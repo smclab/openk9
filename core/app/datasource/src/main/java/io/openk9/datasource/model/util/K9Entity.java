@@ -34,7 +34,9 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 @MappedSuperclass
 @Getter
@@ -57,11 +59,13 @@ public abstract class K9Entity implements GraphqlId {
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	@CreationTimestamp
 	private OffsetDateTime createDate;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "modified_date")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	@UpdateTimestamp
 	private OffsetDateTime modifiedDate;
 

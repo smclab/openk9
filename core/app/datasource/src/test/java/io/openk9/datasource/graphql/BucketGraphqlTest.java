@@ -1,27 +1,21 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package io.openk9.datasource.graphql;
-
-import io.openk9.datasource.EntitiesUtils;
-import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.RAGType;
-import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
-import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.service.BucketService;
-import io.openk9.datasource.service.DatasourceService;
-import io.openk9.datasource.service.RAGConfigurationService;
-import io.openk9.datasource.service.SuggestionCategoryService;
-import io.openk9.datasource.service.TabService;
-import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.graphql.client.GraphQLClient;
-import io.smallrye.graphql.client.core.OperationType;
-import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
-import jakarta.inject.Inject;
-import org.hibernate.reactive.mutiny.Mutiny;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.smallrye.graphql.client.core.Argument.arg;
 import static io.smallrye.graphql.client.core.Argument.args;
@@ -33,6 +27,30 @@ import static io.smallrye.graphql.client.core.Operation.operation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
+import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.RAGConfigurationService;
+import io.openk9.datasource.service.SuggestionCategoryService;
+import io.openk9.datasource.service.TabService;
+
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.graphql.client.GraphQLClient;
+import io.smallrye.graphql.client.core.OperationType;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 public class BucketGraphqlTest {
@@ -124,7 +142,7 @@ public class BucketGraphqlTest {
 			.refreshOnQuery(true)
 			.refreshOnTab(true)
 			.refreshOnSuggestionCategory(true)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.ragConfigurationChat(ragConfigurationChatOne.getId())
 			.ragConfigurationChatTool(ragConfigurationChatToolOne.getId())
 			.ragConfigurationSimpleGenerate(ragConfigurationSimpleOne.getId())
@@ -176,7 +194,7 @@ public class BucketGraphqlTest {
 								prop(REFRESH_ON_QUERY, true),
 								prop(REFRESH_ON_TAB, true),
 								prop(REFRESH_ON_SUGGESTION_CATEGORY, true),
-								prop(RETRIEVE_TYPE, Bucket.RetrieveType.MATCH),
+								prop(RETRIEVE_TYPE, Bucket.RetrieveType.TEXT),
 								prop(DATASOURCE_IDS, datasourceIds),
 								prop(TAB_IDS, tabIds),
 								prop(SUGGESTION_CATEGORY_IDS, suggestionCategorieIds),
@@ -298,7 +316,7 @@ public class BucketGraphqlTest {
 								prop(REFRESH_ON_QUERY, true),
 								prop(REFRESH_ON_TAB, true),
 								prop(REFRESH_ON_SUGGESTION_CATEGORY, true),
-								prop(RETRIEVE_TYPE, Bucket.RetrieveType.MATCH),
+								prop(RETRIEVE_TYPE, Bucket.RetrieveType.TEXT),
 								prop(SUGGESTION_CATEGORY_IDS, suggestionCategorieIds
 									.stream()
 									.limit(1)

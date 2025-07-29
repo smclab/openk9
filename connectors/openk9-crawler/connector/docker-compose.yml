@@ -1,12 +1,10 @@
 version: "3.9"
 
 services:
-  web-parser:
-    image: web-parser:latest
+  web-connector:
+    image: web-connector:latest
     ports:
       - "5000:5000"
       - "6800:6800"
-      - "6080:6080"
-      - "9410:9410"
     environment:
-      - INPUT_LOG_LEVEL=INFO
+      - INPUT_LOG_LEVEL=DEBUG

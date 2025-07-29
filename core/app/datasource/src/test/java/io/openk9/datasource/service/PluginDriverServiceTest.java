@@ -17,19 +17,28 @@
 
 package io.openk9.datasource.service;
 
-import jakarta.inject.Inject;
-
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.PluginDriver;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
-
 import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @QuarkusTest
 public class PluginDriverServiceTest {
+
+	private static final String TENANT_ID = "public";
+	private static final Logger log = Logger.getLogger(PluginDriverServiceTest.class);
 
 	@Inject
 	PluginDriverService pluginDriverService;
@@ -49,11 +58,7 @@ public class PluginDriverServiceTest {
 
 	@Test
 	void should_return_a_PluginDriverDocTypesDTO() {
-		var pluginDriver = pluginDriverService.findByName(
-				"public",
-				Initializer.INIT_DATASOURCE_PLUGIN
-			)
-			.await().indefinitely();
+		var pluginDriver = getInitPluginDriver();
 
 		var pluginDriverDocTypesDTO = pluginDriverService.getDocTypes(pluginDriver.getId())
 			.await().indefinitely();
@@ -82,6 +87,41 @@ public class PluginDriverServiceTest {
 		);
 	}
 
+	@Test
+	void should_create_docTypes() {
+		var pluginDriver = getInitPluginDriver();
+
+		// retrieve the docTypes
+		var pluginDriverDocTypesDTO = pluginDriverService.getDocTypes(pluginDriver.getId())
+			.await().indefinitely();
+
+		// removes the doctypes contained in the pluginDriver sample
+		pluginDriverDocTypesDTO.docTypes().forEach(pluginDriverDocType -> {
+			if(pluginDriverDocType.selected()){
+				docTypeService.deleteById(pluginDriverDocType.docTypeId())
+					.await()
+					.indefinitely();
+			}
+		});
+
+		// creates the doctypes contained in the pluginDriver sample
+		var docTypes = pluginDriverService.createPluginDriverDocTypes(pluginDriver.getId())
+			.await()
+			.indefinitely();
+
+		assertNotNull(docTypes);
+		assertFalse(docTypes.isEmpty());
+		assertEquals(2, docTypes.size());
+
+		var docTypeNames = docTypes.stream().map(DocType::getName).toList();
+
+		assertTrue(docTypeNames.contains("default"));
+		assertTrue(docTypeNames.contains("sample"));
+
+		docTypes.forEach(docType ->
+			log.debug(String.format("document type %d: %s", docType.getId(), docType)));
+	}
+
 	@AfterEach
 	void tearDown() {
 
@@ -89,5 +129,13 @@ public class PluginDriverServiceTest {
 			.flatMap(docType -> docTypeService.deleteById(docType.getId()))
 			.await().indefinitely();
 
+	}
+
+	private PluginDriver getInitPluginDriver() {
+		return pluginDriverService.findByName(
+				TENANT_ID,
+				Initializer.INIT_DATASOURCE_PLUGIN
+			)
+			.await().indefinitely();
 	}
 }

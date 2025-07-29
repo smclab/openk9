@@ -2,15 +2,15 @@
 #                                   STAGES                                     #
 ################################################################################
 stages:
-  - build
-  - build-verifier
-  - container-scanning
-  - dependency-check
-  - restart
-  - publish
+- build
+- build-verifier
+- container-scanning
+- dependency-check
+- restart
+- publish
 
 include:
-  - local: "/.gitlab/.gitlab-templates.yaml"
+- local: "/.gitlab/.gitlab-templates.yaml"
 
 ################################################################################
 #                                  JOBS                                        #
@@ -21,14 +21,14 @@ include:
 #################
 Fetch version:
   stage: build
-  image: node:16-alpine
+  image: node:18-alpine
   script:
-    - cd js-packages/search-frontend
-    - export VERSION=$(node -p "require('./package.json').version") # Legge la versione dal package.json
-    - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Salva la versione in un file
+  - cd js-packages/search-frontend
+  - export VERSION=$(node -p "require('./package.json').version") # Reads version from package.json
+  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Saves version to a file
   artifacts:
     paths:
-      - version.env
+    - version.env
     expire_in: 1 day
 
 ######################## BUILD SEARCH FRONTEND ########################
@@ -36,92 +36,111 @@ Build Search Frontend:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [""]
+    entrypoint: [ "" ]
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
   needs:
-    - job: Fetch version
-      artifacts: true
+  - job: Fetch version
+    artifacts: true
   script:
-    - source $CI_PROJECT_DIR/version.env
-    - echo "=== Using VERSION=$VERSION ==="
-    - echo "=== Configurazione credenziali Kaniko ==="
-    - export NODE_OPTIONS="--max-old-space-size=4096"
-    - mkdir -p /kaniko/.docker
-    - |
-      echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-      > /kaniko/.docker/config.json
-    - |
-      /kaniko/executor \
-        --context "${CI_PROJECT_DIR}" \
-        --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-        --destination "registry.smc.it:49083/openk9/search-frontend:$VERSION"
+  # Docker credentials configuration
+  - export NODE_OPTIONS="--max-old-space-size=4096"
+  - mkdir -p /kaniko/.docker
+  - |
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+  # Conditional logic to determine which tag to use
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
+      # For main, use version from package.json
+      source $CI_PROJECT_DIR/version.env
+      echo "=== Building Search Frontend with VERSION=$VERSION ==="
+      DOCKER_TAG="$VERSION"
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # For feature branch, use 996-SNAPSHOT
+      echo "=== Building Search Frontend with VERSION=996-SNAPSHOT for feature branch ==="
+      DOCKER_TAG="996-SNAPSHOT"
+    fi
+
+  # Run build with the determined tag
+  - |
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+      --destination "registry.smc.it:49083/openk9/search-frontend:$DOCKER_TAG"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/search-frontend/**/*
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/search-frontend/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/search-frontend/**/*
 
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:
   stage: build-verifier
-  image: node:18
+  image: node:14
   script:
-    - cd js-packages/search-frontend
-    - yarn install
-    - yarn build
+  - cd js-packages/search-frontend
+  - yarn install
+  - yarn build
   rules:
-    - changes:
-        - js-packages/search-frontend/**/*
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  - changes:
+    - js-packages/search-frontend/**/*
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
-    - "Fetch version"
-    - "Build Search Frontend"
+  - "Fetch version"
+  - "Build Search Frontend"
   script:
-    - source version.env # Carica la versione dall'artifact
-    - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
-    - gtcs scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Esegue lo scan dell'immagine
+  - source version.env # Loads version from artifact
+  - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Scans the image
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_BRANCH == "main"'
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
-  stage: restart
-  image: alpine:latest
-  script:
-    - apk add --no-cache curl
-    - echo "Triggering restart for Search Frontend"
-      # Invia una richiesta POST al trigger URL per far partire il job `restart-admin-frontend`
-    - |
-      curl -X POST \
-        -F "token=${RESTART_TRIGGER_TOKEN}" \
-        -F "variables[TRIGGER_JOB]=restart-admin-frontend" \
-        -F "ref=main" \
-        "${RESTART_TRIGGER_URL}"
+  extends: .restart_job_template
+  dependencies:
+  - Fetch version
+  variables:
+    COMPONENT_NAME: "search-frontend"
+    COMPONENT_TYPE: "frontend"
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/search-frontend/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/search-frontend/**/*
 
 ####################### PUBLISH SEARCH FRONTEND #######################
 Publish Search Frontend:
   stage: publish
   image: node:18
   script:
-    - cd js-packages/search-frontend
-    - pwd
-    - whoami
-    - yarn install
-    - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-    - npm publish --access public
+  - cd js-packages/search-frontend
+  - pwd
+  - whoami
+  - yarn install
+  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+  - npm publish --access public
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - js-packages/search-frontend/**/*
-      when: manual
-    - when: never
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/search-frontend/**/*
+    when: manual
+  - when: never
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Search Frontend:
@@ -129,5 +148,5 @@ Dependency Check Search Frontend:
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-    - cd js-packages/search-frontend
-    - /analyzer run
+  - cd js-packages/search-frontend
+  - /analyzer run

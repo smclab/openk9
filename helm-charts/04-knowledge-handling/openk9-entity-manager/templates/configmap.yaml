@@ -14,6 +14,7 @@ data:
   QUARKUS_NEO4J_URI: "bolt://{{ .Values.neo4j.host }}:{{ .Values.neo4j.port }}"
   QUARKUS_NEO4J_AUTHENTICATION_USERNAME: {{ .Values.neo4j.username | quote }}
 
+  OPENK9_ENTITY_CLEANER_STOP_WORDS: 'spa,s.p.a.,srl,s.r.l.,s.r.l,s.p.a'
   OPENK9_ENTITY_UNIQUE_ENTITIES: 'date,organization,loc,email,document,bank,person'
   OPENK9_ENTITY_MIN_HOPS: '1'
   OPENK9_ENTITY_MAX_HOPS: '2'

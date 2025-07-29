@@ -120,7 +120,9 @@ const SelectComponent: React.FC<TypeSelectComponent> = ({
         )}
         {sortedOptions.map((option) => (
           <option key={option.id} value={`${option.field}-${option.type}`}>
-            {option.translationMap[keyLanguage] || option.label}
+            {option.translationMap && option.translationMap[keyLanguage]
+              ? option.translationMap[keyLanguage]
+              : option?.label}
           </option>
         ))}
       </Select>

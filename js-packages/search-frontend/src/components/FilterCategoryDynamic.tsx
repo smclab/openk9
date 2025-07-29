@@ -103,7 +103,7 @@ function FilterCategoryDynamic({
 
   return (
     <fieldset
-      className="openk9-filter-category-container"
+      className={`openk9-filter-category-container openk9-filter-category-${suggestionCategoryName}`}
       css={css`
         ${isUniqueLoadMore ? "width: 50%" : null}
         @media  (max-width: 768px) {

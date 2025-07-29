@@ -1,8 +1,8 @@
-# Helm package for Openk9 Wordpress Connector
+# Helm package for Openk9 Database Connector
 
 ## Introduction
 
-This chart bootstraps Openk9 Wordpress Connector deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+This chart bootstraps Openk9 Database Connector deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ Then install using following command:
 helm upgrade -i database-connector openk9/openk9-database-connector
 ```
 
-The command deploys Openk9 Wordpress Connector on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
+The command deploys Openk9 Database Connector on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
 # Parameters
 
@@ -32,17 +32,17 @@ The command deploys Openk9 Wordpress Connector on the Kubernetes cluster in the 
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `image.registry`    | Openk9 Wordpress Connector image registry                                                                                  | `REGISTRY_NAME`            |
-| `image.repository`  | Openk9 Wordpress Connector image repository                                                                                | `REPOSITORY_NAME/openk9` |
-| `image.digest`      | Openk9 Wordpress Connector image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
-| `image.pullPolicy`  | Openk9 Wordpress Connector image pull policy                                                                               | `IfNotPresent`             |
+| `image.registry`    | Openk9 Database Connector image registry                                                                                  | `REGISTRY_NAME`            |
+| `image.repository`  | Openk9 Database Connector image repository                                                                                | `REPOSITORY_NAME/openk9` |
+| `image.digest`      | Openk9 Database Connector image digest in the way sha256:aa.... Please note this parameter, if set, will override the tag | `""`                       |
+| `image.pullPolicy`  | Openk9 Database Connector image pull policy                                                                               | `IfNotPresent`             |
 | `image.pullSecrets` | Specify docker-registry secret names as an array                                                         | `[]`                       |
 | `image.debug`       | Set to true if you would like to see extra information on logs                                           | `false`                    |
 
 ### Configure connections to other Openk9 services
 
-Openk9 Wordpress Connector needs to communicate with other components to work. 
-In particular Openk9 Wordpress Connector need to communicate with Ingestion to send data to it.
+Openk9 Database Connector needs to communicate with other components to work. 
+In particular Openk9 Database Connector need to communicate with Ingestion to send data to it.
 
 To configure connection to Ingestion following parameters are available:
 
@@ -54,9 +54,9 @@ To configure connection to Ingestion following parameters are available:
 
 ### Service account and rbac
 
-Openk9 Wordpress Connector doesn't need particular Service Account or rbac. 
+Openk9 Database Connector doesn't need particular Service Account or rbac. 
 
-But if you want for some reasons associate a pre-created Service Account to Openk9 Wordpress Connector you can do using following parameters:
+But if you want for some reasons associate a pre-created Service Account to Openk9 Database Connector you can do using following parameters:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
@@ -69,7 +69,7 @@ But if you want for some reasons associate a pre-created Service Account to Open
 
 | Name                                          | Description                                                                                | Value   |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- |
-| `serviceAccount.create`                       | Enable creation of ServiceAccount for Wordpress Connector pods                                        | `true`  |
+| `serviceAccount.create`                       | Enable creation of ServiceAccount for Database Connector pods                                        | `true`  |
 | `serviceAccount.name`                         | Name of the created serviceAccount                                                         | `""`    |
 | `serviceAccount.automountServiceAccountToken` | Auto-mount the service account token in the pod                                            | `false` |
 | `serviceAccount.annotations`                  | Annotations for service account. Evaluated as a template. Only used if `create` is `true`. | `{}`    |
@@ -78,7 +78,7 @@ But if you want for some reasons associate a pre-created Service Account to Open
 
 ### Configure ingress or route
 
-Openk9 Wordpress Connector can openk9 Apis externally.
+Openk9 Database Connector can openk9 Apis externally.
 
 For Ingress creation presente of an Ingress Controller is mandatory on your cluster. Check [Kubernets Documentation](https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/) for availables Ingress Controllers.
 
@@ -104,7 +104,7 @@ To configure Route for Openshift use:
 
 ### Startup, readiness and liveness probes
 
-Openk9 Wordpress Connector supports Readiness, Liveness and Startup Probes.
+Openk9 Database Connector supports Readiness, Liveness and Startup Probes.
 
 To configure probes appropriately you can use following parameters:
 
@@ -131,7 +131,7 @@ To configure probes appropriately you can use following parameters:
 
 ### Resource requests and limits
 
-Openk9 Wordpress Connector chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
+Openk9 Database Connector chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
 
 | `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
 
@@ -141,15 +141,15 @@ You can use security context settings when you need to handle permissions on you
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `podSecurityContext.enabled`                        | Enable Wordpress Connector pods' Security Context                                                                                                                                                                            | `true`           |
+| `podSecurityContext.enabled`                        | Enable Database Connector pods' Security Context                                                                                                                                                                            | `true`           |
 | `podSecurityContext.fsGroupChangePolicy`            | Set filesystem group change policy                                                                                                                                                                                | `Always`         |
 | `podSecurityContext.sysctls`                        | Set kernel settings using the sysctl interface                                                                                                                                                                    | `[]`             |
 | `podSecurityContext.supplementalGroups`             | Set filesystem extra groups                                                                                                                                                                                       | `[]`             |
-| `podSecurityContext.fsGroup`                        | Set Wordpress Connector pod's Security Context fsGroup                                                                                                                                                                       | `1001`           |
-| `podSecurityContext.enabled`                  | Enabled Wordpress Connector containers' Security Context                                                                                                                                                                     | `true`           |
-| `podSecurityContext.runAsUser`                | Set Wordpress Connector containers' Security Context runAsUser                                                                                                                                                               | `1001`           |
-| `podSecurityContext.runAsGroup`               | Set Wordpress Connector containers' Security Context runAsGroup                                                                                                                                                              | `1001`           |
-| `podSecurityContext.runAsNonRoot`             | Set Wordpress Connector container's Security Context runAsNonRoot                                                                                                                                                            | `true`           |
+| `podSecurityContext.fsGroup`                        | Set Database Connector pod's Security Context fsGroup                                                                                                                                                                       | `1001`           |
+| `podSecurityContext.enabled`                  | Enabled Database Connector containers' Security Context                                                                                                                                                                     | `true`           |
+| `podSecurityContext.runAsUser`                | Set Database Connector containers' Security Context runAsUser                                                                                                                                                               | `1001`           |
+| `podSecurityContext.runAsGroup`               | Set Database Connector containers' Security Context runAsGroup                                                                                                                                                              | `1001`           |
+| `podSecurityContext.runAsNonRoot`             | Set Database Connector container's Security Context runAsNonRoot                                                                                                                                                            | `true`           |
 | `podSecurityContext.allowPrivilegeEscalation` | Set container's privilege escalation                                                                                                                                                                              | `false`          |
 | `podSecurityContext.readOnlyRootFilesystem`   | Set container's Security Context readOnlyRootFilesystem                                                                                                                                                           | `true`           |
 | `podSecurityContext.capabilities.drop`        | Set container's Security Context runAsNonRoot                                                                                                                                                                     | `["ALL"]`        |

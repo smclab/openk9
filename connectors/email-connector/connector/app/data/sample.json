@@ -4,16 +4,28 @@
    "contentId":3062252989527342,
    "rawContent":"Navigation Skip to Content Navigation Menu Esigenze Close menu Esigenze Risolviamo problemi complessi scegliendo le soluzioni piÃ¹ adatte a ciascun cliente Gestione processi e dati Migliorare i processi produttivi Gestiamo la produzione dal collegamento impianti all'ottimizzazione del piano operativo Misurare ed efficientare i consumi energetici Monitoriamo i consumi di impianti e stabilimenti per garantire la sostenibilitÃ  dei processi produttivi Promuovere la collaborazione tra uffici Spazi condivisi e documenti editabili tra dipartimenti aziendali Misurare le performance dell'azienda Identifichiamo e misuriamo gli indicatori di performance aziendali con report puntuali Comunicazione e vendita Comunicare internamente ed esternamente Evolviamo il modo di comunicare il brand verso i dipendenti e gli utenti esterni Gestire la relazione con il cliente Miglioriamo la qualitÃ  dell'interazione con il cliente concentrandoci sulle attivitÃ  a valore aggiunto Aumentare le vendite online Permetti",
    "datasourcePayload":{
-      "web":{
-         "url":"https://www.smc.it/en/-/consulente-erp-finance",
-         "content":"Navigation Skip to Content Navigation Menu Esigenze Close menu Esigenze Risolviamo problemi complessi scegliendo le soluzioni piÃ¹ adatte a ciascun cliente Gestione processi e dati Migliorare i processi produttivi Gestiamo la produzione dal collegamento impianti all'ottimizzazione del piano operativo Misurare ed efficientare i consumi energetici Monitoriamo i consumi di impianti e stabilimenti per garantire la sostenibilitÃ  dei processi produttivi Promuovere la collaborazione tra uffici Spazi condivisi e documenti editabili tra dipartimenti aziendali Misurare le performance dell'azienda Identifichiamo e misuriamo gli indicatori di performance aziendali con report puntuali Comunicazione e vendita Comunicare internamente ed esternamente Evolviamo il modo di comunicare il brand verso i dipendenti e gli utenti esterni Gestire la relazione con il cliente Miglioriamo la qualitÃ  dell'interazione con il cliente concentrandoci sulle attivitÃ  a valore aggiunto Aumentare le vendite online Permetti",
-         "title":"Consulente ERP - Finance",
-         "favicon":"https://www.smc.it/o/smc-theme/images/favicon.ico"
+      "email":{
+         "date":1574434821000,
+         "from_user":"Mike Brown",
+         "from_email":"mike.brown@smc.it",
+         "to_user":[
+            "John Mayer"
+         ],
+         "to_email":[
+            "john.mayer@smc.it"
+         ],
+         "cc_user":"None",
+         "cc_email":"None",
+         "subject":"Sample email",
+         "to":"John Mayer <john.mayer@smc.it>",
+         "cc":"None",
+         "body":"Sample body",
+         "htmlBody":"html body"
       }
    },
    "resources":{
       "binaries":[
-
+         
       ]
    },
    "scheduleId":"1"

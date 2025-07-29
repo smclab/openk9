@@ -85,7 +85,7 @@ public class TenantInitializerService {
 							bucket.setAvailableLanguages(availableLanguages);
 							bucket.setQueryAnalysis(queryAnalysis);
 							bucket.setSearchConfig(searchConfig);
-							return bucketService.persist(s, bucket);
+							return bucketService.merge(s, bucket);
 						})
 						.flatMap(bucket -> bucketService.enableTenant(s, bucket.getId()))
 					)
@@ -104,7 +104,7 @@ public class TenantInitializerService {
 					.flatMap(queryAnalysis -> {
 						queryAnalysis.setAnnotators(new HashSet<>(annotators));
 						queryAnalysis.setRules(new HashSet<>(rules));
-						return queryAnalysisService.persist(s, queryAnalysis);
+						return queryAnalysisService.merge(s, queryAnalysis);
 					})
 				)
 			);
@@ -123,7 +123,7 @@ public class TenantInitializerService {
 					}
 
 					searchConfig.setQueryParserConfigs(new HashSet<>(queryParserConfigs));
-					return searchConfigService.persist(s, searchConfig);
+					return searchConfigService.merge(s, searchConfig);
 				})
 			);
 	}

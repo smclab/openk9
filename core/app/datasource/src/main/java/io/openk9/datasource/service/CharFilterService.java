@@ -23,7 +23,6 @@ import io.openk9.datasource.mapper.CharFilterMapper;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.CharFilter_;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class CharFilterService extends BaseK9EntityService<CharFilter, CharFilterDTO> {

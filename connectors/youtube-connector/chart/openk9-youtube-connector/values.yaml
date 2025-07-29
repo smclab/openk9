@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   registry: ""
-  name: registry.smc.it:49083/openk9/youtube-connector
+  name: smclab/openk9-youtube-connector
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 

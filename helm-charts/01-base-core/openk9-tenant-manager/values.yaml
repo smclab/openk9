@@ -135,6 +135,17 @@ database:
       changeLogLockTable: "DATABASECHANGELOGLOCK_DATASOURCE"
       changeLogTable: "DATABASECHANGELOG_DATASOURCE"
 
+
+## Openk9 Services configuration
+openk9:
+  ## Openk9 Datasource configuration
+  datasource:
+    host: "openk9-datasource"
+  ## Openk9 K8s Client configuration
+  k8sClient:
+    host: "openk9-k8s-client"
+
+
 ## Opentelemetry configuration
 otel:
   disabled: true

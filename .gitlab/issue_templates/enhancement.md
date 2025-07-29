@@ -10,8 +10,11 @@ the contracts of our API.)
 
 ## Expected Behavior
 
-(In this section, we can list the test cases and what we expect to happen when our API or Components
-are used.)
+(What we expect to happen when our API or Components are used.)
+
+## Test cases
+
+In this section, we can list the test cases (as user stories at high level) to validate correct implementation of the issue.
 
 ## Links / References
 

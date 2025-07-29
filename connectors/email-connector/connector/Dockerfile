@@ -7,13 +7,13 @@ RUN  apt-get update \
     && apt-get install -y dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ./connector/requirements.txt /requirements.txt
+COPY ./requirements.txt /requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-ADD ./connector/docker-entrypoint.sh /etc/docker-entrypoint.sh
+ADD ./docker-entrypoint.sh /etc/docker-entrypoint.sh
 
-COPY ./connector/app /app
+COPY ./app /app
 
 WORKDIR /app
 

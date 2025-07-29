@@ -17,6 +17,11 @@
 
 package io.openk9.k8sclient.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.StatusDetails;
 import io.fabric8.kubernetes.api.model.networking.v1.HTTPIngressPath;
@@ -27,14 +32,9 @@ import io.fabric8.kubernetes.api.model.networking.v1.IngressRuleBuilder;
 import io.fabric8.kubernetes.api.model.networking.v1.IngressTLSBuilder;
 import io.fabric8.kubernetes.api.model.networking.v1.ServiceBackendPort;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @ApplicationScoped
 public final class IngressService {
@@ -55,24 +55,20 @@ public final class IngressService {
 	String ingressClassName;
 
 	public Uni<HasMetadata> create(IngressDef ingressDef) {
-		return Uni.createFrom()
-			.item(() -> {
+		return VertxContextSupport.executeBlocking(() -> {
 				var ingress = getIngress(ingressDef);
 
 				return k8sClient.resource(ingress).createOrReplace();
 			})
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
 			.map(ingress -> ingress);
 	}
 
 	public Uni<List<StatusDetails>> delete(IngressDef ingressDef) {
-		return Uni.createFrom()
-			.item(() -> {
+		return VertxContextSupport.executeBlocking(() -> {
 				var ingress = getIngress(ingressDef);
 
 				return k8sClient.resource(ingress).delete();
-			})
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+		});
 	}
 
 	private Ingress getIngress(IngressDef ingressDef) {

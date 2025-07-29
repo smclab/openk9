@@ -1,0 +1,24 @@
+{
+  "TYPE_MAPPING": {
+    "application/pdf": "pdf",
+    "application/msword": "word",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "word",
+    "application/vnd.ms-excel": "excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "excel",
+    "application/vnd.ms-powerpoint": "powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "powerpoint",
+    "text/plain": "plaintext",
+    "application/vnd.oasis.opendocument.spreadsheet": "excel",
+    "application/vnd.oasis.opendocument.text": "word",
+    "application/vnd.oasis.opendocument.presentation": "powerpoint",
+    "application/epub+zip": "epub",
+    "image/png": "png",
+    "image/jpeg": "jpeg",
+    "image/jpg": "jpg",
+    "message/rfc822": "email",
+    "application/x-tika-msoffice": "office",
+    "application/mbox": "email",
+    "application/x-7z-compressed": "zip",
+    "application/gzip": "gz"
+  }
+}

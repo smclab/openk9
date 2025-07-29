@@ -1,5 +1,20 @@
-import logging
-import os
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 from datetime import date
 
 from langchain.schema import AIMessage, HumanMessage
@@ -7,13 +22,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from opensearchpy import OpenSearch
 
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
+from app.utils.logger import logger
 
 
 def get_chat_history(
@@ -124,25 +133,18 @@ def save_chat_message(
     .. note::
         - Creates index with mappings if not exists (user_id as index name)
         - Source documents require specific structure:
-            - metadata: dict with title, url, source
-            - citations: list of citation texts
+            - metadata (optional): dict with metadata (title, url, etc.)
+            - citations (optional): list of citation texts
         - Index mapping enforces:
             - timestamp as date type
             - Other fields use dynamic mapping
         - Message structure includes conversation data and processed sources
     """
     documents = []
-
     for source in sources:
-        document_title = source["metadata"]["title"]
-        document_url = source["metadata"]["url"]
-        document_source = source["metadata"]["source"]
-        document_citations = source["citations"]
         document = {
-            "title": document_title,
-            "url": document_url,
-            "source": document_source,
-            "citations": document_citations,
+            **source.get("metadata", {}),
+            "citations": source.get("citations", []),
         }
         documents.append(document)
 
@@ -192,10 +194,10 @@ def delete_documents(opensearch_host, interval_in_days=180):
     """
     Delete documents from OpenSearch indices that are older than a specified number of days.
 
-    This function connects to an OpenSearch instance, retrieves all indices, and for each index,
-    it identifies documents grouped by `chat_id`. It checks the latest document for each group
-    and deletes all documents associated with that `chat_id` if the latest document is older than
-    the specified interval in days.
+    This function connects to an OpenSearch instance, retrieves all indices, and for each index
+    that contains 'chat_id' field, it identifies documents grouped by `chat_id`. It checks the
+    latest document for each group and deletes all documents associated with that `chat_id` if
+    the latest document is older than the specified interval in days.
 
     Parameters
     ----------
@@ -204,7 +206,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
     interval_in_days : int, optional
         The number of days to use as a threshold for deletion. Documents older than this
-        value will be deleted. Default is 30 days.
+        value will be deleted. Default is 180 days.
 
     Returns
     -------
@@ -222,7 +224,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
     - The function logs the number of indices found and the number of documents deleted.
     - It performs bulk deletions to optimize the deletion process.
     - Ensure that the OpenSearch client is properly configured and that the necessary permissions
-      are in place to delete documents.
+        are in place to delete documents.
 
     Examples
     --------
@@ -233,17 +235,24 @@ def delete_documents(opensearch_host, interval_in_days=180):
         hosts=[opensearch_host],
     )
 
-    interval_in_days = os.getenv("INTERVAL_IN_DAYS", 180)
-
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
-    logger.info(f"Found {len(all_indices)} indices: {all_indices}")
+    index_field_names = {"user_id", "chat_id", "chat_sequence_number"}
+    indices_to_process = []
 
     today = date.today()
     delete_actions = []
 
     for index in all_indices:
-        logger.info(f"Processing index: {index}")
+        index_mapping = open_search_client.indices.get_mapping(index=index)
+        index_properties = set(index_mapping[index]["mappings"]["properties"])
+        if index_field_names.issubset(index_properties):
+            indices_to_process.append(index)
+
+    logger.info(f"Found {len(indices_to_process)} indices: {indices_to_process}")
+
+    for index_to_process in indices_to_process:
+        logger.info(f"Processing index: {index_to_process}")
 
         # Query to group documents by chat_id and get the latest document for each group
         query = {
@@ -270,7 +279,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
                 }
             },
         }
-        response = open_search_client.search(index=index, body=query)
+        response = open_search_client.search(index=index_to_process, body=query)
         buckets = response["aggregations"]["group_by_chat_id"]["buckets"]
 
         for bucket in buckets:

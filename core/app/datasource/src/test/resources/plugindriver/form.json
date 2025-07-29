@@ -43,9 +43,7 @@
 			],
 			"info": "",
 			"validator": {
-				"min": 0,
-				"max": 100,
-				"regex": "/[[:alnum:]]+/"
+				"max": 100
 			}
 		},
 		{
@@ -82,8 +80,7 @@
 			],
 			"validator": {
 				"min": 0,
-				"max": 100,
-				"regex": "/[[:alnum:]]+/"
+				"max": 100
 			}
 		},
 		{
@@ -100,8 +97,6 @@
 				}
 			],
 			"validator": {
-				"min": 0,
-				"max": 100,
 				"regex": "/[[:alnum:]]+/"
 			}
 		},
@@ -115,9 +110,23 @@
 			"values": [],
 			"validator": {
 				"min": 0,
-				"max": 100,
 				"regex": "/[[:alnum:]]+/"
 			}
+		},
+		{
+			"label": "Metadata mapping",
+			"name": "metadataMapping",
+			"type": "stringMap",
+			"required": true,
+			"values": [
+				{
+					"value": {
+						"field1": "div.articleBody",
+						"field2": "p.articleFooter"
+					},
+					"isDefault": false
+				}
+			]
 		}
 	]
 }

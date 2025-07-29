@@ -1,3 +1,20 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -34,7 +51,7 @@ class SearchQuery(BaseModel):
     range: list = Field(
         ...,
         description="Range filter as [start, end]",
-        example=[0, 5],
+        example=[0, 10],
     )
     afterKey: Optional[str] = Field(
         None, description="Pagination key for subsequent requests", example="page_2"
@@ -126,13 +143,11 @@ class SearchQueryChat(BaseModel):
                     {
                         "title": "Assicurazione Infortuni Conducente | AXA",
                         "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                        "source": "local",
                         "citations": [],
                     },
                     {
                         "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
                         "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                        "source": "local",
                         "citations": [],
                     },
                 ],
@@ -174,4 +189,53 @@ class ChatMessage(BaseModel):
         max_length=100,
         description="New title for the chat conversation",
         example="Project Discussion",
+    )
+
+
+class CommonHeadersMinimal(BaseModel):
+    """
+    A minimal collection of common HTTP headers used across the APIs.
+
+    This model represents a subset of standard HTTP headers commonly used in requests,
+    focusing on essential authentication and routing headers.
+
+    Attributes:
+        authorization (Optional[str]): Bearer token for authentication.
+            Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        x_forwarded_host (Optional[str]): Original host header from the client request,
+            typically used in reverse proxy setups. Example: "example.com"
+    """
+
+    authorization: Optional[str] = Field(
+        None,
+        description="Bearer token for authentication.",
+        example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
+    )
+    x_forwarded_host: Optional[str] = Field(
+        None,
+        description="Original host header from the client request, typically used in reverse proxy setups.",
+        example="example.com",
+    )
+
+
+class CommonHeaders(CommonHeadersMinimal):
+    """
+    A collection of common HTTP headers used across the APIs.
+
+    This model represents standard HTTP headers that are commonly used in requests,
+    particularly for authentication and request routing purposes.
+
+    Attributes:
+        authorization (Optional[str]): Bearer token for authentication.
+            Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        x_forwarded_host (Optional[str]): Original host header from the client request,
+            typically used in reverse proxy setups. Example: "example.com"
+        openk9_acl (Optional[List[str]]): Access control list for tenant resources.
+            Example: ["group:admins", "project:openk9"]
+    """
+
+    openk9_acl: Optional[list[str]] = Field(
+        None,
+        description="Access control list for tenant resources.",
+        example='["group:admins", "project:openk9"]',
     )

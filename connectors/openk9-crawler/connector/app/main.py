@@ -9,7 +9,46 @@ import json
 import logging
 import os
 import requests
+import os
+import tldextract
+import socket
 
+log_level = os.environ.get("INPUT_LOG_LEVEL")
+if log_level is None:
+    log_level = "INFO"
+
+logger = logging.getLogger(__name__)
+logger.setLevel(log_level)
+formatter = logging.Formatter("%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s")
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+
+logger = logging.getLogger(__name__)
+
+def has_internet(host="8.8.8.8", port=53, timeout=1):
+    """Quick check for internet access (Google DNS)."""
+    try:
+        socket.setdefaulttimeout(timeout)
+        socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+        return True
+    except Exception:
+        return False
+
+# Set this from the environment (or fallback)
+cache_dir = os.environ.get("TLDEXTRACT_CACHE", "/app")
+
+if has_internet():
+    # Allow auto-update if internet is available
+    extractor = tldextract.TLDExtract(cache_dir=cache_dir)
+    logger.info("update")
+else:
+    # Prevent any online calls
+    extractor = tldextract.TLDExtract(cache_dir=cache_dir, suffix_list_urls=[])
+    logger.info("no update")
+
+result = extractor("https://example.co.uk")
 
 def post_message(url, payload, timeout=30):
     '''Pass the body as json instead of data'''
@@ -30,30 +69,17 @@ ingestion_url = os.environ.get("INGESTION_URL")
 if ingestion_url is None:
     ingestion_url = "http://ingestion:8080/api/ingestion/v1/ingestion/"
 
-log_level = os.environ.get("INPUT_LOG_LEVEL")
-if log_level is None:
-    log_level = "INFO"
-
-logger = logging.getLogger(__name__)
-logger.setLevel(log_level)
-formatter = logging.Formatter("%(asctime)s,%(msecs)d \t %(levelname)s \t| %(name)s | %(message)s")
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
-
-logger = logging.getLogger(__name__)
-
 
 class BaseRequest(ABC, BaseModel):
     bodyTag: Optional[str] = "body"
     titleTag: Optional[str] = "title::text"
+    excludedBodyTags: Optional[list] = []
     allowedDomains: Optional[list] = []
     excludedPaths: Optional[list] = []
     allowedPaths: Optional[list] = []
     maxLength: Optional[int] = -1
     documentFileExtensions: Optional[list] = []
-    specificTags: Optional[list] = []
+    customMetadata: Optional[dict] = {}
     pageCount: int = 0
     additionalMetadata: Optional[dict] = {}
     doExtractDocs: bool = False
@@ -92,6 +118,7 @@ def set_up_sitemap_endpoint(request):
 
     sitemap_urls = request['sitemapUrls']
     body_tag = request["bodyTag"]
+    excluded_bodyTags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
     datasource_id = request['datasourceId']
     schedule_id = request['scheduleId']
@@ -102,7 +129,7 @@ def set_up_sitemap_endpoint(request):
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
     document_file_extensions = request["documentFileExtensions"]
-    specific_tags = request["specificTags"]
+    custom_metadata = request["customMetadata"]
     page_count = request["pageCount"]
     replace_rule = request["replaceRule"]
     additional_metadata = request["additionalMetadata"]
@@ -114,6 +141,7 @@ def set_up_sitemap_endpoint(request):
         "sitemap_urls": json.dumps(sitemap_urls),
         "allowed_domains": json.dumps(allowed_domains),
         "body_tag": body_tag,
+        "excluded_bodyTags": json.dumps(excluded_bodyTags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,
@@ -125,7 +153,7 @@ def set_up_sitemap_endpoint(request):
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),
-        "specific_tags": json.dumps(specific_tags),
+        "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
@@ -145,6 +173,7 @@ def set_up_crawl_endpoint(request):
 
     start_urls = request['startUrls']
     body_tag = request["bodyTag"]
+    excluded_bodyTags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
     datasource_id = request['datasourceId']
     schedule_id = request['scheduleId']
@@ -157,7 +186,7 @@ def set_up_crawl_endpoint(request):
     tenant_id = request["tenantId"]
     excluded_paths = request["excludedPaths"]
     document_file_extensions = request["documentFileExtensions"]
-    specific_tags = request["specificTags"]
+    custom_metadata = request["customMetadata"]
     close_spider_page_count = request["pageCount"]
     additional_metadata = request["additionalMetadata"]
     do_extract_docs = request["doExtractDocs"]
@@ -170,6 +199,7 @@ def set_up_crawl_endpoint(request):
         "allowed_paths": json.dumps(allowed_paths),
         "excluded_paths": json.dumps(excluded_paths),
         "body_tag": body_tag,
+        "excluded_bodyTags": json.dumps(excluded_bodyTags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,
@@ -179,7 +209,7 @@ def set_up_crawl_endpoint(request):
         "max_length": max_length,
         "tenant_id": tenant_id,
         "document_file_extensions": json.dumps(document_file_extensions),
-        "specific_tags": json.dumps(specific_tags),
+        "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],

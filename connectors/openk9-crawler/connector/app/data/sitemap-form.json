@@ -22,9 +22,7 @@
         "info": "Sitemap Urls to read to extract pages",
         "placeholder": "string",
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -36,9 +34,7 @@
         "values": [],
         "info": "Allowed domain for crawling",
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -50,9 +46,7 @@
         "values": [],
         "info": "Allowed paths for crawling",
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -64,9 +58,7 @@
         "values": [],
         "info": "Excluded paths for crawling",
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -83,9 +75,7 @@
         ],
         "info": "Tag to use to extract main web content",
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -102,9 +92,7 @@
           }
         ],
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
       {
@@ -122,8 +110,7 @@
         ],
         "validator": {
           "min": 0,
-          "max": 10000,
-          "regex": "/[[:alnum:]]+/"
+          "max": 10000
         }
       },
       {
@@ -141,8 +128,7 @@
         ],
         "validator": {
           "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "max": 10000
         }
       },
       {
@@ -150,33 +136,35 @@
         "name": "doExtractDocs",
         "type": "checkbox",
         "size": 4,
-        "required": true,
+        "required": false,
         "info": "If extract documents",
         "values": [
           {
             "value": false,
             "isDefault": true
           }
-        ],
-        "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
-        }
+        ]
       },
       {
         "label": "Document File Extensions",
         "name": "documentFileExtensions",
         "type": "list",
         "size": 4,
-        "required": true,
+        "required": false,
         "info": "File extensions allowed",
         "values": [],
         "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
+          "regex": "^[a-zA-Z0-9]+$"
         }
+      },
+      {
+        "label": "Custome Metadata",
+        "name": "customeMetadata",
+        "type": "stringMap",
+        "size": 4,
+        "required": false,
+        "info": "Custom metadata using xpath expression",
+        "values": []
       }
     ]
 }

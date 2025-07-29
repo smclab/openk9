@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,6 +41,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Getter
@@ -161,6 +164,9 @@ public class Scheduler extends K9Entity {
 	public static final String ENRICH_ITEMS_ENTITY_GRAPH = "Scheduler.fetchEnrichItems";
 	public static final String DATA_INDEXES_ENTITY_GRAPH = "Scheduler.fetchDataIndexes";
 	public static final String RUNNING_STATES = "('RUNNING', 'ERROR', 'STALE')";
+	public static final EnumSet<SchedulerStatus> RUNNING_STATES_SET = EnumSet.of(
+		SchedulerStatus.RUNNING, SchedulerStatus.ERROR, SchedulerStatus.STALE
+	);
 
 	@Column(name = "schedule_id", nullable = false, unique = true)
 	private String scheduleId;
@@ -182,6 +188,7 @@ public class Scheduler extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	private SchedulerStatus status;
 	@Column(name = "last_ingestion_date")
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime lastIngestionDate;
 	@Column(name = "error_description")
 	private String errorDescription;

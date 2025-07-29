@@ -37,12 +37,13 @@ if ingestion_url is None:
 
 class AsyncEmailExtraction(threading.Thread):
 
-    def __init__(self, mail_server, port, username, password, timestamp, datasource_id, folder, schedule_id, tenant_id,
+    def __init__(self, mail_server, port, use_ssl, username, password, timestamp, datasource_id, folder, schedule_id, tenant_id,
                  index_acl, get_attachments, additional_metadata):
         super(AsyncEmailExtraction, self).__init__()
 
         self.mail_server = mail_server
         self.port = port
+        self.use_ssl = use_ssl
         self.username = username
         self.password = password
         self.timestamp = timestamp
@@ -55,12 +56,6 @@ class AsyncEmailExtraction(threading.Thread):
         self.additional_metadata = dict(additional_metadata)
 
         self.status_logger = logging.getLogger('email-logger')
-
-        try:
-            self.imap = ImapClient(self.mail_server, self.port, self.username, self.password)
-        except Exception:
-            self.status_logger.error("Connection error: check if mail server and port are correct")
-            raise
 
     def post_last(self, end_timestamp):
 
@@ -86,6 +81,12 @@ class AsyncEmailExtraction(threading.Thread):
     def extract(self):
 
         try:
+            self.imap = ImapClient(self.mail_server, self.port, self.username, self.password, self.use_ssl)
+        except Exception:
+            self.status_logger.error("Connection error: check if mail server and port are correct")
+            raise
+
+        try:
             self.imap.login()
         except Exception:
             self.status_logger.error("Problem during login: check credentials")
@@ -101,7 +102,7 @@ class AsyncEmailExtraction(threading.Thread):
         # retrieve messages from a given sender
 
         end_timestamp = datetime.utcnow().timestamp()*1000
-        
+
         resp = self.imap.select_folder(self.folder)
         if resp != 'OK':
             self.status_logger.error(f"ERROR: Unable to open {self.folder} folder")
@@ -131,8 +132,6 @@ class AsyncEmailExtraction(threading.Thread):
                 datasource_payload = {
                     "email": struct_msg
                 }
-
-                self.status_logger.info(self.additional_metadata)
 
                 for key, value in self.additional_metadata.items():
                     datasource_payload[key] = value
@@ -171,7 +170,7 @@ class AsyncEmailExtraction(threading.Thread):
 
                     try:
                         post_message(ingestion_url, payload, 10)
-                        # self.status_logger.info(payload)
+                        #self.status_logger.info(datasource_payload)
                         email_posted += 1
                     except requests.RequestException:
                         self.status_logger.error("Problems during extraction of email with id " + str(num))

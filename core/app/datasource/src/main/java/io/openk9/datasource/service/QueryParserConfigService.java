@@ -30,7 +30,6 @@ import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.form.FormConfigurations;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.model.init.QueryParserConfigs;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class QueryParserConfigService extends BaseK9EntityService<QueryParserConfig, QueryParserConfigDTO> {

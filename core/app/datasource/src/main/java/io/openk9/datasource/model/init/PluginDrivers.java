@@ -21,14 +21,14 @@ public class PluginDrivers {
 
 	static {
 		CONFIGURATION_MAP.put(
-			Preset.LIFERAY,
+			Preset.YOUTUBE,
 			PresetConfiguration.builder()
-				.name("Liferay")
-				.description("Plugin Driver for Liferay Portal")
+				.name("Youtube")
+				.description("Plugin Driver for Youtube Channel")
 				.type(PluginDriver.PluginDriverType.HTTP)
 				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.LIFERAY))
+				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.YOUTUBE))
 				.secure(false)
 				.path("/execute")
 				.build()
@@ -94,6 +94,19 @@ public class PluginDrivers {
 				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
 				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
+				.secure(false)
+				.path("/execute")
+				.build()
+		);
+		CONFIGURATION_MAP.put(
+			Preset.MINIO,
+			PresetConfiguration.builder()
+				.name("Minio")
+				.description("Plugin Driver for Minio.")
+				.type(PluginDriver.PluginDriverType.HTTP)
+				.method(HttpPluginDriverInfo.Method.POST)
+				.provisioning(PluginDriver.Provisioning.SYSTEM)
+				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.MINIO))
 				.secure(false)
 				.path("/execute")
 				.build()

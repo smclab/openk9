@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  youtube-parser:
-    image: youtube-parser:latest
-    container_name: youtube-parser
+  youtube-connector:
+    image: youtube-connector:latest
+    container_name: youtube-connector
     environment:
       INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
     ports:

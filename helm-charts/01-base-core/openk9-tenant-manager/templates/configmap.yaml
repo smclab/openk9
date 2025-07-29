@@ -43,7 +43,6 @@ data:
   #QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloakURL" . | quote }}
   QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloak_svcURL" . | quote }}
   QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: {{ .Values.keycloak.username | quote }}
-  QUARKUS_LOG_LEVEL: info
   OPENK9_TENANT_MANAGER_CREATE_TENANT_TIMEOUT: {{ .Values.timeoutDb.CreateTenantTimeout | quote }}
 
   # JVM Memory variable
@@ -61,4 +60,8 @@ data:
     OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_LOCK_TABLE_NAME : {{ .Values.liquibase.changeLogLockTable | quote }}
     OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_TABLE_NAME : {{ .Values.liquibase.changeLogTable | quote }}
   {{- end }}
+
+
+  QUARKUS_GRPC_CLIENTS__APPMANAGER__HOST: {{ include "helper.k8sClientURL" . | quote }}
+  QUARKUS_GRPC_CLIENTS__DATASOURCE__HOST: {{ include "helper.datasourceURL" . | quote }}
 

@@ -17,8 +17,9 @@
 
 package io.openk9.tenantmanager.model;
 
-import io.openk9.common.graphql.util.relay.GraphqlId;
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.time.OffsetDateTime;
+import java.util.Objects;
+import java.util.UUID;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,6 +29,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+
+import io.openk9.common.graphql.util.relay.GraphqlId;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,10 +45,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
-
-import java.time.OffsetDateTime;
-import java.util.Objects;
-import java.util.UUID;
 
 @Entity
 @Table(name = "background_process")
@@ -72,11 +73,13 @@ public class BackgroundProcess implements GraphqlId {
 	@Setter(AccessLevel.NONE)
 	@Column(name = "create_date")
 	@CreationTimestamp
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime createDate;
 
 	@Setter(AccessLevel.NONE)
 	@Column(name = "modified_date")
 	@UpdateTimestamp
+	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime modifiedDate;
 
 	@Enumerated(EnumType.STRING)

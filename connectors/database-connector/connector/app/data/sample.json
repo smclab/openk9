@@ -1,1 +1,14 @@
-{}
+{
+   "parsingDate":1705326198961,
+   "datasourceId":"1",
+   "contentId":3062252989527342,
+   "rawContent": "mysql username my_database table_name key_1 key_2 key_3",
+   "datasourcePayload":{
+   },
+   "resources":{
+      "binaries":[
+
+      ]
+   },
+   "scheduleId":"1"
+}

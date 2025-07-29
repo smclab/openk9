@@ -24,8 +24,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 
 	crawled_ids = []
 
-	def __init__(self, ingestion_url, body_tag, title_tag, allowed_domains, excluded_paths,
-				 allowed_paths, max_length, document_file_extensions, specific_tags, additional_metadata,
+	def __init__(self, ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
+				 allowed_paths, max_length, document_file_extensions, custom_metadata, additional_metadata,
 				 do_extract_docs, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
@@ -34,6 +34,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.ingestion_url = ingestion_url
 
 		self.body_tag = body_tag
+		self.excluded_bodyTags = excluded_bodyTags
 		self.title_tag = title_tag
 
 		self.allowed_domains = ast.literal_eval(allowed_domains)
@@ -41,7 +42,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.allowed_paths = ast.literal_eval(allowed_paths)
 		self.max_length = int(max_length)
 		self.document_file_extensions = ast.literal_eval(document_file_extensions)
-		self.specific_tags = ast.literal_eval(specific_tags)
+		self.custom_metadata = ast.literal_eval(custom_metadata)
 		self.additional_metadata = ast.literal_eval(additional_metadata)
 
 		self.timestamp = timestamp
@@ -83,10 +84,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		if href.startswith(('http://', 'https://')):
 			document_url = href
 			parsed_url = urlparse(document_url)
-			domain = parsed_url.netloc
+			domain = parsed_url.hostname
 		elif href.startswith('/'):
 			parsed_url = urlparse(url_request)
-			domain = parsed_url.netloc
+			domain = parsed_url.hostname
 			http_s_domain = parsed_url.scheme + "://" + domain
 			href = http_s_domain + href
 			document_url = href
@@ -98,7 +99,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			return
 
 		if not document_url:
-			logger.warning(f"Document Url: Could not parse document with href: {href}, extracted url: {document_url}")
+			logger.warning(f"scrapy: Could not parse document with href: {href}, extracted url: {document_url}")
 			return
 
 		response = requests.get(document_url, headers=headers, allow_redirects=True, timeout=5)
@@ -108,7 +109,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			return
 
 		document_mime_type = response.headers.get('Content-Type')
-		document_file_name = re.findall('filename=(.+)', response.headers.get('Content-Disposition'))[0]
+		try:
+			document_file_name = re.findall('filename=(.+)', response.headers.get('Content-Disposition'))[0]
+		except Exception as e:
+			document_file_name = None
 		document_content = response.content
 
 		file_item = FileItem()
@@ -118,7 +122,10 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		document_item = DocumentItem()
 		document_item['url'] = document_url
 		document_item['mimeType'] = document_mime_type
-		document_item['extension'] = extension_from_mimetype(document_mime_type)
+		try:
+			document_item['extension'] = extension_from_mimetype(document_mime_type)
+		except Exception as e:
+			document_item['extension'] = None
 
 		datasource_payload = {
 			"file": dict(file_item),

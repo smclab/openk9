@@ -215,7 +215,7 @@ public class SearcherGrpcTest {
 				Assertions.assertEquals(LLM_API_URL, response.getApiUrl());
 				Assertions.assertEquals(STRUCT_JSON_CONFIG_SHORT, response.getJsonConfig());
 				Assertions.assertEquals(
-					Bucket.RetrieveType.MATCH.name(), response.getRetrieveType());
+					Bucket.RetrieveType.TEXT.name(), response.getRetrieveType());
 				Assertions.assertEquals(PROVIDER, response.getProviderModel().getProvider());
 				Assertions.assertEquals(MODEL, response.getProviderModel().getModel());
 				Assertions.assertEquals(CONTEXT_WINDOW_VALUE, response.getContextWindow());
@@ -318,7 +318,7 @@ public class SearcherGrpcTest {
 						.refreshOnTab(false)
 						.refreshOnDate(false)
 						.refreshOnQuery(false)
-						.retrieveType(Bucket.RetrieveType.MATCH)
+						.retrieveType(Bucket.RetrieveType.TEXT)
 						.build()
 				)
 				.flatMap(bucketTwo ->
@@ -440,7 +440,7 @@ public class SearcherGrpcTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(

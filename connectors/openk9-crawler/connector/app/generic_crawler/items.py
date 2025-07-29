@@ -28,6 +28,7 @@ class BinaryItem(scrapy.Item):
 class DocumentItem(scrapy.Item):
     url = scrapy.Field()
     mimeType = scrapy.Field()
+    extension = scrapy.Field()
 
 
 class Payload(scrapy.Item):

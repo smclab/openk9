@@ -8,7 +8,7 @@
         "size": 4,
         "required": true,
         "values": [],
-        "info": "",
+        "info": "Imap email server to connect",
         "placeholder": "string",
         "validator": {
           "min": 0,
@@ -23,14 +23,32 @@
         "type": "text",
         "size": 4,
         "required": true,
-        "values": [],
-        "info": "",
+        "values": [
+                    {
+            "value": "993",
+            "isDefault": true
+          }
+        ],
+        "info": "Imap email server port. Default is 993",
         "placeholder": "string",
         "validator": {
-          "min": 0,
-          "max": 100,
           "regex": "/[[:alnum:]]+/"
         }
+      },
+      {
+        "label": "Use Ssl",
+        "name": "useSsl",
+        "field": "useSsl",
+        "type": "checkbox",
+        "size": 1,
+        "required": true,
+        "values": [
+          {
+            "value": true,
+            "isDefault": true
+          }
+        ],
+        "info": "If use ssl"
       },
       {
         "label": "Username",
@@ -43,8 +61,6 @@
         ],
         "info": "",
         "validator": {
-          "min": 0,
-          "max": 100,
           "regex": "/[[:alnum:]]+/"
         }
       },
@@ -52,15 +68,13 @@
         "label": "Password",
         "name": "password",
         "field": "password",
-        "type": "text",
+        "type": "password",
         "size": 4,
         "required": true,
         "values": [
         ],
         "info": "",
         "validator": {
-          "min": 0,
-          "max": 100,
           "regex": "/[[:alnum:]]+/"
         }
       },
@@ -75,8 +89,6 @@
         ],
         "info": "",
         "validator": {
-          "min": 0,
-          "max": 100,
           "regex": "/[[:alnum:]]+/"
         }
       },
@@ -89,17 +101,11 @@
         "required": true,
         "values": [
           {
-            "value": "false",
-            "label": "false",
+            "value": false,
             "isDefault": true
           }
         ],
-        "info": "",
-        "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
-        }
+        "info": "If index access control lists"
       },
       {
         "label": "Get Attachments",
@@ -110,17 +116,11 @@
         "required": true,
         "values": [
           {
-            "value": "false",
-            "label": "false",
+            "value": false,
             "isDefault": true
           }
         ],
-        "info": "",
-        "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
-        }
+        "info": "If index attachments"
       }
     ]
 }

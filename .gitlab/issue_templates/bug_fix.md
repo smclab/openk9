@@ -21,6 +21,11 @@ in a more recent version)
 
 (What you should see instead)
 
+## Test cases
+
+In this section, we can list the test cases (precise test cases
+) to validate the correct functioning of the bug fix.
+
 ## Relevant logs and/or screenshots
 
 (Paste any relevant logs - use code blocks (```) to format console output, logs, and code, as

@@ -17,6 +17,12 @@
 
 package io.openk9.k8s.crd;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import io.openk9.common.util.StringUtils;
+
 import io.argoproj.v1alpha1.Application;
 import io.argoproj.v1alpha1.ApplicationSpec;
 import io.argoproj.v1alpha1.applicationspec.Destination;
@@ -26,12 +32,6 @@ import io.argoproj.v1alpha1.applicationspec.source.Helm;
 import io.argoproj.v1alpha1.applicationspec.source.helm.ValuesObject;
 import io.argoproj.v1alpha1.applicationspec.syncpolicy.Automated;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.openk9.common.util.StringUtils;
-import lombok.NonNull;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class ArgoCDManifest {
 
@@ -94,7 +94,7 @@ public class ArgoCDManifest {
 
 	private static String getProject(Manifest manifest) {
 		var namespace = manifest.targetNamespace();
-		var nsRegex = Pattern.compile("^(?:open)?k9-(?<id>[A-Za-z0-9]+)$");
+		var nsRegex = Pattern.compile("^(?:open)?k9-(?<id>[A-Za-z0-9\\-_]+)$");
 		var matcher = nsRegex.matcher(namespace);
 
 		if (matcher.find()) {

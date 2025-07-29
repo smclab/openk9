@@ -30,7 +30,6 @@ import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.dto.base.SortingDTO;
 import io.openk9.datasource.model.dto.base.TranslationDTO;
 import io.openk9.datasource.model.dto.base.TranslationKeyDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;

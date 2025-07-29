@@ -95,9 +95,10 @@ venv/
 */*/*/*.swp
 
 # grpc
-app/grpc/datasource/datasource_pb2_grpc.py
-app/grpc/datasource/datasource_pb2.py
-app/grpc/searcher/searcher_pb2_grpc.py
-app/grpc/searcher/searcher_pb2.py
+app/external_services/grpc/searcher/searcher_pb2_grpc.py
+app/external_services/grpc/searcher/searcher_pb2.py
+app/external_services/grpc/tenant_manager/tenant_manager_pb2_grpc.py
+app/external_services/grpc/tenant_manager/tenant_manager_pb2.py
+
 
 application_default_credentials.json

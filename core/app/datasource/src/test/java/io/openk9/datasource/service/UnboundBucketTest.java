@@ -414,7 +414,7 @@ public class UnboundBucketTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(
@@ -432,7 +432,7 @@ public class UnboundBucketTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(
@@ -450,7 +450,7 @@ public class UnboundBucketTest {
 			.refreshOnTab(false)
 			.refreshOnDate(false)
 			.refreshOnQuery(false)
-			.retrieveType(Bucket.RetrieveType.MATCH)
+			.retrieveType(Bucket.RetrieveType.TEXT)
 			.build();
 
 		sessionFactory.withTransaction(

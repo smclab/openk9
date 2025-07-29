@@ -23,7 +23,6 @@ import io.openk9.datasource.mapper.TokenFilterMapper;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.TokenFilter_;
 import io.openk9.datasource.model.dto.base.TokenFilterDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 @ApplicationScoped
 public class TokenFilterService extends BaseK9EntityService<TokenFilter, TokenFilterDTO> {

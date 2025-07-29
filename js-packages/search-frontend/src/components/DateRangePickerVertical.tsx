@@ -56,7 +56,7 @@ export function DataRangePickerVertical({
       startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     }
     if (endDate) {
-      endDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
+      endDate.set({ hour: 23, minute: 59, second: 59, millisecond: 59 });
     }
     onChange({
       startDate: startDate?._d || undefined,

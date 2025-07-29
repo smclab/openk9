@@ -1,0 +1,28 @@
+{
+   "parsingDate":1705326198961,
+   "datasourceId":"1",
+   "contentId":3062252989527342,
+   "rawContent":"Video title A video description",
+   "datasourcePayload":{
+      "file":{
+         "name":"metadata.object_name",
+         "contentType":"metadata.content_type",
+         "size":"metadata.size",
+         "type":"file_type"
+      },
+      "document":{
+         "title":"title"
+      }
+   },
+   "resources":{
+      "binaries":[
+         {
+            "id":102103123,
+            "name":"Video title",
+            "contentType":"audio/mp4",
+            "data":"<base64-string>"
+         }
+      ]
+   },
+   "scheduleId":"1"
+}

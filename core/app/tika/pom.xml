@@ -23,29 +23,79 @@
 		<version>3.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
-
-	<name>OpenK9 :: App :: Tika</name>
-
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.openk9.app.tika</groupId>
-	<artifactId>tika</artifactId>
-	<packaging>pom</packaging>
-	<modules>
-		<module>tika-common</module>
-		<module>tika-ocr</module>
-		<module>tika-no-ocr</module>
-	</modules>
+	<name>OpenK9 :: App :: Enrich Items :: Content Analysis</name>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>io.openk9.app.tika</groupId>
-				<artifactId>tika-common</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+	<artifactId>tika</artifactId>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>io.smallrye</groupId>
+				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>io.quarkus</groupId>
+				<artifactId>quarkus-maven-plugin</artifactId>
+				<version>${quarkus-plugin.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-mutiny</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkiverse.tika</groupId>
+			<artifactId>quarkus-tika</artifactId>
+			<version>2.0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-smallrye-openapi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-rest-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-rest-client-jackson</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+
+		<!-- Jsoup Dependency -->
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.15.3</version>
+		</dependency>
+	</dependencies>
 
 
 </project>

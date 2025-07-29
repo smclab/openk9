@@ -28,7 +28,6 @@ import io.openk9.datasource.mapper.DocTypeTemplateMapper;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.DocTypeTemplate_;
 import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.FlushMode;

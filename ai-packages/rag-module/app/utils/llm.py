@@ -1,5 +1,21 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 import json
-import logging
 import os
 from enum import Enum
 from typing import List
@@ -18,6 +34,10 @@ from langchain_openai import ChatOpenAI
 from opensearchpy import OpenSearch
 from pydantic import BaseModel, Field
 
+from app.external_services.grpc.grpc_client import (
+    get_llm_configuration,
+    get_rag_configuration,
+)
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retriever import OpenSearchRetriever
 from app.utils.chat_history import (
@@ -25,17 +45,10 @@ from app.utils.chat_history import (
     get_chat_history_from_frontend,
     save_chat_message,
 )
-
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+from app.utils.logger import logger
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
-
-logging.basicConfig(
-    level=LOGGING_LEVEL, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
 
 
 class ModelType(Enum):
@@ -86,6 +99,22 @@ def save_google_application_credentials(credentials):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file_path
 
 
+def get_configurations(
+    rag_type,
+    grpc_host,
+    virtual_host,
+):
+    rag_configuration = get_rag_configuration(grpc_host, virtual_host, rag_type)
+    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+
+    configurations = {
+        "rag_configuration": rag_configuration,
+        "llm_configuration": llm_configuration,
+    }
+
+    return configurations
+
+
 def initialize_language_model(configuration):
     """
     Initialize and return a language model based on the specified model type
@@ -107,9 +136,9 @@ def initialize_language_model(configuration):
                 'IBM_WATSONX', 'CHAT_VERTEX_AI').
             - "model": str
                 Name of the model to use; defaults to DEFAULT_MODEL if not provided.
-            - "prompt": str
+            - "prompt_template": str
                 The initial prompt to be used with the model.
-            - "rephrase_prompt": str
+            - "rephrase_prompt_template": str
                 A prompt for rephrasing tasks, if applicable.
             - "context_window": int
                 Size of the context window for the model's input.
@@ -476,8 +505,9 @@ def stream_rag_conversation(
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
     ):
-        citations_chain = qa_prompt | llm.with_structured_output(Citations)
-
+        citations_chain = qa_prompt | llm.with_structured_output(
+            schema=Citations, include_raw=True, method="function_calling"
+        )
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
             history_factory,
@@ -522,6 +552,8 @@ def stream_rag_conversation(
     documents_id = set()
     citations = []
     conversation_title = ""
+    citations_response = []
+    parsing_error = ""
 
     for chunk in result:
         if chunk and "answer" in chunk.keys() and result_answer == "":
@@ -544,12 +576,19 @@ def stream_rag_conversation(
             and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
             and "annotations" in chunk.keys()
         ):
-            citations = chunk
+            citations_response.append(chunk["annotations"])
+
+    for element in citations_response:
+        if "parsing_error" in element:
+            parsing_error = element["parsing_error"]
+        elif "parsed" in element:
+            citations = element["parsed"]
 
     all_citations = (
-        citations.get("annotations").dict()["citations"]
+        citations.dict()["citations"]
         if citations
         and retrieve_citations
+        and parsing_error is None
         and model_type != ModelType.HUGGING_FACE_CUSTOM.value
         and model_type != ModelType.CHAT_VERTEX_AI_MODEL_GARDEN.value
         else []

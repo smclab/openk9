@@ -1,0 +1,82 @@
+{
+  "fields": [
+    {
+      "label": "Host",
+      "name": "host",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Host of Minio server",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Port",
+      "name": "port",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Port of Minio server",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Access Key",
+      "name": "accessKey",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Access Key for Minio server",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Secret Key",
+      "name": "secretKey",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Secret Key for Minio server",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Bucket Name",
+      "name": "bucketName",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Bucket where extracts files",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+        {
+      "label": "Prefix",
+      "name": "prefix",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "minio",
+      "info": "Prefix of folder in the bucket",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    }
+  ]
+}

@@ -89,7 +89,6 @@ quarkus:
 ## Tika configuration
 tika:
   characterLength: 10
-  ocrEnabled: false
   poolSize: 4
 
 ## Http limit max size

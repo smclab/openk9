@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.Collection;
 
@@ -29,6 +30,8 @@ import java.util.Collection;
 @NoArgsConstructor
 @AllArgsConstructor(staticName = "of")
 public class SuggestionsResponse {
+	@Schema(description = "List of results")
 	private Collection<Object> result;
+	@Schema(description = "After key used for pagination in suggestions endpoint")
 	private String afterKey;
 }

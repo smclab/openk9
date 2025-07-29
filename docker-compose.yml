@@ -1,7 +1,7 @@
 version: "3.5"
 services:
   rabbitmq:
-    image: rabbitmq:3.11-management
+    image: rabbitmq:4.1.0-management
     container_name: rabbitmq
     hostname: rabbitmq
     environment:
@@ -10,27 +10,38 @@ services:
     ports:
       - 5672:5672
       - 15672:15672
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/15672' || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 5
   opensearch:
-    image: docker.io/opensearchproject/opensearch:2.13.0
+    image: docker.io/opensearchproject/opensearch:2.19.1
     container_name: opensearch
     hostname: opensearch
     environment:
       - node.name=opensearch
-      - cluster.name=docker-cluster
-      - cluster.initial_master_nodes=opensearch
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=PsFFF776Ian4
+      - plugins.security.disabled=true
+      - discovery.type=single-node
       # TODO: verify how to set credentials
     ports:
       - "9200:9200"
+    healthcheck:
+      test: "curl -f http://localhost:9200"
+      interval: 10s
+      timeout: 10s
+      retries: 5
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - ./opensearch/data:/var/lib/opensearch/data
+    - opensearch-data:/usr/share/opensearch/data
   postgresql:
-    image: postgres:latest
+    image: postgres:16
     hostname: postgresql
     environment:
       - POSTGRES_MULTIPLE_DATABASES=openk9,tenantmanager,keycloak
@@ -38,17 +49,35 @@ services:
       - POSTGRES_USER=postgres
       - OPENK9_USER=openk9
       - OPENK9_PASSWORD=openk9
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/5432' || exit "
+      interval: 10s
+      timeout: 10s
+      retries: 5
     volumes:
-      - ./postgres/db-data:/var/lib/postgresql/data
       - ./compose-utilities:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    volumes:
+      - minio-data:/data
   adminer:
     image: adminer
     restart: always
     ports:
       - 5050:8080
   keycloak:
-    image: bitnami/keycloak:20.0.5-debian-11-r4
-    hostname: keycloak.openk9.local
+    image: bitnami/keycloak:26.1.3-debian-12-r0
+    hostname: keycloak.openk9.localhost
     environment:
       KEYCLOAK_CREATE_ADMIN_USER: 'true'
       KEYCLOAK_ADMIN_USER: user
@@ -57,35 +86,29 @@ services:
       KEYCLOAK_DATABASE_HOST: postgresql
       KEYCLOAK_DATABASE_PORT: 5432
       KEYCLOAK_DATABASE_NAME: keycloak
-      KEYCLOAK_DATABASE_USER: openk9
+      KEYCLOAK_DATABASE_USER: postgres
       KEYCLOAK_DATABASE_SCHEMA: public
       KEYCLOAK_DATABASE_PASSWORD: openk9
       KEYCLOAK_HTTP_PORT: 8081
+    healthcheck:
+      test: "curl -f http://localhost:8081"
+      interval: 10s
+      timeout: 10s
+      retries: 5
     ports:
       - 8081:8081
     depends_on:
-      - postgresql
+      postgresql:
+        condition: service_healthy
     networks:
       default:
         aliases:
-          - keycloak.openk9.local
-  neo4j:
-    image: neo4j:4.4.8-enterprise
-    container_name: neo4j
-    hostname: neo4j
-    environment:
-      - NEO4J_AUTH=neo4j/openk9
-      - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
-    volumes:
-      - ./neo4j/data:/data
-    ports:
-      - '7474:7474'
-      - '7687:7687'
+          - keycloak.openk9.localhost
   tenant-manager:
-    image: smclab/openk9-tenant-manager:1.6.0
+    image: smclab/openk9-tenant-manager:3.0.0-SNAPSHOT
     hostname: openk9-tenant-manager
     environment:
-      QUARKUS_DATASOURCE_USERNAME: 'openk9'
+      QUARKUS_DATASOURCE_USERNAME: 'postgres'
       QUARKUS_DATASOURCE_PASSWORD: 'openk9'
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/tenantmanager'
       OPENK9_DATASOURCE_URL: 'postgresql://postgresql/openk9'
@@ -94,71 +117,77 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS: 'true'
+      QUARKUS_HTTP_CORS_ORIGINS : /.*/
+      QUARKUS_LOG_LEVEL: 'INFO'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
-      QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.local:8081'
-      QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.local:8081/realms/tenant-manager'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.localhost:8081'
+      QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.localhost:8081/realms/tenant-manager'
       QUARKUS_OIDC_CLIENT_ID: 'tenant-manager'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
     ports:
       - 8186:8080
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api-tenant-manager.entrypoints=web"
-      - "traefik.http.routers.api-tenant-manager.rule=PathPrefix(`/api/tenant-manager`)"
-      - "traefik.http.middlewares.api-tenant-manager_compress.compress=true"
-      - "traefik.http.routers.api-tenant-manager.middlewares=api-tenant-manager-strip@docker,api-tenant-manager_compress@docker"
-      - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
-      - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
-      - "traefik.http.routers.api-tenant-manager.middlewares=api-tenant-manager_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
   datasource:
-    image: smclab/openk9-datasource:1.6.0
-    container_name: datasource
+    image: smclab/openk9-datasource:3.0.0-SNAPSHOT
+    hostname: openk9-datasource
     environment:
-      AKKA_CLUSTER_BOOTSTRAP_SERVICE_NAME: datasource
-      AKKA_CLUSTER_FILE: local
-      IO_OPENK9_SCHEDULING_PURGE_CRON: 0 */10 * ? * *
-      IO_OPENK9_SCHEDULING_PURGE_MAX_AGE: 2d
-      IO_OPENK9_SCHEDULING_TIMEOUT: 100s
+      PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
+      PEKKO_CLUSTER_FILE: 'local'
+      IO_OPENK9_SCHEDULING_PURGE_CRON: '0 */10 * ? * *'
+      IO_OPENK9_SCHEDULING_PURGE_MAX_AGE: '2d'
+      IO_OPENK9_SCHEDULING_TIMEOUT: '100s'
       JAVA_DEBUG: 'true'
-      MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: noop
-      OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.local:8081/realms/{realm}
+      MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: 'noop'
+      OPENK9_AUTHSERVERURL_TEMPLATE: 'http://keycloak.openk9.localhost:8081/realms/{realm}'
       OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'true'
-      OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
-      QUARKUS_DATASOURCE_PASSWORD: openk9
-      QUARKUS_DATASOURCE_REACTIVE_URL: postgresql://postgresql/openk9
-      QUARKUS_DATASOURCE_USERNAME: openk9
-      QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
-      QUARKUS_OPENSEARCH_PASSWORD: admin
-      QUARKUS_OPENSEARCH_USERNAME: admin
-      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
+      QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+      QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'
+      QUARKUS_DATASOURCE_USERNAME: 'postgres'
+      QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
+      QUARKUS_OPENSEARCH_PASSWORD: 'admin'
+      QUARKUS_OPENSEARCH_USERNAME: 'admin'
+      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'tenant-manager'
       QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
       QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS: 'true'
-      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: 20480K
-      QUARKUS_LOG_LEVEL: INFO
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.local:8081/realms/master
-      QUARKUS_OIDC_CLIENT_ID: openk9
-      QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.local:8081
+      QUARKUS_HTTP_CORS_ORIGINS : '/.*/'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      QUARKUS_LOG_LEVEL: 'INFO'
+      QUARKUS_OIDC_AUTH_SERVER_URL: 'http://keycloak.openk9.localhost:8081/realms/master'
+      QUARKUS_OIDC_CLIENT_ID: 'openk9'
+      QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: 'http://keycloak.openk9.localhost:8081'
       QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'true'
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PASSWORD: openk9
+      RABBITMQ_HOST: 'rabbitmq'
+      RABBITMQ_PASSWORD: 'openk9'
       RABBITMQ_PORT: '5672'
-      RABBITMQ_USERNAME: openk9
+      RABBITMQ_USERNAME: 'openk9'
+      QUARKUS_HTTP_PROXY_PROXY_ADDRESS_FORWARDING: 'true'
+      QUARKUS_HTTP_PROXY_ALLOW_X_FORWARDED: 'true'
+      QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_HOST: 'true'
+      QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_PREFIX: 'true'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
     ports:
       - 8185:8080
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api-datasource.entrypoints=web"
-      - "traefik.http.routers.api-datasource.rule=PathPrefix(`/api/datasource`)"
-      - "traefik.http.middlewares.api-datasource_compress.compress=true"
-      - "traefik.http.routers.api-datasource.middlewares=api-datasource-strip@docker,api-datasource_compress@docker"
-      - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
-      - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
-      - "traefik.http.routers.api-datasource.middlewares=api-datasource_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
   ingestion:
-    image: smclab/openk9-ingestion:1.6.0
+    image: smclab/openk9-ingestion:3.0.0-SNAPSHOT
     container_name: ingestion
     environment:
       RABBITMQ_HOST: 'rabbitmq'
@@ -168,101 +197,108 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
-      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://openk9-file-manager:8080
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://file-manager:8080
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
     ports:
       - 8187:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
   searcher:
-    image: smclab/openk9-searcher:1.5.0
+    image: smclab/openk9-searcher:3.0.0-SNAPSHOT
     container_name: searcher
     environment:
-      OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.local:8081/realms/{realm}
-      OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
+      OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.localhost:8081/realms/{realm}
       QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
-      QUARKUS_OPENSEARCH_USERNAME: admin
-      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: openk9-datasource
-      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: openk9-tenant-manager
-      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.local:8081/realms/master
+      QUARKUS_OPENSEARCH_USERNAME: elastic
+      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: 'datasource'
+      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'tenant-manager'
+      QUARKUS_OIDC_AUTH_SERVER_URL: http://keycloak.openk9.localhost:8081/realms/master
       QUARKUS_OIDC_CLIENT_ID: openk9
-      QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.local:8081
+      QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: http://keycloak.openk9.localhost:8081
+      QUARKUS_HTTP_PROXY_PROXY_ADDRESS_FORWARDING: 'true'
+      QUARKUS_HTTP_PROXY_ALLOW_X_FORWARDED: 'true'
+      QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_HOST: 'true'
+      QUARKUS_HTTP_PROXY_ENABLE_FORWARDED_PREFIX: 'true'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
     ports:
       - 8188:8080
-  entity-manager:
-    image: smclab/openk9-entity-manager:1.6.0
-    container_name: entity-manager
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+  file-manager:
+    image: smclab/openk9-file-manager:3.0.0-SNAPSHOT
+    container_name: file-manager
     environment:
-      RABBITMQ_HOST: 'rabbitmq'
-      RABBITMQ_PASSWORD: 'openk9'
-      RABBITMQ_USERNAME: 'openk9'
-      RABBITMQ_PORT: '5672'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
-      QUARKUS_OPENSEARCH_USERNAME: admin
-      QUARKUS_OPENSEARCH_PASSWORD: admin
-      OPENK9_ENTITY_UNIQUE_ENTITIES: 'date,organization,loc,email,document,bank,person'
-      OPENK9_ENTITY_MIN_HOPS: '1'
-      OPENK9_ENTITY_MAX_HOPS: '2'
-      OPENK9_ENTITY_SCORE_THRESHOLD: '0.8'
-      HZ_NETWORK_JOIN_KUBERNETES_NAMESPACE: 'k9-develop'
-      HZ_NETWORK_JOIN_KUBERNETES_ENABLED: 'false'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      QUARKUS_MINIO_ACCESS_KEY: 'minio'
+      QUARKUS_MINIO_SECRET_KEY: 'minio123'
+      QUARKUS_MINIO_URL: 'http://minio:9000'
+      QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'datasource'
+  tika:
+    image: smclab/openk9-tika:3.0.0-SNAPSHOT
+    container_name: tika
+    environment:
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      OPENK9_TIKA_OCR_CHARACTER_LENGTH: '10'
+      OPENK9_TIKA_OCR_ENABLED: 'true'
+      OPENK9_TIKA_POOL_SIZE: '1'
+      QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://datasource:8080'
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://file-manager:8080'
+  web-parser:
+    image: smclab/openk9-web-parser:3.0.0-SNAPSHOT
+    container_name: web-parser
     ports:
-      - 8189:8080
-  #    web-parser:
-  #        image: smclab/openk9-web-parser:latest
-  #        container_name: web-parser
-  #        environment:
-  #            INGESTION_URL: " http://ingestion:8080/v1/ingestion/"
-  #            DELETE_URL: "http://ingestion:8080/v1/ingestion/"
-  #        ports:
-  #            - "5008:80"
-  #            - "6800:6800"
+      - "5001:5000"
+      - "6800:6800"
+  rag-module:
+    image: smclab/openk9-rag-module:3.0.0-SNAPSHOT
+    container_name: rag-module
+    environment:
+      ORIGINS: '*'
+      OPENSEARCH_USERNAME: 'opensearch'
+      OPENSEARCH_HOST: 'opensearch:9200'
+      GRPC_DATASOURCE_HOST : 'datasource:9000'
+      GRPC_TENANT_MANAGER_HOST : 'tenant-manager:9000'
+      KEYCLOAK_URL : 'http://keycloak.openk9.localhost:8081'
+  embedding-module:
+    image: smclab/openk9-embedding-module-base:3.0.0-SNAPSHOT
+    container_name: embedding-module
+    environment:
+      ORIGINS: '*'
   search-frontend:
-    image: smclab/openk9-search-frontend:1.6.0
+    image: smclab/openk9-search-frontend:3.0.0-SNAPSHOT
     container_name: search-frontend
     ports:
-      - "8080:80"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.entrypoints=web"
-      - "traefik.http.services.api-aggregator-docker.loadbalancer.server.port=8080"
-      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
-  search-admin:
-    image: smclab/openk9-admin-ui:1.6.0
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.admin-ui.entrypoints=web"
-      - "traefik.http.routers.admin-ui.rule=PathPrefix(`/admin`)"
-      - "traefik.http.middlewares.admin-ui_compress.compress=true"
-      - "traefik.http.routers.admin-ui.middlewares=admin-ui_compress@docker"
-      - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
-      - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
-      - "traefik.http.routers.admin-ui.middlewares=admin-ui_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
-      - "traefik.http.services.admin-ui.loadbalancer.server.port=8080"
-  tenant-admin:
-    image: smclab/openk9-tenant-ui:1.6.0
-    hostname: tenant-admin
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.tenant-admin.entrypoints=web"
-      - "traefik.http.routers.tenant-admin.rule=PathPrefix(`/tenant`)"
-      - "traefik.http.middlewares.tenant-admin_compress.compress=true"
-      - "traefik.http.routers.tenant-admin.middlewares=tenant-admin_compress@docker"
-      - "traefik.http.middlewares.openk9-host.headers.customrequestheaders.Host=demo.openk9.local"
-      - "traefik.http.middlewares.openk9-forwarded-host.headers.customrequestheaders.X-Forwarded-Host=demo.openk9.local"
-      - "traefik.http.routers.tenant-admin.middlewares=tenant-admin_compress@docker,openk9-forwarded-host@docker,openk9-host@docker"
-      - "traefik.http.services.admin.loadbalancer.server.port=8080"
+      - "8084:80"
+  talk-to:
+    image: smclab/openk9-talk-to:3.0.0-SNAPSHOT
+    container_name: talk-to
     ports:
-      - '8183:8080'
-  reverse-proxy:
-    image: traefik:v2.3
-    command: --api.insecure=true --providers.docker --providers.docker.exposedbydefault=false --entrypoints.web.address=:80
-    networks:
-      default:
-        aliases:
-          - demo.openk9.local
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - "8085:80"
+  admin-ui:
+    image: smclab/openk9-admin-ui:3.0.0-SNAPSHOT
     ports:
-      - '8888:80'
-      - '8182:8080'
+      - "8082:80"
+  gateway:
+      image: smclab/openk9-gateway:3.0.0-SNAPSHOT
+      hostname: gateway
+      ports:
+          - '80:8080'
 
+volumes:
+  opensearch-data: 
+  postgres-data:
+  minio-data:

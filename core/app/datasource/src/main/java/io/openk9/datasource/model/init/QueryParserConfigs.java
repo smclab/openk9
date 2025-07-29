@@ -17,9 +17,6 @@
 
 package io.openk9.datasource.model.init;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
@@ -27,6 +24,9 @@ import io.openk9.datasource.model.form.FieldValue;
 import io.openk9.datasource.model.form.FormField;
 import io.openk9.datasource.model.form.FormFieldType;
 import io.openk9.datasource.model.form.FormTemplate;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * Configuration registry for query parser types and their associated DTOs and form templates.
@@ -115,6 +115,7 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("allFieldsWhenKeywordIsEmpty")
+				.label("All Fields When Keyword Is Empty")
 				.value(FieldValue.builder()
 					.value("true")
 					.build()
@@ -147,6 +148,7 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("scale")
+				.label("Scale")
 				.value(FieldValue.builder()
 					.value("3650d")
 					.build()
@@ -156,8 +158,9 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("boost")
+				.label("Boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(0.1)
 					.build())
 				.type(FormFieldType.NUMBER)
 				.build())
@@ -171,7 +174,7 @@ public class QueryParserConfigs {
 		private static final String TYPE = "ENTITY";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
+				"boost": 50.0,
 				"queryCondition": "SHOULD",
 				"manageEntityName": "true"
 			}
@@ -187,23 +190,26 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("boost")
-				.value(FieldValue.builder().value(50).build())
+				.label("Boost")
+				.value(FieldValue.builder().value(50f).build())
 				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.field(FormField.builder()
 				.name("queryCondition")
+				.label("Query Condition")
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.isDefault(true)
 					.build())
-				.value(FieldValue.builder().value("MUST").build())
+				.value(FieldValue.builder().value("SHOULD").build())
 				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
 				.name("manageEntityName")
-				.value(FieldValue.builder().value("true").build())
+				.label("Manage Entity Name")
+				.value(FieldValue.builder().value(true).build())
 				.type(FormFieldType.CHECKBOX)
 				.build()
 			)
@@ -217,10 +223,12 @@ public class QueryParserConfigs {
 		private static final String TYPE = "FILTER";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
-				"valuesQueryType": "MUST",
+				"boost": 1.0,
+				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
-				"fuzziness": "ZERO"
+				"fuzziness": "ZERO",
+				"multiMatchType": "MOST_FIELDS",
+				"tieBreaker": 0.0
 			}
 			""";
 
@@ -234,8 +242,9 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("boost")
+				.label("Boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -243,13 +252,14 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("valuesQueryType")
+				.label("Values Query Type")
 				.value(FieldValue.builder()
-					.value("MUST")
+					.value("SHOULD")
 					.isDefault(true)
 					.build()
 				)
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.build()
 				)
 				.type(FormFieldType.SELECT)
@@ -257,6 +267,7 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("globalQueryType")
+				.label("Global Query Type")
 				.value(FieldValue.builder()
 					.value("MUST")
 					.isDefault(true)
@@ -271,6 +282,7 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("fuzziness")
+				.label("Fuzziness")
 				.value(FieldValue.builder()
 					.value("ZERO")
 					.isDefault(true)
@@ -301,7 +313,9 @@ public class QueryParserConfigs {
 		private static final String TYPE = QueryParserType.HYBRID.name();
 		private static final String JSON_CONFIG = """
 			{
-				"kNeighbors": 2
+				"kNeighbors": 2,
+				"boost": 1.0,
+				"fuzziness": "ZERO"
 			}
 			""";
 
@@ -315,6 +329,7 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("kNeighbors")
+				.label("K Neighbors")
 				.value(FieldValue.builder()
 					.value(2)
 					.build())
@@ -323,8 +338,9 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("boost")
+				.label("Boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -332,6 +348,7 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("fuzziness")
+				.label("Fuzziness")
 				.value(FieldValue.builder()
 					.value("ZERO")
 					.isDefault(true)
@@ -376,6 +393,7 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("kNeighbors")
+				.label("K Neighbors")
 				.value(FieldValue.builder().value(2).build())
 				.type(FormFieldType.NUMBER)
 				.build()
@@ -389,10 +407,12 @@ public class QueryParserConfigs {
 		private static final String TYPE = "TEXT";
 		private static final String JSON_CONFIG = """
 			{
-				"boost": 50,
-				"valuesQueryType": "MUST",
+				"boost": 1.0,
+				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
-				"fuzziness":"ZERO"
+				"fuzziness": "ZERO",
+				"multiMatchType": "MOST_FIELDS",
+				"tieBreaker": 0.0
 			}
 			""";
 
@@ -406,8 +426,9 @@ public class QueryParserConfigs {
 		private static final FormTemplate FORM_TEMPLATE = FormTemplate.builder()
 			.field(FormField.builder()
 				.name("boost")
+				.label("Boost")
 				.value(FieldValue.builder()
-					.value(50)
+					.value(1.0f)
 					.build()
 				)
 				.type(FormFieldType.NUMBER)
@@ -415,13 +436,14 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("valuesQueryType")
+				.label("Values Query Type")
 				.value(FieldValue.builder()
-					.value("MUST")
+					.value("SHOULD")
 					.isDefault(true)
 					.build()
 				)
 				.value(FieldValue.builder()
-					.value("SHOULD")
+					.value("MUST")
 					.build()
 				)
 				.type(FormFieldType.SELECT)
@@ -429,6 +451,7 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("globalQueryType")
+				.label("Global Query Type")
 				.value(FieldValue.builder()
 					.value("MUST")
 					.isDefault(true)
@@ -443,6 +466,7 @@ public class QueryParserConfigs {
 			)
 			.field(FormField.builder()
 				.name("fuzziness")
+				.label("Fuzziness")
 				.value(FieldValue.builder()
 					.value("ZERO")
 					.isDefault(true)

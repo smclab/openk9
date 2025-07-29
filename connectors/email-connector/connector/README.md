@@ -1,6 +1,6 @@
-# Email Parser
+# Email Connector
 
-This is a parser to extract emails from Imap server. Build image of service, run as Docker container and configure appropriate plugin to call it.\
+This is a connector to extract emails from Imap server. Build image of service, run as Docker container and configure appropriate plugin to call it.\
 The container takes via environment variable INGESTION_URL, which must match the url of the Ingestion Api.
 
 ## Build
@@ -8,16 +8,16 @@ The container takes via environment variable INGESTION_URL, which must match the
 To build images of service you can simply run:
 
 ```
-docker build -t email-parser .
+docker build -t email-connector .
 ```
 
-A pre-built image of email parser is present in Smc Docker Hub at following link: https://hub.docker.com/repository/docker/smclab/email-parser.\
+A pre-built image of email connector is present in Smc Docker Hub at following link: https://hub.docker.com/repository/docker/smclab/email-connector.\
 Then add service in main docker-compose file in the following way:
 
 ```
-email-parser:
-    image: smclab/email-parser:latest
-    container_name: email-parser
+email-connector:
+    image: smclab/email-connector:latest
+    container_name: email-connector
     command: gunicorn -w 1 -t 120 -b 0.0.0.0:80 main:app
     ports:
         - "5005:80"
@@ -25,7 +25,7 @@ email-parser:
         INGESTION_URL: <insert here url of Ingestion Api> 
 ```
 
-## Email Parser Api
+## Email Connector Api
 
 The service exposes APIs through Swagger on root url.
 This Rest service exposes two different endpoints:

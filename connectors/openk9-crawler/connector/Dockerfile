@@ -7,17 +7,17 @@ RUN  apt-get update \
     && apt-get install -y dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-COPY ./connector/requirements.txt /requirements.txt
+COPY requirements.txt /requirements.txt
 
 RUN pip3 install -r requirements.txt
 
-ADD ./connector/docker-entrypoint.sh /etc/docker-entrypoint.sh
+ADD docker-entrypoint.sh /etc/docker-entrypoint.sh
 
-COPY ./connector/app /app
+COPY app /app
 
-COPY ./connector/wait_for_scrapyd.sh /app/wait_for_scrapyd.sh
+COPY wait_for_scrapyd.sh /app/wait_for_scrapyd.sh
 
-COPY ./connector/scrapyd.conf /etc/scrapyd/scrapyd.conf
+COPY scrapyd.conf /etc/scrapyd/scrapyd.conf
 
 RUN dos2unix /app/wait_for_scrapyd.sh
 RUN dos2unix /etc/docker-entrypoint.sh
@@ -29,7 +29,12 @@ RUN chmod g+rw /app
 
 WORKDIR /app
 
-RUN mkdir logs
+# Set default cache directory
+ENV TLDEXTRACT_CACHE=/app
+
+# Create cache folder and preload PSL
+RUN mkdir -p /app && \
+    python -c "import tldextract; tldextract.TLDExtract(cache_dir='/app')('http://example.com')"
 
 ENTRYPOINT ["/bin/bash"]
 

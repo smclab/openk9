@@ -108,7 +108,6 @@
       <groupId>io.openk9.common</groupId>
       <artifactId>datasource-model</artifactId>
     </dependency>
-
     <!-- schema migrations // -->
 
     <!-- realm template -->
@@ -130,7 +129,7 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
     </dependency>
-    <!-- standalone // k-->
+	  <!-- standalone // -->
 
     <!-- implements -->
     <dependency>
@@ -194,13 +193,31 @@
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus-plugin.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>build</goal>
-            </goals>
-          </execution>
-        </executions>
+		  <executions>
+			  <!-- default configuration is for postgresql -->
+			  <execution>
+				  <goals>
+					  <goal>build</goal>
+				  </goals>
+			  </execution>
+			  <execution>
+				  <id>oracle</id>
+				  <goals>
+					  <goal>build</goal>
+				  </goals>
+				  <configuration>
+					  <properties>
+						  <quarkus.profile>prod,prod-oracle</quarkus.profile>
+						  <quarkus.package.output-directory>
+							  quarkus-app-oracle
+						  </quarkus.package.output-directory>
+						  <quarkus.container-image.name>
+							  openk9-tenant-manager-oracle
+						  </quarkus.container-image.name>
+					  </properties>
+				  </configuration>
+			  </execution>
+		  </executions>
       </plugin>
     </plugins>
   </build>

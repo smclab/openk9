@@ -29,7 +29,6 @@ import io.openk9.datasource.model.Annotator_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AnnotatorDTO;
 import io.openk9.datasource.model.dto.request.AnnotatorWithDocTypeFieldDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;

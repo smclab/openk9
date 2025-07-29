@@ -17,8 +17,18 @@
 
 package io.openk9.datasource.web;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.notNull;
+import static org.mockito.ArgumentMatchers.nullable;
+
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.service.SchedulerService;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -27,15 +37,6 @@ import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.notNull;
-import static org.mockito.ArgumentMatchers.nullable;
 
 @QuarkusTest
 @TestHTTPEndpoint(TriggerWithDateResource.class)
@@ -54,14 +55,14 @@ public class TriggerWithDateResourceTest {
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void should_ingest_date_payload() {
 
-		BDDMockito.given(schedulerService.getStatusByDatasources(notNull()))
+		BDDMockito.given(schedulerService.getJobStatusList(notNull()))
 				.willReturn( Uni.createFrom().item(() -> {
 					var datasourceJobStatuses =
 						new ArrayList<SchedulerService.DatasourceJobStatus>();
 
 					datasourceJobStatuses.add(
 						new SchedulerService.DatasourceJobStatus(
-							0L, SchedulerService.JobStatus.ON_SCHEDULING));
+							0L, "mockitoDatasource", SchedulerService.JobStatus.ON_SCHEDULING));
 
 					return datasourceJobStatuses;
 				}));

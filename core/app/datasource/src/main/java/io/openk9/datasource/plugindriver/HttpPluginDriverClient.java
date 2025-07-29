@@ -40,18 +40,70 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class HttpPluginDriverClient {
 
+	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
 	public static final String HTTP = "http://";
 	public static final String HTTPS = "https://";
-	public static final String SAMPLE_PATH = "/sample";
-	public static final String FORM_PATH = "/form";
 	public static final String INVOKE_PATH = "/invoke";
-	@Inject
-	WebClient webClient;
+	public static final String SAMPLE_PATH = "/sample";
 	@Inject
 	Logger logger;
 	@Inject
 	Validator validator;
+	@Inject
+	WebClient webClient;
+
+	public Uni<FormTemplate> getForm(HttpPluginDriverInfo pluginDriverInfo) {
+		return webClient
+			.requestAbs(
+				HttpMethod.GET,
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					FORM_PATH)
+			)
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(FormTemplate.class))
+			.flatMap(this::validateDto);
+	}
+
+	public Uni<PluginDriverHealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
+		return webClient
+			.requestAbs(
+				HttpMethod.GET,
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					HEALTH_PATH)
+			)
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
+			.flatMap(this::validateDto)
+			.onFailure(ConstraintViolationException.class)
+			.recoverWithItem(PluginDriverHealthDTO
+				.builder()
+				.status(PluginDriverHealthDTO.Status.UNKOWN)
+				.build()
+			);
+	}
+
+	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
+		return webClient
+			.requestAbs(
+				HttpMethod.GET,
+				createAbsUri(
+					pluginDriverInfo.isSecure(),
+					pluginDriverInfo.getBaseUri(),
+					SAMPLE_PATH)
+			)
+			.timeout(10000)
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(IngestionPayload.class))
+			.flatMap(this::validateDto);
+	}
 
 	public Uni<HttpResponse<Buffer>> invoke(
 		HttpPluginDriverInfo httpPluginDriverInfo,
@@ -105,57 +157,6 @@ public class HttpPluginDriverClient {
 			);
 	}
 
-	public Uni<PluginDriverHealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
-		return webClient
-			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					HEALTH_PATH)
-			)
-			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
-			.flatMap(this::validateDto)
-			.onFailure(ConstraintViolationException.class)
-			.recoverWithItem(PluginDriverHealthDTO
-				.builder()
-				.status(PluginDriverHealthDTO.Status.UNKOWN)
-				.build()
-			);
-	}
-
-	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
-		return webClient
-			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					SAMPLE_PATH)
-			)
-			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(IngestionPayload.class))
-			.flatMap(this::validateDto);
-	}
-
-	public Uni<FormTemplate> getForm(HttpPluginDriverInfo pluginDriverInfo) {
-		return webClient
-			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					FORM_PATH)
-			)
-			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(FormTemplate.class))
-			.flatMap(this::validateDto);
-	}
-
 	private String createAbsUri(boolean isSecure, String baseUri, String path) {
 		var scheme = isSecure ? HTTPS : HTTP;
 		try {
@@ -181,6 +182,16 @@ public class HttpPluginDriverClient {
 		return string;
 	}
 
+	private <T> Uni<T> validateDto(T dto) {
+		var violations = validator.validate(dto);
+		if (violations.isEmpty()) {
+			return Uni.createFrom().item(dto);
+		}
+		else {
+			return Uni.createFrom().failure(new ConstraintViolationException(violations));
+		}
+	}
+
 	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
 		if (response.statusCode() >= 200 && response.statusCode() <= 299) {
 			return Uni.createFrom().item(response);
@@ -193,16 +204,6 @@ public class HttpPluginDriverClient {
 					response.statusMessage()
 				))
 			);
-		}
-	}
-
-	private <T> Uni<T> validateDto(T dto) {
-		var violations = validator.validate(dto);
-		if (violations.isEmpty()) {
-			return Uni.createFrom().item(dto);
-		}
-		else {
-			return Uni.createFrom().failure(new ConstraintViolationException(violations));
 		}
 	}
 

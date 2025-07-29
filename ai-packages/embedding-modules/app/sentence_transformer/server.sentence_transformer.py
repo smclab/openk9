@@ -1,8 +1,24 @@
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 import logging
 import os
 import time
 from concurrent import futures
-from logging import StreamHandler
 from logging.handlers import TimedRotatingFileHandler
 
 import embedding_pb2
@@ -11,8 +27,8 @@ import grpc
 from derived_text_splitter import DerivedTextSplitter
 from dotenv import load_dotenv
 from google.protobuf import json_format
+from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
-from grpc_health.v1 import health_pb2_grpc, health_pb2
 from grpc_reflection.v1alpha import reflection
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
@@ -64,6 +80,15 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         text = clean_text(request.text)
         text_splitted = []
         chunks = []
+
+        info = {
+            "text": text,
+            "chunk_type": chunk_type,
+            "model": EMBEDDING_MODEL,
+            "chunk_config": chunk_json_config,
+        }
+
+        logger.info(info)
 
         if chunk_type == 1:
             chunk_size = (
@@ -170,7 +195,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         end = time.time()
 
-        logger.info("request: %s", request)
         logger.info(
             "text splitted in %s chunks in %s seconds",
             total_chunks,
@@ -179,12 +203,14 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         return embedding_pb2.EmbeddingResponse(chunks=chunks)
 
+
 class HealthCheckServicer(HealthServicer):
     """gRPC health check servicer with embedding model monitoring.
 
     Attributes:
         embedding_model (HuggingFaceEmbeddings): Embedding model to monitor
     """
+
     def __init__(self, embedding_model):
         super().__init__()
         self.embedding_model = embedding_model
@@ -199,9 +225,13 @@ class HealthCheckServicer(HealthServicer):
 
     def Check(self, request, context):
         if self.check_embedding_model_health():
-            return health_pb2.HealthCheckResponse(status=health_pb2.HealthCheckResponse.SERVING)
+            return health_pb2.HealthCheckResponse(
+                status=health_pb2.HealthCheckResponse.SERVING
+            )
         else:
-            return health_pb2.HealthCheckResponse(status=health_pb2.HealthCheckResponse.NOT_SERVING)
+            return health_pb2.HealthCheckResponse(
+                status=health_pb2.HealthCheckResponse.NOT_SERVING
+            )
 
 
 def serve():

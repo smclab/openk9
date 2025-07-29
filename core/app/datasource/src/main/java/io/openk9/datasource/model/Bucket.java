@@ -314,7 +314,7 @@ public class Bucket extends K9Entity {
 	public enum RetrieveType {
 		KNN,
 		HYBRID,
-		MATCH
+		TEXT
 	}
 
 }

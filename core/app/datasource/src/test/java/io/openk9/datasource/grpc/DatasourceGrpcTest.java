@@ -184,14 +184,14 @@ public class DatasourceGrpcTest {
 			() -> datasource.createPresetPluginDriver(
 				CreatePresetPluginDriverRequest.newBuilder()
 					.setSchemaName(SCHEMA_NAME_VALUE)
-					.setPreset(Preset.LIFERAY)
+					.setPreset(Preset.YOUTUBE)
 					.build()),
 			response -> {
 				BDDMockito.then(pluginDriverService)
 					.should(times(1))
 					.upsert(
 						eq(SCHEMA_NAME_VALUE),
-						eq(PluginDrivers.getPluginDriverDTO(SCHEMA_NAME_VALUE, Preset.LIFERAY))
+						eq(PluginDrivers.getPluginDriverDTO(SCHEMA_NAME_VALUE, Preset.YOUTUBE))
 					);
 
 				Assertions.assertEquals(PLUGIN_DRIVER_ID_VALUE, response.getPluginDriverId());

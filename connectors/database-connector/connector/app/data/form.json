@@ -1,0 +1,152 @@
+{
+	"fields": [
+      {
+        "label": "Dialect",
+        "field": "dialect",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Database name such as 'mysql', 'oracle', 'postgresql', etc.",
+        "placeholder": "mysql",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Driver",
+        "field": "driver",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Database driver (e.g., psycopg2, pymysql).",
+        "placeholder": "pymysql",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Username",
+        "field": "username",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Database username.",
+        "placeholder": "admin",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Password",
+        "name": "password",
+        "type": "password",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Database password.",
+        "placeholder": "password",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+            {
+        "label": "Host",
+        "field": "host",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Database server address (IP or domain).",
+        "placeholder": "localhost",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Port",
+        "field": "port",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Port number for database connection.",
+        "placeholder": "8080",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Database",
+        "field": "db",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Name of the database to connect to.",
+        "placeholder": "mydb",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Table",
+        "field": "table",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Name of the table to extract",
+        "placeholder": "TableName",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Columns",
+        "field": "columns",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Name of the columns to extract",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Where condition",
+        "field": "where",
+        "type": "text",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Where condition used for extraction",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      }
+    ]
+}

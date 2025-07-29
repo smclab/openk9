@@ -63,6 +63,12 @@ export function Tenants() {
               if (tenant?.id) navigate(`${tenant.id}`);
             },
           },
+          {
+            label: "View Admin Host",
+            action: (tenant) => {
+              window.open(`https://${tenant.virtualHost}/admin`, "_blank");
+            },
+          },
         ]}
       />
     </Box>

@@ -28,6 +28,17 @@ Create OpenK9 Datasource URL
 {{- end }}
 {{- end }}
 
+
+{{/*
+Create OpenK9 K8s Client URL
+*/}}
+{{- define "helper.k8sClientURL" -}}
+{{- with .Values.openk9.k8sClient -}}
+{{- $port := ( .port | toString ) -}}
+{{- printf "http://%s:%s" .host $port }}
+{{- end }}
+{{- end }}
+
 {{/*
 Create Keycloak service URL
 */}}

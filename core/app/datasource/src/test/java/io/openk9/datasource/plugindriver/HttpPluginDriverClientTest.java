@@ -35,12 +35,15 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 @QuarkusTestResource(WireMockPluginDriver.class)
 class HttpPluginDriverClientTest {
+
+	private static final Logger log = Logger.getLogger(HttpPluginDriverClientTest.class);
 
 	private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
 		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
@@ -188,7 +191,15 @@ class HttpPluginDriverClientTest {
 
 		asserter.assertThat(
 			() -> httpPluginDriverClient.getForm(pluginDriverInfo),
-			res -> Assertions.assertEquals(expectedFormTemplate, res)
+			res -> {
+
+				if (log.isDebugEnabled()) {
+					log.debugf(
+						"GET /form response: \n%s", Json.encodePrettily(res));
+				}
+
+				Assertions.assertEquals(expectedFormTemplate, res);
+			}
 		);
 
 	}

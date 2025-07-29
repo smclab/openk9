@@ -28,7 +28,6 @@ import io.openk9.datasource.mapper.FileResourceMapper;
 import io.openk9.datasource.model.FileResource;
 import io.openk9.datasource.model.FileResource_;
 import io.openk9.datasource.model.dto.base.FileResourceDTO;
-import io.openk9.datasource.service.util.BaseK9EntityService;
 
 import com.google.protobuf.Empty;
 import io.smallrye.mutiny.Uni;

@@ -166,3 +166,7 @@ cython_debug/
 
 # Other
 .directory
+
+# grpc
+app/external_services/grpc/embedding/embedding_pb2_grpc.py
+app/external_services/grpc/embedding/embedding_pb2.py

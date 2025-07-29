@@ -1,5 +1,21 @@
-from fastapi import status
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
 
+from fastapi import status
 
 OPENAPI_TAGS = [
     {
@@ -212,13 +228,11 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione Infortuni Conducente | AXA",
                                             "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                         {
                                             "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
                                             "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                     ],
@@ -234,7 +248,6 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione Infortuni Conducente | AXA - AXA.it - AXA",
                                             "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                                            "source": "local",
                                             "citations": [
                                                 {
                                                     "quote": "La garanzia accessoria Infortuni del Conducente è una garanzia che rafforza la tua polizza assicurativa che protegge auto, moto, ciclomotore, quadriciclo o autocarro da eventi non coperti dall’assicurazione obbligatoria RC. Sei coperto anche se ti fermi a causa di un guasto o incidente e ti fai male durante le operazioni per riprendere la marcia o mentre segnali un pericolo ad altri conducenti. E non solo, sono inclusi anche gli infortuni dovuti a malore, incoscienza, asfissia, annegamento, assideramento o congelamento."
@@ -247,7 +260,6 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione auto online: la tua polizza su misura | AXA - AXA.it - AXA",
                                             "url": "https://www.axa.it/assicurazione-auto",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                     ],
@@ -360,13 +372,11 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione Infortuni Conducente | AXA",
                                             "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                         {
                                             "title": "Garanzie Accessorie Assicurazione Veicoli | AXA",
                                             "url": "https://www.axa.it/garanzie-accessorie-per-veicoli",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                     ],
@@ -382,7 +392,6 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione Infortuni Conducente | AXA - AXA.it - AXA",
                                             "url": "https://www.axa.it/assicurazione-infortuni-del-conducente",
-                                            "source": "local",
                                             "citations": [
                                                 {
                                                     "quote": "La garanzia accessoria Infortuni del Conducente è una garanzia che rafforza la tua polizza assicurativa che protegge auto, moto, ciclomotore, quadriciclo o autocarro da eventi non coperti dall’assicurazione obbligatoria RC. Sei coperto anche se ti fermi a causa di un guasto o incidente e ti fai male durante le operazioni per riprendere la marcia o mentre segnali un pericolo ad altri conducenti. E non solo, sono inclusi anche gli infortuni dovuti a malore, incoscienza, asfissia, annegamento, assideramento o congelamento."
@@ -395,7 +404,6 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                                         {
                                             "title": "Assicurazione auto online: la tua polizza su misura | AXA - AXA.it - AXA",
                                             "url": "https://www.axa.it/assicurazione-auto",
-                                            "source": "local",
                                             "citations": [],
                                         },
                                     ],

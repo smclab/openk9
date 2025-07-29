@@ -53,6 +53,6 @@ public class BucketDTO extends K9EntityDTO {
 
 	@NotNull
 	@Builder.Default
-	private Bucket.RetrieveType retrieveType = Bucket.RetrieveType.MATCH;
+	private Bucket.RetrieveType retrieveType = Bucket.RetrieveType.TEXT;
 
 }
