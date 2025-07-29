@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const TabTokenQuery = gql`
+gql`
   query TabTokenTab($id: ID!) {
     tokenTab(id: $id) {
       id
@@ -110,7 +110,7 @@ gql`
   }
 `;
 
-export const unassociatedTokenTabsInTab = gql`
+gql`
   query unassociatedTokenTabsInTab($id: BigInteger!) {
     unboundTabsByTokenTab(tokenTabId: $id) {
       id

@@ -5,14 +5,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import { useDeleteEnrichPipelineMutation, useEnrichPipelinesQuery } from "../../graphql-generated";
-import { EnrichPipelinesQuery } from "./gql";
 
 export function Pipelines() {
   const pipelinesQuery = useEnrichPipelinesQuery();
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteEnrichPipelineMutate] = useDeleteEnrichPipelineMutation({
-    refetchQueries: [EnrichPipelinesQuery],
+    refetchQueries: ["EnrichPipelines"],
     onCompleted(data) {
       if (data.deleteEnrichPipeline?.id) {
         toast({

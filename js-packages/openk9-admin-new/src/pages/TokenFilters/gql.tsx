@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 import { TemplateType } from "@pages/Analyzer/gql";
 
-export const TokenFiltersQuery = gql`
+gql`
   query TokenFilters($searchText: String, $after: String) {
     tokenFilters(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -46,6 +46,42 @@ gql`
     unboundAnalyzersByTokenFilter(tokenFilterId: $tokenFilterId) {
       name
       id
+    }
+  }
+`;
+
+gql`
+  query TokenFilter($id: ID!) {
+    tokenFilter(id: $id) {
+      id
+      name
+      description
+      jsonConfig
+      type
+    }
+  }
+`;
+
+gql`
+  mutation CreateOrUpdateTokenFilter(
+    $id: ID
+    $name: String!
+    $description: String
+    $jsonConfig: String
+    $type: String!
+  ) {
+    tokenFilter(
+      id: $id
+      tokenFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
 `;

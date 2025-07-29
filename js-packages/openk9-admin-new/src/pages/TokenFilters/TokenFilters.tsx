@@ -10,7 +10,6 @@ import {
   useTokenFiltersQuery,
   useUnboundAnalyzersByTokenFilterQuery,
 } from "../../graphql-generated";
-import { TokenFiltersQuery } from "./gql";
 
 export function TokenFilters() {
   const tokenFiltersQuery = useTokenFiltersQuery();
@@ -27,7 +26,7 @@ export function TokenFilters() {
   const toast = useToast();
   const [addMutate] = useAddTokenFilterToAnalyzerMutation();
   const [deleteTokenFiltersMutate] = useDeleteTokenFiltersMutation({
-    refetchQueries: [TokenFiltersQuery],
+    refetchQueries: ["TokenFilters"],
     onCompleted(data) {
       if (data.deleteTokenFilter?.id) {
         toast({

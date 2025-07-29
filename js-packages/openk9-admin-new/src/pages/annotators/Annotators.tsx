@@ -4,7 +4,6 @@ import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAnnotatorsQuery, useDeleteAnnotatosMutation } from "../../graphql-generated";
-import { AnnotatorsQuery } from "./gql";
 
 export function Annotators() {
   const annotatorsQuery = useAnnotatorsQuery();
@@ -14,7 +13,7 @@ export function Annotators() {
   });
   const toast = useToast();
   const [deleteAnnotatorMutate] = useDeleteAnnotatosMutation({
-    refetchQueries: [AnnotatorsQuery],
+    refetchQueries: ["Annotators"],
     onCompleted(data) {
       if (data.deleteAnnotator?.id) {
         toast({

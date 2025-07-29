@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const EmbeddingModelsQuery = gql`
+gql`
   query EmbeddingModels($searchText: String, $after: String) {
     embeddingModels(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -33,7 +33,7 @@ gql`
   }
 `;
 
-export const EmbeddingModelQuery = gql`
+gql`
   query EmbeddingModel($id: ID!) {
     embeddingModel(id: $id) {
       name

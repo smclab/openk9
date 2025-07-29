@@ -1,16 +1,15 @@
-import React, { useContext } from "react";
-import { RecapData } from "./RecapData";
 import {
   Box,
   Button,
   FormControl,
   MenuItem,
   SelectChangeEvent,
-  Typography,
   Select as SelectMaterial,
+  Typography,
 } from "@mui/material";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ContainerFluid } from "..";
+import { RecapData } from "./RecapData";
 
 interface Option {
   value?: string | null | undefined;
@@ -112,7 +111,7 @@ export function CreateDataEntity({
   const associateOneToOne = associations?.filter(
     (information) => information.level === page && information.multiAssociation === false,
   );
-  const multiAssociation = associationsMultiSelect?.filter((information) => information.level === page);
+  // const multiAssociation = associationsMultiSelect?.filter((information) => information.level === page);
 
   if (informationSuggestion[page].validation) {
     return (

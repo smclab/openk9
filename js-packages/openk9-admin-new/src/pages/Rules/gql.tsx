@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const RulesQuery = gql`
+gql`
   query Rules($searchText: String, $after: String) {
     rules(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -28,7 +28,7 @@ gql`
   }
 `;
 
-export const RuleQuery = gql`
+gql`
   query Rule($id: ID!) {
     rule: rule(id: $id) {
       id

@@ -1,5 +1,5 @@
-import { CodeInput, useToast } from "@components/Form";
-import { Box, Button, Container, FormControl, Grid, Stack, TextField, Typography } from "@mui/material";
+import { CodeInput, ContainerFluid, useToast } from "@components/Form";
+import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChunkType, useCreateDataIndexMutation } from "../../../graphql-generated";
@@ -73,17 +73,12 @@ export function VerifyDataindexData({
   if (!dataindexData || !dataindexData?.name) return null;
 
   return (
-    <Container maxWidth="md">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Configure Your Asset
-        </Typography>
-        <Typography variant="body1" color="textSecondary">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin cursus congue tortor. Suspendisse ut nisl
-          tempor, egestas tellus blandit.
+    <ContainerFluid>
+      <Box sx={{ paddingBlock: "16px" }}>
+        <Typography component="h1" variant="h1" fontWeight="600">
+          View Data Index
         </Typography>
       </Box>
-
       <Stack spacing={3}>
         <TextField label="Dataindex Name" value={dataindexData.name} disabled fullWidth />
         <TextField label="Description" value={dataindexData.description} disabled fullWidth />
@@ -95,9 +90,11 @@ export function VerifyDataindexData({
           fullWidth
         />
         <TextField label="Document Type" value={dataindexData.docTypeIds?.join(", ") || ""} disabled fullWidth />
-        <TextField label="Chunk Type" value={dataindexData.chunkType || "N/A"} disabled fullWidth />
-        {dataindexData.chunkType && (
-          <TextField label="Chunk Window Size" value={dataindexData.chunkWindowSize || "N/A"} disabled fullWidth />
+        {dataindexData.knnIndex === true && (
+          <>
+            <TextField label="Chunk Type" value={dataindexData.chunkType || "N/A"} disabled fullWidth />
+            <TextField label="Chunk Window Size" value={dataindexData.chunkWindowSize || "N/A"} disabled fullWidth />
+          </>
         )}
       </Stack>
       <Box sx={{ mt: 3 }}>
@@ -141,6 +138,6 @@ export function VerifyDataindexData({
           </Button>
         )}
       </Stack>
-    </Container>
+    </ContainerFluid>
   );
 }

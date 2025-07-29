@@ -1,10 +1,16 @@
-import { CodeInput, CustomSelect, CustomSelectRelationsOneToOne, NumberInput } from "@components/Form";
+import {
+  CodeInput,
+  ContainerFluid,
+  CustomSelect,
+  CustomSelectRelationsOneToOne,
+  NumberInput,
+  TitleEntity,
+} from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
   Button,
   Checkbox,
-  Container,
   FormControl,
   FormControlLabel,
   Paper,
@@ -153,18 +159,12 @@ export function CreateDataindex({
   };
 
   return (
-    <Container maxWidth="md">
+    <ContainerFluid>
       {isLoading ? (
         <Typography>Loading...</Typography>
       ) : (
         <>
-          <Typography variant="h4" gutterBottom>
-            Create new data index
-          </Typography>
-          <Typography variant="body1">
-            Create or Edit a Data Index defining associated Datasource and which Document Types use. On second step
-            customize Index Settings if necessary.
-          </Typography>
+          <TitleEntity nameEntity="Data Index" description="" id={dataindexData?.dataindexId || ""} />
           {step === "configureStandart" && (
             <div>
               <FormControl fullWidth margin="normal">
@@ -442,7 +442,7 @@ export function CreateDataindex({
           )}
         </>
       )}
-    </Container>
+    </ContainerFluid>
   );
 }
 
@@ -512,7 +512,6 @@ function Configuration({
 
   return (
     <div>
-      {JSON.stringify(dataIndex?.settings)}
       {!isReadOnly && <Typography variant="h6">Modify Data Index Settings</Typography>}
       {settings && (
         <CodeInput

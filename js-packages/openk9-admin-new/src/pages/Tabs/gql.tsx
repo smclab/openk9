@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 import { AssociatedUnassociated } from "utils";
 
-export const TabsQuery = gql`
+gql`
   query Tabs($searchText: String, $after: String) {
     tabs(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -38,7 +38,7 @@ gql`
   }
 `;
 
-export const TabQueryGql = gql`
+gql`
   query Tab($id: ID!, $unasociated: Boolean) {
     tab(id: $id) {
       id
@@ -134,7 +134,7 @@ gql`
   }
 `;
 
-export const TabTokensGql = gql`
+gql`
   query TabTokens($searchText: String, $cursor: String) {
     totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
       edges {

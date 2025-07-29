@@ -22,17 +22,3 @@
   background: rgba(0, 0, 0, 0.55);
   height: 5px;
 }
-
-.custom-datetime-input {
-  padding: 8px;
-  border-radius: 8px;
-  width: fit-content;
-  border: 1px solid #80808038;
-  font-size: 14px;
-  outline: none;
-}
-
-.custom-datetime-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}

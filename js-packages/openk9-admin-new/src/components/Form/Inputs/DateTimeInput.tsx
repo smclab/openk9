@@ -1,4 +1,5 @@
 import { Box, Typography } from "@mui/material";
+import { styled } from "styled-components";
 
 export const DateTimeInput = ({
   initialDateTime,
@@ -16,7 +17,7 @@ export const DateTimeInput = ({
   return (
     <Box display={"flex"} flexDirection={"column"} gap={"10px"}>
       <Typography variant="body1">Select Date and Time:</Typography>
-      <input
+      <DateTimeInputCustom
         id="datetime-input"
         type="datetime-local"
         value={initialDateTime}
@@ -26,3 +27,10 @@ export const DateTimeInput = ({
     </Box>
   );
 };
+
+export const DateTimeInputCustom = styled.input`
+  padding: 8px;
+  border-radius: 8px;
+  width: fit-content;
+  border: 1px solid #80808038;
+`;

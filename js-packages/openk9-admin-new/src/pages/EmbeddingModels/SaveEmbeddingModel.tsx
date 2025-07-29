@@ -14,7 +14,6 @@ import {
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../../graphql-generated";
-import { EmbeddingModelQuery, EmbeddingModelsQuery } from "./gql";
 import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
@@ -56,7 +55,7 @@ export function SaveEmbeddingModel() {
 
   const [createOrUpdateEmbeddingModelsMutate, createOrUpdateEmbeddingModelsMutation] =
     useCreateOrUpdateEmbeddingModelMutation({
-      refetchQueries: [EmbeddingModelQuery, EmbeddingModelsQuery],
+      refetchQueries: ["EmbeddingModel", "EmbeddingModels"],
       onCompleted(data) {
         if (data.embeddingModel?.entity) {
           const isNew = embeddingModelsId === "new" ? "created" : "updated";
@@ -158,7 +157,7 @@ export function SaveEmbeddingModel() {
                   <div>
                     <TextInput label="Name" {...form.inputProps("name")} />
                     <TextArea label="Description" {...form.inputProps("description")} />
-                    <NumberInput label="Vector Size" {...form.inputProps("vectorSize")} />
+                    <NumberInput label="Vector Size" {...form.inputProps("vectorSize")} isNumber={false} />
                     <Typography variant="h4">Provider</Typography>
                     <Select
                       id="providerId"

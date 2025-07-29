@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const AnalyzersRefetchQuery = gql`
+gql`
   query Analyzers($searchText: String, $after: String) {
     analyzers(searchText: $searchText, first: 20, after: $after) {
       edges {

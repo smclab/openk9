@@ -1,23 +1,22 @@
+import { NamePath, useSideNavigation } from "@components/sideNavigationContext";
+import AddIcon from "@mui/icons-material/Add";
 import {
-  Paper,
-  List,
   Box,
-  ListItemIcon,
-  Checkbox,
-  ListItemText,
   Button,
-  Typography,
+  Checkbox,
+  List,
+  ListItemIcon,
+  ListItemText,
+  Paper,
   Skeleton,
   SxProps,
   Theme,
+  Typography,
 } from "@mui/material";
 import React from "react";
-import { associateType } from "utils";
-import { handleMove } from "../utils";
-import AddIcon from "@mui/icons-material/Add";
-import { ModalConfirm } from "../Modals";
 import { useNavigate } from "react-router-dom";
-import { NamePath, useSideNavigation } from "@components/sideNavigationContext";
+import { associateType } from "utils";
+import { ModalConfirm } from "../Modals";
 
 type ListProps = {
   unassociated: associateType[] | undefined;
@@ -199,58 +198,65 @@ export function MultiAssociationCustomQuery<Q>({
   );
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      gap={2}
-      sx={{ marginBottom: "20px", width: "fit-content", ...sx }}
-    >
-      <Box sx={{ minWidth: isRecap ? "300px" : "unset" }}>
-        {renderList(
-          "In Use",
-          inUseItems,
-          selectedInUse,
-          (item) => {
-            return !disabled && toggleSelection(item, setSelectedInUse);
-          },
-          !isRecap ? "Associated Items" : "",
+    <Box>
+      {titleAssociation && (
+        <Typography variant="body1" fontWeight={600}>
+          {titleAssociation}
+        </Typography>
+      )}
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        gap={2}
+        sx={{ marginBottom: "20px", width: "fit-content", ...sx }}
+      >
+        <Box sx={{ minWidth: isRecap ? "300px" : "unset" }}>
+          {renderList(
+            "In Use",
+            inUseItems,
+            selectedInUse,
+            (item) => {
+              return !disabled && toggleSelection(item, setSelectedInUse);
+            },
+            !isRecap ? "Associated Items" : "",
+          )}
+        </Box>
+        {!isRecap && (
+          <>
+            <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => handleItemsChange({ isAdded: true })}
+                disabled={selectedInUse.length === 0 || disabled}
+                aria-label="move selected to available"
+              >
+                &gt;
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => handleItemsChange({ isAdded: false })}
+                disabled={selectedAvailable.length === 0 || disabled}
+                aria-label="move selected to in use"
+              >
+                &lt;
+              </Button>
+            </Box>
+            <Box>
+              {renderList(
+                "Available",
+                availableItems,
+                selectedAvailable,
+                (item) => !disabled && toggleSelection(item, setSelectedAvailable),
+                "Unassociated Items",
+                createPath,
+              )}
+            </Box>
+          </>
         )}
       </Box>
-      {!isRecap && (
-        <>
-          <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => handleItemsChange({ isAdded: true })}
-              disabled={selectedInUse.length === 0 || disabled}
-              aria-label="move selected to available"
-            >
-              &gt;
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => handleItemsChange({ isAdded: false })}
-              disabled={selectedAvailable.length === 0 || disabled}
-              aria-label="move selected to in use"
-            >
-              &lt;
-            </Button>
-          </Box>
-          <Box>
-            {renderList(
-              "Available",
-              availableItems,
-              selectedAvailable,
-              (item) => !disabled && toggleSelection(item, setSelectedAvailable),
-              "Unassociated Items",
-              createPath,
-            )}
-          </Box>
-        </>
-      )}
     </Box>
   );
 }

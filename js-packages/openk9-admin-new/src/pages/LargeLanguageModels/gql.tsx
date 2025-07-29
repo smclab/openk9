@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const LargeLanguageModelsQuery = gql`
+gql`
   query LargeLanguageModels($searchText: String, $after: String) {
     largeLanguageModels(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -41,7 +41,7 @@ gql`
   }
 `;
 
-export const LargeLanguageModelCreate = gql`
+gql`
   mutation CreateOrUpdateLargeLanguageModel(
     $id: ID
     $apiKey: String
@@ -78,7 +78,7 @@ export const LargeLanguageModelCreate = gql`
   }
 `;
 
-export const LargeLanguageModelQ = gql`
+gql`
   query LargeLanguageModel($id: ID!) {
     largeLanguageModel(id: $id) {
       name

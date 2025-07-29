@@ -8,14 +8,13 @@ import {
   useEmbeddingModelsQuery,
   useEnableEmbeddingModelMutation,
 } from "../../graphql-generated";
-import { EmbeddingModelsQuery } from "./gql";
 
 export function EmbeddingModels() {
   const embeddingModelsQuery = useEmbeddingModelsQuery();
   const theme = useTheme();
   const toast = useToast();
   const [deleteEmbeddingMutate] = useDeleteEmbeddingModelMutation({
-    refetchQueries: [EmbeddingModelsQuery],
+    refetchQueries: ["EmbeddingModels"],
     onCompleted(data) {
       if (data.deleteEmbeddingModel?.id) {
         toast({
@@ -41,7 +40,7 @@ export function EmbeddingModels() {
   });
 
   const [updateEnableLargeLaguageModel] = useEnableEmbeddingModelMutation({
-    refetchQueries: [EmbeddingModelsQuery],
+    refetchQueries: ["EmbeddingModels"],
   });
 
   return (

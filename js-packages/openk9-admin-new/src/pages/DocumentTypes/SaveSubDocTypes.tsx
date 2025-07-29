@@ -18,7 +18,6 @@ import {
   useUnboundAnalyzersQuery,
 } from "../../graphql-generated";
 import useOptions from "../../utils/getOptions";
-import { DocumentTypeFieldQuery } from "./gql";
 
 export function SaveSubDocType({
   subDocTypesId = "new",
@@ -47,7 +46,7 @@ export function SaveSubDocType({
   });
 
   const [createOrUpdateDocumentTypeFieldMutate] = useCreateOrUpdateDocumentTypeFieldMutation({
-    refetchQueries: [DocumentTypeFieldQuery],
+    refetchQueries: ["DocumentTypeField", "DocTypeFields"],
     onCompleted(data) {
       if (data.docTypeFieldWithAnalyzer?.entity?.id) {
         toast({
@@ -67,7 +66,7 @@ export function SaveSubDocType({
     },
   });
   const [updateSubDoctype] = useCreateOrUpdateDocumentTypeSubFieldsMutation({
-    refetchQueries: [DocumentTypeFieldQuery],
+    refetchQueries: ["DocumentTypeField", "DocTypeFields"],
     onCompleted(data) {
       if (data.createSubField?.entity?.id) {
         toast({

@@ -131,52 +131,7 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
   isNew,
   defaultValue,
 }) => {
-  const [options, setOptions] = useState<Option[]>([]);
-  const [isFetching, setIsFetching] = useState(false);
-
-  const { data, loading, fetchMore } = useQuery(DataIndicesQuery, {
-    variables: { first: 20, after: null },
-    fetchPolicy: "cache-and-network",
-    skip: isNew,
-  });
-
-  React.useEffect(() => {
-    if (!data || !data.dataIndices || !data.dataIndices.edges) return;
-    const newOptions = data.dataIndices.edges.map((edge: any) => edge.node);
-    setOptions((prev) => {
-      const existingIds = new Set(prev.map((o) => o.id));
-      const uniqueOptions = newOptions.filter((o: Option) => !existingIds.has(o.id));
-      return [...prev, ...uniqueOptions];
-    });
-  }, [data]);
-
-  const handleMenuScroll = React.useCallback(
-    (event: React.UIEvent<HTMLElement>) => {
-      if (isFetching || !data?.dataIndices?.pageInfo?.hasNextPage) return;
-      const { scrollTop, scrollHeight, clientHeight } = event.target as HTMLElement;
-      if (scrollHeight - scrollTop <= clientHeight + 5) {
-        setIsFetching(true);
-        fetchMore({
-          variables: { after: data.dataIndices.pageInfo.endCursor },
-          updateQuery: (prev, { fetchMoreResult }) => {
-            if (!fetchMoreResult) return prev;
-            return {
-              dataIndices: {
-                __typename: prev.dataIndices.__typename,
-                edges: [...prev.dataIndices.edges, ...fetchMoreResult.dataIndices.edges],
-                pageInfo: fetchMoreResult.dataIndices.pageInfo,
-              },
-            };
-          },
-        })
-          .catch((error) => {
-            console.error("Error fetching more:", error);
-          })
-          .finally(() => setIsFetching(false));
-      }
-    },
-    [data, isFetching, fetchMore],
-  );
+  const [options] = useState<Option[]>(connectionData.optionDataindex);
 
   return (
     <>
@@ -193,11 +148,6 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
               dataIndex: { id, name },
             }));
           }}
-          MenuProps={{
-            PaperProps: {
-              onScroll: handleMenuScroll,
-            },
-          }}
           displayEmpty
         >
           <MenuItem value={defaultValue.id}>{defaultValue.name}</MenuItem>
@@ -208,11 +158,6 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
                   {item.name}
                 </MenuItem>
               ),
-          )}
-          {(loading || isFetching) && (
-            <MenuItem disabled>
-              <CircularProgress size={24} />
-            </MenuItem>
           )}
         </Select>
       </FormControl>

@@ -9,13 +9,12 @@ import {
   useTabsQuery,
   useUnboundBucketsByTabQuery,
 } from "../../graphql-generated";
-import { TabsQuery } from "./gql";
 
 export function Tabs() {
   const tabsQuery = useTabsQuery();
   const toast = useToast();
   const [deleteTabMutate] = useDeleteTabsMutation({
-    refetchQueries: [TabsQuery],
+    refetchQueries: ["Tabs"],
     onCompleted(data) {
       if (data.deleteTab?.id) {
         toast({

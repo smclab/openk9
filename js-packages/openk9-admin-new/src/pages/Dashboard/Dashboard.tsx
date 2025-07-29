@@ -1,6 +1,18 @@
-import { gql } from "@apollo/client";
-import { Box, Card, CardContent, CardHeader, Container, Typography } from "@mui/material";
+import { gql, useQuery } from "@apollo/client";
+import DatasourcesSection from "@components/Form/Dashboard/datasourceCards";
+import { useRestClient } from "@components/queryClient";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Box, Container, Divider, Grid, IconButton, Menu, MenuItem, Stack, Typography, useTheme } from "@mui/material";
+import { DataSourcesQuery } from "@pages/datasources/gql";
+import React from "react";
+import { Link } from "react-router-dom";
 import { useDataIndexInformationQuery } from "../../graphql-generated";
+import DashboardCard from "./DashboardCard";
+import DashboardInfoRow from "./DashboardInfoRow";
+import { scheduler } from "./gql";
 import { DetailGraph } from "./Graph";
 
 export const DataIndexInformation = gql`
@@ -34,33 +46,65 @@ export const DataIndexInformation = gql`
   }
 `;
 
-const data = [
-  { name: "2/8", query: 100 },
-  { name: "2/9", query: 350 },
-  { name: "2/10", query: 500 },
-  { name: "2/11", query: 250 },
-  { name: "2/12", query: 500 },
-  { name: "2/13", query: 300 },
-  { name: "2/14", query: 200 },
-];
-
-const dataTwo = [
-  { name: "10/3", query: 100 },
-  { name: "10/7", query: 350 },
-  { name: "10/10", query: 1500 },
-  { name: "10/11", query: 2050 },
-  { name: "10/12", query: 1500 },
-  { name: "10/13", query: 800 },
-  { name: "10/24", query: 500 },
-];
-
 export function bytesToMegabytes(bytes: number) {
   const megabytes = bytes / (1024 * 1024);
   return parseFloat(megabytes.toFixed(4));
 }
 
+type SchedulerData = {
+  schedulers: {
+    edges: {
+      node: {
+        id: string;
+        modifiedDate: string;
+        errorDescription: string;
+        lastIngestionDate: string;
+        status: string;
+        datasource: {
+          id: string;
+          name: string;
+        };
+        newDataIndex: {
+          id: string;
+          name: string;
+        };
+      };
+    }[];
+  };
+};
+
 export function DashBoard() {
   const dashboardQuery = useDataIndexInformationQuery();
+  const theme = useTheme();
+  const { data: datasourcesFetched } = useQuery(DataSourcesQuery, {
+    variables: {
+      first: 5,
+      sortByList: [{ column: "modifiedDate", direction: "DESC" }],
+    },
+  });
+  const { data: schedulerError } = useQuery(scheduler, {
+    variables: {
+      searchText: "ERROR",
+    },
+    fetchPolicy: "network-only",
+  }) as { data: SchedulerData };
+  const { data: schedulerFailure } = useQuery(scheduler, {
+    variables: {
+      searchText: "FAILURE",
+    },
+    fetchPolicy: "network-only",
+  }) as { data: SchedulerData };
+  type OriginType = "ERROR" | "FAILURE";
+  const schedulerErrorWithOrigin = (schedulerError?.schedulers?.edges || []).map((item) => ({
+    ...item,
+    origin: "ERROR" as OriginType,
+  }));
+  const schedulerFailureWithOrigin = (schedulerFailure?.schedulers?.edges || []).map((item) => ({
+    ...item,
+    origin: "FAILURE" as OriginType,
+  }));
+  const scheulerData = [...schedulerErrorWithOrigin, ...schedulerFailureWithOrigin];
+  const datasourcesData = datasourcesFetched?.datasources?.edges?.map((edge: any) => edge.node) || [];
 
   const recoveryDocsDeleted = dashboardQuery.data?.buckets?.edges
     ?.map((edge) => edge?.node?.datasources?.edges?.map((datasource) => datasource?.node?.dataIndex?.cat?.docsDeleted))
@@ -81,48 +125,248 @@ export function DashBoard() {
     .filter((arr) => arr != null && arr.length > 0);
 
   const byteCount = recoveryByteCount?.flat().reduce((acc, singleIndex) => acc + parseFloat(singleIndex ?? "0"), 0);
+  const [expandedIndex, setExpandedIndex] = React.useState<number | null>(null);
+  const handleExpandClick = (index: number) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const [actionMenuAnchor, setActionMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [actionMenuIndex, setActionMenuIndex] = React.useState<number | null>(null);
+  const restClient = useRestClient();
+
+  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, index: number) => {
+    setActionMenuAnchor(event.currentTarget);
+    setActionMenuIndex(index);
+  };
+  const handleActionMenuClose = () => {
+    setActionMenuAnchor(null);
+    setActionMenuIndex(null);
+  };
+
+  const [filter, setFilter] = React.useState<{ ERROR: boolean; FAILURE: boolean }>({
+    ERROR: true,
+    FAILURE: true,
+  });
+
+  const handleLegendClick = (type: "ERROR" | "FAILURE") => {
+    setFilter((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  };
+
+  const filteredSchedulerData = scheulerData.filter((item) => filter[item.origin]);
 
   return (
-    <Container style={{ marginTop: "25px" }}>
-      <Box display="flex" padding="0 24px" gap="23px">
-        <Presentation user={""} />
+    <Container style={{ padding: 0 }}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Box display="flex" gap={3} alignItems="stretch">
+            <Box flex={1} minWidth={0}>
+              <DetailGraph
+                firstCardNumber={docCount || 0}
+                secondCardNumber={documentDeleted || 0}
+                thirdCardNumber={bytesToMegabytes(byteCount) || 0}
+                firstCardLabel={"Document counts"}
+                secondCardLabel={"Document deleted"}
+                thirdCardLabel={"Store size megabyte"}
+                thirdCardUnity={""}
+              />
+            </Box>
+            <Box flex={1} minWidth={0} display="flex" flexDirection="column" gap="14px">
+              <DashboardCard
+                title={
+                  <Box
+                    display={"flex"}
+                    flexDirection="row"
+                    gap={1}
+                    justifyContent={"space-between"}
+                    alignItems="center"
+                  >
+                    Alert schedulations
+                    <Box display="flex" alignItems="center" gap={2} mt={1}>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        sx={{
+                          cursor: "pointer",
+                          opacity: filter.ERROR ? 1 : 0.4,
+                        }}
+                        onClick={() => handleLegendClick("ERROR")}
+                      >
+                        <ErrorOutlineIcon sx={{ color: theme.palette.error.main, fontSize: 18 }} />
+                        <Typography variant="caption" color="error" fontWeight={600}>
+                          Error
+                        </Typography>
+                      </Box>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        gap={0.5}
+                        sx={{
+                          cursor: "pointer",
+                          opacity: filter.FAILURE ? 1 : 0.4,
+                        }}
+                        onClick={() => handleLegendClick("FAILURE")}
+                      >
+                        <ErrorOutlineIcon sx={{ color: theme.palette.warning.main, fontSize: 18 }} />
+                        <Typography variant="caption" color="warning.main" fontWeight={600}>
+                          Failure
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                }
+                sx={{
+                  minHeight: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
+                }}
+              >
+                <Stack spacing={2}>
+                  {filteredSchedulerData.length === 0 && (
+                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" py={3}>
+                      <ErrorOutlineIcon sx={{ color: theme.palette.text.disabled, fontSize: 40, mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        There is no alert schedule present
+                      </Typography>
+                    </Box>
+                  )}
+                  {filteredSchedulerData?.map((item, index, arr) => {
+                    const date = new Date(item.node.modifiedDate);
+                    const formattedDate = date.toLocaleString("it-IT", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    const isError = item.origin === "ERROR";
+                    const iconColor = isError ? theme.palette.error.main : theme.palette.warning.main;
+                    const borderColor = isError ? theme.palette.error.main : theme.palette.warning.main;
+
+                    return (
+                      <React.Fragment key={index}>
+                        <Box>
+                          <DashboardInfoRow
+                            icon={
+                              <ErrorOutlineIcon
+                                sx={{
+                                  color: iconColor,
+                                  fontSize: 26,
+                                }}
+                              />
+                            }
+                            label={item.node.id}
+                            subtitle={formattedDate}
+                            borderColor={borderColor}
+                            extraContent={
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Link to={`/notificationInfo/${item.node.id}`}>
+                                  <IconButton size="small">
+                                    <VisibilityIcon />
+                                  </IconButton>
+                                </Link>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleExpandClick(index)}
+                                  aria-label="Mostra errore"
+                                >
+                                  <ArrowDropDownIcon
+                                    sx={{
+                                      transform: expandedIndex === index ? "rotate(180deg)" : "rotate(0deg)",
+                                      transition: "transform 0.2s",
+                                    }}
+                                  />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleActionMenuOpen(e, index)}
+                                  aria-label="Azioni"
+                                >
+                                  <MoreVertIcon />
+                                </IconButton>
+                                {/* Menu delle azioni */}
+                                <Menu
+                                  anchorEl={actionMenuAnchor}
+                                  open={actionMenuIndex === index}
+                                  onClose={handleActionMenuClose}
+                                  anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "right",
+                                  }}
+                                  transformOrigin={{
+                                    vertical: "top",
+                                    horizontal: "right",
+                                  }}
+                                >
+                                  <MenuItem
+                                    onClick={async () => {
+                                      await restClient.schedulerResource.postApiDatasourceSchedulersRerouteScheduling(
+                                        Number(item.node.id),
+                                      );
+                                    }}
+                                  >
+                                    Reroute
+                                  </MenuItem>
+                                  <MenuItem
+                                    onClick={async () => {
+                                      await restClient.schedulerResource.postApiDatasourceSchedulersCloseScheduling(
+                                        Number(item.node.id),
+                                      );
+                                    }}
+                                  >
+                                    Close
+                                  </MenuItem>
+                                  <MenuItem
+                                    onClick={async () => {
+                                      await restClient.schedulerResource.postApiDatasourceSchedulersCancelScheduling(
+                                        Number(item.node.id),
+                                      );
+                                    }}
+                                  >
+                                    Cancel
+                                  </MenuItem>
+                                </Menu>
+                              </Stack>
+                            }
+                          />
+                          {expandedIndex === index && (
+                            <Box
+                              sx={{
+                                background: theme.palette.mode === "dark" ? "#2c2a29" : "#f9eaea",
+                                color: theme.palette.error.main,
+                                borderRadius: 1,
+                                mt: 1,
+                                mb: 1,
+                                px: 2,
+                                py: 1,
+                                minHeight: 40,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Typography variant="body2" color="error">
+                                {item.node.errorDescription || "Nessun errore"}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                        {index < arr.length - 1 && <Divider />}
+                      </React.Fragment>
+                    );
+                  })}
+                </Stack>
+              </DashboardCard>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
+      <Box display="flex" flexDirection="column" gap="14px" mt={"5px"}>
+        <DatasourcesSection datasourcesData={datasourcesData} />
       </Box>
-      <Box marginY={4}>
-        <Typography variant="h5" fontWeight="600" marginLeft="24px">
-          Your active bucket
-        </Typography>
-      </Box>
-      <DetailGraph
-        dataGraph={data}
-        secondDataGraph={dataTwo}
-        firstCardNumber={docCount || 0}
-        secondCardNumber={documentDeleted || 0}
-        thirdCardNumber={bytesToMegabytes(byteCount) || 0}
-        firstCardLabel={"Document counts"}
-        secondCardLabel={"Document deleted"}
-        thirdCardLabel={"Store size megabyte"}
-        thirdCardUnity={""}
-      />
     </Container>
-  );
-}
-
-function Presentation({ user }: { user: any }) {
-  return (
-    <Card
-      style={{
-        maxHeight: "307px",
-        borderRadius: "10px",
-        position: "relative",
-      }}
-    >
-      <CardHeader title={`Welcome ${user}`} />
-      <CardContent>
-        <Typography variant="body2" color="textSecondary" component="p">
-          OpenK9 is a complete Cognitive Enterprise Search solution that fits all your needs. Powerful, Modern and
-          Flexible, it employs Machine Learning to enrich your data and give the best experience possible.
-        </Typography>
-      </CardContent>
-    </Card>
   );
 }

@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { useRagConfigurationsQuery, useDeleteRagConfigurationMutation } from "../../graphql-generated";
-import { RagConfigurationsQuery } from "./gql";
 
 export function RagConfigurations() {
   const ragConfigurationsQuery = useRagConfigurationsQuery();
@@ -15,7 +14,7 @@ export function RagConfigurations() {
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteRagConfigurationMutate] = useDeleteRagConfigurationMutation({
-    refetchQueries: [RagConfigurationsQuery],
+    refetchQueries: ["RagConfigurations"],
     onCompleted(data) {
       if (data.deleteRAGConfiguration?.id) {
         toast({

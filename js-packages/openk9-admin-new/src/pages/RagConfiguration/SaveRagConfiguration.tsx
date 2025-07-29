@@ -18,7 +18,7 @@ import {
   useUpdateRagConfigurationMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { RagConfigurationQuery, RagConfigurationsQuery } from "./gql";
+import { RagConfigurationQuery } from "./gql";
 
 export function SaveRagConfiguration() {
   const { ragConfigId = "new", view } = useParams();
@@ -46,7 +46,7 @@ export function SaveRagConfiguration() {
   });
 
   const [createRagConfigMutate, resultCreateRagConfigMutation] = useCreateRagConfigMutation({
-    refetchQueries: [RagConfigurationsQuery, RagConfigurationQuery],
+    refetchQueries: ["RagConfigurations", RagConfigurationQuery, "Buckets"],
     onCompleted(data) {
       if (data.createRAGConfiguration?.entity) {
         const isNew = ragConfigId === "new" ? "created" : "updated";
@@ -77,7 +77,7 @@ export function SaveRagConfiguration() {
   });
 
   const [updateRagConfigMutate, resultUpdateRagConfigMutation] = useUpdateRagConfigurationMutation({
-    refetchQueries: [RagConfigurationsQuery, RagConfigurationQuery],
+    refetchQueries: ["RagConfigurations", RagConfigurationQuery],
     onCompleted(data) {
       if (data.updateRAGConfiguration?.entity) {
         toast({

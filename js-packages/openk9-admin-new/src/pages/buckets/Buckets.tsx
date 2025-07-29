@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
 import { useBucketsQuery, useDeleteBucketMutation, useEnableBucketMutation } from "../../graphql-generated";
-import { BucketsQuery } from "./gql";
 
 export function Buckets() {
   const bucketsQuery = useBucketsQuery();
@@ -14,12 +13,12 @@ export function Buckets() {
     id: undefined,
   });
   const [updateBucketsMutate] = useEnableBucketMutation({
-    refetchQueries: [BucketsQuery],
+    refetchQueries: ["Buckets"],
   });
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteBucketMutate] = useDeleteBucketMutation({
-    refetchQueries: [BucketsQuery],
+    refetchQueries: ["Buckets"],
     onCompleted(data) {
       if (data.deleteBucket?.id) {
         toast({

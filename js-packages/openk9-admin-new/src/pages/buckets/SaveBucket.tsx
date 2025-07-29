@@ -13,7 +13,6 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
-import RefreshOptionsComponent from "@components/Form/Inputs/CheckboxOptionsLayout";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { TooltipDescription } from "@components/Form/utils";
 import { Box, Button } from "@mui/material";
@@ -37,9 +36,8 @@ import {
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import useOptions from "../../utils/getOptions";
 
-import { useConfirmModal } from "../../utils/useConfirmModal";
-import { BucketsdataSources, BucketsQuery } from "./gql";
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
+import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
   { label: "datasource", id: "datasourceIds", tooltip: "Datasources associated to current bucket" },
@@ -149,7 +147,7 @@ export function SaveBucket() {
   });
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
-    refetchQueries: [BucketsQuery, BucketsdataSources],
+    refetchQueries: ["Buckets", "BucketDataSources"],
     onCompleted(data) {
       if (data.bucketWithLists?.entity) {
         const isNew = bucketId === "new" ? "created" : "updated";
@@ -379,7 +377,6 @@ export function SaveBucket() {
                         isLoading={datasources.isLoading}
                         disabled={isRecap || view === "view"}
                         isRecap={page === 1}
-                        titleAssociation="Association with datasource"
                         createPath={{ path: "/data-source/new/mode/create/landingTab/0", entity: "data-sources" }}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("datasourceIds").value;
@@ -406,7 +403,6 @@ export function SaveBucket() {
                         disabled={isRecap || view === "view"}
                         isRecap={page === 1}
                         createPath={{ path: "/suggestion-category/new", entity: "suggestion-categories" }}
-                        titleAssociation="Association with suggestion category"
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("suggestionCategoryIds").value;
 
@@ -432,7 +428,6 @@ export function SaveBucket() {
                         isLoading={tabs.isLoading}
                         createPath={{ path: "/tab/new", entity: "tabs" }}
                         isRecap={page === 1}
-                        titleAssociation="Association with Tabs"
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("tabIds").value;
 

@@ -4,7 +4,6 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteTokenizerMutation, useTokenizersQuery } from "../../graphql-generated";
-import { TokenizersQuery } from "./gql";
 
 export function Tokenizers() {
   const tokenizersQuery = useTokenizersQuery();
@@ -14,7 +13,7 @@ export function Tokenizers() {
   });
   const toast = useToast();
   const [deleteTokenizersMutate] = useDeleteTokenizerMutation({
-    refetchQueries: [TokenizersQuery],
+    refetchQueries: ["Tokenizers"],
     onCompleted(data) {
       if (data.deleteTokenizer?.id) {
         toast({

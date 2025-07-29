@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const DataSourcesQuery = gql`
-  query DataSources($searchText: String, $after: String) {
-    datasources(searchText: $searchText, first: 10, after: $after) {
+  query DataSources($searchText: String, $after: String, $first: Int = 10, $sortByList: [SortByInput!]) {
+    datasources(searchText: $searchText, first: $first, after: $after, sortByList: $sortByList) {
       edges {
         node {
           id
@@ -217,7 +217,7 @@ const DataSourceInformation = gql`
   }
 `;
 
-export const EnrichPipelineOptionsQuery = gql`
+ gql`
   query EnrichPipelineOptions($searchText: String, $cursor: String) {
     options: enrichPipelines(searchText: $searchText, after: $cursor) {
       edges {
@@ -235,7 +235,7 @@ export const EnrichPipelineOptionsQuery = gql`
   }
 `;
 
-export const EnrichItemsQuery = gql`
+gql`
   query EnrichItems($searchText: String, $after: String) {
     enrichItems(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -261,7 +261,7 @@ export const EnrichItemsQuery = gql`
   }
 `;
 
-export const PluginDriversQuery = gql`
+gql`
   query PluginDrivers {
     pluginDriversPageFilter(pageable: {}) {
       content {

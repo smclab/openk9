@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const RagConfigurationsQuery = gql`
+gql`
   query RagConfigurations($searchText: String, $after: String) {
     ragConfigurations(searchText: $searchText, first: 20, after: $after) {
       edges {

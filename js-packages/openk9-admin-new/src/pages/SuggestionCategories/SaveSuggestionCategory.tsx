@@ -12,6 +12,7 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
+import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -19,9 +20,8 @@ import {
   useDocTypeFieldsQuery,
   useSuggestionCategoryQuery,
 } from "../../graphql-generated";
-import { SuggestionCategoriesQuery, SuggestionCategoryQuery } from "./gql";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import useOptionsSuggestionCategory from "./useOptionsSuggestionCategory";
 
 export function SaveSuggestionCategory() {
   const { suggestionCategoryId = "new", view } = useParams();
@@ -44,10 +44,10 @@ export function SaveSuggestionCategory() {
     skip: !suggestionCategoryId || suggestionCategoryId === "new",
   });
   const toast = useToast();
-  const { OptionDocType } = useOptions();
+  const OptionDocType = useOptionsSuggestionCategory({ suggestionCategoryId: suggestionCategoryId });
   const [createOrUpdateSuggestionCategoryMutate, createOrUpdateSuggestionCategoryMutation] =
     useCreateOrUpdateSuggestionCategoryMutation({
-      refetchQueries: [SuggestionCategoryQuery, SuggestionCategoriesQuery],
+      refetchQueries: ["SuggestionCategory", "SuggestionCategories"],
       onCompleted(data) {
         if (data.suggestionCategoryWithDocTypeField?.entity) {
           const isNew = suggestionCategoryId === "new" ? "created" : "updated";

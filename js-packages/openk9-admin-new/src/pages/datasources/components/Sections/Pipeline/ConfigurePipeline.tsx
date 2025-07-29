@@ -68,9 +68,10 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
               setPipelineArea(e.target.value as PipelineRadioType);
               setDataDatasource((data) => ({
                 ...data,
-                pipeline: {},
+                pipeline: undefined,
                 enrichPipeline: undefined,
                 linkedEnrichItems: undefined,
+                enrichPipelineCustom: undefined,
               }));
               setShowDialog(defaultModal);
             },

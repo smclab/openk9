@@ -4,14 +4,14 @@ import {
   useCreateDatasourceConnectionMutation,
   useUpdateDatasourceConnectionMutation,
 } from "../../../graphql-generated";
-import { DataSourcesQuery, EnrichPipelineOptionsQuery, DataSourceQuery } from "../gql";
+import { DataSourceQuery } from "../gql";
 
 export const useDatasourceMutations = (datasourceId: string, navigate: NavigateFunction) => {
   const toast = useToast();
   const modal = useModal();
 
   const [updateDatasource] = useUpdateDatasourceConnectionMutation({
-    refetchQueries: [DataSourcesQuery, EnrichPipelineOptionsQuery, DataSourceQuery],
+    refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted() {
       navigate("/data-sources");
       modal({ title: "update datasource", displayType: "success" });
@@ -22,7 +22,7 @@ export const useDatasourceMutations = (datasourceId: string, navigate: NavigateF
   });
 
   const [createDatasource] = useCreateDatasourceConnectionMutation({
-    refetchQueries: [DataSourcesQuery, EnrichPipelineOptionsQuery, DataSourceQuery],
+    refetchQueries: ["DataSources", "EnrichPipelineOptions", DataSourceQuery],
     onCompleted(data) {
       if (data.createDatasourceConnection?.entity) {
         const isNew = datasourceId === "new" ? "created" : "updated";

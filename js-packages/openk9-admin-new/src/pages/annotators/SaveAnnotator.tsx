@@ -21,7 +21,6 @@ import {
   useCreateOrUpdateAnnotatorMutation,
   useDocTypeFieldOptionsAnnotatorsQuery,
 } from "../../graphql-generated";
-import { AnnotatorQuery, AnnotatorsQuery, DocValuQuery } from "./gql";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
@@ -49,7 +48,7 @@ export function SaveAnnotator() {
     }
   };
   const [createOrUpdateAnnotatorMutate, createOrUpdateannotatorMutation] = useCreateOrUpdateAnnotatorMutation({
-    refetchQueries: [AnnotatorQuery, AnnotatorsQuery, DocValuQuery],
+    refetchQueries: ["Annotator", "Annotators", "DocTypeFieldValue"],
     onCompleted(data) {
       if (data.annotatorWithDocTypeField?.entity) {
         const isNew = annotatorId === "new" ? "created" : "updated";

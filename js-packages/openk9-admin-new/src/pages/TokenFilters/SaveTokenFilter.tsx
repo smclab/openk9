@@ -13,46 +13,10 @@ import { useToast } from "@components/Form/Form/ToastProvider";
 import useTemplate, { createJsonString, NavigationButtons } from "@components/Form/Hook/Template";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
-import { Filters, TokenFiltersQuery } from "./gql";
+import { Filters } from "./gql";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-
-const TokenFilterQuery = gql`
-  query TokenFilter($id: ID!) {
-    tokenFilter(id: $id) {
-      id
-      name
-      description
-      jsonConfig
-      type
-    }
-  }
-`;
-
-gql`
-  mutation CreateOrUpdateTokenFilter(
-    $id: ID
-    $name: String!
-    $description: String
-    $jsonConfig: String
-    $type: String!
-  ) {
-    tokenFilter(
-      id: $id
-      tokenFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }
-    ) {
-      entity {
-        id
-        name
-      }
-      fieldValidators {
-        field
-        message
-      }
-    }
-  }
-`;
 
 export function SaveTokenFilter() {
   const { tokenFilterId = "new", view } = useParams();
@@ -78,7 +42,7 @@ export function SaveTokenFilter() {
 
   const toast = useToast();
   const [createOrUpdateTokenFilterMutate, createOrUpdateTokenFilterMutation] = useCreateOrUpdateTokenFilterMutation({
-    refetchQueries: [TokenFilterQuery, TokenFiltersQuery],
+    refetchQueries: ["TokenFilter", "TokenFilters"],
     onCompleted(data) {
       if (data.tokenFilter?.entity) {
         const isNew = tokenFilterId === "new" ? "created" : "updated";

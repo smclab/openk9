@@ -18,7 +18,7 @@ gql`
   }
 `;
 
-export const EnrichItemQuery = gql`
+gql`
   query EnrichItem($id: ID!) {
     enrichItem(id: $id) {
       id

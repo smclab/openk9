@@ -4,6 +4,7 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
+  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   TextArea,
   TextInput,
@@ -11,19 +12,35 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
+import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
+import { FieldDocType, SelectedValue } from "@components/Form/Association/MultiLinkedAssociation/types";
+import CheckboxList from "@components/Form/List/CheckboxList";
 import { Box, Button, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  DocTypeUserDtoInput,
+  InputMaybe,
   PluginDriverType,
   Provisioning,
-  useCreateOrUpdatePluginDriverMutation,
+  useDocumentTypeFieldsForPluginQuery,
   usePluginDriverQuery,
   usePluginDriversQuery,
+  usePluginDriverWithDocTypeMutation,
+  UserField,
 } from "../../graphql-generated";
+import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { ConfigType, PluginDriverQuery } from "./gql";
-import { PluginDriversQuery } from "@pages/datasources/gql";
+import { ConfigType } from "./gql";
+
+export const aclOption: { value: UserField; label: UserField }[] = [
+  { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
+  { value: "NAME" as UserField, label: "NAME" as UserField },
+  { value: "NAME_SURNAME" as UserField, label: "NAMESURNAME" as UserField },
+  { value: "ROLES" as UserField, label: "ROLES" as UserField },
+  { value: "SURNAME" as UserField, label: "SURNAME" as UserField },
+  { value: "USERNAME" as UserField, label: "USERNAME" as UserField },
+];
 
 export const SavePluginnDriverModel = React.forwardRef(
   (
@@ -47,6 +64,12 @@ export const SavePluginnDriverModel = React.forwardRef(
       labelConfirm: "Edit",
     });
 
+    const { OptionQuery: userFieldsOptions } = useOptions({
+      queryKeyPath: "docTypeFields.edges",
+      useQuery: useDocumentTypeFieldsForPluginQuery,
+      accessKey: "node",
+    });
+
     const handleEditClick = async () => {
       const confirmed = await openConfirmModal();
       if (confirmed) {
@@ -58,37 +81,100 @@ export const SavePluginnDriverModel = React.forwardRef(
       variables: { id: pluginDriverId as string },
       skip: !pluginDriverId || pluginDriverId === "new",
     });
-    const toast = useToast();
-    const [createOrUpdatePluginDriverMutate, createOrUpdatePluginDriverMutation] =
-      useCreateOrUpdatePluginDriverMutation({
-        refetchQueries: [PluginDriverQuery, PluginDriversQuery],
-        onCompleted(data) {
-          if (data.pluginDriver?.entity) {
-            const isNew = pluginDriverId === "new" ? "created" : "updated";
-            toast({
-              title: `Connector ${isNew}`,
-              content: `Connector has been ${isNew} successfully`,
-              displayType: "success",
-            });
-            !isConnector && navigate(`/plugin-drivers/`, { replace: true });
-          } else {
-            toast({
-              title: `Error`,
-              content: combineErrorMessages(data.pluginDriver?.fieldValidators),
-              displayType: "error",
+
+    const [selectedItems, setSelectedItems] = React.useState<SelectedValue[]>([]);
+    const [fields, setFields] = React.useState<FieldDocType[]>([]);
+
+    React.useEffect(() => {
+      const mappings = pluginDriverQuery.data?.pluginDriver?.aclMappings;
+      if (!mappings) return;
+
+      const initialFields: FieldDocType[] = mappings.map((field) => ({
+        docTypeId: field?.docTypeField?.id ?? "",
+        userField: field?.userField ?? "",
+        userFieldId: field?.userField ?? "",
+        fieldName: field?.docTypeField?.name ?? "",
+      }));
+
+      setFields(initialFields);
+    }, [pluginDriverQuery.data?.pluginDriver?.aclMappings]);
+    const isDuplicate = (newField: FieldDocType) => {
+      return fields.some((field) => field.userField === newField.userField && field.fieldName === newField.fieldName);
+    };
+
+    const handleAddField = () => {
+      const duplicates: { fieldName: string; userField: string }[] = [];
+      const newFields = selectedItems
+        .filter((item) => {
+          const isDup = isDuplicate({
+            fieldName: item.name,
+            userField: form.inputProps("userFieldsSelectedOptions").value.name,
+            docTypeId: item.id,
+            userFieldId: form.inputProps("userFieldsSelectedOptions").value.id,
+          });
+          if (isDup) {
+            duplicates.push({
+              fieldName: item.name,
+              userField: form.inputProps("userFieldsSelectedOptions").value.name,
             });
           }
-        },
-        onError(error) {
-          console.log(error);
-          const isNew = pluginDriverId === "new" ? "create" : "update";
+          return !isDup;
+        })
+        .map((item) => ({
+          fieldName: item.name,
+          userField: form.inputProps("userFieldsSelectedOptions").value.name,
+          docTypeId: item.id,
+          userFieldId: form.inputProps("userFieldsSelectedOptions").value.id,
+        }));
+
+      setFields((prev) => [...prev, ...newFields]);
+
+      if (duplicates.length > 0) {
+        toast({
+          title: "Duplicate associations",
+          content: `The following associations could not be added because they already exist: ${duplicates
+            .map((d) => `"${d.userField}" - "${d.fieldName}"`)
+            .join(", ")}`,
+          displayType: "warning",
+        });
+      }
+      setSelectedItems([]);
+    };
+
+    const handleReset = () => {
+      setSelectedItems([]);
+    };
+
+    const toast = useToast();
+    const [pluginDriverWithDocType, pluginDriverWithDocTypeMutation] = usePluginDriverWithDocTypeMutation({
+      refetchQueries: ["PluginDriver", "PluginDrivers", "DataSource"],
+      onCompleted(data) {
+        if (data.pluginDriverWithDocType?.entity) {
+          const isNew = pluginDriverId === "new" ? "created" : "updated";
           toast({
-            title: `Error ${isNew}`,
-            content: `Impossible to ${isNew} Connector`,
+            title: `Connector ${isNew}`,
+            content: `Connector has been ${isNew} successfully`,
+            displayType: "success",
+          });
+          !isConnector && navigate(`/plugin-drivers/`, { replace: true });
+        } else {
+          toast({
+            title: `Error`,
+            content: combineErrorMessages(data.pluginDriverWithDocType?.fieldValidators),
             displayType: "error",
           });
-        },
-      });
+        }
+      },
+      onError(error) {
+        console.log(error);
+        const isNew = pluginDriverId === "new" ? "create" : "update";
+        toast({
+          title: `Error ${isNew}`,
+          content: `Impossible to ${isNew} Connector`,
+          displayType: "error",
+        });
+      },
+    });
 
     const [config, setConfig] = React.useState<ConfigType | null>(null);
 
@@ -107,6 +193,9 @@ export const SavePluginnDriverModel = React.forwardRef(
           type: PluginDriverType.Http,
           jsonConfig: "{}",
           provisioning: Provisioning.User,
+          userFieldsSelectedOptions: { id: "", name: "" },
+          docTypeFieldsSelectedOptions: { id: "", name: "" },
+          docTypeUserDTOSet: [] as DocTypeUserDtoInput[],
         }),
         [],
       ),
@@ -116,10 +205,15 @@ export const SavePluginnDriverModel = React.forwardRef(
         provisioning: Provisioning.User,
         description: pluginDriverQuery.data?.pluginDriver?.type || "",
         jsonConfig: pluginDriverQuery.data?.pluginDriver?.jsonConfig || "{}",
+        docTypeUserDTOSet:
+          pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
+            docTypeId: Number(field?.docTypeField?.id),
+            userField: field?.userField as InputMaybe<UserField> | undefined,
+          })) || [],
       },
-      isLoading: pluginDriverQuery.loading || createOrUpdatePluginDriverMutation.loading,
+      isLoading: pluginDriverQuery.loading || pluginDriverWithDocTypeMutation.loading,
       onSubmit(data) {
-        createOrUpdatePluginDriverMutate({
+        pluginDriverWithDocType({
           variables: {
             id: pluginDriverId !== "new" ? pluginDriverId : undefined,
             description: data.description,
@@ -127,6 +221,11 @@ export const SavePluginnDriverModel = React.forwardRef(
             type: PluginDriverType.Http,
             provisioning: Provisioning.User,
             jsonConfig: JSON.stringify(config),
+            docTypeUserDTOSet:
+              fields?.map((field) => ({
+                docTypeId: Number(field.docTypeId),
+                userField: field.userFieldId as InputMaybe<UserField> | undefined,
+              })) || [],
           },
         }).then(() => {
           if (isConnector && onSubmitSuccess) {
@@ -136,7 +235,7 @@ export const SavePluginnDriverModel = React.forwardRef(
         });
       },
       getValidationMessages: fromFieldValidators(
-        createOrUpdatePluginDriverMutation.data?.pluginDriver?.fieldValidators,
+        pluginDriverWithDocTypeMutation.data?.pluginDriverWithDocType?.fieldValidators,
       ),
     });
 
@@ -151,7 +250,7 @@ export const SavePluginnDriverModel = React.forwardRef(
       },
     }));
     return (
-      <ContainerFluid>
+      <ContainerFluid size="md">
         <>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <TitleEntity
@@ -233,6 +332,90 @@ export const SavePluginnDriverModel = React.forwardRef(
                         <MenuItem value="DELETE">DELETE</MenuItem>
                         <MenuItem value="PATCH">PATCH</MenuItem>
                       </Select>
+                      {/* <ConnectorManager /> */}
+                      <DataCardManager
+                        options={userFieldsOptions}
+                        config={{
+                          title: "Associate Acl mappings",
+                          description: "Associate user fields with document types to manage access control.",
+                          addLabel: "Add",
+                        }}
+                        isCreateButtonVisible
+                        // fields={fields}
+                        onAddField={handleAddField}
+                        onReset={handleReset}
+                        // removeField={(id: string) => {
+                        //   setFields((prev) => prev.filter((field) => field.fieldName !== id));
+                        // }}
+                        // updateField={(updatedField: FieldDocType, index?: number) => {
+                        //   setFields((prev) =>
+                        //     prev.map((field, i) => (i === index ? { ...field, ...updatedField } : field)),
+                        //   );
+                        // }}
+                        row={
+                          fields.map((field) => ({
+                            itemLabel: field.userField,
+                            itemLabelId: field.userFieldId,
+                            associatedLabel: field.fieldName,
+                            associatedLabelId: field.docTypeId,
+                            actions: [
+                              {
+                                action(item, index) {
+                                  setFields((prev) =>
+                                    prev.map((field, i) => {
+                                      return i === index
+                                        ? {
+                                            ...field,
+                                            ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
+                                            ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
+                                            ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
+                                            ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
+                                          }
+                                        : field;
+                                    }),
+                                  );
+                                },
+                                label: "Edit",
+                              },
+                              {
+                                action(item, index) {
+                                  setFields((prev) => prev.filter((_, i) => i !== index));
+                                },
+                                label: "Delete",
+                              },
+                            ],
+                          }))
+                          //   [
+                          //   {
+                          //     itemLabel: "",
+                          //     associatedLabel: "",
+                          //     actions: [],
+                          //   },
+                          // ]
+                        }
+                      >
+                        <Box sx={{ width: "100%", display: "grid", gridColumn: "span 2" }}>
+                          <CustomSelectRelationsOneToOne
+                            options={aclOption}
+                            label="UserFieldsOptions"
+                            onChange={(val) =>
+                              form.inputProps("userFieldsSelectedOptions").onChange({ id: val.id, name: val.name })
+                            }
+                            value={{
+                              id: form.inputProps("userFieldsSelectedOptions").value.id,
+                              name: form.inputProps("userFieldsSelectedOptions").value.name || "",
+                            }}
+                            disabled={page === 1}
+                            // description="Default Language for current bucket"
+                          />
+                          <CheckboxList
+                            options={userFieldsOptions}
+                            onChange={setSelectedItems}
+                            selectedValues={selectedItems}
+                          />
+                        </Box>
+                        {/* <p>Connector component</p> */}
+                      </DataCardManager>
                     </Box>
                   ),
                   page: 0,

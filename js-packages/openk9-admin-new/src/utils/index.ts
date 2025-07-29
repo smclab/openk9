@@ -1,1 +1,2 @@
-export * from './QueryFunctions';
+export * from "./QueryFunctions";
+export * from "./getOptions";

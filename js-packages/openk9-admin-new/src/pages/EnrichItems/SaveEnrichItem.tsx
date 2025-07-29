@@ -21,8 +21,6 @@ import {
   useCreateOrUpdateEnrichItemMutation,
   useEnrichItemQuery,
 } from "../../graphql-generated";
-import { EnrichItemQuery } from "./gql";
-import { EnrichItemsQuery } from "@pages/datasources/gql";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
@@ -44,12 +42,12 @@ export function SaveEnrichItem() {
   const enrichItemQuery = useEnrichItemQuery({
     variables: { id: enrichItemId as string },
     skip: !enrichItemId || enrichItemId === "new",
-    fetchPolicy: "network-only"
+    fetchPolicy: "network-only",
   });
   const [page, setPage] = React.useState(0);
   const toast = useToast();
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
-    refetchQueries: [EnrichItemQuery, EnrichItemsQuery],
+    refetchQueries: ["EnrichItem", "EnrichItems"],
     onCompleted(data) {
       if (data.enrichItem?.entity) {
         const isNew = enrichItemId === "new" ? "created" : "updated";

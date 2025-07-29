@@ -1,8 +1,8 @@
+import { ModalAddSingle, ModalConfirm } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ModalAddSingle, ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import {
   useAddTokenTabToTabMutation,
@@ -10,15 +10,13 @@ import {
   useTabTokensQuery,
   useUnassociatedTokenTabsInTabQuery,
 } from "../../graphql-generated";
-import { TabTokens, unassociatedTokenTabsInTab } from "./gql";
 
 export function TokenTabs() {
   const tabTokensQuery = useTabTokensQuery();
-  // const showModal = useModal();
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteTabMutate] = useDeleteTabTokenMutation({
-    refetchQueries: [TabTokens],
+    refetchQueries: ["TabTokens"],
     onCompleted(data) {
       if (data.deleteTokenTab?.id) {
         toast({
@@ -43,7 +41,7 @@ export function TokenTabs() {
   });
   const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
   const [addTokenTabToTabMutate] = useAddTokenTabToTabMutation({
-    refetchQueries: [unassociatedTokenTabsInTab],
+    refetchQueries: ["unassociatedTokenTabsInTab"],
   });
 
   const { data } = useUnassociatedTokenTabsInTabQuery({

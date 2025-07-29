@@ -10,7 +10,6 @@ import {
   useDeleteDataSourceMutation,
   useUnboundBucketsByDatasourceQuery,
 } from "../../graphql-generated";
-import { DataSourcesQuery } from "./gql";
 
 export function Datasources() {
   const datasourcesQuery = useDataSourcesQuery();
@@ -25,7 +24,7 @@ export function Datasources() {
   const [addMutate] = useAddDataSourceToBucketMutation();
   const toast = useToast();
   const [deleteDataSource] = useDeleteDataSourceMutation({
-    refetchQueries: [DataSourcesQuery],
+    refetchQueries: ["DataSources"],
     onCompleted(data) {
       if (data.deleteDatasource?.id) {
         toast({

@@ -80,7 +80,7 @@ export function useRecoveryForm(restClient: any, formValues: any, requestBody: a
     formCustomClient
       .then((data: Field[]) => {
         const remappedData = data
-          .map((formItem) => {
+          ?.map((formItem) => {
             if (formItem.type === "text" && Array.isArray(formItem.values) && formItem.values.length === 0) {
               return {
                 ...formItem,

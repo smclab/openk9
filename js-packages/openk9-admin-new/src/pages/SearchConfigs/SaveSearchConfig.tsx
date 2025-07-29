@@ -1,3 +1,4 @@
+import { useQuery } from "@apollo/client";
 import {
   BooleanInput,
   combineErrorMessages,
@@ -12,9 +13,10 @@ import {
   useForm,
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
-import { InformationField } from "@components/Form/utils/informationField";
+import { TooltipDescription } from "@components/Form/utils";
 import { useRestClient } from "@components/queryClient";
 import CloseIcon from "@mui/icons-material/Close";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   Box,
   Button,
@@ -28,14 +30,19 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import {
+  DynamicFormArray,
+  GenerateDynamicForm,
+  Template,
+} from "@pages/datasources/components/Sections/DataSource/DynamicForm";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
 import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique } from "../../openapi-generated";
-import { SearchConfigQuery } from "./gql";
-import { TooltipDescription } from "@components/Form/utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { QueryParserConfig } from "./gql";
+import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 
 interface ConfigureHybridSearchInterface {
   searchConfigId: string;
@@ -59,14 +66,14 @@ export function useConfigureHybridSearchMutation({
       weights,
     }: ConfigureHybridSearchInterface) => {
       const hybridSearchPipelineDTO: HybridSearchPipelineDTO = {
-        normalizationTechnique, //: NormalizationTechnique.MIN_MAX, // Scegli il valore appropriato dall'enum - mock
-        combinationTechnique, //: CombinationTechnique.ARITHMETIC_MEAN, // Scegli il valore appropriato dall'enum - mock
-        weights, //: [1.0, 2.0, 3.0], // Sostituisci con i pesi desiderati
+        normalizationTechnique,
+        combinationTechnique,
+        weights,
       };
 
       await restClient.searchConfigResource.postApiDatasourceV1SearchConfigConfigureHybridSearch(
-        Number(searchConfigId), // Passa l'ID come primo argomento
-        hybridSearchPipelineDTO, // Passa l'oggetto DTO come secondo argomento
+        Number(searchConfigId),
+        hybridSearchPipelineDTO,
       );
     },
   );
@@ -75,6 +82,9 @@ export function useConfigureHybridSearchMutation({
 export function SaveSearchConfig() {
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
+  const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
+  const [activeType, setActiveType] = React.useState<string | undefined | null>();
+  const openFormRef = React.useRef<() => void>();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Search Config",
     body: "Are you sure you want to edit this Search Config?",
@@ -89,16 +99,20 @@ export function SaveSearchConfig() {
   };
   const [page, setPage] = React.useState(0);
   const [isHybridSearch, setIsHybridSearch] = React.useState<boolean>(false);
+  const [jsonConfigs, setJsonConfigs] = React.useState<string[]>([]);
 
   const searchConfigQuery = useSearchConfigQuery({
     variables: { id: searchConfigId as string },
     skip: !searchConfigId || searchConfigId === "new",
   });
+
+  const queryParserConfig = useQuery(QueryParserConfig, { fetchPolicy: "cache-and-network" });
+
   const toast = useToast();
   const [createOrUpdateSearchConfigMutate, createOrUpdateSearchConfigMutation] = useCreateOrUpdateSearchConfigMutation({
-    refetchQueries: [SearchConfigQuery],
+    refetchQueries: ["SearchConfig", "Buckets"],
     onCompleted(data) {
-      if (data.searchConfig?.entity) {
+      if (data.searchConfigWithQueryParsers?.entity) {
         const isNew = searchConfigId === "new" ? "created" : "updated";
         toast({
           title: `Search Config ${isNew}`,
@@ -109,7 +123,7 @@ export function SaveSearchConfig() {
       } else {
         toast({
           title: `Error`,
-          content: combineErrorMessages(data.searchConfig?.fieldValidators),
+          content: combineErrorMessages(data.searchConfigWithQueryParsers?.fieldValidators),
           displayType: "error",
         });
       }
@@ -126,7 +140,7 @@ export function SaveSearchConfig() {
   });
 
   const handleCloseDialog = () => {
-    setIsHybridSearch(false); // Chiudi la modale
+    setIsHybridSearch(false);
   };
 
   const form = useForm({
@@ -137,6 +151,8 @@ export function SaveSearchConfig() {
         minScore: 0.0,
         minScoreSuggestions: false,
         minScoreSearch: false,
+        jsonConfig: "",
+        queryParserConfig: [],
       }),
       [],
     ),
@@ -147,16 +163,82 @@ export function SaveSearchConfig() {
         variables: {
           id: searchConfigId !== "new" ? searchConfigId : undefined,
           ...data,
+          queryParsersConfig:
+            types?.map((type, idx) => ({
+              type: type.itemLabelId,
+              name: type.itemLabelId,
+              jsonConfig: jsonConfigs[idx] || "",
+            })) || [],
         },
       });
     },
-    getValidationMessages: fromFieldValidators(createOrUpdateSearchConfigMutation.data?.searchConfig?.fieldValidators),
+    getValidationMessages: fromFieldValidators(
+      createOrUpdateSearchConfigMutation.data?.searchConfigWithQueryParsers?.fieldValidators,
+    ),
   });
 
-  if (!searchConfigId) return null;
+  const template = React.useMemo(() => {
+    const raw = queryParserConfig?.data?.queryParserConfigFormConfigurations;
+    if (!raw || searchConfigQuery.loading) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      const mappedType = (parsed as Array<{ type: string }>)?.map((parse) => ({
+        itemLabel: parse?.type,
+        itemLabelId: parse?.type,
+      }));
+      setTypes(mappedType);
+
+      const template = parsed?.map((pars: { form: any }) => ({ ...pars?.form }));
+      if (jsonConfigs.length === 0 && Array.isArray(template)) {
+        const mappedData = template.map((item: Template, idx: number) => {
+          const jsonObj: Record<string, any> = {};
+          const edge = searchConfigQuery.data?.searchConfig?.queryParserConfigs?.edges?.find((e) => {
+            return e?.node?.type?.toLowerCase() === mappedType[idx]?.itemLabelId?.toLowerCase();
+          });
+
+          let parsedJson: Record<string, any> = {};
+          if (edge?.node?.jsonConfig) {
+            try {
+              parsedJson = JSON.parse(edge.node.jsonConfig);
+            } catch {
+              parsedJson = {};
+            }
+          }
+          item.fields.forEach((field) => {
+            const valueFromJson = parsedJson[field.name];
+            jsonObj[field.name] =
+              valueFromJson !== undefined && valueFromJson !== null && valueFromJson !== ""
+                ? valueFromJson
+                : field.values?.[0]?.value ?? "";
+          });
+          return JSON.stringify(jsonObj);
+        });
+        setJsonConfigs(mappedData);
+      }
+
+      return { template: template, jsonConfigs: jsonConfigs };
+    } catch (e) {
+      console.error("Failed to parse form config:", e);
+      return null;
+    }
+  }, [queryParserConfig?.data, searchConfigQuery.loading, searchConfigQuery.data]);
+
+  const DynamicsHook = DynamicFormArray({
+    templates: template?.template,
+    jsonConfigs: jsonConfigs,
+    onChangeJsonConfig: (idx: number, newJson: string) => {
+      setJsonConfigs((prev) => {
+        const updated = [...prev];
+        updated[idx] = newJson;
+        return updated;
+      });
+    },
+  });
+
+  if (!searchConfigId && searchConfigQuery.loading) return null;
   return (
     <>
-      <ContainerFluid>
+      <ContainerFluid size="md">
         <>
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <TitleEntity
@@ -185,21 +267,23 @@ export function SaveSearchConfig() {
                     <div>
                       <TextInput label="Name" {...form.inputProps("name")} />
                       <TextArea label="Description" {...form.inputProps("description")} />
-                      <NumberInput
-                        label="minScore"
-                        {...form.inputProps("minScore")}
-                        description="Define score threshold used to filter results after query has been done"
-                      />
-                      <BooleanInput
-                        label="min Score Suggestions"
-                        {...form.inputProps("minScoreSuggestions")}
-                        description="If use configured min score to filter search results"
-                      />
-                      <BooleanInput
-                        label="min Score Search"
-                        {...form.inputProps("minScoreSearch")}
-                        description="If use configured min score to filter suggestions"
-                      />
+                      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
+                        <NumberInput
+                          label="minScore"
+                          {...form.inputProps("minScore")}
+                          description="Define score threshold used to filter results after query has been done"
+                        />
+                        <BooleanInput
+                          label="min Score Suggestions"
+                          {...form.inputProps("minScoreSuggestions")}
+                          description="If use configured min score to filter search results"
+                        />
+                        <BooleanInput
+                          label="min Score Search"
+                          {...form.inputProps("minScoreSearch")}
+                          description="If use configured min score to filter suggestions"
+                        />
+                      </Box>
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
                           type="button"
@@ -214,6 +298,48 @@ export function SaveSearchConfig() {
                           }}
                         />
                       </TooltipDescription>
+                      <DataCardManager
+                        options={[]}
+                        config={{
+                          title: "Set Query Parser",
+                          description: activeType ? `${activeType}` : "Query Parser Configuration",
+                        }}
+                        onAddField={() => {
+                          // const remappedData= mappingDynamicForm.map((mapping)=>)
+                        }}
+                        // onReset={handleReset}
+                        onInit={({ openForm }) => {
+                          openFormRef.current = openForm;
+                        }}
+                        row={types.map((type) => ({
+                          ...type,
+                          customActions: [
+                            {
+                              icon: <EditIcon fontSize="small" />,
+                              // label: "Modify",
+                              action: (id) => {
+                                setActiveType(id);
+                                openFormRef.current?.();
+                              },
+                            },
+                          ],
+                        }))}
+                      >
+                        <Box sx={{ width: "100%", display: "grid", gridColumn: "span 2" }}>
+                          {activeType &&
+                            (() => {
+                              const index = types.findIndex((type) => type.itemLabel === activeType);
+                              const dynamicObj = DynamicsHook[index !== -1 ? index : 0];
+                              return (
+                                <GenerateDynamicForm
+                                  templates={dynamicObj?.dynamicTemplate ?? null}
+                                  changeValueKey={dynamicObj?.changeValueTemplate ?? (() => {})}
+                                  disabled={false}
+                                />
+                              );
+                            })()}
+                        </Box>
+                      </DataCardManager>
                     </div>
                   ),
                   page: 0,
@@ -459,3 +585,10 @@ const SliderWithTooltip = ({
     </Box>
   );
 };
+
+type structureTemplateSearchConfig = [
+  {
+    type: string;
+    form: Template;
+  },
+];

@@ -14,7 +14,7 @@ import {
   useForm,
 } from "../../components/Form";
 import { TabQuery, useCreateOrUpdateTabMutation, useTabQuery, useTabTokensQuery } from "../../graphql-generated";
-import { ReturnUserTabData, TabQueryGql, TabsQuery } from "./gql";
+import { ReturnUserTabData } from "./gql";
 import { formatQueryToBE, formatQueryToFE } from "../../utils";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
@@ -42,7 +42,7 @@ export function SaveTab() {
   };
   const toast = useToast();
   const [createOrUpdateTabMutate, createOrUpdateTabMutation] = useCreateOrUpdateTabMutation({
-    refetchQueries: [TabQueryGql, TabsQuery],
+    refetchQueries: ["Tab", "Tabs"],
     onCompleted(data) {
       try {
         const parentId = data.tabWithTokenTabs?.entity?.id;

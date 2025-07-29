@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const AnnotatorsQuery = gql`
+gql`
   query Annotators($searchText: String, $after: String) {
     annotators(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -48,7 +48,7 @@ gql`
     }
   }
 `;
-export const DocValuQuery = gql`
+gql`
   query DocTypeFieldValue($id: ID!) {
     value: docTypeField(id: $id) {
       id
@@ -58,7 +58,7 @@ export const DocValuQuery = gql`
   }
 `;
 
-export const AnnotatorQuery = gql`
+gql`
   query Annotator($id: ID!) {
     annotator(id: $id) {
       id

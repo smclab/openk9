@@ -13,7 +13,7 @@ import useTemplate, { createJsonString, NavigationButtons } from "@components/Fo
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCharFilterQuery, useCreateOrUpdateCharFilterMutation } from "../../graphql-generated";
-import { CharFilterQuery, CharFilters, CharFiltersQuery } from "./gql";
+import { CharFilters } from "./gql";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
@@ -45,7 +45,7 @@ export function SaveCharFilter() {
     type: charFilterQuery.data?.charFilter?.type,
   });
   const [createOrUpdateCharFilterMutate, createOrUpdateCharFilterMutation] = useCreateOrUpdateCharFilterMutation({
-    refetchQueries: [CharFilterQuery, CharFiltersQuery],
+    refetchQueries: ["CharFilter", "Charfilters"],
     onCompleted(data) {
       if (data.charFilter?.entity) {
         const isNew = charFilterId === "new" ? "created" : "updated";

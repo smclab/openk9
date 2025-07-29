@@ -8,14 +8,13 @@ import {
   useEnableLargeLanguageModelMutation,
   useLargeLanguageModelsQuery,
 } from "../../graphql-generated";
-import { LargeLanguageModelsQuery } from "./gql";
 
 export function LargeLanguageModels() {
   const largeLanguageModelsQuery = useLargeLanguageModelsQuery();
   const theme = useTheme();
   const toast = useToast();
   const [deleteTabMutate] = useDeleteLargeLanguageModelMutation({
-    refetchQueries: [LargeLanguageModelsQuery],
+    refetchQueries: ["LargeLanguageModels"],
     onCompleted(data) {
       if (data.deleteLargeLanguageModel?.id) {
         toast({
@@ -41,11 +40,11 @@ export function LargeLanguageModels() {
   });
 
   const [updateEnableLargeLaguageModel] = useEnableLargeLanguageModelMutation({
-    refetchQueries: [LargeLanguageModelsQuery],
+    refetchQueries: ["LargeLanguageModels"],
   });
 
   const [deleteModelsMutate] = useDeleteLargeLanguageModelMutation({
-    refetchQueries: [LargeLanguageModelsQuery],
+    refetchQueries: ["LargeLanguageModels"],
     onCompleted(data) {
       if (data.deleteLargeLanguageModel?.id) {
       }

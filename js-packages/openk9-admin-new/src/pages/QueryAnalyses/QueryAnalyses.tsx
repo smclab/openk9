@@ -4,7 +4,6 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useDeleteQueryAnalysisMutation, useQueryAnalysesQuery } from "../../graphql-generated";
-import { QueryAnalysesQuery } from "./gql";
 
 export function QueryAnalyses() {
   const queryAnalysesQuery = useQueryAnalysesQuery();
@@ -15,7 +14,7 @@ export function QueryAnalyses() {
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteQueryAnalysisMutate] = useDeleteQueryAnalysisMutation({
-    refetchQueries: [QueryAnalysesQuery],
+    refetchQueries: ["QueryAnalyses"],
     onCompleted(data) {
       if (data.deleteQueryAnalysis?.id) {
         toast({

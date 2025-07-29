@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const SearchConfigQuery = gql`
+gql`
   query SearchConfig($id: ID!) {
     searchConfig(id: $id) {
       id
@@ -9,6 +9,16 @@ export const SearchConfigQuery = gql`
       minScore
       minScoreSuggestions
       minScoreSearch
+      queryParserConfigs {
+        edges {
+          node {
+            id
+            name
+            type
+            jsonConfig
+          }
+        }
+      }
     }
   }
 `;
@@ -21,15 +31,17 @@ gql`
     $minScore: Float!
     $minScoreSuggestions: Boolean!
     $minScoreSearch: Boolean!
+    $queryParsersConfig: [QueryParserConfigDTOInput]
   ) {
-    searchConfig(
+    searchConfigWithQueryParsers(
       id: $id
-      searchConfigDTO: {
+      searchConfigWithQueryParsersDTO: {
         name: $name
         description: $description
         minScore: $minScore
         minScoreSuggestions: $minScoreSuggestions
         minScoreSearch: $minScoreSearch
+        queryParsers: $queryParsersConfig
       }
     ) {
       entity {
@@ -45,7 +57,7 @@ gql`
   }
 `;
 
-export const SearchConfigsQueryQ = gql`
+gql`
   query SearchConfigs($searchText: String, $after: String) {
     searchConfigs(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -72,5 +84,11 @@ gql`
       id
       name
     }
+  }
+`;
+
+export const QueryParserConfig = gql`
+  query queryParserConfig {
+    queryParserConfigFormConfigurations
   }
 `;

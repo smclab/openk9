@@ -30,13 +30,12 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DataIndicesQuery } from "@pages/dataindices/gql";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEnrichItemsQuery } from "../../../../../graphql-generated";
 import { BoxArea } from "../../BoxArea";
 import { DateTimeSection } from "./DateTimeSection";
-import { GenerateDynamicForm, Template } from "./DynamicForm";
+import { ChangeValueKey, GenerateDynamicForm, Template } from "./DynamicForm";
 import { tabsType } from "../../../datasourceType";
 import { ConnectionData } from "../../../types";
 
@@ -76,7 +75,7 @@ export function ConfigureDatasource({
   dynamicFormJson: string | null;
   loadingFormCustom: boolean;
   dynamicTemplate: Template | null;
-  changeValueTemplate: (fieldName: string, newValue: string | number | Array<string> | boolean) => void;
+  changeValueTemplate: ChangeValueKey;
 }) {
   const [areaState, setAreaState] = useState<{
     schedulingArea: SchedulingRadioType | null;
@@ -184,9 +183,9 @@ export function EnrichItemsTable({
   });
 
   const handleOrderChange = (index: number, direction: "up" | "down") => {
-    if (!connectionData?.linkedEnrichItems) return;
+    if (!connectionData?.enrichPipelineCustom?.linkedEnrichItems) return;
 
-    const updatedEnrichItems = [...connectionData.linkedEnrichItems];
+    const updatedEnrichItems = [...connectionData.enrichPipelineCustom?.linkedEnrichItems];
 
     if (direction === "up" && index > 0) {
       const currentWeight = updatedEnrichItems[index].weight;
@@ -204,12 +203,17 @@ export function EnrichItemsTable({
 
     setConnectionData((prevData) => ({
       ...prevData,
-      linkedEnrichItems: updatedEnrichItems,
+      enrichPipelineCustom: {
+        ...prevData.enrichPipelineCustom,
+        id: prevData.enrichPipelineCustom?.id ?? "",
+        name: prevData.enrichPipelineCustom?.name ?? "",
+        linkedEnrichItems: updatedEnrichItems,
+      },
     }));
   };
 
   const handleEnrichItemLink = (item: any) => {
-    const weight = (connectionData?.linkedEnrichItems?.length || 0) + 1;
+    const weight = (connectionData?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) + 1;
     const enrichItem = {
       id: item?.node?.id,
       name: item?.node?.name,
@@ -218,7 +222,11 @@ export function EnrichItemsTable({
     };
     setConnectionData((prevData) => ({
       ...prevData,
-      linkedEnrichItems: [...(prevData?.linkedEnrichItems || []), enrichItem],
+      enrichPipelineCustom: {
+        id: prevData.enrichPipelineCustom?.id ?? "",
+        name: prevData.enrichPipelineCustom?.name ?? "",
+        linkedEnrichItems: [...(prevData?.enrichPipelineCustom?.linkedEnrichItems || []), enrichItem],
+      },
     }));
   };
 
@@ -271,16 +279,17 @@ export function EnrichItemsTable({
           <TextField
             type={"text"}
             disabled={!isActive}
-            value={connectionData?.enrichPipeline?.name}
+            value={connectionData?.enrichPipelineCustom?.name || ""}
             onChange={(e) => {
-              if (e.currentTarget.value !== null && e.currentTarget.value !== undefined)
-                setConnectionData((d) => ({
-                  ...d,
-                  enrichPipeline: {
-                    ...d.enrichPipeline,
-                    name: e?.currentTarget?.value,
-                  },
-                }));
+              const value = e.currentTarget.value;
+              setConnectionData((d) => ({
+                ...d,
+                enrichPipelineCustom: {
+                  id: d.enrichPipelineCustom?.id ?? "",
+                  name: value,
+                  linkedEnrichItems: d.enrichPipelineCustom?.linkedEnrichItems ?? [],
+                },
+              }));
             }}
           />
         </div>
@@ -299,7 +308,7 @@ export function EnrichItemsTable({
                 </TableHead>
                 <TableBody>
                   {enrichItems.data?.enrichItems?.edges?.map((item) => {
-                    const isLinked = connectionData?.linkedEnrichItems?.some(
+                    const isLinked = connectionData?.enrichPipelineCustom?.linkedEnrichItems?.some(
                       (enrichItem) => enrichItem.id === item?.node?.id,
                     );
                     if (!isLinked) {
@@ -339,7 +348,7 @@ export function EnrichItemsTable({
               </TableRow>
             </TableHead>
             <TableBody>
-              {connectionData?.linkedEnrichItems
+              {connectionData?.enrichPipelineCustom?.linkedEnrichItems
                 ?.sort((a, b) => a.weight - b.weight)
                 .map((item, index) => (
                   <TableRow key={index}>
@@ -349,7 +358,7 @@ export function EnrichItemsTable({
                       </IconButton>
                       <IconButton
                         onClick={() => handleOrderChange(index, "down")}
-                        disabled={index === (connectionData?.linkedEnrichItems || [])?.length - 1}
+                        disabled={index === (connectionData?.enrichPipelineCustom?.linkedEnrichItems || [])?.length - 1}
                       >
                         <ArrowDownwardIcon />
                       </IconButton>
@@ -361,12 +370,17 @@ export function EnrichItemsTable({
                         <Link
                           underline="always"
                           onClick={() => {
-                            const filteredItems = connectionData?.linkedEnrichItems?.filter(
+                            const filteredItems = connectionData?.enrichPipelineCustom?.linkedEnrichItems?.filter(
                               (element) => element.id !== item.id,
                             );
                             setConnectionData((prevData) => ({
                               ...prevData,
-                              linkedEnrichItems: filteredItems,
+                              enrichPipelineCustom: {
+                                ...prevData.enrichPipelineCustom,
+                                id: prevData.enrichPipelineCustom?.id ?? "",
+                                name: prevData.enrichPipelineCustom?.name ?? "",
+                                linkedEnrichItems: filteredItems || [],
+                              },
                             }));
                           }}
                         >
@@ -419,196 +433,6 @@ export type CustomForm = {
   validator: {};
   values: any;
 };
-
-function Form({
-  formCustom,
-  setFormCustom,
-  disabled,
-}: {
-  formCustom: CustomForm[] | undefined;
-  setFormCustom: React.Dispatch<CustomForm[] | undefined>;
-  disabled: boolean;
-}) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormCustom(
-      formCustom?.map((form) =>
-        form.name === name
-          ? {
-              ...form,
-              values: form.values.map((val: any) => (val.isDefault ? { ...val, value } : val)),
-            }
-          : form,
-      ),
-    );
-  };
-
-  const handleSelectChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormCustom(
-      formCustom?.map((form) =>
-        form.name === name
-          ? {
-              ...form,
-              values: form.values.map((val: any) => (val.isDefault ? { ...val, value } : val)),
-            }
-          : form,
-      ),
-    );
-  };
-
-  const handleListChange = (name: string, value: string[]) => {
-    setFormCustom(
-      formCustom?.map((form) =>
-        form.name === name
-          ? {
-              ...form,
-              values: value.map((val) => {
-                const existingVal = form.values.find((v: any) => v.value === val);
-                return existingVal ? { ...existingVal } : { value: val, isDefault: false };
-              }),
-            }
-          : form,
-      ),
-    );
-  };
-
-  const handleRemoveItem = (formName: string, itemValue: string) => {
-    setFormCustom(
-      formCustom?.map((form) =>
-        form.name === formName
-          ? {
-              ...form,
-              values: form.values.filter((val: any) => val.value !== itemValue),
-            }
-          : form,
-      ),
-    );
-  };
-
-  const handleRemoveAllItems = (formName: string) => {
-    setFormCustom(
-      formCustom?.map((form) =>
-        form.name === formName
-          ? {
-              ...form,
-              values: [],
-            }
-          : form,
-      ),
-    );
-    handleListChange(formName, []);
-  };
-
-  return (
-    <>
-      <Box>
-        {formCustom?.map((form) => (
-          <Box key={form?.name} sx={{ marginBottom: "1rem" }}>
-            <FormControl fullWidth required={form?.required}>
-              {form?.type === "text" || form?.type === "number" || form?.type === "password" ? (
-                <>
-                  <Box sx={{ display: "flex", gap: "3px" }}>
-                    <Typography variant="body1">{form?.label || form?.name}</Typography>
-                    {form?.required && <FormHelperText sx={{ color: "red" }}>*</FormHelperText>}
-                  </Box>
-                  {form?.info && <FormHelperText>{form?.info}</FormHelperText>}
-                  <TextField
-                    id={form?.name}
-                    disabled={disabled}
-                    name={form?.name}
-                    type={form?.type}
-                    required={form?.required}
-                    value={form?.values.find((val: any) => val.isDefault)?.value || ""}
-                    onChange={handleChange}
-                  />
-                </>
-              ) : form?.type === "select" ? (
-                <>
-                  <Box sx={{ display: "flex", gap: "3px" }}>
-                    <Typography variant="body1">{form?.name}</Typography>
-                    {form?.required && <FormHelperText sx={{ color: "red" }}>*</FormHelperText>}
-                  </Box>
-                  <Select
-                    id={form?.name}
-                    disabled={disabled}
-                    name={form?.name}
-                    value={form?.values.find((val: any) => val.isDefault)?.value || ""}
-                    label={form?.label}
-                    onChange={handleSelectChange}
-                  >
-                    {form?.values.map((value: any) => (
-                      <MenuItem key={value.value} value={value.value}>
-                        {value.value}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </>
-              ) : form?.type === "list" ? (
-                <>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <Typography variant="body1">{form?.name}</Typography>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      disabled={disabled}
-                      onClick={() => handleRemoveAllItems(form.name)}
-                    >
-                      Remove all
-                    </Button>
-                  </Box>
-                  <Autocomplete
-                    freeSolo
-                    disabled={disabled}
-                    multiple
-                    options={[]}
-                    sx={{ minWidth: "230px" }}
-                    value={form.values?.map((val: any) => val.value) || []}
-                    onChange={(event, value) => handleListChange(form.name, value as string[])}
-                    renderTags={(value: string[], getTagProps) =>
-                      value?.map((option: string, index: number) => (
-                        <Chip
-                          label={option}
-                          {...getTagProps({ index })}
-                          onDelete={() => handleRemoveItem(form.name, option)}
-                        />
-                      ))
-                    }
-                    renderInput={(params) => (
-                      <TextField {...params} variant="outlined" name={form?.name} placeholder="Add a domain" />
-                    )}
-                  />
-                </>
-              ) : form?.type === "checkbox" ? (
-                <MenuItem value="*">
-                  <Checkbox
-                    checked={form.values[0].value}
-                    disabled={disabled}
-                    onChange={() =>
-                      handleSelectChange({
-                        target: {
-                          name: form?.name || form?.label,
-                          value: !form.values[0]?.value,
-                        },
-                      })
-                    }
-                  />
-                  <ListItemText primary="Every month" />
-                </MenuItem>
-              ) : null}
-            </FormControl>
-          </Box>
-        ))}
-      </Box>
-    </>
-  );
-}
 
 export type SchedulingRadioType = "present-scheduling" | "custom-scheduling";
 export type PipelineRadioType = "present-pipeline" | "custom-pipeline" | "no-pipeline";

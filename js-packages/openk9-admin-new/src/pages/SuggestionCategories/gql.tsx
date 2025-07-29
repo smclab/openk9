@@ -9,7 +9,7 @@ gql`
   }
 `;
 
-export const SuggestionCategoriesQuery = gql`
+gql`
   query SuggestionCategories($searchText: String, $after: String) {
     suggestionCategories(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -83,7 +83,7 @@ gql`
   }
 `;
 
-export const SuggestionCategoryQuery = gql`
+gql`
   query SuggestionCategory($id: ID!) {
     suggestionCategory(id: $id) {
       id
@@ -101,6 +101,15 @@ export const SuggestionCategoryQuery = gql`
         value
         description
       }
+    }
+  }
+`;
+
+gql`
+  query UnboundDocTypeFieldsBySuggestionCategory($suggestionCategoryId: BigInteger!) {
+    unboundDocTypeFieldsBySuggestionCategory(suggestionCategoryId: $suggestionCategoryId) {
+      id
+      name
     }
   }
 `;

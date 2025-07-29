@@ -4,14 +4,13 @@ import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDeleteDocumentTypeTemplateMutation, useDocumentTypeTemplatesQuery } from "../../graphql-generated";
-import { DocumentTypeTemplatesQuery } from "./gql";
 
 export function DocumentTypeTemplates() {
   const docTypeTemplatesQuery = useDocumentTypeTemplatesQuery();
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteDocumentTypeTemplateMutate] = useDeleteDocumentTypeTemplateMutation({
-    refetchQueries: [DocumentTypeTemplatesQuery],
+    refetchQueries: ["DocumentTypeTemplates"],
     onCompleted(data) {
       if (data.deleteDocTypeTemplate?.id) {
         toast({

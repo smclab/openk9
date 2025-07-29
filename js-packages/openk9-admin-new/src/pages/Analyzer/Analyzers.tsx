@@ -4,7 +4,6 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
 import { useAnalyzersQuery, useDeleteAnalyzerMutation } from "../../graphql-generated";
-import { AnalyzersRefetchQuery } from "./gql";
 
 export function Analyzers() {
   const analyzerQuery = useAnalyzersQuery();
@@ -15,7 +14,7 @@ export function Analyzers() {
   const toast = useToast();
   const navigate = useNavigate();
   const [deleteAnalyzerMutate] = useDeleteAnalyzerMutation({
-    refetchQueries: [AnalyzersRefetchQuery],
+    refetchQueries: ["Analyzers"],
     onCompleted(data) {
       if (data.deleteAnalyzer?.id) {
         toast({

@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const FailureQuery = gql`
+gql`
   query Schedulers {
     schedulers(searchText: "FAILURE") {
       edges {
@@ -16,7 +16,8 @@ export const FailureQuery = gql`
     }
   }
 `;
-export const ErrorQuery = gql`
+
+gql`
   query schedulersError {
     schedulers(searchText: "ERROR") {
       edges {
@@ -34,7 +35,7 @@ export const ErrorQuery = gql`
   }
 `;
 
-export const SchedulerQuery = gql`
+gql`
   query Scheduler($id: ID!) {
     scheduler(id: $id) {
       scheduleId

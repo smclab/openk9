@@ -1,12 +1,10 @@
+import { ModalConfirm } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import { useDeletePluginDriverMutation, usePluginDriversInfoQueryQuery } from "../../graphql-generated";
-import { PluginDriversInfoQuery } from "./gql";
-import { PluginDriversQuery } from "@pages/datasources/gql";
 
 export function PluginDrivers() {
   const pluginDriverQuery = usePluginDriversInfoQueryQuery({
@@ -21,7 +19,7 @@ export function PluginDrivers() {
   });
   const toast = useToast();
   const [deletePluginDriverMutate] = useDeletePluginDriverMutation({
-    refetchQueries: [PluginDriversInfoQuery],
+    refetchQueries: ["PluginDriversInfoQuery"],
     onCompleted(data) {
       if (data.deletePluginDriver?.id) {
         toast({

@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 import { TemplateType } from "@pages/Analyzer/gql";
 
-export const CharFiltersQuery = gql`
+ gql`
   query Charfilters($searchText: String, $after: String) {
     charFilters(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -50,7 +50,7 @@ gql`
   }
 `;
 
-export const CharFilterQuery = gql`
+ gql`
   query CharFilter($id: ID!) {
     charFilter(id: $id) {
       id

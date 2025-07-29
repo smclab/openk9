@@ -1,6 +1,5 @@
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {
+  CodeInput,
   combineErrorMessages,
   ContainerFluid,
   CreateDataEntity,
@@ -10,9 +9,12 @@ import {
   TextInput,
   TitleEntity,
   useForm,
-  CodeInput,
-  TooltipDescription,
 } from "@components/Form";
+import { useToast } from "@components/Form/Form/ToastProvider";
+import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
+import { Box, Button } from "@mui/material";
+import React, { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   QueryAnalysisAssociationsQuery,
   useAnnotatorsQuery,
@@ -21,16 +23,22 @@ import {
   useQueryAnalysisQuery,
   useRulesQuery,
 } from "../../graphql-generated";
-import { QueryAnalysisQuery, QueryAnalysesQuery } from "./gql";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
-import { useToast } from "@components/Form/Form/ToastProvider";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 type ReturnQueryAnalysis = {
   annotators: AssociatedUnassociated;
   rules: AssociatedUnassociated;
 };
+
+const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
+  {
+    label: "Annotators",
+    id: "annotatorsIds",
+    tooltip: "Annotators associated to current Query Analysis configuration",
+  },
+  { label: "Rules", id: "rulesIds", tooltip: "Rules associated to current Query Analysis configuration" },
+];
 
 const useQueryAnalysisData = ({
   queryAnalysisId,
@@ -82,6 +90,7 @@ const useQueryAnalysisData = ({
 export function SaveQueryAnalysis() {
   const { queryAnalysisId = "new", view } = useParams();
   const navigate = useNavigate();
+  const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Query Analysis",
     body: "Are you sure you want to edit this Query Analysis?",
@@ -121,7 +130,7 @@ export function SaveQueryAnalysis() {
   const toast = useToast();
   const [createOrUpdateQueryAnalysisMutate, createOrUpdateQueryAnalysisMutation] =
     useCreateOrUpdateQueryAnalysisMutation({
-      refetchQueries: [QueryAnalysisQuery, QueryAnalysesQuery],
+      refetchQueries: ["QueryAnalysis", "QueryAnalyses"],
       onCompleted(data) {
         if (data.queryAnalysisWithLists?.entity) {
           const isNew = queryAnalysisId === "new" ? "created" : "updated";
@@ -208,10 +217,10 @@ export function SaveQueryAnalysis() {
             {
               content: (
                 <>
-                  <ContainerFluid flexColumn>
+                  <ContainerFluid flexColumn size="md">
                     <TextInput label="Name" {...form.inputProps("name")} />
                     <TextArea label="Description" {...form.inputProps("description")} />
-                    <TooltipDescription informationDescription="Annotators associated to current Query Analysis configuration">
+                    <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
                       <MultiAssociationCustomQuery
                         list={{
                           ...annotators,
@@ -220,7 +229,7 @@ export function SaveQueryAnalysis() {
                         createPath={{ path: "/annotator/new", entity: "annotators" }}
                         disabled={false}
                         isRecap={page === 1}
-                        titleAssociation="Association with annotators"
+                        sx={selectedAssociationTabs === "annotatorsIds" ? {} : { display: "none" }}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("annotatorsIds").value;
                           if (isAdd) {
@@ -235,8 +244,6 @@ export function SaveQueryAnalysis() {
                           }
                         }}
                       />
-                    </TooltipDescription>
-                    <TooltipDescription informationDescription="Rules associated to current Query Analysis configuration">
                       <MultiAssociationCustomQuery
                         list={{
                           ...rules,
@@ -244,7 +251,7 @@ export function SaveQueryAnalysis() {
                         }}
                         disabled={false}
                         isRecap={page === 1}
-                        titleAssociation="Association with rules"
+                        sx={selectedAssociationTabs === "rulesIds" ? {} : { display: "none" }}
                         onSelect={({ items, isAdd }) => {
                           const data = form.inputProps("rulesIds").value;
                           if (isAdd) {
@@ -259,7 +266,7 @@ export function SaveQueryAnalysis() {
                           }
                         }}
                       />
-                    </TooltipDescription>
+                    </AssociationsLayout>
                   </ContainerFluid>
                   <ContainerFluid size="md">
                     <CodeInput

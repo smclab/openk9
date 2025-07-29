@@ -1,14 +1,12 @@
 import { ModalConfirm, useToast } from "@components/Form";
 import { Table } from "@components/Table/Table";
-import { Box, Button, Container, Typography, useTheme } from "@mui/material";
-import { useDeleteDocumentTypeMutation, useDocumentTypesQuery } from "../../graphql-generated";
+import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { DocumentTypesQuery } from "./gql";
+import { useDeleteDocumentTypeMutation, useDocumentTypesQuery } from "../../graphql-generated";
 
 export default function DocumentTypes() {
   const documentTypeQuery = useDocumentTypesQuery();
-  const theme = useTheme();
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
     id: undefined,
@@ -16,7 +14,7 @@ export default function DocumentTypes() {
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteDocumentTypeMutate] = useDeleteDocumentTypeMutation({
-    refetchQueries: [DocumentTypesQuery],
+    refetchQueries: ["DocumentTypes"],
     onCompleted(data) {
       if (data.deleteDocType?.id) {
         toast({

@@ -168,6 +168,15 @@ export function SaveDatasource() {
       purging: formValues.purging || "0 0 1 * * ?",
       purgeable: formValues.isCronSectionpurge || false,
       purgeMaxAge: formValues.purgeMaxAge || "2d",
+      ...(formValues.enrichPipelineCustom?.name && {
+        pipeline: {
+          name: formValues.enrichPipelineCustom.name,
+          items: formValues?.enrichPipelineCustom.linkedEnrichItems?.map((forms) => ({
+            enrichItemId: forms.id || "",
+            weight: forms.weight || 0,
+          })) as [],
+        },
+      }),
     };
 
     if (formValues.datasourceId !== "new") {
@@ -207,6 +216,7 @@ export function SaveDatasource() {
             }),
           },
         },
+        refetchQueries: ["DataSources"],
         onError: (error) => {
           setActiveTab("recap");
           toast({

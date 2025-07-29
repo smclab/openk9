@@ -1,24 +1,23 @@
 import {
+  BooleanInput,
   CodeInput,
   ContainerFluid,
   CreateDataEntity,
+  NumberInput,
   TextArea,
   TextInput,
   TitleEntity,
+  TooltipDescription,
   combineErrorMessages,
   useForm,
-  TooltipDescription,
-  NumberInput,
-  BooleanInput,
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
+import { Box, Button, MenuItem, Select, Typography } from "@mui/material";
+import { maskApiKey } from "@pages/EmbeddingModels";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery } from "../../graphql-generated";
-import { LargeLanguageModelCreate, LargeLanguageModelQ, LargeLanguageModelsQuery } from "./gql";
-import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { maskApiKey } from "@pages/EmbeddingModels";
 
 const PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI" },
@@ -53,7 +52,7 @@ export function SaveLargeLanguageModel() {
   const toast = useToast();
   const [createOrUpdateLargeLanguageModelMutate, createOrUpdateLargeLanguageModelMutation] =
     useCreateOrUpdateLargeLanguageModelMutation({
-      refetchQueries: [LargeLanguageModelCreate, LargeLanguageModelsQuery, LargeLanguageModelQ],
+      refetchQueries: ["CreateOrUpdateLargeLanguageModel", "LargeLanguageModels", "LargeLanguageModel"],
       onCompleted(data) {
         if (data.largeLanguageModel?.entity) {
           const isNew = LargeLanguageModelId === "new" ? "created" : "updated";
@@ -182,7 +181,7 @@ export function SaveLargeLanguageModel() {
                     <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
                       <TextInput label="Api url" {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
-                    <NumberInput label="Context Window" {...form.inputProps("contextWindow")} />
+                    <NumberInput label="Context Window" {...form.inputProps("contextWindow")} isNumber={false} />
                     <BooleanInput label="Retrieve Citations" {...form.inputProps("retrieveCitations")} />
                     <Typography variant="h4">Provider</Typography>
                     <Select

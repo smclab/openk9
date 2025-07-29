@@ -31,6 +31,7 @@ export interface ConnectionData {
     description?: string | null;
   };
   bodyTag: string;
+  optionDataindex: Array<{ id: string; name: string }>;
   titleTag: string;
   titleCount: string;
   maxLenght: string;
@@ -39,6 +40,10 @@ export interface ConnectionData {
   enrichPipeline?: { id?: string | null; name?: string | null };
   jsonConfig?: string | null;
   lastIngestionDate?: any;
+  enrichPipelineCustom:
+    | { id: string | null | undefined; name: string | null | undefined; linkedEnrichItems: any[] | null }
+    | undefined
+    | null;
   scheduling?: string | null;
   purging?: string | null;
   isCronSectionscheduling?: boolean | null;

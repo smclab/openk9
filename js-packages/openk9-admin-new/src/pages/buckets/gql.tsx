@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const BucketsQuery = gql`
+gql`
   query Buckets($searchText: String, $after: String) {
     buckets(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -230,7 +230,7 @@ gql`
   }
 `;
 
-export const BucketsdataSources = gql`
+gql`
   query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id

@@ -22,19 +22,13 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useConfirmModal } from "../../utils/useConfirmModal";
 import {
   useAssociatedEnrichPipelineEnrichItemsQuery,
   useEnrichItemsQuery,
   useEnrichPipelineQuery,
   useEnrichPipelineWithItemsMutation,
 } from "../../graphql-generated";
-import {
-  AssociatedEnrichPipelineEnrichItemsQuery,
-  EnrichPipelineQuery,
-  EnrichPipelinesQuery,
-  EnrichPipelineWithItemsQuery,
-} from "./gql";
+import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SavePipeline() {
   const { pipelineId = "new", mode } = useParams();
@@ -89,10 +83,10 @@ export function SavePipeline() {
 
   const [createOrUpdatePipelineMutate] = useEnrichPipelineWithItemsMutation({
     refetchQueries: [
-      EnrichPipelinesQuery,
-      EnrichPipelineQuery,
-      EnrichPipelineWithItemsQuery,
-      AssociatedEnrichPipelineEnrichItemsQuery,
+      "EnrichPipelines",
+      "EnrichPipeline",
+      "EnrichPipelineWithItems",
+      "AssociatedEnrichPipelineEnrichItems",
     ],
     onCompleted(data) {
       if (data.enrichPipelineWithEnrichItems?.entity) {

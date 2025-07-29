@@ -1,2 +1,2 @@
-export * from './SaveSuggestionCategory';
-export * from './SuggestionCategories';
+export * from "./SaveSuggestionCategory";
+export * from "./SuggestionCategories";

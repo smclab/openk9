@@ -1,6 +1,5 @@
 import { ModalAddSingle, ModalConfirm, useToast } from "@components/Form";
 import { Box, Button, Container, Typography } from "@mui/material";
-import { EnrichItemsQuery } from "@pages/datasources/gql";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
@@ -19,7 +18,7 @@ export function EnrichItems() {
     refetchQueries: [],
   });
   const [deleteEnrichItemMutate] = useDeleteEnrichItemMutation({
-    refetchQueries: [EnrichItemsQuery],
+    refetchQueries: ["EnrichItems"],
     onCompleted(data) {
       if (data.deleteEnrichItem?.id) {
         toast({

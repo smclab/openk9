@@ -1,7 +1,8 @@
-import { BooleanInput, NumberInputSimple, TextInputSimple } from "@components/Form";
+import { BooleanInput, KeyValue, NumberInputSimple, TextInputSimple } from "@components/Form";
 import Autocomplete from "@components/Form/Form/AutoComplete";
-import { Box, FormControl, InputLabel, Typography, Select, MenuItem } from "@mui/material";
+import { Box, FormControl, Grid, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
+import { StringMapInput } from "./StringMap/StringMap";
 
 export default function DynamicForm({
   template,
@@ -14,8 +15,11 @@ export default function DynamicForm({
   const [dynamicFormJson, setDynamicFormJson] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (template && validateTemplate(template)) {
-      const dynamicTemplateUpdate = jsonConfig ? convertJsonToTemplate({ template, jsonConfig }) : template;
+    const filteredTemplate = template ? filterValidFields(template) : null;
+    if (filteredTemplate) {
+      const dynamicTemplateUpdate = jsonConfig
+        ? convertJsonToTemplate({ template: filteredTemplate, jsonConfig })
+        : filteredTemplate;
       const jsonDynamicTemplateUpdate = convertTemplateToJson({ fields: dynamicTemplateUpdate.fields });
 
       setDynamicTemplate(dynamicTemplateUpdate);
@@ -26,7 +30,10 @@ export default function DynamicForm({
     }
   }, [template, jsonConfig]);
 
-  const changeValueTemplate = (fieldName: string, newValue: string | number | Array<string> | boolean) => {
+  const changeValueTemplate = (
+    fieldName: string,
+    newValue: string | number | boolean | string[] | { location: string; title: string }[],
+  ) => {
     if (dynamicTemplate) {
       const updatedFields = dynamicTemplate.fields.map((field) => {
         if (field.name === fieldName) {
@@ -35,14 +42,16 @@ export default function DynamicForm({
             if (field.values && field.values.length > 0) {
               updatedValues = field?.values?.map((value) => ({
                 ...value,
-                isDefault: (newValue as string[]).find((val) => val === value.value) ? true : false,
+                isDefault: (newValue as string[])?.includes(value.value as string),
               }));
             }
+          } else if (field.type === "stringMap") {
+            updatedValues = newValue as any;
           } else if (field.type === "select") {
             if (field.values && field.values.length > 0) {
               updatedValues = field?.values?.map((value) => ({
                 ...value,
-                isDefault: value.value === newValue,
+                isDefault: value?.value === newValue,
               }));
             } else {
               updatedValues = [
@@ -52,6 +61,13 @@ export default function DynamicForm({
                 },
               ];
             }
+          } else if (field.type === "checkbox" || field.type === "boolean") {
+            updatedValues = [
+              {
+                value: typeof newValue === "boolean" ? newValue : newValue === "true",
+                isDefault: true,
+              },
+            ];
           } else {
             const formattedValue = field.type === "list" ? (newValue as string[]) : [String(newValue)];
             updatedValues = formattedValue.map((val) => ({
@@ -68,44 +84,15 @@ export default function DynamicForm({
         return field;
       });
 
-      const jsonDynamicTemplateUpdate = convertTemplateToJson({ fields: updatedFields });
-      setDynamicFormJson(jsonDynamicTemplateUpdate);
-      setDynamicTemplate({ fields: updatedFields });
+      const newDynamicTemplate = { fields: [...updatedFields] };
+      const newJsonDynamicTemplateUpdate = convertTemplateToJson(newDynamicTemplate);
+
+      setDynamicTemplate(newDynamicTemplate);
+      setDynamicFormJson(newJsonDynamicTemplateUpdate);
     }
   };
 
   return { dynamicTemplate, changeValueTemplate, dynamicFormJson };
-}
-
-function validateTemplate(template: any): template is Template {
-  if (!template || typeof template !== "object" || !Array.isArray(template.fields)) {
-    console.log("Template structure is invalid");
-    return false;
-  }
-  const isValid = template.fields.every((field: any) => {
-    const isFieldValid =
-      typeof field.label === "string" &&
-      typeof field.name === "string" &&
-      [
-        "text",
-        "number",
-        "list",
-        "select",
-        "boolean",
-        "password",
-        "email",
-        "time",
-        "date",
-        "url",
-        "checkbox",
-        "multiselect",
-      ].includes(field.type);
-    if (!isFieldValid) {
-      console.log("Invalid field:", field);
-    }
-    return isFieldValid;
-  });
-  return isValid;
 }
 
 function convertJsonToTemplate({ template, jsonConfig }: { template: Template; jsonConfig: string }): Template {
@@ -116,7 +103,12 @@ function convertJsonToTemplate({ template, jsonConfig }: { template: Template; j
       const fieldConfig = parsedConfig[field.name];
 
       let updatedValues: FieldValue[] = [];
-      if (field.type === "multiselect") {
+      if (field.type === "stringMap") {
+        const obj = Array.isArray(fieldConfig) && fieldConfig.length > 0 ? fieldConfig[0] : {};
+        updatedValues = Object.keys(obj).map((key) => ({
+          [key]: obj[key],
+        })) as any;
+      } else if (field.type === "multiselect") {
         if (Array.isArray(field.values) && field.values.length > 0) {
           updatedValues = field.values.map((value) => ({
             ...value,
@@ -159,6 +151,7 @@ function convertJsonToTemplate({ template, jsonConfig }: { template: Template; j
           },
         ];
       }
+
       return {
         ...field,
         values: updatedValues,
@@ -192,6 +185,9 @@ function convertTemplateToJson(template: Template): string {
       case "select":
         acc[field.name] = fieldValue as string;
         break;
+      case "stringMap":
+        acc[field.name] = [fieldValue as Record<string, string>];
+        break;
       default:
         acc[field.name] = fieldValue;
         break;
@@ -201,7 +197,7 @@ function convertTemplateToJson(template: Template): string {
   return JSON.stringify(jsonConfig);
 }
 
-function getDefaultValue(field: Field): string | number | boolean | string[] {
+function getDefaultValue(field: Field): string | number | boolean | string[] | Record<string, string> {
   if (!field.values || field.values.length === 0) {
     switch (field.type) {
       case "text":
@@ -209,7 +205,6 @@ function getDefaultValue(field: Field): string | number | boolean | string[] {
       case "number":
         return 0;
       case "checkbox":
-        return false;
       case "boolean":
         return false;
       case "list":
@@ -222,19 +217,40 @@ function getDefaultValue(field: Field): string | number | boolean | string[] {
       case "date":
       case "url":
         return "";
+      case "stringMap":
+        return {};
       default:
         return "";
     }
   }
+  if (field.type === "stringMap") {
+    const val = (field.values as KeyValue[]).reduce((acc, curr) => {
+      if (curr.key !== undefined && curr.value !== undefined) {
+        acc[curr.key] = curr.value;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+    return val;
+  }
+
   if (field.type === "list" || field.type === "multiselect") {
     return field.values.filter((value) => value.isDefault).map((value) => value.value as string);
+  }
+  if (field.type === "checkbox" || field.type === "boolean") {
+    return !!field.values.find((value) => value.isDefault)?.value;
   }
   return field.values.find((value) => value.isDefault)?.value ?? field.values[0]?.value ?? "";
 }
 
 type FieldValue = {
-  value: string | Array<string> | boolean;
+  value: string | Array<string> | boolean | KeyValue;
   isDefault: boolean;
+  [key: string]: any;
+};
+
+export type FieldValueWithLocation = {
+  location?: string;
+  title?: string;
 };
 
 type Validator = {
@@ -259,7 +275,9 @@ export type Field = {
     | "date"
     | "url"
     | "checkbox"
+    | "stringMap"
     | "multiselect";
+
   size: number;
   required: boolean;
   values: FieldValue[];
@@ -270,15 +288,30 @@ export type Template = {
   fields: Field[];
 };
 
+export type ChangeValueKey = (
+  fieldName: string,
+  newValue: string | number | boolean | string[] | { location: string; title: string }[],
+) => void;
+
 export function GenerateDynamicForm({
   templates,
   changeValueKey,
   disabled,
 }: {
   templates: Template | null;
-  changeValueKey: (fieldName: string, newValue: string | number | Array<string> | boolean) => void;
+  changeValueKey: ChangeValueKey;
   disabled: boolean;
 }) {
+  const firstStringMapValues = React.useMemo(() => {
+    if (!templates || !templates.fields) return {};
+    return templates.fields.reduce((acc, field) => {
+      if (field.type === "stringMap") {
+        acc[field.name] = field?.values && field.values.length > 0 ? Object.assign({}, ...field.values) : {};
+      }
+      return acc;
+    }, {} as Record<string, any>);
+  }, [templates]);
+
   const renderField = (field: Field) => {
     const value = getDefaultValue(field);
     const jsx = (() => {
@@ -287,10 +320,12 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
               value={value as string}
               description={field.info}
               disabled={disabled}
+              sx={{ paddingBottom: "0px" }}
               onChange={(e) => {
                 changeValueKey(field.name, e.currentTarget.value);
               }}
@@ -302,11 +337,30 @@ export function GenerateDynamicForm({
               key={field.name}
               label={field.label}
               value={Number(value)}
+              isRequired={field.required}
               description={field.info}
               disabled={disabled}
               onChange={(e) => {
                 changeValueKey(field.name, Number(e.currentTarget.value));
               }}
+            />
+          );
+        case "stringMap":
+          const firstValue = firstStringMapValues[field.name] || {};
+          return (
+            <StringMapInput
+              key={field.name}
+              defaultValue={
+                typeof firstValue === "object" && firstValue !== null
+                  ? Object.keys(firstValue).map((value: string) => ({
+                      key: value || "",
+                      value: (firstValue as KeyValue)[value] || "",
+                    }))
+                  : []
+              }
+              label={field.label}
+              description={field.info}
+              onChange={(newMap) => changeValueKey(field.name, newMap as any)}
             />
           );
         case "checkbox":
@@ -327,6 +381,7 @@ export function GenerateDynamicForm({
           return (
             <FormControl disabled={disabled} fullWidth key={field.name} sx={{ paddingBottom: "20px" }}>
               <InputLabel>{field.label}</InputLabel>
+              {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
               <Select
                 label={field.label}
                 multiple
@@ -354,6 +409,7 @@ export function GenerateDynamicForm({
           return (
             <FormControl disabled={disabled} fullWidth key={field.name}>
               <InputLabel>{field.label}</InputLabel>
+              {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
               <Select
                 label={field.label}
                 value={value as string}
@@ -384,6 +440,7 @@ export function GenerateDynamicForm({
               <Typography variant="subtitle1" component="label">
                 {field.label}
               </Typography>
+              {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
               <Autocomplete
                 disabled={disabled}
                 defaultChip={Array.isArray(value) ? value : []}
@@ -397,10 +454,12 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
               type="password"
               value={value as string}
               description={field.info}
+              sx={{ paddingBottom: "0px" }}
               disabled={disabled}
               onChange={(e) => {
                 changeValueKey(field.name, e.currentTarget.value);
@@ -411,10 +470,12 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
               type="email"
               value={value as string}
               description={field.info}
+              sx={{ paddingBottom: "0px" }}
               disabled={disabled}
               onChange={(e) => {
                 changeValueKey(field.name, e.currentTarget.value);
@@ -425,7 +486,9 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
+              sx={{ paddingBottom: "0px" }}
               type="time"
               value={value as string}
               description={field.info}
@@ -439,9 +502,11 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
               type="date"
               value={value as string}
+              sx={{ paddingBottom: "0px" }}
               description={field.info}
               disabled={disabled}
               onChange={(e) => {
@@ -453,9 +518,11 @@ export function GenerateDynamicForm({
           return (
             <TextInputSimple
               key={field.name}
+              isRequired={field.required}
               label={field.label}
               type="url"
               value={value as string}
+              sx={{ paddingBottom: "0px" }}
               description={field.info}
               disabled={disabled}
               onChange={(e) => {
@@ -470,16 +537,140 @@ export function GenerateDynamicForm({
 
     return jsx;
   };
+
   if (!templates) return null;
+
+  const renderedFields = templates?.fields
+    ?.map((field) => ({ field, jsx: renderField(field) }))
+    ?.filter(({ jsx }) => jsx !== null);
+
   return (
-    <div>
-      <Box display={"flex"} flexDirection={"column"} gap={"20px"}>
-        <div>
-          {templates?.fields?.map((field, index) => (
-            <div key={index}>{renderField(field)}</div>
-          ))}
-        </div>
-      </Box>
-    </div>
+    <Box>
+      <Grid container spacing={2} alignItems="center">
+        {renderedFields.map(({ field, jsx }, index) => (
+          <Grid item key={field.name} xs={12} sm={field.size} md={field.size} lg={field.size} xl={field.size}>
+            {jsx}
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
   );
+}
+
+function filterValidFields(template: any): Template | null {
+  if (!template || typeof template !== "object" || !Array.isArray(template.fields)) {
+    console.log("Template structure is invalid");
+    return null;
+  }
+  const validTypes = [
+    "text",
+    "number",
+    "list",
+    "select",
+    "boolean",
+    "password",
+    "email",
+    "time",
+    "date",
+    "url",
+    "checkbox",
+    "stringMap",
+    "multiselect",
+  ];
+  const validFields = template.fields.filter((field: any) => {
+    const isFieldValid =
+      typeof field.label === "string" && typeof field.name === "string" && validTypes.includes(field.type);
+    if (!isFieldValid) {
+      console.log("Invalid field:", field);
+    }
+    return isFieldValid;
+  });
+  if (validFields.length === 0) return null;
+  return { fields: validFields };
+}
+
+export function DynamicFormArray({
+  templates,
+  jsonConfigs,
+  onChangeJsonConfig,
+}: {
+  templates: (Template | null | undefined)[];
+  jsonConfigs: (string | null | undefined)[];
+  onChangeJsonConfig: (idx: number, newJson: string) => void;
+}) {
+  return templates?.map((template, idx) => {
+    const filteredTemplate = template ? filterValidFields(template) : null;
+    let dynamicTemplate: Template | null = null;
+    let dynamicFormJson: string | null = null;
+
+    if (filteredTemplate) {
+      const dynamicTemplateUpdate = jsonConfigs[idx]
+        ? convertJsonToTemplate({ template: filteredTemplate, jsonConfig: jsonConfigs[idx]! })
+        : filteredTemplate;
+      dynamicTemplate = dynamicTemplateUpdate;
+      dynamicFormJson = convertTemplateToJson({ fields: dynamicTemplateUpdate.fields });
+    }
+
+    const changeValueTemplate = (
+      fieldName: string,
+      newValue: string | number | boolean | string[] | Array<{ location: string; title: string }>,
+    ) => {
+      if (dynamicTemplate) {
+        const updatedFields = dynamicTemplate.fields.map((field) => {
+          if (field.name === fieldName) {
+            let updatedValues: FieldValue[] = [];
+            if (field.type === "multiselect") {
+              if (field.values && field.values.length > 0) {
+                updatedValues = field.values.map((value) => ({
+                  ...value,
+                  isDefault: (newValue as string[]).find((val) => val === value.value) ? true : false,
+                }));
+              }
+            } else if (field.type === "stringMap") {
+              updatedValues = newValue as any;
+            } else if (field.type === "select") {
+              if (field.values && field.values.length > 0) {
+                updatedValues = field?.values?.map((value) => ({
+                  ...value,
+                  isDefault: value?.value === newValue,
+                }));
+              } else {
+                updatedValues = [
+                  {
+                    value: String(newValue),
+                    isDefault: true,
+                  },
+                ];
+              }
+            } else if (field.type === "checkbox" || field.type === "boolean") {
+              updatedValues = [
+                {
+                  value: typeof newValue === "boolean" ? newValue : newValue === "true",
+                  isDefault: true,
+                },
+              ];
+            } else {
+              const formattedValue = field.type === "list" ? (newValue as string[]) : [String(newValue)];
+              updatedValues = formattedValue.map((val) => ({
+                value: val,
+                isDefault: true,
+              }));
+            }
+
+            return {
+              ...field,
+              values: updatedValues,
+            };
+          }
+          return field;
+        });
+
+        dynamicFormJson = convertTemplateToJson({ fields: updatedFields });
+        dynamicTemplate = { fields: updatedFields };
+        onChangeJsonConfig(idx, dynamicFormJson);
+      }
+    };
+
+    return { dynamicTemplate, changeValueTemplate, dynamicFormJson };
+  });
 }

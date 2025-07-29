@@ -32,7 +32,6 @@ import {
   useDocumentTypeTemplateQuery,
   useEnrichPipelinesValueOptionsQuery,
 } from "../../graphql-generated";
-import { DocumentTypeTemplateQuery, DocumentTypeTemplatesQuery } from "./gql";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SaveDocumentTypeTemplate() {
@@ -59,7 +58,7 @@ export function SaveDocumentTypeTemplate() {
   const toast = useToast();
   const [createOrUpdateDocumentTypeTemplateMutate, createOrUpdateDocumentTypeTempalteMutation] =
     useCreateOrUpdateDocumentTypeTemplateMutation({
-      refetchQueries: [DocumentTypeTemplateQuery, DocumentTypeTemplatesQuery],
+      refetchQueries: ["DocumentTypeTemplate", "DocumentTypeTemplates", "docTypeTemplateList"],
       onCompleted(data) {
         if (data.docTypeTemplate?.entity) {
           const isNew = documentTypeTemplateId === "new" ? "created" : "updated";

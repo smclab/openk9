@@ -9,7 +9,6 @@ import {
   useDeleteCharFiltersMutation,
   useUnboundAnalyzersByCharFilterQuery,
 } from "../../graphql-generated";
-import { CharFiltersQuery } from "./gql";
 
 export function CharFilters() {
   const charFiltersQuery = useCharfiltersQuery();
@@ -22,7 +21,7 @@ export function CharFilters() {
     fetchPolicy: "network-only",
   });
   const [deleteCharFilterMutate] = useDeleteCharFiltersMutation({
-    refetchQueries: [CharFiltersQuery],
+    refetchQueries: ["Charfilters"],
     onCompleted(data) {
       if (data.deleteCharFilter?.id) {
         toast({

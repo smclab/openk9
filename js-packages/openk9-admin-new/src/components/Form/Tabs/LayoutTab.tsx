@@ -1,24 +1,6 @@
-import { Box, Typography, Paper, Tab, Tabs } from "@mui/material";
+import { Box, Paper, Tab, Tabs, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { TooltipDescription } from "../utils";
-
-function TabPanel({ children, value, index, ...other }: any) {
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`association-tabpanel-${index}`}
-      aria-labelledby={`association-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }} justifyContent="center" display="flex">
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
 
 function a11yProps(tabId: string) {
   return {
@@ -62,7 +44,8 @@ export default function AssociationsLayout({
         sx={{
           border: "1px solid #e0e0e0",
           borderRadius: "10px",
-          overflow: "hidden",
+          width: "100%",
+          overflow: "scroll",
         }}
       >
         <Box sx={{ borderBottom: "1px solid #e0e0e0" }}>

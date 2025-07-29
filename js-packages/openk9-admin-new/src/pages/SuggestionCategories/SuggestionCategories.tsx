@@ -10,7 +10,6 @@ import {
   useSuggestionCategoriesQuery,
   useUnboundBucketsBySuggestionCategoryQuery,
 } from "../../graphql-generated";
-import { SuggestionCategoriesQuery } from "./gql";
 
 export function SuggestionCategories() {
   const suggestionCategoriesQuery = useSuggestionCategoriesQuery();
@@ -28,7 +27,7 @@ export function SuggestionCategories() {
   const [addMutate] = useAddSuggestionCategoryToBucketMutation();
   const toast = useToast();
   const [deleteSuggestionCategoryMutate] = useDeleteSuggestionCategoryMutation({
-    refetchQueries: [SuggestionCategoriesQuery],
+    refetchQueries: ["SuggestionCategories"],
     onCompleted(data) {
       if (data.deleteSuggestionCategory?.id) {
         toast({

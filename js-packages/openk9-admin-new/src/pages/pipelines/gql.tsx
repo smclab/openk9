@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const EnrichPipelinesQuery = gql`
+gql`
   query EnrichPipelines($searchText: String, $after: String) {
     enrichPipelines(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -36,7 +36,7 @@ export const DeletePipelines = gql`
   }
 `;
 
-export const EnrichPipelineQuery = gql`
+gql`
   query EnrichPipeline($id: ID!) {
     enrichPipeline(id: $id) {
       id
@@ -46,7 +46,7 @@ export const EnrichPipelineQuery = gql`
   }
 `;
 
-export const AssociatedEnrichPipelineEnrichItemsQuery = gql`
+gql`
   query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
     enrichPipeline(id: $enrichPipelineId) {
       id
@@ -148,7 +148,7 @@ gql`
   }
 `;
 
-export const EnrichPipelineWithItemsQuery = gql`
+gql`
   mutation EnrichPipelineWithItems($id: ID, $items: [ItemDTOInput], $name: String!, $description: String!) {
     enrichPipelineWithEnrichItems(
       id: $id

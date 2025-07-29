@@ -1,12 +1,12 @@
-type Node = { id: string; name: string };
+import { KeyValue } from "@components/Form";
 
-type Params = { useQuery?: any; data?: any; queryKeyPath: string; accessKey?: "node" };
+type Params = { useQuery?: any; data?: any; queryKeyPath: string; accessKey?: "node"; variables?: KeyValue };
 const pathObject = {
   node: "node",
 };
 
-export default function useOptions({ useQuery, data, queryKeyPath, accessKey = "node" }: Params) {
-  const queryData = useQuery?.();
+export default function useOptions({ useQuery, data, queryKeyPath, accessKey = "node", variables }: Params) {
+  const queryData = useQuery?.({ variables: { ...variables } }) || {};
   const sourceData = data?.data || queryData?.data;
 
   const value = extract({ object: sourceData, pathKey: queryKeyPath });

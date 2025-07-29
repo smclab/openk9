@@ -17,7 +17,6 @@ import {
   useDocumentTypeQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { DocumentTypeQuery, DocumentTypesQuery } from "./gql";
 
 export function SaveDocumentType() {
   const { documentTypeId = "new", view } = useParams();
@@ -42,7 +41,7 @@ export function SaveDocumentType() {
   const toast = useToast();
   const [createOrUpdateDocumentTypeMutate, createOrUpdateDocumentTypeMutation] =
     useCreateOrUpdateDocTypeWithTemplateMutation({
-      refetchQueries: [DocumentTypeQuery, DocumentTypesQuery],
+      refetchQueries: ["DocumentType", "DocumentTypes"],
       onCompleted(data) {
         if (data.docTypeWithTemplate?.entity) {
           if (documentTypeId === "new") {
@@ -70,8 +69,11 @@ export function SaveDocumentType() {
       createOrUpdateDocumentTypeMutate({
         variables: {
           id: documentTypeId !== "new" ? documentTypeId : undefined,
-          ...data,
-          docTypeTemplateId: data.docTypeTemplateId.id === "-1" ? null : data.docTypeTemplateId.id,
+          name: data.name,
+          description: data.description,
+          ...(data.docTypeTemplateId.id !== "-1" && {
+            docTypeTemplateId: data.docTypeTemplateId.id,
+          }),
         },
       });
     },
@@ -109,14 +111,14 @@ export function SaveDocumentType() {
                     <TextArea label="Description" {...form.inputProps("description")} />
                     <CustomSelectRelationsOneToOne
                       options={docTypeTemplates}
-                      label="Search Config"
+                      label="Document type template"
                       onChange={(val) => form.inputProps("docTypeTemplateId").onChange({ id: val.id, name: val.name })}
                       value={{
                         id: form.inputProps("docTypeTemplateId").value.id,
                         name: form.inputProps("docTypeTemplateId").value.name || "",
                       }}
                       disabled={page === 1}
-                      description="Search Configuration for current bucket"
+                      description="Document type template for current Document Type"
                     />
                   </div>
                 ),

@@ -7,9 +7,11 @@ export function NumberInputSimple({
   value,
   onChange,
   disabled,
+  isRequired = false,
 }: {
   label: string;
   description?: string;
+  isRequired?: boolean;
   value: number;
   disabled?: boolean;
   onChange(event: any): void;
@@ -20,6 +22,11 @@ export function NumberInputSimple({
         <Typography variant="subtitle1" component="label">
           {label}
         </Typography>
+        {isRequired && (
+          <Typography color="error" ml={"3px"}>
+            *
+          </Typography>
+        )}
         {description && <InformationField description={description} />}
       </Box>
       <TextField

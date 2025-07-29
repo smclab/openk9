@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const QueryAnalysisQuery = gql`
+gql`
   query QueryAnalysis($id: ID!) {
     queryAnalysis(id: $id) {
       id
@@ -27,7 +27,7 @@ export const QueryAnalysisQuery = gql`
   }
 `;
 
-export const QueryAnalysesQuery = gql`
+gql`
   query QueryAnalyses($searchText: String, $after: String) {
     queryAnalyses(searchText: $searchText, first: 20, after: $after) {
       edges {

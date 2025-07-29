@@ -14,7 +14,7 @@ import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
-import { TemplateTokenizer, TokenizerQuery, TokenizersQuery } from "./gql";
+import { TemplateTokenizer } from "./gql";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SaveTokenizer() {
@@ -40,7 +40,7 @@ export function SaveTokenizer() {
 
   const toast = useToast();
   const [createOrUpdateTokenizerMutate, createOrUpdateTokenizerMutation] = useCreateOrUpdateTokenizerMutation({
-    refetchQueries: [TokenizerQuery, TokenizersQuery],
+    refetchQueries: ["Tokenizer", "Tokenizers"],
     onCompleted(data) {
       if (data.tokenizer?.entity) {
         const isNew = tokenizerId === "new" ? "created" : "updated";

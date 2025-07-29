@@ -7,6 +7,7 @@ import { ConnectionData } from "../types";
 export const initializeConnectionData = (datasourceId: string | undefined | null): ConnectionData => ({
   datasourceId: datasourceId || "new",
   name: "",
+  optionDataindex: [],
   description: "",
   dataIndices: [],
   dataIndex: {},
@@ -35,6 +36,7 @@ export const initializeConnectionData = (datasourceId: string | undefined | null
   titleCount: "",
   titleTag: "",
   documentTypeExtension: "",
+  enrichPipelineCustom: { id: "", name: "", linkedEnrichItems: [] },
   vectorIndex: {
     textEmbeddingField: "",
     titleField: "",
@@ -60,7 +62,7 @@ export const useDatasourceForm = (
   const [formValues, setFormValues] = useState<ConnectionData>(initializeConnectionData(datasourceId));
 
   useEffect(() => {
-    if (datasourceQuery.data?.datasource && datasourceQuery.data.datasource.jsonConfig) {
+    if (datasourceQuery.data?.datasource) {
       const parsedScheduling = parseCronString(datasourceQuery?.data?.datasource?.scheduling || "");
 
       const parsedReindexing = parseCronString(datasourceQuery?.data?.datasource?.reindexing || "");
@@ -85,6 +87,11 @@ export const useDatasourceForm = (
       setFormValues((prevValues) => ({
         ...prevValues,
         ...datasourceQuery?.data?.datasource,
+        optionDataindex:
+          datasourceQuery?.data?.datasource?.dataIndexes?.edges?.map((dat) => ({
+            id: dat?.node?.id || "",
+            name: dat?.node?.name || "",
+          })) || [],
         scheduling: datasourceQuery?.data?.datasource?.scheduling,
         schedulingDayOfMonth: day,
         schedulingHour: hour,

@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 import { TemplateType } from "@pages/Analyzer/gql";
 
-export const TokenizerQuery = gql`
+gql`
   query Tokenizer($id: ID!) {
     tokenizer(id: $id) {
       id
@@ -28,7 +28,7 @@ gql`
   }
 `;
 
-export const TokenizersQuery = gql`
+gql`
   query Tokenizers($searchText: String, $after: String) {
     tokenizers(searchText: $searchText, first: 20, after: $after) {
       edges {

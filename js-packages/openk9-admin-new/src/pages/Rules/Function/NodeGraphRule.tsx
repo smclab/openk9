@@ -1,14 +1,8 @@
+import { useToast } from "@components/Form/Form/ToastProvider";
+import { Typography, useTheme } from "@mui/material";
 import React from "react";
 import { Handle, Position } from "react-flow-renderer";
 import { useCreateOrUpdateRuleQueryMutation, useDeleteRulesMutation } from "../../../graphql-generated";
-import { RulesQuery, RuleQuery } from "../gql";
-import {
-  AddRuleToQueryAnalyses,
-  QueryAnalysesRule,
-  RemoveRuleFromQueryAnalyses,
-} from "../../QueryAnalyses/Function/QueryAnalysesRules";
-import { useToast } from "@components/Form/Form/ToastProvider";
-import { Typography, useTheme } from "@mui/material";
 
 export default function NodeGraphRule(props: any) {
   const { data } = props;
@@ -21,7 +15,7 @@ export default function NodeGraphRule(props: any) {
   const theme = useTheme();
 
   const [createOrUpdateRuleMutate] = useCreateOrUpdateRuleQueryMutation({
-    refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
+    refetchQueries: ["Rule", "Rules", "QueryAnalysesRules", "AddRulesToQueryAnalyses", "RemoveRuleFromQueryAnalyses"],
     onCompleted(data) {},
   });
   const handleNodeClick = () => {
@@ -29,7 +23,7 @@ export default function NodeGraphRule(props: any) {
   };
   const toast = useToast();
   const [deleteRuleMutate] = useDeleteRulesMutation({
-    refetchQueries: [RuleQuery, RulesQuery, QueryAnalysesRule, AddRuleToQueryAnalyses, RemoveRuleFromQueryAnalyses],
+    refetchQueries: ["Rule", "Rules", "QueryAnalysesRules", "AddRulesToQueryAnalyses", "RemoveRuleFromQueryAnalyses"],
     onCompleted(data) {
       if (data.deleteRule?.id) {
         toast({

@@ -5,7 +5,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { ModalConfirm } from "@components/Form";
 import { Table } from "../../components/Table/Table";
 import { useDeleteSearchConfigMutation, useSearchConfigsQuery } from "../../graphql-generated";
-import { SearchConfigsQueryQ } from "./gql";
 
 export function SearchConfigs() {
   const searchConfigQuery = useSearchConfigsQuery();
@@ -16,7 +15,7 @@ export function SearchConfigs() {
   const navigate = useNavigate();
   const toast = useToast();
   const [deleteSearchConfigMutate] = useDeleteSearchConfigMutation({
-    refetchQueries: [SearchConfigsQueryQ],
+    refetchQueries: ["SearchConfigs"],
     onCompleted(data) {
       if (data.deleteSearchConfig?.id) {
         toast({

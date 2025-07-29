@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
-export const DocumentTypeTemplatesQuery = gql`
+ gql`
   query DocumentTypeTemplates($searchText: String, $after: String) {
     docTypeTemplates(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -45,7 +45,7 @@ export const DocumentTypesQuery = gql`
   }
 `;
 
-export const DocumentTypeTemplateQuery = gql`
+gql`
   query DocumentTypeTemplate($id: ID!) {
     docTypeTemplate(id: $id) {
       id

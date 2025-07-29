@@ -14,7 +14,6 @@ import {
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
-import { TabTokensGql } from "@pages/Tabs/gql";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -24,7 +23,6 @@ import {
   useTabTokenTabQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { TabTokenQuery } from "./gql";
 
 enum fuzziness {
   ZERO = "ZERO",
@@ -84,7 +82,7 @@ export function SaveTokenTab() {
   const { DocTypeQuery, OptionDocType } = useOptions();
   const toast = useToast();
   const [createOrUpdateTabTokenMutate, createOrUpdateTabTokenMutation] = useCreateOrUpdateTabTokenMutation({
-    refetchQueries: [TabTokenQuery, TabTokensGql],
+    refetchQueries: ["TabTokenTab", "TabTokens"],
     onCompleted(data: any) {
       if (data.tokenTabWithDocTypeField?.entity) {
         const isNew = tokenTabId === "new" ? "created" : "updated";

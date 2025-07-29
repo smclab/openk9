@@ -12,9 +12,11 @@ export function BooleanInput({
   description,
   sxCheckbox,
   sxControl,
+  isRequired = false,
 }: BaseInputProps<boolean> & {
   sxCheckbox?: SxProps<Theme>;
   sxControl?: SxProps<Theme>;
+  isRequired?: boolean;
 }) {
   return (
     <div>
@@ -27,6 +29,7 @@ export function BooleanInput({
             }
             label={label}
           />
+          {isRequired && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
           {description && <InformationField description={description} />}
           {validationMessages.length > 0 && (
             <FormHelperText>

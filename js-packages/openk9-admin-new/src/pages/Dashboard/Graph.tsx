@@ -1,18 +1,11 @@
 import TrashIcon from "@mui/icons-material/Delete";
 import DocumentIcon from "@mui/icons-material/Description";
 import RulerIcon from "@mui/icons-material/Straighten";
-import { Box, Container } from "@mui/material";
-import { CreateGraphic, LabelNumber } from "@components/Form";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
+import DashboardCard from "./DashboardCard";
+import DashboardInfoRow from "./DashboardInfoRow";
 
 type detailGraphProps = {
-  dataGraph: {
-    name: string;
-    query: number;
-  }[];
-  secondDataGraph: {
-    name: string;
-    query: number;
-  }[];
   firstCardNumber: number;
   secondCardNumber: number;
   thirdCardNumber: number;
@@ -25,11 +18,9 @@ type detailGraphProps = {
 };
 
 export function DetailGraph({
-  dataGraph,
   firstCardLabel,
   secondCardLabel,
   thirdCardLabel,
-  secondDataGraph,
   firstCardNumber,
   secondCardNumber,
   thirdCardNumber,
@@ -37,46 +28,191 @@ export function DetailGraph({
   secondCardUnity = "",
   thirdCardUnity = "",
 }: detailGraphProps) {
+  const theme = useTheme();
+
   return (
-    <Container>
-      <Box display="flex" flexDirection="column" gap="20px">
-        <Box display="flex" flexDirection="row" gap="30px" width="100%" alignItems="stretch">
-          <LabelNumber
+    <Box display="flex" flexDirection="column" gap="14px">
+      <DashboardCard title="Document information">
+        <Box display="flex" flexDirection="column" gap="14px">
+          <DashboardInfoRow
+            icon={
+              <DocumentIcon
+                sx={{
+                  color: theme.palette.info.main,
+                  fontSize: 26,
+                }}
+              />
+            }
             label={firstCardLabel}
-            number={firstCardNumber || 0}
-            unity={firstCardUnity}
-            icon={<DocumentIcon style={{ opacity: 0.2 }} />}
+            value={
+              <Typography
+                variant="h6"
+                sx={{
+                  color: theme.palette.info.main,
+                  fontWeight: 800,
+                  fontFamily: "Nunito Sans",
+                  ml: "auto",
+                  fontSize: "1.3rem",
+                }}
+              >
+                {firstCardNumber}
+                <span
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 400,
+                    marginLeft: 4,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {firstCardUnity}
+                </span>
+              </Typography>
+            }
+            borderColor={theme.palette.info.main}
           />
-          <LabelNumber
+          <Divider></Divider>
+          <DashboardInfoRow
+            icon={
+              <TrashIcon
+                sx={{
+                  color: theme.palette.error.main,
+                  fontSize: 26,
+                }}
+              />
+            }
             label={secondCardLabel}
-            number={secondCardNumber || 0}
-            unity={secondCardUnity}
-            icon={<TrashIcon style={{ opacity: 0.2 }} />}
+            value={
+              <Typography
+                variant="h6"
+                sx={{
+                  color: theme.palette.error.main,
+                  fontWeight: 800,
+                  fontFamily: "Nunito Sans",
+                  ml: "auto",
+                  fontSize: "1.3rem",
+                }}
+              >
+                {secondCardNumber}
+                <span
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 400,
+                    marginLeft: 4,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {secondCardUnity}
+                </span>
+              </Typography>
+            }
+            borderColor={theme.palette.error.main}
           />
-          <LabelNumber
+          <Divider></Divider>
+          <DashboardInfoRow
+            icon={
+              <RulerIcon
+                sx={{
+                  color: theme.palette.success.main,
+                  fontSize: 26,
+                }}
+              />
+            }
             label={thirdCardLabel}
-            number={thirdCardNumber || 0}
-            unity={thirdCardUnity}
-            icon={<RulerIcon style={{ opacity: 0.2 }} />}
+            value={
+              <Typography
+                variant="h6"
+                sx={{
+                  color: theme.palette.success.main,
+                  fontWeight: 800,
+                  fontFamily: "Nunito Sans",
+                  ml: "auto",
+                  fontSize: "1.3rem",
+                }}
+              >
+                {thirdCardNumber}
+                <span
+                  style={{
+                    fontSize: "0.95rem",
+                    fontWeight: 400,
+                    marginLeft: 4,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {thirdCardUnity}
+                </span>
+              </Typography>
+            }
+            borderColor={theme.palette.success.main}
           />
         </Box>
-        <Box display="flex" gap="30px" width="100%">
-          <CreateGraphic
-            data={dataGraph}
-            height={210}
-            width={450}
-            labelInformationRigth="View Api Logs"
-            Information="Document Count "
-          />
-          <CreateGraphic
-            data={secondDataGraph}
-            height={210}
-            width={450}
-            labelInformationRigth="View Api Logs"
-            Information="Total Api"
-          />
-        </Box>
-      </Box>
-    </Container>
+      </DashboardCard>
+    </Box>
+  );
+}
+
+export function LabelNumber({
+  label,
+  number,
+  unity,
+  icon,
+  borderColor,
+}: {
+  label: string;
+  number: number;
+  unity?: string;
+  icon?: React.ReactNode;
+  borderColor?: string;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Box
+      display="flex"
+      alignItems="center"
+      width="100%"
+      sx={{
+        borderLeft: `4px solid ${borderColor}`,
+        pl: 1.5,
+        background: theme.palette.mode === "dark" ? "rgba(30,32,36,0.92)" : "rgba(255,255,255,0.92)",
+        borderRadius: "6px",
+        boxShadow: theme.shadows[1],
+        minHeight: 44,
+      }}
+    >
+      <Box>{icon}</Box>
+      <Typography
+        variant="subtitle2"
+        sx={{
+          fontWeight: 600,
+          flex: 1,
+          color: theme.palette.text.primary,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="h6"
+        sx={{
+          color: borderColor,
+          fontWeight: 800,
+          fontFamily: "Nunito Sans",
+          ml: "auto",
+          transition: "color 0.2s",
+          fontSize: "1.3rem",
+        }}
+      >
+        {number}
+        <span
+          style={{
+            fontSize: "0.95rem",
+            fontWeight: 400,
+            marginLeft: 4,
+            color: theme.palette.text.secondary,
+          }}
+        >
+          {unity}
+        </span>
+      </Typography>
+    </Box>
   );
 }

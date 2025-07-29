@@ -12,7 +12,8 @@ export function NumberInput({
   validationMessages,
   item,
   description,
-}: BaseInputProps<number> & { item?: boolean }) {
+  isNumber = true,
+}: BaseInputProps<number> & { item?: boolean; isNumber?: boolean }) {
   const ref = React.useRef<HTMLInputElement | null>(null);
 
   React.useLayoutEffect(() => {
@@ -31,7 +32,7 @@ export function NumberInput({
       </Box>
       <TextField
         inputRef={ref}
-        type="number"
+        type={"number"}
         id={id}
         variant="outlined"
         value={value}
@@ -42,8 +43,15 @@ export function NumberInput({
         aria-describedby={`${id}-helper-text`}
         fullWidth
         error={validationMessages.length > 0}
-        inputProps={{ step: "any" }}
+        inputProps={{
+          step: "any",
+          onWheel: (e) => {
+            !isNumber && e.preventDefault();
+            !isNumber && e.currentTarget.blur();
+          },
+        }}
       />
+
       {validationMessages.length > 0 && (
         <FormHelperText error>
           {validationMessages.map((validationMessage, index) => (

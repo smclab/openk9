@@ -24,6 +24,8 @@ import { Logo } from "@components/common";
 import { ModalConfirm } from "@components/Form";
 import { SaveSubDocType } from "./SaveSubDocTypes";
 import { useTheme } from "@mui/material/styles";
+import SubdirectoryArrowLeftIcon from "@mui/icons-material/SubdirectoryArrowLeft";
+import { Link as LinkRRD } from "react-router-dom";
 
 type ChipProperties = {
   sortable: boolean;
@@ -143,7 +145,6 @@ export function SubDocTypes() {
 
   const toggleChip = async (child: TreeNode, id: string, property: keyof ChipProperties) => {
     const updatedValue = !child.chipProperties[property];
-    console.log(child, updatedValue);
 
     try {
       await updateDoctype({
@@ -254,6 +255,19 @@ export function SubDocTypes() {
             </div>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
               <Breadcrumbs aria-label="breadcrumb" separator="›" sx={{ overflow: "auto", width: "100%" }}>
+                <LinkRRD
+                  to="/document-types"
+                  color="inherit"
+                  style={{
+                    cursor: "pointer",
+                    textDecoration: "none",
+                    color: "inherit",
+                    textDecorationLine: "underline",
+                    fontWeight: "500",
+                  }}
+                >
+                  Document Types
+                </LinkRRD>
                 <Link
                   color="inherit"
                   onClick={() => {
@@ -346,9 +360,7 @@ export function SubDocTypes() {
                   marginBottom="10px"
                 >
                   <Box sx={{ width: "200px" }}>
-                    <Typography variant="body1" onClick={() => handleChildClick(child.id)} sx={{ cursor: "pointer" }}>
-                      {child.name || "Unnamed"}
-                    </Typography>
+                    <Typography variant="body1">{child.name || "Unnamed"}</Typography>
                   </Box>
                   <Box display="flex" gap="10px">
                     <Chip
@@ -407,6 +419,17 @@ export function SubDocTypes() {
                       }}
                     >
                       Edit
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<SubdirectoryArrowLeftIcon />}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleChildClick(child.id);
+                      }}
+                    >
+                      Sub Doc Types
                     </Button>
                   </Box>
                 </Box>

@@ -109,6 +109,7 @@ const lightTheme = createTheme({
     MuiCard: {
       defaultProps: {
         variant: "outlined",
+        sx: { backgroundColor: "#ffffff" },
       },
     },
     MuiListItemButton: {
@@ -240,6 +241,7 @@ const darkTheme = createTheme({
     MuiCard: {
       defaultProps: {
         variant: "outlined",
+        sx: { backgroundColor: "#3b3b3b" },
       },
     },
     MuiListItemButton: {
@@ -419,6 +421,13 @@ const AppRoutes = () => (
   </Routes>
 );
 
+export const scrollToTop = () => {
+  const mainContent = document.querySelector("main");
+  if (mainContent) {
+    mainContent.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
+
 export default function App() {
   const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
   const [isNotification, setIsNotification] = React.useState(false);
@@ -455,13 +464,6 @@ export default function App() {
     }
   }, []);
 
-  const scrollToTop = () => {
-    const mainContent = document.querySelector("main");
-    if (mainContent) {
-      mainContent.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
   const [searchTerm, setSearchTerm] = useState("");
   const filteredMenuItems = useFilteredMenuItems(searchTerm);
 
@@ -479,7 +481,6 @@ export default function App() {
                       display: "flex",
                       backgroundColor: isDarkMode ? "#1e1e1e" : "#f5f5f5",
                       minHeight: "100vh",
-                      width: "unset",
                       p: 1.25, // 10px di padding uniforme
                     }}
                   >
@@ -511,6 +512,7 @@ export default function App() {
 
                     <Box
                       sx={{
+                        width: 240,
                         flexShrink: 0,
                         mt: "74px", // Aggiustato per i margini
                         mr: 1.25, // 10px di margine
@@ -519,7 +521,6 @@ export default function App() {
                         flexDirection: "column",
                         justifyContent: "space-between",
                       }}
-                      style={{ width: "unset" }}
                     >
                       <Box
                         sx={{

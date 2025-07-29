@@ -1,5 +1,3 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import {
   combineErrorMessages,
   ContainerFluid,
@@ -14,6 +12,10 @@ import {
 } from "@components/Form";
 import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamicFields";
 import useTemplate, { createJsonString, NavigationButtons } from "@components/Form/Hook/Template";
+import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
+import { Box, Button } from "@mui/material";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   AnalyzersAssociationsQuery,
   useAnalyzerQuery,
@@ -24,15 +26,20 @@ import {
   useTokenizersQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
-import { AnalyzersRefetchQuery, TemplateAnalyzers } from "./gql";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { TemplateAnalyzers } from "./gql";
+
+const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
+  { label: "Char Filters", id: "charFilters" },
+  { label: "Token Filters", id: "tokenFilters" },
+];
 
 export function SaveAnalyzer() {
   const { analyzerId = "new", view } = useParams();
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
   const toast = useToast();
+  const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
 
   const isNewAnalyzer = analyzerId === "new";
 
@@ -76,7 +83,7 @@ export function SaveAnalyzer() {
   const { OptionsTokenizer } = useOptions();
 
   const [createOrUpdateAnalyzerMutate, createOrUpdateAnalyzerMutation] = useCreateOrUpdateAnalyzerMutation({
-    refetchQueries: [AnalyzersRefetchQuery],
+    refetchQueries: ["Analyzers"],
     onCompleted(data) {
       if (data.analyzerWithLists?.entity) {
         const action = isNewAnalyzer ? "created" : "updated";
@@ -194,23 +201,26 @@ export function SaveAnalyzer() {
           />
           {isCustom && (
             <>
-              <MultiAssociationCustomQuery
-                list={{ ...charFilters, associated: form.inputProps("charFilters").value }}
-                disabled={isRecap || view === "view"}
-                isRecap={isRecap}
-                titleAssociation="Association with Char Filters"
-                createPath={{ path: "/char-filter/new", entity: "char-filters" }}
-                onSelect={handleAssociationSelect("charFilters")}
-              />
-              <MultiAssociationCustomQuery
-                list={{ ...tokenFilters, associated: form.inputProps("tokenFilters").value }}
-                disabled={isRecap || view === "view"}
-                createPath={{ path: "/token-filter/new", entity: "token-filters" }}
-                isRecap={isRecap}
-                titleAssociation="Association with Token Filters"
-                onSelect={handleAssociationSelect("tokenFilters")}
-              />
+              <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
+                <MultiAssociationCustomQuery
+                  list={{ ...charFilters, associated: form.inputProps("charFilters").value }}
+                  sx={selectedAssociationTabs === "charFilters" ? {} : { display: "none" }}
+                  disabled={isRecap || view === "view"}
+                  isRecap={isRecap}
+                  createPath={{ path: "/char-filter/new", entity: "char-filters" }}
+                  onSelect={handleAssociationSelect("charFilters")}
+                />
+                <MultiAssociationCustomQuery
+                  list={{ ...tokenFilters, associated: form.inputProps("tokenFilters").value }}
+                  sx={selectedAssociationTabs === "tokenFilters" ? {} : { display: "none" }}
+                  disabled={isRecap || view === "view"}
+                  createPath={{ path: "/token-filter/new", entity: "token-filters" }}
+                  isRecap={isRecap}
+                  onSelect={handleAssociationSelect("tokenFilters")}
+                />
+              </AssociationsLayout>
               <CustomSelectRelationsOneToOne
+                sx={{ mt: 2 }}
                 options={OptionsTokenizer}
                 label="Tokenizer"
                 onChange={(val) => form.inputProps("tokenizerId").onChange({ id: val.id, name: val.name })}

@@ -1,13 +1,15 @@
 import {
-  SelectChangeEvent,
-  MenuItem,
-  Select as SelectMaterial,
   Box,
-  Typography,
   CircularProgress,
+  MenuItem,
+  SelectChangeEvent,
+  Select as SelectMaterial,
+  SxProps,
+  Theme,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { InformationField } from "../utils/informationField";
-import { useState, useEffect } from "react";
 
 type OptionRelationOneToOne = {
   value: string;
@@ -27,6 +29,7 @@ type CustomSelectProps = {
   description?: string;
   disabled?: boolean;
   loadMoreOptions?: { response: () => Promise<OptionRelationOneToOne[]>; hasNextPage: boolean };
+  sx?: SxProps<Theme>;
 };
 
 export function CustomSelectRelationsOneToOne({
@@ -37,6 +40,7 @@ export function CustomSelectRelationsOneToOne({
   disabled,
   description,
   loadMoreOptions,
+  sx,
 }: CustomSelectProps) {
   const [currentOptions, setCurrentOptions] = useState<OptionRelationOneToOne[]>(options);
   const [loading, setLoading] = useState(false);
@@ -69,7 +73,7 @@ export function CustomSelectRelationsOneToOne({
 
   return (
     <Box>
-      <Box marginBottom={1} display={"flex"} flexDirection="row" alignItems="center" gap="4px">
+      <Box marginBottom={1} display={"flex"} flexDirection="row" alignItems="center" gap="4px" sx={sx}>
         <Typography variant="subtitle1" component="label" htmlFor={label + "label"}>
           {label}
         </Typography>
