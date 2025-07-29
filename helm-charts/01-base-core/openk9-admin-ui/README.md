@@ -1,15 +1,5 @@
 # Helm package for Openk9 Admin Ui
 
-## Table of Contents
-
-- [Introduction](#introduction)
-- [Prerequisites](#prerequisites)
-- [Installing the Chart](#installing-the-chart)
-- [Parameters](#parameters)
-  - [Configure Image](#getting-started)
-  - [Common parameters](#features)
-  - [Service account and rbac](#core-features)
-
 ## Introduction
 
 This chart bootstraps Openk9 Admin Ui deployment on a [Kubernetes](https://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.

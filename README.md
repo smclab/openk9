@@ -36,6 +36,12 @@ To test conversational search:
 
 Enjoy Openk9!
 
+## Installation for production
+
+To install Openk9 in production is advisable to deploy it in Kubernetes or Openshift environments.
+
+You can find a complete guide to do it [here](./helm-charts/README.md) using Helm Charts.
+
 ## Docs and Resources
 
 - [Official Documentation](https://www.openk9.io/)
