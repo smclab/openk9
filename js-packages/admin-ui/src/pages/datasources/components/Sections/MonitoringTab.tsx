@@ -149,7 +149,11 @@ export function MonitoringTab({ id }: { id: string }) {
     if (dataSourceInformationQuery.data && dataSourceInformationQuery.data.datasource?.dataIndex?.cat) {
       setDocsCount(Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.docsCount || "0"));
       setDocsDeleted(Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.docsDeleted || "0"));
-      setStoreSize(Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.priStoreSize || "0"));
+      setStoreSize(
+        Number(
+          (Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.priStoreSize || "0") / 1024).toFixed(2),
+        ),
+      );
     }
   }, [dataSourceInformationQuery.data]);
 
