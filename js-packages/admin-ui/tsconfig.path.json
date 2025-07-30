@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./src",
+    "paths": {
+      "@pages": ["pages"], // this doesn't work for @pages/smth
+      "@pages/*": ["pages/*"],
+      "@components": ["components"],
+      "@components/*": ["components/*"]
+    }
+  }
+}
