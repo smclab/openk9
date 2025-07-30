@@ -203,6 +203,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						),
 					);
 					setIsChatting(false);
+					setIsLoading(null);
 				}
 			} catch (error) {
 				console.error("Errore durante la richiesta", error);
