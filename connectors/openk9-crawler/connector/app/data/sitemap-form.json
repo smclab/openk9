@@ -78,6 +78,18 @@
           "regex": "^[a-zA-Z0-9 ]+$"
         }
       },
+            {
+        "label": "Excuded Body Tags",
+        "name": "excludedBodyTags",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Excluded body from tags",
+        "validator": {
+          "regex": "^[a-zA-Z0-9 ]+$"
+        }
+      },
       {
         "label": "Title tag",
         "name": "titleTag",
@@ -158,8 +170,8 @@
         }
       },
       {
-        "label": "Custome Metadata",
-        "name": "customeMetadata",
+        "label": "Custom Metadata",
+        "name": "custom Metadata",
         "type": "stringMap",
         "size": 4,
         "required": false,
