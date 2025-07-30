@@ -26,7 +26,7 @@ helm upgrade -i datasource openk9/openk9-datasource
 
 The command deploys Openk9 Datasource on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-# Parameters
+## Parameters
 
 ### Configure Image
 
@@ -61,7 +61,7 @@ Openk9 Datasource service is based on Quarkus Framework. Use following parameter
 | `quarkus.HttpCorsOrigin`  | Cors origin allowed                                   | `/https://.*.openk9.local/,` |
 | `quarkus.LogConsoleJson`      | If json log is enabled | `false`                       |
 | `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
-| `quarkus.LogLevelHibernate`  | Default log level for Hibernate                 | `INFO`             |
+| `quarkus.LogLevelHibernate`  | Default log level for Hibernate. Set to ERROR in production                 | `INFO`             |
 
 ### Scheduling configurations
 
@@ -357,7 +357,7 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
-### Advanced logging
+## Advanced logging
 
 In case you want to configure Openk9 Datasource logging you can set up following parameters:
 
@@ -367,6 +367,7 @@ An example:
 quarkus:
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO" ## change log level
+  LogLevelHibernate: "INFO"
 
 ## Http Access Log configuration
 config:
@@ -375,7 +376,7 @@ config:
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 ```
 
-### Known issues
+## Known issues
 
 No Known issues
 
@@ -385,7 +386,6 @@ Find more information about how to deal with common errors related to Openk9's H
 
 
 ## Upgrading
-
 
 ### To 2.0.0
 
