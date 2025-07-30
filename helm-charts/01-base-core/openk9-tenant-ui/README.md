@@ -26,7 +26,7 @@ helm upgrade -i tenant-ui openk9/openk9-tenant-ui
 
 The command deploys Openk9 tenant ui on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-# Parameters
+## Parameters
 
 ### Configure Image
 
@@ -150,12 +150,11 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
-### Advanced logging
+## Advanced logging
 
 No settings are available to set up advanced configuration for logging.
 
-
-### Known issues
+## Known issues
 
 No Known issues
 
@@ -169,7 +168,6 @@ Find more information about how to deal with common errors related to Openk9's H
 
 
 ### To 1.7.0
-
 
 
 ## License

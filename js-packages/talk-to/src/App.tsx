@@ -120,7 +120,7 @@ function App() {
 							display="flex"
 							flexDirection="column"
 							alignItems="center"
-							justifyContent="center"
+							justifyContent={messages.length !== 0 ? "flex-start" : "center"}
 							p={2}
 							boxSizing="border-box"
 							zIndex={2}

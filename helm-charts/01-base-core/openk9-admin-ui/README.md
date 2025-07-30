@@ -26,7 +26,7 @@ helm upgrade -i admin-ui openk9/openk9-admin-ui
 
 The command deploys Openk9 Admin Ui on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-# Parameters
+## Parameters
 
 ### Configure Image
 
@@ -150,12 +150,12 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
-### Advanced logging
+## Advanced logging
 
 No settings are available to set up advanced configuration for logging.
 
 
-### Known issues
+## Known issues
 
 No Known issues
 

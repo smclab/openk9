@@ -275,7 +275,7 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
-### Advanced logging
+## Advanced logging
 
 In case you want to configure Openk9 Resources Validator logging you can set up following parameters:
 
@@ -293,7 +293,7 @@ config:
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 ```
 
-### Known issues
+## Known issues
 
 No Known issues
 
