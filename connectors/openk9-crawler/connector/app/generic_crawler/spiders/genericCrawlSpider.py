@@ -101,19 +101,22 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
             extracted_custom_metadata = {}
 
+            custom_item = generate_item([])
+
             if self.custom_metadata:
                 for key, value in self.custom_metadata.items():
                     extracted_elements = response.xpath(value).getall()
                     if len(extracted_elements) > 0:
                         extracted_elements_list = [extracted_element.strip() for extracted_element in extracted_elements]
-                        web_item[key] = extracted_elements_list
+                        custom_item[key] = extracted_elements_list
                         extracted_custom_metadata[key] = extracted_elements_list
                     else:
-                        web_item[key] = None
+                        custom_item[key] = None
                         extracted_custom_metadata[key] = None
 
             datasource_payload = {
-                "web": dict(web_item)
+                "web": dict(web_item),
+                "custom": dict(custom_item)
             }
 
             anchors = response.css('a')

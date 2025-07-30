@@ -159,13 +159,16 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		except Exception as e:
 			document_item['extension'] = None
 
+		custom_item = generate_item([])
+
 		if extracted_custom_metadata:
 			for key, value in extracted_custom_metadata.items():
-				document_item[key] = value
+				custom_item[key] = value
 
 		datasource_payload = {
 			"file": dict(file_item),
-			"document": dict(document_item)
+			"document": dict(document_item),
+			"custom": dict(custom_item)
 		}
 
 		for key, value in self.additional_metadata.items():

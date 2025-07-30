@@ -171,12 +171,12 @@
       },
       {
         "label": "Custom Metadata",
-        "name": "custom Metadata",
+        "name": "customMetadata",
         "type": "stringMap",
         "size": 4,
         "required": false,
         "info": "Custom metadata using xpath expression",
-        "values": []
+        "values": {}
       }
     ]
 }
