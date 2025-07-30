@@ -1,5 +1,0 @@
-export enum RAGType {
-  CHAT_RAG = "CHAT_RAG",
-  CHAT_RAG_TOOL = "CHAT_RAG_TOOL",
-  SIMPLE_GENERATE = "SIMPLE_GENERATE",
-} 

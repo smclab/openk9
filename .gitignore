@@ -199,4 +199,4 @@ nb-configuration.xml
 
 release.properties
 
-!js-packages/openk9-chabot-vite/lib/
+!js-packages/openk9-chatbot/lib/
