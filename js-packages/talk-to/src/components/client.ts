@@ -57,6 +57,17 @@ export function OpenK9Client() {
 			const data = await response.json();
 			return data || [];
 		},
+		async getAvailableLanguages(): Promise<language[]> {
+			const res = await fetch("/api/datasource/buckets/current/availableLanguage");
+			if (!res.ok) throw new Error("Failed to fetch languages");
+			return res.json();
+		},
+
+		async getDefaultLanguage(): Promise<language | null> {
+			const res = await fetch("/api/datasource/buckets/current/defaultLanguage");
+			if (!res.ok) throw new Error("Failed to fetch default language");
+			return res.json();
+		},
 		async getUserInfo(): Promise<getUserInfo> {
 			const response = await fetch(`/api/datasource/buckets/current`);
 			if (!response.ok) throw new Error("Network response was not ok");
@@ -156,3 +167,11 @@ export interface getUserInfo {
 	refreshOnQuery: boolean;
 	retrieveType: "MATCH" | "KNN" | "HYBRID";
 }
+
+type language = {
+	createDate?: string;
+	id?: number;
+	modifiedDate?: string;
+	name?: string;
+	value?: string;
+};

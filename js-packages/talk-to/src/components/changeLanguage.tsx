@@ -2,10 +2,14 @@ import { Button, Menu, MenuItem } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import React from "react";
 import LanguageIcon from "@mui/icons-material/Language";
+import { useQuery } from "react-query";
+import { OpenK9Client } from "./client";
+import { useUser } from "./ChatInfoContext";
 
 const ChangeLanguage = () => {
 	const { i18n } = useTranslation();
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+	const { setLanguage, language } = useUser();
 
 	const handleClick = (event: React.MouseEvent<HTMLElement>) => {
 		setAnchorEl(event.currentTarget);
@@ -17,15 +21,48 @@ const ChangeLanguage = () => {
 
 	const changeLanguage = (lng: string) => {
 		i18n.changeLanguage(lng);
+		setLanguage?.(lng);
 		handleClose();
 	};
 
-	const languages: { value: string; label: string }[] = [
-		{ value: "it", label: "Italiano" },
-		{ value: "en", label: "English" },
-		{ value: "fr", label: "Français" },
-		{ value: "es", label: "Español" },
-	];
+	const client = OpenK9Client();
+
+	const { data: languagesTest = [] } = useQuery({
+		queryKey: ["available-languages"],
+		queryFn: client.getAvailableLanguages,
+		staleTime: Infinity,
+		cacheTime: Infinity,
+	});
+
+	useQuery({
+		queryKey: ["default-language"],
+		queryFn: client.getDefaultLanguage,
+		onSuccess: (defaultLang) => {
+			console.log("defaultLang", defaultLang, languagesTest);
+
+			if (defaultLang) {
+				i18n.changeLanguage(defaultLang.value || "en");
+				setLanguage?.(defaultLang.value || "en");
+			}
+		},
+		onError: (error) => {
+			console.error("Error fetching default language:", error);
+			i18n.changeLanguage("en");
+		},
+		enabled: !!languagesTest.length,
+	});
+
+	const languages: { label: string; value: string }[] = languagesTest
+		.map((lang) => {
+			if (lang.name && lang.value) {
+				return {
+					label: lang.name,
+					value: lang.value,
+				};
+			}
+			return undefined;
+		})
+		.filter((val): val is { label: string; value: string } => val !== undefined);
 
 	return (
 		<>
@@ -50,7 +87,7 @@ const ChangeLanguage = () => {
 					},
 				}}
 			>
-				{i18n.language.toUpperCase()}
+				{i18n.language && languageMapped(language)}
 			</Button>
 			<Menu
 				anchorEl={anchorEl}
@@ -74,8 +111,8 @@ const ChangeLanguage = () => {
 					horizontal: "center",
 				}}
 			>
-				{languages.map((language) => (
-					<MenuItem key={language.value} onClick={() => changeLanguage(language.value)}>
+				{languages?.map((language, index) => (
+					<MenuItem key={language?.value || index} onClick={() => changeLanguage(language.value)}>
 						{language.label}
 					</MenuItem>
 				))}
@@ -84,4 +121,19 @@ const ChangeLanguage = () => {
 	);
 };
 
-export default ChangeLanguage;
+export const ChangeLanguageMemo = React.memo(ChangeLanguage);
+
+function languageMapped(value: string | undefined) {
+	switch (value) {
+		case "en_US":
+			return "EN";
+		case "fr_FR":
+			return "FR";
+		case "it_IT":
+			return "IT";
+		case "es_ES":
+			return "ES";
+		default:
+			return "en_US";
+	}
+}

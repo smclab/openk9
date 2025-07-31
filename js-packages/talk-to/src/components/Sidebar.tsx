@@ -1,15 +1,14 @@
 import { Box, Typography } from "@mui/material";
-import { defaultThemeK9 } from "./theme";
 import { t } from "i18next";
+import React from "react";
 import { Graphic } from "../Svg/Graphic";
 import { GraphicThree } from "../Svg/GraphicsThree";
 import { GraphicTwo } from "../Svg/GraphicsTwo";
 import { Logo } from "../Svg/Logo";
-import ChangeLanguage from "./changeLanguage";
+import { ChangeLanguageMemo } from "./changeLanguage";
+import { OpenK9Client } from "./client";
 import { HistoryChat } from "./HistoryChat";
 import { Login } from "./Login";
-import React from "react";
-import { OpenK9Client } from "./client";
 import fetchUserProfile, { chatId } from "./utils/fetchUserProfile";
 
 const Sidebar = ({ setChatId }: { setChatId: React.Dispatch<React.SetStateAction<chatId>> }) => {
@@ -86,7 +85,7 @@ const Sidebar = ({ setChatId }: { setChatId: React.Dispatch<React.SetStateAction
 				{/* Main Login Area */}
 				<Box display="flex" flex={1} alignItems="center" justifyContent="space-between" px={2} zIndex={2}>
 					<Box sx={{ transform: "scale(0.8)" }}>
-						<ChangeLanguage />
+						<ChangeLanguageMemo />
 					</Box>
 					<Box sx={{ transform: "scale(0.8)" }}>
 						<Login authenticated={authenticated} setAuthenticated={setAuthenticated} />

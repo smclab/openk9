@@ -1,26 +1,20 @@
-import React from "react";
-import { Box, Typography, CssBaseline, Button } from "@mui/material";
-import Search from "./components/Search";
-import { Logo } from "./Svg/Logo";
+import { Box, Button, CssBaseline } from "@mui/material";
 import { keyframes, ThemeProvider as MuiThemeProvider } from "@mui/material/styles";
-import { defaultThemeK9 } from "./components/theme";
-import { Graphic } from "./Svg/Graphic";
-import { GraphicTwo } from "./Svg/GraphicsTwo";
-import { GraphicThree } from "./Svg/GraphicsThree";
-import useGenerateResponse, { Message } from "./components/useGenerateResponse";
-import { HistoryChat } from "./components/HistoryChat";
-import { InitialConversation } from "./components/InitialConversation";
-import { MessageCard } from "./components/MessageCard";
-import "./App.css";
-import { OpenK9Client } from "./components/client";
-import { Login } from "./components/Login";
-import { useQuery } from "react-query";
-import { getUserProfile } from "./components/authentication";
-import ChangeLanguage from "./components/changeLanguage";
+import React from "react";
 import { useTranslation } from "react-i18next";
+import { useQuery } from "react-query";
 import { v4 as uuidv4 } from "uuid";
+import "./App.css";
+import { getUserProfile } from "./components/authentication";
+import { OpenK9Client } from "./components/client";
+import { InitialConversation } from "./components/InitialConversation";
 import { keycloak } from "./components/keycloak";
+import { MessageCard } from "./components/MessageCard";
+import Search from "./components/Search";
 import Sidebar from "./components/Sidebar";
+import { defaultThemeK9 } from "./components/theme";
+import useGenerateResponse, { Message } from "./components/useGenerateResponse";
+import { Logo } from "./Svg/Logo";
 
 function App() {
 	const [chatId, setChatId] = React.useState<chatId>({ id: null, isNew: true });

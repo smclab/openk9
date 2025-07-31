@@ -10,6 +10,8 @@ interface UserContextType {
 	userInfo: UserInfo | null;
 	loading: boolean;
 	error: any;
+	language?: string;
+	setLanguage?: (language: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const ChatInfoContext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const client = OpenK9Client();
 	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+	const [language, setLanguage] = useState<string>("es_US");
 
 	const { data, isLoading, error } = useQuery(
 		"user-info",
@@ -35,7 +38,11 @@ export const ChatInfoContext: React.FC<{ children: React.ReactNode }> = ({ child
 		}
 	}, [data]);
 
-	return <UserContext.Provider value={{ userInfo, loading: isLoading, error }}>{children}</UserContext.Provider>;
+	return (
+		<UserContext.Provider value={{ userInfo, loading: isLoading, error, language, setLanguage }}>
+			{children}
+		</UserContext.Provider>
+	);
 };
 
 export const useUser = () => {

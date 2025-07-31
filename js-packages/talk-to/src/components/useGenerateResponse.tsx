@@ -27,6 +27,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	const [isLoading, setIsLoading] = useState<{ isLoading: boolean; id: string } | null>(null);
 	const { userInfo, loading } = useUser();
 	const client = React.useMemo(() => OpenK9Client(), []);
+	const { language } = useUser();
 	const { dispatch } = useChatContext();
 	const { t } = useTranslation();
 	useEffect(() => {
@@ -84,12 +85,14 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						chatId,
 						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
 						timestamp,
+						language,
 				  }
 				: {
 						searchText: query,
 						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
 						timestamp,
 						chatHistory,
+						language,
 				  };
 
 			try {
@@ -216,7 +219,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				return updated;
 			});
 		},
-		[loading, userInfo, messages, client],
+		[loading, userInfo, messages, client, language],
 	);
 
 	const cancelResponse = (id: string) => {
