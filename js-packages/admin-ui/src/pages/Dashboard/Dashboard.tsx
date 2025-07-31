@@ -281,13 +281,15 @@ export function DashBoard() {
                                     }}
                                   />
                                 </IconButton>
-                                <IconButton
-                                  size="small"
-                                  onClick={(e) => handleActionMenuOpen(e, index)}
-                                  aria-label="Azioni"
-                                >
-                                  <MoreVertIcon />
-                                </IconButton>
+                                {isError && (
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => handleActionMenuOpen(e, index)}
+                                    aria-label="Azioni"
+                                  >
+                                    <MoreVertIcon />
+                                  </IconButton>
+                                )}
                                 {/* Menu delle azioni */}
                                 <Menu
                                   anchorEl={actionMenuAnchor}
@@ -309,7 +311,7 @@ export function DashBoard() {
                                       );
                                     }}
                                   >
-                                    Reroute
+                                    Reprocess failed messages
                                   </MenuItem>
                                   <MenuItem
                                     onClick={async () => {

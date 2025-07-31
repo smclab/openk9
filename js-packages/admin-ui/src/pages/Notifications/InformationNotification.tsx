@@ -3,6 +3,15 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useRestClient } from "@components/queryClient";
 import { useSchedulerQuery } from "../../graphql-generated";
 
+const allowedActionsByStatus: Record<string, string[]> = {
+  RUNNING: ["CANCEL", "CLOSE"],
+  ERROR: ["CANCEL", "CLOSE", "REPROCESS"],
+  STALE: ["CANCEL", "CLOSE"],
+  FAILURE: [],
+  CANCELLED: [],
+  FINISHED: [],
+};
+
 export const InformationNotification = () => {
   const { notificationId = "" } = useParams();
   const navigate = useNavigate();
@@ -14,6 +23,7 @@ export const InformationNotification = () => {
   if (loading) return null;
 
   const info = data?.scheduler;
+  const allowedActions = allowedActionsByStatus[info?.status || ""] || [];
 
   return (
     <Container>
@@ -30,33 +40,45 @@ export const InformationNotification = () => {
         </Typography>
         {notificationId && (
           <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={async () => {
-                await restClient.schedulerResource.postApiDatasourceSchedulersCancelScheduling(Number(notificationId));
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={async () => {
-                await restClient.schedulerResource.postApiDatasourceSchedulersCloseScheduling(Number(notificationId));
-              }}
-            >
-              Close
-            </Button>
-            <Button
-              variant="outlined"
-              color="primary"
-              onClick={async () => {
-                await restClient.schedulerResource.postApiDatasourceSchedulersRerouteScheduling(Number(notificationId));
-              }}
-            >
-              Reroute
-            </Button>
+            {allowedActions.includes("CANCEL") && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={async () => {
+                  await restClient.schedulerResource.postApiDatasourceSchedulersCancelScheduling(
+                    Number(notificationId),
+                  );
+                }}
+              >
+                Cancel
+              </Button>
+            )}
+
+            {allowedActions.includes("CLOSE") && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={async () => {
+                  await restClient.schedulerResource.postApiDatasourceSchedulersCloseScheduling(Number(notificationId));
+                }}
+              >
+                Close
+              </Button>
+            )}
+
+            {allowedActions.includes("REPROCESS") && (
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={async () => {
+                  await restClient.schedulerResource.postApiDatasourceSchedulersRerouteScheduling(
+                    Number(notificationId),
+                  );
+                }}
+              >
+                Reprocess failed messages
+              </Button>
+            )}
           </Box>
         )}
       </Box>
