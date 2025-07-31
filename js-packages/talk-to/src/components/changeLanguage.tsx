@@ -37,9 +37,9 @@ const ChangeLanguage = () => {
 	useQuery({
 		queryKey: ["default-language"],
 		queryFn: client.getDefaultLanguage,
+		staleTime: Infinity,
+		cacheTime: Infinity,
 		onSuccess: (defaultLang) => {
-			console.log("defaultLang", defaultLang, languagesTest);
-
 			if (defaultLang) {
 				i18n.changeLanguage(defaultLang.value || "en");
 				setLanguage?.(defaultLang.value || "en");
