@@ -6,5 +6,6 @@ import type { JobStatus } from './JobStatus';
 
 export type DatasourceJobStatus = {
     id?: number;
+    name?: string;
     status?: JobStatus;
 };

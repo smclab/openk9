@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type FormFieldValue = {
-    value?: string;
+export type FieldValue = {
+    value?: any;
     isDefault?: boolean;
 };

@@ -2,17 +2,17 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { FieldValue } from './FieldValue';
+import type { FormFieldType } from './FormFieldType';
 import type { FormFieldValidator } from './FormFieldValidator';
-import type { FormFieldValue } from './FormFieldValue';
-import type { FormType } from './FormType';
 
 export type FormField = {
     info?: string;
     label?: string;
     name?: string;
-    type?: FormType;
+    type?: FormFieldType;
     size?: number;
     required?: boolean;
-    values?: Array<FormFieldValue>;
+    values?: Array<FieldValue>;
     validator?: FormFieldValidator;
 };

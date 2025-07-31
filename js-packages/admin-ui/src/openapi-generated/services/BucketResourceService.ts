@@ -473,23 +473,22 @@ sortBy?: K9Column,
     /**
      * @deprecated
      * Remove Suggestion Category
+     * @param id 
      * @param suggestionCategoryId 
-     * @param requestBody 
      * @returns Tuple2BucketSuggestionCategory OK
      * @throws ApiError
      */
     public deleteApiDatasourceBucketsSuggestionCategories(
+id: number,
 suggestionCategoryId: number,
-requestBody: number,
 ): CancelablePromise<Tuple2BucketSuggestionCategory> {
         return this.httpRequest.request({
             method: 'DELETE',
             url: '/api/datasource/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
             path: {
+                'id': id,
                 'suggestionCategoryId': suggestionCategoryId,
             },
-            body: requestBody,
-            mediaType: 'text/plain',
             errors: {
                 401: `Not Authorized`,
                 403: `Not Allowed`,
@@ -500,23 +499,22 @@ requestBody: number,
     /**
      * @deprecated
      * Add Suggestion Category
+     * @param id 
      * @param suggestionCategoryId 
-     * @param requestBody 
      * @returns Tuple2BucketSuggestionCategory OK
      * @throws ApiError
      */
     public putApiDatasourceBucketsSuggestionCategories(
+id: number,
 suggestionCategoryId: number,
-requestBody: number,
 ): CancelablePromise<Tuple2BucketSuggestionCategory> {
         return this.httpRequest.request({
             method: 'PUT',
             url: '/api/datasource/buckets/{id}/suggestion-categories/{suggestionCategoryId}',
             path: {
+                'id': id,
                 'suggestionCategoryId': suggestionCategoryId,
             },
-            body: requestBody,
-            mediaType: 'text/plain',
             errors: {
                 401: `Not Authorized`,
                 403: `Not Allowed`,

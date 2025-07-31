@@ -4,6 +4,6 @@
 
 import type { FormField } from './FormField';
 
-export type PluginDriverFormDTO = {
+export type FormTemplate = {
     fields?: Array<FormField>;
 };

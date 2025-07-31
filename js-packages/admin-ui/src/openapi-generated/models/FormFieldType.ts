@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export enum FormType {
+export enum FormFieldType {
     TEXT = 'text',
     NUMBER = 'number',
     SELECT = 'select',
@@ -14,4 +14,5 @@ export enum FormType {
     TIME = 'time',
     URL = 'url',
     CHECKBOX = 'checkbox',
+    STRING_MAP = 'stringMap',
 }

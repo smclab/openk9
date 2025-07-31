@@ -1,12 +1,30 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { StatusResponse } from '../models/StatusResponse';
+
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
 export class SchedulerResourceService {
 
     constructor(public readonly httpRequest: BaseHttpRequest) {}
+
+    /**
+     * Status
+     * @returns StatusResponse OK
+     * @throws ApiError
+     */
+    public getApiDatasourceSchedulersStatus(): CancelablePromise<StatusResponse> {
+        return this.httpRequest.request({
+            method: 'GET',
+            url: '/api/datasource/schedulers/status',
+            errors: {
+                401: `Not Authorized`,
+                403: `Not Allowed`,
+            },
+        });
+    }
 
     /**
      * Cancel Scheduling

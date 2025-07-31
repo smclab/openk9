@@ -5,5 +5,5 @@
 export enum RetrieveType {
     KNN = 'KNN',
     HYBRID = 'HYBRID',
-    MATCH = 'MATCH',
+    TEXT = 'TEXT',
 }
