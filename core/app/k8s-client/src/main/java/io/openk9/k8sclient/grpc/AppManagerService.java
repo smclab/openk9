@@ -151,7 +151,7 @@ public class AppManagerService implements AppManager {
 			),
 			virtualHost,
 			List.of(
-				IngressDef.Route.of("/search", "openk9-search-frontend", 8080),
+				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
 				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
 				IngressDef.Route.of("/api/datasource", "openk9-datasource", 8080),
 				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080),

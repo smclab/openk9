@@ -131,7 +131,7 @@ ingress:
   ## @param ingress.paths Paths for the default host.
   ##
   paths:
-    - /search
+    - /chat
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
@@ -143,7 +143,7 @@ route:
   enabled: false
   annotations: {}
   host: openk9.local #-TBMD
-  path: /search
+  path: /chat
   tls:
     enabled: false
     secretName: openk9-tls-star-secret   #-TBMD

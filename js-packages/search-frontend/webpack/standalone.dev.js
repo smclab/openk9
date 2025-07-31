@@ -64,7 +64,7 @@ module.exports = {
         throw new Error("webpack-dev-server is not defined");
       }
       const port = devServer.server.address().port;
-      open(`http://localhost:${port}/search`);
+      open(`http://localhost:${port}`);
     },
   },
 };
