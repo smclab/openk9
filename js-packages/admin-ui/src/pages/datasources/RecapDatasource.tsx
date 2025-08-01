@@ -1,5 +1,7 @@
 import { Box, Typography, Grid, Card, CardContent, Button, Divider } from "@mui/material";
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 function RecapDatasource({
   area,
@@ -17,6 +19,8 @@ function RecapDatasource({
   actions?: { title: string; action: () => void };
 }) {
   const [expandedIndexes, setExpandedIndexes] = useState<Set<number>>(new Set());
+  const [overflowingCards, setOverflowingCards] = useState<boolean[]>([]);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const toggleCard = (idx: number) => {
     setExpandedIndexes((prev) => {
@@ -26,11 +30,17 @@ function RecapDatasource({
     });
   };
 
+  useLayoutEffect(() => {
+    const overflows = contentRefs.current.map((el) => !!el && el.scrollHeight > 315);
+    setOverflowingCards(overflows);
+  }, [area]);
+
   return (
     <Box display="flex" flexDirection="column" gap={2}>
       <Grid container spacing={2}>
         {area.map((section, idx) => {
           const isExpanded = expandedIndexes.has(idx);
+          const isOverflowing = overflowingCards[idx];
 
           return (
             <Grid item xs={12} sm={6} md={4} key={idx}>
@@ -40,22 +50,48 @@ function RecapDatasource({
                   height: isExpanded ? "auto" : 315,
                   minHeight: 315,
                   overflow: "hidden",
-                  cursor: "pointer",
+                  position: "relative",
+                  cursor: isOverflowing ? "pointer" : "default",
                   transition: "0.3s",
                 }}
                 onClick={() => toggleCard(idx)}
               >
-                <CardContent sx={{ p: 2 }}>
+                <CardContent ref={(el) => (contentRefs.current[idx] = el)} sx={{ p: 2 }}>
                   {section.title && (
-                    <Typography variant="subtitle1" fontWeight={600} mb={0.5}>
-                      {section.title}
-                    </Typography>
+                    <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {section.title}
+                      </Typography>
+
+                      {isOverflowing && (
+                        <Button
+                          variant="text"
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleCard(idx);
+                          }}
+                          endIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                          sx={{
+                            color: "primary.main",
+                            fontWeight: 500,
+                            textTransform: "none",
+                            minWidth: "auto",
+                            px: 1,
+                          }}
+                        >
+                          {isExpanded ? "Show Less" : "Show More"}
+                        </Button>
+                      )}
+                    </Box>
                   )}
+
                   {section.description && (
                     <Typography variant="body2" color="text.secondary" display="block" mb={1}>
                       {section.description}
                     </Typography>
                   )}
+
                   <Box display="flex" flexDirection="column" gap={0.75}>
                     {section.fields?.flatMap((field, index) => {
                       if (field.type === "json") {
@@ -120,7 +156,10 @@ function RecapDatasource({
                                         <Typography
                                           variant="body2"
                                           color="text.secondary"
-                                          sx={{ minWidth: 110, flexShrink: 0 }}
+                                          sx={{
+                                            minWidth: 110,
+                                            flexShrink: 0,
+                                          }}
                                         >
                                           {key} :
                                         </Typography>
@@ -139,6 +178,7 @@ function RecapDatasource({
                           </Box>
                         );
                       }
+
                       const displayValue =
                         field.value === null || field.value === undefined || field.value === ""
                           ? "-"
