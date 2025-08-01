@@ -192,7 +192,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		payload['rawContent'] = None
 		payload['datasourcePayload'] = datasource_payload
 		payload["resources"] = {
-			"binaries": []
+			"binaries": binaries
 		}
 		payload["scheduleId"] = self.schedule_id
 		payload["tenantId"] = self.tenant_id
