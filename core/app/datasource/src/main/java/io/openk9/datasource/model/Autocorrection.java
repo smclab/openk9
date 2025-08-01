@@ -48,7 +48,7 @@ public class Autocorrection extends K9Entity {
 
 	@JsonIgnore
 	@ToString.Exclude
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne
 	@JoinColumn(name = "autocorrection_doc_type_field_id", referencedColumnName = "id")
 	private DocTypeField autocorrectionDocTypeField;
 

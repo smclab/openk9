@@ -32,6 +32,33 @@ service Searcher {
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
   rpc GetRAGConfigurations(GetRAGConfigurationsRequest) returns (GetRAGConfigurationsResponse) {}
   rpc GetEmbeddingModelConfigurations(GetEmbeddingModelConfigurationsRequest) returns (GetEmbeddingModelConfigurationsResponse) {}
+  rpc GetAutocorrectionConfigurations(AutocorrectionConfigurationsRequest) returns (AutocorrectionConfigurationsResponse) {}
+}
+
+message AutocorrectionConfigurationsRequest {
+  string virtualHost = 1;
+}
+
+message AutocorrectionConfigurationsResponse {
+  repeated string indexName = 1;
+  string field = 2;
+  SortType sort = 3;
+  SuggestMode suggestMode = 4;
+  int32 prefixLength = 5;
+  int32 minWordLength = 6;
+  int32 maxEdit = 7;
+  bool enableSearchWithCorrection = 8;
+}
+
+enum SortType {
+  SCORE = 0;
+  FREQUENCY = 1;
+}
+
+enum SuggestMode {
+  MISSING = 0;
+  POPULAR = 1;
+  ALWAYS = 2;
 }
 
 message QueryParserResponse {
