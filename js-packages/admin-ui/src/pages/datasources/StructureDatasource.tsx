@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigureDatasource, MonitoringTab } from "./Function";
 import Reindex from "./Function/Reindex";
-import RecapDatasource from "./OldRecapDatasource";
+import RecapDatasource from "./RecapDatasource";
 import ReindexArea from "./components/Sections/ReindexArea";
 import { ConfigureConnectors } from "./components/Sections/Connectors/ConfigureConnectors";
 import DataIndex from "./components/Sections/DataIndex/ConfigureDataIndex";
@@ -42,6 +42,60 @@ export const TabsSection = ({
   const isRecapTab = "recap";
   isRecap && handleTabChange(null, isRecapTab);
   const navigate = useNavigate();
+  const area = [
+    formValues.pluginDriverSelect?.id && {
+      title: "Connector",
+      description: "area del plugin driver",
+      fields: [
+        {
+          label: "Name Connector",
+          value: formValues.pluginDriverSelect?.nameConnectors,
+          type: "string",
+        },
+        { label: "Host", value: formValues.pluginDriverSelect?.host, type: "string" },
+        { label: "Port", value: formValues.pluginDriverSelect?.port, type: "string" },
+        { label: "Method", value: formValues.pluginDriverSelect?.method, type: "string" },
+        { label: "Path", value: formValues.pluginDriverSelect?.path, type: "string" },
+        { label: "Provisioning", value: formValues.pluginDriverSelect?.provisioning, type: "string" },
+        { label: "Secure", value: formValues.pluginDriverSelect?.secure, type: "boolean" },
+      ],
+    },
+    formValues.datasourceId
+      ? {
+          title: "Datasource",
+          description: "area del datasource",
+          fields: [
+            { label: "Name", value: formValues.name, type: "string" },
+            { label: "Description", value: formValues.description, type: "string" },
+            { label: "Reindexing", value: formValues.reindex, type: "string" },
+            { label: "Scheduling", value: formValues.scheduling, type: "string" },
+            {
+              label: "json",
+              type: "json",
+              value: formValues.jsonConfig ?? {},
+            },
+          ],
+        }
+      : null,
+    formValues.enrichPipeline?.name
+      ? {
+          title: "Pipeline",
+          description: "area delle pipeline",
+          fields: [{ label: "Name", type: "string", value: formValues.enrichPipeline?.name }],
+        }
+      : null,
+    (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) > 0 && {
+      title: "Pipeline Custom",
+      description: "area delle pipeline custom",
+      fields: [
+        {
+          type: "array",
+          value: formValues.enrichPipelineCustom?.linkedEnrichItems?.map((form) => ({ name: form.name })) ?? [],
+        },
+      ],
+    },
+  ].filter((section): section is { title: string; description: string; fields: any[] } => !!section);
+
   return (
     <>
       <Tabs value={activeTab} onChange={handleTabChange}>
@@ -207,7 +261,30 @@ export const TabsSection = ({
       )}
       {isRecap && activeTab === "recap" && (
         <>
-          <RecapDatasource formValues={formValues} jsonConfig={dynamicFormJson} />
+          <Box sx={{ marginBlock: 2 }}>
+            {/* name: formValues.name || "",
+      schedulable: formValues.isCronSectionscheduling || false,
+      reindexable: formValues.isCronSectionreindex || false,
+      reindexing: formValues.reindexing || "0 0 1 * * ?",
+      scheduling: formValues.scheduling || "0 30 * ? * * *",
+      jsonConfig: dynamicFormJson,
+      description: formValues.description,
+      pluginDriverId: Number(formValues.pluginDriverSelect?.id),
+      pipelineId: formValues.enrichPipeline?.id || null,
+      purging: formValues.purging || "0 0 1 * * ?",
+      purgeable: formValues.isCronSectionpurge || false,
+      purgeMaxAge: formValues.purgeMaxAge || "2d",
+      ...(formValues.enrichPipelineCustom?.name && { */}
+            {/* pipeline: {
+          name: formValues.enrichPipelineCustom.name,
+          items: formValues?.enrichPipelineCustom.linkedEnrichItems?.map((forms) => ({
+            enrichItemId: forms.id || "",
+            weight: forms.weight || 0,
+          })) as [],
+        },
+      }), */}
+            <RecapDatasource area={area} />
+          </Box>
           <Box display={"flex"} justifyContent={"space-between"}>
             <Button
               variant="contained"

@@ -217,7 +217,7 @@ const DataSourceInformation = gql`
   }
 `;
 
- gql`
+gql`
   query EnrichPipelineOptions($searchText: String, $cursor: String) {
     options: enrichPipelines(searchText: $searchText, after: $cursor) {
       edges {
