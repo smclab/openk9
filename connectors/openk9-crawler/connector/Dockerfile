@@ -29,13 +29,6 @@ RUN chmod g+rw /app
 
 WORKDIR /app
 
-# Set default cache directory
-ENV TLDEXTRACT_CACHE=/app
-
-# Create cache folder and preload PSL
-RUN mkdir -p /app && \
-    python -c "import tldextract; tldextract.TLDExtract(cache_dir='/app')('http://example.com')"
-
 ENTRYPOINT ["/bin/bash"]
 
 CMD ["/etc/docker-entrypoint.sh"]
