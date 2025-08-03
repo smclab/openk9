@@ -21,6 +21,9 @@ package io.openk9.datasource.web;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
+
+import io.openk9.datasource.web.dto.*;
+import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
@@ -62,17 +65,24 @@ import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
-import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
-import io.openk9.datasource.web.dto.SortingResponseDTO;
-import io.openk9.datasource.web.dto.TabResponseDTO;
-import io.openk9.datasource.web.dto.TemplateResponseDTO;
 
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.hibernate.reactive.mutiny.Mutiny;
+
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 
 @ApplicationScoped
 @Path("/buckets")
@@ -81,6 +91,27 @@ public class BucketResource {
 	@Context
 	HttpServerRequest request;
 
+	@Operation(operationId = "templates")
+	@Tag(name = "Templates API", description = "Return javascript templates configured for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "List of templates returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.TEMPLATES_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/templates")
 	@GET
 	public Uni<List<TemplateResponseDTO>> getTemplates() {
@@ -90,9 +121,31 @@ public class BucketResource {
 		);
 	}
 
+	@Operation(operationId = "tabs")
+	@Tag(name = "Tabs API", description = "Return configured tabs for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.TABS_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/tabs")
 	@GET
 	public Uni<List<TabResponseDTO>> getTabs(
+			@Parameter(description = "If return translations")
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return cache.getAsync(
@@ -101,9 +154,31 @@ public class BucketResource {
 		);
 	}
 
+	@Operation(operationId = "suggestion-categories")
+	@Tag(name = "Suggestions Categories API", description = "Return configured suggestion categories for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.SUGGESTION_CATEGORIES_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/suggestionCategories")
 	@GET
 	public Uni<List<? extends SuggestionCategory>> getSuggestionCategories(
+			@Parameter(description = "If return translations")
 			@QueryParam("translated") @DefaultValue("true") boolean translated) {
 
 		return cache.getAsync(
@@ -112,26 +187,91 @@ public class BucketResource {
 		);
 	}
 
+	@Operation(operationId = "doc-type-fields-sortable")
+	@Tag(name = "Sortable Doctype Fields API", description = "Return list of sortable doctype fields")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.SORTABLE_DOCTYPE_FIELDS_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/doc-type-fields-sortable")
 	@GET
 	public Uni<List<DocTypeFieldResponseDTO>> getDocTypeFieldsSortable(
-		@QueryParam("translated") @DefaultValue("true") boolean translated){
+			@Parameter(description = "If return translations")
+			@QueryParam("translated") @DefaultValue("true") boolean translated){
 		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getDocTypeFieldsSortable", translated),
 			key -> getDocTypeFieldsSortableList(request.host(), translated)
 		);
 	}
 
+	@Operation(operationId = "sortings")
+	@Tag(name = "Sorting Rules API", description = "Return list of sorting rules")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.SORTING_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/sortings")
 	@GET
 	public Uni<List<SortingResponseDTO>> getSortings(
-		@QueryParam("translated") @DefaultValue("true") boolean translated){
+			@Parameter(description = "If return translations")
+			@QueryParam("translated") @DefaultValue("true") boolean translated){
 		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getSortings", translated),
 			key -> getSortingList(request.host(), translated)
 		);
 	}
 
+	@Operation(operationId = "default-language")
+	@Tag(name = "Default Language API", description = "Return, if configured, default language for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.DEFAULT_LANGUAGE_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
@@ -141,6 +281,27 @@ public class BucketResource {
 		);
 	}
 
+	@Operation(operationId = "available-languages")
+	@Tag(name = "Available Languages API", description = "Return, if configured, available languages for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Tabs returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.AVAILABLE_LANGUAGES_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/availableLanguage")
 	@GET
 	public Uni<List<Language>> getAvailableLanguage(){
@@ -150,6 +311,27 @@ public class BucketResource {
 		);
 	}
 
+	@Operation(operationId = "current")
+	@Tag(name = "Current Bucket API", description = "Return general configuration for the bucket")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Current bucket configuration returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = BucketDtoExamples.CURRENT_BUCKET_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current")
 	@GET
 	public Uni<CurrentBucket> getCurrentBucket() {
