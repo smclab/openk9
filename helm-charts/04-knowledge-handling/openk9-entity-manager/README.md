@@ -57,6 +57,8 @@ Openk9 Entity Manager service is based on Quarkus Framework. Use following param
 | `quarkus.HttpCorsOrigin`  | Cors origin allowed                                   | `/https://.*.openk9.local/,` |
 | `quarkus.LogConsoleJson`      | If json log is enabled | `false`                       |
 | `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
+| `debug.enabled`    | Enable Java debug mode                             | `true`            |
+| `hazelcast.network.join.kubernetes.serviceName`    | Kubernetes service name used for Hazelcast cluster discovery                             | `openk9-entity-manager`            |
 
 ### JVM configuration
 
@@ -261,7 +263,18 @@ It is necessary to have a working installation of Prometheus for the integration
 | `metrics.prometheusRule.enabled`                     | Set this to true to create prometheusRules for Prometheus operator                                 | `false`               |
 | `metrics.prometheusRule.additionalLabels`            | Additional labels that can be used so prometheusRules will be discovered by Prometheus             | `{}`                  |
 | `metrics.prometheusRule.namespace`                   | namespace where prometheusRules resource should be created                                         | `""`                  |
-| `metrics.prometheusRule.rules`                       | List of rules, used as template by Helm.                                                           | `[]`                  ||
+| `metrics.prometheusRule.rules`                       | List of rules, used as template by Helm.                                                           | `[]`                  |
+
+### Entity Manager specific configurations
+
+Openk9 Entity Manager service has specific configurations that can be customized to control entity recognition and processing behavior.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `entity.uniqueEntities`    | Comma-separated list of unique entity types to be processed                             | `date,organization,loc,email,document,bank,person`            |
+| `entity.minHops`    | Minimum number of hops for entity relationship traversal                             | `1`            |
+| `entity.maxHops`    | Maximum number of hops for entity relationship traversal                             | `2`            |
+| `entity.scoreThreshold`    | Score threshold for entity recognition confidence                             | `0.8`            |
 
 ### Scale horizontally
 
@@ -280,15 +293,15 @@ Is possible also to set autoscaling using following parameters:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `autoscaling.enabled`                             | Enable livenessProbe                                                                                                                                                                                              | `true`           |
-| `autoscaling.minReplicas`                 | Initial delay seconds for livenessProbe                                                                                                                                                                           | `120`            |
-| `autoscaling.maxReplicas`                       | Period seconds for livenessProbe                                                                                                                                                                                  | `30`             |
-| `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
-| `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
+| `autoscaling.enabled`                             | Enable autoscaling                                                                                                                                                                                              | `true`           |
+| `autoscaling.minReplicas`                 | Minimum number of replicas                                                                                                                                                                           | `1`            |
+| `autoscaling.maxReplicas`                       | Maximum number of replicas                                                                                                                                                                                  | `10`             |
+| `autoscaling.averageCpuUtilizationPercentage`                      | Target CPU utilization percentage                                                                                                                                                                                 | `80`             |
+| `autoscaling.averageMemoryUtilizationPercentage`                    | Target memory utilization percentage                                                                                                                                                                               | `80`              |
 
 ## Advanced logging
 
-In case you want to configure Openk9 Datasource logging you can set up following parameters:
+In case you want to configure Openk9 Entity Manager logging you can set up following parameters:
 
 An example:
 
@@ -312,17 +325,13 @@ No Known issues
 
 Find more information about how to deal with common errors related to Openk9's Helm charts in [this troubleshooting guide](https://staging-site.openk9.io/docs/monitoring/troubleshooting).
 
-
 ## Upgrading
 
 ### To 2.0.0
 
-
 ### To 1.7.0
 
-
 ## License
-
 
 Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 

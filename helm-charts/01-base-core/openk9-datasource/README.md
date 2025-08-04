@@ -26,7 +26,7 @@ helm upgrade -i datasource openk9/openk9-datasource
 
 The command deploys Openk9 Datasource on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
-## Parameters
+# Parameters
 
 ### Configure Image
 
@@ -61,7 +61,9 @@ Openk9 Datasource service is based on Quarkus Framework. Use following parameter
 | `quarkus.HttpCorsOrigin`  | Cors origin allowed                                   | `/https://.*.openk9.local/,` |
 | `quarkus.LogConsoleJson`      | If json log is enabled | `false`                       |
 | `quarkus.LogLevel`  | Default log level                                                                             | `INFO`             |
-| `quarkus.LogLevelHibernate`  | Default log level for Hibernate. Set to ERROR in production                 | `INFO`             |
+| `quarkus.LogLevelHibernate`  | Default log level for Hibernate                 | `INFO`             |
+| `debug.enabled`    | Enable Java debug mode                             | `false`            |
+| `graphql.uiAlwaysInclude`    | Always include GraphQL UI in the application                             | `true`            |
 
 ### Scheduling configurations
 
@@ -86,6 +88,14 @@ Openk9 Datasource service handles pipelines. Following parameters allow to handl
 | ------------------- |--------------------------------------------------|-------|
 | `pipeline.HttpTimeout`      | Timeout used by Http client calling enrich items | `10s` |
 
+### Datasource specific configurations
+
+Openk9 Datasource service has specific configurations that can be customized to control its behavior.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `datasource.aclQueryExtraParamsEnabled`    | Enable extra parameters for ACL queries                             | `true`            |
+
 
 ### JVM configuration
 
@@ -106,6 +116,8 @@ To configure connection to Postgresql or Oracle following parameters are availab
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `database.type`    | Database to use. Default is postgresql         | `postgresql`            |
+| `hibernate.orm.databaseGeneration`    | Database generation strategy for Hibernate                             | `none`            |
+| `hibernate.orm.logSql`    | Enable SQL logging in Hibernate                             | `false`            |
 
 Configure these when database type is postgresql
 
@@ -160,6 +172,7 @@ To configure connection to Rabbitmq following parameters are available:
 | `rabbitmq.passwordSecretName` | Name of the secret where password is stored                            | `rabbitmq-password`                       |
 | `rabbitmq.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `rabbitmq-password`                    |
 | `rabbitmq.keyPasswordEnvName`       | Name of environment variable where password is set       | `RABBITMQ_PASSWORD`   |
+| `messaging.incoming.events.routingKeys`    | Routing keys for incoming events                             | `noop`            |
 
 ### Configure Keycloak
 
@@ -171,6 +184,7 @@ To configure connection to Keycloak following parameters are available:
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `keycloak.host`    | Keycloak host                         | `keycloak.openk9.local`            |
 | `keycloak.clientId`  | Keycloak client                             | `openk9` |
+| `keycloak.realm.master`    | Master realm name for Keycloak authentication                             | `master`            |
 
 ### Configure connections to other Openk9 services
 
@@ -357,7 +371,7 @@ Is possible also to set autoscaling using following parameters:
 | `autoscaling.averageCpuUtilizationPercentage`                      | Timeout seconds for livenessProbe                                                                                                                                                                                 | `20`             |
 | `autoscaling.averageMemoryUtilizationPercentage`                    | Failure threshold for livenessProbe                                                                                                                                                                               | `6`              |
 
-## Advanced logging
+### Advanced logging
 
 In case you want to configure Openk9 Datasource logging you can set up following parameters:
 
@@ -367,7 +381,6 @@ An example:
 quarkus:
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO" ## change log level
-  LogLevelHibernate: "INFO"
 
 ## Http Access Log configuration
 config:
@@ -376,7 +389,7 @@ config:
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 ```
 
-## Known issues
+### Known issues
 
 No Known issues
 
@@ -386,6 +399,7 @@ Find more information about how to deal with common errors related to Openk9's H
 
 
 ## Upgrading
+
 
 ### To 2.0.0
 
