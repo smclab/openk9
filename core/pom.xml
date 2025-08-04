@@ -96,7 +96,7 @@
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<quarkus.platform.version>3.20.2</quarkus.platform.version>
 		<quarkus.version>3.20.2</quarkus.version>
-		<quarkiverse.opensearch.version>1.16.1</quarkiverse.opensearch.version>
+		<quarkiverse.opensearch.version>1.17.2</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<hibernate.version>6.6.23.Final</hibernate.version>
 		<surefire-plugin.version>3.5.2</surefire-plugin.version>
