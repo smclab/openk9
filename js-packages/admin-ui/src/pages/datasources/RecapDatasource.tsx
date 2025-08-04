@@ -31,7 +31,7 @@ function RecapDatasource({
   };
 
   useLayoutEffect(() => {
-    const overflows = contentRefs.current.map((el) => !!el && el.scrollHeight > 300);
+    const overflows = contentRefs.current.map((el) => !!el && el.scrollHeight > 297);
     setOverflowingCards(overflows);
   }, [area]);
 
@@ -47,8 +47,8 @@ function RecapDatasource({
               <Card
                 variant="outlined"
                 sx={{
-                  height: isExpanded ? "auto" : 300,
-                  minHeight: 300,
+                  height: isExpanded ? "auto" : 297,
+                  minHeight: 297,
                   overflow: "hidden",
                   position: "relative",
                   cursor: isOverflowing ? "pointer" : "default",
