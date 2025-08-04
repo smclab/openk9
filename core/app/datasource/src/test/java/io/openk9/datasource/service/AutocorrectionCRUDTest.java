@@ -19,7 +19,6 @@ package io.openk9.datasource.service;
 
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Autocorrection;
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SortType;
 import io.openk9.datasource.model.SuggestMode;
@@ -33,7 +32,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,7 +65,7 @@ public class AutocorrectionCRUDTest {
 
 	@BeforeEach
 	void setup() {
-		var docTypeFields = getAllDocTypeFields();
+		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
 		var docTypeFieldId = docTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
@@ -126,7 +124,7 @@ public class AutocorrectionCRUDTest {
 
 	@Test
 	void should_create_autocorrection_one_with_docTypeField() {
-		var docTypeFields = getAllDocTypeFields();
+		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
 		docTypeFields.forEach(docTypeField ->
 			log.debug(
@@ -212,7 +210,7 @@ public class AutocorrectionCRUDTest {
 			)
 		);
 
-		var docTypeFields = getAllDocTypeFields();
+		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
 		var docTypeField = docTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
@@ -287,7 +285,7 @@ public class AutocorrectionCRUDTest {
 			)
 		);
 
-		var docTypeFields = getAllDocTypeFields();
+		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
 		var docTypeField = docTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
@@ -364,12 +362,5 @@ public class AutocorrectionCRUDTest {
 		)
 		.await()
 		.indefinitely();
-	}
-
-	private List<DocTypeField> getAllDocTypeFields() {
-		return sessionFactory.withTransaction(session ->
-				docTypeFieldService.findAll()
-			)
-			.await().indefinitely();
 	}
 }

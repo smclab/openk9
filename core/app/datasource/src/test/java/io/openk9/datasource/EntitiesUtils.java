@@ -19,6 +19,7 @@ package io.openk9.datasource;
 
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
@@ -33,6 +34,7 @@ import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.smallrye.mutiny.Uni;
@@ -191,6 +193,18 @@ public class EntitiesUtils {
 
 	// Get methods
 	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> List<ENTITY> getAllEntities(
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(session ->
+				service.findAll()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
 		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
 			String name,
 			SERVICE service,
@@ -213,6 +227,21 @@ public class EntitiesUtils {
 				session -> autocorrectionService.findByName(session, name)
 					.call(autocorrection ->
 						Mutiny.fetch(autocorrection.getAutocorrectionDocTypeField())
+					)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static Datasource getDatasource(
+			String name,
+			DatasourceService datasourceService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> datasourceService.findByName(session, name)
+					.call(datasource ->
+						Mutiny.fetch(datasource.getDataIndexes())
 					)
 			)
 			.await()

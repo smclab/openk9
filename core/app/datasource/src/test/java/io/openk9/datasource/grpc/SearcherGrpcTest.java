@@ -17,46 +17,53 @@
 
 package io.openk9.datasource.grpc;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
-import jakarta.inject.Inject;
-
+import com.google.protobuf.Struct;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BucketService;
+import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.RAGConfigurationService;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
-
-import com.google.protobuf.Struct;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
+import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import scala.annotation.meta.field;
+
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class SearcherGrpcTest {
@@ -99,7 +106,10 @@ public class SearcherGrpcTest {
 	private static final String LLM_ONE_NAME = ENTITY_NAME_PREFIX + "Large language model 1 ";
 	private static final String LLM_API_KEY = "api_key";
 	private static final String LLM_API_URL = "api_url";
+	private static final int MAX_EDIT = 2;
+	private static final int MIN_WORD_LENGTH = 3;
 	private static final String MODEL = "model";
+	private static final int PREFIX_LENGTH = 3;
 	private static final String PROMPT_TEST = "Test prompt";
 	private static final String PROVIDER = "provider";
 	private static final String RAG_CHAT_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT 1";
@@ -110,8 +120,11 @@ public class SearcherGrpcTest {
 	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
 	private static final String VIRTUAL_HOST = "test.openk9.local";
+
 	private static final Logger log = Logger.getLogger(SearcherGrpcTest.class);
 
+	private String docTypeFieldPath = "";
+	private String defaultDataindexNames = "";
 
 	static {
 		BUCKET.setRetrieveType(Bucket.RetrieveType.HYBRID);
@@ -124,7 +137,16 @@ public class SearcherGrpcTest {
 	Searcher searcher;
 
 	@Inject
+	AutocorrectionService autocorrectionService;
+
+	@Inject
 	BucketService bucketService;
+
+	@Inject
+	DatasourceService datasourceService;
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
 
 	@Inject
 	EmbeddingModelService embeddingModelService;
@@ -143,6 +165,13 @@ public class SearcherGrpcTest {
 		// EmbeddingModel
 		createEmbeddingModelOne();
 		enableEmbeddingModelOne();
+
+		// Datasource
+		var defaultDatasource = EntitiesUtils.getDatasource(
+			Initializer.INIT_DATASOURCE_CONNECTION, datasourceService, sessionFactory);
+		defaultDataindexNames = defaultDatasource.getDataIndexes().stream()
+			.map(dataIndex -> SCHEMA_NAME + "-" + dataIndex.getName())
+			.collect(Collectors.joining(","));
 
 		// Bucket
 		createBucketOne();
@@ -205,6 +234,45 @@ public class SearcherGrpcTest {
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_SEARCH_ONE));
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_TOOL_ONE));
+
+		// Autocorrection
+		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
+
+		var docTypeField = docTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(scala.annotation.meta.field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.findFirst();
+
+		var docTypeFieldId = 0L;
+
+		if (docTypeField.isPresent()) {
+			docTypeFieldId = docTypeField.get().getId();
+			docTypeFieldPath = docTypeField.get().getPath();
+		}
+
+		AutocorrectionDTO autocorrectionDTO = AutocorrectionDTO.builder()
+			.name(AUTOCORRECTION_NAME_ONE)
+			.autocorrectionDocTypeFieldId(docTypeFieldId)
+			.sort(SortType.FREQUENCY)
+			.suggestMode(SuggestMode.MISSING)
+			.maxEdit(MAX_EDIT)
+			.minWordLength(MIN_WORD_LENGTH)
+			.prefixLength(PREFIX_LENGTH)
+			.enableSearchWithCorrection(true)
+			.build();
+
+		EntitiesUtils.createEntity(
+			autocorrectionDTO,
+			autocorrectionService,
+			sessionFactory
+		);
+
+		var autocorrectionOne =
+			EntitiesUtils.getEntity(AUTOCORRECTION_NAME_ONE, autocorrectionService, sessionFactory);
+
+		assertNotNull(autocorrectionOne.getAutocorrectionDocTypeField());
+
+		bindAutocorrectionToBucket(bucketOne, autocorrectionOne);
 	}
 
 	@Test
@@ -334,6 +402,35 @@ public class SearcherGrpcTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_get_autocorrection_configurations(UniAsserter asserter) {
+		asserter.assertThat(
+			() -> searcher.getAutocorrectionConfigurations(
+				AutocorrectionConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+				log.debug(String.format("Response on new line: \n%s", response));
+
+				var indexNameList = response.getIndexNameList();
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
+				assertEquals(docTypeFieldPath, response.getField());
+				assertEquals(SortType.FREQUENCY.name(), response.getSort().name());
+				assertEquals(SuggestMode.MISSING.name(), response.getSuggestMode().name());
+				assertEquals(MAX_EDIT, response.getMaxEdit());
+				assertEquals(MIN_WORD_LENGTH, response.getMinWordLength());
+				assertEquals(PREFIX_LENGTH, response.getPrefixLength());
+				assertTrue(response.getEnableSearchWithCorrection());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
 	void should_fail_trying_get_missing_rag_configurations(UniAsserter asserter) {
 
 		// create a Bucket without any RAGConfigurations and enables it
@@ -434,19 +531,15 @@ public class SearcherGrpcTest {
 		enableLargeLanguageModelDefaultPrimary();
 		removeLargeLanguageModelOne();
 
-		// Bucket
-		var bucketDefault = EntitiesUtils.getBucket(
-			sessionFactory,
-			bucketService,
-			io.openk9.datasource.model.init.Bucket.INSTANCE.getName()
-		);
+		// Autocorrection
+		unbindAutocorrectionToBucket(getBucketOne());
+		EntitiesUtils.removeEntity(AUTOCORRECTION_NAME_ONE, autocorrectionService, sessionFactory);
 
-		enableBucket(bucketDefault);
-		EntitiesUtils.removeBucket(
-			sessionFactory,
-			bucketService,
-			BUCKET_ONE
-		);
+		// Bucket
+		enableBucket(getBucketDefault());
+		var bucketOne = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sessionFactory);
+		EntitiesUtils.cleanBucket(bucketOne, bucketService);
+		removeBucketOne();
 
 		// RAGConfiguration
 		EntitiesUtils.removeRAGConfiguration(
@@ -464,6 +557,12 @@ public class SearcherGrpcTest {
 			ragConfigurationService,
 			RAG_CHAT_TOOL_ONE
 		);
+	}
+
+	private void bindAutocorrectionToBucket(Bucket bucket, Autocorrection autocorrection) {
+		bucketService.bindAutocorrection(bucket.getId(), autocorrection.getId())
+			.await()
+			.indefinitely();
 	}
 
 	private void bindRAGConfigurationToBucket(Bucket bucket, RAGConfiguration ragConfiguration) {
@@ -591,6 +690,26 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
+	private Bucket getBucketDefault() {
+		return sessionFactory.withTransaction(
+				session ->
+					bucketService.findByName(
+						session,
+						io.openk9.datasource.model.init.Bucket.INSTANCE.getName())
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private Bucket getBucketOne() {
+		return sessionFactory.withTransaction(
+				session ->
+					bucketService.findByName(session, BUCKET_ONE)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private EmbeddingModel getEmbeddingModelDefaultPrimary() {
 		return sessionFactory.withTransaction(
 				s ->
@@ -634,6 +753,17 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
+	private void removeBucketOne() {
+		var bucket = getBucketOne();
+
+		sessionFactory.withTransaction(
+				session ->
+					bucketService.deleteById(session, bucket.getId())
+			)
+			.await()
+			.indefinitely();
+	}
+
 	private EmbeddingModel removeEmbeddingModelOne() {
 		var embeddingModel = getEmbeddingModelOne();
 
@@ -654,6 +784,12 @@ public class SearcherGrpcTest {
 				(session, transaction) ->
 					largeLanguageModelService.deleteById(session, largeLanguageModel.getId())
 			)
+			.await()
+			.indefinitely();
+	}
+
+	private void unbindAutocorrectionToBucket(Bucket bucket) {
+		bucketService.unbindAutocorrection(bucket.getId())
 			.await()
 			.indefinitely();
 	}
