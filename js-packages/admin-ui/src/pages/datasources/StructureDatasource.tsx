@@ -154,9 +154,9 @@ export const TabsSection = ({
             value: formValues?.vectorIndex?.embeddingDocTypeFieldId?.name,
           },
           {
-            label: "Datasources ",
+            label: "dataIndices ",
             type: "array",
-            value: formValues?.vectorIndex?.docTypeIds,
+            value: formValues?.dataIndices || [],
           },
         ],
       },
@@ -311,12 +311,12 @@ export const TabsSection = ({
               dataIndices: defaultData,
             }));
           }}
-          changeDataIndex={({ dataIndex }: { dataIndex: { id: string } }) => {
+          changeDataIndex={({ dataIndex }: { dataIndex: { id: string; name: string } }) => {
             const isPresentDataIndex = formValues.dataIndices?.find((item) => item.id === dataIndex.id);
 
             const updatedTypes = isPresentDataIndex
               ? formValues.dataIndices?.filter((item) => item.id !== dataIndex.id)
-              : [...(formValues.dataIndices || []), dataIndex];
+              : [...(formValues.dataIndices || []), dataIndex.id];
             setFormValues((prev: ConnectionData) => ({
               ...prev,
               dataIndices: updatedTypes,

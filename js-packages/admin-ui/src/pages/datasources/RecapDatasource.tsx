@@ -126,11 +126,16 @@ function RecapDatasource({
                             }
 
                             return (
-                              <Box key={`${index}-${subIdx}`} display="flex" gap={1}>
+                              <Box
+                                key={`${index}-${subIdx}`}
+                                display="flex"
+                                justifyContent={"space-between"}
+                                alignItems="center"
+                              >
                                 <Typography
                                   variant="body2"
                                   color="text.secondary"
-                                  sx={{ minWidth: 110, flexShrink: 0 }}
+                                  sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700 }}
                                 >
                                   {key}:
                                 </Typography>
@@ -145,20 +150,28 @@ function RecapDatasource({
 
                       if (field.type === "array") {
                         return (
-                          <Box key={index} display="flex" gap={1} flexDirection={"column"}>
+                          <Box key={index} display="flex" gap={0} flexDirection={"column"}>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700, mb: 0.5 }}
+                            >
+                              {field.label}:
+                            </Typography>
                             {field.value &&
                               Array.isArray(field.value) &&
                               field.value.map((item, itemIndex) => (
                                 <Box display="flex" flexDirection="column" key={itemIndex} mb={1}>
                                   {typeof item === "object" && item !== null ? (
                                     Object.entries(item).map(([key, value], index) => (
-                                      <Box display="flex" gap={0} key={key}>
+                                      <Box display="flex" justifyContent={"space-between"} key={key}>
                                         <Typography
                                           variant="body2"
                                           color="text.secondary"
                                           sx={{
                                             minWidth: 110,
                                             flexShrink: 0,
+                                            fontWeight: 500,
                                           }}
                                         >
                                           {key} :
@@ -189,8 +202,12 @@ function RecapDatasource({
                           : String(field.value);
 
                       return (
-                        <Box key={index} display="flex" gap={1}>
-                          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 110, flexShrink: 0 }}>
+                        <Box key={index} display="flex" justifyContent={"space-between"} alignContent={"center"}>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700 }}
+                          >
                             {field.label}:
                           </Typography>
                           <Typography variant="body1" fontWeight={400} noWrap>
