@@ -8,7 +8,7 @@ import { useTheme } from "@mui/material/styles";
 import { SavePluginnDriverModel } from "@pages/PluginDriver";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usePluginDriversQuery } from "../../../../../graphql-generated";
+import { PluginDriverType, Provisioning, usePluginDriversQuery } from "../../../../../graphql-generated";
 import { tabsType } from "../../../datasourceType";
 import { ConnectionData } from "../../../types";
 import { BoxArea } from "../../BoxArea";
@@ -155,13 +155,38 @@ export function ConfigureConnectors({
             systemPluginDrivers={systemPluginDrivers}
             disabled={areaEnabled !== "card" || disabled}
             activeCardId={pluginDriverId || null}
-            setActiveCardId={(id: string | null, name: string | null) =>
+            setActiveCardId={(
+              id: string | null,
+              name: string | null,
+              description?: string | null,
+              host?: string | null,
+              path?: string | null,
+              port?: string | null,
+              secure?: boolean | null,
+              method?: string | null,
+              provisioning?: Provisioning,
+              pluginDriverType?: PluginDriverType,
+              json?: string | null,
+            ) => {
               id &&
-              setFormValues((pre) => ({
-                ...pre,
-                pluginDriverSelect: { ...pre, id, nameConnectors: name },
-              }))
-            }
+                setFormValues((pre) => ({
+                  ...pre,
+                  pluginDriverSelect: {
+                    ...pre,
+                    id,
+                    nameConnectors: name,
+                    description,
+                    host,
+                    path,
+                    port,
+                    secure,
+                    method,
+                    provisioning,
+                    pluginDriverType,
+                    json,
+                  },
+                }));
+            }}
           />
           <Divider sx={{ margin: "17.5px 0px" }} />
           <Typography variant="h3" gutterBottom>
@@ -171,13 +196,38 @@ export function ConfigureConnectors({
             systemPluginDrivers={userPluginDrivers}
             disabled={areaEnabled !== "card" || disabled}
             activeCardId={pluginDriverId || null}
-            setActiveCardId={(id: string | null, name: string | null) =>
+            setActiveCardId={(
+              id: string | null,
+              name: string | null,
+              description?: string | null,
+              host?: string | null,
+              path?: string | null,
+              port?: string | null,
+              secure?: boolean | null,
+              method?: string | null,
+              provisioning?: Provisioning,
+              pluginDriverType?: PluginDriverType,
+              json?: string | null,
+            ) => {
               id &&
-              setFormValues((pre) => ({
-                ...pre,
-                pluginDriverSelect: { ...pre, id, nameConnectors: name },
-              }))
-            }
+                setFormValues((pre) => ({
+                  ...pre,
+                  pluginDriverSelect: {
+                    ...pre,
+                    id,
+                    nameConnectors: name,
+                    description,
+                    host,
+                    path,
+                    port,
+                    secure,
+                    method,
+                    provisioning,
+                    pluginDriverType,
+                    json,
+                  },
+                }));
+            }}
           />
           <Divider sx={{ margin: "17.5px 0px" }} />
           <ButtonAddPluginDrivers pluginDriverRefetch={pluginDrivers} disabled={disabled} />

@@ -52,12 +52,9 @@ export const TabsSection = ({
           value: formValues.pluginDriverSelect?.nameConnectors,
           type: "string",
         },
-        { label: "Host", value: formValues.pluginDriverSelect?.host, type: "string" },
-        { label: "Port", value: formValues.pluginDriverSelect?.port, type: "string" },
-        { label: "Method", value: formValues.pluginDriverSelect?.method, type: "string" },
-        { label: "Path", value: formValues.pluginDriverSelect?.path, type: "string" },
+
         { label: "Provisioning", value: formValues.pluginDriverSelect?.provisioning, type: "string" },
-        { label: "Secure", value: formValues.pluginDriverSelect?.secure, type: "boolean" },
+        { label: "Json", value: formValues.pluginDriverSelect.json, type: "json" },
       ],
     },
     formValues.datasourceId
@@ -69,11 +66,7 @@ export const TabsSection = ({
             { label: "Description", value: formValues.description, type: "string" },
             { label: "Reindexing", value: formValues.reindex, type: "string" },
             { label: "Scheduling", value: formValues.scheduling, type: "string" },
-            {
-              label: "json",
-              type: "json",
-              value: formValues.jsonConfig ?? {},
-            },
+            { label: "Json", value: dynamicFormJson, type: "json" },
           ],
         }
       : null,
@@ -144,7 +137,6 @@ export const TabsSection = ({
           setShowDialog={setShowDialog}
         />
       )}
-
       {activeTab === "datasource" && (
         <ConfigureDatasource
           dataDatasource={formValues}
