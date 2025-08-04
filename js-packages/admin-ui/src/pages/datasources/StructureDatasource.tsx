@@ -6,10 +6,10 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigureDatasource, MonitoringTab } from "./Function";
 import Reindex from "./Function/Reindex";
 import RecapDatasource from "./RecapDatasource";
-import ReindexArea from "./components/Sections/ReindexArea";
 import { ConfigureConnectors } from "./components/Sections/Connectors/ConfigureConnectors";
 import DataIndex from "./components/Sections/DataIndex/ConfigureDataIndex";
 import ConfigurePipeline from "./components/Sections/Pipeline/ConfigurePipeline";
+import ReindexArea from "./components/Sections/ReindexArea";
 import { HeaderType, tabsPropsConstructor } from "./datasourceType";
 import { ConnectionData } from "./types";
 
@@ -70,11 +70,18 @@ export const TabsSection = ({
           ],
         }
       : null,
-    formValues.enrichPipeline?.name
+    formValues.enrichPipeline?.id
       ? {
           title: "Pipeline",
           description: "area delle pipeline",
           fields: [{ label: "Name", type: "string", value: formValues.enrichPipeline?.name }],
+        }
+      : null,
+    !formValues.enrichPipeline?.id && (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) === 0
+      ? {
+          title: "Pipeline",
+          description: "area delle pipeline",
+          fields: [{ label: "Name", type: "string", value: "not select" }],
         }
       : null,
     (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) > 0 && {
@@ -84,6 +91,83 @@ export const TabsSection = ({
         {
           type: "array",
           value: formValues.enrichPipelineCustom?.linkedEnrichItems?.map((form) => ({ name: form.name })) ?? [],
+        },
+      ],
+    },
+    // dataIndex: {
+    //       ...(formValues.dataIndex?.description && { description: formValues.dataIndex.description }),
+    //       knnIndex: formValues?.vectorIndex?.knnIndex || false,
+    //       ...(formValues.vectorIndex?.docTypeIds && { docTypeIds: formValues.vectorIndex.docTypeIds }),
+    //       name: formValues.dataIndex?.name || "",
+    //       ...(formValues?.vectorIndex?.chunkType && { chunkType: formValues?.vectorIndex?.chunkType }),
+    //       ...(formValues?.vectorIndex?.chunkWindowSize && {
+    //         chunkWindowSize: formValues?.vectorIndex?.chunkWindowSize,
+    //       }),
+    //       ...(formValues.vectorIndex?.embeddingDocTypeFieldId?.id && {
+    //         embeddingDocTypeFieldId: formValues.vectorIndex.embeddingDocTypeFieldId.id,
+    //       }),
+    //       ...(formValues.vectorIndex?.embeddingJsonConfig && {
+    //         embeddingJsonConfig: formValues.vectorIndex.embeddingJsonConfig,
+    //       }),
+    //     },
+    formValues?.dataIndex?.name &&
+      (formValues.vectorIndex?.embeddingJsonConfig ||
+        formValues.vectorIndex?.knnIndex ||
+        formValues.vectorIndex?.chunkType ||
+        (formValues?.vectorIndex?.docTypeIds?.length || 0) > 0) && {
+        title: "Data Index",
+        description: "area delle data index",
+        fields: [
+          {
+            label: "Name",
+            type: "string",
+            value: formValues.dataIndex.name,
+          },
+          {
+            label: "Description",
+            type: "string",
+            value: formValues.dataIndex.description,
+          },
+          {
+            label: "chunk Type",
+            type: "string",
+            value: formValues.vectorIndex?.chunkType,
+          },
+          {
+            label: "chunk Window Size",
+            type: "number",
+            value: formValues.vectorIndex?.chunkWindowSize,
+          },
+          {
+            label: "Embedding json Config",
+            type: "json",
+            value: formValues.vectorIndex?.embeddingJsonConfig,
+          },
+          {
+            label: "Embedding knn index ",
+            type: "boolean",
+            value: formValues.vectorIndex?.knnIndex,
+          },
+          {
+            label: "Doc Type ",
+            type: "string",
+            value: formValues?.vectorIndex?.embeddingDocTypeFieldId?.name,
+          },
+          {
+            label: "Datasources ",
+            type: "array",
+            value: formValues?.vectorIndex?.docTypeIds,
+          },
+        ],
+      },
+    formValues.dataIndex?.id && {
+      title: "Data Index",
+      description: "area delle data index",
+      fields: [
+        {
+          label: "Name",
+          type: "string",
+          value: formValues.dataIndex.name,
         },
       ],
     },

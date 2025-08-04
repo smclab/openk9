@@ -100,7 +100,12 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
                 onChange={(event) => {
                   setDataDatasource((dat) => ({
                     ...dat,
-                    enrichPipeline: { id: "" + event?.target?.value },
+                    enrichPipeline: {
+                      id: "" + event?.target?.value,
+                      name:
+                        enrichPipelines?.data?.options?.edges?.find((item) => item?.node?.id === event.target.value)
+                          ?.node?.name || undefined,
+                    },
                   }));
                 }}
                 label="Select Label"
