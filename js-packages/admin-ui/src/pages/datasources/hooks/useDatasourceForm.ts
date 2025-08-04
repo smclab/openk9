@@ -124,6 +124,7 @@ export const useDatasourceForm = (
           ...datasourceQuery?.data?.datasource?.pluginDriver,
           json: datasourceQuery?.data?.datasource?.pluginDriver?.jsonConfig || "",
           provisioning: datasourceQuery?.data?.datasource?.pluginDriver?.provisioning || Provisioning.System,
+          nameConnectors: datasourceQuery?.data?.datasource?.pluginDriver?.name || "",
         },
       }));
     }

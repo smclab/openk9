@@ -21,7 +21,7 @@ import { BoxArea } from "../../BoxArea";
 
 interface ConfigurePipelineProps {
   dataDatasource: ConnectionData;
-  setDataDatasource: React.Dispatch<React.SetStateAction<ConnectionData>>; // Sostituisci con il tipo corretto
+  setDataDatasource: React.Dispatch<React.SetStateAction<ConnectionData>>;
   disabled: boolean;
   datasourceId: string;
   tabs: tabsType;

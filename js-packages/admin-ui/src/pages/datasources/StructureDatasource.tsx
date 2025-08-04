@@ -45,7 +45,6 @@ export const TabsSection = ({
   const area = [
     formValues.pluginDriverSelect?.id && {
       title: "Connector",
-      description: "area del plugin driver",
       fields: [
         {
           label: "Name Connector",
@@ -60,12 +59,14 @@ export const TabsSection = ({
     formValues.datasourceId
       ? {
           title: "Datasource",
-          description: "area del datasource",
           fields: [
             { label: "Name", value: formValues.name, type: "string" },
-            { label: "Description", value: formValues.description, type: "string" },
-            { label: "Reindexing", value: formValues.reindex, type: "string" },
+            { label: "Reindexing", value: formValues.isCronSectionreindex, type: "boolean" },
+            { label: "Scheduling", value: formValues.isCronSectionscheduling, type: "boolean" },
+            { label: "Purging", value: formValues.isCronSectionpurge, type: "boolean" },
+            { label: "Reindexing", value: formValues.reindexing, type: "string" },
             { label: "Scheduling", value: formValues.scheduling, type: "string" },
+            { label: "Purging", value: formValues.purging, type: "string" },
             { label: "Json", value: dynamicFormJson, type: "json" },
           ],
         }
@@ -73,50 +74,31 @@ export const TabsSection = ({
     formValues.enrichPipeline?.id
       ? {
           title: "Pipeline",
-          description: "area delle pipeline",
           fields: [{ label: "Name", type: "string", value: formValues.enrichPipeline?.name }],
         }
       : null,
     !formValues.enrichPipeline?.id && (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) === 0
       ? {
           title: "Pipeline",
-          description: "area delle pipeline",
-          fields: [{ label: "Name", type: "string", value: "not select" }],
+          fields: [{ label: "Name", type: "string", value: "not selected" }],
         }
       : null,
     (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) > 0 && {
       title: "Pipeline Custom",
-      description: "area delle pipeline custom",
       fields: [
         {
+          label: "Enrich Item Custom",
           type: "array",
           value: formValues.enrichPipelineCustom?.linkedEnrichItems?.map((form) => ({ name: form.name })) ?? [],
         },
       ],
     },
-    // dataIndex: {
-    //       ...(formValues.dataIndex?.description && { description: formValues.dataIndex.description }),
-    //       knnIndex: formValues?.vectorIndex?.knnIndex || false,
-    //       ...(formValues.vectorIndex?.docTypeIds && { docTypeIds: formValues.vectorIndex.docTypeIds }),
-    //       name: formValues.dataIndex?.name || "",
-    //       ...(formValues?.vectorIndex?.chunkType && { chunkType: formValues?.vectorIndex?.chunkType }),
-    //       ...(formValues?.vectorIndex?.chunkWindowSize && {
-    //         chunkWindowSize: formValues?.vectorIndex?.chunkWindowSize,
-    //       }),
-    //       ...(formValues.vectorIndex?.embeddingDocTypeFieldId?.id && {
-    //         embeddingDocTypeFieldId: formValues.vectorIndex.embeddingDocTypeFieldId.id,
-    //       }),
-    //       ...(formValues.vectorIndex?.embeddingJsonConfig && {
-    //         embeddingJsonConfig: formValues.vectorIndex.embeddingJsonConfig,
-    //       }),
-    //     },
     formValues?.dataIndex?.name &&
       (formValues.vectorIndex?.embeddingJsonConfig ||
         formValues.vectorIndex?.knnIndex ||
         formValues.vectorIndex?.chunkType ||
         (formValues?.vectorIndex?.docTypeIds?.length || 0) > 0) && {
         title: "Data Index",
-        description: "area delle data index",
         fields: [
           {
             label: "Name",
@@ -162,7 +144,6 @@ export const TabsSection = ({
       },
     formValues.dataIndex?.id && {
       title: "Data Index",
-      description: "area delle data index",
       fields: [
         {
           label: "Name",
