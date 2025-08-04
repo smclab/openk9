@@ -105,7 +105,7 @@
 		<dependency-check-plugin.version>12.1.1</dependency-check-plugin.version>
 		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
 		<reactor-bom-version>2022.0.1</reactor-bom-version>
-		<pekko.version>1.1.2</pekko.version>
+		<pekko.version>1.1.5</pekko.version>
 		<scala.version>2.13</scala.version>
 		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
 	</properties>
