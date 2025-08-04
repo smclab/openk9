@@ -61,7 +61,7 @@ public class SearchConfigResource {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = Response.class),
-									example = SearchConfigDtoExamples.TABS_RESPONSE
+									example = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_RESPONSE
 							)
 					}
 			),
@@ -76,8 +76,8 @@ public class SearchConfigResource {
 							schema = @Schema(implementation = HybridSearchPipelineDTO.class),
 							examples = {
 									@ExampleObject(
-											name = "Auto Generate DTO",
-											value = SearchConfigDtoExamples.TABS_RESPONSE
+											name = "Configure Hybrid Search DTO",
+											value = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_REQUEST
 									)
 							}
 					)

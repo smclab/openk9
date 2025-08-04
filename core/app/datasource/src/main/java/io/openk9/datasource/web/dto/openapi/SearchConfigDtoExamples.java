@@ -110,34 +110,17 @@ public class SearchConfigDtoExamples {
               },
               "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
             }""";
-    public static final String AVAILABLE_LANGUAGES_RESPONSE =
+    public static final String CONFIGURE_HYBRID_SEARCH_RESPONSE =
+            """
+            {"status":200,"body":"{\\"acknowledged\\":true}","reason":"OK"}""";
+    public static final String CONFIGURE_HYBRID_SEARCH_REQUEST =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
-            }""";
-    public static final String CURRENT_BUCKET_RESPONSE =
-            """
-            {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
-            }""";
+               "normalizationTechnique": "MIN_MAX",
+               "combinationTechnique": "ARITHMETIC_MEAN",
+               "weights": [
+                 0.5,
+                 0.5
+               ]
+             }""";
 }

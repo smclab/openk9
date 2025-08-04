@@ -23,91 +23,72 @@ public class DataIndexDtoExamples {
     public static final String AUTO_GENERATE_DATA_INDEX_DTO =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
+              "datasourceId": 12
             }""";
     public static final String GET_MAPPINGS_FROM_DOCTYPES_DTO =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
+              "docTypeIds": [12, 13, 14]
             }""";
     public static final String GET_SETTINGS_FROM_DOCTYPES_DTO =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
-            }""";
-    public static final String AUTO_GENERATE_DATA_INDEX_RESPONSE =
-            """
-            {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
+              "docTypeIds": [12, 13, 14]
             }""";
     public static final String GET_MAPPINGS_FROM_DOCTYPES_RESPONSE =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
-            }""";
+                "properties": {
+                    "web": {
+                        "properties": {
+                            "content": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword",
+                                        "ignore_above": 256
+                                    }
+                                }
+                            },
+                            "favicon": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword",
+                                        "ignore_above": 256
+                                    }
+                                }
+                            },
+                            "title": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword",
+                                        "ignore_above": 256
+                                    }
+                                }
+                            },
+                            "url": {
+                                "type": "text",
+                                "fields": {
+                                    "keyword": {
+                                        "type": "keyword",
+                                        "ignore_above": 256
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+             }""";
     public static final String GET_SETTINGS_FROM_DOCTYPES_RESPONSE =
             """
             {
-              "datasourceId": 12,
-              "tenantId": "tenantId",
-              "contentId": "12fs4e3cds3ew32",
-              "parsingDate": 1743007437740,
-              "rawContent": "string",
-              "datasourcePayload": {
-                "additionalProp1": "string",
-                "additionalProp2": "string",
-                "additionalProp3": "string"
-              },
-              "scheduleId": "bf988b9c-92a2-4a44-9558-5ebeb94c790e"
-            }""";
+                "analysis": {},
+                "index": {
+                    "highlight": {
+                        "max_analyzed_offset": "10000000"
+                    }
+                }
+             }""";
 }

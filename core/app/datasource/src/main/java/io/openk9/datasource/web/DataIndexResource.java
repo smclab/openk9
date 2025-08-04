@@ -86,17 +86,16 @@ public class DataIndexResource {
 	@Operation(operationId = "auto-generate-doc-types")
 	@Tag(name = "Auto Generate DocumentTypes API", description = "Permits to generate document types starting from a specific datasource and data index")
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
 			@APIResponse(responseCode = "400", description = "invalid"),
 			@APIResponse(
-					responseCode = "200",
+					responseCode = "204",
 					description = "Auto Generate successful",
 					content = {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = DataIndexDtoExamples.AUTO_GENERATE_DATA_INDEX_RESPONSE
+									schema = @Schema(implementation = Response.class)
 							)
 					}
 			),

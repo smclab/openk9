@@ -354,11 +354,6 @@ public class PluginDriverService
 			);
 	}
 
-	public Uni<FormTemplate> getForm(PluginDriverDTO pluginDriverDTO) {
-		return httpPluginDriverClient.getForm(
-			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
-	}
-
 	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		return httpPluginDriverClient.getHealth(
 			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));

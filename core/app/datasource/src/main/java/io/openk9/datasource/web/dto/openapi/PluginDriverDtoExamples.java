@@ -18,7 +18,7 @@
 
 package io.openk9.datasource.web.dto.openapi;
 
-public class BucketDtoExamples {
+public class PluginDriverDtoExamples {
 
     public static final String TEMPLATES_RESPONSE =
             """

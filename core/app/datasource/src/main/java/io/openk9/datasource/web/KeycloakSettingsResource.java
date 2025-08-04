@@ -27,6 +27,14 @@ import io.openk9.datasource.web.dto.KeycloakSettings;
 import io.quarkus.oidc.OidcTenantConfig;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/oauth2")
 public class KeycloakSettingsResource {
@@ -38,6 +46,26 @@ public class KeycloakSettingsResource {
 	@Inject
 	RoutingContext routingContext;
 
+	@Operation(operationId = "settings")
+	@Tag(name = "Keycloak Settings API", description = "Return keycloak settings")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Keycloak Settings returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class)
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
     @GET
     @Path("/settings")
 	public Uni<KeycloakSettings> keycloakSettings() {
@@ -47,6 +75,26 @@ public class KeycloakSettingsResource {
 		return oidcConfigUni.map(KeycloakSettingsResource::mapSettings);
     }
 
+	@Operation(operationId = "settings.js")
+	@Tag(name = "Keycloak Settings JS API", description = "Return keycloak settings as javascript file")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Keycloak Settings returned",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class)
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
     @GET
     @Path("/settings.js")
     @Produces("text/javascript")
