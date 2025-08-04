@@ -47,12 +47,14 @@ import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import io.quarkus.arc.deployment.AdditionalBeanBuildItem;
 import io.quarkus.arc.deployment.RecorderBeanInitializedBuildItem;
+import io.quarkus.arc.deployment.UnremovableBeanBuildItem;
 import io.quarkus.datasource.common.runtime.DataSourceUtil;
 import io.quarkus.datasource.common.runtime.DatabaseKind;
 import io.quarkus.datasource.deployment.spi.DefaultDataSourceDbKindBuildItem;
 import io.quarkus.datasource.runtime.DataSourceBuildTimeConfig;
 import io.quarkus.datasource.runtime.DataSourcesBuildTimeConfig;
 import io.quarkus.deployment.Capabilities;
+import io.quarkus.deployment.Capability;
 import io.quarkus.deployment.annotations.BuildProducer;
 import io.quarkus.deployment.annotations.BuildStep;
 import io.quarkus.deployment.annotations.BuildSteps;
@@ -65,6 +67,7 @@ import io.quarkus.deployment.builditem.LogCategoryBuildItem;
 import io.quarkus.deployment.builditem.SystemPropertyBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.NativeImageResourceBuildItem;
 import io.quarkus.deployment.builditem.nativeimage.ReflectiveClassBuildItem;
+import io.quarkus.deployment.builditem.nativeimage.ServiceProviderBuildItem;
 import io.quarkus.deployment.pkg.builditem.CurateOutcomeBuildItem;
 import io.quarkus.deployment.recording.RecorderContext;
 import io.quarkus.hibernate.orm.deployment.HibernateConfigUtil;
@@ -80,6 +83,7 @@ import io.quarkus.hibernate.orm.deployment.integration.HibernateOrmIntegrationRu
 import io.quarkus.hibernate.orm.deployment.spi.DatabaseKindDialectBuildItem;
 import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfig;
 import io.quarkus.hibernate.orm.runtime.boot.QuarkusPersistenceUnitDescriptor;
+import io.quarkus.hibernate.orm.runtime.customized.FormatMapperKind;
 import io.quarkus.hibernate.orm.runtime.recording.RecordedConfig;
 import io.quarkus.hibernate.reactive.runtime.FastBootHibernateReactivePersistenceProvider;
 import io.quarkus.hibernate.reactive.runtime.HibernateReactive;
@@ -106,6 +110,14 @@ public final class HibernateReactiveProcessor {
 		"org.hibernate.reactive.persister.collection.impl.ReactiveBasicCollectionPersister",
     };
 
+	@BuildStep
+	void registerServicesForReflection(BuildProducer<ServiceProviderBuildItem> services) {
+		services.produce(new ServiceProviderBuildItem(
+			"io.vertx.core.spi.VertxServiceProvider",
+			"org.hibernate.reactive.context.impl.ContextualDataStorage"
+		));
+	}
+
     @BuildStep
     public void buildReactivePersistenceUnit(
 		HibernateOrmConfig hibernateOrmConfig, CombinedIndexBuildItem index,
@@ -121,6 +133,7 @@ public final class HibernateReactiveProcessor {
 		BuildProducer<PersistenceUnitDescriptorBuildItem> persistenceUnitDescriptors,
 		List<DefaultDataSourceDbKindBuildItem> defaultDataSourceDbKindBuildItems,
 		CurateOutcomeBuildItem curateOutcomeBuildItem,
+		BuildProducer<UnremovableBeanBuildItem> unremovableBeans,
 		List<DatabaseKindDialectBuildItem> dbKindDialectBuildItems) {
 
         final boolean enableHR = hasEntities(jpaModel);
@@ -186,11 +199,23 @@ public final class HibernateReactiveProcessor {
 				dbKindDialectBuildItems
 			);
 
-            //Some constant arguments to the following method:
+			Optional<FormatMapperKind> jsonMapper = jsonMapperKind(capabilities);
+			Optional<FormatMapperKind> xmlMapper = xmlMapperKind(capabilities);
+
+			jsonMapper.flatMap(FormatMapperKind::requiredBeanType)
+				.ifPresent(type -> unremovableBeans.produce(UnremovableBeanBuildItem.beanClassNames(
+					type)));
+			xmlMapper.flatMap(FormatMapperKind::requiredBeanType)
+				.ifPresent(type -> unremovableBeans.produce(UnremovableBeanBuildItem.beanClassNames(
+					type)));
+
+
+			//Some constant arguments to the following method:
             // - this is Reactive
             // - we don't support starting Hibernate Reactive from a persistence.xml
             // - we don't support Hibernate Envers with Hibernate Reactive
-            persistenceUnitDescriptors.produce(new PersistenceUnitDescriptorBuildItem(reactivePU,
+			persistenceUnitDescriptors.produce(new PersistenceUnitDescriptorBuildItem(
+					reactivePU,
 				new RecordedConfig(
 					Optional.of(DataSourceUtil.DEFAULT_DATASOURCE_NAME),
 					dbKindOptional, Optional.empty(),
@@ -201,8 +226,9 @@ public final class HibernateReactiveProcessor {
 				),
 				null,
 				jpaModel.getXmlMappings(reactivePU.getName()),
-				true, false, capabilities
-			));
+					true, false, isHibernateValidatorPresent(capabilities), jsonMapper, xmlMapper
+				)
+			);
 		}
 	}
 
@@ -692,4 +718,24 @@ public final class HibernateReactiveProcessor {
         return !jpaModel.getEntityClassNames().isEmpty();
     }
 
+	private static Optional<FormatMapperKind> jsonMapperKind(Capabilities capabilities) {
+		if (capabilities.isPresent(Capability.JACKSON)) {
+			return Optional.of(FormatMapperKind.JACKSON);
+		}
+		if (capabilities.isPresent(Capability.JSONB)) {
+			return Optional.of(FormatMapperKind.JSONB);
+		}
+		return Optional.empty();
+	}
+
+	private static Optional<FormatMapperKind> xmlMapperKind(Capabilities capabilities) {
+		if (capabilities.isPresent(Capability.JAXB)) {
+			return Optional.of(FormatMapperKind.JAXB);
+		}
+		return Optional.empty();
+	}
+
+	private static boolean isHibernateValidatorPresent(Capabilities capabilities) {
+		return capabilities.isPresent(Capability.HIBERNATE_VALIDATOR);
+	}
 }
