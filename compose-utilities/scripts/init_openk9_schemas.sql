@@ -903,7 +903,7 @@ BEGIN
         ALTER TABLE ONLY "openk9"."token_tab" ADD CONSTRAINT "fk37w5m3swa2cebgar0umrnytyy" FOREIGN KEY (doc_type_field_id) REFERENCES doc_type_field(id) NOT DEFERRABLE;
 
         INSERT INTO "plugin_driver" ("id", "create_date", "modified_date", "description", "json_config", "name", "type", "provisioning") VALUES
-        (1,	'2025-06-16 21:28:48.540534',	'2025-06-16 21:28:48.541568',	'',	'{"baseUri":"web-parser:5000","path":"/startSitemapCrawling","method":"POST"}',	'web parser',	'HTTP',	'USER');
+        (1,	'2025-06-16 21:28:48.540534',	'2025-06-16 21:28:48.541568',	'',	'{"baseUri":"web-connector:5000","path":"/startSitemapCrawling","method":"POST"}',	'web parser',	'HTTP',	'USER');
 
         INSERT INTO "enrich_item" ("id", "create_date", "modified_date", "description", "json_config", "name", "service_name", "type", "script", "behavior_merge_type", "json_path", "behavior_on_error", "request_timeout") VALUES
         (1,	'2025-06-29 20:10:56.418262',	'2025-06-29 20:10:56.420208',	'',	'{}',	'tika',	'http://openk9-tika:8080/api/tika/process',	'HTTP_ASYNC',	'',	'MERGE',	'$',	'SKIP',	10000);
@@ -913,13 +913,14 @@ BEGIN
 
         INSERT INTO "enrich_pipeline_item" ("enrich_item_id", "enrich_pipeline_id", "weight") VALUES
         (1,	19,	1);
-        
-        INSERT INTO "datasource" ("id", "create_date", "modified_date", "description", "json_config", "last_ingestion_date", "name", "schedulable", "scheduling", "data_index_id", "enrich_pipeline_id", "plugin_driver_id", "reindexable", "reindexing", "purgeable", "purging", "purge_max_age") VALUES
-        (30,	'2025-06-17 11:24:17.648002',	'2025-06-17 11:54:40.419122',	'',	'{"sitemapUrls":["https://www.smc.it/sitemap.xml"],"allowedDomains":["www.smc.it"],"allowedPaths":[],"excludedPaths":[],"bodyTag":"body","titleTag":"title::text","maxLength":-1,"pageCount":0,"doExtractDocs":false,"documentFileExtensions":[]}',	NULL,	'smc site ',	'0',	'0 */30 * ? * * *',	NULL,	NULL,	1,	'0',	'0 0 1 * * ?',	'0',	'0 0 1 * * ?',	'2d');
 
         INSERT INTO "doc_type" ("id", "create_date", "modified_date", "description", "name", "doc_type_template_id") VALUES
         (2,	'2025-06-16 21:28:48.947629',	'2025-06-16 21:28:48.947651',	'auto-generated',	'default',	NULL),
         (9,	'2025-06-16 21:28:48.954147',	'2025-06-16 21:28:48.954165',	'auto-generated',	'web',	NULL);
+
+        INSERT INTO "datasource" ("id", "create_date", "modified_date", "description", "json_config", "last_ingestion_date", "name", "schedulable", "scheduling", "data_index_id", "enrich_pipeline_id", "plugin_driver_id", "reindexable", "reindexing", "purgeable", "purging", "purge_max_age") VALUES
+        (30,	'2025-06-17 11:24:17.648002',	'2025-06-17 11:54:40.419122',	'',	'{"sitemapUrls":["https://www.smc.it/sitemap.xml"],"allowedDomains":["www.smc.it"],"allowedPaths":[],"excludedPaths":[],"bodyTag":"body","excludedBodyTags":[],"titleTag":"title::text","maxLength":-1,"pageCount":0,"doExtractDocs":false,"documentFileExtensions":[], "customMetadata": {}}',	NULL,	'smc site ',	'0',	'0 */30 * ? * * *',	NULL,	NULL,	1,	'0',	'0 0 1 * * ?',	'0',	'0 0 1 * * ?',	'2d');
+
 
         INSERT INTO "doc_type_field" ("id", "create_date", "modified_date", "boost", "description", "exclude", "field_name", "field_type", "json_config", "name", "searchable", "analyzer", "doc_type_id", "parent_doc_type_field_id", "sortable") VALUES
         (3,	'2025-06-16 21:28:48.94894',	'2025-06-16 21:28:48.948959',	1,	'auto-generated',	NULL,	'contentId',	'TEXT',	NULL,	'contentId',	'1',	NULL,	2,	NULL,	'0'),
