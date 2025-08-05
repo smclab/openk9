@@ -85,20 +85,31 @@
 
     <!-- // data processing -->
 
-    <dependency>
-      <groupId>io.smallrye.reactive</groupId>
-      <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>4.0.6</version>
-    </dependency>
-    <dependency>
-      <groupId>com.jayway.jsonpath</groupId>
-      <artifactId>json-path</artifactId>
-      <version>2.9.0</version>
-    </dependency>
+	  <dependency>
+		  <groupId>io.smallrye.reactive</groupId>
+		  <artifactId>smallrye-mutiny-vertx-web-client</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.groovy</groupId>
+		  <artifactId>groovy</artifactId>
+		  <version>4.0.6</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>com.jayway.jsonpath</groupId>
+		  <artifactId>json-path</artifactId>
+		  <version>2.9.0</version>
+		  <exclusions>
+			  <exclusion>
+				  <groupId>net.minidev</groupId>
+				  <artifactId>json-smart</artifactId>
+			  </exclusion>
+		  </exclusions>
+	  </dependency>
+	  <dependency>
+		  <groupId>net.minidev</groupId>
+		  <artifactId>json-smart</artifactId>
+		  <version>2.5.2</version>
+	  </dependency>
 
     <!-- data processing // -->
 
