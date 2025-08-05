@@ -708,6 +708,12 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 				var autocorrection = bucket.getAutocorrection();
 
+				if (autocorrection == null) {
+					throw new StatusRuntimeException(
+						Status.NOT_FOUND.withDescription(
+							"Missing active autocorrection."));
+				}
+
 				return Uni.createFrom().item(
 					AutocorrectionConfigurationsResponse.newBuilder()
 						.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
@@ -721,9 +727,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						.setEnableSearchWithCorrection(
 							autocorrection.isEnableSearchWithCorrection())
 						.build()
-					);
-				}
-			));
+				);
+			}));
 	}
 
 	@Override
