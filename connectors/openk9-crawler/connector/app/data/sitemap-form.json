@@ -176,7 +176,7 @@
         "size": 4,
         "required": false,
         "info": "Custom metadata using xpath expression",
-        "values": {}
+        "values": []
       }
     ]
 }
