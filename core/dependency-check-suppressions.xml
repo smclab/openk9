@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+	<suppress>
+		<notes><![CDATA[
+      This is a false positive. The scanner incorrectly identifies 'quarkus-minio:3.7.7' as the vulnerable 'minio:minio:3.8.4' from 2017.
+      Our dependency tree confirms we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
+      ]]></notes>
+		<filePath regex="true">.*quarkus-minio-3\.7\.7\.jar.*</filePath>
+		<cve>CVE-2021-43858</cve>
+		<cve>CVE-2023-28433</cve>
+		<cve>CVE-2023-28434</cve>
+		<cve>CVE-2021-21287</cve>
+		<cve>CVE-2018-1000538</cve>
+		<cve>CVE-2020-11012</cve>
+		<cve>CVE-2021-21362</cve>
+		<cve>CVE-2021-21390</cve>
+		<cve>CVE-2022-35919</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+      This is a false positive. The scanner incorrectly identifies 'quarkus-minio-native:3.7.7' as the vulnerable 'minio:minio:3.8.4' from 2017.
+      Our dependency tree confirms we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
+      ]]></notes>
+		<filePath regex="true">.*quarkus-minio-native-3\.7\.7\.jar.*</filePath>
+		<cve>CVE-2021-43858</cve>
+		<cve>CVE-2023-28433</cve>
+		<cve>CVE-2023-28434</cve>
+		<cve>CVE-2021-21287</cve>
+		<cve>CVE-2018-1000538</cve>
+		<cve>CVE-2020-11012</cve>
+		<cve>CVE-2021-21362</cve>
+		<cve>CVE-2021-21390</cve>
+		<cve>CVE-2022-35919</cve>
+	</suppress>
+</suppressions>

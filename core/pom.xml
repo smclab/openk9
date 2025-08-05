@@ -256,6 +256,7 @@
 					<!-- Use the defined property for the NVD API key -->
 					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
 					<nvdApiDelay>6000</nvdApiDelay>
+					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
 				</configuration>
 			</plugin>
 			<plugin>
