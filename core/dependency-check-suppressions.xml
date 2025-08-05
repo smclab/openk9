@@ -19,10 +19,11 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 	<suppress>
 		<notes><![CDATA[
-      This is a false positive. The scanner incorrectly identifies 'quarkus-minio:3.7.7' as the vulnerable 'minio:minio:3.8.4' from 2017.
-      Our dependency tree confirms we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
+      FP: quarkus-minio 3.7.7 is identified as the vulnerable 'minio:minio:3.7.7'.
+      Our dependency tree confirms
+      we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
       ]]></notes>
-		<filePath regex="true">.*quarkus-minio-3\.7\.7\.jar.*</filePath>
+		<filePath regex="true">.*quarkus-minio(\-.*)?-3\.7\.7\.jar.*</filePath>
 		<cve>CVE-2021-43858</cve>
 		<cve>CVE-2023-28433</cve>
 		<cve>CVE-2023-28434</cve>
@@ -35,18 +36,24 @@
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-      This is a false positive. The scanner incorrectly identifies 'quarkus-minio-native:3.7.7' as the vulnerable 'minio:minio:3.8.4' from 2017.
-      Our dependency tree confirms we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
-      ]]></notes>
-		<filePath regex="true">.*quarkus-minio-native-3\.7\.7\.jar.*</filePath>
-		<cve>CVE-2021-43858</cve>
-		<cve>CVE-2023-28433</cve>
-		<cve>CVE-2023-28434</cve>
-		<cve>CVE-2021-21287</cve>
-		<cve>CVE-2018-1000538</cve>
-		<cve>CVE-2020-11012</cve>
-		<cve>CVE-2021-21362</cve>
-		<cve>CVE-2021-21390</cve>
-		<cve>CVE-2022-35919</cve>
+	   FP: CVE-2022-2403 is a server-side vulnerability in the OpenShift Container Platform,
+	   not a client-side flaw in the Fabric8 client or openshift-model JARs.
+	   The vulnerability is a misconfiguration on the cluster itself.
+	   The scanner has incorrectly attributed a platform CVE to a client library.
+	   The only fix is to upgrade the OCP cluster.
+	   ]]></notes>
+		<filePath regex="true">.*openshift-model(\-.*)?-7\.1\.0\.jar.*</filePath>
+		<cve>CVE-2022-2403</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+	   Downgrading severity from Medium to Low. This finding applies to the Pekko Management port.
+	   Mitigating Control: The port is only exposed internally
+	   within our Kubernetes cluster network and is not accessible from the public internet.
+	   The attack vector requires a prior breach of another service within the network.
+	   The fix will be scheduled as a low-priority technical debt item.
+	   ]]></notes>
+		<filePath regex="true">.*pekko-management(\-.*)?_2\.13\-1\.1\.1\.jar.*</filePath>
+		<cve>CVE-2025-46548</cve>
 	</suppress>
 </suppressions>
