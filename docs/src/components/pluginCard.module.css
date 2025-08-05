@@ -1,0 +1,71 @@
+.pluginCard {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 16%);
+  padding: 24px;
+  display: flex;
+  align-items: flex-start;
+  width: calc(33% - 11px);
+  margin-right: 16px;
+  margin-bottom: 16px;
+}
+
+.pluginCard:nth-child(3n) {
+  margin-right: 0;
+}
+
+.pluginCardIcon {
+  width: 48px;
+}
+
+.pluginCardTitle {
+  margin-bottom: 0;
+  font-size: 18px;
+}
+
+.pluginCardText {
+  margin-left: 16px;
+}
+
+@media (max-width: 1200px) {
+  .pluginCard {
+    width: calc(50% - 8px);
+  }
+
+  .pluginCard:nth-child(3n) {
+    margin-right: 16px;
+  }
+
+  .pluginCard:nth-child(2n) {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .pluginCard {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .pluginCard:nth-child(3n) {
+    margin-right: 0;
+  }
+
+  .pluginCardTitle {
+    font-size: 16px;
+  }
+  .pluginCardDescription {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .pluginCard {
+    flex-direction: column;
+  }
+
+  .pluginCardText {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}

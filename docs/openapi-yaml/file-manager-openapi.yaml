@@ -1,0 +1,131 @@
+---
+openapi: 3.1.0
+paths:
+  /api/file-manager/v1/delete/{resourceId}/{schemaName}:
+    post:
+      parameters:
+      - name: resourceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: schemaName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "201":
+          description: Created
+      summary: Delete
+      tags:
+      - Delete Endpoint
+  /api/file-manager/v1/download/base64/{resourceId}/{schemaName}:
+    get:
+      parameters:
+      - name: resourceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: schemaName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      summary: Download As Base 64
+      tags:
+      - Download As Base 64 Endpoint
+  /api/file-manager/v1/download/byte/{resourceId}/{schemaName}:
+    get:
+      parameters:
+      - name: resourceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: schemaName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Download As Byte
+      tags:
+      - Download As Byte Array
+  /api/file-manager/v1/download/{resourceId}/{schemaName}:
+    get:
+      parameters:
+      - name: resourceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: schemaName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+      summary: Download
+      tags:
+      - Download Endpoint
+  /api/file-manager/v1/upload/{datasourceId}/{fileId}/{schemaName}:
+    post:
+      parameters:
+      - name: datasourceId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: schemaName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+      summary: Upload
+      tags:
+      - Upload Endpoint
+info:
+  title: file-manager API
+  version: 3.0.0-SNAPSHOT

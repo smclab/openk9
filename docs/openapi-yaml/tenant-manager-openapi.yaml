@@ -1,0 +1,380 @@
+---
+openapi: 3.1.0
+components:
+  schemas:
+    BackgroundProcess:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        createDate:
+          $ref: "#/components/schemas/OffsetDateTime"
+        modifiedDate:
+          $ref: "#/components/schemas/OffsetDateTime"
+        status:
+          $ref: "#/components/schemas/Status"
+        message:
+          type: string
+        processId:
+          $ref: "#/components/schemas/UUID"
+        name:
+          type: string
+    CreateConnectorRequest:
+      type: object
+      required:
+      - tenantName
+      properties:
+        tenantName:
+          type: string
+          minLength: 1
+        preset:
+          $ref: "#/components/schemas/Preset"
+    CreateConnectorResponse:
+      type: object
+      properties:
+        result:
+          type: string
+    CreateTablesResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    CreateTenantRequest:
+      type: object
+      properties:
+        virtualHost:
+          type: string
+    DeleteTenantRequest:
+      type: object
+      properties:
+        virtualHost:
+          type: string
+    DeleteTenantResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    EffectiveDeleteTenantRequest:
+      type: object
+      properties:
+        virtualHost:
+          type: string
+        token:
+          type: string
+    InitTenantRequest:
+      type: object
+      required:
+      - tenantName
+      properties:
+        tenantName:
+          type: string
+          minLength: 1
+    InitTenantResponse:
+      type: object
+      properties:
+        bucketId:
+          type: integer
+          format: int64
+    OffsetDateTime:
+      type: string
+      format: date-time
+      examples:
+      - 2022-03-10T12:15:50-04:00
+    Preset:
+      type: string
+      enum:
+      - YOUTUBE
+      - CRAWLER
+      - EMAIL
+      - GITLAB
+      - SITEMAP
+      - DATABASE
+      - MINIO
+      - UNRECOGNIZED
+    Status:
+      type: string
+      enum:
+      - IN_PROGRESS
+      - FINISHED
+      - FAILED
+      - ROOLBACK
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        createDate:
+          $ref: "#/components/schemas/OffsetDateTime"
+        modifiedDate:
+          $ref: "#/components/schemas/OffsetDateTime"
+        schemaName:
+          type: string
+        liquibaseSchemaName:
+          type: string
+        virtualHost:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        realmName:
+          type: string
+    UUID:
+      type: string
+      format: uuid
+      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      description: Authentication
+      openIdConnectUrl: https://keycloak-test.openk9.io/realms/tenant-manager/.well-known/openid-configuration
+paths:
+  /api/tenant-manager/oauth2/settings.js:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            text/javascript:
+              schema:
+                type: string
+      summary: Settings Js
+      tags:
+      - O Auth 2 Settings Resource
+  /api/tenant-manager/provisioning/connector:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConnectorRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateConnectorResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Connector
+      tags:
+      - Provisioning Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/provisioning/initTenant:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitTenantRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InitTenantResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Init Tenant
+      tags:
+      - Provisioning Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/background-process/all:
+    get:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BackgroundProcess"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Find All Background Process
+      tags:
+      - Background Process Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/background-process/id/{id}:
+    get:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundProcess"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Find Background Process By Id
+      tags:
+      - Background Process Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/background-process/status/{status}:
+    get:
+      parameters:
+      - name: status
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/Status"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BackgroundProcess"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Find All Background Process
+      tags:
+      - Background Process Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/tenant:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Create Tenant
+      tags:
+      - Tenant Manager Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/tenant/delete:
+    delete:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EffectiveDeleteTenantRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteTenantResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Delete Tenant
+      tags:
+      - Tenant Manager Resource
+      security:
+      - SecurityScheme:
+        - admin
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteTenantRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteTenantResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+        "400":
+          description: Bad Request
+      summary: Delete Tenant
+      tags:
+      - Tenant Manager Resource
+      security:
+      - SecurityScheme:
+        - admin
+  /api/tenant-manager/tenant-manager/tenant/{id}/tables:
+    post:
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTablesResponse"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Create Tables
+      tags:
+      - Tenant Manager Resource
+      security:
+      - SecurityScheme:
+        - admin
+info:
+  title: tenant-manager API
+  version: 3.0.0-SNAPSHOT

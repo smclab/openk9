@@ -1,0 +1,684 @@
+---
+openapi: 3.1.0
+info:
+  contact:
+    email: dev@openk9.io
+    name: OpenK9 Support
+  description: "API to search on indexed data, as well as get filter options or use\
+    \ autocomplete."
+  license:
+    name: GNU Affero General Public License v3.0
+    url: https://github.com/smclab/openk9/blob/main/LICENSE
+  title: Searcher Service
+  version: 3.0.0-SNAPSHOT
+components:
+  responses:
+    bad-request:
+      description: Bad Request
+      content:
+        application/json+problem:
+          schema:
+            $ref: "#/components/schemas/Problem"
+            externalDocs:
+              description: More Info here
+              url: https://opensource.zalando.com/problem
+    internal-server-error:
+      description: Internal Server Error
+      content:
+        application/json+problem:
+          schema:
+            $ref: "#/components/schemas/Problem"
+            externalDocs:
+              description: More Info here
+              url: https://opensource.zalando.com/problem
+    not-found:
+      description: Not found
+      content:
+        application/json+problem:
+          schema:
+            $ref: "#/components/schemas/Problem"
+            externalDocs:
+              description: More Info here
+              url: https://opensource.zalando.com/problem
+  schemas:
+    ParserSearchToken:
+      type: object
+      properties:
+        entityType:
+          type: string
+          description: Used for specify entityType to search in case of tokenType
+            ENTITY
+        entityName:
+          type: string
+          description: Used for specify entityName to search in case of tokenType
+            ENTITY
+        tokenType:
+          type: string
+          description: Token Type to specify type of ParserSearchToken
+        keywordKey:
+          type: string
+          description: Used to specify specific keyword field to perform search
+        values:
+          type: array
+          items:
+            type: string
+          description: "List of strings used to perform search. In case of multiple\
+            \ strings, search logic (MUST/SHOULD/...) depends on Openk9 search config"
+        extra:
+          type: object
+          additionalProperties:
+            type: string
+          description: Used to specify extra configurations to overwrite default configurations
+        filter:
+          type: boolean
+    Problem:
+      type: object
+      description: Problem details for HTTP APIs (rfc7807)
+      properties:
+        type:
+          type: string
+          format: uri
+          description: An absolute URI that identifies the problem type.
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+          description: An absolute URI that identifies the specific occurrence of
+            the problem.
+    QueryAnalysisRequest:
+      type: object
+      properties:
+        searchText:
+          type: string
+          description: Search text to perform query analysis
+        tokens:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueryAnalysisToken"
+          description: List of QueryAnalysisToken accepted by user
+    QueryAnalysisResponse:
+      type: object
+      properties:
+        searchText:
+          type: string
+          description: Search text where performed query analysis
+        analysis:
+          type: array
+          items:
+            $ref: "#/components/schemas/QueryAnalysisTokens"
+          description: List of QueryAnalysisToken describing performed analysis
+    QueryAnalysisToken:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Text associated to analysis
+        start:
+          type: integer
+          format: int32
+          description: Character offset where analysis starts
+        end:
+          type: integer
+          format: int32
+          description: Character offset where analysis ends
+        token:
+          type: object
+          additionalProperties: {}
+          description: List of token associated to analysis
+        pos:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: Token position for analysis
+    QueryAnalysisTokens:
+      type: object
+      properties:
+        text:
+          type: string
+        start:
+          type: integer
+          format: int32
+        end:
+          type: integer
+          format: int32
+        tokens:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        pos:
+          type: array
+          items:
+            type: integer
+            format: int32
+    Response:
+      type: object
+      properties:
+        result:
+          description: List of results
+        total:
+          type: integer
+          format: int64
+          description: Number of results obtained
+    SearchRequest:
+      type: object
+      properties:
+        searchQuery:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParserSearchToken"
+          description: List of ParserSearchToken to compose search query.
+        range:
+          type: array
+          items:
+            type: integer
+            format: int32
+          description: List of integer for pagination where first element is start
+            element and second element is page size
+        afterKey:
+          type: string
+          description: After key used for pagination in suggestions endpoint
+        suggestKeyword:
+          type: string
+          description: Keyword used to filter options in suggestions endpoint
+        suggestionCategoryId:
+          type: integer
+          format: uuid
+          description: Unique string that identifies the Suggestion Category to return
+            suggestions
+        order:
+          type: string
+          description: How to order suggestions
+        sort:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: object
+              additionalProperties:
+                type: string
+          description: List of objects to define sort logic
+        sortAfterKey:
+          type: string
+          description: After key used for pagination when sort is present
+        language:
+          type: string
+          description: Language used to apply search in specific language.
+    SuggestionsResponse:
+      type: object
+      properties:
+        result:
+          type: array
+          items: {}
+          description: List of results
+        afterKey:
+          type: string
+          description: After key used for pagination in suggestions endpoint
+  securitySchemes:
+    SecurityScheme:
+      type: openIdConnect
+      description: Authentication
+      openIdConnectUrl: https://keycloak-test.openk9.io/realms/master/.well-known/openid-configuration
+tags:
+- name: Query Analysis API
+  description: "Performs sematic query analysis on search query, as well as provides\
+    \ autocomplete suggestions."
+- name: Search API
+  description: Execute search on indexed data. Returns list of matching results ordered
+    by score.
+- name: Search Query API
+  description: Transform Openk9 Search Request in equivalent Opensearch query
+- name: Suggestions API
+  description: Return filter options for a specific filed based on search results.
+paths:
+  /api/searcher/v1/query-analysis:
+    post:
+      operationId: query-analysis
+      tags:
+      - Query Analysis API
+      requestBody:
+        content:
+          application/json:
+            examples:
+              simple query analysis request:
+                value:
+                  searchText: acco
+                  tokens: []
+              query analysis request with tokens:
+                value:
+                  searchText: acco
+                  tokens: []
+            schema:
+              $ref: "#/components/schemas/QueryAnalysisRequest"
+        required: true
+      responses:
+        "200":
+          description: Ingestion successful
+          content:
+            application/json:
+              example:
+                searchText: acco
+                analysis:
+                - text: acco
+                  start: 0
+                  end: 4
+                  tokens:
+                  - score: 0.1
+                    label: Topic
+                    tokenType: TEXT
+                    value: Accordi tavoli
+                  - score: 0.1
+                    label: Topic
+                    tokenType: TEXT
+                    value: Accordo Consob - Garante privacy
+                  - score: 0.1
+                    extra:
+                      globalQueryType: MUST
+                      boost: "50"
+                      valuesQueryType: MUST
+                    label: Topic
+                    tokenType: TEXT
+                    value: Accordo Consob PCAOB
+                  pos:
+                  - 0
+              schema:
+                $ref: "#/components/schemas/QueryAnalysisResponse"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      summary: Query Analysis
+  /api/searcher/v1/search:
+    post:
+      operationId: search
+      tags:
+      - Search API
+      requestBody:
+        content:
+          application/json:
+            examples:
+              text search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: TEXT
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+              hybrid search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: HYBRID
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+              knn search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: KNN
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+        required: true
+      responses:
+        "200":
+          description: Ingestion successful
+          content:
+            application/json:
+              example:
+                result:
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: Il prossimo 6 ottobre saremo protagonisti al Liferay
+                        Vision 2022
+                      url: https://www.smc.it/-/il-prossimo-6-ottobre-saremo-protagonisti-al-liferay-vision-2022
+                      content: 'Content content content content content content content
+                        content '
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "6450297360913884"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: 59700f29-5b7e-461f-9509-0cd8f9640a83
+                    acl:
+                      public: true
+                    id: 2pdCjpQBIQNzsDHHSGJ1
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: Content content content content content content content
+                      content
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: "DGS, portfolio company di H.I.G. Capital, acquisisce\
+                        \ SMC"
+                      url: https://www.smc.it/-/dgs-portfolio-company-di-h-i-g-capital-acquisisce-smc
+                      content: Content content content content content content content
+                        content
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "4570164635913900"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: 777325a7-4147-4518-91d2-7896c9cc66d1
+                    acl:
+                      public: true
+                    id: 5pdCjpQBIQNzsDHHWWL1
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: Content content content content content content content
+                      content
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: Homepage | SMC DGS Company
+                      url: https://www.smc.it/homepage
+                      content: content content content content
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "5128501921869583"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: ec67ae53-a523-4b4f-ad28-0c97317a0531
+                    acl:
+                      public: true
+                    id: DJdCjpQBIQNzsDHHqGPZ
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: content content content content
+                total: 3
+              schema:
+                $ref: "#/components/schemas/Response"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      summary: Search
+  /api/searcher/v1/search-query:
+    post:
+      operationId: search-query
+      tags:
+      - Search Query API
+      requestBody:
+        content:
+          application/json:
+            examples:
+              text search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: TEXT
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+              hybrid search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: HYBRID
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+              knn search:
+                value:
+                  range:
+                  - 0
+                  - 10
+                  language: it_IT
+                  searchQuery:
+                  - tokenType: KNN
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  sortAfterKey: ""
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+        required: true
+      responses:
+        "200":
+          description: Ingestion successful
+          content:
+            application/json:
+              example:
+                result:
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: Il prossimo 6 ottobre saremo protagonisti al Liferay
+                        Vision 2022
+                      url: https://www.smc.it/-/il-prossimo-6-ottobre-saremo-protagonisti-al-liferay-vision-2022
+                      content: 'Content content content content content content content
+                        content '
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "6450297360913884"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: 59700f29-5b7e-461f-9509-0cd8f9640a83
+                    acl:
+                      public: true
+                    id: 2pdCjpQBIQNzsDHHSGJ1
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: Content content content content content content content
+                      content
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: "DGS, portfolio company di H.I.G. Capital, acquisisce\
+                        \ SMC"
+                      url: https://www.smc.it/-/dgs-portfolio-company-di-h-i-g-capital-acquisisce-smc
+                      content: Content content content content content content content
+                        content
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "4570164635913900"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: 777325a7-4147-4518-91d2-7896c9cc66d1
+                    acl:
+                      public: true
+                    id: 5pdCjpQBIQNzsDHHWWL1
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: Content content content content content content content
+                      content
+                - highlight: {}
+                  score: 0.0
+                  source:
+                    last: false
+                    web:
+                      favicon: https://www.smc.it/o/smc-theme/images/favicon.ico
+                      title: Homepage | SMC DGS Company
+                      url: https://www.smc.it/homepage
+                      content: content content content content
+                    indexName: hitmontop-2761-data-3a1558a2-45f1-4872-89d0-811b992d63c6
+                    documentTypes:
+                    - web
+                    contentId: "5128501921869583"
+                    datasourceId: 2761
+                    tenantId: hitmontop
+                    oldIndexName: hitmontop-2761-data-d16661f8-f36e-470e-a632-6fc3be7de983
+                    ingestionId: ec67ae53-a523-4b4f-ad28-0c97317a0531
+                    acl:
+                      public: true
+                    id: DJdCjpQBIQNzsDHHqGPZ
+                    scheduleId: 3a1558a2-45f1-4872-89d0-811b992d63c6
+                    parsingDate: 1737555901056
+                    rawContent: content content content content
+                total: 3
+              schema:
+                $ref: "#/components/schemas/Response"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      summary: Search Query
+  /api/searcher/v1/suggestions:
+    post:
+      operationId: suggestions
+      tags:
+      - Suggestions API
+      requestBody:
+        content:
+          application/json:
+            examples:
+              suggestions for a specific suggestion category:
+                value:
+                  searchQuery:
+                  - tokenType: TEXT
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  range:
+                  - 0
+                  - 9
+                  suggestionCategoryId: 364
+                  suggestKeyword: ""
+                  order: asc
+                  language: it_IT
+              suggestions for a specific suggestion category and string filter:
+                value:
+                  searchQuery:
+                  - tokenType: TEXT
+                    values:
+                    - smc
+                    filter: false
+                    isSearch: true
+                  range:
+                  - 0
+                  - 20
+                  suggestionCategoryId: 364
+                  suggestKeyword: poli
+                  order: desc
+                  language: it_IT
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+        required: true
+      responses:
+        "200":
+          description: Ingestion successful
+          content:
+            application/json:
+              example:
+                result:
+                - tokenType: FILTER
+                  value: ' Attività commerciale'
+                  suggestionCategoryId: 364
+                  count: 46
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' benessere'
+                  suggestionCategoryId: 364
+                  count: 13
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' divertimento'
+                  suggestionCategoryId: 364
+                  count: 2
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' politica'
+                  suggestionCategoryId: 364
+                  count: 6
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' religione'
+                  suggestionCategoryId: 364
+                  count: 1
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' scienza'
+                  suggestionCategoryId: 364
+                  count: 4
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' sport'
+                  suggestionCategoryId: 364
+                  count: 9
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                - tokenType: FILTER
+                  value: ' stile e bellezza'
+                  suggestionCategoryId: 364
+                  count: 4
+                  keywordKey: news.topic.i18n.it_IT.keyword
+                afterKey: eyJuZXdzLnRvcGljLmkxOG4uaXRfSVQua2V5d29yZCI6IiBzdGlsZSBlIGJlbGxlenphIn0=
+              schema:
+                $ref: "#/components/schemas/SuggestionsResponse"
+        "404":
+          $ref: "#/components/responses/not-found"
+        "400":
+          $ref: "#/components/responses/bad-request"
+        "500":
+          $ref: "#/components/responses/internal-server-error"
+      summary: Suggestions
