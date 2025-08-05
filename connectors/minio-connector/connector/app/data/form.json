@@ -77,6 +77,19 @@
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
+    },
+    {
+      "label": "Columns",
+      "name": "columns",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "minio",
+      "info": "List of columns in case of extracting excel file",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
     }
   ]
 }
