@@ -108,6 +108,9 @@
 		<pekko.version>1.1.5</pekko.version>
 		<scala.version>2.13</scala.version>
 		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
+		<pekko.management.version>1.1.1</pekko.management.version>
+		<lucene.version>9.12.1</lucene.version>
+		<zstd-jni.version>1.5.6-3</zstd-jni.version>
 	</properties>
 
 	<dependencyManagement>
