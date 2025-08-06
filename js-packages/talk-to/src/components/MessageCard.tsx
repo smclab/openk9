@@ -48,13 +48,11 @@ export function MessageCard({
 
 		if (newSet.has(url)) {
 			newSet.delete(url);
-			// Se tutte erano espanse, ora almeno una è chiusa → disattiva showAllSources
 			if (newSet.size < sources.length) {
 				setShowAllSources(false);
 			}
 		} else {
 			newSet.add(url);
-			// Se tutte sono ora espanse → attiva showAllSources
 			if (newSet.size === sources.length) {
 				setShowAllSources(true);
 			}
@@ -66,7 +64,6 @@ export function MessageCard({
 	const getTypeColor = (source: string) => {
 		const baseColor = getStableColor(source, theme);
 
-		// Converti il colore in RGB per creare versioni più chiare
 		const hexToRgb = (hex: string) => {
 			const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 			return result
@@ -192,11 +189,9 @@ export function MessageCard({
 								setShowAllSources(newState);
 
 								if (newState) {
-									// Espandi tutte
 									const allExpanded = new Set(sources.map((s) => s.url || ""));
 									setExpandedChips(allExpanded);
 								} else {
-									// Comprimi tutte
 									setExpandedChips(new Set());
 								}
 							}}
@@ -324,7 +319,6 @@ export function MessageCard({
 	);
 }
 
-// Funzione per generare colori casuali con luminosità adeguata per il tema
 function generateAccessibleColor(theme: Theme): string {
 	const MAX_TRIES = 20;
 	const bgColor = theme === "light" ? "#ffffff" : "#000000";
@@ -332,10 +326,7 @@ function generateAccessibleColor(theme: Theme): string {
 	for (let i = 0; i < MAX_TRIES; i++) {
 		const hue = Math.floor(Math.random() * 360);
 		const saturation = 80;
-		const lightness =
-			theme === "light"
-				? 20 + Math.random() * 30 // più scuri sul chiaro
-				: 60 + Math.random() * 30; // più chiari sullo scuro
+		const lightness = theme === "light" ? 20 + Math.random() * 30 : 60 + Math.random() * 30;
 
 		const hex = hslToHex(hue, saturation, lightness);
 		if (hasGoodContrast(hex, bgColor, 6.0)) {
@@ -343,16 +334,13 @@ function generateAccessibleColor(theme: Theme): string {
 		}
 	}
 
-	// fallback sicuro
 	return theme === "light" ? "#111111" : "#eeeeee";
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
-	// Rimuove l'# se presente
 	hex = hex.replace(/^#/, "");
 
 	if (hex.length === 3) {
-		// Es. #abc -> #aabbcc
 		hex = hex
 			.split("")
 			.map((c) => c + c)
@@ -386,7 +374,6 @@ function hasGoodContrast(fg: string, bg: string, minRatio = 6.0): boolean {
 	return contrastRatio(fg, bg) >= minRatio;
 }
 
-// Funzione per convertire HSL in HEX
 function hslToHex(h: number, s: number, l: number): string {
 	l /= 100;
 	const a = (s * Math.min(l, 1 - l)) / 100;
@@ -400,7 +387,6 @@ function hslToHex(h: number, s: number, l: number): string {
 	return `#${f(0)}${f(8)}${f(4)}`;
 }
 
-// Mappa per memorizzare i colori per fonte
 const sourceColorMap = new Map<string, { light: string; dark: string }>();
 
 function getStableColor(source: string | undefined, theme: Theme): string {
@@ -409,10 +395,8 @@ function getStableColor(source: string | undefined, theme: Theme): string {
 	if (!sourceColorMap.has(source)) {
 		const mappedColor = mappingColors(source, theme);
 		if (mappedColor) {
-			// Se c'è un colore mappato, usa quello per entrambi i temi (eventualmente adattato)
 			sourceColorMap.set(source, { light: mappedColor, dark: mappedColor });
 		} else {
-			// Genera colori casuali per entrambi i temi
 			sourceColorMap.set(source, {
 				light: generateAccessibleColor("light"),
 				dark: generateAccessibleColor("dark"),
@@ -424,7 +408,6 @@ function getStableColor(source: string | undefined, theme: Theme): string {
 }
 
 function mappingColors(source: string | undefined, theme: Theme): string | undefined {
-	// Colori brand che funzionano bene in entrambi i temi
 	switch (source?.toLowerCase()) {
 		case "ansa.it":
 			return theme === "light" ? "#1976d2" : "#42a5f5";
@@ -447,7 +430,7 @@ function mappingColors(source: string | undefined, theme: Theme): string | undef
 		case "coursera.org":
 			return theme === "light" ? "#d32f2f" : "#ef5350";
 		case "spotify.com":
-			return "#1dd15d"; // Verde Spotify funziona bene in entrambi i temi
+			return "#1dd15d";
 		case "arxiv.org":
 			return theme === "light" ? "#7b1fa2" : "#ab47bc";
 		case "github.com":
@@ -458,7 +441,6 @@ function mappingColors(source: string | undefined, theme: Theme): string | undef
 			return theme === "light" ? "#000000" : "#ffffff";
 		case "youtube.com":
 			return theme === "light" ? "#ff0000" : "#ff4444";
-		case "twitter.com":
 		case "x.com":
 			return theme === "light" ? "#1da1f2" : "#1d9bf0";
 		case "linkedin.com":
@@ -468,6 +450,6 @@ function mappingColors(source: string | undefined, theme: Theme): string | undef
 		case "wikipedia.org":
 			return theme === "light" ? "#000000" : "#ffffff";
 		default:
-			return undefined; // Usa colore casuale
+			return undefined;
 	}
 }

@@ -362,6 +362,7 @@ const MessageList: React.FC<{
               <SingleMessage
                 contentMessage={message.answer}
                 status={message.status}
+                sources={message?.sources}
                 isChatbot={true}
                 timeMessage={responseTime}
                 icon={icon.chatbotIcon}
