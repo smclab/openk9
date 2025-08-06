@@ -38,13 +38,15 @@ export function MonitoringTab({ id }: { id: string }) {
   const [open, setOpen] = React.useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = React.useState<boolean>(false);
   const [schedulers, setSchedulers] = React.useState<any[]>([]);
+  const [pageInfo, setPageInfo] = React.useState<any>(null);
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   const dataSourceInformationQuery = useDataSourceInformationQuery({
     variables: { id },
   });
   const dataSourceSchedulers = useQDatasourceSchedulersQuery({
-    variables: { id },
+    variables: { id, first: 10 },
     skip: !id || id === "new",
   });
 
@@ -57,6 +59,39 @@ export function MonitoringTab({ id }: { id: string }) {
     setOpen(false);
     setModalMessage("");
   };
+
+  const loadMoreSchedulers = async () => {
+    if (!pageInfo?.hasNextPage) return;
+
+    const fetchMoreResult = await dataSourceSchedulers.fetchMore({
+      variables: {
+        after: pageInfo.endCursor,
+        first: 10,
+      },
+    });
+
+    const newEdges = fetchMoreResult?.data?.datasource?.schedulers?.edges || [];
+    const newPageInfo = fetchMoreResult?.data?.datasource?.schedulers?.pageInfo;
+
+    if (newEdges.length) {
+      setSchedulers((prev) => [...prev, ...newEdges]);
+      setPageInfo(newPageInfo);
+    }
+  };
+
+  const observer = React.useRef<IntersectionObserver | null>(null);
+  const lastElementRef = React.useCallback(
+    (node: any) => {
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && pageInfo?.hasNextPage) {
+          loadMoreSchedulers();
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [pageInfo],
+  );
 
   const handleAction = async () => {
     try {
@@ -158,8 +193,10 @@ export function MonitoringTab({ id }: { id: string }) {
   }, [dataSourceInformationQuery.data]);
 
   React.useEffect(() => {
-    if (dataSourceSchedulers.data && dataSourceSchedulers.data.datasource?.schedulers?.edges) {
-      setSchedulers(dataSourceSchedulers.data.datasource.schedulers.edges);
+    const schedulersData = dataSourceSchedulers.data?.datasource?.schedulers;
+    if (schedulersData?.edges) {
+      setSchedulers(schedulersData.edges);
+      setPageInfo(schedulersData.pageInfo);
     }
   }, [dataSourceSchedulers.data]);
 
@@ -246,8 +283,10 @@ export function MonitoringTab({ id }: { id: string }) {
                     })}`
                   : "—";
 
+                const isLast = index === schedulers.length - 1;
+
                 return (
-                  <TableRow key={index}>
+                  <TableRow key={item?.node?.id || index} ref={isLast ? lastElementRef : null}>
                     <TableCell>{item?.node?.__typename}</TableCell>
                     <TableCell>{formattedDateTime}</TableCell>
                     <TableCell>{item?.node?.status && renderStatus(item.node.status)}</TableCell>

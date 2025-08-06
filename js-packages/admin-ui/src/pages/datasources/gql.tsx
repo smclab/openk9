@@ -180,16 +180,21 @@ export const updateDataSource = gql`
 `;
 
 export const DatasourceSchedulers = gql`
-  query qDatasourceSchedulers($id: ID!) {
+  query qDatasourceSchedulers($id: ID!, $first: Int, $after: String) {
     datasource(id: $id) {
       id
-      schedulers(sortByList: { column: "modifiedDate", direction: DESC }) {
+      schedulers(first: $first, after: $after, sortByList: { column: "modifiedDate", direction: DESC }) {
         edges {
           node {
             id
             status
             modifiedDate
           }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+          __typename
         }
       }
     }
@@ -217,7 +222,7 @@ const DataSourceInformation = gql`
   }
 `;
 
- gql`
+gql`
   query EnrichPipelineOptions($searchText: String, $cursor: String) {
     options: enrichPipelines(searchText: $searchText, after: $cursor) {
       edges {
