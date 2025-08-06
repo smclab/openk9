@@ -54,7 +54,7 @@ export function SavePipeline() {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [modalDataLost, setModalDataLost] = useState(false);
-  const enrichItems = useEnrichItemsQuery();
+  const enrichItems = useEnrichItemsQuery({ fetchPolicy: "network-only" });
   const enrichItemsClean = (enrichItems.data?.enrichItems?.edges || []).map((element) => ({
     id: element?.node?.id,
     name: element?.node?.name,
