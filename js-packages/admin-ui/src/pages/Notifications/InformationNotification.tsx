@@ -92,7 +92,7 @@ export const InformationNotification = () => {
           id="scheduleId"
           fullWidth
           margin="normal"
-          value={notificationId}
+          value={info?.scheduleId || ""}
           InputProps={{ readOnly: true }}
         />
         <TextField
