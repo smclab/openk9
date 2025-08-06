@@ -25,8 +25,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 	crawled_ids = []
 
 	def __init__(self, ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
-				 allowed_paths, max_length, document_file_extensions, custom_metadata, additional_metadata,
-				 do_extract_docs, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
+				 allowed_paths, max_length, max_size_bytes,  document_file_extensions, custom_metadata, additional_metadata,
+				 do_extract_docs, cert_verification, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
 		super(AbstractBaseCrawlSpider, self).__init__(*a, **kw)
@@ -41,6 +41,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.excluded_paths = ast.literal_eval(excluded_paths)
 		self.allowed_paths = ast.literal_eval(allowed_paths)
 		self.max_length = int(max_length)
+		self.max_size_bytes = int(max_size_bytes)
 		self.document_file_extensions = ast.literal_eval(document_file_extensions)
 		self.custom_metadata = ast.literal_eval(custom_metadata)
 		self.additional_metadata = ast.literal_eval(additional_metadata)
@@ -53,6 +54,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.end_timestamp = datetime.utcnow().timestamp() * 1000
 
 		self.do_extract_docs = str_to_bool(do_extract_docs)
+		self.cert_verification = str_to_bool(cert_verification)
 		self.count = 0
 
 	def try_parse_documents(self, anchors, url_request, extracted_custom_metadata):
@@ -111,19 +113,22 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 			logger.warning(f"scrapy: Could not parse document with href: {href}, extracted url: {document_url}")
 			return
 
-		max_size_bytes = 20 * 1024 * 1024  # 10 MB
+		#max_size_bytes = 20 * 1024 * 1024  # 10 MB
 
-		head_response = requests.head(document_url, headers=headers, allow_redirects=True, timeout=60)
+		head_response = requests.head(document_url, verify=self.cert_verification, headers=headers, allow_redirects=True, timeout=60)
 
 		content_length = head_response.headers.get("Content-Length")
 
 		if content_length is not None:
 			content_length = int(content_length)
-			if content_length > max_size_bytes:
-				logger.error(f"Document size {content_length} exceeds limit of {max_size_bytes} bytes.")
+			if not self.max_size_bytes:
+				logger.error(f"The maximum size in bytes of files that can be processed has not been configured.")
+				return
+			elif content_length > self.max_size_bytes:
+				logger.error(f"Document size {content_length} exceeds limit of {self.max_size_bytes} bytes.")
 				return
 			else:
-				response = requests.get(document_url, headers=headers, allow_redirects=False, timeout=60)
+				response = requests.get(document_url, verify=self.cert_verification, headers=headers, allow_redirects=False, timeout=60)
 		else:
 			logger.error("Warning: Content-Length header not provided; proceeding with caution.")
 			return 
