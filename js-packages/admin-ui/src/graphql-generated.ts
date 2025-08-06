@@ -13201,7 +13201,12 @@ export type CreateDataIndexMutationResult = Apollo.MutationResult<CreateDataInde
 export type CreateDataIndexMutationOptions = Apollo.BaseMutationOptions<CreateDataIndexMutation, CreateDataIndexMutationVariables>;
 export const DataIndicesDocument = gql`
     query DataIndices($searchText: String, $first: Int, $after: String) {
-  dataIndices(searchText: $searchText, first: $first, after: $after) {
+  dataIndices(
+    searchText: $searchText
+    first: $first
+    before: $after
+    sortByList: [{column: "modifiedDate", direction: DESC}]
+  ) {
     edges {
       node {
         id
@@ -13662,7 +13667,7 @@ export const QDatasourceSchedulersDocument = gql`
     id
     schedulers(
       first: $first
-      after: $after
+      before: $after
       sortByList: {column: "modifiedDate", direction: DESC}
     ) {
       edges {
@@ -14417,4 +14422,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-08-06T11:04:28+02:00
+// Generated on 2025-08-06T12:56:19+02:00

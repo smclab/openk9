@@ -183,7 +183,7 @@ export const DatasourceSchedulers = gql`
   query qDatasourceSchedulers($id: ID!, $first: Int, $after: String) {
     datasource(id: $id) {
       id
-      schedulers(first: $first, after: $after, sortByList: { column: "modifiedDate", direction: DESC }) {
+      schedulers(first: $first, before: $after, sortByList: { column: "modifiedDate", direction: DESC }) {
         edges {
           node {
             id
