@@ -220,21 +220,41 @@ export function MonitoringTab({ id }: { id: string }) {
           <TableHead>
             <TableRow>
               <TableCell>Activity</TableCell>
-              <TableCell>Time spent</TableCell>
+              <TableCell>Modified date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {schedulers.length > 0 ? (
-              schedulers.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item?.node?.__typename}</TableCell>
-                  <TableCell>{item?.node?.modifiedDate}</TableCell>
-                  <TableCell>{item?.node?.status && renderStatus(item.node.status)}</TableCell>
-                  <TableCell>{renderActions(item)}</TableCell>
-                </TableRow>
-              ))
+              schedulers.map((item, index) => {
+                const rawDate = item?.node?.modifiedDate;
+                const cleanedDate = rawDate?.slice(0, 23) + "Z";
+                const date = cleanedDate ? new Date(cleanedDate) : null;
+
+                const formattedDateTime = date
+                  ? `${date.toLocaleDateString("it-IT", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      timeZone: "Europe/Rome",
+                    })} ${date.toLocaleTimeString("it-IT", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                      timeZone: "Europe/Rome",
+                    })}`
+                  : "—";
+
+                return (
+                  <TableRow key={index}>
+                    <TableCell>{item?.node?.__typename}</TableCell>
+                    <TableCell>{formattedDateTime}</TableCell>
+                    <TableCell>{item?.node?.status && renderStatus(item.node.status)}</TableCell>
+                    <TableCell>{renderActions(item)}</TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={4} sx={{ py: 5, textAlign: "center" }}>
