@@ -79,6 +79,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 public abstract class BaseSearchService {
 
 	private static final JsonObject EMPTY_JSON = new JsonObject(Map.of());
+	private static final Logger log = Logger.getLogger(BaseSearchService.class);
 	@Inject
 	Instance<QueryParser> queryParserInstance;
 	@Inject
@@ -347,7 +348,12 @@ public abstract class BaseSearchService {
 						.getSingleResultOrNull();
 					}
 				)
-				.map(bucket -> new TenantWithBucket(tenant, bucket))
+				.map(bucket -> {
+					if (bucket == null) {
+						log.warn("It's not possible to find a valid active bucket.");
+					}
+					return new TenantWithBucket(tenant, bucket);
+				})
 			);
 
 	}
