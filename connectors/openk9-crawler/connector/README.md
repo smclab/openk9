@@ -28,6 +28,8 @@ This endpoint takes different arguments in JSON raw body:
 - **titleTag**: html tag for title to assign to extracted page (optional, if not specified )
 - **pageCount**: count of page limit to crawl (optional, if not specified )
 - **maxLength**: maximum length of extracted content (optional, if not specified )
+- **maxSizeBytes**: maximum size in bytes of files that can be processed (required)
+- **certVerification**: SSL/TLS certificate verification while processing documents (optional, if not specified is True)
 - **customMetadata**: map key-value where key is the metadata to extract and value is xpath expression to get element/s to extract from html
 - **documentFileExtensions**: extensions of files to allowed during extraction
 - **datasourceId**: id of datasource
@@ -64,6 +66,8 @@ curl -X 'POST' \
   "tenantId": "",
   "follow": true,
   "maxLength": 1000,
+  "maxSizeBytes": 20971520,
+  "certVerification": False,
   "excluded_paths": [],
   "document_file_extensions": [],
   "specific_tags": [],
@@ -88,6 +92,8 @@ This endpoint takes different arguments in JSON raw body:
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl
 - **maxLength**: maximum length of extracted content (optional, if not specified)
+- **maxSizeBytes**: maximum size in bytes of files that can be processed (required)
+- **certVerification**: SSL/TLS certificate verification while processing documents (optional, if not specified is True)
 - **customMetadata**: map key-value where key is the metadata added to Openk9 payload and value is xpath expression to get element/s to extract from html and ling to metadata
 - **doExtractDocs**: if follows links when connector link from sitemap
 - **documentFileExtensions**: extensions of files to allowed during extraction
@@ -115,6 +121,8 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "depth": 0,
     "pageCount": 0
     "follow": true,
+    "maxSizeBytes": 20971520,
+    "certVerification": False,
     "doExtractDocs": true,
     "documentFileExtensions": [".pdf"],
     "customMetadata": {

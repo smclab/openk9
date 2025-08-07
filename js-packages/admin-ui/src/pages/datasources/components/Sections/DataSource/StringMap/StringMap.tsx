@@ -142,14 +142,14 @@ export function StringMapInput({ defaultValue, label, description, onChange }: S
               helperText={entry.error ? "Duplicate key" : ""}
               size="small"
               onChange={(e) => handleChange(idx, "key", e.target.value)}
-              sx={{ flex: 1, bgcolor: "#fff" }}
+              sx={{ flex: 1 }}
             />
             <TextField
               label="Value"
               value={entry.value}
               size="small"
               onChange={(e) => handleChange(idx, "value", e.target.value)}
-              sx={{ flex: 2, bgcolor: "#fff" }}
+              sx={{ flex: 2 }}
             />
             <IconButton
               aria-label="Test"

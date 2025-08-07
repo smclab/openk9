@@ -33,11 +33,11 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     type_mapping = []
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_bodyTags, title_tag, follow,
-                 max_length, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions,
-                 custom_metadata, additional_metadata, do_extract_docs, timestamp, *a, **kw):
+                 max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions,
+                 custom_metadata, additional_metadata, do_extract_docs, cert_verification, timestamp, *a, **kw):
         super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
-                                                 allowed_paths, max_length, document_file_extensions, custom_metadata,
-                                                 additional_metadata, do_extract_docs, datasource_id, schedule_id,
+                                                 allowed_paths, max_length, max_size_bytes, document_file_extensions, custom_metadata,
+                                                 additional_metadata, do_extract_docs, cert_verification, datasource_id, schedule_id,
                                                  timestamp, tenant_id, *a, **kw)
 
         self.start_urls = ast.literal_eval(start_urls) if isinstance(ast.literal_eval(start_urls), list) \

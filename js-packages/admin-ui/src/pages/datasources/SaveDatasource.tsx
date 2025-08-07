@@ -161,7 +161,7 @@ export function SaveDatasource() {
       reindexable: formValues.isCronSectionreindex || false,
       reindexing: formValues.reindexing || "0 0 1 * * ?",
       scheduling: formValues.scheduling || "0 */30 * ? * * *",
-      jsonConfig: dynamicFormJson,
+      jsonConfig: dynamicFormJson || formValues.jsonConfig,
       description: formValues.description,
       pluginDriverId: Number(formValues.pluginDriverSelect?.id),
       pipelineId: formValues.enrichPipeline?.id || null,

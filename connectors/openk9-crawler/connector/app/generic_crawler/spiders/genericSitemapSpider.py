@@ -39,12 +39,12 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     payload = {}
 
     def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, datasource_id, schedule_id,
-                ingestion_url, timestamp, additional_metadata, max_length, tenant_id, excluded_paths, allowed_paths,
-                 document_file_extensions, custom_metadata, do_extract_docs, *a, **kw):
+                ingestion_url, timestamp, additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
+                 document_file_extensions, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
         super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains,
-                                                   excluded_paths, allowed_paths, max_length, document_file_extensions,
-                                                   custom_metadata, additional_metadata, do_extract_docs, datasource_id,
+                                                   excluded_paths, allowed_paths, max_length, max_size_bytes, document_file_extensions,
+                                                   custom_metadata, additional_metadata, do_extract_docs, cert_verification, datasource_id,
                                                    schedule_id, timestamp, tenant_id, *a, **kw)
 
         self._cbs = []

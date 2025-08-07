@@ -36,7 +36,12 @@ export const CreateDataIndexMutation = gql`
 
 export const DataIndicesQuery = gql`
   query DataIndices($searchText: String, $first: Int, $after: String) {
-    dataIndices(searchText: $searchText, first: $first, after: $after) {
+    dataIndices(
+      searchText: $searchText
+      first: $first
+      before: $after
+      sortByList: [{ column: "modifiedDate", direction: DESC }]
+    ) {
       edges {
         node {
           id

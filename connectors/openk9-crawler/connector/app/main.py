@@ -58,6 +58,9 @@ class BaseRequest(ABC, BaseModel):
     pageCount: int = 0
     additionalMetadata: Optional[dict] = {}
     doExtractDocs: bool = False
+    certVerification: bool = True
+    maxSizeBytes: int
+    pageCount: int = 0
     datasourceId: int
     scheduleId: str
     timestamp: int
@@ -109,6 +112,8 @@ def set_up_sitemap_endpoint(request):
     replace_rule = request["replaceRule"]
     additional_metadata = request["additionalMetadata"]
     do_extract_docs = request["doExtractDocs"]
+    cert_verification = request["certVerification"]
+    max_size_bytes = request["maxSizeBytes"]
 
     payload = {
         "project": "generic_crawler",
@@ -123,6 +128,7 @@ def set_up_sitemap_endpoint(request):
         "ingestion_url": ingestion_url,
         "timestamp": timestamp,
         "max_length": max_length,
+        "max_size_bytes": max_size_bytes,
         "tenant_id": tenant_id,
         "replace_rule": json.dumps(replace_rule),
         "excluded_paths": json.dumps(excluded_paths),
@@ -130,6 +136,7 @@ def set_up_sitemap_endpoint(request):
         "document_file_extensions": json.dumps(document_file_extensions),
         "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
+        "cert_verification": json.dumps(cert_verification),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
     }
@@ -158,6 +165,7 @@ def set_up_crawl_endpoint(request):
     depth = request["depth"]
     follow = request["follow"]
     max_length = request["maxLength"]
+    max_size_bytes = request["maxSizeBytes"]
     tenant_id = request["tenantId"]
     excluded_paths = request["excludedPaths"]
     document_file_extensions = request["documentFileExtensions"]
@@ -165,6 +173,7 @@ def set_up_crawl_endpoint(request):
     close_spider_page_count = request["pageCount"]
     additional_metadata = request["additionalMetadata"]
     do_extract_docs = request["doExtractDocs"]
+    cert_verification = request["certVerification"]
 
     payload = {
         "project": "generic_crawler",
@@ -182,10 +191,12 @@ def set_up_crawl_endpoint(request):
         "timestamp": timestamp,
         "follow": follow,
         "max_length": max_length,
+        "max_size_bytes": max_size_bytes,
         "tenant_id": tenant_id,
         "document_file_extensions": json.dumps(document_file_extensions),
         "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
+        "cert_verification": json.dumps(cert_verification),
         "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],
     }

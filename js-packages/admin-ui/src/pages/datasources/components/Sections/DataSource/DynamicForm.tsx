@@ -104,10 +104,10 @@ function convertJsonToTemplate({ template, jsonConfig }: { template: Template; j
 
       let updatedValues: FieldValue[] = [];
       if (field.type === "stringMap") {
-        const obj = Array.isArray(fieldConfig) && fieldConfig.length > 0 ? fieldConfig[0] : {};
-        updatedValues = Object.keys(obj).map((key) => ({
-          [key]: obj[key],
-        })) as any;
+        const obj = typeof fieldConfig === "object" && fieldConfig !== null ? fieldConfig : {};
+        updatedValues = Object.entries(obj).map(([key, value]) => ({
+          [key]: value,
+        })) as any[];
       } else if (field.type === "multiselect") {
         if (Array.isArray(field.values) && field.values.length > 0) {
           updatedValues = field.values.map((value) => ({
@@ -186,7 +186,7 @@ function convertTemplateToJson(template: Template): string {
         acc[field.name] = fieldValue as string;
         break;
       case "stringMap":
-        acc[field.name] = [fieldValue as Record<string, string>];
+        acc[field.name] = fieldValue as Record<string, string>;
         break;
       default:
         acc[field.name] = fieldValue;

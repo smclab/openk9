@@ -11,6 +11,7 @@ export type DataindexData = {
   description: string;
   knnIndex: boolean;
   docTypeIds: number[];
+  docTypeString: string[];
   chunkType: string | null | undefined;
   chunkWindowSize: number | null | undefined;
   embeddingDocTypeFieldId: { id: string; name: string } | null | undefined;
@@ -39,6 +40,7 @@ export function SaveDataindex() {
           description: "",
           knnIndex: false,
           docTypeIds: [],
+          docTypeString: [],
           chunkWindowSize: 0,
           settings: "{}",
           embeddingJsonConfig: "{}",
@@ -67,6 +69,10 @@ export function SaveDataindex() {
             dataindexQuery.data?.dataIndex?.docTypes?.edges
               ?.map((doc) => (doc?.node?.id ? Number(doc.node.id) : null))
               .filter((id): id is number => id !== null) || [],
+          docTypeString:
+            dataindexQuery.data?.dataIndex?.docTypes?.edges
+              ?.map((doc) => (doc?.node?.name ? doc.node.name : null))
+              .filter((name): name is string => name !== null) || [],
           chunkType: dataindexQuery.data?.dataIndex?.chunkType || "ChunkTypeCharacterTextSplitter",
           chunkWindowSize: dataindexQuery.data?.dataIndex?.chunkWindowSize || 2000,
           embeddingDocTypeFieldId: {

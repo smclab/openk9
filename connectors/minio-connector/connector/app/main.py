@@ -51,6 +51,7 @@ class MinioRequest(BaseModel):
     scheduleId: str
     timestamp: int
     tenantId: str
+    datasourcePayloadKey: Optional[str] = None
     prefix: Optional[str] = None
     columns: Optional[list] = []
     additionalMetadata: Optional[dict] = {}
@@ -104,10 +105,12 @@ def execute(request: MinioRequest):
     access_key = request["accessKey"]
     secret_key = request["secretKey"]
     bucket_name = request["bucketName"]
+    prefix = request["prefix"]
+    datasource_payload_key = request["datasourcePayloadKey"]
     columns = request["columns"]
 
-    extractor = ExcelMinioExtractor(host, port, access_key, secret_key, bucket_name, columns, datasource_id,
-                               timestamp, schedule_id, tenant_id, ingestion_url)
+    extractor = ExcelMinioExtractor(host, port, access_key, secret_key, bucket_name, columns, prefix, datasource_payload_key,
+                                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
 
     thread = threading.Thread(target=extractor.extract_data)
     thread.start()
