@@ -62,6 +62,8 @@ export const DataSourceQuery = gql`
       pluginDriver {
         id
         name
+        provisioning
+        jsonConfig
       }
       dataIndex {
         id
@@ -273,8 +275,9 @@ gql`
         id
         name
         description
-        type
+        jsonConfig
         provisioning
+        type
       }
     }
   }

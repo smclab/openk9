@@ -6176,7 +6176,7 @@ export type DataSourceQueryVariables = Exact<{
 }>;
 
 
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexable?: boolean | null, reindexing?: string | null, purgeable?: boolean | null, purging?: string | null, purgeMaxAge?: string | null, lastIngestionDate?: any | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, knnIndex?: boolean | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexable?: boolean | null, reindexing?: string | null, purgeable?: boolean | null, purging?: string | null, purgeMaxAge?: string | null, lastIngestionDate?: any | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, provisioning?: Provisioning | null, jsonConfig?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, knnIndex?: boolean | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateDatasourceConnectionMutationVariables = Exact<{
   name: Scalars['String'];
@@ -6253,7 +6253,7 @@ export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typenam
 export type PluginDriversQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PluginDriversQuery = { __typename?: 'Query', pluginDriversPageFilter?: { __typename?: 'Page_PluginDriver', content?: Array<{ __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, provisioning?: Provisioning | null } | null> | null } | null };
+export type PluginDriversQuery = { __typename?: 'Query', pluginDriversPageFilter?: { __typename?: 'Page_PluginDriver', content?: Array<{ __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, provisioning?: Provisioning | null, type?: PluginDriverType | null } | null> | null } | null };
 
 export type CreateOrUpdatePluginDriverMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -13500,6 +13500,8 @@ export const DataSourceDocument = gql`
     pluginDriver {
       id
       name
+      provisioning
+      jsonConfig
     }
     dataIndex {
       id
@@ -13871,8 +13873,9 @@ export const PluginDriversDocument = gql`
       id
       name
       description
-      type
+      jsonConfig
       provisioning
+      type
     }
   }
 }
@@ -14422,4 +14425,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-08-06T14:51:29+02:00
+// Generated on 2025-08-07T13:08:16+02:00

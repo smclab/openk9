@@ -4,21 +4,16 @@ import { useSideNavigation } from "@components/sideNavigationContext";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import {
-  Autocomplete,
   Box,
   Button,
-  Checkbox,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   FormControl,
-  FormHelperText,
   IconButton,
   Link,
-  ListItemText,
   MenuItem,
   Select,
   Table,
@@ -33,11 +28,11 @@ import {
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEnrichItemsQuery } from "../../../../../graphql-generated";
+import { tabsType } from "../../../datasourceType";
+import { ConnectionData } from "../../../types";
 import { BoxArea } from "../../BoxArea";
 import { DateTimeSection } from "./DateTimeSection";
 import { ChangeValueKey, GenerateDynamicForm, Template } from "./DynamicForm";
-import { tabsType } from "../../../datasourceType";
-import { ConnectionData } from "../../../types";
 
 export const defaultModal = {
   isShow: false,

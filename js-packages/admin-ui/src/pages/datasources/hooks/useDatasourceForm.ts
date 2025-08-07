@@ -1,5 +1,5 @@
 import { QueryResult } from "@apollo/client";
-import { DataSourceQuery, Exact, InputMaybe, Scalars } from "../../../graphql-generated";
+import { DataSourceQuery, Exact, InputMaybe, Provisioning, Scalars } from "../../../graphql-generated";
 import { useEffect, useState } from "react";
 import { parseCronString } from "../Function";
 import { ConnectionData } from "../types";
@@ -122,6 +122,9 @@ export const useDatasourceForm = (
         pluginDriverSelect: {
           ...prevValues?.pluginDriverSelect,
           ...datasourceQuery?.data?.datasource?.pluginDriver,
+          json: datasourceQuery?.data?.datasource?.pluginDriver?.jsonConfig || "",
+          provisioning: datasourceQuery?.data?.datasource?.pluginDriver?.provisioning || Provisioning.System,
+          nameConnectors: datasourceQuery?.data?.datasource?.pluginDriver?.name || "",
         },
       }));
     }

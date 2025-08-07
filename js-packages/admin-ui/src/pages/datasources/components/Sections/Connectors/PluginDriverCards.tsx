@@ -10,19 +10,62 @@ interface PluginDriver {
   description?: string | null;
   type?: PluginDriverType | null;
   provisioning?: Provisioning | null;
+  host?: string | null;
+  path?: string | null;
+  port?: string | null;
+  secure?: boolean | null;
+  method?: string | null;
+  jsonConfig?: string | null;
 }
 
 interface CardsProps {
   systemPluginDrivers: (PluginDriver | null)[] | undefined;
   disabled: boolean;
   activeCardId: string | null;
-  setActiveCardId: (id: string | null, name: string | null) => void;
+  setActiveCardId: (
+    id: string | null,
+    name: string | null,
+    description?: string | null,
+    host?: string | null,
+    path?: string | null,
+    port?: string | null,
+    secure?: boolean | null,
+    method?: string | null,
+    provisioning?: Provisioning,
+    pluginDriverType?: PluginDriverType,
+    json?: string | null,
+  ) => void;
 }
 
 export function PluginDriverCards({ systemPluginDrivers, disabled, activeCardId, setActiveCardId }: CardsProps) {
-  const handleToggle = (id: string | null | undefined, name: string | null | undefined) => {
+  const handleToggle = (
+    id: string | null | undefined,
+    name: string | null | undefined,
+    description?: string | null,
+    host?: string | null,
+    path?: string | null,
+    port?: string | null,
+    secure?: boolean | null,
+    method?: string | null,
+    provisioning?: Provisioning,
+    pluginDriverType?: PluginDriverType,
+    json?: string | null,
+  ) => {
     if (!id) return;
-    setActiveCardId(activeCardId === id ? null : id, name || null);
+
+    setActiveCardId(
+      activeCardId === id ? null : id,
+      name || null,
+      description,
+      host,
+      path,
+      port,
+      secure,
+      method,
+      provisioning,
+      pluginDriverType,
+      json,
+    );
   };
 
   const theme = useTheme();
@@ -40,7 +83,21 @@ export function PluginDriverCards({ systemPluginDrivers, disabled, activeCardId,
             <ButtonBase
               disabled={disabled}
               sx={{ width: "100%", borderRadius: "10px" }}
-              onClick={() => handleToggle(driver.id, driver.name)}
+              onClick={() =>
+                handleToggle(
+                  driver.id,
+                  driver.name,
+                  driver.description,
+                  driver.host,
+                  driver.path,
+                  driver.port,
+                  driver.secure,
+                  driver.method,
+                  driver.provisioning || Provisioning.System,
+                  driver.type || PluginDriverType.Http,
+                  driver.jsonConfig,
+                )
+              }
             >
               <Card
                 sx={{

@@ -85,6 +85,7 @@ export interface ConnectionData {
     method?: string | null;
     provisioning?: Provisioning;
     pluginDriverType?: PluginDriverType;
+    json?: string | null;
   };
   vectorIndex?: {
     urlField?: string;

@@ -41,6 +41,7 @@ interface DataIndex {
 interface ChangeDataIndexParams {
   dataIndex: {
     id: string;
+    name: string;
   };
 }
 
@@ -250,7 +251,7 @@ export default function DataIndexFormsource({
                                 checked={isCheckboxChecked(item?.node?.id || "")}
                                 disabled={isDisabled}
                                 onChange={() => {
-                                  changeDataIndex({ dataIndex: { id: item?.node?.id || "" } });
+                                  changeDataIndex({ dataIndex: { id: item?.node?.id || "", name: item?.node.name } });
                                 }}
                               />
                             }
