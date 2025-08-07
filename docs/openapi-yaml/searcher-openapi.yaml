@@ -10,7 +10,7 @@ info:
     name: GNU Affero General Public License v3.0
     url: https://github.com/smclab/openk9/blob/main/LICENSE
   title: Searcher Service
-  version: 3.0.0-SNAPSHOT
+  version: 3.0.0
 components:
   responses:
     bad-request:

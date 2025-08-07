@@ -33,7 +33,7 @@ import io.openk9.common.model.dto.Problem;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Datasource Service",
-                version = "3.0.0-SNAPSHOT",
+                version = "3.0.0",
                 description = "API to get configurations and interact with schedules",
                 license = @License(
                         name = "GNU Affero General Public License v3.0",

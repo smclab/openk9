@@ -32,7 +32,7 @@ import io.openk9.common.model.dto.Problem;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Searcher Service",
-                version = "3.0.0-SNAPSHOT",
+                version = "3.0.0",
                 description = "API to search on indexed data, as well as get filter options or use autocomplete.",
                 license = @License(
                         name = "GNU Affero General Public License v3.0",

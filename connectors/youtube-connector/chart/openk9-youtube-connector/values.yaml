@@ -8,7 +8,7 @@ image:
   registry: ""
   name: smclab/openk9-youtube-connector
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "3.0.0"
 
   # Specify a imagePullPolicy
   # Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'

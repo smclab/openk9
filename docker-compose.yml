@@ -105,7 +105,7 @@ services:
         aliases:
           - keycloak.openk9.localhost
   tenant-manager:
-    image: smclab/openk9-tenant-manager:3.0.0-SNAPSHOT
+    image: smclab/openk9-tenant-manager:3.0.0
     hostname: openk9-tenant-manager
     environment:
       QUARKUS_DATASOURCE_USERNAME: 'postgres'
@@ -134,7 +134,7 @@ services:
       postgresql:
         condition: service_healthy
   datasource:
-    image: smclab/openk9-datasource:3.0.0-SNAPSHOT
+    image: smclab/openk9-datasource:3.0.0
     hostname: openk9-datasource
     environment:
       PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
@@ -187,7 +187,7 @@ services:
       postgresql:
         condition: service_healthy
   ingestion:
-    image: smclab/openk9-ingestion:3.0.0-SNAPSHOT
+    image: smclab/openk9-ingestion:3.0.0
     container_name: ingestion
     environment:
       RABBITMQ_HOST: 'rabbitmq'
@@ -206,7 +206,7 @@ services:
       rabbitmq:
         condition: service_healthy
   searcher:
-    image: smclab/openk9-searcher:3.0.0-SNAPSHOT
+    image: smclab/openk9-searcher:3.0.0
     container_name: searcher
     environment:
       OPENK9_AUTHSERVERURL_TEMPLATE: http://keycloak.openk9.localhost:8081/realms/{realm}
@@ -231,7 +231,7 @@ services:
       keycloak:
         condition: service_healthy
   file-manager:
-    image: smclab/openk9-file-manager:3.0.0-SNAPSHOT
+    image: smclab/openk9-file-manager:3.0.0
     container_name: file-manager
     environment:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
@@ -244,7 +244,7 @@ services:
       QUARKUS_MINIO_URL: 'http://minio:9000'
       QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'datasource'
   tika:
-    image: smclab/openk9-tika:3.0.0-SNAPSHOT
+    image: smclab/openk9-tika:3.0.0
     container_name: tika
     environment:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
@@ -258,13 +258,13 @@ services:
       QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://datasource:8080'
       QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://file-manager:8080'
   web-connector:
-    image: smclab/openk9-web-connector:3.0.0-SNAPSHOT
+    image: smclab/openk9-web-connector:3.0.0
     container_name: web-connector
     ports:
       - "5001:5000"
       - "6800:6800"
   rag-module:
-    image: smclab/openk9-rag-module:3.0.0-SNAPSHOT
+    image: smclab/openk9-rag-module:3.0.0
     container_name: rag-module
     environment:
       ORIGINS: '*'
@@ -274,26 +274,26 @@ services:
       GRPC_TENANT_MANAGER_HOST : 'tenant-manager:9000'
       KEYCLOAK_URL : 'http://keycloak.openk9.localhost:8081'
   embedding-module:
-    image: smclab/openk9-embedding-module-base:3.0.0-SNAPSHOT
+    image: smclab/openk9-embedding-module-base:3.0.0
     container_name: embedding-module
     environment:
       ORIGINS: '*'
   search-frontend:
-    image: smclab/openk9-search-frontend:3.0.0-SNAPSHOT
+    image: smclab/openk9-search-frontend:3.0.0
     container_name: search-frontend
     ports:
       - "8084:80"
   talk-to:
-    image: smclab/openk9-talk-to:3.0.0-SNAPSHOT
+    image: smclab/openk9-talk-to:3.0.0
     container_name: talk-to
     ports:
       - "8085:80"
   admin-ui:
-    image: smclab/openk9-admin-ui:3.0.0-SNAPSHOT
+    image: smclab/openk9-admin-ui:3.0.0
     ports:
       - "8082:80"
   gateway:
-      image: smclab/openk9-gateway:3.0.0-SNAPSHOT
+      image: smclab/openk9-gateway:3.0.0
       hostname: gateway
       ports:
           - '80:8080'

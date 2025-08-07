@@ -20,7 +20,7 @@ image:
   registry: ""
   name: smclab/openk9-gitlab-connector
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "3.0.0"
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images

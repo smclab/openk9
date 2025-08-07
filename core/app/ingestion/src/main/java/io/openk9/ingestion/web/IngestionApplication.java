@@ -33,7 +33,7 @@ import io.openk9.common.model.dto.Problem;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Ingestion Service",
-                version = "3.0.0-SNAPSHOT",
+                version = "3.0.0",
                 description = "API to ingest data from external sources inside Openk9.",
                 license = @License(
                         name = "GNU Affero General Public License v3.0",
