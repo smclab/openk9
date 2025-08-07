@@ -1,6 +1,6 @@
 # OpenK9 Helm Charts 
 
-This repository contains the Helm Charts and other elements that allow you to install OpenK9 **version 3.0.0-SNAPSHOT**:
+This repository contains the Helm Charts and other elements that allow you to install OpenK9 **version 3.1.0-SNAPSHOT**:
 
 - in a standard [Kubernets](https://kubernetes.io/) installed in the Cloud or On-Premises
 - in a standard [OpenShift](https://www.redhat.com/it/technologies/cloud-computing/openshift) installed in the Cloud or On-Premises
