@@ -46,7 +46,6 @@ export function SingleMessage({
   sources && console.log(sources);
 
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
-  // const [showSourcesModal, setShowSourcesModal] = useState(false);
   const [showAllSources, setShowAllSources] = useState(false);
   const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
   const maxVisibleSources = 8;
@@ -242,12 +241,13 @@ export function SingleMessage({
                 )}
               </ParagraphMessage>
               {sources.length > 0 && (
-                <Box>
+                <Box mb={6}>
                   <Box
                     display="flex"
                     justifyContent="space-between"
                     alignItems="center"
                     mb={2}
+                    sx={{ overflowX: "hidden" }}
                   >
                     <Typography variant="body2" color="text.secondary">
                       {sources.length} sources
@@ -286,17 +286,17 @@ export function SingleMessage({
                     </Box>
                   </Box>
 
-                  <Box display="flex" flexWrap="wrap" gap={1}>
+                  <Box
+                    display="flex"
+                    flexWrap="wrap"
+                    gap={1}
+                    sx={{ overflowX: "hidden" }}
+                  >
                     {visibleSources.map((source, index) => {
                       const typeColors = getTypeColor(source.url || "");
                       return (
                         <Chip
                           key={source.url || index}
-                          style={{
-                            flex: expandedChips.has(source.url || "")
-                              ? 1
-                              : "none",
-                          }}
                           label={
                             <Box
                               display="flex"
@@ -305,7 +305,7 @@ export function SingleMessage({
                               flex={1}
                               sx={{
                                 width: expandedChips.has(source.url || "")
-                                  ? "auto"
+                                  ? "230px"
                                   : "170px",
                                 overflow: "hidden",
                                 textOverflow: expandedChips.has(
@@ -331,7 +331,6 @@ export function SingleMessage({
                                 }}
                               />
                               <Typography
-                                flex={1}
                                 variant="caption"
                                 fontWeight={500}
                                 overflow={"hidden"}
@@ -408,7 +407,6 @@ export function SingleMessage({
                             </Typography>
                           </Box>
                         }
-                        // onClick={() => setShowSourcesModal(true)}
                         sx={{
                           backgroundColor:
                             themeInfo === "light" ? "#f5f5f5" : "#2d2d2d",
@@ -468,8 +466,6 @@ const ParagraphMessage = styled.div<{
   text-align: left;
   font-family: ${(props) => props.$font};
   padding-block: 3px;
-  // letter-spacing: 1.44px;
-  // word-spacing: 1.92px;
 `;
 
 const ParagraphName = styled.p<{ $color?: string; $font?: string }>`
@@ -478,8 +474,6 @@ const ParagraphName = styled.p<{ $color?: string; $font?: string }>`
   size: 10px;
   line-height: 15.21px;
   font-family: ${(props) => props.$font};
-  // letter-spacing: 1.44px;
-  // word-spacing: 1.92px;
 `;
 
 const FocusableSection = styled.section<{ $contraxtFocus: string }>`

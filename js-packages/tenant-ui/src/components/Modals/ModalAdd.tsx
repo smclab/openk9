@@ -83,7 +83,6 @@ export function ModalAdd<TAssociation, TRemove>({
         })
       );
     }
-    // setIsRecap(true);
   };
 
   return (
@@ -141,7 +140,6 @@ export function ModalAddSingle({
     onErrorCallback: (error: Error) => void;
   }) => void;
 }) {
-  // const [open, setOpen] = React.useState(true);
   const [items, setItems] = React.useState<{
     label: string;
     value: string;
@@ -167,22 +165,6 @@ export function ModalAddSingle({
           content: error.message || "Si è verificato un errore.",
         });
       },
-      // onCompleted: () => {
-      //   toast({
-      //     displayType: "success",
-      //     title: "Association",
-      //     content: messageSuccess || "",
-      //   });
-      //   setOpen(false);
-      // },
-
-      // onError: (error) => {
-      //   toast({
-      //     displayType: "error",
-      //     title: "Errore",
-      //     content: error.message || "Si è verificato un errore.",
-      //   });
-      // },
     });
   };
 

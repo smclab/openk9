@@ -8,7 +8,6 @@ import { useDeletePluginDriverMutation, usePluginDriversInfoQueryQuery } from ".
 
 export function PluginDrivers() {
   const pluginDriverQuery = usePluginDriversInfoQueryQuery({
-    // refetchQueries: [PluginDriversQuery],
     fetchPolicy: "network-only",
   });
 

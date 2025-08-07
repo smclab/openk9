@@ -48,7 +48,6 @@ function ButtonAddPluginDrivers({ disabled, pluginDriverRefetch }: { disabled: b
 
   const handleConfirm = () => {
     formRef.current?.submit();
-    // pluginDriverRefetch.refetch();
   };
 
   const borderColor = theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
@@ -148,38 +147,46 @@ export function ConfigureConnectors({
       <h2>Choose only one type of connectors from the list below</h2>
       <Box>
         <BoxArea isActive={areaEnabled === "card"}>
-          <Typography variant="h3" gutterBottom>
-            Preconfigured Connectors
-          </Typography>
-          <PluginDriverCards
-            systemPluginDrivers={systemPluginDrivers}
-            disabled={areaEnabled !== "card" || disabled}
-            activeCardId={pluginDriverId || null}
-            setActiveCardId={(id: string | null, name: string | null) =>
-              id &&
-              setFormValues((pre) => ({
-                ...pre,
-                pluginDriverSelect: { ...pre, id, nameConnectors: name },
-              }))
-            }
-          />
-          <Divider sx={{ margin: "17.5px 0px" }} />
-          <Typography variant="h3" gutterBottom>
-            Custom Connectors
-          </Typography>
-          <PluginDriverCards
-            systemPluginDrivers={userPluginDrivers}
-            disabled={areaEnabled !== "card" || disabled}
-            activeCardId={pluginDriverId || null}
-            setActiveCardId={(id: string | null, name: string | null) =>
-              id &&
-              setFormValues((pre) => ({
-                ...pre,
-                pluginDriverSelect: { ...pre, id, nameConnectors: name },
-              }))
-            }
-          />
-          <Divider sx={{ margin: "17.5px 0px" }} />
+          {systemPluginDrivers && systemPluginDrivers.length > 0 && (
+            <>
+              <Typography variant="h3" gutterBottom>
+                Preconfigured Connectors
+              </Typography>
+              <PluginDriverCards
+                systemPluginDrivers={systemPluginDrivers}
+                disabled={areaEnabled !== "card" || disabled}
+                activeCardId={pluginDriverId || null}
+                setActiveCardId={(id: string | null, name: string | null) =>
+                  id &&
+                  setFormValues((pre) => ({
+                    ...pre,
+                    pluginDriverSelect: { ...pre, id, nameConnectors: name },
+                  }))
+                }
+              />
+              <Divider sx={{ margin: "17.5px 0px" }} />
+            </>
+          )}
+          {userPluginDrivers && userPluginDrivers.length > 0 && (
+            <>
+              <Typography variant="h3" gutterBottom>
+                Custom Connectors
+              </Typography>
+              <PluginDriverCards
+                systemPluginDrivers={userPluginDrivers}
+                disabled={areaEnabled !== "card" || disabled}
+                activeCardId={pluginDriverId || null}
+                setActiveCardId={(id: string | null, name: string | null) =>
+                  id &&
+                  setFormValues((pre) => ({
+                    ...pre,
+                    pluginDriverSelect: { ...pre, id, nameConnectors: name },
+                  }))
+                }
+              />
+              <Divider sx={{ margin: "17.5px 0px" }} />
+            </>
+          )}
           <ButtonAddPluginDrivers pluginDriverRefetch={pluginDrivers} disabled={disabled} />
           <Divider sx={{ margin: "17.5px 0px" }} />
           {!disabled && <p>Test connector</p>}

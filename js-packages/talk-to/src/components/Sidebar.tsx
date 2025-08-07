@@ -57,13 +57,6 @@ const Sidebar = ({ setChatId }: { setChatId: React.Dispatch<React.SetStateAction
 							K9
 						</Typography>
 					</Box>
-					{/* <Box
-						display="flex"
-						sx={{ justifyContent: "center", gap: "10px", flexDirection: "column", alignItems: "center" }}
-					>
-						<Typography variant="body2">{t("version")} 1.6.03</Typography>
-						<ChangeLanguage />
-					</Box> */}
 					<Box sx={{ display: "flex" }} mt={2}>
 						{authenticated && <HistoryChat setChatId={setChatId} userId={userId} />}
 					</Box>

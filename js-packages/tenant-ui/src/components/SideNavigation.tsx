@@ -41,18 +41,6 @@ export function SideNavigation({ isSideMenuOpen }: { isSideMenuOpen: boolean }) 
       <List>
         <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} label="Dashboard" path="/" />
         <SideNavigationItem setSelect={setSelect} elementSelect={elementSelect} label="Tenant" path="/tenants" />
-        {/* Ejemplo de menú colapsable */}
-        {/* 
-        <SideNavigationCollapsible label="More">
-          <SideNavigationItem
-            setSelect={setSelect}
-            elementSelect={elementSelect}
-            label="Child"
-            path="/child"
-            isChild
-          />
-        </SideNavigationCollapsible>
-        */}
       </List>
     </Drawer>
   );

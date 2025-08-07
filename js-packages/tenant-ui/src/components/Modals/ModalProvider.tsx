@@ -11,8 +11,8 @@ import {
   IconButton,
   Slide,
 } from "@mui/material";
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -23,9 +23,7 @@ type ModalDefinition = {
   callback?(): void;
 };
 
-const ModalContext = React.createContext<(params: ModalDefinition) => void>(
-  null as any,
-);
+const ModalContext = React.createContext<(params: ModalDefinition) => void>(null as any);
 
 export function useModal() {
   const showModal = React.useContext(ModalContext);
@@ -34,25 +32,15 @@ export function useModal() {
 
 type ModalProviderProps = { children: React.ReactNode };
 export function ModalProvider({ children }: ModalProviderProps) {
-  const [modalItems, setModalItems] = React.useState<
-    Array<{ key: string } & ModalDefinition>
-  >([]);
+  const [modalItems, setModalItems] = React.useState<Array<{ key: string } & ModalDefinition>>([]);
 
-  const addModal = React.useCallback(
-    ({ displayType, title, content }: ModalDefinition) => {
-      const key = new Date().toJSON();
-      setModalItems((modalItems) => [
-        ...modalItems,
-        { key, displayType, title, content },
-      ]);
-    },
-    [],
-  );
+  const addModal = React.useCallback(({ displayType, title, content }: ModalDefinition) => {
+    const key = new Date().toJSON();
+    setModalItems((modalItems) => [...modalItems, { key, displayType, title, content }]);
+  }, []);
 
   const removeModal = (key: string) => {
-    setModalItems((modalItems) =>
-      modalItems.filter((item) => item.key !== key),
-    );
+    setModalItems((modalItems) => modalItems.filter((item) => item.key !== key));
   };
 
   const theme = useTheme();
@@ -65,9 +53,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
 
   const iconMap = {
     success: <CheckCircleOutlineIcon fontSize="large" sx={{ fill: "white" }} />,
-    error: (
-      <SentimentVeryDissatisfiedIcon fontSize="large" sx={{ fill: "white" }} />
-    ),
+    error: <SentimentVeryDissatisfiedIcon fontSize="large" sx={{ fill: "white" }} />,
     warning: <CheckCircleIcon fontSize="large" sx={{ fill: "white" }} />,
     info: <CheckCircleIcon fontSize="large" sx={{ fill: "white" }} />,
   };
@@ -91,9 +77,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
             },
           }}
         >
-          <Box bgcolor={theme.palette.success.main} display="flex" justifyContent="flex-end">
-              
-          </Box>
+          <Box bgcolor={theme.palette.success.main} display="flex" justifyContent="flex-end"></Box>
           <Box
             sx={{
               backgroundColor: colorMap[displayType],
@@ -106,10 +90,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
           >
             <Box display="flex" alignItems="center" gap="10px">
               {iconMap[displayType]}
-              <Typography
-                variant="body2"
-                sx={{ color: "white", fontWeight: "bold", fontSize: "1.25rem" }}
-              >
+              <Typography variant="body2" sx={{ color: "white", fontWeight: "bold", fontSize: "1.25rem" }}>
                 {title}
               </Typography>
             </Box>
@@ -118,13 +99,10 @@ export function ModalProvider({ children }: ModalProviderProps) {
             </IconButton>
           </Box>
           {content && (
-            <DialogContent sx={{ py: 2, px: 3, display:'flex', justifyContent:'center' }}>
-              <DialogContentText id="alert-dialog-description" justifyContent='center'>
-                <Typography
-                  variant="body1"
-                  sx={{ color: theme.palette.text.primary, textAlign: 'center' }}
-                >
-                 {content}
+            <DialogContent sx={{ py: 2, px: 3, display: "flex", justifyContent: "center" }}>
+              <DialogContentText id="alert-dialog-description" justifyContent="center">
+                <Typography variant="body1" sx={{ color: theme.palette.text.primary, textAlign: "center" }}>
+                  {content}
                 </Typography>
               </DialogContentText>
             </DialogContent>
@@ -138,7 +116,6 @@ export function ModalProvider({ children }: ModalProviderProps) {
               color="primary"
               variant="contained"
               sx={{
-                // borderRadius: "20px",
                 padding: "8px 24px",
                 textTransform: "none",
                 fontWeight: "bold",

@@ -251,7 +251,6 @@ export const SavePluginnDriverModel = React.forwardRef(
       form.submit();
     };
 
-    // Esponiamo handleSubmit attraverso la ref
     React.useImperativeHandle(ref, () => ({
       submit: () => {
         form.submit();
@@ -360,58 +359,40 @@ export const SavePluginnDriverModel = React.forwardRef(
                           addLabel: "Add",
                         }}
                         isCreateButtonVisible
-                        // fields={fields}
                         onAddField={handleAddField}
                         onReset={handleReset}
-                        // removeField={(id: string) => {
-                        //   setFields((prev) => prev.filter((field) => field.fieldName !== id));
-                        // }}
-                        // updateField={(updatedField: FieldDocType, index?: number) => {
-                        //   setFields((prev) =>
-                        //     prev.map((field, i) => (i === index ? { ...field, ...updatedField } : field)),
-                        //   );
-                        // }}
-                        row={
-                          fields.map((field) => ({
-                            itemLabel: field.userField,
-                            itemLabelId: field.userFieldId,
-                            associatedLabel: field.fieldName,
-                            associatedLabelId: field.docTypeId,
-                            actions: [
-                              {
-                                action(item, index) {
-                                  setFields((prev) =>
-                                    prev.map((field, i) => {
-                                      return i === index
-                                        ? {
-                                            ...field,
-                                            ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
-                                            ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
-                                            ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
-                                            ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
-                                          }
-                                        : field;
-                                    }),
-                                  );
-                                },
-                                label: "Edit",
+                        row={fields.map((field) => ({
+                          itemLabel: field.userField,
+                          itemLabelId: field.userFieldId,
+                          associatedLabel: field.fieldName,
+                          associatedLabelId: field.docTypeId,
+                          actions: [
+                            {
+                              action(item, index) {
+                                setFields((prev) =>
+                                  prev.map((field, i) => {
+                                    return i === index
+                                      ? {
+                                          ...field,
+                                          ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
+                                          ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
+                                          ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
+                                          ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
+                                        }
+                                      : field;
+                                  }),
+                                );
                               },
-                              {
-                                action(item, index) {
-                                  setFields((prev) => prev.filter((_, i) => i !== index));
-                                },
-                                label: "Delete",
+                              label: "Edit",
+                            },
+                            {
+                              action(item, index) {
+                                setFields((prev) => prev.filter((_, i) => i !== index));
                               },
-                            ],
-                          }))
-                          //   [
-                          //   {
-                          //     itemLabel: "",
-                          //     associatedLabel: "",
-                          //     actions: [],
-                          //   },
-                          // ]
-                        }
+                              label: "Delete",
+                            },
+                          ],
+                        }))}
                       >
                         <Box sx={{ width: "100%", display: "grid", gridColumn: "span 2" }}>
                           <CustomSelectRelationsOneToOne
@@ -425,7 +406,6 @@ export const SavePluginnDriverModel = React.forwardRef(
                               name: form.inputProps("userFieldsSelectedOptions").value.name || "",
                             }}
                             disabled={page === 1}
-                            // description="Default Language for current bucket"
                           />
                           <CheckboxList
                             options={userFieldsOptions}
@@ -433,7 +413,6 @@ export const SavePluginnDriverModel = React.forwardRef(
                             selectedValues={selectedItems}
                           />
                         </Box>
-                        {/* <p>Connector component</p> */}
                       </DataCardManager>
                     </Box>
                   ),

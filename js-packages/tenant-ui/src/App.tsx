@@ -67,7 +67,6 @@ export default function App() {
                       >
                         <Toolbar sx={{ minHeight: 56 }}>
                           <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                            {/* Logo section on the left */}
                             <Box display="flex" alignItems="center">
                               <BrandLogo width={30} colorFill="#c22525" />
                               <Typography variant="h6" ml={1} color="text.primary" fontWeight={700}>

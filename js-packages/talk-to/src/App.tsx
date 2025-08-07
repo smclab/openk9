@@ -20,7 +20,6 @@ function App() {
 	const [chatId, setChatId] = React.useState<chatId>({ id: null, isNew: true });
 	const [userId, setUserId] = React.useState<string | undefined | null>();
 	const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
-	// const [authenticated, setAuthenticated] = React.useState(false);
 	const { initialMessages } = useChatData(userId || "", chatId);
 	const isLoadingChat = !chatId?.isNew && initialMessages.isLoadingChat;
 	const { t } = useTranslation();
@@ -46,10 +45,6 @@ function App() {
 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 		}
 	}, [messages]);
-
-	// React.useEffect(() => {
-	// 	client.authInit.then(setAuthenticated);
-	// }, [client]);
 
 	React.useEffect(() => {
 		async function fetchUserProfile() {
