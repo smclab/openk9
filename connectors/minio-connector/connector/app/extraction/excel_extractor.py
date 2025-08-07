@@ -51,8 +51,8 @@ def post_message(url, payload):
 
 class ExcelMinioExtractor:
 
-    def __init__(self, host, port, access_key, secret_key, bucket_name, columns, datasource_id, timestamp,
-                 schedule_id, tenant_id, ingestion_url):
+    def __init__(self, host, port, access_key, secret_key, bucket_name, columns, prefix, datasource_payload_key, 
+                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url):
 
         super(ExcelMinioExtractor, self).__init__()
         self.datasource_id = datasource_id
@@ -63,6 +63,8 @@ class ExcelMinioExtractor:
         self.secret_key = secret_key
         self.bucket_name = bucket_name
         self.columns = columns
+        self.prefix = prefix
+        self.datasource_payload_key = datasource_payload_key
         self.timestamp = timestamp
         self.url = str(host) + ":" + str(port)
 
@@ -109,7 +111,7 @@ class ExcelMinioExtractor:
             for i, element in enumerate(df_dict):
 
                 datasource_payload = {
-                    "ticket": element
+                    self.datasource_payload_key: element
                 }
 
                 payload = {
