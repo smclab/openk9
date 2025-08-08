@@ -34,7 +34,10 @@
     "lint": "eslint --ext js,ts,tsx src",
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
     "precommit": "lint-staged",
-    "prepare": "cross-env NODE_ENV=production yarn build"
+    "prepare": "cross-env NODE_ENV=production yarn build",
+    "build:keycloak": "webpack --config webpack/standalone.prod.js --env keycloak=true --env chatbot=false",
+    "build:nokeycloak": "webpack --config webpack/standalone.prod.js --env keycloak=false --env chatbot=false",
+    "build:chatbot": "webpack --config webpack/standalone.prod.js --env keycloak=true --env chatbot=true"
   },
   "targets": {
     "main": false
