@@ -1,4 +1,11 @@
-import { CodeInput, CustomSelect, CustomSelectRelationsOneToOne, NumberInput } from "@components/Form";
+import { CodeInput, CustomSelect, NumberInput } from "@components/Form";
+import { SelectedValue } from "@components/Form/Association/MultiLinkedAssociation/types";
+import {
+  AutocompleteDropdown,
+  Option,
+  UseOptionsHook,
+  UseOptionsResult,
+} from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -19,7 +26,7 @@ import {
 import { useOptions } from "@pages/SuggestionCategories";
 import { PluginDriverDocType } from "openapi-generated";
 import React, { useEffect, useState } from "react";
-import { ChunkType } from "../../../../../graphql-generated";
+import { ChunkType, useDocTypeFieldsQuery } from "../../../../../graphql-generated";
 
 interface DefaultDataIndex {
   id: string;
@@ -98,7 +105,7 @@ export default function DataIndexFormsource({
   const restClient = useRestClient();
   const [documentTypes, setDocumentTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { docTypesQuery, OptionDocType } = useOptions();
+  const { docTypesQuery } = useOptions();
 
   React.useEffect(() => {
     const checkedIds = documentTypes
@@ -316,21 +323,22 @@ export default function DataIndexFormsource({
                 label="Embedding JSON Config"
                 validationMessages={[]}
               />
-              <CustomSelectRelationsOneToOne
-                options={OptionDocType}
+              <AutocompleteDropdown
                 label="Doc Type Field"
                 onChange={(val) =>
                   changeExtraParamsDataIndex("embeddingDocTypeFieldId", { id: val.id, name: val.name })
                 }
-                value={{
-                  id: extraParamsDataIndex.embeddingDocTypeFieldId?.id || "",
-                  name: extraParamsDataIndex.embeddingDocTypeFieldId?.name || "",
-                }}
+                value={
+                  !extraParamsDataIndex?.embeddingDocTypeFieldId?.id
+                    ? undefined
+                    : {
+                        id: extraParamsDataIndex.embeddingDocTypeFieldId?.id ?? "",
+                        name: extraParamsDataIndex.embeddingDocTypeFieldId?.name ?? "",
+                      }
+                }
+                onClear={() => changeExtraParamsDataIndex("embeddingDocTypeFieldId", null)}
                 disabled={isDisabled}
-                loadMoreOptions={{
-                  response: loadMoreOptions,
-                  hasNextPage: docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage || false,
-                }}
+                useOptions={useDocTypeOptions}
               />
             </FormControl>
           </div>
@@ -367,3 +375,37 @@ export default function DataIndexFormsource({
     </div>
   );
 }
+
+export const useDocTypeOptions: UseOptionsHook = (searchText: string): UseOptionsResult => {
+  const { data, loading, fetchMore } = useDocTypeFieldsQuery({
+    variables: { searchText, first: 20, after: null },
+    notifyOnNetworkStatusChange: true,
+  });
+
+  const edges = data?.docTypeFields?.edges ?? [];
+  const options: Option[] = edges.map((e: any) => ({ value: e?.node?.id ?? "", label: e?.node?.name ?? "" }));
+
+  const pageInfo = data?.docTypeFields?.pageInfo;
+  const hasNextPage = !!pageInfo?.hasNextPage;
+
+  const loadMore = hasNextPage
+    ? async () => {
+        await fetchMore({
+          variables: { searchText, first: 20, after: pageInfo?.endCursor },
+          updateQuery: (prev: any, { fetchMoreResult }: any) => {
+            const prevEdges = prev?.docTypeFields?.edges ?? [];
+            const nextEdges = fetchMoreResult?.docTypeFields?.edges ?? [];
+            return {
+              docTypeFields: {
+                __typename: prev?.docTypeFields?.__typename ?? "DocTypeFieldConnection",
+                edges: [...prevEdges, ...nextEdges],
+                pageInfo: fetchMoreResult?.docTypeFields?.pageInfo,
+              },
+            };
+          },
+        });
+      }
+    : undefined;
+
+  return { options, loading: !!loading, hasNextPage, loadMore };
+};

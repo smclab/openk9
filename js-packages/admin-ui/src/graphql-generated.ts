@@ -1,5 +1,5 @@
-import { gql } from '@apollo/client';
-import * as Apollo from '@apollo/client';
+import { gql } from "@apollo/client";
+import * as Apollo from "@apollo/client";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -20,7 +20,7 @@ export type Scalars = {
 };
 
 export type AclMapping = {
-  __typename?: 'AclMapping';
+  __typename?: "AclMapping";
   docTypeField?: Maybe<DocTypeField>;
   key?: Maybe<PluginDriverDocTypeFieldKey>;
   pluginDriver?: Maybe<PluginDriver>;
@@ -28,158 +28,155 @@ export type AclMapping = {
 };
 
 export type Analyzer = {
-  __typename?: 'Analyzer';
+  __typename?: "Analyzer";
   charFilters?: Maybe<Connection_CharFilter>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   tokenFilters?: Maybe<Connection_TokenFilter>;
   tokenizer?: Maybe<Tokenizer>;
-  type?: Maybe<Scalars['String']>;
+  type?: Maybe<Scalars["String"]>;
 };
 
-
 export type AnalyzerCharFiltersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-
 export type AnalyzerTokenFiltersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type AnalyzerDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  type: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  type: Scalars["String"];
 };
 
 export type AnalyzerWithListsDtoInput = {
-  charFilterIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  tokenFilterIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  tokenizerId?: InputMaybe<Scalars['BigInteger']>;
-  type: Scalars['String'];
+  charFilterIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  tokenFilterIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  tokenizerId?: InputMaybe<Scalars["BigInteger"]>;
+  type: Scalars["String"];
 };
 
 export type Annotator = {
-  __typename?: 'Annotator';
+  __typename?: "Annotator";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldNotInAnnotator?: Maybe<Connection_DocTypeField>;
-  extraParams?: Maybe<Scalars['String']>;
-  fieldName?: Maybe<Scalars['String']>;
+  extraParams?: Maybe<Scalars["String"]>;
+  fieldName?: Maybe<Scalars["String"]>;
   fuziness?: Maybe<Fuzziness>;
-  id?: Maybe<Scalars['ID']>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  size?: Maybe<Scalars['Int']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  size?: Maybe<Scalars["Int"]>;
   type?: Maybe<AnnotatorType>;
 };
 
-
 export type AnnotatorDocTypeFieldNotInAnnotatorArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type AnnotatorDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  extraParams?: InputMaybe<Scalars['String']>;
-  fieldName: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
+  fieldName: Scalars["String"];
   fuziness: Fuzziness;
-  name: Scalars['String'];
-  size?: InputMaybe<Scalars['Int']>;
+  name: Scalars["String"];
+  size?: InputMaybe<Scalars["Int"]>;
   type: AnnotatorType;
 };
 
 export enum AnnotatorType {
-  Aggregator = 'AGGREGATOR',
-  Autocomplete = 'AUTOCOMPLETE',
-  Autocorrect = 'AUTOCORRECT',
-  Doctype = 'DOCTYPE',
-  Keyword = 'KEYWORD',
-  KeywordAutocomplete = 'KEYWORD_AUTOCOMPLETE',
-  Ner = 'NER',
-  NerAutocomplete = 'NER_AUTOCOMPLETE',
-  Stopword = 'STOPWORD',
-  Token = 'TOKEN'
+  Aggregator = "AGGREGATOR",
+  Autocomplete = "AUTOCOMPLETE",
+  Autocorrect = "AUTOCORRECT",
+  Doctype = "DOCTYPE",
+  Keyword = "KEYWORD",
+  KeywordAutocomplete = "KEYWORD_AUTOCOMPLETE",
+  Ner = "NER",
+  NerAutocomplete = "NER_AUTOCOMPLETE",
+  Stopword = "STOPWORD",
+  Token = "TOKEN",
 }
 
 export type AnnotatorWithDocTypeFieldDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   /** The docTypeField to be associated. (optional) */
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  extraParams?: InputMaybe<Scalars['String']>;
-  fieldName: Scalars['String'];
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
+  fieldName: Scalars["String"];
   fuziness: Fuzziness;
-  name: Scalars['String'];
-  size?: InputMaybe<Scalars['Int']>;
+  name: Scalars["String"];
+  size?: InputMaybe<Scalars["Int"]>;
   type: AnnotatorType;
 };
 
 export enum BehaviorMergeType {
-  Merge = 'MERGE',
-  Replace = 'REPLACE'
+  Merge = "MERGE",
+  Replace = "REPLACE",
 }
 
 export enum BehaviorOnError {
-  Fail = 'FAIL',
-  Reject = 'REJECT',
-  Skip = 'SKIP'
+  Fail = "FAIL",
+  Reject = "REJECT",
+  Skip = "SKIP",
 }
 
 export type Bucket = {
-  __typename?: 'Bucket';
+  __typename?: "Bucket";
   catIndices?: Maybe<Array<Maybe<CatResponse>>>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
   datasources?: Maybe<Connection_Datasource>;
-  description?: Maybe<Scalars['String']>;
-  docCount?: Maybe<Scalars['BigInteger']>;
-  enabled: Scalars['Boolean'];
-  id?: Maybe<Scalars['ID']>;
-  indexCount?: Maybe<Scalars['BigInteger']>;
+  description?: Maybe<Scalars["String"]>;
+  docCount?: Maybe<Scalars["BigInteger"]>;
+  enabled: Scalars["Boolean"];
+  id?: Maybe<Scalars["ID"]>;
+  indexCount?: Maybe<Scalars["BigInteger"]>;
   language?: Maybe<Language>;
   languages?: Maybe<Connection_Language>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   queryAnalysis?: Maybe<QueryAnalysis>;
   ragConfigurationChat?: Maybe<RagConfiguration>;
   ragConfigurationChatTool?: Maybe<RagConfiguration>;
   ragConfigurationSimpleGenerate?: Maybe<RagConfiguration>;
-  refreshOnDate?: Maybe<Scalars['Boolean']>;
-  refreshOnQuery?: Maybe<Scalars['Boolean']>;
-  refreshOnSuggestionCategory?: Maybe<Scalars['Boolean']>;
-  refreshOnTab?: Maybe<Scalars['Boolean']>;
+  refreshOnDate?: Maybe<Scalars["Boolean"]>;
+  refreshOnQuery?: Maybe<Scalars["Boolean"]>;
+  refreshOnSuggestionCategory?: Maybe<Scalars["Boolean"]>;
+  refreshOnTab?: Maybe<Scalars["Boolean"]>;
   retrieveType?: Maybe<RetrieveType>;
   searchConfig?: Maybe<SearchConfig>;
   sortings?: Maybe<Connection_Sorting>;
@@ -187,131 +184,126 @@ export type Bucket = {
   tabs?: Maybe<Connection_Tab>;
 };
 
-
 export type BucketDatasourcesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 export type BucketLanguagesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 export type BucketSortingsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 export type BucketSuggestionCategoriesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-
 export type BucketTabsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type BucketDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  refreshOnDate: Scalars['Boolean'];
-  refreshOnQuery: Scalars['Boolean'];
-  refreshOnSuggestionCategory: Scalars['Boolean'];
-  refreshOnTab: Scalars['Boolean'];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  refreshOnDate: Scalars["Boolean"];
+  refreshOnQuery: Scalars["Boolean"];
+  refreshOnSuggestionCategory: Scalars["Boolean"];
+  refreshOnTab: Scalars["Boolean"];
   retrieveType: RetrieveType;
 };
 
 export type BucketWithListsDtoInput = {
-  datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  queryAnalysisId?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationChat?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationChatTool?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
-  refreshOnDate: Scalars['Boolean'];
-  refreshOnQuery: Scalars['Boolean'];
-  refreshOnSuggestionCategory: Scalars['Boolean'];
-  refreshOnTab: Scalars['Boolean'];
+  datasourceIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  defaultLanguageId?: InputMaybe<Scalars["BigInteger"]>;
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  queryAnalysisId?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationChat?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationChatTool?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationSimpleGenerate?: InputMaybe<Scalars["BigInteger"]>;
+  refreshOnDate: Scalars["Boolean"];
+  refreshOnQuery: Scalars["Boolean"];
+  refreshOnSuggestionCategory: Scalars["Boolean"];
+  refreshOnTab: Scalars["Boolean"];
   retrieveType: RetrieveType;
-  searchConfigId?: InputMaybe<Scalars['BigInteger']>;
-  suggestionCategoryIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  tabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  searchConfigId?: InputMaybe<Scalars["BigInteger"]>;
+  suggestionCategoryIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  tabIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
 };
 
 export type CatResponse = {
-  __typename?: 'CatResponse';
-  docsCount?: Maybe<Scalars['String']>;
-  docsDeleted?: Maybe<Scalars['String']>;
-  health?: Maybe<Scalars['String']>;
-  index?: Maybe<Scalars['String']>;
-  pri?: Maybe<Scalars['String']>;
-  priStoreSize: Scalars['BigInteger'];
-  rep?: Maybe<Scalars['String']>;
-  status?: Maybe<Scalars['String']>;
-  storeSize: Scalars['BigInteger'];
-  uuid?: Maybe<Scalars['String']>;
+  __typename?: "CatResponse";
+  docsCount?: Maybe<Scalars["String"]>;
+  docsDeleted?: Maybe<Scalars["String"]>;
+  health?: Maybe<Scalars["String"]>;
+  index?: Maybe<Scalars["String"]>;
+  pri?: Maybe<Scalars["String"]>;
+  priStoreSize: Scalars["BigInteger"];
+  rep?: Maybe<Scalars["String"]>;
+  status?: Maybe<Scalars["String"]>;
+  storeSize: Scalars["BigInteger"];
+  uuid?: Maybe<Scalars["String"]>;
 };
 
 export type CharFilter = {
-  __typename?: 'CharFilter';
+  __typename?: "CharFilter";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  type?: Maybe<Scalars["String"]>;
 };
 
 export type CharFilterDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  type: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  type: Scalars["String"];
 };
 
 export enum ChunkType {
-  ChunkTypeCharacterTextSplitter = 'CHUNK_TYPE_CHARACTER_TEXT_SPLITTER',
-  ChunkTypeDefault = 'CHUNK_TYPE_DEFAULT',
-  ChunkTypeSemanticSplitter = 'CHUNK_TYPE_SEMANTIC_SPLITTER',
-  ChunkTypeTextSplitter = 'CHUNK_TYPE_TEXT_SPLITTER',
-  ChunkTypeTokenTextSplitter = 'CHUNK_TYPE_TOKEN_TEXT_SPLITTER',
-  Unrecognized = 'UNRECOGNIZED'
+  ChunkTypeCharacterTextSplitter = "CHUNK_TYPE_CHARACTER_TEXT_SPLITTER",
+  ChunkTypeDefault = "CHUNK_TYPE_DEFAULT",
+  ChunkTypeSemanticSplitter = "CHUNK_TYPE_SEMANTIC_SPLITTER",
+  ChunkTypeTextSplitter = "CHUNK_TYPE_TEXT_SPLITTER",
+  ChunkTypeTokenTextSplitter = "CHUNK_TYPE_TOKEN_TEXT_SPLITTER",
+  Unrecognized = "UNRECOGNIZED",
 }
 
 /** A connection to a list of items. */
@@ -541,30 +533,30 @@ export type Connection_Tokenizer = {
 export type CreateDatasourceDtoInput = {
   /** Configurations used to create the dataIndex */
   dataIndex: DataIndexDtoInput;
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   /** Json configuration with custom fields for datasource */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** Pipeline to be created and associated (optional) */
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
   /** Pipeline to be associated (optional) */
-  pipelineId?: InputMaybe<Scalars['BigInteger']>;
+  pipelineId?: InputMaybe<Scalars["BigInteger"]>;
   /** PluginDriver to be associated */
-  pluginDriverId: Scalars['BigInteger'];
+  pluginDriverId: Scalars["BigInteger"];
   /** The duration to identify orphaned Dataindex. */
-  purgeMaxAge?: InputMaybe<Scalars['String']>;
+  purgeMaxAge?: InputMaybe<Scalars["String"]>;
   /** If true set active the purge job scheduling */
-  purgeable?: InputMaybe<Scalars['Boolean']>;
+  purgeable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define purging for this datasource */
-  purging?: InputMaybe<Scalars['String']>;
+  purging?: InputMaybe<Scalars["String"]>;
   /** If true datasource is reindexed based on defined scheduling expression */
-  reindexable?: InputMaybe<Scalars['Boolean']>;
+  reindexable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define reindexing of datasource */
-  reindexing?: InputMaybe<Scalars['String']>;
+  reindexing?: InputMaybe<Scalars["String"]>;
   /** If true datasource is scheduled based on defined scheduling expression */
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define scheduling of datasource */
-  scheduling?: InputMaybe<Scalars['String']>;
+  scheduling?: InputMaybe<Scalars["String"]>;
 };
 
 export type CreateRagConfigurationDtoInput = {
@@ -574,66 +566,65 @@ export type CreateRagConfigurationDtoInput = {
    * > 0: Enables merging with specified window size.
    *
    */
-  chunkWindow?: InputMaybe<Scalars['Int']>;
-  description?: InputMaybe<Scalars['String']>;
+  chunkWindow?: InputMaybe<Scalars["Int"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** Main prompt template used for RAG. */
-  prompt?: InputMaybe<Scalars['String']>;
+  prompt?: InputMaybe<Scalars["String"]>;
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
    *
    */
-  promptNoRag?: InputMaybe<Scalars['String']>;
+  promptNoRag?: InputMaybe<Scalars["String"]>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
    *
    */
-  ragToolDescription?: InputMaybe<Scalars['String']>;
+  ragToolDescription?: InputMaybe<Scalars["String"]>;
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
    *
    */
-  reformulate?: InputMaybe<Scalars['Boolean']>;
+  reformulate?: InputMaybe<Scalars["Boolean"]>;
   /** Prompt template used if reformulate is set to true. */
-  rephrasePrompt?: InputMaybe<Scalars['String']>;
+  rephrasePrompt?: InputMaybe<Scalars["String"]>;
   type: RagType;
 };
 
 export type DataIndex = {
-  __typename?: 'DataIndex';
+  __typename?: "DataIndex";
   cat?: Maybe<CatResponse>;
   chunkType?: Maybe<ChunkType>;
-  chunkWindowSize?: Maybe<Scalars['Int']>;
+  chunkWindowSize?: Maybe<Scalars["Int"]>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
   datasource?: Maybe<Datasource>;
-  description?: Maybe<Scalars['String']>;
-  docCount?: Maybe<Scalars['BigInteger']>;
+  description?: Maybe<Scalars["String"]>;
+  docCount?: Maybe<Scalars["BigInteger"]>;
   docTypes?: Maybe<Connection_DocType>;
   embeddingDocTypeField?: Maybe<DocTypeField>;
-  embeddingJsonConfig?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  knnIndex?: Maybe<Scalars['Boolean']>;
-  mappings?: Maybe<Scalars['String']>;
+  embeddingJsonConfig?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  knnIndex?: Maybe<Scalars["Boolean"]>;
+  mappings?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  settings?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  settings?: Maybe<Scalars["String"]>;
 };
 
-
 export type DataIndexDocTypesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
@@ -641,606 +632,602 @@ export type DataIndexDtoInput = {
   /** The chunk strategy to apply. */
   chunkType?: InputMaybe<ChunkType>;
   /** The number of chunks before and after every chunk. */
-  chunkWindowSize?: InputMaybe<Scalars['Int']>;
-  description?: InputMaybe<Scalars['String']>;
+  chunkWindowSize?: InputMaybe<Scalars["Int"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** The list of documentType ids that the dataIndex is composed of. */
-  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
   /**
    * The field used during the text embedding,
    * must be a valid docTypeFieldId.
    */
-  embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  embeddingDocTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
   /** The configurations used by the embedding model, if needed. */
-  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
+  embeddingJsonConfig?: InputMaybe<Scalars["String"]>;
   /**
    * Define if this index is a knn index, this property enables
    * vector similarity search features on this DataIndex.
    */
-  knnIndex?: InputMaybe<Scalars['Boolean']>;
-  name: Scalars['String'];
+  knnIndex?: InputMaybe<Scalars["Boolean"]>;
+  name: Scalars["String"];
   /** The settings that will be used when the associated indexTemplate is created. */
-  settings?: InputMaybe<Scalars['String']>;
+  settings?: InputMaybe<Scalars["String"]>;
 };
 
 export type Datasource = {
-  __typename?: 'Datasource';
+  __typename?: "Datasource";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
   dataIndex?: Maybe<DataIndex>;
   dataIndexes?: Maybe<Connection_DataIndex>;
-  description?: Maybe<Scalars['String']>;
+  description?: Maybe<Scalars["String"]>;
   enrichPipeline?: Maybe<EnrichPipeline>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** Last ingestion date of data for current datasource (ISO-8601) */
-  lastIngestionDate?: Maybe<Scalars['DateTime']>;
+  lastIngestionDate?: Maybe<Scalars["DateTime"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   pluginDriver?: Maybe<PluginDriver>;
   /** The duration to identify orphaned Dataindex. */
-  purgeMaxAge?: Maybe<Scalars['String']>;
+  purgeMaxAge?: Maybe<Scalars["String"]>;
   /** If true set active the purge job scheduling */
-  purgeable?: Maybe<Scalars['Boolean']>;
+  purgeable?: Maybe<Scalars["Boolean"]>;
   /** Chron quartz expression to define purging for this datasource */
-  purging?: Maybe<Scalars['String']>;
+  purging?: Maybe<Scalars["String"]>;
   /** If true set datasource as reindexable */
-  reindexable?: Maybe<Scalars['Boolean']>;
+  reindexable?: Maybe<Scalars["Boolean"]>;
   /** Chron quartz expression to define reindexing of datasource */
-  reindexing?: Maybe<Scalars['String']>;
+  reindexing?: Maybe<Scalars["String"]>;
   /** If true set datasource as schedulable */
-  schedulable?: Maybe<Scalars['Boolean']>;
+  schedulable?: Maybe<Scalars["Boolean"]>;
   schedulers?: Maybe<Connection_Scheduler>;
   /** Chron quartz expression to define scheduling of datasource */
-  scheduling?: Maybe<Scalars['String']>;
+  scheduling?: Maybe<Scalars["String"]>;
 };
 
-
 export type DatasourceDataIndexesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-
 export type DatasourceSchedulersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type DatasourceDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   /** Json configuration with custom fields for datasource */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** The duration to identify orphaned Dataindex. */
-  purgeMaxAge?: InputMaybe<Scalars['String']>;
+  purgeMaxAge?: InputMaybe<Scalars["String"]>;
   /** If true set active the purge job scheduling */
-  purgeable?: InputMaybe<Scalars['Boolean']>;
+  purgeable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define purging for this datasource */
-  purging?: InputMaybe<Scalars['String']>;
+  purging?: InputMaybe<Scalars["String"]>;
   /** If true datasource is reindexed based on defined scheduling expression */
-  reindexable?: InputMaybe<Scalars['Boolean']>;
+  reindexable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define reindexing of datasource */
-  reindexing?: InputMaybe<Scalars['String']>;
+  reindexing?: InputMaybe<Scalars["String"]>;
   /** If true datasource is scheduled based on defined scheduling expression */
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define scheduling of datasource */
-  scheduling?: InputMaybe<Scalars['String']>;
+  scheduling?: InputMaybe<Scalars["String"]>;
 };
 
 export type DefaultConnection_Analyzer = Connection_Analyzer & {
-  __typename?: 'DefaultConnection_Analyzer';
+  __typename?: "DefaultConnection_Analyzer";
   edges?: Maybe<Array<Maybe<Edge_Analyzer>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Annotator = Connection_Annotator & {
-  __typename?: 'DefaultConnection_Annotator';
+  __typename?: "DefaultConnection_Annotator";
   edges?: Maybe<Array<Maybe<Edge_Annotator>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Bucket = Connection_Bucket & {
-  __typename?: 'DefaultConnection_Bucket';
+  __typename?: "DefaultConnection_Bucket";
   edges?: Maybe<Array<Maybe<Edge_Bucket>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_CharFilter = Connection_CharFilter & {
-  __typename?: 'DefaultConnection_CharFilter';
+  __typename?: "DefaultConnection_CharFilter";
   edges?: Maybe<Array<Maybe<Edge_CharFilter>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_DataIndex = Connection_DataIndex & {
-  __typename?: 'DefaultConnection_DataIndex';
+  __typename?: "DefaultConnection_DataIndex";
   edges?: Maybe<Array<Maybe<Edge_DataIndex>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Datasource = Connection_Datasource & {
-  __typename?: 'DefaultConnection_Datasource';
+  __typename?: "DefaultConnection_Datasource";
   edges?: Maybe<Array<Maybe<Edge_Datasource>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_DocType = Connection_DocType & {
-  __typename?: 'DefaultConnection_DocType';
+  __typename?: "DefaultConnection_DocType";
   edges?: Maybe<Array<Maybe<Edge_DocType>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_DocTypeField = Connection_DocTypeField & {
-  __typename?: 'DefaultConnection_DocTypeField';
+  __typename?: "DefaultConnection_DocTypeField";
   edges?: Maybe<Array<Maybe<Edge_DocTypeField>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_DocTypeTemplate = Connection_DocTypeTemplate & {
-  __typename?: 'DefaultConnection_DocTypeTemplate';
+  __typename?: "DefaultConnection_DocTypeTemplate";
   edges?: Maybe<Array<Maybe<Edge_DocTypeTemplate>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_EmbeddingModel = Connection_EmbeddingModel & {
-  __typename?: 'DefaultConnection_EmbeddingModel';
+  __typename?: "DefaultConnection_EmbeddingModel";
   edges?: Maybe<Array<Maybe<Edge_EmbeddingModel>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_EnrichItem = Connection_EnrichItem & {
-  __typename?: 'DefaultConnection_EnrichItem';
+  __typename?: "DefaultConnection_EnrichItem";
   edges?: Maybe<Array<Maybe<Edge_EnrichItem>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_EnrichPipeline = Connection_EnrichPipeline & {
-  __typename?: 'DefaultConnection_EnrichPipeline';
+  __typename?: "DefaultConnection_EnrichPipeline";
   edges?: Maybe<Array<Maybe<Edge_EnrichPipeline>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Language = Connection_Language & {
-  __typename?: 'DefaultConnection_Language';
+  __typename?: "DefaultConnection_Language";
   edges?: Maybe<Array<Maybe<Edge_Language>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_LargeLanguageModel = Connection_LargeLanguageModel & {
-  __typename?: 'DefaultConnection_LargeLanguageModel';
+  __typename?: "DefaultConnection_LargeLanguageModel";
   edges?: Maybe<Array<Maybe<Edge_LargeLanguageModel>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_PluginDriver = Connection_PluginDriver & {
-  __typename?: 'DefaultConnection_PluginDriver';
+  __typename?: "DefaultConnection_PluginDriver";
   edges?: Maybe<Array<Maybe<Edge_PluginDriver>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_QueryAnalysis = Connection_QueryAnalysis & {
-  __typename?: 'DefaultConnection_QueryAnalysis';
+  __typename?: "DefaultConnection_QueryAnalysis";
   edges?: Maybe<Array<Maybe<Edge_QueryAnalysis>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_QueryParserConfig = Connection_QueryParserConfig & {
-  __typename?: 'DefaultConnection_QueryParserConfig';
+  __typename?: "DefaultConnection_QueryParserConfig";
   edges?: Maybe<Array<Maybe<Edge_QueryParserConfig>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_RagConfiguration = Connection_RagConfiguration & {
-  __typename?: 'DefaultConnection_RAGConfiguration';
+  __typename?: "DefaultConnection_RAGConfiguration";
   edges?: Maybe<Array<Maybe<Edge_RagConfiguration>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Rule = Connection_Rule & {
-  __typename?: 'DefaultConnection_Rule';
+  __typename?: "DefaultConnection_Rule";
   edges?: Maybe<Array<Maybe<Edge_Rule>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Scheduler = Connection_Scheduler & {
-  __typename?: 'DefaultConnection_Scheduler';
+  __typename?: "DefaultConnection_Scheduler";
   edges?: Maybe<Array<Maybe<Edge_Scheduler>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_SearchConfig = Connection_SearchConfig & {
-  __typename?: 'DefaultConnection_SearchConfig';
+  __typename?: "DefaultConnection_SearchConfig";
   edges?: Maybe<Array<Maybe<Edge_SearchConfig>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_SearchTokenDto = Connection_SearchTokenDto & {
-  __typename?: 'DefaultConnection_SearchTokenDto';
+  __typename?: "DefaultConnection_SearchTokenDto";
   edges?: Maybe<Array<Maybe<Edge_SearchTokenDto>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Sorting = Connection_Sorting & {
-  __typename?: 'DefaultConnection_Sorting';
+  __typename?: "DefaultConnection_Sorting";
   edges?: Maybe<Array<Maybe<Edge_Sorting>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_SuggestionCategory = Connection_SuggestionCategory & {
-  __typename?: 'DefaultConnection_SuggestionCategory';
+  __typename?: "DefaultConnection_SuggestionCategory";
   edges?: Maybe<Array<Maybe<Edge_SuggestionCategory>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Tab = Connection_Tab & {
-  __typename?: 'DefaultConnection_Tab';
+  __typename?: "DefaultConnection_Tab";
   edges?: Maybe<Array<Maybe<Edge_Tab>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_TokenFilter = Connection_TokenFilter & {
-  __typename?: 'DefaultConnection_TokenFilter';
+  __typename?: "DefaultConnection_TokenFilter";
   edges?: Maybe<Array<Maybe<Edge_TokenFilter>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_TokenTab = Connection_TokenTab & {
-  __typename?: 'DefaultConnection_TokenTab';
+  __typename?: "DefaultConnection_TokenTab";
   edges?: Maybe<Array<Maybe<Edge_TokenTab>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultConnection_Tokenizer = Connection_Tokenizer & {
-  __typename?: 'DefaultConnection_Tokenizer';
+  __typename?: "DefaultConnection_Tokenizer";
   edges?: Maybe<Array<Maybe<Edge_Tokenizer>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
 export type DefaultEdge_Analyzer = Edge_Analyzer & {
-  __typename?: 'DefaultEdge_Analyzer';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Analyzer";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Analyzer>;
 };
 
 export type DefaultEdge_Annotator = Edge_Annotator & {
-  __typename?: 'DefaultEdge_Annotator';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Annotator";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Annotator>;
 };
 
 export type DefaultEdge_Bucket = Edge_Bucket & {
-  __typename?: 'DefaultEdge_Bucket';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Bucket";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Bucket>;
 };
 
 export type DefaultEdge_CharFilter = Edge_CharFilter & {
-  __typename?: 'DefaultEdge_CharFilter';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_CharFilter";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<CharFilter>;
 };
 
 export type DefaultEdge_DataIndex = Edge_DataIndex & {
-  __typename?: 'DefaultEdge_DataIndex';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_DataIndex";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<DataIndex>;
 };
 
 export type DefaultEdge_Datasource = Edge_Datasource & {
-  __typename?: 'DefaultEdge_Datasource';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Datasource";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Datasource>;
 };
 
 export type DefaultEdge_DocType = Edge_DocType & {
-  __typename?: 'DefaultEdge_DocType';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_DocType";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<DocType>;
 };
 
 export type DefaultEdge_DocTypeField = Edge_DocTypeField & {
-  __typename?: 'DefaultEdge_DocTypeField';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_DocTypeField";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<DocTypeField>;
 };
 
 export type DefaultEdge_DocTypeTemplate = Edge_DocTypeTemplate & {
-  __typename?: 'DefaultEdge_DocTypeTemplate';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_DocTypeTemplate";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<DocTypeTemplate>;
 };
 
 export type DefaultEdge_EmbeddingModel = Edge_EmbeddingModel & {
-  __typename?: 'DefaultEdge_EmbeddingModel';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_EmbeddingModel";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<EmbeddingModel>;
 };
 
 export type DefaultEdge_EnrichItem = Edge_EnrichItem & {
-  __typename?: 'DefaultEdge_EnrichItem';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_EnrichItem";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<EnrichItem>;
 };
 
 export type DefaultEdge_EnrichPipeline = Edge_EnrichPipeline & {
-  __typename?: 'DefaultEdge_EnrichPipeline';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_EnrichPipeline";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<EnrichPipeline>;
 };
 
 export type DefaultEdge_Language = Edge_Language & {
-  __typename?: 'DefaultEdge_Language';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Language";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Language>;
 };
 
 export type DefaultEdge_LargeLanguageModel = Edge_LargeLanguageModel & {
-  __typename?: 'DefaultEdge_LargeLanguageModel';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_LargeLanguageModel";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<LargeLanguageModel>;
 };
 
 export type DefaultEdge_PluginDriver = Edge_PluginDriver & {
-  __typename?: 'DefaultEdge_PluginDriver';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_PluginDriver";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<PluginDriver>;
 };
 
 export type DefaultEdge_QueryAnalysis = Edge_QueryAnalysis & {
-  __typename?: 'DefaultEdge_QueryAnalysis';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_QueryAnalysis";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<QueryAnalysis>;
 };
 
 export type DefaultEdge_QueryParserConfig = Edge_QueryParserConfig & {
-  __typename?: 'DefaultEdge_QueryParserConfig';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_QueryParserConfig";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<QueryParserConfig>;
 };
 
 export type DefaultEdge_RagConfiguration = Edge_RagConfiguration & {
-  __typename?: 'DefaultEdge_RAGConfiguration';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_RAGConfiguration";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<RagConfiguration>;
 };
 
 export type DefaultEdge_Rule = Edge_Rule & {
-  __typename?: 'DefaultEdge_Rule';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Rule";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Rule>;
 };
 
 export type DefaultEdge_Scheduler = Edge_Scheduler & {
-  __typename?: 'DefaultEdge_Scheduler';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Scheduler";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Scheduler>;
 };
 
 export type DefaultEdge_SearchConfig = Edge_SearchConfig & {
-  __typename?: 'DefaultEdge_SearchConfig';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_SearchConfig";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<SearchConfig>;
 };
 
 export type DefaultEdge_SearchTokenDto = Edge_SearchTokenDto & {
-  __typename?: 'DefaultEdge_SearchTokenDto';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_SearchTokenDto";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<SearchTokenDto>;
 };
 
 export type DefaultEdge_Sorting = Edge_Sorting & {
-  __typename?: 'DefaultEdge_Sorting';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Sorting";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Sorting>;
 };
 
 export type DefaultEdge_SuggestionCategory = Edge_SuggestionCategory & {
-  __typename?: 'DefaultEdge_SuggestionCategory';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_SuggestionCategory";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<SuggestionCategory>;
 };
 
 export type DefaultEdge_Tab = Edge_Tab & {
-  __typename?: 'DefaultEdge_Tab';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Tab";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Tab>;
 };
 
 export type DefaultEdge_TokenFilter = Edge_TokenFilter & {
-  __typename?: 'DefaultEdge_TokenFilter';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_TokenFilter";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<TokenFilter>;
 };
 
 export type DefaultEdge_TokenTab = Edge_TokenTab & {
-  __typename?: 'DefaultEdge_TokenTab';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_TokenTab";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<TokenTab>;
 };
 
 export type DefaultEdge_Tokenizer = Edge_Tokenizer & {
-  __typename?: 'DefaultEdge_Tokenizer';
-  cursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultEdge_Tokenizer";
+  cursor?: Maybe<Scalars["String"]>;
   node?: Maybe<Tokenizer>;
 };
 
 export type DefaultPageInfo = PageInfo & {
-  __typename?: 'DefaultPageInfo';
-  endCursor?: Maybe<Scalars['String']>;
-  hasNextPage: Scalars['Boolean'];
-  hasPreviousPage: Scalars['Boolean'];
-  startCursor?: Maybe<Scalars['String']>;
+  __typename?: "DefaultPageInfo";
+  endCursor?: Maybe<Scalars["String"]>;
+  hasNextPage: Scalars["Boolean"];
+  hasPreviousPage: Scalars["Boolean"];
+  startCursor?: Maybe<Scalars["String"]>;
 };
 
 export enum Direction {
-  Asc = 'ASC',
-  Desc = 'DESC'
+  Asc = "ASC",
+  Desc = "DESC",
 }
 
 export type DocType = {
-  __typename?: 'DocType';
+  __typename?: "DocType";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
   docTypeTemplate?: Maybe<DocTypeTemplate>;
-  id?: Maybe<Scalars['ID']>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
 };
 
-
 export type DocTypeDocTypeFieldsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type DocTypeDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
 };
 
 export type DocTypeField = {
-  __typename?: 'DocTypeField';
+  __typename?: "DocTypeField";
   analyzer?: Maybe<Analyzer>;
-  autocomplete: Scalars['Boolean'];
-  boolean: Scalars['Boolean'];
-  boost?: Maybe<Scalars['Float']>;
+  autocomplete: Scalars["Boolean"];
+  boolean: Scalars["Boolean"];
+  boost?: Maybe<Scalars["Float"]>;
   children?: Maybe<Array<Maybe<DocTypeField>>>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  date: Scalars['Boolean'];
-  defaultBoost: Scalars['Boolean'];
-  defaultExclude: Scalars['Boolean'];
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  date: Scalars["Boolean"];
+  defaultBoost: Scalars["Boolean"];
+  defaultExclude: Scalars["Boolean"];
+  description?: Maybe<Scalars["String"]>;
   docType?: Maybe<DocType>;
   docTypeFieldAndChildren?: Maybe<Array<Maybe<DocTypeField>>>;
-  exclude?: Maybe<Scalars['Boolean']>;
-  fieldName?: Maybe<Scalars['String']>;
+  exclude?: Maybe<Scalars["Boolean"]>;
+  fieldName?: Maybe<Scalars["String"]>;
   fieldType?: Maybe<FieldType>;
-  floatBoost?: Maybe<Scalars['Float']>;
-  i18N: Scalars['Boolean'];
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
-  keyword: Scalars['Boolean'];
+  floatBoost?: Maybe<Scalars["Float"]>;
+  i18N: Scalars["Boolean"];
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
+  keyword: Scalars["Boolean"];
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  numeric: Scalars['Boolean'];
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  numeric: Scalars["Boolean"];
   parent?: Maybe<DocTypeField>;
-  path?: Maybe<Scalars['String']>;
-  searchable?: Maybe<Scalars['Boolean']>;
-  searchableAndAutocomplete: Scalars['Boolean'];
-  searchableAndDate: Scalars['Boolean'];
-  searchableAndI18N: Scalars['Boolean'];
-  searchableAndText: Scalars['Boolean'];
-  sortable?: Maybe<Scalars['Boolean']>;
+  path?: Maybe<Scalars["String"]>;
+  searchable?: Maybe<Scalars["Boolean"]>;
+  searchableAndAutocomplete: Scalars["Boolean"];
+  searchableAndDate: Scalars["Boolean"];
+  searchableAndI18N: Scalars["Boolean"];
+  searchableAndText: Scalars["Boolean"];
+  sortable?: Maybe<Scalars["Boolean"]>;
   subFields?: Maybe<Connection_DocTypeField>;
-  text: Scalars['Boolean'];
+  text: Scalars["Boolean"];
   translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
-
 export type DocTypeFieldSubFieldsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type DocTypeFieldDtoInput = {
   /** Value to define boost on score in case of matches on current field */
-  boost?: InputMaybe<Scalars['Float']>;
-  description?: InputMaybe<Scalars['String']>;
+  boost?: InputMaybe<Scalars["Float"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** If true field is not returned by search */
-  exclude?: InputMaybe<Scalars['Boolean']>;
-  fieldName: Scalars['String'];
+  exclude?: InputMaybe<Scalars["Boolean"]>;
+  fieldName: Scalars["String"];
   /** Define type used to map field in index */
   fieldType: FieldType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** If true field is used for matches during search */
-  searchable: Scalars['Boolean'];
+  searchable: Scalars["Boolean"];
   /** If true field is used for sorting during search */
-  sortable: Scalars['Boolean'];
+  sortable: Scalars["Boolean"];
 };
 
 export type DocTypeFieldWithAnalyzerDtoInput = {
   /** The analyzerId used to analyze the query string in full-text query. (optional) */
-  analyzerId?: InputMaybe<Scalars['BigInteger']>;
+  analyzerId?: InputMaybe<Scalars["BigInteger"]>;
   /** Value to define boost on score in case of matches on current field */
-  boost?: InputMaybe<Scalars['Float']>;
-  description?: InputMaybe<Scalars['String']>;
+  boost?: InputMaybe<Scalars["Float"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** If true field is not returned by search */
-  exclude?: InputMaybe<Scalars['Boolean']>;
-  fieldName: Scalars['String'];
+  exclude?: InputMaybe<Scalars["Boolean"]>;
+  fieldName: Scalars["String"];
   /** Define type used to map field in index */
   fieldType: FieldType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** If true field is used for matches during search */
-  searchable: Scalars['Boolean'];
+  searchable: Scalars["Boolean"];
   /** If true field is used for sorting during search */
-  sortable: Scalars['Boolean'];
+  sortable: Scalars["Boolean"];
 };
 
 export type DocTypeTemplate = {
-  __typename?: 'DocTypeTemplate';
-  compiled?: Maybe<Scalars['String']>;
+  __typename?: "DocTypeTemplate";
+  compiled?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  source?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  source?: Maybe<Scalars["String"]>;
   templateType?: Maybe<TemplateType>;
 };
 
 export type DocTypeTemplateDtoInput = {
-  compiled: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  source: Scalars['String'];
+  compiled: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  source: Scalars["String"];
   templateType: TemplateType;
 };
 
 export type DocTypeUserDtoInput = {
-  docTypeId: Scalars['BigInteger'];
+  docTypeId: Scalars["BigInteger"];
   userField?: InputMaybe<UserField>;
 };
 
 export type DocTypeWithTemplateDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   /** Rendering template to be associated. (optional) */
-  docTypeTemplateId?: InputMaybe<Scalars['BigInteger']>;
-  name: Scalars['String'];
+  docTypeTemplateId?: InputMaybe<Scalars["BigInteger"]>;
+  name: Scalars["String"];
 };
 
 /** An edge in a connection */
 export type Edge_Analyzer = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Analyzer>;
 };
@@ -1248,7 +1235,7 @@ export type Edge_Analyzer = {
 /** An edge in a connection */
 export type Edge_Annotator = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Annotator>;
 };
@@ -1256,7 +1243,7 @@ export type Edge_Annotator = {
 /** An edge in a connection */
 export type Edge_Bucket = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Bucket>;
 };
@@ -1264,7 +1251,7 @@ export type Edge_Bucket = {
 /** An edge in a connection */
 export type Edge_CharFilter = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<CharFilter>;
 };
@@ -1272,7 +1259,7 @@ export type Edge_CharFilter = {
 /** An edge in a connection */
 export type Edge_DataIndex = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<DataIndex>;
 };
@@ -1280,7 +1267,7 @@ export type Edge_DataIndex = {
 /** An edge in a connection */
 export type Edge_Datasource = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Datasource>;
 };
@@ -1288,7 +1275,7 @@ export type Edge_Datasource = {
 /** An edge in a connection */
 export type Edge_DocType = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<DocType>;
 };
@@ -1296,7 +1283,7 @@ export type Edge_DocType = {
 /** An edge in a connection */
 export type Edge_DocTypeField = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<DocTypeField>;
 };
@@ -1304,7 +1291,7 @@ export type Edge_DocTypeField = {
 /** An edge in a connection */
 export type Edge_DocTypeTemplate = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<DocTypeTemplate>;
 };
@@ -1312,7 +1299,7 @@ export type Edge_DocTypeTemplate = {
 /** An edge in a connection */
 export type Edge_EmbeddingModel = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<EmbeddingModel>;
 };
@@ -1320,7 +1307,7 @@ export type Edge_EmbeddingModel = {
 /** An edge in a connection */
 export type Edge_EnrichItem = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<EnrichItem>;
 };
@@ -1328,7 +1315,7 @@ export type Edge_EnrichItem = {
 /** An edge in a connection */
 export type Edge_EnrichPipeline = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<EnrichPipeline>;
 };
@@ -1336,7 +1323,7 @@ export type Edge_EnrichPipeline = {
 /** An edge in a connection */
 export type Edge_Language = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Language>;
 };
@@ -1344,7 +1331,7 @@ export type Edge_Language = {
 /** An edge in a connection */
 export type Edge_LargeLanguageModel = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<LargeLanguageModel>;
 };
@@ -1352,7 +1339,7 @@ export type Edge_LargeLanguageModel = {
 /** An edge in a connection */
 export type Edge_PluginDriver = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<PluginDriver>;
 };
@@ -1360,7 +1347,7 @@ export type Edge_PluginDriver = {
 /** An edge in a connection */
 export type Edge_QueryAnalysis = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<QueryAnalysis>;
 };
@@ -1368,7 +1355,7 @@ export type Edge_QueryAnalysis = {
 /** An edge in a connection */
 export type Edge_QueryParserConfig = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<QueryParserConfig>;
 };
@@ -1376,7 +1363,7 @@ export type Edge_QueryParserConfig = {
 /** An edge in a connection */
 export type Edge_RagConfiguration = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<RagConfiguration>;
 };
@@ -1384,7 +1371,7 @@ export type Edge_RagConfiguration = {
 /** An edge in a connection */
 export type Edge_Rule = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Rule>;
 };
@@ -1392,7 +1379,7 @@ export type Edge_Rule = {
 /** An edge in a connection */
 export type Edge_Scheduler = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Scheduler>;
 };
@@ -1400,7 +1387,7 @@ export type Edge_Scheduler = {
 /** An edge in a connection */
 export type Edge_SearchConfig = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<SearchConfig>;
 };
@@ -1408,7 +1395,7 @@ export type Edge_SearchConfig = {
 /** An edge in a connection */
 export type Edge_SearchTokenDto = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<SearchTokenDto>;
 };
@@ -1416,7 +1403,7 @@ export type Edge_SearchTokenDto = {
 /** An edge in a connection */
 export type Edge_Sorting = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Sorting>;
 };
@@ -1424,7 +1411,7 @@ export type Edge_Sorting = {
 /** An edge in a connection */
 export type Edge_SuggestionCategory = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<SuggestionCategory>;
 };
@@ -1432,7 +1419,7 @@ export type Edge_SuggestionCategory = {
 /** An edge in a connection */
 export type Edge_Tab = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Tab>;
 };
@@ -1440,7 +1427,7 @@ export type Edge_Tab = {
 /** An edge in a connection */
 export type Edge_TokenFilter = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<TokenFilter>;
 };
@@ -1448,7 +1435,7 @@ export type Edge_TokenFilter = {
 /** An edge in a connection */
 export type Edge_TokenTab = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<TokenTab>;
 };
@@ -1456,26 +1443,26 @@ export type Edge_TokenTab = {
 /** An edge in a connection */
 export type Edge_Tokenizer = {
   /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
+  cursor?: Maybe<Scalars["String"]>;
   /** The item at the end of the edge */
   node?: Maybe<Tokenizer>;
 };
 
 export type EmbeddingModel = {
-  __typename?: 'EmbeddingModel';
-  apiKey?: Maybe<Scalars['String']>;
-  apiUrl?: Maybe<Scalars['String']>;
+  __typename?: "EmbeddingModel";
+  apiKey?: Maybe<Scalars["String"]>;
+  apiUrl?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  enabled: Scalars['Boolean'];
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  enabled: Scalars["Boolean"];
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   providerModel?: Maybe<ProviderModel>;
-  vectorSize?: Maybe<Scalars['Int']>;
+  vectorSize?: Maybe<Scalars["Int"]>;
 };
 
 export type EmbeddingModelDtoInput = {
@@ -1485,18 +1472,18 @@ export type EmbeddingModelDtoInput = {
    * Ensure this key is kept confidential.
    *
    */
-  apiKey?: InputMaybe<Scalars['String']>;
+  apiKey?: InputMaybe<Scalars["String"]>;
   /**
    * The API URL for the embedding model's endpoint.
    * Required only when using a custom embedding service or a model hosted
    * on a private/internal network.
    *
    */
-  apiUrl?: InputMaybe<Scalars['String']>;
-  description?: InputMaybe<Scalars['String']>;
+  apiUrl?: InputMaybe<Scalars["String"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   providerModel: ProviderModelDtoInput;
   /**
    * Dimensionality of the embedding vectors produced by the model.
@@ -1511,250 +1498,249 @@ export type EmbeddingModelDtoInput = {
    * 1,536 dimensions: Ultra-high performance models
    *
    */
-  vectorSize: Scalars['Int'];
+  vectorSize: Scalars["Int"];
 };
 
 export type EnrichItem = {
-  __typename?: 'EnrichItem';
+  __typename?: "EnrichItem";
   behaviorMergeType?: Maybe<BehaviorMergeType>;
   behaviorOnError?: Maybe<BehaviorOnError>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
-  jsonPath?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
+  jsonPath?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  requestTimeout?: Maybe<Scalars['BigInteger']>;
-  script?: Maybe<Scalars['String']>;
-  serviceName?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  requestTimeout?: Maybe<Scalars["BigInteger"]>;
+  script?: Maybe<Scalars["String"]>;
+  serviceName?: Maybe<Scalars["String"]>;
   type?: Maybe<EnrichItemType>;
 };
 
 export type EnrichItemDtoInput = {
   behaviorMergeType: BehaviorMergeType;
   behaviorOnError: BehaviorOnError;
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  jsonPath: Scalars['String'];
-  name: Scalars['String'];
-  requestTimeout: Scalars['BigInteger'];
-  script?: InputMaybe<Scalars['String']>;
-  serviceName: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  jsonPath: Scalars["String"];
+  name: Scalars["String"];
+  requestTimeout: Scalars["BigInteger"];
+  script?: InputMaybe<Scalars["String"]>;
+  serviceName: Scalars["String"];
   type: EnrichItemType;
 };
 
 export enum EnrichItemType {
-  GroovyScript = 'GROOVY_SCRIPT',
-  HttpAsync = 'HTTP_ASYNC',
-  HttpSync = 'HTTP_SYNC'
+  GroovyScript = "GROOVY_SCRIPT",
+  HttpAsync = "HTTP_ASYNC",
+  HttpSync = "HTTP_SYNC",
 }
 
 export type EnrichPipeline = {
-  __typename?: 'EnrichPipeline';
+  __typename?: "EnrichPipeline";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   enrichItems?: Maybe<Connection_EnrichItem>;
-  id?: Maybe<Scalars['ID']>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
 };
 
-
 export type EnrichPipelineEnrichItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  not?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  not?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type EnrichPipelineDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
 };
 
 export type Event = {
-  __typename?: 'Event';
-  className?: Maybe<Scalars['String']>;
-  classPK?: Maybe<Scalars['String']>;
+  __typename?: "Event";
+  className?: Maybe<Scalars["String"]>;
+  classPK?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  created?: Maybe<Scalars['DateTime']>;
-  data?: Maybe<Scalars['String']>;
-  groupKey?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['String']>;
+  created?: Maybe<Scalars["DateTime"]>;
+  data?: Maybe<Scalars["String"]>;
+  groupKey?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  parsingDate?: Maybe<Scalars['DateTime']>;
-  size?: Maybe<Scalars['Int']>;
-  type?: Maybe<Scalars['String']>;
-  version?: Maybe<Scalars['Int']>;
+  parsingDate?: Maybe<Scalars["DateTime"]>;
+  size?: Maybe<Scalars["Int"]>;
+  type?: Maybe<Scalars["String"]>;
+  version?: Maybe<Scalars["Int"]>;
 };
 
 export type EventOption = {
-  __typename?: 'EventOption';
-  className?: Maybe<Scalars['String']>;
-  classPK?: Maybe<Scalars['String']>;
-  groupKey?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  __typename?: "EventOption";
+  className?: Maybe<Scalars["String"]>;
+  classPK?: Maybe<Scalars["String"]>;
+  groupKey?: Maybe<Scalars["String"]>;
+  type?: Maybe<Scalars["String"]>;
 };
 
 export enum EventSortable {
-  ClassName = 'CLASS_NAME',
-  ClassPk = 'CLASS_PK',
-  Created = 'CREATED',
-  GroupKey = 'GROUP_KEY',
-  ParsingDate = 'PARSING_DATE',
-  Size = 'SIZE',
-  Type = 'TYPE',
-  Version = 'VERSION'
+  ClassName = "CLASS_NAME",
+  ClassPk = "CLASS_PK",
+  Created = "CREATED",
+  GroupKey = "GROUP_KEY",
+  ParsingDate = "PARSING_DATE",
+  Size = "SIZE",
+  Type = "TYPE",
+  Version = "VERSION",
 }
 
 export enum FieldType {
-  AnnotatedText = 'ANNOTATED_TEXT',
-  Binary = 'BINARY',
-  Boolean = 'BOOLEAN',
-  Byte = 'BYTE',
-  Completion = 'COMPLETION',
-  ConstantKeyword = 'CONSTANT_KEYWORD',
-  Date = 'DATE',
-  DateNanos = 'DATE_NANOS',
-  DateRange = 'DATE_RANGE',
-  DenseVector = 'DENSE_VECTOR',
-  Double = 'DOUBLE',
-  DoubleRange = 'DOUBLE_RANGE',
-  Flattened = 'FLATTENED',
-  Float = 'FLOAT',
-  GeoPoint = 'GEO_POINT',
-  GeoShape = 'GEO_SHAPE',
-  HalfFloat = 'HALF_FLOAT',
-  Histogram = 'HISTOGRAM',
-  I18N = 'I18N',
-  Integer = 'INTEGER',
-  Ip = 'IP',
-  IpRange = 'IP_RANGE',
-  Join = 'JOIN',
-  Keyword = 'KEYWORD',
-  KnnVector = 'KNN_VECTOR',
-  Long = 'LONG',
-  LongRange = 'LONG_RANGE',
-  Murmur3 = 'MURMUR3',
-  Nested = 'NESTED',
-  Null = 'NULL',
-  Object = 'OBJECT',
-  Percolator = 'PERCOLATOR',
-  Point = 'POINT',
-  RankFeature = 'RANK_FEATURE',
-  RankFeatures = 'RANK_FEATURES',
-  ScaledFloat = 'SCALED_FLOAT',
-  SearchAsYouType = 'SEARCH_AS_YOU_TYPE',
-  Shape = 'SHAPE',
-  Short = 'SHORT',
-  SparseVector = 'SPARSE_VECTOR',
-  Text = 'TEXT',
-  TokenCount = 'TOKEN_COUNT',
-  UnsignedLong = 'UNSIGNED_LONG',
-  Version = 'VERSION',
-  Wildcard = 'WILDCARD'
+  AnnotatedText = "ANNOTATED_TEXT",
+  Binary = "BINARY",
+  Boolean = "BOOLEAN",
+  Byte = "BYTE",
+  Completion = "COMPLETION",
+  ConstantKeyword = "CONSTANT_KEYWORD",
+  Date = "DATE",
+  DateNanos = "DATE_NANOS",
+  DateRange = "DATE_RANGE",
+  DenseVector = "DENSE_VECTOR",
+  Double = "DOUBLE",
+  DoubleRange = "DOUBLE_RANGE",
+  Flattened = "FLATTENED",
+  Float = "FLOAT",
+  GeoPoint = "GEO_POINT",
+  GeoShape = "GEO_SHAPE",
+  HalfFloat = "HALF_FLOAT",
+  Histogram = "HISTOGRAM",
+  I18N = "I18N",
+  Integer = "INTEGER",
+  Ip = "IP",
+  IpRange = "IP_RANGE",
+  Join = "JOIN",
+  Keyword = "KEYWORD",
+  KnnVector = "KNN_VECTOR",
+  Long = "LONG",
+  LongRange = "LONG_RANGE",
+  Murmur3 = "MURMUR3",
+  Nested = "NESTED",
+  Null = "NULL",
+  Object = "OBJECT",
+  Percolator = "PERCOLATOR",
+  Point = "POINT",
+  RankFeature = "RANK_FEATURE",
+  RankFeatures = "RANK_FEATURES",
+  ScaledFloat = "SCALED_FLOAT",
+  SearchAsYouType = "SEARCH_AS_YOU_TYPE",
+  Shape = "SHAPE",
+  Short = "SHORT",
+  SparseVector = "SPARSE_VECTOR",
+  Text = "TEXT",
+  TokenCount = "TOKEN_COUNT",
+  UnsignedLong = "UNSIGNED_LONG",
+  Version = "VERSION",
+  Wildcard = "WILDCARD",
 }
 
 export type FieldValidator = {
-  __typename?: 'FieldValidator';
-  field?: Maybe<Scalars['String']>;
-  message?: Maybe<Scalars['String']>;
+  __typename?: "FieldValidator";
+  field?: Maybe<Scalars["String"]>;
+  message?: Maybe<Scalars["String"]>;
 };
 
 export type FilterFieldInput = {
-  fieldName?: InputMaybe<Scalars['String']>;
-  not?: InputMaybe<Scalars['Boolean']>;
+  fieldName?: InputMaybe<Scalars["String"]>;
+  not?: InputMaybe<Scalars["Boolean"]>;
   operator?: InputMaybe<Operator>;
-  value?: InputMaybe<Scalars['String']>;
+  value?: InputMaybe<Scalars["String"]>;
 };
 
 export type FilterInput = {
-  andOperator?: InputMaybe<Scalars['Boolean']>;
+  andOperator?: InputMaybe<Scalars["Boolean"]>;
   filterFields?: InputMaybe<Array<InputMaybe<FilterFieldInput>>>;
 };
 
 export enum Fuzziness {
-  Auto = 'AUTO',
-  One = 'ONE',
-  Two = 'TWO',
-  Zero = 'ZERO'
+  Auto = "AUTO",
+  One = "ONE",
+  Two = "TWO",
+  Zero = "ZERO",
 }
 
 export type ItemDtoInput = {
-  enrichItemId: Scalars['BigInteger'];
-  weight: Scalars['Float'];
+  enrichItemId: Scalars["BigInteger"];
+  weight: Scalars["Float"];
 };
 
 export enum K9Column {
-  CreateDate = 'createDate',
-  Description = 'description',
-  Id = 'id',
-  ModifiedDate = 'modifiedDate',
-  Name = 'name'
+  CreateDate = "createDate",
+  Description = "description",
+  Id = "id",
+  ModifiedDate = "modifiedDate",
+  Name = "name",
 }
 
 export type Language = {
-  __typename?: 'Language';
+  __typename?: "Language";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  id?: Maybe<Scalars['ID']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  value?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  value?: Maybe<Scalars["String"]>;
 };
 
 export type LanguageDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  value?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  value?: InputMaybe<Scalars["String"]>;
 };
 
 export type LargeLanguageModel = {
-  __typename?: 'LargeLanguageModel';
-  apiKey?: Maybe<Scalars['String']>;
-  apiUrl?: Maybe<Scalars['String']>;
-  contextWindow?: Maybe<Scalars['Int']>;
+  __typename?: "LargeLanguageModel";
+  apiKey?: Maybe<Scalars["String"]>;
+  apiUrl?: Maybe<Scalars["String"]>;
+  contextWindow?: Maybe<Scalars["Int"]>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  enabled: Scalars['Boolean'];
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  enabled: Scalars["Boolean"];
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   providerModel?: Maybe<ProviderModel>;
-  retrieveCitations?: Maybe<Scalars['Boolean']>;
+  retrieveCitations?: Maybe<Scalars["Boolean"]>;
 };
 
 export type LargeLanguageModelDtoInput = {
   /** It is the API key that you have to provide in order to make the authentication. */
-  apiKey?: InputMaybe<Scalars['String']>;
+  apiKey?: InputMaybe<Scalars["String"]>;
   /** It is the API url of the model that you want to use. */
-  apiUrl: Scalars['String'];
+  apiUrl: Scalars["String"];
   /** It is the context window size. */
-  contextWindow?: InputMaybe<Scalars['Int']>;
-  description?: InputMaybe<Scalars['String']>;
+  contextWindow?: InputMaybe<Scalars["Int"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** It is a JSON that can be used to add additional configurations to the LargeLanguageModel. */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   providerModel: ProviderModelDtoInput;
   /** It indicates whether the LargeLanguageModel retrieves citations. */
-  retrieveCitations?: InputMaybe<Scalars['Boolean']>;
+  retrieveCitations?: InputMaybe<Scalars["Boolean"]>;
 };
 
 /** Mutation root */
 export type Mutation = {
-  __typename?: 'Mutation';
+  __typename?: "Mutation";
   addAnnotatorToQueryAnalysis?: Maybe<Tuple2_QueryAnalysis_Annotator>;
   addCharFilterToAnalyzer?: Maybe<Tuple2_Analyzer_CharFilter>;
   addDatasourceToBucket?: Maybe<Tuple2_Bucket_Datasource>;
@@ -1961,1135 +1947,993 @@ export type Mutation = {
   userField?: Maybe<AclMapping>;
 };
 
-
 /** Mutation root */
 export type MutationAddAnnotatorToQueryAnalysisArgs = {
-  annotatorId: Scalars['ID'];
-  id: Scalars['ID'];
+  annotatorId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddCharFilterToAnalyzerArgs = {
-  charFilterId: Scalars['ID'];
-  id: Scalars['ID'];
+  charFilterId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddDatasourceToBucketArgs = {
-  bucketId: Scalars['ID'];
-  datasourceId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddDocTypeFieldToPluginDriverArgs = {
-  docTypeFieldId: Scalars['ID'];
-  pluginDriverId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  pluginDriverId: Scalars["ID"];
   userField?: InputMaybe<UserField>;
 };
 
-
 /** Mutation root */
 export type MutationAddDocTypeFieldToSuggestionCategoryArgs = {
-  docTypeFieldId: Scalars['ID'];
-  suggestionCategoryId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddDocTypeFieldTranslationArgs = {
-  docTypeFieldId: Scalars['ID'];
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  value?: InputMaybe<Scalars['String']>;
+  docTypeFieldId: Scalars["ID"];
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  value?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationAddDocTypeToDataIndexArgs = {
-  dataIndexId: Scalars['ID'];
-  docTypeId: Scalars['ID'];
+  dataIndexId: Scalars["ID"];
+  docTypeId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddEnrichItemToEnrichPipelineArgs = {
-  enrichItemId: Scalars['ID'];
-  enrichPipelineId: Scalars['ID'];
-  tail?: InputMaybe<Scalars['Boolean']>;
+  enrichItemId: Scalars["ID"];
+  enrichPipelineId: Scalars["ID"];
+  tail?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationAddLanguageToBucketArgs = {
-  bucketId: Scalars['ID'];
-  languageId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  languageId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddRuleToQueryAnalysisArgs = {
-  id: Scalars['ID'];
-  ruleId: Scalars['ID'];
+  id: Scalars["ID"];
+  ruleId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddSortingToBucketArgs = {
-  id: Scalars['ID'];
-  sortingId: Scalars['ID'];
+  id: Scalars["ID"];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddSortingToTabArgs = {
-  id: Scalars['ID'];
-  sortingId: Scalars['ID'];
+  id: Scalars["ID"];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddSortingTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  sortingId: Scalars['ID'];
-  value?: InputMaybe<Scalars['String']>;
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  sortingId: Scalars["ID"];
+  value?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationAddSuggestionCategoryToBucketArgs = {
-  bucketId: Scalars['ID'];
-  suggestionCategoryId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddSuggestionCategoryTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  suggestionCategoryId: Scalars['ID'];
-  value?: InputMaybe<Scalars['String']>;
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  suggestionCategoryId: Scalars["ID"];
+  value?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationAddTabToBucketArgs = {
-  id: Scalars['ID'];
-  tabId: Scalars['ID'];
+  id: Scalars["ID"];
+  tabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddTabTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  tabId: Scalars['ID'];
-  value?: InputMaybe<Scalars['String']>;
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  tabId: Scalars["ID"];
+  value?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationAddTokenFilterToAnalyzerArgs = {
-  id: Scalars['ID'];
-  tokenFilterId: Scalars['ID'];
+  id: Scalars["ID"];
+  tokenFilterId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAddTokenTabToTabArgs = {
-  id: Scalars['ID'];
-  tokenTabId: Scalars['ID'];
+  id: Scalars["ID"];
+  tokenTabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationAnalyzerArgs = {
   analyzerDTO?: InputMaybe<AnalyzerDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationAnalyzerWithListsArgs = {
   analyzerWithListsDTO?: InputMaybe<AnalyzerWithListsDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationAnnotatorArgs = {
   annotatorDTO?: InputMaybe<AnnotatorDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationAnnotatorWithDocTypeFieldArgs = {
   annotatorDTO?: InputMaybe<AnnotatorWithDocTypeFieldDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationBindAnalyzerToDocTypeFieldArgs = {
-  analyzerId: Scalars['ID'];
-  docTypeFieldId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
+  docTypeFieldId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindAnnotatorToDocTypeFieldArgs = {
-  docTypeFieldId: Scalars['ID'];
-  id: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindDataIndexToDatasourceArgs = {
-  dataIndexId: Scalars['ID'];
-  datasourceId: Scalars['ID'];
+  dataIndexId: Scalars["ID"];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindDocTypeFieldToSortingArgs = {
-  docTypeFieldId: Scalars['ID'];
-  sortingId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindDocTypeFieldToTokenTabArgs = {
-  docTypeFieldId: Scalars['ID'];
-  tokenTabId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  tokenTabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindDocTypeToDocTypeTemplateArgs = {
-  docTypeId: Scalars['ID'];
-  docTypeTemplateId: Scalars['ID'];
+  docTypeId: Scalars["ID"];
+  docTypeTemplateId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindEnrichPipelineToDatasourceArgs = {
-  datasourceId: Scalars['ID'];
-  enrichPipelineId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
+  enrichPipelineId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindLanguageToBucketArgs = {
-  bucketId: Scalars['ID'];
-  languageId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  languageId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindPluginDriverToDatasourceArgs = {
-  datasourceId: Scalars['ID'];
-  pluginDriverId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
+  pluginDriverId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindQueryAnalysisToBucketArgs = {
-  bucketId: Scalars['ID'];
-  queryAnalysisId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  queryAnalysisId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindRagConfigurationToBucketArgs = {
-  bucketId: Scalars['ID'];
-  ragConfigurationId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  ragConfigurationId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindSearchConfigToBucketArgs = {
-  bucketId: Scalars['ID'];
-  searchConfigId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  searchConfigId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBindTokenizerToAnalyzerArgs = {
-  analyzerId: Scalars['ID'];
-  tokenizerId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
+  tokenizerId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationBucketArgs = {
   bucketDTO?: InputMaybe<BucketDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationBucketWithListsArgs = {
   bucketWithListsDTO?: InputMaybe<BucketWithListsDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationCharFilterArgs = {
   charFilterDTO?: InputMaybe<CharFilterDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationCreateDatasourceAndAddPluginDriverArgs = {
   datasourceDTO?: InputMaybe<DatasourceDtoInput>;
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationCreateDatasourceConnectionArgs = {
   datasourceConnection?: InputMaybe<CreateDatasourceDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationCreateRagConfigurationArgs = {
   createRAGConfigurationDTO?: InputMaybe<CreateRagConfigurationDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationCreateSubFieldArgs = {
   docTypeFieldDTO?: InputMaybe<DocTypeFieldDtoInput>;
-  parentDocTypeFieldId: Scalars['ID'];
+  parentDocTypeFieldId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDataIndexArgs = {
   dataIndexDTO?: InputMaybe<DataIndexDtoInput>;
-  datasourceId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDatasourceArgs = {
   datasourceDTO?: InputMaybe<DatasourceDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationDeleteAnalyzerArgs = {
-  analyzerId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteAnnotatorArgs = {
-  annotatorId: Scalars['ID'];
+  annotatorId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteCharFilterArgs = {
-  charFilterId: Scalars['ID'];
+  charFilterId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteDataIndexArgs = {
-  dataIndexId: Scalars['ID'];
+  dataIndexId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteDatasourceArgs = {
-  datasourceId: Scalars['ID'];
-  datasourceName?: InputMaybe<Scalars['String']>;
+  datasourceId: Scalars["ID"];
+  datasourceName?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationDeleteDocTypeArgs = {
-  docTypeId: Scalars['ID'];
-  docTypeName?: InputMaybe<Scalars['String']>;
+  docTypeId: Scalars["ID"];
+  docTypeName?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationDeleteDocTypeFieldTranslationArgs = {
-  docTypeFieldId: Scalars['ID'];
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
+  docTypeFieldId: Scalars["ID"];
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Mutation root */
 export type MutationDeleteDocTypeTemplateArgs = {
-  docTypeTemplateId: Scalars['ID'];
+  docTypeTemplateId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteEmbeddingModelArgs = {
-  embeddingModelId: Scalars['ID'];
+  embeddingModelId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteEnrichItemArgs = {
-  enrichItemId: Scalars['ID'];
+  enrichItemId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteEnrichPipelineArgs = {
-  enrichPipelineId: Scalars['ID'];
+  enrichPipelineId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteLanguageArgs = {
-  languageId: Scalars['ID'];
+  languageId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteLargeLanguageModelArgs = {
-  largeLanguageModelId: Scalars['ID'];
+  largeLanguageModelId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeletePluginDriverArgs = {
-  pluginDriverId: Scalars['ID'];
+  pluginDriverId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteQueryAnalysisArgs = {
-  queryAnalysisId: Scalars['ID'];
+  queryAnalysisId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteRagConfigurationArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteRuleArgs = {
-  ruleId: Scalars['ID'];
+  ruleId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteSearchConfigArgs = {
-  searchConfigId: Scalars['ID'];
+  searchConfigId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteSortingTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  sortingId: Scalars['ID'];
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteSuggestionCategoryArgs = {
-  suggestionCategoryId: Scalars['ID'];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteSuggestionCategoryTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  suggestionCategoryId: Scalars['ID'];
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteTabArgs = {
-  tabId: Scalars['ID'];
+  tabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteTabTranslationArgs = {
-  key?: InputMaybe<Scalars['String']>;
-  language?: InputMaybe<Scalars['String']>;
-  tabId: Scalars['ID'];
+  key?: InputMaybe<Scalars["String"]>;
+  language?: InputMaybe<Scalars["String"]>;
+  tabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteTokenFilterArgs = {
-  tokenFilterId: Scalars['ID'];
+  tokenFilterId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteTokenTabArgs = {
-  tokenTabId: Scalars['ID'];
+  tokenTabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDeleteTokenizerArgs = {
-  tokenizerId: Scalars['ID'];
+  tokenizerId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationDocTypeArgs = {
   docTypeDTO?: InputMaybe<DocTypeDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationDocTypeFieldArgs = {
   docTypeFieldDTO?: InputMaybe<DocTypeFieldDtoInput>;
-  docTypeFieldId?: InputMaybe<Scalars['ID']>;
-  docTypeId: Scalars['ID'];
-  patch?: InputMaybe<Scalars['Boolean']>;
+  docTypeFieldId?: InputMaybe<Scalars["ID"]>;
+  docTypeId: Scalars["ID"];
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationDocTypeFieldWithAnalyzerArgs = {
-  docTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldId?: InputMaybe<Scalars["ID"]>;
   docTypeFieldWithAnalyzerDTO?: InputMaybe<DocTypeFieldWithAnalyzerDtoInput>;
-  docTypeId: Scalars['ID'];
-  patch?: InputMaybe<Scalars['Boolean']>;
+  docTypeId: Scalars["ID"];
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationDocTypeTemplateArgs = {
   docTypeTemplateDTO?: InputMaybe<DocTypeTemplateDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationDocTypeWithTemplateArgs = {
   docTypeWithTemplateDTO?: InputMaybe<DocTypeWithTemplateDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationEmbeddingModelArgs = {
   embeddingModelDTO?: InputMaybe<EmbeddingModelDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationEnableBucketArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationEnableEmbeddingModelArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationEnableLargeLanguageModelArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationEnrichItemArgs = {
   enrichItemDTO?: InputMaybe<EnrichItemDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationEnrichPipelineArgs = {
   enrichPipelineDTO?: InputMaybe<EnrichPipelineDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationEnrichPipelineWithEnrichItemsArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   pipelineWithItemsDTO?: InputMaybe<PipelineWithItemsDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationLanguageArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
   languageDTO?: InputMaybe<LanguageDtoInput>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationLargeLanguageModelArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
   largeLanguageModelDTO?: InputMaybe<LargeLanguageModelDtoInput>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Mutation root */
 export type MutationMultiSelectArgs = {
-  multiSelect: Scalars['Boolean'];
-  suggestionCategoryId: Scalars['ID'];
+  multiSelect: Scalars["Boolean"];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationPluginDriverArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   pluginDriverDTO?: InputMaybe<PluginDriverDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationPluginDriverWithDocTypeArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   pluginWithDocTypeDTO?: InputMaybe<PluginWithDocTypeDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationQueryAnalysisArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   queryAnalysisDTO?: InputMaybe<QueryAnalysisDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationQueryAnalysisWithListsArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   queryAnalysisWithListsDTO?: InputMaybe<QueryAnalysisWithListsDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationQueryParserConfigArgs = {
-  patch?: InputMaybe<Scalars['Boolean']>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   queryParserConfigDTO?: InputMaybe<QueryParserConfigDtoInput>;
-  queryParserConfigId?: InputMaybe<Scalars['ID']>;
-  searchConfigId: Scalars['ID'];
+  queryParserConfigId?: InputMaybe<Scalars["ID"]>;
+  searchConfigId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveAnnotatorFromQueryAnalysisArgs = {
-  annotatorId: Scalars['ID'];
-  id: Scalars['ID'];
+  annotatorId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveCharFilterFromAnalyzerArgs = {
-  charFilterId: Scalars['ID'];
-  id: Scalars['ID'];
+  charFilterId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveCharFilterListFromAnalyzerArgs = {
-  analyzerId: Scalars['BigInteger'];
+  analyzerId: Scalars["BigInteger"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveDatasourceFromBucketArgs = {
-  bucketId: Scalars['ID'];
-  datasourceId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveDocTypeFieldArgs = {
-  docTypeFieldId: Scalars['ID'];
-  docTypeId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  docTypeId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveDocTypeFieldFromPluginDriverArgs = {
-  docTypeFieldId: Scalars['ID'];
-  pluginDriverId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  pluginDriverId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveDocTypeFieldFromSuggestionCategoryArgs = {
-  docTypeFieldId: Scalars['ID'];
-  suggestionCategoryId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveDocTypeFromDataIndexArgs = {
-  dataIndexId: Scalars['ID'];
-  docTypeId: Scalars['ID'];
+  dataIndexId: Scalars["ID"];
+  docTypeId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveEnrichItemFromEnrichPipelineArgs = {
-  enrichItemId: Scalars['ID'];
-  enrichPipelineId: Scalars['ID'];
+  enrichItemId: Scalars["ID"];
+  enrichPipelineId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveLanguageFromBucketArgs = {
-  bucketId: Scalars['ID'];
-  languageId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  languageId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveQueryParserConfigArgs = {
-  queryParserConfigId: Scalars['ID'];
-  searchConfigId: Scalars['ID'];
+  queryParserConfigId: Scalars["ID"];
+  searchConfigId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveRuleFromQueryAnalysisArgs = {
-  id: Scalars['ID'];
-  ruleId: Scalars['ID'];
+  id: Scalars["ID"];
+  ruleId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveSortingFromBucketArgs = {
-  id: Scalars['ID'];
-  sortingId: Scalars['ID'];
+  id: Scalars["ID"];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveSortingToTabArgs = {
-  id: Scalars['ID'];
-  sortingId: Scalars['ID'];
+  id: Scalars["ID"];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveSuggestionCategoryFromBucketArgs = {
-  bucketId: Scalars['ID'];
-  suggestionCategoryId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveTabFromBucketArgs = {
-  id: Scalars['ID'];
-  tabId: Scalars['ID'];
+  id: Scalars["ID"];
+  tabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveTokenFilterFromAnalyzerArgs = {
-  id: Scalars['ID'];
-  tokenFilterId: Scalars['ID'];
+  id: Scalars["ID"];
+  tokenFilterId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveTokenFilterListFromAnalyzerArgs = {
-  analyzerId: Scalars['BigInteger'];
+  analyzerId: Scalars["BigInteger"];
 };
-
 
 /** Mutation root */
 export type MutationRemoveTokenTabToTabArgs = {
-  id: Scalars['ID'];
-  tokenTabId: Scalars['ID'];
+  id: Scalars["ID"];
+  tokenTabId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationRuleArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   ruleDTO?: InputMaybe<RuleDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationSearchConfigArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   searchConfigDTO?: InputMaybe<SearchConfigDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationSearchConfigWithQueryParsersArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   searchConfigWithQueryParsersDTO?: InputMaybe<SearchConfigWithQueryParsersDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationSortEnrichItemsArgs = {
-  enrichItemIdList?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  enrichPipelineId: Scalars['ID'];
+  enrichItemIdList?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  enrichPipelineId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationSortingArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   sortingDTO?: InputMaybe<SortingDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationSuggestionCategoryArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   suggestionCategoryDTO?: InputMaybe<SuggestionCategoryDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationSuggestionCategoryWithDocTypeFieldArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   suggestionCategoryWithDocTypeFieldDTO?: InputMaybe<SuggestionCategoryWithDocTypeFieldDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTabArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tabDTO?: InputMaybe<TabDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTabWithTokenTabsArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tabWithTokenTabsDTO?: InputMaybe<TabWithTokenTabsDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTokenFilterArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tokenFilterDTO?: InputMaybe<TokenFilterDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTokenTabArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tokenTabDTO?: InputMaybe<TokenTabDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTokenTabWithDocTypeFieldArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tokenTabWithDocTypeFieldDTO?: InputMaybe<TokenTabWithDocTypeFieldDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationTokenizerArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
   tokenizerDTO?: InputMaybe<TokenizerDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationUnbindAnalyzerFromDocTypeFieldArgs = {
-  docTypeFieldId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindAnnotatorFromDocTypeFieldArgs = {
-  docTypeFieldId: Scalars['ID'];
-  id: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindDataIndexFromDatasourceArgs = {
-  datasourceId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindDocTypeFieldFromSortingArgs = {
-  docTypeFieldId: Scalars['ID'];
-  id: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindDocTypeFieldFromSuggestionCategoryArgs = {
-  suggestionCategoryId: Scalars['ID'];
+  suggestionCategoryId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindDocTypeFieldFromTokenTabArgs = {
-  docTypeFieldId: Scalars['ID'];
-  id: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  id: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindDocTypeTemplateFromDocTypeArgs = {
-  docTypeId: Scalars['ID'];
+  docTypeId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindEnrichPipelineToDatasourceArgs = {
-  datasourceId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindLanguageFromBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindPluginDriverToDatasourceArgs = {
-  datasourceId: Scalars['ID'];
+  datasourceId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindQueryAnalysisFromBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindRagConfigurationFromBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
   ragType: RagType;
 };
 
-
 /** Mutation root */
 export type MutationUnbindSearchConfigFromBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUnbindTokenizerFromAnalyzerArgs = {
-  analyzerId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
 };
-
 
 /** Mutation root */
 export type MutationUpdateDatasourceConnectionArgs = {
   datasourceConnection?: InputMaybe<UpdateDatasourceDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationUpdateRagConfigurationArgs = {
-  id: Scalars['ID'];
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id: Scalars["ID"];
+  patch?: InputMaybe<Scalars["Boolean"]>;
   ragConfigurationDTO?: InputMaybe<RagConfigurationDtoInput>;
 };
 
-
 /** Mutation root */
 export type MutationUserFieldArgs = {
-  docTypeFieldId: Scalars['ID'];
-  pluginDriverId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
+  pluginDriverId: Scalars["ID"];
   userField?: InputMaybe<UserField>;
 };
 
 export enum Operator {
-  Contains = 'contains',
-  EndsWith = 'endsWith',
-  Equals = 'equals',
-  GreaterThan = 'greaterThan',
-  GreaterThanOrEqualTo = 'greaterThanOrEqualTo',
-  LessThan = 'lessThan',
-  LessThenOrEqualTo = 'lessThenOrEqualTo',
-  StartsWith = 'startsWith'
+  Contains = "contains",
+  EndsWith = "endsWith",
+  Equals = "equals",
+  GreaterThan = "greaterThan",
+  GreaterThanOrEqualTo = "greaterThanOrEqualTo",
+  LessThan = "lessThan",
+  LessThenOrEqualTo = "lessThenOrEqualTo",
+  StartsWith = "startsWith",
 }
 
 /** Information about pagination in a connection. */
 export type PageInfo = {
   /** When paginating forwards, the cursor to continue. */
-  endCursor?: Maybe<Scalars['String']>;
+  endCursor?: Maybe<Scalars["String"]>;
   /** When paginating forwards, are there more items? */
-  hasNextPage: Scalars['Boolean'];
+  hasNextPage: Scalars["Boolean"];
   /** When paginating backwards, are there more items? */
-  hasPreviousPage: Scalars['Boolean'];
+  hasPreviousPage: Scalars["Boolean"];
   /** When paginating backwards, the cursor to continue. */
-  startCursor?: Maybe<Scalars['String']>;
+  startCursor?: Maybe<Scalars["String"]>;
 };
 
 export type Page_PluginDriver = {
-  __typename?: 'Page_PluginDriver';
-  afterId: Scalars['BigInteger'];
-  beforeId: Scalars['BigInteger'];
+  __typename?: "Page_PluginDriver";
+  afterId: Scalars["BigInteger"];
+  beforeId: Scalars["BigInteger"];
   content?: Maybe<Array<Maybe<PluginDriver>>>;
-  count: Scalars['BigInteger'];
-  limit: Scalars['Int'];
+  count: Scalars["BigInteger"];
+  limit: Scalars["Int"];
 };
 
 export type PageableInput = {
-  afterId?: InputMaybe<Scalars['BigInteger']>;
-  beforeId?: InputMaybe<Scalars['BigInteger']>;
-  limit?: InputMaybe<Scalars['Int']>;
+  afterId?: InputMaybe<Scalars["BigInteger"]>;
+  beforeId?: InputMaybe<Scalars["BigInteger"]>;
+  limit?: InputMaybe<Scalars["Int"]>;
   sortBy?: InputMaybe<K9Column>;
 };
 
 export type PipelineWithItemsDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   items?: InputMaybe<Array<InputMaybe<ItemDtoInput>>>;
-  name: Scalars['String'];
+  name: Scalars["String"];
 };
 
 export type PluginDriver = {
-  __typename?: 'PluginDriver';
+  __typename?: "PluginDriver";
   aclMappings?: Maybe<Array<Maybe<PluginDriverAclMapping>>>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   provisioning?: Maybe<Provisioning>;
   type?: Maybe<PluginDriverType>;
 };
 
-
 export type PluginDriverDocTypeFieldsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  not?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  not?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type PluginDriverAclMapping = {
-  __typename?: 'PluginDriverAclMapping';
+  __typename?: "PluginDriverAclMapping";
   docTypeField?: Maybe<DocTypeField>;
   userField?: Maybe<UserField>;
 };
 
 export type PluginDriverDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   provisioning?: InputMaybe<Provisioning>;
   type: PluginDriverType;
 };
 
 export type PluginDriverDocTypeFieldKey = {
-  __typename?: 'PluginDriverDocTypeFieldKey';
-  docTypeFieldId?: Maybe<Scalars['BigInteger']>;
-  pluginDriverId?: Maybe<Scalars['BigInteger']>;
+  __typename?: "PluginDriverDocTypeFieldKey";
+  docTypeFieldId?: Maybe<Scalars["BigInteger"]>;
+  pluginDriverId?: Maybe<Scalars["BigInteger"]>;
 };
 
 export enum PluginDriverType {
-  Http = 'HTTP'
+  Http = "HTTP",
 }
 
 export type PluginWithDocTypeDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
   docTypeUserDTOSet?: InputMaybe<Array<InputMaybe<DocTypeUserDtoInput>>>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   provisioning?: InputMaybe<Provisioning>;
   type: PluginDriverType;
 };
 
 export type ProviderModel = {
-  __typename?: 'ProviderModel';
-  model?: Maybe<Scalars['String']>;
-  provider?: Maybe<Scalars['String']>;
+  __typename?: "ProviderModel";
+  model?: Maybe<Scalars["String"]>;
+  provider?: Maybe<Scalars["String"]>;
 };
 
 export type ProviderModelDtoInput = {
   /** The specific model like: GPT-4, LLaMA 2, Mistral 7B. */
-  model: Scalars['String'];
+  model: Scalars["String"];
   /** The model provider like: OpenAI, Meta, Mistral. */
-  provider: Scalars['String'];
+  provider: Scalars["String"];
 };
 
 export enum Provisioning {
-  System = 'SYSTEM',
-  User = 'USER'
+  System = "SYSTEM",
+  User = "USER",
 }
 
 /** Query root */
 export type Query = {
-  __typename?: 'Query';
+  __typename?: "Query";
   analyzer?: Maybe<Analyzer>;
   analyzers?: Maybe<Connection_Analyzer>;
   annotator?: Maybe<Annotator>;
@@ -3124,7 +2968,7 @@ export type Query = {
   /** Returns the list of events */
   event?: Maybe<Array<Maybe<Event>>>;
   /** Get event data */
-  eventData?: Maybe<Scalars['String']>;
+  eventData?: Maybe<Scalars["String"]>;
   /** Returns the list of available options for the event */
   eventOptions?: Maybe<Array<Maybe<EventOption>>>;
   language?: Maybe<Language>;
@@ -3138,7 +2982,7 @@ export type Query = {
   queryAnalysis?: Maybe<QueryAnalysis>;
   queryParserConfig?: Maybe<QueryParserConfig>;
   /** Retrieves all available form configurations from the system. */
-  queryParserConfigFormConfigurations?: Maybe<Scalars['FormConfigurations']>;
+  queryParserConfigFormConfigurations?: Maybe<Scalars["FormConfigurations"]>;
   queryParserConfigs?: Maybe<Connection_QueryParserConfig>;
   ragConfiguration?: Maybe<RagConfiguration>;
   ragConfigurations?: Maybe<Connection_RagConfiguration>;
@@ -3190,370 +3034,330 @@ export type Query = {
   unboundTabsByTokenTab?: Maybe<Array<Maybe<Tab>>>;
 };
 
-
 /** Query root */
 export type QueryAnalyzerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryAnalyzersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryAnnotatorArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryAnnotatorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryBucketArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryBucketsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryCharFilterArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryCharFiltersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDataIndexArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDataIndicesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDatasourceArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDatasourcesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldNotInAnnotatorArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  annotatorId: Scalars['ID'];
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  annotatorId: Scalars["ID"];
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsByParentArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  parentId: Scalars['BigInteger'];
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  parentId: Scalars["BigInteger"];
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsFromDocTypeArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  docTypeId: Scalars['ID'];
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  docTypeId: Scalars["ID"];
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsFromDocTypeByParentArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  docTypeId: Scalars['ID'];
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  parentId: Scalars['BigInteger'];
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  docTypeId: Scalars["ID"];
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  parentId: Scalars["BigInteger"];
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsNotInSortingArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-  sortingId: Scalars['ID'];
+  sortingId: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDocTypeFieldsNotInTokenTabArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-  tokenTabId: Scalars['ID'];
+  tokenTabId: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDocTypeTemplateArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryDocTypeTemplatesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryDocTypesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryEmbeddingModelArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryEmbeddingModelsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryEnrichItemArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryEnrichItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryEnrichPipelineArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryEnrichPipelinesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryEventArgs = {
-  className?: InputMaybe<Scalars['String']>;
-  classPK?: InputMaybe<Scalars['String']>;
-  from?: InputMaybe<Scalars['Int']>;
-  groupKey?: InputMaybe<Scalars['String']>;
-  gte?: InputMaybe<Scalars['DateTime']>;
-  id?: InputMaybe<Scalars['String']>;
-  lte?: InputMaybe<Scalars['DateTime']>;
-  size?: InputMaybe<Scalars['Int']>;
+  className?: InputMaybe<Scalars["String"]>;
+  classPK?: InputMaybe<Scalars["String"]>;
+  from?: InputMaybe<Scalars["Int"]>;
+  groupKey?: InputMaybe<Scalars["String"]>;
+  gte?: InputMaybe<Scalars["DateTime"]>;
+  id?: InputMaybe<Scalars["String"]>;
+  lte?: InputMaybe<Scalars["DateTime"]>;
+  size?: InputMaybe<Scalars["Int"]>;
   sortBy?: InputMaybe<EventSortable>;
-  sortType?: InputMaybe<Scalars['String']>;
-  type?: InputMaybe<Scalars['String']>;
+  sortType?: InputMaybe<Scalars["String"]>;
+  type?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Query root */
 export type QueryEventDataArgs = {
-  id?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["String"]>;
 };
-
 
 /** Query root */
 export type QueryEventOptionsArgs = {
-  from?: InputMaybe<Scalars['Int']>;
-  size?: InputMaybe<Scalars['Int']>;
-  sortType?: InputMaybe<Scalars['String']>;
-  sortable?: InputMaybe<Scalars['Boolean']>;
+  from?: InputMaybe<Scalars["Int"]>;
+  size?: InputMaybe<Scalars["Int"]>;
+  sortType?: InputMaybe<Scalars["String"]>;
+  sortable?: InputMaybe<Scalars["Boolean"]>;
 };
-
 
 /** Query root */
 export type QueryLanguageArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryLanguagesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryLargeLanguageModelArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryLargeLanguageModelsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryPluginDriverArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryPluginDriversArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryPluginDriversPageFilterArgs = {
@@ -3561,394 +3365,357 @@ export type QueryPluginDriversPageFilterArgs = {
   pageable?: InputMaybe<PageableInput>;
 };
 
-
 /** Query root */
 export type QueryQueryAnalysesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryQueryAnalysisArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryQueryParserConfigArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryQueryParserConfigsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchConfigId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchConfigId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryRagConfigurationArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryRagConfigurationsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryRuleArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryRulesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QuerySchedulerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QuerySchedulersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QuerySearchConfigArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QuerySearchConfigsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QuerySortingArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QuerySortingsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-  tabId: Scalars['ID'];
+  tabId: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QuerySuggestionCategoriesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QuerySuggestionCategoryArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTabArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTabsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryTokenFilterArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTokenFiltersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryTokenTabArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTokenTabsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-  tabId: Scalars['ID'];
+  tabId: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTokenizerArgs = {
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 };
-
 
 /** Query root */
 export type QueryTokenizersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryTotalSortingsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryTotalTokenTabsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 /** Query root */
 export type QueryUnboundAnalyzersByCharFilterArgs = {
-  charFilterId: Scalars['BigInteger'];
+  charFilterId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundAnalyzersByTokenFilterArgs = {
-  tokenFilterId: Scalars['BigInteger'];
+  tokenFilterId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundBucketsByDatasourceArgs = {
-  datasourceId: Scalars['BigInteger'];
+  datasourceId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundBucketsBySuggestionCategoryArgs = {
-  suggestionCategoryId: Scalars['BigInteger'];
+  suggestionCategoryId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundBucketsByTabArgs = {
-  tabId: Scalars['BigInteger'];
+  tabId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundDocTypeFieldsBySuggestionCategoryArgs = {
-  suggestionCategoryId: Scalars['BigInteger'];
+  suggestionCategoryId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundEnrichPipelinesArgs = {
-  itemId: Scalars['BigInteger'];
+  itemId: Scalars["BigInteger"];
 };
-
 
 /** Query root */
 export type QueryUnboundRagConfigurationByBucketArgs = {
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
   ragType: RagType;
 };
 
-
 /** Query root */
 export type QueryUnboundTabsByTokenTabArgs = {
-  tokenTabId: Scalars['BigInteger'];
+  tokenTabId: Scalars["BigInteger"];
 };
 
 export type QueryAnalysis = {
-  __typename?: 'QueryAnalysis';
+  __typename?: "QueryAnalysis";
   annotators?: Maybe<Connection_Annotator>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   rules?: Maybe<Connection_Rule>;
-  stopWords?: Maybe<Scalars['String']>;
-  stopWordsList?: Maybe<Array<Maybe<Scalars['String']>>>;
+  stopWords?: Maybe<Scalars["String"]>;
+  stopWordsList?: Maybe<Array<Maybe<Scalars["String"]>>>;
 };
 
-
 export type QueryAnalysisAnnotatorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-
 export type QueryAnalysisRulesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type QueryAnalysisDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  stopWords?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  stopWords?: InputMaybe<Scalars["String"]>;
 };
 
 export type QueryAnalysisWithListsDtoInput = {
-  annotatorsIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  rulesIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  stopWords?: InputMaybe<Scalars['String']>;
+  annotatorsIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  rulesIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
+  stopWords?: InputMaybe<Scalars["String"]>;
 };
 
 export type QueryParserConfig = {
-  __typename?: 'QueryParserConfig';
+  __typename?: "QueryParserConfig";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   type?: Maybe<QueryParserType>;
 };
 
 export type QueryParserConfigDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  type: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  type: Scalars["String"];
 };
 
 export enum QueryParserType {
-  Acl = 'ACL',
-  Autocomplete = 'AUTOCOMPLETE',
-  Datasource = 'DATASOURCE',
-  Date = 'DATE',
-  DateOrder = 'DATE_ORDER',
-  Doctype = 'DOCTYPE',
-  Entity = 'ENTITY',
-  Filter = 'FILTER',
-  Hybrid = 'HYBRID',
-  Knn = 'KNN',
-  Text = 'TEXT'
+  Acl = "ACL",
+  Autocomplete = "AUTOCOMPLETE",
+  Datasource = "DATASOURCE",
+  Date = "DATE",
+  DateOrder = "DATE_ORDER",
+  Doctype = "DOCTYPE",
+  Entity = "ENTITY",
+  Filter = "FILTER",
+  Hybrid = "HYBRID",
+  Knn = "KNN",
+  Text = "TEXT",
 }
 
 export type RagConfiguration = {
-  __typename?: 'RAGConfiguration';
-  chunkWindow?: Maybe<Scalars['Int']>;
+  __typename?: "RAGConfiguration";
+  chunkWindow?: Maybe<Scalars["Int"]>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  prompt?: Maybe<Scalars['String']>;
-  promptNoRag?: Maybe<Scalars['String']>;
-  ragToolDescription?: Maybe<Scalars['String']>;
-  reformulate?: Maybe<Scalars['Boolean']>;
-  rephrasePrompt?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  prompt?: Maybe<Scalars["String"]>;
+  promptNoRag?: Maybe<Scalars["String"]>;
+  ragToolDescription?: Maybe<Scalars["String"]>;
+  reformulate?: Maybe<Scalars["Boolean"]>;
+  rephrasePrompt?: Maybe<Scalars["String"]>;
   type?: Maybe<RagType>;
 };
 
@@ -3959,348 +3726,346 @@ export type RagConfigurationDtoInput = {
    * > 0: Enables merging with specified window size.
    *
    */
-  chunkWindow?: InputMaybe<Scalars['Int']>;
-  description?: InputMaybe<Scalars['String']>;
+  chunkWindow?: InputMaybe<Scalars["Int"]>;
+  description?: InputMaybe<Scalars["String"]>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** Main prompt template used for RAG. */
-  prompt?: InputMaybe<Scalars['String']>;
+  prompt?: InputMaybe<Scalars["String"]>;
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
    *
    */
-  promptNoRag?: InputMaybe<Scalars['String']>;
+  promptNoRag?: InputMaybe<Scalars["String"]>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
    *
    */
-  ragToolDescription?: InputMaybe<Scalars['String']>;
+  ragToolDescription?: InputMaybe<Scalars["String"]>;
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
    *
    */
-  reformulate?: InputMaybe<Scalars['Boolean']>;
+  reformulate?: InputMaybe<Scalars["Boolean"]>;
   /** Prompt template used if reformulate is set to true. */
-  rephrasePrompt?: InputMaybe<Scalars['String']>;
+  rephrasePrompt?: InputMaybe<Scalars["String"]>;
 };
 
 export enum RagType {
-  ChatRag = 'CHAT_RAG',
-  ChatRagTool = 'CHAT_RAG_TOOL',
-  SimpleGenerate = 'SIMPLE_GENERATE'
+  ChatRag = "CHAT_RAG",
+  ChatRagTool = "CHAT_RAG_TOOL",
+  SimpleGenerate = "SIMPLE_GENERATE",
 }
 
 export type Response_Analyzer = {
-  __typename?: 'Response_Analyzer';
+  __typename?: "Response_Analyzer";
   entity?: Maybe<Analyzer>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Annotator = {
-  __typename?: 'Response_Annotator';
+  __typename?: "Response_Annotator";
   entity?: Maybe<Annotator>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Bucket = {
-  __typename?: 'Response_Bucket';
+  __typename?: "Response_Bucket";
   entity?: Maybe<Bucket>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_CharFilter = {
-  __typename?: 'Response_CharFilter';
+  __typename?: "Response_CharFilter";
   entity?: Maybe<CharFilter>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_DataIndex = {
-  __typename?: 'Response_DataIndex';
+  __typename?: "Response_DataIndex";
   entity?: Maybe<DataIndex>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Datasource = {
-  __typename?: 'Response_Datasource';
+  __typename?: "Response_Datasource";
   entity?: Maybe<Datasource>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_DocType = {
-  __typename?: 'Response_DocType';
+  __typename?: "Response_DocType";
   entity?: Maybe<DocType>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_DocTypeField = {
-  __typename?: 'Response_DocTypeField';
+  __typename?: "Response_DocTypeField";
   entity?: Maybe<DocTypeField>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_DocTypeTemplate = {
-  __typename?: 'Response_DocTypeTemplate';
+  __typename?: "Response_DocTypeTemplate";
   entity?: Maybe<DocTypeTemplate>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_EmbeddingModel = {
-  __typename?: 'Response_EmbeddingModel';
+  __typename?: "Response_EmbeddingModel";
   entity?: Maybe<EmbeddingModel>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_EnrichItem = {
-  __typename?: 'Response_EnrichItem';
+  __typename?: "Response_EnrichItem";
   entity?: Maybe<EnrichItem>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_EnrichPipeline = {
-  __typename?: 'Response_EnrichPipeline';
+  __typename?: "Response_EnrichPipeline";
   entity?: Maybe<EnrichPipeline>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Language = {
-  __typename?: 'Response_Language';
+  __typename?: "Response_Language";
   entity?: Maybe<Language>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_LargeLanguageModel = {
-  __typename?: 'Response_LargeLanguageModel';
+  __typename?: "Response_LargeLanguageModel";
   entity?: Maybe<LargeLanguageModel>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_PluginDriver = {
-  __typename?: 'Response_PluginDriver';
+  __typename?: "Response_PluginDriver";
   entity?: Maybe<PluginDriver>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_QueryAnalysis = {
-  __typename?: 'Response_QueryAnalysis';
+  __typename?: "Response_QueryAnalysis";
   entity?: Maybe<QueryAnalysis>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_QueryParserConfig = {
-  __typename?: 'Response_QueryParserConfig';
+  __typename?: "Response_QueryParserConfig";
   entity?: Maybe<QueryParserConfig>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_RagConfiguration = {
-  __typename?: 'Response_RAGConfiguration';
+  __typename?: "Response_RAGConfiguration";
   entity?: Maybe<RagConfiguration>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Rule = {
-  __typename?: 'Response_Rule';
+  __typename?: "Response_Rule";
   entity?: Maybe<Rule>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_SearchConfig = {
-  __typename?: 'Response_SearchConfig';
+  __typename?: "Response_SearchConfig";
   entity?: Maybe<SearchConfig>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Sorting = {
-  __typename?: 'Response_Sorting';
+  __typename?: "Response_Sorting";
   entity?: Maybe<Sorting>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_SuggestionCategory = {
-  __typename?: 'Response_SuggestionCategory';
+  __typename?: "Response_SuggestionCategory";
   entity?: Maybe<SuggestionCategory>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Tab = {
-  __typename?: 'Response_Tab';
+  __typename?: "Response_Tab";
   entity?: Maybe<Tab>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_TokenFilter = {
-  __typename?: 'Response_TokenFilter';
+  __typename?: "Response_TokenFilter";
   entity?: Maybe<TokenFilter>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_TokenTab = {
-  __typename?: 'Response_TokenTab';
+  __typename?: "Response_TokenTab";
   entity?: Maybe<TokenTab>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export type Response_Tokenizer = {
-  __typename?: 'Response_Tokenizer';
+  __typename?: "Response_Tokenizer";
   entity?: Maybe<Tokenizer>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
 export enum RetrieveType {
-  Hybrid = 'HYBRID',
-  Knn = 'KNN',
-  Text = 'TEXT'
+  Hybrid = "HYBRID",
+  Knn = "KNN",
+  Text = "TEXT",
 }
 
 export type Rule = {
-  __typename?: 'Rule';
+  __typename?: "Rule";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  lhs?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  lhs?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  rhs?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  rhs?: Maybe<Scalars["String"]>;
 };
 
 export type RuleDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  lhs: Scalars['String'];
-  name: Scalars['String'];
-  rhs: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  lhs: Scalars["String"];
+  name: Scalars["String"];
+  rhs: Scalars["String"];
 };
 
 export type Scheduler = {
-  __typename?: 'Scheduler';
+  __typename?: "Scheduler";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
   dataIndex?: Maybe<DataIndex>;
   datasource?: Maybe<Datasource>;
-  errorDescription?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
+  errorDescription?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  lastIngestionDate?: Maybe<Scalars['DateTime']>;
+  lastIngestionDate?: Maybe<Scalars["DateTime"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
   newDataIndex?: Maybe<DataIndex>;
   oldDataIndex?: Maybe<DataIndex>;
-  scheduleId?: Maybe<Scalars['String']>;
+  scheduleId?: Maybe<Scalars["String"]>;
   status?: Maybe<SchedulerStatus>;
 };
 
 export enum SchedulerStatus {
-  Cancelled = 'CANCELLED',
-  Error = 'ERROR',
-  Failure = 'FAILURE',
-  Finished = 'FINISHED',
-  Running = 'RUNNING',
-  Stale = 'STALE'
+  Cancelled = "CANCELLED",
+  Error = "ERROR",
+  Failure = "FAILURE",
+  Finished = "FINISHED",
+  Running = "RUNNING",
+  Stale = "STALE",
 }
 
 export type SearchConfig = {
-  __typename?: 'SearchConfig';
+  __typename?: "SearchConfig";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  minScore?: Maybe<Scalars['Float']>;
-  minScoreSearch: Scalars['Boolean'];
-  minScoreSuggestions: Scalars['Boolean'];
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  minScore?: Maybe<Scalars["Float"]>;
+  minScoreSearch: Scalars["Boolean"];
+  minScoreSuggestions: Scalars["Boolean"];
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   queryParserConfigs?: Maybe<Connection_QueryParserConfig>;
 };
 
-
 export type SearchConfigQueryParserConfigsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type SearchConfigDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  minScore: Scalars['Float'];
-  minScoreSearch: Scalars['Boolean'];
-  minScoreSuggestions: Scalars['Boolean'];
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  minScore: Scalars["Float"];
+  minScoreSearch: Scalars["Boolean"];
+  minScoreSuggestions: Scalars["Boolean"];
+  name: Scalars["String"];
 };
 
 export type SearchConfigWithQueryParsersDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  minScore: Scalars['Float'];
-  minScoreSearch: Scalars['Boolean'];
-  minScoreSuggestions: Scalars['Boolean'];
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  minScore: Scalars["Float"];
+  minScoreSearch: Scalars["Boolean"];
+  minScoreSuggestions: Scalars["Boolean"];
+  name: Scalars["String"];
   queryParsers?: InputMaybe<Array<InputMaybe<QueryParserConfigDtoInput>>>;
 };
 
 export type SearchTokenDto = {
-  __typename?: 'SearchTokenDto';
-  filter?: Maybe<Scalars['Boolean']>;
-  keywordKey?: Maybe<Scalars['String']>;
-  tokenType?: Maybe<Scalars['String']>;
-  values?: Maybe<Array<Maybe<Scalars['String']>>>;
+  __typename?: "SearchTokenDto";
+  filter?: Maybe<Scalars["Boolean"]>;
+  keywordKey?: Maybe<Scalars["String"]>;
+  tokenType?: Maybe<Scalars["String"]>;
+  values?: Maybe<Array<Maybe<Scalars["String"]>>>;
 };
 
 export type SortByInput = {
-  column?: InputMaybe<Scalars['String']>;
+  column?: InputMaybe<Scalars["String"]>;
   direction?: InputMaybe<Direction>;
 };
 
 export type Sorting = {
-  __typename?: 'Sorting';
+  __typename?: "Sorting";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  defaultSort: Scalars['Boolean'];
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  defaultSort: Scalars["Boolean"];
+  description?: Maybe<Scalars["String"]>;
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldsNotInSorting?: Maybe<Connection_DocTypeField>;
-  id?: Maybe<Scalars['ID']>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  priority?: Maybe<Scalars['Float']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  priority?: Maybe<Scalars["Float"]>;
   type?: Maybe<SortingType>;
 };
 
-
 export type SortingDocTypeFieldsNotInSortingArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type SortingDtoInput = {
-  defaultSort: Scalars['Boolean'];
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  priority: Scalars['Float'];
+  defaultSort: Scalars["Boolean"];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  priority: Scalars["Float"];
   type: SortingType;
 };
 
 export enum SortingType {
-  Asc = 'ASC',
-  Desc = 'DESC'
+  Asc = "ASC",
+  Desc = "DESC",
 }
 
 /** Subscription root */
 export type Subscription = {
-  __typename?: 'Subscription';
+  __typename?: "Subscription";
   analyzerCreated?: Maybe<Analyzer>;
   analyzerDeleted?: Maybe<Analyzer>;
   analyzerUpdated?: Maybe<Analyzer>;
@@ -4364,2034 +4129,3932 @@ export type Subscription = {
 };
 
 export type SuggestionCategory = {
-  __typename?: 'SuggestionCategory';
+  __typename?: "SuggestionCategory";
   buckets?: Maybe<Connection_Bucket>;
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   docTypeField?: Maybe<DocTypeField>;
-  id?: Maybe<Scalars['ID']>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  multiSelect: Scalars['Boolean'];
-  name?: Maybe<Scalars['String']>;
-  priority?: Maybe<Scalars['Float']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  multiSelect: Scalars["Boolean"];
+  name?: Maybe<Scalars["String"]>;
+  priority?: Maybe<Scalars["Float"]>;
   translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
-
 export type SuggestionCategoryBucketsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type SuggestionCategoryDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  multiSelect: Scalars['Boolean'];
-  name: Scalars['String'];
-  priority: Scalars['Float'];
+  description?: InputMaybe<Scalars["String"]>;
+  multiSelect: Scalars["Boolean"];
+  name: Scalars["String"];
+  priority: Scalars["Float"];
 };
 
 export type SuggestionCategoryWithDocTypeFieldDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  multiSelect: Scalars['Boolean'];
-  name: Scalars['String'];
-  priority: Scalars['Float'];
+  description?: InputMaybe<Scalars["String"]>;
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  multiSelect: Scalars["Boolean"];
+  name: Scalars["String"];
+  priority: Scalars["Float"];
 };
 
 export type Tab = {
-  __typename?: 'Tab';
+  __typename?: "Tab";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  priority?: Maybe<Scalars['Int']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  priority?: Maybe<Scalars["Int"]>;
   searchTokens?: Maybe<Connection_SearchTokenDto>;
   sortings?: Maybe<Connection_Sorting>;
   tokenTabs?: Maybe<Connection_TokenTab>;
   translations?: Maybe<Array<Maybe<TranslationDto>>>;
 };
 
-
 export type TabSearchTokensArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
-
 
 export type TabSortingsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-
 export type TabTokenTabsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  notEqual?: InputMaybe<Scalars['Boolean']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  notEqual?: InputMaybe<Scalars["Boolean"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type TabDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  priority: Scalars['Int'];
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  priority: Scalars["Int"];
 };
 
 export type TabWithTokenTabsDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  priority: Scalars['Int'];
-  tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  description?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  priority: Scalars["Int"];
+  tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>>>;
 };
 
 export enum TemplateType {
-  JavascriptCompiled = 'JAVASCRIPT_COMPILED',
-  JavascriptSource = 'JAVASCRIPT_SOURCE',
-  TypescriptSource = 'TYPESCRIPT_SOURCE'
+  JavascriptCompiled = "JAVASCRIPT_COMPILED",
+  JavascriptSource = "JAVASCRIPT_SOURCE",
+  TypescriptSource = "TYPESCRIPT_SOURCE",
 }
 
 export type TokenFilter = {
-  __typename?: 'TokenFilter';
+  __typename?: "TokenFilter";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  type?: Maybe<Scalars["String"]>;
 };
 
 export type TokenFilterDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  type: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  type: Scalars["String"];
 };
 
 export type TokenTab = {
-  __typename?: 'TokenTab';
+  __typename?: "TokenTab";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldsNotInTokenTab?: Maybe<Connection_DocTypeField>;
-  extraParams?: Maybe<Scalars['String']>;
-  filter?: Maybe<Scalars['Boolean']>;
-  id?: Maybe<Scalars['ID']>;
+  extraParams?: Maybe<Scalars["String"]>;
+  filter?: Maybe<Scalars["Boolean"]>;
+  id?: Maybe<Scalars["ID"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
   tokenType?: Maybe<TokenType>;
-  value?: Maybe<Scalars['String']>;
+  value?: Maybe<Scalars["String"]>;
 };
 
-
 export type TokenTabDocTypeFieldsNotInTokenTabArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars["String"]>;
+  before?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  last?: InputMaybe<Scalars["Int"]>;
+  searchText?: InputMaybe<Scalars["String"]>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
 export type TokenTabDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  extraParams?: InputMaybe<Scalars['String']>;
-  filter: Scalars['Boolean'];
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
+  filter: Scalars["Boolean"];
+  name: Scalars["String"];
   tokenType: TokenType;
-  value: Scalars['String'];
+  value: Scalars["String"];
 };
 
 export type TokenTabWithDocTypeFieldDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  extraParams?: InputMaybe<Scalars['String']>;
-  filter: Scalars['Boolean'];
-  name: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
+  filter: Scalars["Boolean"];
+  name: Scalars["String"];
   tokenType: TokenType;
-  value: Scalars['String'];
+  value: Scalars["String"];
 };
 
 export enum TokenType {
-  Autocomplete = 'AUTOCOMPLETE',
-  Date = 'DATE',
-  DateOrder = 'DATE_ORDER',
-  Doctype = 'DOCTYPE',
-  Entity = 'ENTITY',
-  Filter = 'FILTER',
-  Text = 'TEXT'
+  Autocomplete = "AUTOCOMPLETE",
+  Date = "DATE",
+  DateOrder = "DATE_ORDER",
+  Doctype = "DOCTYPE",
+  Entity = "ENTITY",
+  Filter = "FILTER",
+  Text = "TEXT",
 }
 
 export type Tokenizer = {
-  __typename?: 'Tokenizer';
+  __typename?: "Tokenizer";
   /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
+  createDate?: Maybe<Scalars["DateTime"]>;
+  description?: Maybe<Scalars["String"]>;
+  id?: Maybe<Scalars["ID"]>;
+  jsonConfig?: Maybe<Scalars["String"]>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  type?: Maybe<Scalars['String']>;
+  modifiedDate?: Maybe<Scalars["DateTime"]>;
+  name?: Maybe<Scalars["String"]>;
+  type?: Maybe<Scalars["String"]>;
 };
 
 export type TokenizerDtoInput = {
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  type: Scalars['String'];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
+  type: Scalars["String"];
 };
 
 export type TranslationDto = {
-  __typename?: 'TranslationDTO';
-  description?: Maybe<Scalars['String']>;
-  key?: Maybe<Scalars['String']>;
-  language?: Maybe<Scalars['String']>;
-  name: Scalars['String'];
-  value?: Maybe<Scalars['String']>;
+  __typename?: "TranslationDTO";
+  description?: Maybe<Scalars["String"]>;
+  key?: Maybe<Scalars["String"]>;
+  language?: Maybe<Scalars["String"]>;
+  name: Scalars["String"];
+  value?: Maybe<Scalars["String"]>;
 };
 
 export type Tuple2_Analyzer_CharFilter = {
-  __typename?: 'Tuple2_Analyzer_CharFilter';
+  __typename?: "Tuple2_Analyzer_CharFilter";
   left?: Maybe<Analyzer>;
   right?: Maybe<CharFilter>;
 };
 
 export type Tuple2_Analyzer_TokenFilter = {
-  __typename?: 'Tuple2_Analyzer_TokenFilter';
+  __typename?: "Tuple2_Analyzer_TokenFilter";
   left?: Maybe<Analyzer>;
   right?: Maybe<TokenFilter>;
 };
 
 export type Tuple2_Analyzer_Tokenizer = {
-  __typename?: 'Tuple2_Analyzer_Tokenizer';
+  __typename?: "Tuple2_Analyzer_Tokenizer";
   left?: Maybe<Analyzer>;
   right?: Maybe<Tokenizer>;
 };
 
 export type Tuple2_Annotator_DocTypeField = {
-  __typename?: 'Tuple2_Annotator_DocTypeField';
+  __typename?: "Tuple2_Annotator_DocTypeField";
   left?: Maybe<Annotator>;
   right?: Maybe<DocTypeField>;
 };
 
 export type Tuple2_Bucket_Datasource = {
-  __typename?: 'Tuple2_Bucket_Datasource';
+  __typename?: "Tuple2_Bucket_Datasource";
   left?: Maybe<Bucket>;
   right?: Maybe<Datasource>;
 };
 
 export type Tuple2_Bucket_Language = {
-  __typename?: 'Tuple2_Bucket_Language';
+  __typename?: "Tuple2_Bucket_Language";
   left?: Maybe<Bucket>;
   right?: Maybe<Language>;
 };
 
 export type Tuple2_Bucket_QueryAnalysis = {
-  __typename?: 'Tuple2_Bucket_QueryAnalysis';
+  __typename?: "Tuple2_Bucket_QueryAnalysis";
   left?: Maybe<Bucket>;
   right?: Maybe<QueryAnalysis>;
 };
 
 export type Tuple2_Bucket_RagConfiguration = {
-  __typename?: 'Tuple2_Bucket_RAGConfiguration';
+  __typename?: "Tuple2_Bucket_RAGConfiguration";
   left?: Maybe<Bucket>;
   right?: Maybe<RagConfiguration>;
 };
 
 export type Tuple2_Bucket_SearchConfig = {
-  __typename?: 'Tuple2_Bucket_SearchConfig';
+  __typename?: "Tuple2_Bucket_SearchConfig";
   left?: Maybe<Bucket>;
   right?: Maybe<SearchConfig>;
 };
 
 export type Tuple2_Bucket_Sorting = {
-  __typename?: 'Tuple2_Bucket_Sorting';
+  __typename?: "Tuple2_Bucket_Sorting";
   left?: Maybe<Bucket>;
   right?: Maybe<Sorting>;
 };
 
 export type Tuple2_Bucket_SuggestionCategory = {
-  __typename?: 'Tuple2_Bucket_SuggestionCategory';
+  __typename?: "Tuple2_Bucket_SuggestionCategory";
   left?: Maybe<Bucket>;
   right?: Maybe<SuggestionCategory>;
 };
 
 export type Tuple2_Bucket_Tab = {
-  __typename?: 'Tuple2_Bucket_Tab';
+  __typename?: "Tuple2_Bucket_Tab";
   left?: Maybe<Bucket>;
   right?: Maybe<Tab>;
 };
 
 export type Tuple2_DataIndex_DocType = {
-  __typename?: 'Tuple2_DataIndex_DocType';
+  __typename?: "Tuple2_DataIndex_DocType";
   left?: Maybe<DataIndex>;
   right?: Maybe<DocType>;
 };
 
 export type Tuple2_Datasource_DataIndex = {
-  __typename?: 'Tuple2_Datasource_DataIndex';
+  __typename?: "Tuple2_Datasource_DataIndex";
   left?: Maybe<Datasource>;
   right?: Maybe<DataIndex>;
 };
 
 export type Tuple2_Datasource_EnrichPipeline = {
-  __typename?: 'Tuple2_Datasource_EnrichPipeline';
+  __typename?: "Tuple2_Datasource_EnrichPipeline";
   left?: Maybe<Datasource>;
   right?: Maybe<EnrichPipeline>;
 };
 
 export type Tuple2_Datasource_PluginDriver = {
-  __typename?: 'Tuple2_Datasource_PluginDriver';
+  __typename?: "Tuple2_Datasource_PluginDriver";
   left?: Maybe<Datasource>;
   right?: Maybe<PluginDriver>;
 };
 
 export type Tuple2_DocTypeField_Analyzer = {
-  __typename?: 'Tuple2_DocTypeField_Analyzer';
+  __typename?: "Tuple2_DocTypeField_Analyzer";
   left?: Maybe<DocTypeField>;
   right?: Maybe<Analyzer>;
 };
 
 export type Tuple2_DocType_BigInteger = {
-  __typename?: 'Tuple2_DocType_BigInteger';
+  __typename?: "Tuple2_DocType_BigInteger";
   left?: Maybe<DocType>;
-  right?: Maybe<Scalars['BigInteger']>;
+  right?: Maybe<Scalars["BigInteger"]>;
 };
 
 export type Tuple2_DocType_DocTypeTemplate = {
-  __typename?: 'Tuple2_DocType_DocTypeTemplate';
+  __typename?: "Tuple2_DocType_DocTypeTemplate";
   left?: Maybe<DocType>;
   right?: Maybe<DocTypeTemplate>;
 };
 
 export type Tuple2_EnrichPipeline_EnrichItem = {
-  __typename?: 'Tuple2_EnrichPipeline_EnrichItem';
+  __typename?: "Tuple2_EnrichPipeline_EnrichItem";
   left?: Maybe<EnrichPipeline>;
   right?: Maybe<EnrichItem>;
 };
 
 export type Tuple2_PluginDriver_DocTypeField = {
-  __typename?: 'Tuple2_PluginDriver_DocTypeField';
+  __typename?: "Tuple2_PluginDriver_DocTypeField";
   left?: Maybe<PluginDriver>;
   right?: Maybe<DocTypeField>;
 };
 
 export type Tuple2_QueryAnalysis_Annotator = {
-  __typename?: 'Tuple2_QueryAnalysis_Annotator';
+  __typename?: "Tuple2_QueryAnalysis_Annotator";
   left?: Maybe<QueryAnalysis>;
   right?: Maybe<Annotator>;
 };
 
 export type Tuple2_QueryAnalysis_Rule = {
-  __typename?: 'Tuple2_QueryAnalysis_Rule';
+  __typename?: "Tuple2_QueryAnalysis_Rule";
   left?: Maybe<QueryAnalysis>;
   right?: Maybe<Rule>;
 };
 
 export type Tuple2_SearchConfig_BigInteger = {
-  __typename?: 'Tuple2_SearchConfig_BigInteger';
+  __typename?: "Tuple2_SearchConfig_BigInteger";
   left?: Maybe<SearchConfig>;
-  right?: Maybe<Scalars['BigInteger']>;
+  right?: Maybe<Scalars["BigInteger"]>;
 };
 
 export type Tuple2_Sorting_DocTypeField = {
-  __typename?: 'Tuple2_Sorting_DocTypeField';
+  __typename?: "Tuple2_Sorting_DocTypeField";
   left?: Maybe<Sorting>;
   right?: Maybe<DocTypeField>;
 };
 
 export type Tuple2_String_String = {
-  __typename?: 'Tuple2_String_String';
-  left?: Maybe<Scalars['String']>;
-  right?: Maybe<Scalars['String']>;
+  __typename?: "Tuple2_String_String";
+  left?: Maybe<Scalars["String"]>;
+  right?: Maybe<Scalars["String"]>;
 };
 
 export type Tuple2_SuggestionCategory_DocTypeField = {
-  __typename?: 'Tuple2_SuggestionCategory_DocTypeField';
+  __typename?: "Tuple2_SuggestionCategory_DocTypeField";
   left?: Maybe<SuggestionCategory>;
   right?: Maybe<DocTypeField>;
 };
 
 export type Tuple2_Tab_Sorting = {
-  __typename?: 'Tuple2_Tab_Sorting';
+  __typename?: "Tuple2_Tab_Sorting";
   left?: Maybe<Tab>;
   right?: Maybe<Sorting>;
 };
 
 export type Tuple2_Tab_TokenTab = {
-  __typename?: 'Tuple2_Tab_TokenTab';
+  __typename?: "Tuple2_Tab_TokenTab";
   left?: Maybe<Tab>;
   right?: Maybe<TokenTab>;
 };
 
 export type Tuple2_TokenTab_DocTypeField = {
-  __typename?: 'Tuple2_TokenTab_DocTypeField';
+  __typename?: "Tuple2_TokenTab_DocTypeField";
   left?: Maybe<TokenTab>;
   right?: Maybe<DocTypeField>;
 };
 
 export type UpdateDatasourceDtoInput = {
   /** The dataIndex's id related to this datasource */
-  dataIndexId: Scalars['BigInteger'];
+  dataIndexId: Scalars["BigInteger"];
   /** The datasource's id that needs to be updated */
-  datasourceId: Scalars['BigInteger'];
-  description?: InputMaybe<Scalars['String']>;
+  datasourceId: Scalars["BigInteger"];
+  description?: InputMaybe<Scalars["String"]>;
   /** Json configuration with custom fields for datasource */
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  name: Scalars["String"];
   /** Pipeline to be created and associated (optional) */
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
   /** Pipeline to be associated (optional) */
-  pipelineId?: InputMaybe<Scalars['BigInteger']>;
+  pipelineId?: InputMaybe<Scalars["BigInteger"]>;
   /** The duration to identify orphaned Dataindex. */
-  purgeMaxAge?: InputMaybe<Scalars['String']>;
+  purgeMaxAge?: InputMaybe<Scalars["String"]>;
   /** If true set active the purge job scheduling */
-  purgeable?: InputMaybe<Scalars['Boolean']>;
+  purgeable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define purging for this datasource */
-  purging?: InputMaybe<Scalars['String']>;
+  purging?: InputMaybe<Scalars["String"]>;
   /** If true datasource is reindexed based on defined scheduling expression */
-  reindexable?: InputMaybe<Scalars['Boolean']>;
+  reindexable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define reindexing of datasource */
-  reindexing?: InputMaybe<Scalars['String']>;
+  reindexing?: InputMaybe<Scalars["String"]>;
   /** If true datasource is scheduled based on defined scheduling expression */
-  schedulable?: InputMaybe<Scalars['Boolean']>;
+  schedulable?: InputMaybe<Scalars["Boolean"]>;
   /** Cron quartz expression to define scheduling of datasource */
-  scheduling?: InputMaybe<Scalars['String']>;
+  scheduling?: InputMaybe<Scalars["String"]>;
 };
 
 export enum UserField {
-  Email = 'EMAIL',
-  Name = 'NAME',
-  NameSurname = 'NAME_SURNAME',
-  Roles = 'ROLES',
-  Surname = 'SURNAME',
-  Username = 'USERNAME'
+  Email = "EMAIL",
+  Name = "NAME",
+  NameSurname = "NAME_SURNAME",
+  Roles = "ROLES",
+  Surname = "SURNAME",
+  Username = "USERNAME",
 }
 
 export type LanguagesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type LanguagesQuery = { __typename?: 'Query', languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type LanguagesQuery = {
+  __typename?: "Query";
+  languages?: {
+    __typename?: "DefaultConnection_Language";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Language";
+      node?: { __typename?: "Language"; id?: string | null; name?: string | null; value?: string | null } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type AnalyzersQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type AnalyzersQuery = { __typename?: 'Query', analyzers?: { __typename?: 'DefaultConnection_Analyzer', edges?: Array<{ __typename?: 'DefaultEdge_Analyzer', node?: { __typename?: 'Analyzer', id?: string | null, name?: string | null, description?: string | null, type?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type AnalyzersQuery = {
+  __typename?: "Query";
+  analyzers?: {
+    __typename?: "DefaultConnection_Analyzer";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Analyzer";
+      node?: {
+        __typename?: "Analyzer";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        type?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type AnalyzerOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type AnalyzerOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_Analyzer', edges?: Array<{ __typename?: 'DefaultEdge_Analyzer', node?: { __typename?: 'Analyzer', name?: string | null, description?: string | null, type?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type AnalyzerOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_Analyzer";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Analyzer";
+      node?: {
+        __typename?: "Analyzer";
+        name?: string | null;
+        description?: string | null;
+        type?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type AnalyzerValueQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type AnalyzerValueQuery = { __typename?: 'Query', value?: { __typename?: 'Analyzer', id?: string | null, name?: string | null, description?: string | null, type?: string | null } | null };
+export type AnalyzerValueQuery = {
+  __typename?: "Query";
+  value?: {
+    __typename?: "Analyzer";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    type?: string | null;
+  } | null;
+};
 
 export type BindAnalyzerToDocTypeFieldMutationVariables = Exact<{
-  analyzerId: Scalars['ID'];
-  docTypeFieldId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
+  docTypeFieldId: Scalars["ID"];
 }>;
 
-
-export type BindAnalyzerToDocTypeFieldMutation = { __typename?: 'Mutation', bindAnalyzerToDocTypeField?: { __typename?: 'Tuple2_DocTypeField_Analyzer', left?: { __typename?: 'DocTypeField', id?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null, right?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
+export type BindAnalyzerToDocTypeFieldMutation = {
+  __typename?: "Mutation";
+  bindAnalyzerToDocTypeField?: {
+    __typename?: "Tuple2_DocTypeField_Analyzer";
+    left?: {
+      __typename?: "DocTypeField";
+      id?: string | null;
+      docType?: { __typename?: "DocType"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "Analyzer"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindQueryAnalysisFromDocTypeFieldMutationVariables = Exact<{
-  docTypeFieldId: Scalars['ID'];
+  docTypeFieldId: Scalars["ID"];
 }>;
 
-
-export type UnbindQueryAnalysisFromDocTypeFieldMutation = { __typename?: 'Mutation', unbindAnalyzerFromDocTypeField?: { __typename?: 'Tuple2_DocTypeField_Analyzer', right?: { __typename?: 'Analyzer', id?: string | null } | null } | null };
+export type UnbindQueryAnalysisFromDocTypeFieldMutation = {
+  __typename?: "Mutation";
+  unbindAnalyzerFromDocTypeField?: {
+    __typename?: "Tuple2_DocTypeField_Analyzer";
+    right?: { __typename?: "Analyzer"; id?: string | null } | null;
+  } | null;
+};
 
 export type SearchConfigOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type SearchConfigOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_SearchConfig', edges?: Array<{ __typename?: 'DefaultEdge_SearchConfig', node?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type SearchConfigOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_SearchConfig";
+    edges?: Array<{
+      __typename?: "DefaultEdge_SearchConfig";
+      node?: {
+        __typename?: "SearchConfig";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type SearchConfigValueQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type SearchConfigValueQuery = { __typename?: 'Query', value?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null } | null };
+export type SearchConfigValueQuery = {
+  __typename?: "Query";
+  value?: { __typename?: "SearchConfig"; id?: string | null; name?: string | null; description?: string | null } | null;
+};
 
 export type BindTokenizerToAnalyzerMutationVariables = Exact<{
-  analyzerId: Scalars['ID'];
-  tokenizerId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
+  tokenizerId: Scalars["ID"];
 }>;
 
-
-export type BindTokenizerToAnalyzerMutation = { __typename?: 'Mutation', bindTokenizerToAnalyzer?: { __typename?: 'Tuple2_Analyzer_Tokenizer', left?: { __typename?: 'Analyzer', id?: string | null, tokenizer?: { __typename?: 'Tokenizer', id?: string | null } | null } | null, right?: { __typename?: 'Tokenizer', id?: string | null } | null } | null };
+export type BindTokenizerToAnalyzerMutation = {
+  __typename?: "Mutation";
+  bindTokenizerToAnalyzer?: {
+    __typename?: "Tuple2_Analyzer_Tokenizer";
+    left?: {
+      __typename?: "Analyzer";
+      id?: string | null;
+      tokenizer?: { __typename?: "Tokenizer"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "Tokenizer"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindTokenizerFromAnalyzerMutationVariables = Exact<{
-  analyzerId: Scalars['ID'];
+  analyzerId: Scalars["ID"];
 }>;
 
-
-export type UnbindTokenizerFromAnalyzerMutation = { __typename?: 'Mutation', unbindTokenizerFromAnalyzer?: { __typename?: 'Tuple2_Analyzer_Tokenizer', right?: { __typename?: 'Tokenizer', id?: string | null } | null } | null };
+export type UnbindTokenizerFromAnalyzerMutation = {
+  __typename?: "Mutation";
+  unbindTokenizerFromAnalyzer?: {
+    __typename?: "Tuple2_Analyzer_Tokenizer";
+    right?: { __typename?: "Tokenizer"; id?: string | null } | null;
+  } | null;
+};
 
 export type LanguagesOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type LanguagesOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type LanguagesOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_Language";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Language";
+      node?: { __typename?: "Language"; id?: string | null; name?: string | null; value?: string | null } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type LanguageValueQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type LanguageValueQuery = { __typename?: 'Query', value?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null };
+export type LanguageValueQuery = {
+  __typename?: "Query";
+  value?: { __typename?: "Language"; id?: string | null; name?: string | null; value?: string | null } | null;
+};
 
 export type AnalyzerQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type AnalyzerQuery = { __typename?: 'Query', analyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null, description?: string | null, type?: string | null, jsonConfig?: string | null, tokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null } | null } | null };
+export type AnalyzerQuery = {
+  __typename?: "Query";
+  analyzer?: {
+    __typename?: "Analyzer";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    type?: string | null;
+    jsonConfig?: string | null;
+    tokenizer?: { __typename?: "Tokenizer"; id?: string | null; name?: string | null } | null;
+  } | null;
+};
 
 export type DeleteAnalyzerMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteAnalyzerMutation = { __typename?: 'Mutation', deleteAnalyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null };
+export type DeleteAnalyzerMutation = {
+  __typename?: "Mutation";
+  deleteAnalyzer?: { __typename?: "Analyzer"; id?: string | null; name?: string | null } | null;
+};
 
 export type CreateOrUpdateAnalyzerMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
-  tokenFilterIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  charFilterIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  tokenizerId?: InputMaybe<Scalars['BigInteger']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  type: Scalars["String"];
+  tokenFilterIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  charFilterIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  tokenizerId?: InputMaybe<Scalars["BigInteger"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateAnalyzerMutation = { __typename?: 'Mutation', analyzerWithLists?: { __typename?: 'Response_Analyzer', entity?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateAnalyzerMutation = {
+  __typename?: "Mutation";
+  analyzerWithLists?: {
+    __typename?: "Response_Analyzer";
+    entity?: { __typename?: "Analyzer"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type AnalyzersAssociationsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  unassociated: Scalars['Boolean'];
+  parentId: Scalars["ID"];
+  unassociated: Scalars["Boolean"];
 }>;
 
-
-export type AnalyzersAssociationsQuery = { __typename?: 'Query', analyzer?: { __typename?: 'Analyzer', id?: string | null, charFilters?: { __typename?: 'DefaultConnection_CharFilter', edges?: Array<{ __typename?: 'DefaultEdge_CharFilter', node?: { __typename?: 'CharFilter', id?: string | null, name?: string | null } | null } | null> | null } | null, tokenFilters?: { __typename?: 'DefaultConnection_TokenFilter', edges?: Array<{ __typename?: 'DefaultEdge_TokenFilter', node?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type AnalyzersAssociationsQuery = {
+  __typename?: "Query";
+  analyzer?: {
+    __typename?: "Analyzer";
+    id?: string | null;
+    charFilters?: {
+      __typename?: "DefaultConnection_CharFilter";
+      edges?: Array<{
+        __typename?: "DefaultEdge_CharFilter";
+        node?: { __typename?: "CharFilter"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+    tokenFilters?: {
+      __typename?: "DefaultConnection_TokenFilter";
+      edges?: Array<{
+        __typename?: "DefaultEdge_TokenFilter";
+        node?: { __typename?: "TokenFilter"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type CharfiltersQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CharfiltersQuery = { __typename?: 'Query', charFilters?: { __typename?: 'DefaultConnection_CharFilter', edges?: Array<{ __typename?: 'DefaultEdge_CharFilter', node?: { __typename?: 'CharFilter', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type CharfiltersQuery = {
+  __typename?: "Query";
+  charFilters?: {
+    __typename?: "DefaultConnection_CharFilter";
+    edges?: Array<{
+      __typename?: "DefaultEdge_CharFilter";
+      node?: {
+        __typename?: "CharFilter";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteCharFiltersMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteCharFiltersMutation = { __typename?: 'Mutation', deleteCharFilter?: { __typename?: 'CharFilter', id?: string | null, name?: string | null } | null };
+export type DeleteCharFiltersMutation = {
+  __typename?: "Mutation";
+  deleteCharFilter?: { __typename?: "CharFilter"; id?: string | null; name?: string | null } | null;
+};
 
 export type UnboundAnalyzersByCharFilterQueryVariables = Exact<{
-  charFilterId: Scalars['BigInteger'];
+  charFilterId: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundAnalyzersByCharFilterQuery = { __typename?: 'Query', unboundAnalyzersByCharFilter?: Array<{ __typename?: 'Analyzer', name?: string | null, id?: string | null } | null> | null };
+export type UnboundAnalyzersByCharFilterQuery = {
+  __typename?: "Query";
+  unboundAnalyzersByCharFilter?: Array<{
+    __typename?: "Analyzer";
+    name?: string | null;
+    id?: string | null;
+  } | null> | null;
+};
 
 export type AddCharFiltersToAnalyzerMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddCharFiltersToAnalyzerMutation = { __typename?: 'Mutation', addCharFilterToAnalyzer?: { __typename?: 'Tuple2_Analyzer_CharFilter', left?: { __typename?: 'Analyzer', id?: string | null } | null, right?: { __typename?: 'CharFilter', id?: string | null } | null } | null };
+export type AddCharFiltersToAnalyzerMutation = {
+  __typename?: "Mutation";
+  addCharFilterToAnalyzer?: {
+    __typename?: "Tuple2_Analyzer_CharFilter";
+    left?: { __typename?: "Analyzer"; id?: string | null } | null;
+    right?: { __typename?: "CharFilter"; id?: string | null } | null;
+  } | null;
+};
 
 export type CharFilterQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type CharFilterQuery = { __typename?: 'Query', charFilter?: { __typename?: 'CharFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
+export type CharFilterQuery = {
+  __typename?: "Query";
+  charFilter?: {
+    __typename?: "CharFilter";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    jsonConfig?: string | null;
+    type?: string | null;
+  } | null;
+};
 
 export type CreateOrUpdateCharFilterMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  type: Scalars["String"];
 }>;
 
+export type CreateOrUpdateCharFilterMutation = {
+  __typename?: "Mutation";
+  charFilter?: {
+    __typename?: "Response_CharFilter";
+    entity?: { __typename?: "CharFilter"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
-export type CreateOrUpdateCharFilterMutation = { __typename?: 'Mutation', charFilter?: { __typename?: 'Response_CharFilter', entity?: { __typename?: 'CharFilter', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type DataIndexInformationQueryVariables = Exact<{ [key: string]: never }>;
 
-export type DataIndexInformationQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type DataIndexInformationQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null } | null> | null } | null } | null } | null> | null } | null };
+export type DataIndexInformationQuery = {
+  __typename?: "Query";
+  buckets?: {
+    __typename?: "DefaultConnection_Bucket";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Bucket";
+      node?: {
+        __typename?: "Bucket";
+        datasources?: {
+          __typename?: "DefaultConnection_Datasource";
+          edges?: Array<{
+            __typename?: "DefaultEdge_Datasource";
+            node?: {
+              __typename?: "Datasource";
+              dataIndex?: {
+                __typename?: "DataIndex";
+                cat?: {
+                  __typename?: "CatResponse";
+                  docsCount?: string | null;
+                  docsDeleted?: string | null;
+                  health?: string | null;
+                  index?: string | null;
+                  pri?: string | null;
+                  priStoreSize: any;
+                  rep?: string | null;
+                  status?: string | null;
+                  storeSize: any;
+                  uuid?: string | null;
+                } | null;
+              } | null;
+            } | null;
+          } | null> | null;
+        } | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type SchedulersFaiulureQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type SchedulersFaiulureQuery = { __typename?: 'Query', schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', id?: string | null, modifiedDate?: any | null, errorDescription?: string | null, lastIngestionDate?: any | null, status?: SchedulerStatus | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, newDataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null } | null> | null } | null };
+export type SchedulersFaiulureQuery = {
+  __typename?: "Query";
+  schedulers?: {
+    __typename?: "DefaultConnection_Scheduler";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Scheduler";
+      node?: {
+        __typename?: "Scheduler";
+        id?: string | null;
+        modifiedDate?: any | null;
+        errorDescription?: string | null;
+        lastIngestionDate?: any | null;
+        status?: SchedulerStatus | null;
+        datasource?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+        newDataIndex?: { __typename?: "DataIndex"; id?: string | null; name?: string | null } | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DocumentTypeTemplatesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocumentTypeTemplatesQuery = { __typename?: 'Query', docTypeTemplates?: { __typename?: 'DefaultConnection_DocTypeTemplate', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeTemplate', node?: { __typename?: 'DocTypeTemplate', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocumentTypeTemplatesQuery = {
+  __typename?: "Query";
+  docTypeTemplates?: {
+    __typename?: "DefaultConnection_DocTypeTemplate";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeTemplate";
+      node?: {
+        __typename?: "DocTypeTemplate";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteDocumentTypeTemplateMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteDocumentTypeTemplateMutation = { __typename?: 'Mutation', deleteDocTypeTemplate?: { __typename?: 'DocTypeTemplate', id?: string | null, name?: string | null } | null };
+export type DeleteDocumentTypeTemplateMutation = {
+  __typename?: "Mutation";
+  deleteDocTypeTemplate?: { __typename?: "DocTypeTemplate"; id?: string | null; name?: string | null } | null;
+};
 
 export type DocumentTypesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocumentTypesQuery = { __typename?: 'Query', docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocumentTypesQuery = {
+  __typename?: "Query";
+  docTypes?: {
+    __typename?: "DefaultConnection_DocType";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocType";
+      node?: { __typename?: "DocType"; id?: string | null; name?: string | null; description?: string | null } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DocumentTypeTemplateQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DocumentTypeTemplateQuery = { __typename?: 'Query', docTypeTemplate?: { __typename?: 'DocTypeTemplate', id?: string | null, name?: string | null, description?: string | null, templateType?: TemplateType | null, source?: string | null, compiled?: string | null } | null };
+export type DocumentTypeTemplateQuery = {
+  __typename?: "Query";
+  docTypeTemplate?: {
+    __typename?: "DocTypeTemplate";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    templateType?: TemplateType | null;
+    source?: string | null;
+    compiled?: string | null;
+  } | null;
+};
 
 export type CreateOrUpdateDocumentTypeTemplateMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   templateType: TemplateType;
-  source: Scalars['String'];
-  compiled: Scalars['String'];
+  source: Scalars["String"];
+  compiled: Scalars["String"];
 }>;
 
-
-export type CreateOrUpdateDocumentTypeTemplateMutation = { __typename?: 'Mutation', docTypeTemplate?: { __typename?: 'Response_DocTypeTemplate', entity?: { __typename?: 'DocTypeTemplate', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateDocumentTypeTemplateMutation = {
+  __typename?: "Mutation";
+  docTypeTemplate?: {
+    __typename?: "Response_DocTypeTemplate";
+    entity?: { __typename?: "DocTypeTemplate"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DocumentTypeFieldQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, analyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+export type DocumentTypeFieldQuery = {
+  __typename?: "Query";
+  docTypeField?: {
+    __typename?: "DocTypeField";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    fieldType?: FieldType | null;
+    boost?: number | null;
+    searchable?: boolean | null;
+    exclude?: boolean | null;
+    fieldName?: string | null;
+    jsonConfig?: string | null;
+    sortable?: boolean | null;
+    analyzer?: { __typename?: "Analyzer"; id?: string | null; name?: string | null } | null;
+    translations?: Array<{
+      __typename?: "TranslationDTO";
+      key?: string | null;
+      language?: string | null;
+      value?: string | null;
+      description?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdateDocumentTypeSubFieldsMutationVariables = Exact<{
-  parentDocTypeFieldId: Scalars['ID'];
-  name: Scalars['String'];
-  fieldName: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  searchable: Scalars['Boolean'];
-  boost?: InputMaybe<Scalars['Float']>;
+  parentDocTypeFieldId: Scalars["ID"];
+  name: Scalars["String"];
+  fieldName: Scalars["String"];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  searchable: Scalars["Boolean"];
+  boost?: InputMaybe<Scalars["Float"]>;
   fieldType: FieldType;
-  sortable: Scalars['Boolean'];
+  sortable: Scalars["Boolean"];
 }>;
 
-
-export type CreateOrUpdateDocumentTypeSubFieldsMutation = { __typename?: 'Mutation', createSubField?: { __typename?: 'Response_DocTypeField', entity?: { __typename?: 'DocTypeField', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateDocumentTypeSubFieldsMutation = {
+  __typename?: "Mutation";
+  createSubField?: {
+    __typename?: "Response_DocTypeField";
+    entity?: { __typename?: "DocTypeField"; id?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdateDocumentTypeMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateDocumentTypeMutation = { __typename?: 'Mutation', docType?: { __typename?: 'Response_DocType', entity?: { __typename?: 'DocType', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateDocumentTypeMutation = {
+  __typename?: "Mutation";
+  docType?: {
+    __typename?: "Response_DocType";
+    entity?: { __typename?: "DocType"; id?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DocumentTypeQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DocumentTypeQuery = { __typename?: 'Query', docType?: { __typename?: 'DocType', id?: string | null, name?: string | null, description?: string | null, docTypeTemplate?: { __typename?: 'DocTypeTemplate', id?: string | null, name?: string | null } | null } | null };
+export type DocumentTypeQuery = {
+  __typename?: "Query";
+  docType?: {
+    __typename?: "DocType";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    docTypeTemplate?: { __typename?: "DocTypeTemplate"; id?: string | null; name?: string | null } | null;
+  } | null;
+};
 
 export type DocTypeFieldsByParentQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  parentId: Scalars['BigInteger'];
-  docTypeId: Scalars['ID'];
+  searchText?: InputMaybe<Scalars["String"]>;
+  parentId: Scalars["BigInteger"];
+  docTypeId: Scalars["ID"];
 }>;
 
-
-export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
+export type DocTypeFieldsByParentQuery = {
+  __typename?: "Query";
+  docTypeFieldsFromDocTypeByParent?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: {
+        __typename?: "DocTypeField";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        fieldType?: FieldType | null;
+        boost?: number | null;
+        searchable?: boolean | null;
+        exclude?: boolean | null;
+        fieldName?: string | null;
+        jsonConfig?: string | null;
+        sortable?: boolean | null;
+        parent?: { __typename?: "DocTypeField"; id?: string | null; fieldName?: string | null } | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
-  documentTypeId: Scalars['ID'];
-  documentTypeFieldId?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  fieldName: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  documentTypeId: Scalars["ID"];
+  documentTypeFieldId?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  fieldName: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   fieldType: FieldType;
-  boost?: InputMaybe<Scalars['Float']>;
-  searchable: Scalars['Boolean'];
-  exclude?: InputMaybe<Scalars['Boolean']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  sortable: Scalars['Boolean'];
-  analyzerId?: InputMaybe<Scalars['BigInteger']>;
+  boost?: InputMaybe<Scalars["Float"]>;
+  searchable: Scalars["Boolean"];
+  exclude?: InputMaybe<Scalars["Boolean"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  sortable: Scalars["Boolean"];
+  analyzerId?: InputMaybe<Scalars["BigInteger"]>;
 }>;
 
-
-export type CreateOrUpdateDocumentTypeFieldMutation = { __typename?: 'Mutation', docTypeFieldWithAnalyzer?: { __typename?: 'Response_DocTypeField', entity?: { __typename?: 'DocTypeField', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateDocumentTypeFieldMutation = {
+  __typename?: "Mutation";
+  docTypeFieldWithAnalyzer?: {
+    __typename?: "Response_DocTypeField";
+    entity?: { __typename?: "DocTypeField"; id?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DeleteDocumentTypeMutationVariables = Exact<{
-  id: Scalars['ID'];
-  docTypeName?: InputMaybe<Scalars['String']>;
+  id: Scalars["ID"];
+  docTypeName?: InputMaybe<Scalars["String"]>;
 }>;
 
+export type DeleteDocumentTypeMutation = {
+  __typename?: "Mutation";
+  deleteDocType?: { __typename?: "DocType"; id?: string | null } | null;
+};
 
-export type DeleteDocumentTypeMutation = { __typename?: 'Mutation', deleteDocType?: { __typename?: 'DocType', id?: string | null } | null };
+export type DocTypeTemplateListQueryVariables = Exact<{ [key: string]: never }>;
 
-export type DocTypeTemplateListQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type DocTypeTemplateListQuery = { __typename?: 'Query', docTypeTemplates?: { __typename?: 'DefaultConnection_DocTypeTemplate', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeTemplate', node?: { __typename?: 'DocTypeTemplate', name?: string | null, id?: string | null } | null } | null> | null } | null };
+export type DocTypeTemplateListQuery = {
+  __typename?: "Query";
+  docTypeTemplates?: {
+    __typename?: "DefaultConnection_DocTypeTemplate";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeTemplate";
+      node?: { __typename?: "DocTypeTemplate"; name?: string | null; id?: string | null } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdateDocTypeWithTemplateMutationVariables = Exact<{
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  docTypeTemplateId?: InputMaybe<Scalars['BigInteger']>;
-  id?: InputMaybe<Scalars['ID']>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  docTypeTemplateId?: InputMaybe<Scalars["BigInteger"]>;
+  id?: InputMaybe<Scalars["ID"]>;
 }>;
 
+export type CreateOrUpdateDocTypeWithTemplateMutation = {
+  __typename?: "Mutation";
+  docTypeWithTemplate?: {
+    __typename?: "Response_DocType";
+    entity?: { __typename?: "DocType"; id?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
-export type CreateOrUpdateDocTypeWithTemplateMutation = { __typename?: 'Mutation', docTypeWithTemplate?: { __typename?: 'Response_DocType', entity?: { __typename?: 'DocType', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type UnboundAnalyzersQueryVariables = Exact<{ [key: string]: never }>;
 
-export type UnboundAnalyzersQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type UnboundAnalyzersQuery = { __typename?: 'Query', analyzers?: { __typename?: 'DefaultConnection_Analyzer', edges?: Array<{ __typename?: 'DefaultEdge_Analyzer', node?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null } | null> | null } | null };
+export type UnboundAnalyzersQuery = {
+  __typename?: "Query";
+  analyzers?: {
+    __typename?: "DefaultConnection_Analyzer";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Analyzer";
+      node?: { __typename?: "Analyzer"; id?: string | null; name?: string | null } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type EmbeddingModelsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type EmbeddingModelsQuery = { __typename?: 'Query', embeddingModels?: { __typename?: 'DefaultConnection_EmbeddingModel', edges?: Array<{ __typename?: 'DefaultEdge_EmbeddingModel', node?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null, description?: string | null, enabled: boolean } | null } | null> | null } | null };
+export type EmbeddingModelsQuery = {
+  __typename?: "Query";
+  embeddingModels?: {
+    __typename?: "DefaultConnection_EmbeddingModel";
+    edges?: Array<{
+      __typename?: "DefaultEdge_EmbeddingModel";
+      node?: {
+        __typename?: "EmbeddingModel";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        enabled: boolean;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type EnableEmbeddingModelMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EnableEmbeddingModelMutation = { __typename?: 'Mutation', enableEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
+export type EnableEmbeddingModelMutation = {
+  __typename?: "Mutation";
+  enableEmbeddingModel?: { __typename?: "EmbeddingModel"; id?: string | null; name?: string | null } | null;
+};
 
 export type DeleteEmbeddingModelMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteEmbeddingModelMutation = { __typename?: 'Mutation', deleteEmbeddingModel?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null };
+export type DeleteEmbeddingModelMutation = {
+  __typename?: "Mutation";
+  deleteEmbeddingModel?: { __typename?: "EmbeddingModel"; id?: string | null; name?: string | null } | null;
+};
 
 export type EmbeddingModelQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, vectorSize?: number | null, jsonConfig?: string | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
+export type EmbeddingModelQuery = {
+  __typename?: "Query";
+  embeddingModel?: {
+    __typename?: "EmbeddingModel";
+    name?: string | null;
+    description?: string | null;
+    apiUrl?: string | null;
+    apiKey?: string | null;
+    vectorSize?: number | null;
+    jsonConfig?: string | null;
+    providerModel?: { __typename?: "ProviderModel"; provider?: string | null; model?: string | null } | null;
+  } | null;
+};
 
 export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  apiKey?: InputMaybe<Scalars['String']>;
-  apiUrl: Scalars['String'];
-  description: Scalars['String'];
-  name: Scalars['String'];
-  vectorSize: Scalars['Int'];
+  id?: InputMaybe<Scalars["ID"]>;
+  apiKey?: InputMaybe<Scalars["String"]>;
+  apiUrl: Scalars["String"];
+  description: Scalars["String"];
+  name: Scalars["String"];
+  vectorSize: Scalars["Int"];
   providerModel: ProviderModelDtoInput;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateEmbeddingModelMutation = { __typename?: 'Mutation', embeddingModel?: { __typename?: 'Response_EmbeddingModel', entity?: { __typename?: 'EmbeddingModel', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateEmbeddingModelMutation = {
+  __typename?: "Mutation";
+  embeddingModel?: {
+    __typename?: "Response_EmbeddingModel";
+    entity?: { __typename?: "EmbeddingModel"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type UnboundEnrichPipelinesQueryVariables = Exact<{
-  itemId: Scalars['BigInteger'];
+  itemId: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundEnrichPipelinesQuery = { __typename?: 'Query', unboundEnrichPipelines?: Array<{ __typename?: 'EnrichPipeline', name?: string | null, id?: string | null } | null> | null };
+export type UnboundEnrichPipelinesQuery = {
+  __typename?: "Query";
+  unboundEnrichPipelines?: Array<{
+    __typename?: "EnrichPipeline";
+    name?: string | null;
+    id?: string | null;
+  } | null> | null;
+};
 
 export type DeleteEnrichItemMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteEnrichItemMutation = { __typename?: 'Mutation', deleteEnrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null } | null };
+export type DeleteEnrichItemMutation = {
+  __typename?: "Mutation";
+  deleteEnrichItem?: { __typename?: "EnrichItem"; id?: string | null; name?: string | null } | null;
+};
 
 export type EnrichItemQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null };
+export type EnrichItemQuery = {
+  __typename?: "Query";
+  enrichItem?: {
+    __typename?: "EnrichItem";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    type?: EnrichItemType | null;
+    serviceName?: string | null;
+    jsonConfig?: string | null;
+    script?: string | null;
+    behaviorMergeType?: BehaviorMergeType | null;
+    jsonPath?: string | null;
+    behaviorOnError?: BehaviorOnError | null;
+    requestTimeout?: any | null;
+  } | null;
+};
 
 export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   type: EnrichItemType;
-  serviceName: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  script?: InputMaybe<Scalars['String']>;
+  serviceName: Scalars["String"];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  script?: InputMaybe<Scalars["String"]>;
   behaviorMergeType: BehaviorMergeType;
-  jsonPath: Scalars['String'];
+  jsonPath: Scalars["String"];
   behaviorOnError: BehaviorOnError;
-  requestTimeout: Scalars['BigInteger'];
+  requestTimeout: Scalars["BigInteger"];
 }>;
 
-
-export type CreateOrUpdateEnrichItemMutation = { __typename?: 'Mutation', enrichItem?: { __typename?: 'Response_EnrichItem', entity?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateEnrichItemMutation = {
+  __typename?: "Mutation";
+  enrichItem?: {
+    __typename?: "Response_EnrichItem";
+    entity?: { __typename?: "EnrichItem"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type LargeLanguageModelsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type LargeLanguageModelsQuery = { __typename?: 'Query', largeLanguageModels?: { __typename?: 'DefaultConnection_LargeLanguageModel', edges?: Array<{ __typename?: 'DefaultEdge_LargeLanguageModel', node?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null, description?: string | null, enabled: boolean, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type LargeLanguageModelsQuery = {
+  __typename?: "Query";
+  largeLanguageModels?: {
+    __typename?: "DefaultConnection_LargeLanguageModel";
+    edges?: Array<{
+      __typename?: "DefaultEdge_LargeLanguageModel";
+      node?: {
+        __typename?: "LargeLanguageModel";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        enabled: boolean;
+        providerModel?: { __typename?: "ProviderModel"; provider?: string | null; model?: string | null } | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type EnableLargeLanguageModelMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EnableLargeLanguageModelMutation = { __typename?: 'Mutation', enableLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
+export type EnableLargeLanguageModelMutation = {
+  __typename?: "Mutation";
+  enableLargeLanguageModel?: { __typename?: "LargeLanguageModel"; id?: string | null; name?: string | null } | null;
+};
 
 export type DeleteLargeLanguageModelMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteLargeLanguageModelMutation = { __typename?: 'Mutation', deleteLargeLanguageModel?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null };
+export type DeleteLargeLanguageModelMutation = {
+  __typename?: "Mutation";
+  deleteLargeLanguageModel?: { __typename?: "LargeLanguageModel"; id?: string | null; name?: string | null } | null;
+};
 
 export type CreateOrUpdateLargeLanguageModelMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  apiKey?: InputMaybe<Scalars['String']>;
-  apiUrl: Scalars['String'];
-  description: Scalars['String'];
-  name: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  apiKey?: InputMaybe<Scalars["String"]>;
+  apiUrl: Scalars["String"];
+  description: Scalars["String"];
+  name: Scalars["String"];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
   providerModel: ProviderModelDtoInput;
-  contextWindow?: InputMaybe<Scalars['Int']>;
-  retrieveCitations?: InputMaybe<Scalars['Boolean']>;
+  contextWindow?: InputMaybe<Scalars["Int"]>;
+  retrieveCitations?: InputMaybe<Scalars["Boolean"]>;
 }>;
 
-
-export type CreateOrUpdateLargeLanguageModelMutation = { __typename?: 'Mutation', largeLanguageModel?: { __typename?: 'Response_LargeLanguageModel', entity?: { __typename?: 'LargeLanguageModel', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateLargeLanguageModelMutation = {
+  __typename?: "Mutation";
+  largeLanguageModel?: {
+    __typename?: "Response_LargeLanguageModel";
+    entity?: { __typename?: "LargeLanguageModel"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type LargeLanguageModelQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
+export type LargeLanguageModelQuery = {
+  __typename?: "Query";
+  largeLanguageModel?: {
+    __typename?: "LargeLanguageModel";
+    name?: string | null;
+    description?: string | null;
+    apiUrl?: string | null;
+    apiKey?: string | null;
+    jsonConfig?: string | null;
+    contextWindow?: number | null;
+    retrieveCitations?: boolean | null;
+    providerModel?: { __typename?: "ProviderModel"; provider?: string | null; model?: string | null } | null;
+  } | null;
+};
 
-export type LargeLanguageModelQuery = { __typename?: 'Query', largeLanguageModel?: { __typename?: 'LargeLanguageModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, jsonConfig?: string | null, contextWindow?: number | null, retrieveCitations?: boolean | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
+export type SchedulersQueryVariables = Exact<{ [key: string]: never }>;
 
-export type SchedulersQueryVariables = Exact<{ [key: string]: never; }>;
+export type SchedulersQuery = {
+  __typename?: "Query";
+  schedulers?: {
+    __typename?: "DefaultConnection_Scheduler";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Scheduler";
+      node?: {
+        __typename?: "Scheduler";
+        scheduleId?: string | null;
+        status?: SchedulerStatus | null;
+        datasource?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
+export type SchedulersErrorQueryVariables = Exact<{ [key: string]: never }>;
 
-export type SchedulersQuery = { __typename?: 'Query', schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', scheduleId?: string | null, status?: SchedulerStatus | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null } | null> | null } | null };
-
-export type SchedulersErrorQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type SchedulersErrorQuery = { __typename?: 'Query', schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', scheduleId?: string | null, createDate?: any | null, status?: SchedulerStatus | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null } | null> | null } | null };
+export type SchedulersErrorQuery = {
+  __typename?: "Query";
+  schedulers?: {
+    __typename?: "DefaultConnection_Scheduler";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Scheduler";
+      node?: {
+        __typename?: "Scheduler";
+        scheduleId?: string | null;
+        createDate?: any | null;
+        status?: SchedulerStatus | null;
+        datasource?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type SchedulerQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type SchedulerQuery = { __typename?: 'Query', scheduler?: { __typename?: 'Scheduler', scheduleId?: string | null, createDate?: any | null, modifiedDate?: any | null, lastIngestionDate?: any | null, status?: SchedulerStatus | null, errorDescription?: string | null } | null };
+export type SchedulerQuery = {
+  __typename?: "Query";
+  scheduler?: {
+    __typename?: "Scheduler";
+    scheduleId?: string | null;
+    createDate?: any | null;
+    modifiedDate?: any | null;
+    lastIngestionDate?: any | null;
+    status?: SchedulerStatus | null;
+    errorDescription?: string | null;
+  } | null;
+};
 
 export type PluginDriverQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type PluginDriverQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, jsonConfig?: string | null, provisioning?: Provisioning | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', name?: string | null, id?: string | null, fieldName?: string | null } | null } | null> | null } | null };
+export type PluginDriverQuery = {
+  __typename?: "Query";
+  pluginDriver?: {
+    __typename?: "PluginDriver";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    type?: PluginDriverType | null;
+    jsonConfig?: string | null;
+    provisioning?: Provisioning | null;
+    aclMappings?: Array<{
+      __typename?: "PluginDriverAclMapping";
+      userField?: UserField | null;
+      docTypeField?: {
+        __typename?: "DocTypeField";
+        name?: string | null;
+        id?: string | null;
+        fieldName?: string | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdatePluginDriverMutationMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   type: PluginDriverType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
   provisioning: Provisioning;
 }>;
 
-
-export type CreateOrUpdatePluginDriverMutationMutation = { __typename?: 'Mutation', pluginDriver?: { __typename?: 'Response_PluginDriver', entity?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdatePluginDriverMutationMutation = {
+  __typename?: "Mutation";
+  pluginDriver?: {
+    __typename?: "Response_PluginDriver";
+    entity?: { __typename?: "PluginDriver"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type PluginDriverByNameQueryVariables = Exact<{
-  name?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type PluginDriverByNameQuery = { __typename?: 'Query', pluginDrivers?: { __typename?: 'DefaultConnection_PluginDriver', edges?: Array<{ __typename?: 'DefaultEdge_PluginDriver', node?: { __typename?: 'PluginDriver', id?: string | null } | null } | null> | null } | null };
+export type PluginDriverByNameQuery = {
+  __typename?: "Query";
+  pluginDrivers?: {
+    __typename?: "DefaultConnection_PluginDriver";
+    edges?: Array<{
+      __typename?: "DefaultEdge_PluginDriver";
+      node?: { __typename?: "PluginDriver"; id?: string | null } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type PluginDriversInfoQueryQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type PluginDriversInfoQueryQuery = { __typename?: 'Query', pluginDrivers?: { __typename?: 'DefaultConnection_PluginDriver', edges?: Array<{ __typename?: 'DefaultEdge_PluginDriver', node?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', fieldName?: string | null } | null } | null> | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type PluginDriversInfoQueryQuery = {
+  __typename?: "Query";
+  pluginDrivers?: {
+    __typename?: "DefaultConnection_PluginDriver";
+    edges?: Array<{
+      __typename?: "DefaultEdge_PluginDriver";
+      node?: {
+        __typename?: "PluginDriver";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        type?: PluginDriverType | null;
+        aclMappings?: Array<{
+          __typename?: "PluginDriverAclMapping";
+          userField?: UserField | null;
+          docTypeField?: { __typename?: "DocTypeField"; fieldName?: string | null } | null;
+        } | null> | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeletePluginDriverMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeletePluginDriverMutation = { __typename?: 'Mutation', deletePluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null } | null };
+export type DeletePluginDriverMutation = {
+  __typename?: "Mutation";
+  deletePluginDriver?: { __typename?: "PluginDriver"; id?: string | null; name?: string | null } | null;
+};
 
 export type PluginDriverWithDocTypeMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   type: PluginDriverType;
-  jsonConfig: Scalars['String'];
+  jsonConfig: Scalars["String"];
   provisioning: Provisioning;
   docTypeUserDTOSet?: InputMaybe<Array<InputMaybe<DocTypeUserDtoInput>> | InputMaybe<DocTypeUserDtoInput>>;
 }>;
 
-
-export type PluginDriverWithDocTypeMutation = { __typename?: 'Mutation', pluginDriverWithDocType?: { __typename?: 'Response_PluginDriver', entity?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type PluginDriverWithDocTypeMutation = {
+  __typename?: "Mutation";
+  pluginDriverWithDocType?: {
+    __typename?: "Response_PluginDriver";
+    entity?: { __typename?: "PluginDriver"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type PluginDriverToDocumentTypeFieldsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type PluginDriverToDocumentTypeFieldsQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null, docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type PluginDriverToDocumentTypeFieldsQuery = {
+  __typename?: "Query";
+  pluginDriver?: {
+    __typename?: "PluginDriver";
+    id?: string | null;
+    aclMappings?: Array<{
+      __typename?: "PluginDriverAclMapping";
+      userField?: UserField | null;
+      docTypeField?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+    } | null> | null;
+    docTypeFields?: {
+      __typename?: "DefaultConnection_DocTypeField";
+      edges?: Array<{
+        __typename?: "DefaultEdge_DocTypeField";
+        node?: {
+          __typename?: "DocTypeField";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+          docType?: { __typename?: "DocType"; id?: string | null } | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type DocumentTypeFieldsForPluginQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocumentTypeFieldsForPluginQuery = { __typename?: 'Query', docTypeFields?: { __typename: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename: 'DefaultEdge_DocTypeField', node?: { __typename: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null } | null };
+export type DocumentTypeFieldsForPluginQuery = {
+  __typename?: "Query";
+  docTypeFields?: {
+    __typename: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename: "DefaultEdge_DocTypeField";
+      node?: {
+        __typename: "DocTypeField";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
 export type QueryAnalysesRulesQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type QueryAnalysesRulesQuery = { __typename?: 'Query', queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, rules?: { __typename?: 'DefaultConnection_Rule', edges?: Array<{ __typename?: 'DefaultEdge_Rule', node?: { __typename?: 'Rule', id?: string | null, name?: string | null, lhs?: string | null, rhs?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type QueryAnalysesRulesQuery = {
+  __typename?: "Query";
+  queryAnalysis?: {
+    __typename?: "QueryAnalysis";
+    id?: string | null;
+    rules?: {
+      __typename?: "DefaultConnection_Rule";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Rule";
+        node?: {
+          __typename?: "Rule";
+          id?: string | null;
+          name?: string | null;
+          lhs?: string | null;
+          rhs?: string | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type AddRulesToQueryAnalysesMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddRulesToQueryAnalysesMutation = { __typename?: 'Mutation', addRuleToQueryAnalysis?: { __typename?: 'Tuple2_QueryAnalysis_Rule', left?: { __typename?: 'QueryAnalysis', id?: string | null } | null, right?: { __typename?: 'Rule', id?: string | null } | null } | null };
+export type AddRulesToQueryAnalysesMutation = {
+  __typename?: "Mutation";
+  addRuleToQueryAnalysis?: {
+    __typename?: "Tuple2_QueryAnalysis_Rule";
+    left?: { __typename?: "QueryAnalysis"; id?: string | null } | null;
+    right?: { __typename?: "Rule"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveRuleFromQueryAnalysesMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveRuleFromQueryAnalysesMutation = { __typename?: 'Mutation', removeRuleFromQueryAnalysis?: { __typename?: 'Tuple2_QueryAnalysis_Rule', left?: { __typename?: 'QueryAnalysis', id?: string | null } | null, right?: { __typename?: 'Rule', id?: string | null } | null } | null };
+export type RemoveRuleFromQueryAnalysesMutation = {
+  __typename?: "Mutation";
+  removeRuleFromQueryAnalysis?: {
+    __typename?: "Tuple2_QueryAnalysis_Rule";
+    left?: { __typename?: "QueryAnalysis"; id?: string | null } | null;
+    right?: { __typename?: "Rule"; id?: string | null } | null;
+  } | null;
+};
 
 export type QueryAnalysisQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type QueryAnalysisQuery = { __typename?: 'Query', queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null, description?: string | null, stopWords?: string | null, annotators?: { __typename?: 'DefaultConnection_Annotator', edges?: Array<{ __typename?: 'DefaultEdge_Annotator', node?: { __typename?: 'Annotator', id?: string | null, name?: string | null } | null } | null> | null } | null, rules?: { __typename?: 'DefaultConnection_Rule', edges?: Array<{ __typename?: 'DefaultEdge_Rule', node?: { __typename?: 'Rule', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type QueryAnalysisQuery = {
+  __typename?: "Query";
+  queryAnalysis?: {
+    __typename?: "QueryAnalysis";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    stopWords?: string | null;
+    annotators?: {
+      __typename?: "DefaultConnection_Annotator";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Annotator";
+        node?: { __typename?: "Annotator"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+    rules?: {
+      __typename?: "DefaultConnection_Rule";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Rule";
+        node?: { __typename?: "Rule"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type QueryAnalysesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type QueryAnalysesQuery = { __typename?: 'Query', queryAnalyses?: { __typename?: 'DefaultConnection_QueryAnalysis', edges?: Array<{ __typename?: 'DefaultEdge_QueryAnalysis', node?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type QueryAnalysesQuery = {
+  __typename?: "Query";
+  queryAnalyses?: {
+    __typename?: "DefaultConnection_QueryAnalysis";
+    edges?: Array<{
+      __typename?: "DefaultEdge_QueryAnalysis";
+      node?: {
+        __typename?: "QueryAnalysis";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteQueryAnalysisMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteQueryAnalysisMutation = { __typename?: 'Mutation', deleteQueryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null } | null };
+export type DeleteQueryAnalysisMutation = {
+  __typename?: "Mutation";
+  deleteQueryAnalysis?: { __typename?: "QueryAnalysis"; id?: string | null; name?: string | null } | null;
+};
 
 export type CreateOrUpdateQueryAnalysisMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  stopWords?: InputMaybe<Scalars['String']>;
-  annotatorsIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  rulesIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  stopWords?: InputMaybe<Scalars["String"]>;
+  annotatorsIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  rulesIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
 }>;
 
-
-export type CreateOrUpdateQueryAnalysisMutation = { __typename?: 'Mutation', queryAnalysisWithLists?: { __typename?: 'Response_QueryAnalysis', entity?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateQueryAnalysisMutation = {
+  __typename?: "Mutation";
+  queryAnalysisWithLists?: {
+    __typename?: "Response_QueryAnalysis";
+    entity?: { __typename?: "QueryAnalysis"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type QueryAnalysisAssociationsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  unassociated: Scalars['Boolean'];
+  parentId: Scalars["ID"];
+  unassociated: Scalars["Boolean"];
 }>;
 
-
-export type QueryAnalysisAssociationsQuery = { __typename?: 'Query', queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, annotators?: { __typename?: 'DefaultConnection_Annotator', edges?: Array<{ __typename?: 'DefaultEdge_Annotator', node?: { __typename?: 'Annotator', id?: string | null, name?: string | null } | null } | null> | null } | null, rules?: { __typename?: 'DefaultConnection_Rule', edges?: Array<{ __typename?: 'DefaultEdge_Rule', node?: { __typename?: 'Rule', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type QueryAnalysisAssociationsQuery = {
+  __typename?: "Query";
+  queryAnalysis?: {
+    __typename?: "QueryAnalysis";
+    id?: string | null;
+    annotators?: {
+      __typename?: "DefaultConnection_Annotator";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Annotator";
+        node?: { __typename?: "Annotator"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+    rules?: {
+      __typename?: "DefaultConnection_Rule";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Rule";
+        node?: { __typename?: "Rule"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type RagConfigurationsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type RagConfigurationsQuery = { __typename?: 'Query', ragConfigurations?: { __typename?: 'DefaultConnection_RAGConfiguration', edges?: Array<{ __typename?: 'DefaultEdge_RAGConfiguration', node?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, description?: string | null, type?: RagType | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type RagConfigurationsQuery = {
+  __typename?: "Query";
+  ragConfigurations?: {
+    __typename?: "DefaultConnection_RAGConfiguration";
+    edges?: Array<{
+      __typename?: "DefaultEdge_RAGConfiguration";
+      node?: {
+        __typename?: "RAGConfiguration";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        type?: RagType | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type RagConfigurationQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type RagConfigurationQuery = { __typename?: 'Query', ragConfiguration?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, description?: string | null, type?: RagType | null, reformulate?: boolean | null, chunkWindow?: number | null, rephrasePrompt?: string | null, prompt?: string | null, jsonConfig?: string | null, ragToolDescription?: string | null, promptNoRag?: string | null } | null };
+export type RagConfigurationQuery = {
+  __typename?: "Query";
+  ragConfiguration?: {
+    __typename?: "RAGConfiguration";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    type?: RagType | null;
+    reformulate?: boolean | null;
+    chunkWindow?: number | null;
+    rephrasePrompt?: string | null;
+    prompt?: string | null;
+    jsonConfig?: string | null;
+    ragToolDescription?: string | null;
+    promptNoRag?: string | null;
+  } | null;
+};
 
 export type CreateRagConfigMutationVariables = Exact<{
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   type: RagType;
-  reformulate?: InputMaybe<Scalars['Boolean']>;
-  chunkWindow?: InputMaybe<Scalars['Int']>;
-  rephrasePrompt?: InputMaybe<Scalars['String']>;
-  prompt?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  ragToolDescription?: InputMaybe<Scalars['String']>;
-  promptNoRag?: InputMaybe<Scalars['String']>;
+  reformulate?: InputMaybe<Scalars["Boolean"]>;
+  chunkWindow?: InputMaybe<Scalars["Int"]>;
+  rephrasePrompt?: InputMaybe<Scalars["String"]>;
+  prompt?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  ragToolDescription?: InputMaybe<Scalars["String"]>;
+  promptNoRag?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateRagConfigMutation = { __typename?: 'Mutation', createRAGConfiguration?: { __typename?: 'Response_RAGConfiguration', entity?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, type?: RagType | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateRagConfigMutation = {
+  __typename?: "Mutation";
+  createRAGConfiguration?: {
+    __typename?: "Response_RAGConfiguration";
+    entity?: {
+      __typename?: "RAGConfiguration";
+      id?: string | null;
+      name?: string | null;
+      type?: RagType | null;
+    } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type UpdateRagConfigurationMutationVariables = Exact<{
-  id: Scalars['ID'];
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  reformulate?: InputMaybe<Scalars['Boolean']>;
-  chunkWindow?: InputMaybe<Scalars['Int']>;
-  rephrasePrompt?: InputMaybe<Scalars['String']>;
-  prompt?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  ragToolDescription?: InputMaybe<Scalars['String']>;
-  promptNoRag?: InputMaybe<Scalars['String']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
+  id: Scalars["ID"];
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  reformulate?: InputMaybe<Scalars["Boolean"]>;
+  chunkWindow?: InputMaybe<Scalars["Int"]>;
+  rephrasePrompt?: InputMaybe<Scalars["String"]>;
+  prompt?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  ragToolDescription?: InputMaybe<Scalars["String"]>;
+  promptNoRag?: InputMaybe<Scalars["String"]>;
+  patch?: InputMaybe<Scalars["Boolean"]>;
 }>;
 
-
-export type UpdateRagConfigurationMutation = { __typename?: 'Mutation', updateRAGConfiguration?: { __typename?: 'Response_RAGConfiguration', entity?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, type?: RagType | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type UpdateRagConfigurationMutation = {
+  __typename?: "Mutation";
+  updateRAGConfiguration?: {
+    __typename?: "Response_RAGConfiguration";
+    entity?: {
+      __typename?: "RAGConfiguration";
+      id?: string | null;
+      name?: string | null;
+      type?: RagType | null;
+    } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DeleteRagConfigurationMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteRagConfigurationMutation = { __typename?: 'Mutation', deleteRAGConfiguration?: { __typename?: 'RAGConfiguration', id?: string | null } | null };
+export type DeleteRagConfigurationMutation = {
+  __typename?: "Mutation";
+  deleteRAGConfiguration?: { __typename?: "RAGConfiguration"; id?: string | null } | null;
+};
 
 export type UnboundRagConfigurationsByBucketQueryVariables = Exact<{
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
   ragType: RagType;
 }>;
 
-
-export type UnboundRagConfigurationsByBucketQuery = { __typename?: 'Query', unboundRAGConfigurationByBucket?: Array<{ __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null> | null };
+export type UnboundRagConfigurationsByBucketQuery = {
+  __typename?: "Query";
+  unboundRAGConfigurationByBucket?: Array<{
+    __typename?: "RAGConfiguration";
+    id?: string | null;
+    name?: string | null;
+  } | null> | null;
+};
 
 export type RulesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type RulesQuery = { __typename?: 'Query', rules?: { __typename?: 'DefaultConnection_Rule', edges?: Array<{ __typename?: 'DefaultEdge_Rule', node?: { __typename?: 'Rule', id?: string | null, name?: string | null, lhs?: string | null, rhs?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type RulesQuery = {
+  __typename?: "Query";
+  rules?: {
+    __typename?: "DefaultConnection_Rule";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Rule";
+      node?: {
+        __typename?: "Rule";
+        id?: string | null;
+        name?: string | null;
+        lhs?: string | null;
+        rhs?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteRulesMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteRulesMutation = { __typename?: 'Mutation', deleteRule?: { __typename?: 'Rule', id?: string | null, name?: string | null } | null };
+export type DeleteRulesMutation = {
+  __typename?: "Mutation";
+  deleteRule?: { __typename?: "Rule"; id?: string | null; name?: string | null } | null;
+};
 
 export type RuleQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type RuleQuery = { __typename?: 'Query', rule?: { __typename?: 'Rule', id?: string | null, name?: string | null, description?: string | null, lhs?: string | null, rhs?: string | null } | null };
+export type RuleQuery = {
+  __typename?: "Query";
+  rule?: {
+    __typename?: "Rule";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    lhs?: string | null;
+    rhs?: string | null;
+  } | null;
+};
 
 export type CreateOrUpdateRuleQueryMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  lhs: Scalars['String'];
-  rhs: Scalars['String'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  lhs: Scalars["String"];
+  rhs: Scalars["String"];
 }>;
 
-
-export type CreateOrUpdateRuleQueryMutation = { __typename?: 'Mutation', rule?: { __typename?: 'Response_Rule', entity?: { __typename?: 'Rule', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateRuleQueryMutation = {
+  __typename?: "Mutation";
+  rule?: {
+    __typename?: "Response_Rule";
+    entity?: { __typename?: "Rule"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type SearchConfigQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean, queryParserConfigs?: { __typename?: 'DefaultConnection_QueryParserConfig', edges?: Array<{ __typename?: 'DefaultEdge_QueryParserConfig', node?: { __typename?: 'QueryParserConfig', id?: string | null, name?: string | null, type?: QueryParserType | null, jsonConfig?: string | null } | null } | null> | null } | null } | null };
+export type SearchConfigQuery = {
+  __typename?: "Query";
+  searchConfig?: {
+    __typename?: "SearchConfig";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    minScore?: number | null;
+    minScoreSuggestions: boolean;
+    minScoreSearch: boolean;
+    queryParserConfigs?: {
+      __typename?: "DefaultConnection_QueryParserConfig";
+      edges?: Array<{
+        __typename?: "DefaultEdge_QueryParserConfig";
+        node?: {
+          __typename?: "QueryParserConfig";
+          id?: string | null;
+          name?: string | null;
+          type?: QueryParserType | null;
+          jsonConfig?: string | null;
+        } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  minScore: Scalars['Float'];
-  minScoreSuggestions: Scalars['Boolean'];
-  minScoreSearch: Scalars['Boolean'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  minScore: Scalars["Float"];
+  minScoreSuggestions: Scalars["Boolean"];
+  minScoreSearch: Scalars["Boolean"];
   queryParsersConfig?: InputMaybe<Array<InputMaybe<QueryParserConfigDtoInput>> | InputMaybe<QueryParserConfigDtoInput>>;
 }>;
 
-
-export type CreateOrUpdateSearchConfigMutation = { __typename?: 'Mutation', searchConfigWithQueryParsers?: { __typename?: 'Response_SearchConfig', entity?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, minScore?: number | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateSearchConfigMutation = {
+  __typename?: "Mutation";
+  searchConfigWithQueryParsers?: {
+    __typename?: "Response_SearchConfig";
+    entity?: { __typename?: "SearchConfig"; id?: string | null; name?: string | null; minScore?: number | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type SearchConfigsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type SearchConfigsQuery = { __typename?: 'Query', searchConfigs?: { __typename?: 'DefaultConnection_SearchConfig', edges?: Array<{ __typename?: 'DefaultEdge_SearchConfig', node?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type SearchConfigsQuery = {
+  __typename?: "Query";
+  searchConfigs?: {
+    __typename?: "DefaultConnection_SearchConfig";
+    edges?: Array<{
+      __typename?: "DefaultEdge_SearchConfig";
+      node?: {
+        __typename?: "SearchConfig";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        minScore?: number | null;
+        minScoreSuggestions: boolean;
+        minScoreSearch: boolean;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteSearchConfigMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
+export type DeleteSearchConfigMutation = {
+  __typename?: "Mutation";
+  deleteSearchConfig?: { __typename?: "SearchConfig"; id?: string | null; name?: string | null } | null;
+};
 
-export type DeleteSearchConfigMutation = { __typename?: 'Mutation', deleteSearchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null } | null };
+export type QueryParserConfigQueryVariables = Exact<{ [key: string]: never }>;
 
-export type QueryParserConfigQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type QueryParserConfigQuery = { __typename?: 'Query', queryParserConfigFormConfigurations?: any | null };
+export type QueryParserConfigQuery = { __typename?: "Query"; queryParserConfigFormConfigurations?: any | null };
 
 export type UnboundBucketsBySuggestionCategoryQueryVariables = Exact<{
-  id: Scalars['BigInteger'];
+  id: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundBucketsBySuggestionCategoryQuery = { __typename?: 'Query', unboundBucketsBySuggestionCategory?: Array<{ __typename?: 'Bucket', name?: string | null, id?: string | null } | null> | null };
+export type UnboundBucketsBySuggestionCategoryQuery = {
+  __typename?: "Query";
+  unboundBucketsBySuggestionCategory?: Array<{
+    __typename?: "Bucket";
+    name?: string | null;
+    id?: string | null;
+  } | null> | null;
+};
 
 export type SuggestionCategoriesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type SuggestionCategoriesQuery = { __typename?: 'Query', suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type SuggestionCategoriesQuery = {
+  __typename?: "Query";
+  suggestionCategories?: {
+    __typename?: "DefaultConnection_SuggestionCategory";
+    edges?: Array<{
+      __typename?: "DefaultEdge_SuggestionCategory";
+      node?: {
+        __typename?: "SuggestionCategory";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        priority?: number | null;
+        multiSelect: boolean;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteSuggestionCategoryMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteSuggestionCategoryMutation = { __typename?: 'Mutation', deleteSuggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null };
+export type DeleteSuggestionCategoryMutation = {
+  __typename?: "Mutation";
+  deleteSuggestionCategory?: { __typename?: "SuggestionCategory"; id?: string | null; name?: string | null } | null;
+};
 
 export type SuggestionCategoryDocumentTypeFieldsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type SuggestionCategoryDocumentTypeFieldsQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, docTypeField?: { __typename?: 'DocTypeField', name?: string | null, subFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, docType?: { __typename?: 'DocType', id?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null } | null };
+export type SuggestionCategoryDocumentTypeFieldsQuery = {
+  __typename?: "Query";
+  suggestionCategory?: {
+    __typename?: "SuggestionCategory";
+    id?: string | null;
+    docTypeField?: {
+      __typename?: "DocTypeField";
+      name?: string | null;
+      subFields?: {
+        __typename?: "DefaultConnection_DocTypeField";
+        edges?: Array<{
+          __typename?: "DefaultEdge_DocTypeField";
+          node?: {
+            __typename?: "DocTypeField";
+            id?: string | null;
+            name?: string | null;
+            description?: string | null;
+            docType?: { __typename?: "DocType"; id?: string | null } | null;
+          } | null;
+        } | null> | null;
+        pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+      } | null;
+    } | null;
+  } | null;
+};
 
 export type AddDocumentTypeFieldToSuggestionCategoryMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddDocumentTypeFieldToSuggestionCategoryMutation = { __typename?: 'Mutation', addDocTypeFieldToSuggestionCategory?: { __typename?: 'Tuple2_SuggestionCategory_DocTypeField', left?: { __typename?: 'SuggestionCategory', id?: string | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type AddDocumentTypeFieldToSuggestionCategoryMutation = {
+  __typename?: "Mutation";
+  addDocTypeFieldToSuggestionCategory?: {
+    __typename?: "Tuple2_SuggestionCategory_DocTypeField";
+    left?: { __typename?: "SuggestionCategory"; id?: string | null } | null;
+    right?: { __typename?: "DocTypeField"; id?: string | null } | null;
+  } | null;
+};
 
 export type SuggestionCategoryQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+export type SuggestionCategoryQuery = {
+  __typename?: "Query";
+  suggestionCategory?: {
+    __typename?: "SuggestionCategory";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    priority?: number | null;
+    multiSelect: boolean;
+    docTypeField?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+    translations?: Array<{
+      __typename?: "TranslationDTO";
+      key?: string | null;
+      language?: string | null;
+      value?: string | null;
+      description?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type AddSuggestionCategoryTranslationMutationVariables = Exact<{
-  suggestionCategoryId: Scalars['ID'];
-  language: Scalars['String'];
-  key?: InputMaybe<Scalars['String']>;
-  value: Scalars['String'];
+  suggestionCategoryId: Scalars["ID"];
+  language: Scalars["String"];
+  key?: InputMaybe<Scalars["String"]>;
+  value: Scalars["String"];
 }>;
 
-
-export type AddSuggestionCategoryTranslationMutation = { __typename?: 'Mutation', addSuggestionCategoryTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
+export type AddSuggestionCategoryTranslationMutation = {
+  __typename?: "Mutation";
+  addSuggestionCategoryTranslation?: {
+    __typename?: "Tuple2_String_String";
+    left?: string | null;
+    right?: string | null;
+  } | null;
+};
 
 export type UnboundDocTypeFieldsBySuggestionCategoryQueryVariables = Exact<{
-  suggestionCategoryId: Scalars['BigInteger'];
+  suggestionCategoryId: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundDocTypeFieldsBySuggestionCategoryQuery = { __typename?: 'Query', unboundDocTypeFieldsBySuggestionCategory?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
+export type UnboundDocTypeFieldsBySuggestionCategoryQuery = {
+  __typename?: "Query";
+  unboundDocTypeFieldsBySuggestionCategory?: Array<{
+    __typename?: "DocTypeField";
+    id?: string | null;
+    name?: string | null;
+  } | null> | null;
+};
 
 export type DocTypeFieldsQueryVariables = Exact<{
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocTypeFieldsQuery = { __typename?: 'Query', docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocTypeFieldsQuery = {
+  __typename?: "Query";
+  docTypeFields?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  priority: Scalars['Float'];
-  multiSelect: Scalars['Boolean'];
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  priority: Scalars["Float"];
+  multiSelect: Scalars["Boolean"];
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
 }>;
 
-
-export type CreateOrUpdateSuggestionCategoryMutation = { __typename?: 'Mutation', suggestionCategoryWithDocTypeField?: { __typename?: 'Response_SuggestionCategory', entity?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateSuggestionCategoryMutation = {
+  __typename?: "Mutation";
+  suggestionCategoryWithDocTypeField?: {
+    __typename?: "Response_SuggestionCategory";
+    entity?: { __typename?: "SuggestionCategory"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type TabsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type TabsQuery = { __typename?: 'Query', tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabsQuery = {
+  __typename?: "Query";
+  tabs?: {
+    __typename?: "DefaultConnection_Tab";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Tab";
+      node?: {
+        __typename?: "Tab";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        priority?: number | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteTabsMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteTabsMutation = { __typename?: 'Mutation', deleteTab?: { __typename?: 'Tab', id?: string | null, name?: string | null } | null };
+export type DeleteTabsMutation = {
+  __typename?: "Mutation";
+  deleteTab?: { __typename?: "Tab"; id?: string | null; name?: string | null } | null;
+};
 
 export type UnboundBucketsByTabQueryVariables = Exact<{
-  id: Scalars['BigInteger'];
+  id: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundBucketsByTabQuery = { __typename?: 'Query', unboundBucketsByTab?: Array<{ __typename?: 'Bucket', name?: string | null, id?: string | null } | null> | null };
+export type UnboundBucketsByTabQuery = {
+  __typename?: "Query";
+  unboundBucketsByTab?: Array<{ __typename?: "Bucket"; name?: string | null; id?: string | null } | null> | null;
+};
 
 export type AddTabTranslationMutationVariables = Exact<{
-  tabId: Scalars['ID'];
-  language: Scalars['String'];
-  key?: InputMaybe<Scalars['String']>;
-  value: Scalars['String'];
+  tabId: Scalars["ID"];
+  language: Scalars["String"];
+  key?: InputMaybe<Scalars["String"]>;
+  value: Scalars["String"];
 }>;
 
-
-export type AddTabTranslationMutation = { __typename?: 'Mutation', addTabTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
+export type AddTabTranslationMutation = {
+  __typename?: "Mutation";
+  addTabTranslation?: { __typename?: "Tuple2_String_String"; left?: string | null; right?: string | null } | null;
+};
 
 export type TabQueryVariables = Exact<{
-  id: Scalars['ID'];
-  unasociated?: InputMaybe<Scalars['Boolean']>;
+  id: Scalars["ID"];
+  unasociated?: InputMaybe<Scalars["Boolean"]>;
 }>;
 
-
-export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', name?: string | null, id?: string | null } | null } | null> | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+export type TabQuery = {
+  __typename?: "Query";
+  tab?: {
+    __typename?: "Tab";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    priority?: number | null;
+    tokenTabs?: {
+      __typename?: "DefaultConnection_TokenTab";
+      edges?: Array<{
+        __typename?: "DefaultEdge_TokenTab";
+        node?: { __typename?: "TokenTab"; name?: string | null; id?: string | null } | null;
+      } | null> | null;
+    } | null;
+    translations?: Array<{
+      __typename?: "TranslationDTO";
+      key?: string | null;
+      language?: string | null;
+      value?: string | null;
+      description?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdateTabMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  priority: Scalars['Int'];
-  tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  priority: Scalars["Int"];
+  tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
 }>;
 
-
-export type CreateOrUpdateTabMutation = { __typename?: 'Mutation', tabWithTokenTabs?: { __typename?: 'Response_Tab', entity?: { __typename?: 'Tab', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateTabMutation = {
+  __typename?: "Mutation";
+  tabWithTokenTabs?: {
+    __typename?: "Response_Tab";
+    entity?: { __typename?: "Tab"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type TabTokenTabsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
 }>;
 
-
-export type TabTokenTabsQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type TabTokenTabsQuery = {
+  __typename?: "Query";
+  tab?: {
+    __typename?: "Tab";
+    id?: string | null;
+    tokenTabs?: {
+      __typename?: "DefaultConnection_TokenTab";
+      edges?: Array<{
+        __typename?: "DefaultEdge_TokenTab";
+        node?: {
+          __typename?: "TokenTab";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type AddTokenTabToTabMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddTokenTabToTabMutation = { __typename?: 'Mutation', addTokenTabToTab?: { __typename?: 'Tuple2_Tab_TokenTab', left?: { __typename?: 'Tab', id?: string | null } | null, right?: { __typename?: 'TokenTab', id?: string | null } | null } | null };
+export type AddTokenTabToTabMutation = {
+  __typename?: "Mutation";
+  addTokenTabToTab?: {
+    __typename?: "Tuple2_Tab_TokenTab";
+    left?: { __typename?: "Tab"; id?: string | null } | null;
+    right?: { __typename?: "TokenTab"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveTokenTabToTabMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveTokenTabToTabMutation = { __typename?: 'Mutation', removeTokenTabToTab?: { __typename?: 'Tuple2_Tab_TokenTab', left?: { __typename?: 'Tab', id?: string | null } | null, right?: { __typename?: 'TokenTab', id?: string | null } | null } | null };
+export type RemoveTokenTabToTabMutation = {
+  __typename?: "Mutation";
+  removeTokenTabToTab?: {
+    __typename?: "Tuple2_Tab_TokenTab";
+    left?: { __typename?: "Tab"; id?: string | null } | null;
+    right?: { __typename?: "TokenTab"; id?: string | null } | null;
+  } | null;
+};
 
 export type TabTokensQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type TabTokensQuery = { __typename?: 'Query', totalTokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null, extraParams?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabTokensQuery = {
+  __typename?: "Query";
+  totalTokenTabs?: {
+    __typename?: "DefaultConnection_TokenTab";
+    edges?: Array<{
+      __typename?: "DefaultEdge_TokenTab";
+      node?: {
+        __typename?: "TokenTab";
+        id?: string | null;
+        name?: string | null;
+        tokenType?: TokenType | null;
+        value?: string | null;
+        filter?: boolean | null;
+        extraParams?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type TokenFiltersQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type TokenFiltersQuery = { __typename?: 'Query', tokenFilters?: { __typename?: 'DefaultConnection_TokenFilter', edges?: Array<{ __typename?: 'DefaultEdge_TokenFilter', node?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TokenFiltersQuery = {
+  __typename?: "Query";
+  tokenFilters?: {
+    __typename?: "DefaultConnection_TokenFilter";
+    edges?: Array<{
+      __typename?: "DefaultEdge_TokenFilter";
+      node?: {
+        __typename?: "TokenFilter";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteTokenFiltersMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteTokenFiltersMutation = { __typename?: 'Mutation', deleteTokenFilter?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null } | null };
+export type DeleteTokenFiltersMutation = {
+  __typename?: "Mutation";
+  deleteTokenFilter?: { __typename?: "TokenFilter"; id?: string | null; name?: string | null } | null;
+};
 
 export type AddTokenFilterToAnalyzerMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddTokenFilterToAnalyzerMutation = { __typename?: 'Mutation', addTokenFilterToAnalyzer?: { __typename?: 'Tuple2_Analyzer_TokenFilter', left?: { __typename?: 'Analyzer', id?: string | null } | null, right?: { __typename?: 'TokenFilter', id?: string | null } | null } | null };
+export type AddTokenFilterToAnalyzerMutation = {
+  __typename?: "Mutation";
+  addTokenFilterToAnalyzer?: {
+    __typename?: "Tuple2_Analyzer_TokenFilter";
+    left?: { __typename?: "Analyzer"; id?: string | null } | null;
+    right?: { __typename?: "TokenFilter"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnboundAnalyzersByTokenFilterQueryVariables = Exact<{
-  tokenFilterId: Scalars['BigInteger'];
+  tokenFilterId: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundAnalyzersByTokenFilterQuery = { __typename?: 'Query', unboundAnalyzersByTokenFilter?: Array<{ __typename?: 'Analyzer', name?: string | null, id?: string | null } | null> | null };
+export type UnboundAnalyzersByTokenFilterQuery = {
+  __typename?: "Query";
+  unboundAnalyzersByTokenFilter?: Array<{
+    __typename?: "Analyzer";
+    name?: string | null;
+    id?: string | null;
+  } | null> | null;
+};
 
 export type TokenFilterQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type TokenFilterQuery = { __typename?: 'Query', tokenFilter?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
+export type TokenFilterQuery = {
+  __typename?: "Query";
+  tokenFilter?: {
+    __typename?: "TokenFilter";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    jsonConfig?: string | null;
+    type?: string | null;
+  } | null;
+};
 
 export type CreateOrUpdateTokenFilterMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  type: Scalars["String"];
 }>;
 
-
-export type CreateOrUpdateTokenFilterMutation = { __typename?: 'Mutation', tokenFilter?: { __typename?: 'Response_TokenFilter', entity?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateTokenFilterMutation = {
+  __typename?: "Mutation";
+  tokenFilter?: {
+    __typename?: "Response_TokenFilter";
+    entity?: { __typename?: "TokenFilter"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type TabTokenTabQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type TabTokenTabQuery = { __typename?: 'Query', tokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, description?: string | null, value?: string | null, filter?: boolean | null, tokenType?: TokenType | null, extraParams?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null };
+export type TabTokenTabQuery = {
+  __typename?: "Query";
+  tokenTab?: {
+    __typename?: "TokenTab";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    value?: string | null;
+    filter?: boolean | null;
+    tokenType?: TokenType | null;
+    extraParams?: string | null;
+    docTypeField?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+  } | null;
+};
 
 export type CreateOrUpdateTabTokenMutationVariables = Exact<{
-  tokenTabId?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  value: Scalars['String'];
-  filter: Scalars['Boolean'];
+  tokenTabId?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  value: Scalars["String"];
+  filter: Scalars["Boolean"];
   tokenType: TokenType;
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  extraParams?: InputMaybe<Scalars['String']>;
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateTabTokenMutation = { __typename?: 'Mutation', tokenTabWithDocTypeField?: { __typename?: 'Response_TokenTab', entity?: { __typename?: 'TokenTab', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateTabTokenMutation = {
+  __typename?: "Mutation";
+  tokenTabWithDocTypeField?: {
+    __typename?: "Response_TokenTab";
+    entity?: { __typename?: "TokenTab"; id?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DocTypeFieldValueQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DocTypeFieldValueQuery = { __typename?: 'Query', value?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null };
+export type DocTypeFieldValueQuery = {
+  __typename?: "Query";
+  value?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null; description?: string | null } | null;
+};
 
 export type DocTypeFieldOptionsTokenTabQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocTypeFieldOptionsTokenTabQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocTypeFieldOptionsTokenTabQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: {
+        __typename?: "DocTypeField";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type TabTokensQueryQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type TabTokensQueryQuery = { __typename?: 'Query', totalTokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', id?: string | null, name?: string | null, tokenType?: TokenType | null, value?: string | null, filter?: boolean | null, extraParams?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TabTokensQueryQuery = {
+  __typename?: "Query";
+  totalTokenTabs?: {
+    __typename?: "DefaultConnection_TokenTab";
+    edges?: Array<{
+      __typename?: "DefaultEdge_TokenTab";
+      node?: {
+        __typename?: "TokenTab";
+        id?: string | null;
+        name?: string | null;
+        tokenType?: TokenType | null;
+        value?: string | null;
+        filter?: boolean | null;
+        extraParams?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteTabTokenMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteTabTokenMutation = { __typename?: 'Mutation', deleteTokenTab?: { __typename?: 'TokenTab', id?: string | null, name?: string | null } | null };
+export type DeleteTabTokenMutation = {
+  __typename?: "Mutation";
+  deleteTokenTab?: { __typename?: "TokenTab"; id?: string | null; name?: string | null } | null;
+};
 
 export type UnassociatedTokenTabsInTabQueryVariables = Exact<{
-  id: Scalars['BigInteger'];
+  id: Scalars["BigInteger"];
 }>;
 
-
-export type UnassociatedTokenTabsInTabQuery = { __typename?: 'Query', unboundTabsByTokenTab?: Array<{ __typename?: 'Tab', id?: string | null, name?: string | null } | null> | null };
+export type UnassociatedTokenTabsInTabQuery = {
+  __typename?: "Query";
+  unboundTabsByTokenTab?: Array<{ __typename?: "Tab"; id?: string | null; name?: string | null } | null> | null;
+};
 
 export type TokenizerQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type TokenizerQuery = { __typename?: 'Query', tokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, type?: string | null } | null };
+export type TokenizerQuery = {
+  __typename?: "Query";
+  tokenizer?: {
+    __typename?: "Tokenizer";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    jsonConfig?: string | null;
+    type?: string | null;
+  } | null;
+};
 
 export type CreateOrUpdateTokenizerMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  type: Scalars['String'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  type: Scalars["String"];
 }>;
 
-
-export type CreateOrUpdateTokenizerMutation = { __typename?: 'Mutation', tokenizer?: { __typename?: 'Response_Tokenizer', entity?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateTokenizerMutation = {
+  __typename?: "Mutation";
+  tokenizer?: {
+    __typename?: "Response_Tokenizer";
+    entity?: { __typename?: "Tokenizer"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type TokenizersQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type TokenizersQuery = { __typename?: 'Query', tokenizers?: { __typename?: 'DefaultConnection_Tokenizer', edges?: Array<{ __typename?: 'DefaultEdge_Tokenizer', node?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type TokenizersQuery = {
+  __typename?: "Query";
+  tokenizers?: {
+    __typename?: "DefaultConnection_Tokenizer";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Tokenizer";
+      node?: { __typename?: "Tokenizer"; id?: string | null; name?: string | null; description?: string | null } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteTokenizerMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteTokenizerMutation = { __typename?: 'Mutation', deleteTokenizer?: { __typename?: 'Tokenizer', id?: string | null, name?: string | null } | null };
+export type DeleteTokenizerMutation = {
+  __typename?: "Mutation";
+  deleteTokenizer?: { __typename?: "Tokenizer"; id?: string | null; name?: string | null } | null;
+};
 
 export type AnnotatorsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type AnnotatorsQuery = { __typename?: 'Query', annotators?: { __typename?: 'DefaultConnection_Annotator', edges?: Array<{ __typename?: 'DefaultEdge_Annotator', node?: { __typename?: 'Annotator', id?: string | null, name?: string | null, description?: string | null, size?: number | null, type?: AnnotatorType | null, fieldName?: string | null, fuziness?: Fuzziness | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type AnnotatorsQuery = {
+  __typename?: "Query";
+  annotators?: {
+    __typename?: "DefaultConnection_Annotator";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Annotator";
+      node?: {
+        __typename?: "Annotator";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        size?: number | null;
+        type?: AnnotatorType | null;
+        fieldName?: string | null;
+        fuziness?: Fuzziness | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteAnnotatosMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteAnnotatosMutation = { __typename?: 'Mutation', deleteAnnotator?: { __typename?: 'Annotator', id?: string | null, name?: string | null } | null };
+export type DeleteAnnotatosMutation = {
+  __typename?: "Mutation";
+  deleteAnnotator?: { __typename?: "Annotator"; id?: string | null; name?: string | null } | null;
+};
 
 export type DocTypeFieldOptionsAnnotatorsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DocTypeFieldOptionsAnnotatorsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocTypeFieldOptionsAnnotatorsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: {
+        __typename?: "DocTypeField";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type AnnotatorQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type AnnotatorQuery = { __typename?: 'Query', annotator?: { __typename?: 'Annotator', id?: string | null, fuziness?: Fuzziness | null, size?: number | null, type?: AnnotatorType | null, description?: string | null, name?: string | null, fieldName?: string | null, extraParams?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null };
+export type AnnotatorQuery = {
+  __typename?: "Query";
+  annotator?: {
+    __typename?: "Annotator";
+    id?: string | null;
+    fuziness?: Fuzziness | null;
+    size?: number | null;
+    type?: AnnotatorType | null;
+    description?: string | null;
+    name?: string | null;
+    fieldName?: string | null;
+    extraParams?: string | null;
+    docTypeField?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+  } | null;
+};
 
 export type CreateOrUpdateAnnotatorMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  fieldName: Scalars['String'];
+  id?: InputMaybe<Scalars["ID"]>;
+  fieldName: Scalars["String"];
   fuziness: Fuzziness;
   type: AnnotatorType;
-  description?: InputMaybe<Scalars['String']>;
-  size?: InputMaybe<Scalars['Int']>;
-  name: Scalars['String'];
-  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  extraParams?: InputMaybe<Scalars['String']>;
+  description?: InputMaybe<Scalars["String"]>;
+  size?: InputMaybe<Scalars["Int"]>;
+  name: Scalars["String"];
+  docTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  extraParams?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateAnnotatorMutation = { __typename?: 'Mutation', annotatorWithDocTypeField?: { __typename?: 'Response_Annotator', entity?: { __typename?: 'Annotator', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateAnnotatorMutation = {
+  __typename?: "Mutation";
+  annotatorWithDocTypeField?: {
+    __typename?: "Response_Annotator";
+    entity?: { __typename?: "Annotator"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type DocTypeFieldOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
-  annotatorId: Scalars['ID'];
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
+  annotatorId: Scalars["ID"];
 }>;
 
-
-export type DocTypeFieldOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DocTypeFieldOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: {
+        __typename?: "DocTypeField";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type BindDocTypeFieldToDataSourceMutationVariables = Exact<{
-  documentTypeFieldId: Scalars['ID'];
-  annotatorId: Scalars['ID'];
+  documentTypeFieldId: Scalars["ID"];
+  annotatorId: Scalars["ID"];
 }>;
 
-
-export type BindDocTypeFieldToDataSourceMutation = { __typename?: 'Mutation', bindAnnotatorToDocTypeField?: { __typename?: 'Tuple2_Annotator_DocTypeField', left?: { __typename?: 'Annotator', id?: string | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null } | null } | null, right?: { __typename?: 'DocTypeField', id?: string | null } | null } | null };
+export type BindDocTypeFieldToDataSourceMutation = {
+  __typename?: "Mutation";
+  bindAnnotatorToDocTypeField?: {
+    __typename?: "Tuple2_Annotator_DocTypeField";
+    left?: {
+      __typename?: "Annotator";
+      id?: string | null;
+      docTypeField?: { __typename?: "DocTypeField"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "DocTypeField"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindDocTypeFieldToDataSourceMutationVariables = Exact<{
-  documentTypeFieldId: Scalars['ID'];
-  annotatorId: Scalars['ID'];
+  documentTypeFieldId: Scalars["ID"];
+  annotatorId: Scalars["ID"];
 }>;
 
-
-export type UnbindDocTypeFieldToDataSourceMutation = { __typename?: 'Mutation', unbindAnnotatorFromDocTypeField?: { __typename?: 'Tuple2_Annotator_DocTypeField', left?: { __typename?: 'Annotator', id?: string | null } | null } | null };
+export type UnbindDocTypeFieldToDataSourceMutation = {
+  __typename?: "Mutation";
+  unbindAnnotatorFromDocTypeField?: {
+    __typename?: "Tuple2_Annotator_DocTypeField";
+    left?: { __typename?: "Annotator"; id?: string | null } | null;
+  } | null;
+};
 
 export type BucketsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type BucketsQuery = { __typename?: 'Query', buckets?: { __typename?: 'DefaultConnection_Bucket', edges?: Array<{ __typename?: 'DefaultEdge_Bucket', node?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type BucketsQuery = {
+  __typename?: "Query";
+  buckets?: {
+    __typename?: "DefaultConnection_Bucket";
+    edges?: Array<{
+      __typename?: "DefaultEdge_Bucket";
+      node?: {
+        __typename?: "Bucket";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        enabled: boolean;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type QueryAnalysisOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type QueryAnalysisOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_QueryAnalysis', edges?: Array<{ __typename?: 'DefaultEdge_QueryAnalysis', node?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type QueryAnalysisOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_QueryAnalysis";
+    edges?: Array<{
+      __typename?: "DefaultEdge_QueryAnalysis";
+      node?: {
+        __typename?: "QueryAnalysis";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type QueryAnalysisValueQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type QueryAnalysisValueQuery = { __typename?: 'Query', value?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null, description?: string | null } | null };
+export type QueryAnalysisValueQuery = {
+  __typename?: "Query";
+  value?: {
+    __typename?: "QueryAnalysis";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+  } | null;
+};
 
 export type BindQueryAnalysisToBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
-  queryAnalysis: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  queryAnalysis: Scalars["ID"];
 }>;
 
-
-export type BindQueryAnalysisToBucketMutation = { __typename?: 'Mutation', bindQueryAnalysisToBucket?: { __typename?: 'Tuple2_Bucket_QueryAnalysis', left?: { __typename?: 'Bucket', id?: string | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null } | null } | null, right?: { __typename?: 'QueryAnalysis', id?: string | null } | null } | null };
+export type BindQueryAnalysisToBucketMutation = {
+  __typename?: "Mutation";
+  bindQueryAnalysisToBucket?: {
+    __typename?: "Tuple2_Bucket_QueryAnalysis";
+    left?: {
+      __typename?: "Bucket";
+      id?: string | null;
+      queryAnalysis?: { __typename?: "QueryAnalysis"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "QueryAnalysis"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindQueryAnalysisFromBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 }>;
 
-
-export type UnbindQueryAnalysisFromBucketMutation = { __typename?: 'Mutation', unbindQueryAnalysisFromBucket?: { __typename?: 'Tuple2_Bucket_QueryAnalysis', right?: { __typename?: 'QueryAnalysis', id?: string | null } | null } | null };
+export type UnbindQueryAnalysisFromBucketMutation = {
+  __typename?: "Mutation";
+  unbindQueryAnalysisFromBucket?: {
+    __typename?: "Tuple2_Bucket_QueryAnalysis";
+    right?: { __typename?: "QueryAnalysis"; id?: string | null } | null;
+  } | null;
+};
 
 export type BindSearchConfigToBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
-  searchConfigId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  searchConfigId: Scalars["ID"];
 }>;
 
-
-export type BindSearchConfigToBucketMutation = { __typename?: 'Mutation', bindSearchConfigToBucket?: { __typename?: 'Tuple2_Bucket_SearchConfig', left?: { __typename?: 'Bucket', id?: string | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null } | null } | null, right?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+export type BindSearchConfigToBucketMutation = {
+  __typename?: "Mutation";
+  bindSearchConfigToBucket?: {
+    __typename?: "Tuple2_Bucket_SearchConfig";
+    left?: {
+      __typename?: "Bucket";
+      id?: string | null;
+      searchConfig?: { __typename?: "SearchConfig"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "SearchConfig"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindSearchConfigFromBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 }>;
 
-
-export type UnbindSearchConfigFromBucketMutation = { __typename?: 'Mutation', unbindSearchConfigFromBucket?: { __typename?: 'Tuple2_Bucket_SearchConfig', right?: { __typename?: 'SearchConfig', id?: string | null } | null } | null };
+export type UnbindSearchConfigFromBucketMutation = {
+  __typename?: "Mutation";
+  unbindSearchConfigFromBucket?: {
+    __typename?: "Tuple2_Bucket_SearchConfig";
+    right?: { __typename?: "SearchConfig"; id?: string | null } | null;
+  } | null;
+};
 
 export type BindLanguageToBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
-  languageId: Scalars['ID'];
+  bucketId: Scalars["ID"];
+  languageId: Scalars["ID"];
 }>;
 
-
-export type BindLanguageToBucketMutation = { __typename?: 'Mutation', bindLanguageToBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null, language?: { __typename?: 'Language', id?: string | null } | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+export type BindLanguageToBucketMutation = {
+  __typename?: "Mutation";
+  bindLanguageToBucket?: {
+    __typename?: "Tuple2_Bucket_Language";
+    left?: {
+      __typename?: "Bucket";
+      id?: string | null;
+      language?: { __typename?: "Language"; id?: string | null } | null;
+    } | null;
+    right?: { __typename?: "Language"; id?: string | null } | null;
+  } | null;
+};
 
 export type UnbindLanguageFromBucketMutationVariables = Exact<{
-  bucketId: Scalars['ID'];
+  bucketId: Scalars["ID"];
 }>;
 
-
-export type UnbindLanguageFromBucketMutation = { __typename?: 'Mutation', unbindLanguageFromBucket?: { __typename?: 'Tuple2_Bucket_Language', right?: { __typename?: 'Language', id?: string | null } | null } | null };
+export type UnbindLanguageFromBucketMutation = {
+  __typename?: "Mutation";
+  unbindLanguageFromBucket?: {
+    __typename?: "Tuple2_Bucket_Language";
+    right?: { __typename?: "Language"; id?: string | null } | null;
+  } | null;
+};
 
 export type BucketQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean, refreshOnDate?: boolean | null, refreshOnQuery?: boolean | null, refreshOnSuggestionCategory?: boolean | null, refreshOnTab?: boolean | null, retrieveType?: RetrieveType | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null } | null, ragConfigurationChat?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationChatTool?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationSimpleGenerate?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, language?: { __typename?: 'Language', id?: string | null, name?: string | null } | null } | null };
+export type BucketQuery = {
+  __typename?: "Query";
+  bucket?: {
+    __typename?: "Bucket";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    enabled: boolean;
+    refreshOnDate?: boolean | null;
+    refreshOnQuery?: boolean | null;
+    refreshOnSuggestionCategory?: boolean | null;
+    refreshOnTab?: boolean | null;
+    retrieveType?: RetrieveType | null;
+    queryAnalysis?: { __typename?: "QueryAnalysis"; id?: string | null; name?: string | null } | null;
+    searchConfig?: { __typename?: "SearchConfig"; id?: string | null; name?: string | null } | null;
+    ragConfigurationChat?: { __typename?: "RAGConfiguration"; id?: string | null; name?: string | null } | null;
+    ragConfigurationChatTool?: { __typename?: "RAGConfiguration"; id?: string | null; name?: string | null } | null;
+    ragConfigurationSimpleGenerate?: {
+      __typename?: "RAGConfiguration";
+      id?: string | null;
+      name?: string | null;
+    } | null;
+    language?: { __typename?: "Language"; id?: string | null; name?: string | null } | null;
+  } | null;
+};
 
 export type EnableBucketMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EnableBucketMutation = { __typename?: 'Mutation', enableBucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null } | null };
+export type EnableBucketMutation = {
+  __typename?: "Mutation";
+  enableBucket?: { __typename?: "Bucket"; id?: string | null; name?: string | null } | null;
+};
 
 export type DeleteBucketMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteBucketMutation = { __typename?: 'Mutation', deleteBucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null } | null };
+export type DeleteBucketMutation = {
+  __typename?: "Mutation";
+  deleteBucket?: { __typename?: "Bucket"; id?: string | null; name?: string | null } | null;
+};
 
 export type BucketDataSourcesQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketDataSourcesQuery = {
+  __typename?: "Query";
+  bucket?: {
+    __typename?: "Bucket";
+    id?: string | null;
+    tabs?: {
+      __typename?: "DefaultConnection_Tab";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Tab";
+        node?: { __typename?: "Tab"; name?: string | null; id?: string | null } | null;
+      } | null> | null;
+    } | null;
+    suggestionCategories?: {
+      __typename?: "DefaultConnection_SuggestionCategory";
+      edges?: Array<{
+        __typename?: "DefaultEdge_SuggestionCategory";
+        node?: { __typename?: "SuggestionCategory"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+    datasources?: {
+      __typename?: "DefaultConnection_Datasource";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Datasource";
+        node?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type CreateOrUpdateBucketMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  refreshOnDate: Scalars['Boolean'];
-  refreshOnQuery: Scalars['Boolean'];
-  refreshOnSuggestionCategory: Scalars['Boolean'];
-  refreshOnTab: Scalars['Boolean'];
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  refreshOnDate: Scalars["Boolean"];
+  refreshOnQuery: Scalars["Boolean"];
+  refreshOnSuggestionCategory: Scalars["Boolean"];
+  refreshOnTab: Scalars["Boolean"];
   retrieveType: RetrieveType;
-  datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  suggestionCategoryIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  tabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
-  queryAnalysisId?: InputMaybe<Scalars['BigInteger']>;
-  defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
-  searchConfigId?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationChat?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationChatTool?: InputMaybe<Scalars['BigInteger']>;
-  ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
+  datasourceIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  suggestionCategoryIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  tabIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
+  queryAnalysisId?: InputMaybe<Scalars["BigInteger"]>;
+  defaultLanguageId?: InputMaybe<Scalars["BigInteger"]>;
+  searchConfigId?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationChat?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationChatTool?: InputMaybe<Scalars["BigInteger"]>;
+  ragConfigurationSimpleGenerate?: InputMaybe<Scalars["BigInteger"]>;
 }>;
 
-
-export type CreateOrUpdateBucketMutation = { __typename?: 'Mutation', bucketWithLists?: { __typename?: 'Response_Bucket', entity?: { __typename?: 'Bucket', id?: string | null, name?: string | null, enabled: boolean } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateBucketMutation = {
+  __typename?: "Mutation";
+  bucketWithLists?: {
+    __typename?: "Response_Bucket";
+    entity?: { __typename?: "Bucket"; id?: string | null; name?: string | null; enabled: boolean } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type AddDataSourceToBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddDataSourceToBucketMutation = { __typename?: 'Mutation', addDatasourceToBucket?: { __typename?: 'Tuple2_Bucket_Datasource', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Datasource', id?: string | null } | null } | null };
+export type AddDataSourceToBucketMutation = {
+  __typename?: "Mutation";
+  addDatasourceToBucket?: {
+    __typename?: "Tuple2_Bucket_Datasource";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Datasource"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveDataSourceFromBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveDataSourceFromBucketMutation = { __typename?: 'Mutation', removeDatasourceFromBucket?: { __typename?: 'Tuple2_Bucket_Datasource', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Datasource', id?: string | null } | null } | null };
+export type RemoveDataSourceFromBucketMutation = {
+  __typename?: "Mutation";
+  removeDatasourceFromBucket?: {
+    __typename?: "Tuple2_Bucket_Datasource";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Datasource"; id?: string | null } | null;
+  } | null;
+};
 
 export type BucketLanguagesQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type BucketLanguagesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketLanguagesQuery = {
+  __typename?: "Query";
+  bucket?: {
+    __typename?: "Bucket";
+    id?: string | null;
+    languages?: {
+      __typename?: "DefaultConnection_Language";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Language";
+        node?: { __typename?: "Language"; id?: string | null; name?: string | null; value?: string | null } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type AddLanguageToBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddLanguageToBucketMutation = { __typename?: 'Mutation', addLanguageToBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+export type AddLanguageToBucketMutation = {
+  __typename?: "Mutation";
+  addLanguageToBucket?: {
+    __typename?: "Tuple2_Bucket_Language";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Language"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveLanguageFromBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveLanguageFromBucketMutation = { __typename?: 'Mutation', removeLanguageFromBucket?: { __typename?: 'Tuple2_Bucket_Language', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Language', id?: string | null } | null } | null };
+export type RemoveLanguageFromBucketMutation = {
+  __typename?: "Mutation";
+  removeLanguageFromBucket?: {
+    __typename?: "Tuple2_Bucket_Language";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Language"; id?: string | null } | null;
+  } | null;
+};
 
 export type BucketTabsQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type BucketTabsQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketTabsQuery = {
+  __typename?: "Query";
+  bucket?: {
+    __typename?: "Bucket";
+    id?: string | null;
+    tabs?: {
+      __typename?: "DefaultConnection_Tab";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Tab";
+        node?: { __typename?: "Tab"; id?: string | null; name?: string | null; description?: string | null } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type AddTabToBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddTabToBucketMutation = { __typename?: 'Mutation', addTabToBucket?: { __typename?: 'Tuple2_Bucket_Tab', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Tab', id?: string | null } | null } | null };
+export type AddTabToBucketMutation = {
+  __typename?: "Mutation";
+  addTabToBucket?: {
+    __typename?: "Tuple2_Bucket_Tab";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Tab"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveTabFromBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveTabFromBucketMutation = { __typename?: 'Mutation', removeTabFromBucket?: { __typename?: 'Tuple2_Bucket_Tab', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Tab', id?: string | null } | null } | null };
+export type RemoveTabFromBucketMutation = {
+  __typename?: "Mutation";
+  removeTabFromBucket?: {
+    __typename?: "Tuple2_Bucket_Tab";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "Tab"; id?: string | null } | null;
+  } | null;
+};
 
 export type BucketSuggestionCategoriesQueryVariables = Exact<{
-  parentId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
-  unassociated: Scalars['Boolean'];
-  cursor?: InputMaybe<Scalars['String']>;
+  parentId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
+  unassociated: Scalars["Boolean"];
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type BucketSuggestionCategoriesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketSuggestionCategoriesQuery = {
+  __typename?: "Query";
+  bucket?: {
+    __typename?: "Bucket";
+    id?: string | null;
+    suggestionCategories?: {
+      __typename?: "DefaultConnection_SuggestionCategory";
+      edges?: Array<{
+        __typename?: "DefaultEdge_SuggestionCategory";
+        node?: {
+          __typename?: "SuggestionCategory";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type AddSuggestionCategoryToBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddSuggestionCategoryToBucketMutation = { __typename?: 'Mutation', addSuggestionCategoryToBucket?: { __typename?: 'Tuple2_Bucket_SuggestionCategory', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'SuggestionCategory', id?: string | null } | null } | null };
+export type AddSuggestionCategoryToBucketMutation = {
+  __typename?: "Mutation";
+  addSuggestionCategoryToBucket?: {
+    __typename?: "Tuple2_Bucket_SuggestionCategory";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "SuggestionCategory"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveSuggestionCategoryFromBucketMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveSuggestionCategoryFromBucketMutation = { __typename?: 'Mutation', removeSuggestionCategoryFromBucket?: { __typename?: 'Tuple2_Bucket_SuggestionCategory', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'SuggestionCategory', id?: string | null } | null } | null };
+export type RemoveSuggestionCategoryFromBucketMutation = {
+  __typename?: "Mutation";
+  removeSuggestionCategoryFromBucket?: {
+    __typename?: "Tuple2_Bucket_SuggestionCategory";
+    left?: { __typename?: "Bucket"; id?: string | null } | null;
+    right?: { __typename?: "SuggestionCategory"; id?: string | null } | null;
+  } | null;
+};
 
 export type CreateDataIndexMutationVariables = Exact<{
-  name: Scalars['String'];
-  datasourceId: Scalars['ID'];
-  description?: InputMaybe<Scalars['String']>;
-  knnIndex?: InputMaybe<Scalars['Boolean']>;
-  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  name: Scalars["String"];
+  datasourceId: Scalars["ID"];
+  description?: InputMaybe<Scalars["String"]>;
+  knnIndex?: InputMaybe<Scalars["Boolean"]>;
+  docTypeIds?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
   chunkType?: InputMaybe<ChunkType>;
-  chunkWindowSize?: InputMaybe<Scalars['Int']>;
-  embeddingJsonConfig?: InputMaybe<Scalars['String']>;
-  embeddingDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  settings?: InputMaybe<Scalars['String']>;
+  chunkWindowSize?: InputMaybe<Scalars["Int"]>;
+  embeddingJsonConfig?: InputMaybe<Scalars["String"]>;
+  embeddingDocTypeFieldId?: InputMaybe<Scalars["BigInteger"]>;
+  settings?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateDataIndexMutation = { __typename?: 'Mutation', dataIndex?: { __typename?: 'Response_DataIndex', entity?: { __typename?: 'DataIndex', name?: string | null } | null } | null };
+export type CreateDataIndexMutation = {
+  __typename?: "Mutation";
+  dataIndex?: {
+    __typename?: "Response_DataIndex";
+    entity?: { __typename?: "DataIndex"; name?: string | null } | null;
+  } | null;
+};
 
 export type DataIndicesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DataIndicesQuery = { __typename?: 'Query', dataIndices?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, createDate?: any | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataIndicesQuery = {
+  __typename?: "Query";
+  dataIndices?: {
+    __typename?: "DefaultConnection_DataIndex";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DataIndex";
+      node?: {
+        __typename?: "DataIndex";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        createDate?: any | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DataIndexQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
+export type DataIndexQuery = {
+  __typename?: "Query";
+  dataIndex?: {
+    __typename?: "DataIndex";
+    name?: string | null;
+    description?: string | null;
+    settings?: string | null;
+    chunkType?: ChunkType | null;
+    chunkWindowSize?: number | null;
+    embeddingJsonConfig?: string | null;
+    knnIndex?: boolean | null;
+    datasource?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+    embeddingDocTypeField?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+    docTypes?: {
+      __typename?: "DefaultConnection_DocType";
+      edges?: Array<{
+        __typename?: "DefaultEdge_DocType";
+        node?: { __typename?: "DocType"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+    cat?: { __typename?: "CatResponse"; docsCount?: string | null; docsDeleted?: string | null; storeSize: any } | null;
+  } | null;
+};
 
 export type DataIndexMappingQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DataIndexMappingQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', mappings?: string | null } | null };
+export type DataIndexMappingQuery = {
+  __typename?: "Query";
+  dataIndex?: { __typename?: "DataIndex"; mappings?: string | null } | null;
+};
 
 export type DataSourcesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
   sortByList?: InputMaybe<Array<SortByInput> | SortByInput>;
 }>;
 
-
-export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename: 'DefaultConnection_Datasource', edges?: Array<{ __typename: 'DefaultEdge_Datasource', node?: { __typename: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataSourcesQuery = {
+  __typename?: "Query";
+  datasources?: {
+    __typename: "DefaultConnection_Datasource";
+    edges?: Array<{
+      __typename: "DefaultEdge_Datasource";
+      node?: {
+        __typename: "Datasource";
+        id?: string | null;
+        name?: string | null;
+        schedulable?: boolean | null;
+        lastIngestionDate?: any | null;
+        scheduling?: string | null;
+        jsonConfig?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type DeleteDataSourceMutationVariables = Exact<{
-  id: Scalars['ID'];
-  datasourceName: Scalars['String'];
+  id: Scalars["ID"];
+  datasourceName: Scalars["String"];
 }>;
 
-
-export type DeleteDataSourceMutation = { __typename?: 'Mutation', deleteDatasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null };
+export type DeleteDataSourceMutation = {
+  __typename?: "Mutation";
+  deleteDatasource?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+};
 
 export type UnboundBucketsByDatasourceQueryVariables = Exact<{
-  datasourceId: Scalars['BigInteger'];
+  datasourceId: Scalars["BigInteger"];
 }>;
 
-
-export type UnboundBucketsByDatasourceQuery = { __typename?: 'Query', unboundBucketsByDatasource?: Array<{ __typename?: 'Bucket', name?: string | null, id?: string | null } | null> | null };
+export type UnboundBucketsByDatasourceQuery = {
+  __typename?: "Query";
+  unboundBucketsByDatasource?: Array<{ __typename?: "Bucket"; name?: string | null; id?: string | null } | null> | null;
+};
 
 export type DataSourceQueryVariables = Exact<{
-  id: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
+  id: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexable?: boolean | null, reindexing?: string | null, purgeable?: boolean | null, purging?: string | null, purgeMaxAge?: string | null, lastIngestionDate?: any | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, provisioning?: Provisioning | null, jsonConfig?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, knnIndex?: boolean | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataSourceQuery = {
+  __typename?: "Query";
+  datasource?: {
+    __typename?: "Datasource";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+    schedulable?: boolean | null;
+    scheduling?: string | null;
+    jsonConfig?: string | null;
+    reindexable?: boolean | null;
+    reindexing?: string | null;
+    purgeable?: boolean | null;
+    purging?: string | null;
+    purgeMaxAge?: string | null;
+    lastIngestionDate?: any | null;
+    pluginDriver?: {
+      __typename?: "PluginDriver";
+      id?: string | null;
+      name?: string | null;
+      provisioning?: Provisioning | null;
+      jsonConfig?: string | null;
+    } | null;
+    dataIndex?: {
+      __typename?: "DataIndex";
+      id?: string | null;
+      name?: string | null;
+      description?: string | null;
+      knnIndex?: boolean | null;
+    } | null;
+    enrichPipeline?: { __typename?: "EnrichPipeline"; id?: string | null; name?: string | null } | null;
+    dataIndexes?: {
+      __typename?: "DefaultConnection_DataIndex";
+      edges?: Array<{
+        __typename?: "DefaultEdge_DataIndex";
+        node?: { __typename?: "DataIndex"; id?: string | null; name?: string | null } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type CreateDatasourceConnectionMutationVariables = Exact<{
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  schedulable: Scalars['Boolean'];
-  scheduling: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
-  pluginDriverId: Scalars['BigInteger'];
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  schedulable: Scalars["Boolean"];
+  scheduling: Scalars["String"];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
+  pluginDriverId: Scalars["BigInteger"];
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
-  pipelineId?: InputMaybe<Scalars['BigInteger']>;
-  reindexable: Scalars['Boolean'];
-  reindexing: Scalars['String'];
-  purgeable: Scalars['Boolean'];
-  purging: Scalars['String'];
-  purgeMaxAge: Scalars['String'];
+  pipelineId?: InputMaybe<Scalars["BigInteger"]>;
+  reindexable: Scalars["Boolean"];
+  reindexing: Scalars["String"];
+  purgeable: Scalars["Boolean"];
+  purging: Scalars["String"];
+  purgeMaxAge: Scalars["String"];
   dataIndex: DataIndexDtoInput;
 }>;
 
-
-export type CreateDatasourceConnectionMutation = { __typename?: 'Mutation', createDatasourceConnection?: { __typename?: 'Response_Datasource', entity?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateDatasourceConnectionMutation = {
+  __typename?: "Mutation";
+  createDatasourceConnection?: {
+    __typename?: "Response_Datasource";
+    entity?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type UpdateDatasourceConnectionMutationVariables = Exact<{
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  schedulable: Scalars['Boolean'];
-  scheduling: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
+  schedulable: Scalars["Boolean"];
+  scheduling: Scalars["String"];
+  jsonConfig?: InputMaybe<Scalars["String"]>;
   pipeline?: InputMaybe<PipelineWithItemsDtoInput>;
-  pipelineId?: InputMaybe<Scalars['BigInteger']>;
-  dataIndexId: Scalars['BigInteger'];
-  datasourceId: Scalars['BigInteger'];
-  reindexable: Scalars['Boolean'];
-  reindexing: Scalars['String'];
-  purging: Scalars['String'];
-  purgeable: Scalars['Boolean'];
-  purgeMaxAge: Scalars['String'];
+  pipelineId?: InputMaybe<Scalars["BigInteger"]>;
+  dataIndexId: Scalars["BigInteger"];
+  datasourceId: Scalars["BigInteger"];
+  reindexable: Scalars["Boolean"];
+  reindexing: Scalars["String"];
+  purging: Scalars["String"];
+  purgeable: Scalars["Boolean"];
+  purgeMaxAge: Scalars["String"];
 }>;
 
-
-export type UpdateDatasourceConnectionMutation = { __typename?: 'Mutation', updateDatasourceConnection?: { __typename?: 'Response_Datasource', entity?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type UpdateDatasourceConnectionMutation = {
+  __typename?: "Mutation";
+  updateDatasourceConnection?: {
+    __typename?: "Response_Datasource";
+    entity?: { __typename?: "Datasource"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type QDatasourceSchedulersQueryVariables = Exact<{
-  id: Scalars['ID'];
-  first?: InputMaybe<Scalars['Int']>;
-  after?: InputMaybe<Scalars['String']>;
+  id: Scalars["ID"];
+  first?: InputMaybe<Scalars["Int"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type QDatasourceSchedulersQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', id?: string | null, status?: SchedulerStatus | null, modifiedDate?: any | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type QDatasourceSchedulersQuery = {
+  __typename?: "Query";
+  datasource?: {
+    __typename?: "Datasource";
+    id?: string | null;
+    schedulers?: {
+      __typename?: "DefaultConnection_Scheduler";
+      edges?: Array<{
+        __typename?: "DefaultEdge_Scheduler";
+        node?: {
+          __typename?: "Scheduler";
+          id?: string | null;
+          status?: SchedulerStatus | null;
+          modifiedDate?: any | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type DataSourceInformationQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DataSourceInformationQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', dataIndex?: { __typename?: 'DataIndex', cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, health?: string | null, index?: string | null, pri?: string | null, priStoreSize: any, rep?: string | null, status?: string | null, storeSize: any, uuid?: string | null } | null } | null } | null };
+export type DataSourceInformationQuery = {
+  __typename?: "Query";
+  datasource?: {
+    __typename?: "Datasource";
+    dataIndex?: {
+      __typename?: "DataIndex";
+      cat?: {
+        __typename?: "CatResponse";
+        docsCount?: string | null;
+        docsDeleted?: string | null;
+        health?: string | null;
+        index?: string | null;
+        pri?: string | null;
+        priStoreSize: any;
+        rep?: string | null;
+        status?: string | null;
+        storeSize: any;
+        uuid?: string | null;
+      } | null;
+    } | null;
+  } | null;
+};
 
 export type EnrichPipelineOptionsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type EnrichPipelineOptionsQuery = { __typename?: 'Query', options?: { __typename?: 'DefaultConnection_EnrichPipeline', edges?: Array<{ __typename?: 'DefaultEdge_EnrichPipeline', node?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type EnrichPipelineOptionsQuery = {
+  __typename?: "Query";
+  options?: {
+    __typename?: "DefaultConnection_EnrichPipeline";
+    edges?: Array<{
+      __typename?: "DefaultEdge_EnrichPipeline";
+      node?: {
+        __typename?: "EnrichPipeline";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type EnrichItemsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
+export type EnrichItemsQuery = {
+  __typename?: "Query";
+  enrichItems?: {
+    __typename?: "DefaultConnection_EnrichItem";
+    edges?: Array<{
+      __typename?: "DefaultEdge_EnrichItem";
+      node?: {
+        __typename?: "EnrichItem";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+        type?: EnrichItemType | null;
+        serviceName?: string | null;
+        jsonConfig?: string | null;
+        script?: string | null;
+        behaviorMergeType?: BehaviorMergeType | null;
+        jsonPath?: string | null;
+        behaviorOnError?: BehaviorOnError | null;
+        requestTimeout?: any | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
-export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type PluginDriversQueryVariables = Exact<{ [key: string]: never }>;
 
-export type PluginDriversQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PluginDriversQuery = { __typename?: 'Query', pluginDriversPageFilter?: { __typename?: 'Page_PluginDriver', content?: Array<{ __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, provisioning?: Provisioning | null, type?: PluginDriverType | null } | null> | null } | null };
+export type PluginDriversQuery = {
+  __typename?: "Query";
+  pluginDriversPageFilter?: {
+    __typename?: "Page_PluginDriver";
+    content?: Array<{
+      __typename?: "PluginDriver";
+      id?: string | null;
+      name?: string | null;
+      description?: string | null;
+      jsonConfig?: string | null;
+      provisioning?: Provisioning | null;
+      type?: PluginDriverType | null;
+    } | null> | null;
+  } | null;
+};
 
 export type CreateOrUpdatePluginDriverMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
   type: PluginDriverType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars["String"]>;
   provisioning?: InputMaybe<Provisioning>;
 }>;
 
-
-export type CreateOrUpdatePluginDriverMutation = { __typename?: 'Mutation', pluginDriver?: { __typename?: 'Response_PluginDriver', entity?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdatePluginDriverMutation = {
+  __typename?: "Mutation";
+  pluginDriver?: {
+    __typename?: "Response_PluginDriver";
+    entity?: { __typename?: "PluginDriver"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type EnrichPipelinesQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  after?: InputMaybe<Scalars['String']>;
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type EnrichPipelinesQuery = { __typename?: 'Query', enrichPipelines?: { __typename?: 'DefaultConnection_EnrichPipeline', edges?: Array<{ __typename?: 'DefaultEdge_EnrichPipeline', node?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type EnrichPipelinesQuery = {
+  __typename?: "Query";
+  enrichPipelines?: {
+    __typename?: "DefaultConnection_EnrichPipeline";
+    edges?: Array<{
+      __typename?: "DefaultEdge_EnrichPipeline";
+      node?: {
+        __typename?: "EnrichPipeline";
+        id?: string | null;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null> | null;
+    pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+  } | null;
+};
 
 export type EnrichPipelinesValueOptionsQueryVariables = Exact<{
-  id: Scalars['BigInteger'];
+  id: Scalars["BigInteger"];
 }>;
 
-
-export type EnrichPipelinesValueOptionsQuery = { __typename?: 'Query', unboundEnrichPipelines?: Array<{ __typename?: 'EnrichPipeline', name?: string | null, id?: string | null } | null> | null };
+export type EnrichPipelinesValueOptionsQuery = {
+  __typename?: "Query";
+  unboundEnrichPipelines?: Array<{
+    __typename?: "EnrichPipeline";
+    name?: string | null;
+    id?: string | null;
+  } | null> | null;
+};
 
 export type DeleteEnrichPipelineMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type DeleteEnrichPipelineMutation = { __typename?: 'Mutation', deleteEnrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null };
+export type DeleteEnrichPipelineMutation = {
+  __typename?: "Mutation";
+  deleteEnrichPipeline?: { __typename?: "EnrichPipeline"; id?: string | null; name?: string | null } | null;
+};
 
 export type EnrichPipelineQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars["ID"];
 }>;
 
-
-export type EnrichPipelineQuery = { __typename?: 'Query', enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null, description?: string | null } | null };
+export type EnrichPipelineQuery = {
+  __typename?: "Query";
+  enrichPipeline?: {
+    __typename?: "EnrichPipeline";
+    id?: string | null;
+    name?: string | null;
+    description?: string | null;
+  } | null;
+};
 
 export type AssociatedEnrichPipelineEnrichItemsQueryVariables = Exact<{
-  enrichPipelineId: Scalars['ID'];
+  enrichPipelineId: Scalars["ID"];
 }>;
 
-
-export type AssociatedEnrichPipelineEnrichItemsQuery = { __typename?: 'Query', enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type AssociatedEnrichPipelineEnrichItemsQuery = {
+  __typename?: "Query";
+  enrichPipeline?: {
+    __typename?: "EnrichPipeline";
+    id?: string | null;
+    enrichItems?: {
+      __typename?: "DefaultConnection_EnrichItem";
+      edges?: Array<{
+        __typename?: "DefaultEdge_EnrichItem";
+        node?: {
+          __typename?: "EnrichItem";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type UnassociatedEnrichPipelineEnrichItemsQueryVariables = Exact<{
-  enrichPipelineId: Scalars['ID'];
-  searchText?: InputMaybe<Scalars['String']>;
+  enrichPipelineId: Scalars["ID"];
+  searchText?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type UnassociatedEnrichPipelineEnrichItemsQuery = { __typename?: 'Query', enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type UnassociatedEnrichPipelineEnrichItemsQuery = {
+  __typename?: "Query";
+  enrichPipeline?: {
+    __typename?: "EnrichPipeline";
+    id?: string | null;
+    enrichItems?: {
+      __typename?: "DefaultConnection_EnrichItem";
+      edges?: Array<{
+        __typename?: "DefaultEdge_EnrichItem";
+        node?: {
+          __typename?: "EnrichItem";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null> | null;
+      pageInfo?: { __typename?: "DefaultPageInfo"; hasNextPage: boolean; endCursor?: string | null } | null;
+    } | null;
+  } | null;
+};
 
 export type CreateOrUpdateEnrichPipelineMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  name: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars["ID"]>;
+  name: Scalars["String"];
+  description?: InputMaybe<Scalars["String"]>;
 }>;
 
-
-export type CreateOrUpdateEnrichPipelineMutation = { __typename?: 'Mutation', enrichPipeline?: { __typename?: 'Response_EnrichPipeline', entity?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type CreateOrUpdateEnrichPipelineMutation = {
+  __typename?: "Mutation";
+  enrichPipeline?: {
+    __typename?: "Response_EnrichPipeline";
+    entity?: { __typename?: "EnrichPipeline"; id?: string | null; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export type AddEnrichItemToEnrichPipelineMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type AddEnrichItemToEnrichPipelineMutation = { __typename?: 'Mutation', addEnrichItemToEnrichPipeline?: { __typename?: 'Tuple2_EnrichPipeline_EnrichItem', left?: { __typename?: 'EnrichPipeline', id?: string | null } | null, right?: { __typename?: 'EnrichItem', id?: string | null } | null } | null };
+export type AddEnrichItemToEnrichPipelineMutation = {
+  __typename?: "Mutation";
+  addEnrichItemToEnrichPipeline?: {
+    __typename?: "Tuple2_EnrichPipeline_EnrichItem";
+    left?: { __typename?: "EnrichPipeline"; id?: string | null } | null;
+    right?: { __typename?: "EnrichItem"; id?: string | null } | null;
+  } | null;
+};
 
 export type RemoveEnrichItemFromEnrichPipelineMutationVariables = Exact<{
-  childId: Scalars['ID'];
-  parentId: Scalars['ID'];
+  childId: Scalars["ID"];
+  parentId: Scalars["ID"];
 }>;
 
-
-export type RemoveEnrichItemFromEnrichPipelineMutation = { __typename?: 'Mutation', removeEnrichItemFromEnrichPipeline?: { __typename?: 'Tuple2_EnrichPipeline_EnrichItem', left?: { __typename?: 'EnrichPipeline', id?: string | null } | null, right?: { __typename?: 'EnrichItem', id?: string | null } | null } | null };
+export type RemoveEnrichItemFromEnrichPipelineMutation = {
+  __typename?: "Mutation";
+  removeEnrichItemFromEnrichPipeline?: {
+    __typename?: "Tuple2_EnrichPipeline_EnrichItem";
+    left?: { __typename?: "EnrichPipeline"; id?: string | null } | null;
+    right?: { __typename?: "EnrichItem"; id?: string | null } | null;
+  } | null;
+};
 
 export type SortEnrichItemsMutationVariables = Exact<{
-  enrichPipelineId: Scalars['ID'];
-  enrichItemIdList?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  enrichPipelineId: Scalars["ID"];
+  enrichItemIdList?: InputMaybe<Array<InputMaybe<Scalars["BigInteger"]>> | InputMaybe<Scalars["BigInteger"]>>;
 }>;
 
-
-export type SortEnrichItemsMutation = { __typename?: 'Mutation', sortEnrichItems?: { __typename?: 'EnrichPipeline', id?: string | null, enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null } | null } | null> | null } | null } | null };
+export type SortEnrichItemsMutation = {
+  __typename?: "Mutation";
+  sortEnrichItems?: {
+    __typename?: "EnrichPipeline";
+    id?: string | null;
+    enrichItems?: {
+      __typename?: "DefaultConnection_EnrichItem";
+      edges?: Array<{
+        __typename?: "DefaultEdge_EnrichItem";
+        node?: {
+          __typename?: "EnrichItem";
+          id?: string | null;
+          name?: string | null;
+          description?: string | null;
+        } | null;
+      } | null> | null;
+    } | null;
+  } | null;
+};
 
 export type EnrichPipelineWithItemsMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
+  id?: InputMaybe<Scalars["ID"]>;
   items?: InputMaybe<Array<InputMaybe<ItemDtoInput>> | InputMaybe<ItemDtoInput>>;
-  name: Scalars['String'];
-  description: Scalars['String'];
+  name: Scalars["String"];
+  description: Scalars["String"];
 }>;
 
-
-export type EnrichPipelineWithItemsMutation = { __typename?: 'Mutation', enrichPipelineWithEnrichItems?: { __typename?: 'Response_EnrichPipeline', entity?: { __typename?: 'EnrichPipeline', name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
-
+export type EnrichPipelineWithItemsMutation = {
+  __typename?: "Mutation";
+  enrichPipelineWithEnrichItems?: {
+    __typename?: "Response_EnrichPipeline";
+    entity?: { __typename?: "EnrichPipeline"; name?: string | null } | null;
+    fieldValidators?: Array<{
+      __typename?: "FieldValidator";
+      field?: string | null;
+      message?: string | null;
+    } | null> | null;
+  } | null;
+};
 
 export const LanguagesDocument = gql`
-    query Languages($searchText: String, $cursor: String) {
-  languages(searchText: $searchText, first: 20, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        value
+  query Languages($searchText: String, $cursor: String) {
+    languages(searchText: $searchText, first: 20, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useLanguagesQuery__
@@ -6411,34 +8074,36 @@ export const LanguagesDocument = gql`
  * });
  */
 export function useLanguagesQuery(baseOptions?: Apollo.QueryHookOptions<LanguagesQuery, LanguagesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
-      }
-export function useLanguagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguagesQuery, LanguagesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
+}
+export function useLanguagesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LanguagesQuery, LanguagesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<LanguagesQuery, LanguagesQueryVariables>(LanguagesDocument, options);
+}
 export type LanguagesQueryHookResult = ReturnType<typeof useLanguagesQuery>;
 export type LanguagesLazyQueryHookResult = ReturnType<typeof useLanguagesLazyQuery>;
 export type LanguagesQueryResult = Apollo.QueryResult<LanguagesQuery, LanguagesQueryVariables>;
 export const AnalyzersDocument = gql`
-    query Analyzers($searchText: String, $after: String) {
-  analyzers(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        type
+  query Analyzers($searchText: String, $after: String) {
+    analyzers(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          type
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useAnalyzersQuery__
@@ -6458,33 +8123,35 @@ export const AnalyzersDocument = gql`
  * });
  */
 export function useAnalyzersQuery(baseOptions?: Apollo.QueryHookOptions<AnalyzersQuery, AnalyzersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnalyzersQuery, AnalyzersQueryVariables>(AnalyzersDocument, options);
-      }
-export function useAnalyzersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnalyzersQuery, AnalyzersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnalyzersQuery, AnalyzersQueryVariables>(AnalyzersDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnalyzersQuery, AnalyzersQueryVariables>(AnalyzersDocument, options);
+}
+export function useAnalyzersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnalyzersQuery, AnalyzersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnalyzersQuery, AnalyzersQueryVariables>(AnalyzersDocument, options);
+}
 export type AnalyzersQueryHookResult = ReturnType<typeof useAnalyzersQuery>;
 export type AnalyzersLazyQueryHookResult = ReturnType<typeof useAnalyzersLazyQuery>;
 export type AnalyzersQueryResult = Apollo.QueryResult<AnalyzersQuery, AnalyzersQueryVariables>;
 export const AnalyzerOptionsDocument = gql`
-    query AnalyzerOptions($searchText: String, $cursor: String) {
-  options: analyzers(searchText: $searchText, first: 5, after: $cursor) {
-    edges {
-      node {
-        name
-        description
-        type
+  query AnalyzerOptions($searchText: String, $cursor: String) {
+    options: analyzers(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          name
+          description
+          type
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useAnalyzerOptionsQuery__
@@ -6503,27 +8170,31 @@ export const AnalyzerOptionsDocument = gql`
  *   },
  * });
  */
-export function useAnalyzerOptionsQuery(baseOptions?: Apollo.QueryHookOptions<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>(AnalyzerOptionsDocument, options);
-      }
-export function useAnalyzerOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>(AnalyzerOptionsDocument, options);
-        }
+export function useAnalyzerOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>(AnalyzerOptionsDocument, options);
+}
+export function useAnalyzerOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>(AnalyzerOptionsDocument, options);
+}
 export type AnalyzerOptionsQueryHookResult = ReturnType<typeof useAnalyzerOptionsQuery>;
 export type AnalyzerOptionsLazyQueryHookResult = ReturnType<typeof useAnalyzerOptionsLazyQuery>;
 export type AnalyzerOptionsQueryResult = Apollo.QueryResult<AnalyzerOptionsQuery, AnalyzerOptionsQueryVariables>;
 export const AnalyzerValueDocument = gql`
-    query analyzerValue($id: ID!) {
-  value: analyzer(id: $id) {
-    id
-    name
-    description
-    type
+  query analyzerValue($id: ID!) {
+    value: analyzer(id: $id) {
+      id
+      name
+      description
+      type
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useAnalyzerValueQuery__
@@ -6541,36 +8212,40 @@ export const AnalyzerValueDocument = gql`
  *   },
  * });
  */
-export function useAnalyzerValueQuery(baseOptions: Apollo.QueryHookOptions<AnalyzerValueQuery, AnalyzerValueQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnalyzerValueQuery, AnalyzerValueQueryVariables>(AnalyzerValueDocument, options);
-      }
-export function useAnalyzerValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnalyzerValueQuery, AnalyzerValueQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnalyzerValueQuery, AnalyzerValueQueryVariables>(AnalyzerValueDocument, options);
-        }
+export function useAnalyzerValueQuery(
+  baseOptions: Apollo.QueryHookOptions<AnalyzerValueQuery, AnalyzerValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnalyzerValueQuery, AnalyzerValueQueryVariables>(AnalyzerValueDocument, options);
+}
+export function useAnalyzerValueLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnalyzerValueQuery, AnalyzerValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnalyzerValueQuery, AnalyzerValueQueryVariables>(AnalyzerValueDocument, options);
+}
 export type AnalyzerValueQueryHookResult = ReturnType<typeof useAnalyzerValueQuery>;
 export type AnalyzerValueLazyQueryHookResult = ReturnType<typeof useAnalyzerValueLazyQuery>;
 export type AnalyzerValueQueryResult = Apollo.QueryResult<AnalyzerValueQuery, AnalyzerValueQueryVariables>;
 export const BindAnalyzerToDocTypeFieldDocument = gql`
-    mutation BindAnalyzerToDocTypeField($analyzerId: ID!, $docTypeFieldId: ID!) {
-  bindAnalyzerToDocTypeField(
-    analyzerId: $analyzerId
-    docTypeFieldId: $docTypeFieldId
-  ) {
-    left {
-      id
-      docType {
+  mutation BindAnalyzerToDocTypeField($analyzerId: ID!, $docTypeFieldId: ID!) {
+    bindAnalyzerToDocTypeField(analyzerId: $analyzerId, docTypeFieldId: $docTypeFieldId) {
+      left {
+        id
+        docType {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindAnalyzerToDocTypeFieldMutationFn = Apollo.MutationFunction<BindAnalyzerToDocTypeFieldMutation, BindAnalyzerToDocTypeFieldMutationVariables>;
+`;
+export type BindAnalyzerToDocTypeFieldMutationFn = Apollo.MutationFunction<
+  BindAnalyzerToDocTypeFieldMutation,
+  BindAnalyzerToDocTypeFieldMutationVariables
+>;
 
 /**
  * __useBindAnalyzerToDocTypeFieldMutation__
@@ -6590,23 +8265,37 @@ export type BindAnalyzerToDocTypeFieldMutationFn = Apollo.MutationFunction<BindA
  *   },
  * });
  */
-export function useBindAnalyzerToDocTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<BindAnalyzerToDocTypeFieldMutation, BindAnalyzerToDocTypeFieldMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindAnalyzerToDocTypeFieldMutation, BindAnalyzerToDocTypeFieldMutationVariables>(BindAnalyzerToDocTypeFieldDocument, options);
-      }
+export function useBindAnalyzerToDocTypeFieldMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    BindAnalyzerToDocTypeFieldMutation,
+    BindAnalyzerToDocTypeFieldMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindAnalyzerToDocTypeFieldMutation, BindAnalyzerToDocTypeFieldMutationVariables>(
+    BindAnalyzerToDocTypeFieldDocument,
+    options,
+  );
+}
 export type BindAnalyzerToDocTypeFieldMutationHookResult = ReturnType<typeof useBindAnalyzerToDocTypeFieldMutation>;
 export type BindAnalyzerToDocTypeFieldMutationResult = Apollo.MutationResult<BindAnalyzerToDocTypeFieldMutation>;
-export type BindAnalyzerToDocTypeFieldMutationOptions = Apollo.BaseMutationOptions<BindAnalyzerToDocTypeFieldMutation, BindAnalyzerToDocTypeFieldMutationVariables>;
+export type BindAnalyzerToDocTypeFieldMutationOptions = Apollo.BaseMutationOptions<
+  BindAnalyzerToDocTypeFieldMutation,
+  BindAnalyzerToDocTypeFieldMutationVariables
+>;
 export const UnbindQueryAnalysisFromDocTypeFieldDocument = gql`
-    mutation UnbindQueryAnalysisFromDocTypeField($docTypeFieldId: ID!) {
-  unbindAnalyzerFromDocTypeField(docTypeFieldId: $docTypeFieldId) {
-    right {
-      id
+  mutation UnbindQueryAnalysisFromDocTypeField($docTypeFieldId: ID!) {
+    unbindAnalyzerFromDocTypeField(docTypeFieldId: $docTypeFieldId) {
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindQueryAnalysisFromDocTypeFieldMutationFn = Apollo.MutationFunction<UnbindQueryAnalysisFromDocTypeFieldMutation, UnbindQueryAnalysisFromDocTypeFieldMutationVariables>;
+`;
+export type UnbindQueryAnalysisFromDocTypeFieldMutationFn = Apollo.MutationFunction<
+  UnbindQueryAnalysisFromDocTypeFieldMutation,
+  UnbindQueryAnalysisFromDocTypeFieldMutationVariables
+>;
 
 /**
  * __useUnbindQueryAnalysisFromDocTypeFieldMutation__
@@ -6625,30 +8314,44 @@ export type UnbindQueryAnalysisFromDocTypeFieldMutationFn = Apollo.MutationFunct
  *   },
  * });
  */
-export function useUnbindQueryAnalysisFromDocTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<UnbindQueryAnalysisFromDocTypeFieldMutation, UnbindQueryAnalysisFromDocTypeFieldMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindQueryAnalysisFromDocTypeFieldMutation, UnbindQueryAnalysisFromDocTypeFieldMutationVariables>(UnbindQueryAnalysisFromDocTypeFieldDocument, options);
-      }
-export type UnbindQueryAnalysisFromDocTypeFieldMutationHookResult = ReturnType<typeof useUnbindQueryAnalysisFromDocTypeFieldMutation>;
-export type UnbindQueryAnalysisFromDocTypeFieldMutationResult = Apollo.MutationResult<UnbindQueryAnalysisFromDocTypeFieldMutation>;
-export type UnbindQueryAnalysisFromDocTypeFieldMutationOptions = Apollo.BaseMutationOptions<UnbindQueryAnalysisFromDocTypeFieldMutation, UnbindQueryAnalysisFromDocTypeFieldMutationVariables>;
+export function useUnbindQueryAnalysisFromDocTypeFieldMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UnbindQueryAnalysisFromDocTypeFieldMutation,
+    UnbindQueryAnalysisFromDocTypeFieldMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    UnbindQueryAnalysisFromDocTypeFieldMutation,
+    UnbindQueryAnalysisFromDocTypeFieldMutationVariables
+  >(UnbindQueryAnalysisFromDocTypeFieldDocument, options);
+}
+export type UnbindQueryAnalysisFromDocTypeFieldMutationHookResult = ReturnType<
+  typeof useUnbindQueryAnalysisFromDocTypeFieldMutation
+>;
+export type UnbindQueryAnalysisFromDocTypeFieldMutationResult =
+  Apollo.MutationResult<UnbindQueryAnalysisFromDocTypeFieldMutation>;
+export type UnbindQueryAnalysisFromDocTypeFieldMutationOptions = Apollo.BaseMutationOptions<
+  UnbindQueryAnalysisFromDocTypeFieldMutation,
+  UnbindQueryAnalysisFromDocTypeFieldMutationVariables
+>;
 export const SearchConfigOptionsDocument = gql`
-    query SearchConfigOptions($searchText: String, $cursor: String) {
-  options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        description
+  query SearchConfigOptions($searchText: String, $cursor: String) {
+    options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSearchConfigOptionsQuery__
@@ -6667,26 +8370,39 @@ export const SearchConfigOptionsDocument = gql`
  *   },
  * });
  */
-export function useSearchConfigOptionsQuery(baseOptions?: Apollo.QueryHookOptions<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>(SearchConfigOptionsDocument, options);
-      }
-export function useSearchConfigOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>(SearchConfigOptionsDocument, options);
-        }
+export function useSearchConfigOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>(
+    SearchConfigOptionsDocument,
+    options,
+  );
+}
+export function useSearchConfigOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>(
+    SearchConfigOptionsDocument,
+    options,
+  );
+}
 export type SearchConfigOptionsQueryHookResult = ReturnType<typeof useSearchConfigOptionsQuery>;
 export type SearchConfigOptionsLazyQueryHookResult = ReturnType<typeof useSearchConfigOptionsLazyQuery>;
-export type SearchConfigOptionsQueryResult = Apollo.QueryResult<SearchConfigOptionsQuery, SearchConfigOptionsQueryVariables>;
+export type SearchConfigOptionsQueryResult = Apollo.QueryResult<
+  SearchConfigOptionsQuery,
+  SearchConfigOptionsQueryVariables
+>;
 export const SearchConfigValueDocument = gql`
-    query SearchConfigValue($id: ID!) {
-  value: searchConfig(id: $id) {
-    id
-    name
-    description
+  query SearchConfigValue($id: ID!) {
+    value: searchConfig(id: $id) {
+      id
+      name
+      description
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useSearchConfigValueQuery__
@@ -6704,33 +8420,43 @@ export const SearchConfigValueDocument = gql`
  *   },
  * });
  */
-export function useSearchConfigValueQuery(baseOptions: Apollo.QueryHookOptions<SearchConfigValueQuery, SearchConfigValueQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SearchConfigValueQuery, SearchConfigValueQueryVariables>(SearchConfigValueDocument, options);
-      }
-export function useSearchConfigValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigValueQuery, SearchConfigValueQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SearchConfigValueQuery, SearchConfigValueQueryVariables>(SearchConfigValueDocument, options);
-        }
+export function useSearchConfigValueQuery(
+  baseOptions: Apollo.QueryHookOptions<SearchConfigValueQuery, SearchConfigValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SearchConfigValueQuery, SearchConfigValueQueryVariables>(SearchConfigValueDocument, options);
+}
+export function useSearchConfigValueLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigValueQuery, SearchConfigValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SearchConfigValueQuery, SearchConfigValueQueryVariables>(
+    SearchConfigValueDocument,
+    options,
+  );
+}
 export type SearchConfigValueQueryHookResult = ReturnType<typeof useSearchConfigValueQuery>;
 export type SearchConfigValueLazyQueryHookResult = ReturnType<typeof useSearchConfigValueLazyQuery>;
 export type SearchConfigValueQueryResult = Apollo.QueryResult<SearchConfigValueQuery, SearchConfigValueQueryVariables>;
 export const BindTokenizerToAnalyzerDocument = gql`
-    mutation BindTokenizerToAnalyzer($analyzerId: ID!, $tokenizerId: ID!) {
-  bindTokenizerToAnalyzer(analyzerId: $analyzerId, tokenizerId: $tokenizerId) {
-    left {
-      id
-      tokenizer {
+  mutation BindTokenizerToAnalyzer($analyzerId: ID!, $tokenizerId: ID!) {
+    bindTokenizerToAnalyzer(analyzerId: $analyzerId, tokenizerId: $tokenizerId) {
+      left {
+        id
+        tokenizer {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindTokenizerToAnalyzerMutationFn = Apollo.MutationFunction<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>;
+`;
+export type BindTokenizerToAnalyzerMutationFn = Apollo.MutationFunction<
+  BindTokenizerToAnalyzerMutation,
+  BindTokenizerToAnalyzerMutationVariables
+>;
 
 /**
  * __useBindTokenizerToAnalyzerMutation__
@@ -6750,23 +8476,34 @@ export type BindTokenizerToAnalyzerMutationFn = Apollo.MutationFunction<BindToke
  *   },
  * });
  */
-export function useBindTokenizerToAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>(BindTokenizerToAnalyzerDocument, options);
-      }
+export function useBindTokenizerToAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>(
+    BindTokenizerToAnalyzerDocument,
+    options,
+  );
+}
 export type BindTokenizerToAnalyzerMutationHookResult = ReturnType<typeof useBindTokenizerToAnalyzerMutation>;
 export type BindTokenizerToAnalyzerMutationResult = Apollo.MutationResult<BindTokenizerToAnalyzerMutation>;
-export type BindTokenizerToAnalyzerMutationOptions = Apollo.BaseMutationOptions<BindTokenizerToAnalyzerMutation, BindTokenizerToAnalyzerMutationVariables>;
+export type BindTokenizerToAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  BindTokenizerToAnalyzerMutation,
+  BindTokenizerToAnalyzerMutationVariables
+>;
 export const UnbindTokenizerFromAnalyzerDocument = gql`
-    mutation UnbindTokenizerFromAnalyzer($analyzerId: ID!) {
-  unbindTokenizerFromAnalyzer(analyzerId: $analyzerId) {
-    right {
-      id
+  mutation UnbindTokenizerFromAnalyzer($analyzerId: ID!) {
+    unbindTokenizerFromAnalyzer(analyzerId: $analyzerId) {
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindTokenizerFromAnalyzerMutationFn = Apollo.MutationFunction<UnbindTokenizerFromAnalyzerMutation, UnbindTokenizerFromAnalyzerMutationVariables>;
+`;
+export type UnbindTokenizerFromAnalyzerMutationFn = Apollo.MutationFunction<
+  UnbindTokenizerFromAnalyzerMutation,
+  UnbindTokenizerFromAnalyzerMutationVariables
+>;
 
 /**
  * __useUnbindTokenizerFromAnalyzerMutation__
@@ -6785,30 +8522,41 @@ export type UnbindTokenizerFromAnalyzerMutationFn = Apollo.MutationFunction<Unbi
  *   },
  * });
  */
-export function useUnbindTokenizerFromAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<UnbindTokenizerFromAnalyzerMutation, UnbindTokenizerFromAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindTokenizerFromAnalyzerMutation, UnbindTokenizerFromAnalyzerMutationVariables>(UnbindTokenizerFromAnalyzerDocument, options);
-      }
+export function useUnbindTokenizerFromAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UnbindTokenizerFromAnalyzerMutation,
+    UnbindTokenizerFromAnalyzerMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnbindTokenizerFromAnalyzerMutation, UnbindTokenizerFromAnalyzerMutationVariables>(
+    UnbindTokenizerFromAnalyzerDocument,
+    options,
+  );
+}
 export type UnbindTokenizerFromAnalyzerMutationHookResult = ReturnType<typeof useUnbindTokenizerFromAnalyzerMutation>;
 export type UnbindTokenizerFromAnalyzerMutationResult = Apollo.MutationResult<UnbindTokenizerFromAnalyzerMutation>;
-export type UnbindTokenizerFromAnalyzerMutationOptions = Apollo.BaseMutationOptions<UnbindTokenizerFromAnalyzerMutation, UnbindTokenizerFromAnalyzerMutationVariables>;
+export type UnbindTokenizerFromAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  UnbindTokenizerFromAnalyzerMutation,
+  UnbindTokenizerFromAnalyzerMutationVariables
+>;
 export const LanguagesOptionsDocument = gql`
-    query LanguagesOptions($searchText: String, $cursor: String) {
-  options: languages(searchText: $searchText, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        value
+  query LanguagesOptions($searchText: String, $cursor: String) {
+    options: languages(searchText: $searchText, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useLanguagesOptionsQuery__
@@ -6827,26 +8575,30 @@ export const LanguagesOptionsDocument = gql`
  *   },
  * });
  */
-export function useLanguagesOptionsQuery(baseOptions?: Apollo.QueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
-      }
-export function useLanguagesOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
-        }
+export function useLanguagesOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
+}
+export function useLanguagesOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>(LanguagesOptionsDocument, options);
+}
 export type LanguagesOptionsQueryHookResult = ReturnType<typeof useLanguagesOptionsQuery>;
 export type LanguagesOptionsLazyQueryHookResult = ReturnType<typeof useLanguagesOptionsLazyQuery>;
 export type LanguagesOptionsQueryResult = Apollo.QueryResult<LanguagesOptionsQuery, LanguagesOptionsQueryVariables>;
 export const LanguageValueDocument = gql`
-    query LanguageValue($id: ID!) {
-  value: language(id: $id) {
-    id
-    name
-    value
+  query LanguageValue($id: ID!) {
+    value: language(id: $id) {
+      id
+      name
+      value
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useLanguageValueQuery__
@@ -6864,32 +8616,36 @@ export const LanguageValueDocument = gql`
  *   },
  * });
  */
-export function useLanguageValueQuery(baseOptions: Apollo.QueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
-      }
-export function useLanguageValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
-        }
+export function useLanguageValueQuery(
+  baseOptions: Apollo.QueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
+}
+export function useLanguageValueLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LanguageValueQuery, LanguageValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<LanguageValueQuery, LanguageValueQueryVariables>(LanguageValueDocument, options);
+}
 export type LanguageValueQueryHookResult = ReturnType<typeof useLanguageValueQuery>;
 export type LanguageValueLazyQueryHookResult = ReturnType<typeof useLanguageValueLazyQuery>;
 export type LanguageValueQueryResult = Apollo.QueryResult<LanguageValueQuery, LanguageValueQueryVariables>;
 export const AnalyzerDocument = gql`
-    query Analyzer($id: ID!) {
-  analyzer(id: $id) {
-    id
-    name
-    description
-    type
-    jsonConfig
-    tokenizer {
+  query Analyzer($id: ID!) {
+    analyzer(id: $id) {
       id
       name
+      description
+      type
+      jsonConfig
+      tokenizer {
+        id
+        name
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useAnalyzerQuery__
@@ -6908,24 +8664,24 @@ export const AnalyzerDocument = gql`
  * });
  */
 export function useAnalyzerQuery(baseOptions: Apollo.QueryHookOptions<AnalyzerQuery, AnalyzerQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnalyzerQuery, AnalyzerQueryVariables>(AnalyzerDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnalyzerQuery, AnalyzerQueryVariables>(AnalyzerDocument, options);
+}
 export function useAnalyzerLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnalyzerQuery, AnalyzerQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnalyzerQuery, AnalyzerQueryVariables>(AnalyzerDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnalyzerQuery, AnalyzerQueryVariables>(AnalyzerDocument, options);
+}
 export type AnalyzerQueryHookResult = ReturnType<typeof useAnalyzerQuery>;
 export type AnalyzerLazyQueryHookResult = ReturnType<typeof useAnalyzerLazyQuery>;
 export type AnalyzerQueryResult = Apollo.QueryResult<AnalyzerQuery, AnalyzerQueryVariables>;
 export const DeleteAnalyzerDocument = gql`
-    mutation DeleteAnalyzer($id: ID!) {
-  deleteAnalyzer(analyzerId: $id) {
-    id
-    name
+  mutation DeleteAnalyzer($id: ID!) {
+    deleteAnalyzer(analyzerId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type DeleteAnalyzerMutationFn = Apollo.MutationFunction<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>;
 
 /**
@@ -6945,31 +8701,56 @@ export type DeleteAnalyzerMutationFn = Apollo.MutationFunction<DeleteAnalyzerMut
  *   },
  * });
  */
-export function useDeleteAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>(DeleteAnalyzerDocument, options);
-      }
+export function useDeleteAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>(DeleteAnalyzerDocument, options);
+}
 export type DeleteAnalyzerMutationHookResult = ReturnType<typeof useDeleteAnalyzerMutation>;
 export type DeleteAnalyzerMutationResult = Apollo.MutationResult<DeleteAnalyzerMutation>;
-export type DeleteAnalyzerMutationOptions = Apollo.BaseMutationOptions<DeleteAnalyzerMutation, DeleteAnalyzerMutationVariables>;
+export type DeleteAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  DeleteAnalyzerMutation,
+  DeleteAnalyzerMutationVariables
+>;
 export const CreateOrUpdateAnalyzerDocument = gql`
-    mutation CreateOrUpdateAnalyzer($id: ID, $name: String!, $description: String, $type: String!, $tokenFilterIds: [BigInteger], $charFilterIds: [BigInteger], $tokenizerId: BigInteger, $jsonConfig: String) {
-  analyzerWithLists(
-    id: $id
-    analyzerWithListsDTO: {name: $name, type: $type, description: $description, tokenFilterIds: $tokenFilterIds, charFilterIds: $charFilterIds, tokenizerId: $tokenizerId, jsonConfig: $jsonConfig}
+  mutation CreateOrUpdateAnalyzer(
+    $id: ID
+    $name: String!
+    $description: String
+    $type: String!
+    $tokenFilterIds: [BigInteger]
+    $charFilterIds: [BigInteger]
+    $tokenizerId: BigInteger
+    $jsonConfig: String
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    analyzerWithLists(
+      id: $id
+      analyzerWithListsDTO: {
+        name: $name
+        type: $type
+        description: $description
+        tokenFilterIds: $tokenFilterIds
+        charFilterIds: $charFilterIds
+        tokenizerId: $tokenizerId
+        jsonConfig: $jsonConfig
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateAnalyzerMutationFn = Apollo.MutationFunction<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>;
+`;
+export type CreateOrUpdateAnalyzerMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateAnalyzerMutation,
+  CreateOrUpdateAnalyzerMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateAnalyzerMutation__
@@ -6995,36 +8776,44 @@ export type CreateOrUpdateAnalyzerMutationFn = Apollo.MutationFunction<CreateOrU
  *   },
  * });
  */
-export function useCreateOrUpdateAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>(CreateOrUpdateAnalyzerDocument, options);
-      }
+export function useCreateOrUpdateAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>(
+    CreateOrUpdateAnalyzerDocument,
+    options,
+  );
+}
 export type CreateOrUpdateAnalyzerMutationHookResult = ReturnType<typeof useCreateOrUpdateAnalyzerMutation>;
 export type CreateOrUpdateAnalyzerMutationResult = Apollo.MutationResult<CreateOrUpdateAnalyzerMutation>;
-export type CreateOrUpdateAnalyzerMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateAnalyzerMutation, CreateOrUpdateAnalyzerMutationVariables>;
+export type CreateOrUpdateAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateAnalyzerMutation,
+  CreateOrUpdateAnalyzerMutationVariables
+>;
 export const AnalyzersAssociationsDocument = gql`
-    query AnalyzersAssociations($parentId: ID!, $unassociated: Boolean!) {
-  analyzer(id: $parentId) {
-    id
-    charFilters(notEqual: $unassociated) {
-      edges {
-        node {
-          id
-          name
+  query AnalyzersAssociations($parentId: ID!, $unassociated: Boolean!) {
+    analyzer(id: $parentId) {
+      id
+      charFilters(notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
-    }
-    tokenFilters(notEqual: $unassociated) {
-      edges {
-        node {
-          id
-          name
+      tokenFilters(notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useAnalyzersAssociationsQuery__
@@ -7043,34 +8832,47 @@ export const AnalyzersAssociationsDocument = gql`
  *   },
  * });
  */
-export function useAnalyzersAssociationsQuery(baseOptions: Apollo.QueryHookOptions<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>(AnalyzersAssociationsDocument, options);
-      }
-export function useAnalyzersAssociationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>(AnalyzersAssociationsDocument, options);
-        }
+export function useAnalyzersAssociationsQuery(
+  baseOptions: Apollo.QueryHookOptions<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>(
+    AnalyzersAssociationsDocument,
+    options,
+  );
+}
+export function useAnalyzersAssociationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>(
+    AnalyzersAssociationsDocument,
+    options,
+  );
+}
 export type AnalyzersAssociationsQueryHookResult = ReturnType<typeof useAnalyzersAssociationsQuery>;
 export type AnalyzersAssociationsLazyQueryHookResult = ReturnType<typeof useAnalyzersAssociationsLazyQuery>;
-export type AnalyzersAssociationsQueryResult = Apollo.QueryResult<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>;
+export type AnalyzersAssociationsQueryResult = Apollo.QueryResult<
+  AnalyzersAssociationsQuery,
+  AnalyzersAssociationsQueryVariables
+>;
 export const CharfiltersDocument = gql`
-    query Charfilters($searchText: String, $after: String) {
-  charFilters(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query Charfilters($searchText: String, $after: String) {
+    charFilters(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useCharfiltersQuery__
@@ -7089,26 +8891,33 @@ export const CharfiltersDocument = gql`
  *   },
  * });
  */
-export function useCharfiltersQuery(baseOptions?: Apollo.QueryHookOptions<CharfiltersQuery, CharfiltersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CharfiltersQuery, CharfiltersQueryVariables>(CharfiltersDocument, options);
-      }
-export function useCharfiltersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CharfiltersQuery, CharfiltersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CharfiltersQuery, CharfiltersQueryVariables>(CharfiltersDocument, options);
-        }
+export function useCharfiltersQuery(
+  baseOptions?: Apollo.QueryHookOptions<CharfiltersQuery, CharfiltersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<CharfiltersQuery, CharfiltersQueryVariables>(CharfiltersDocument, options);
+}
+export function useCharfiltersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CharfiltersQuery, CharfiltersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<CharfiltersQuery, CharfiltersQueryVariables>(CharfiltersDocument, options);
+}
 export type CharfiltersQueryHookResult = ReturnType<typeof useCharfiltersQuery>;
 export type CharfiltersLazyQueryHookResult = ReturnType<typeof useCharfiltersLazyQuery>;
 export type CharfiltersQueryResult = Apollo.QueryResult<CharfiltersQuery, CharfiltersQueryVariables>;
 export const DeleteCharFiltersDocument = gql`
-    mutation DeleteCharFilters($id: ID!) {
-  deleteCharFilter(charFilterId: $id) {
-    id
-    name
+  mutation DeleteCharFilters($id: ID!) {
+    deleteCharFilter(charFilterId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteCharFiltersMutationFn = Apollo.MutationFunction<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>;
+`;
+export type DeleteCharFiltersMutationFn = Apollo.MutationFunction<
+  DeleteCharFiltersMutation,
+  DeleteCharFiltersMutationVariables
+>;
 
 /**
  * __useDeleteCharFiltersMutation__
@@ -7127,21 +8936,29 @@ export type DeleteCharFiltersMutationFn = Apollo.MutationFunction<DeleteCharFilt
  *   },
  * });
  */
-export function useDeleteCharFiltersMutation(baseOptions?: Apollo.MutationHookOptions<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>(DeleteCharFiltersDocument, options);
-      }
+export function useDeleteCharFiltersMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>(
+    DeleteCharFiltersDocument,
+    options,
+  );
+}
 export type DeleteCharFiltersMutationHookResult = ReturnType<typeof useDeleteCharFiltersMutation>;
 export type DeleteCharFiltersMutationResult = Apollo.MutationResult<DeleteCharFiltersMutation>;
-export type DeleteCharFiltersMutationOptions = Apollo.BaseMutationOptions<DeleteCharFiltersMutation, DeleteCharFiltersMutationVariables>;
+export type DeleteCharFiltersMutationOptions = Apollo.BaseMutationOptions<
+  DeleteCharFiltersMutation,
+  DeleteCharFiltersMutationVariables
+>;
 export const UnboundAnalyzersByCharFilterDocument = gql`
-    query UnboundAnalyzersByCharFilter($charFilterId: BigInteger!) {
-  unboundAnalyzersByCharFilter(charFilterId: $charFilterId) {
-    name
-    id
+  query UnboundAnalyzersByCharFilter($charFilterId: BigInteger!) {
+    unboundAnalyzersByCharFilter(charFilterId: $charFilterId) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundAnalyzersByCharFilterQuery__
@@ -7159,30 +8976,51 @@ export const UnboundAnalyzersByCharFilterDocument = gql`
  *   },
  * });
  */
-export function useUnboundAnalyzersByCharFilterQuery(baseOptions: Apollo.QueryHookOptions<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>(UnboundAnalyzersByCharFilterDocument, options);
-      }
-export function useUnboundAnalyzersByCharFilterLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>(UnboundAnalyzersByCharFilterDocument, options);
-        }
+export function useUnboundAnalyzersByCharFilterQuery(
+  baseOptions: Apollo.QueryHookOptions<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>(
+    UnboundAnalyzersByCharFilterDocument,
+    options,
+  );
+}
+export function useUnboundAnalyzersByCharFilterLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnboundAnalyzersByCharFilterQuery,
+    UnboundAnalyzersByCharFilterQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>(
+    UnboundAnalyzersByCharFilterDocument,
+    options,
+  );
+}
 export type UnboundAnalyzersByCharFilterQueryHookResult = ReturnType<typeof useUnboundAnalyzersByCharFilterQuery>;
-export type UnboundAnalyzersByCharFilterLazyQueryHookResult = ReturnType<typeof useUnboundAnalyzersByCharFilterLazyQuery>;
-export type UnboundAnalyzersByCharFilterQueryResult = Apollo.QueryResult<UnboundAnalyzersByCharFilterQuery, UnboundAnalyzersByCharFilterQueryVariables>;
+export type UnboundAnalyzersByCharFilterLazyQueryHookResult = ReturnType<
+  typeof useUnboundAnalyzersByCharFilterLazyQuery
+>;
+export type UnboundAnalyzersByCharFilterQueryResult = Apollo.QueryResult<
+  UnboundAnalyzersByCharFilterQuery,
+  UnboundAnalyzersByCharFilterQueryVariables
+>;
 export const AddCharFiltersToAnalyzerDocument = gql`
-    mutation AddCharFiltersToAnalyzer($childId: ID!, $parentId: ID!) {
-  addCharFilterToAnalyzer(charFilterId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddCharFiltersToAnalyzer($childId: ID!, $parentId: ID!) {
+    addCharFilterToAnalyzer(charFilterId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddCharFiltersToAnalyzerMutationFn = Apollo.MutationFunction<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>;
+`;
+export type AddCharFiltersToAnalyzerMutationFn = Apollo.MutationFunction<
+  AddCharFiltersToAnalyzerMutation,
+  AddCharFiltersToAnalyzerMutationVariables
+>;
 
 /**
  * __useAddCharFiltersToAnalyzerMutation__
@@ -7202,24 +9040,32 @@ export type AddCharFiltersToAnalyzerMutationFn = Apollo.MutationFunction<AddChar
  *   },
  * });
  */
-export function useAddCharFiltersToAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>(AddCharFiltersToAnalyzerDocument, options);
-      }
+export function useAddCharFiltersToAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>(
+    AddCharFiltersToAnalyzerDocument,
+    options,
+  );
+}
 export type AddCharFiltersToAnalyzerMutationHookResult = ReturnType<typeof useAddCharFiltersToAnalyzerMutation>;
 export type AddCharFiltersToAnalyzerMutationResult = Apollo.MutationResult<AddCharFiltersToAnalyzerMutation>;
-export type AddCharFiltersToAnalyzerMutationOptions = Apollo.BaseMutationOptions<AddCharFiltersToAnalyzerMutation, AddCharFiltersToAnalyzerMutationVariables>;
+export type AddCharFiltersToAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  AddCharFiltersToAnalyzerMutation,
+  AddCharFiltersToAnalyzerMutationVariables
+>;
 export const CharFilterDocument = gql`
-    query CharFilter($id: ID!) {
-  charFilter(id: $id) {
-    id
-    name
-    description
-    jsonConfig
-    type
+  query CharFilter($id: ID!) {
+    charFilter(id: $id) {
+      id
+      name
+      description
+      jsonConfig
+      type
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useCharFilterQuery__
@@ -7238,34 +9084,45 @@ export const CharFilterDocument = gql`
  * });
  */
 export function useCharFilterQuery(baseOptions: Apollo.QueryHookOptions<CharFilterQuery, CharFilterQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<CharFilterQuery, CharFilterQueryVariables>(CharFilterDocument, options);
-      }
-export function useCharFilterLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<CharFilterQuery, CharFilterQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<CharFilterQuery, CharFilterQueryVariables>(CharFilterDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<CharFilterQuery, CharFilterQueryVariables>(CharFilterDocument, options);
+}
+export function useCharFilterLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<CharFilterQuery, CharFilterQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<CharFilterQuery, CharFilterQueryVariables>(CharFilterDocument, options);
+}
 export type CharFilterQueryHookResult = ReturnType<typeof useCharFilterQuery>;
 export type CharFilterLazyQueryHookResult = ReturnType<typeof useCharFilterLazyQuery>;
 export type CharFilterQueryResult = Apollo.QueryResult<CharFilterQuery, CharFilterQueryVariables>;
 export const CreateOrUpdateCharFilterDocument = gql`
-    mutation CreateOrUpdateCharFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
-  charFilter(
-    id: $id
-    charFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
+  mutation CreateOrUpdateCharFilter(
+    $id: ID
+    $name: String!
+    $description: String
+    $jsonConfig: String
+    $type: String!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    charFilter(
+      id: $id
+      charFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateCharFilterMutationFn = Apollo.MutationFunction<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>;
+`;
+export type CreateOrUpdateCharFilterMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateCharFilterMutation,
+  CreateOrUpdateCharFilterMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateCharFilterMutation__
@@ -7288,33 +9145,42 @@ export type CreateOrUpdateCharFilterMutationFn = Apollo.MutationFunction<CreateO
  *   },
  * });
  */
-export function useCreateOrUpdateCharFilterMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>(CreateOrUpdateCharFilterDocument, options);
-      }
+export function useCreateOrUpdateCharFilterMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>(
+    CreateOrUpdateCharFilterDocument,
+    options,
+  );
+}
 export type CreateOrUpdateCharFilterMutationHookResult = ReturnType<typeof useCreateOrUpdateCharFilterMutation>;
 export type CreateOrUpdateCharFilterMutationResult = Apollo.MutationResult<CreateOrUpdateCharFilterMutation>;
-export type CreateOrUpdateCharFilterMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateCharFilterMutation, CreateOrUpdateCharFilterMutationVariables>;
+export type CreateOrUpdateCharFilterMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateCharFilterMutation,
+  CreateOrUpdateCharFilterMutationVariables
+>;
 export const DataIndexInformationDocument = gql`
-    query dataIndexInformation {
-  buckets {
-    edges {
-      node {
-        datasources {
-          edges {
-            node {
-              dataIndex {
-                cat {
-                  docsCount
-                  docsDeleted
-                  health
-                  index
-                  pri
-                  priStoreSize
-                  rep
-                  status
-                  storeSize
-                  uuid
+  query dataIndexInformation {
+    buckets {
+      edges {
+        node {
+          datasources {
+            edges {
+              node {
+                dataIndex {
+                  cat {
+                    docsCount
+                    docsDeleted
+                    health
+                    index
+                    pri
+                    priStoreSize
+                    rep
+                    status
+                    storeSize
+                    uuid
+                  }
                 }
               }
             }
@@ -7323,8 +9189,7 @@ export const DataIndexInformationDocument = gql`
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDataIndexInformationQuery__
@@ -7341,40 +9206,53 @@ export const DataIndexInformationDocument = gql`
  *   },
  * });
  */
-export function useDataIndexInformationQuery(baseOptions?: Apollo.QueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(DataIndexInformationDocument, options);
-      }
-export function useDataIndexInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(DataIndexInformationDocument, options);
-        }
+export function useDataIndexInformationQuery(
+  baseOptions?: Apollo.QueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(
+    DataIndexInformationDocument,
+    options,
+  );
+}
+export function useDataIndexInformationLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataIndexInformationQuery, DataIndexInformationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataIndexInformationQuery, DataIndexInformationQueryVariables>(
+    DataIndexInformationDocument,
+    options,
+  );
+}
 export type DataIndexInformationQueryHookResult = ReturnType<typeof useDataIndexInformationQuery>;
 export type DataIndexInformationLazyQueryHookResult = ReturnType<typeof useDataIndexInformationLazyQuery>;
-export type DataIndexInformationQueryResult = Apollo.QueryResult<DataIndexInformationQuery, DataIndexInformationQueryVariables>;
+export type DataIndexInformationQueryResult = Apollo.QueryResult<
+  DataIndexInformationQuery,
+  DataIndexInformationQueryVariables
+>;
 export const SchedulersFaiulureDocument = gql`
-    query SchedulersFaiulure($searchText: String) {
-  schedulers(searchText: $searchText) {
-    edges {
-      node {
-        id
-        modifiedDate
-        errorDescription
-        lastIngestionDate
-        status
-        datasource {
+  query SchedulersFaiulure($searchText: String) {
+    schedulers(searchText: $searchText) {
+      edges {
+        node {
           id
-          name
-        }
-        newDataIndex {
-          id
-          name
+          modifiedDate
+          errorDescription
+          lastIngestionDate
+          status
+          datasource {
+            id
+            name
+          }
+          newDataIndex {
+            id
+            name
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSchedulersFaiulureQuery__
@@ -7392,34 +9270,47 @@ export const SchedulersFaiulureDocument = gql`
  *   },
  * });
  */
-export function useSchedulersFaiulureQuery(baseOptions?: Apollo.QueryHookOptions<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>(SchedulersFaiulureDocument, options);
-      }
-export function useSchedulersFaiulureLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>(SchedulersFaiulureDocument, options);
-        }
+export function useSchedulersFaiulureQuery(
+  baseOptions?: Apollo.QueryHookOptions<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>(
+    SchedulersFaiulureDocument,
+    options,
+  );
+}
+export function useSchedulersFaiulureLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>(
+    SchedulersFaiulureDocument,
+    options,
+  );
+}
 export type SchedulersFaiulureQueryHookResult = ReturnType<typeof useSchedulersFaiulureQuery>;
 export type SchedulersFaiulureLazyQueryHookResult = ReturnType<typeof useSchedulersFaiulureLazyQuery>;
-export type SchedulersFaiulureQueryResult = Apollo.QueryResult<SchedulersFaiulureQuery, SchedulersFaiulureQueryVariables>;
+export type SchedulersFaiulureQueryResult = Apollo.QueryResult<
+  SchedulersFaiulureQuery,
+  SchedulersFaiulureQueryVariables
+>;
 export const DocumentTypeTemplatesDocument = gql`
-    query DocumentTypeTemplates($searchText: String, $after: String) {
-  docTypeTemplates(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocumentTypeTemplates($searchText: String, $after: String) {
+    docTypeTemplates(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypeTemplatesQuery__
@@ -7438,26 +9329,42 @@ export const DocumentTypeTemplatesDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypeTemplatesQuery(baseOptions?: Apollo.QueryHookOptions<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>(DocumentTypeTemplatesDocument, options);
-      }
-export function useDocumentTypeTemplatesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>(DocumentTypeTemplatesDocument, options);
-        }
+export function useDocumentTypeTemplatesQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>(
+    DocumentTypeTemplatesDocument,
+    options,
+  );
+}
+export function useDocumentTypeTemplatesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>(
+    DocumentTypeTemplatesDocument,
+    options,
+  );
+}
 export type DocumentTypeTemplatesQueryHookResult = ReturnType<typeof useDocumentTypeTemplatesQuery>;
 export type DocumentTypeTemplatesLazyQueryHookResult = ReturnType<typeof useDocumentTypeTemplatesLazyQuery>;
-export type DocumentTypeTemplatesQueryResult = Apollo.QueryResult<DocumentTypeTemplatesQuery, DocumentTypeTemplatesQueryVariables>;
+export type DocumentTypeTemplatesQueryResult = Apollo.QueryResult<
+  DocumentTypeTemplatesQuery,
+  DocumentTypeTemplatesQueryVariables
+>;
 export const DeleteDocumentTypeTemplateDocument = gql`
-    mutation DeleteDocumentTypeTemplate($id: ID!) {
-  deleteDocTypeTemplate(docTypeTemplateId: $id) {
-    id
-    name
+  mutation DeleteDocumentTypeTemplate($id: ID!) {
+    deleteDocTypeTemplate(docTypeTemplateId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteDocumentTypeTemplateMutationFn = Apollo.MutationFunction<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>;
+`;
+export type DeleteDocumentTypeTemplateMutationFn = Apollo.MutationFunction<
+  DeleteDocumentTypeTemplateMutation,
+  DeleteDocumentTypeTemplateMutationVariables
+>;
 
 /**
  * __useDeleteDocumentTypeTemplateMutation__
@@ -7476,30 +9383,41 @@ export type DeleteDocumentTypeTemplateMutationFn = Apollo.MutationFunction<Delet
  *   },
  * });
  */
-export function useDeleteDocumentTypeTemplateMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>(DeleteDocumentTypeTemplateDocument, options);
-      }
+export function useDeleteDocumentTypeTemplateMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    DeleteDocumentTypeTemplateMutation,
+    DeleteDocumentTypeTemplateMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>(
+    DeleteDocumentTypeTemplateDocument,
+    options,
+  );
+}
 export type DeleteDocumentTypeTemplateMutationHookResult = ReturnType<typeof useDeleteDocumentTypeTemplateMutation>;
 export type DeleteDocumentTypeTemplateMutationResult = Apollo.MutationResult<DeleteDocumentTypeTemplateMutation>;
-export type DeleteDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeTemplateMutation, DeleteDocumentTypeTemplateMutationVariables>;
+export type DeleteDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<
+  DeleteDocumentTypeTemplateMutation,
+  DeleteDocumentTypeTemplateMutationVariables
+>;
 export const DocumentTypesDocument = gql`
-    query DocumentTypes($searchText: String, $cursor: String) {
-  docTypes(searchText: $searchText, first: 20, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocumentTypes($searchText: String, $cursor: String) {
+    docTypes(searchText: $searchText, first: 20, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypesQuery__
@@ -7518,29 +9436,33 @@ export const DocumentTypesDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypesQuery(baseOptions?: Apollo.QueryHookOptions<DocumentTypesQuery, DocumentTypesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypesQuery, DocumentTypesQueryVariables>(DocumentTypesDocument, options);
-      }
-export function useDocumentTypesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypesQuery, DocumentTypesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypesQuery, DocumentTypesQueryVariables>(DocumentTypesDocument, options);
-        }
+export function useDocumentTypesQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocumentTypesQuery, DocumentTypesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypesQuery, DocumentTypesQueryVariables>(DocumentTypesDocument, options);
+}
+export function useDocumentTypesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypesQuery, DocumentTypesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypesQuery, DocumentTypesQueryVariables>(DocumentTypesDocument, options);
+}
 export type DocumentTypesQueryHookResult = ReturnType<typeof useDocumentTypesQuery>;
 export type DocumentTypesLazyQueryHookResult = ReturnType<typeof useDocumentTypesLazyQuery>;
 export type DocumentTypesQueryResult = Apollo.QueryResult<DocumentTypesQuery, DocumentTypesQueryVariables>;
 export const DocumentTypeTemplateDocument = gql`
-    query DocumentTypeTemplate($id: ID!) {
-  docTypeTemplate(id: $id) {
-    id
-    name
-    description
-    templateType
-    source
-    compiled
+  query DocumentTypeTemplate($id: ID!) {
+    docTypeTemplate(id: $id) {
+      id
+      name
+      description
+      templateType
+      source
+      compiled
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypeTemplateQuery__
@@ -7558,35 +9480,64 @@ export const DocumentTypeTemplateDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypeTemplateQuery(baseOptions: Apollo.QueryHookOptions<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>(DocumentTypeTemplateDocument, options);
-      }
-export function useDocumentTypeTemplateLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>(DocumentTypeTemplateDocument, options);
-        }
+export function useDocumentTypeTemplateQuery(
+  baseOptions: Apollo.QueryHookOptions<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>(
+    DocumentTypeTemplateDocument,
+    options,
+  );
+}
+export function useDocumentTypeTemplateLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>(
+    DocumentTypeTemplateDocument,
+    options,
+  );
+}
 export type DocumentTypeTemplateQueryHookResult = ReturnType<typeof useDocumentTypeTemplateQuery>;
 export type DocumentTypeTemplateLazyQueryHookResult = ReturnType<typeof useDocumentTypeTemplateLazyQuery>;
-export type DocumentTypeTemplateQueryResult = Apollo.QueryResult<DocumentTypeTemplateQuery, DocumentTypeTemplateQueryVariables>;
+export type DocumentTypeTemplateQueryResult = Apollo.QueryResult<
+  DocumentTypeTemplateQuery,
+  DocumentTypeTemplateQueryVariables
+>;
 export const CreateOrUpdateDocumentTypeTemplateDocument = gql`
-    mutation CreateOrUpdateDocumentTypeTemplate($id: ID, $name: String!, $description: String, $templateType: TemplateType!, $source: String!, $compiled: String!) {
-  docTypeTemplate(
-    id: $id
-    docTypeTemplateDTO: {name: $name, description: $description, templateType: $templateType, source: $source, compiled: $compiled}
+  mutation CreateOrUpdateDocumentTypeTemplate(
+    $id: ID
+    $name: String!
+    $description: String
+    $templateType: TemplateType!
+    $source: String!
+    $compiled: String!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    docTypeTemplate(
+      id: $id
+      docTypeTemplateDTO: {
+        name: $name
+        description: $description
+        templateType: $templateType
+        source: $source
+        compiled: $compiled
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateDocumentTypeTemplateMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeTemplateMutation, CreateOrUpdateDocumentTypeTemplateMutationVariables>;
+`;
+export type CreateOrUpdateDocumentTypeTemplateMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateDocumentTypeTemplateMutation,
+  CreateOrUpdateDocumentTypeTemplateMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateDocumentTypeTemplateMutation__
@@ -7610,39 +9561,53 @@ export type CreateOrUpdateDocumentTypeTemplateMutationFn = Apollo.MutationFuncti
  *   },
  * });
  */
-export function useCreateOrUpdateDocumentTypeTemplateMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeTemplateMutation, CreateOrUpdateDocumentTypeTemplateMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocumentTypeTemplateMutation, CreateOrUpdateDocumentTypeTemplateMutationVariables>(CreateOrUpdateDocumentTypeTemplateDocument, options);
-      }
-export type CreateOrUpdateDocumentTypeTemplateMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeTemplateMutation>;
-export type CreateOrUpdateDocumentTypeTemplateMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeTemplateMutation>;
-export type CreateOrUpdateDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeTemplateMutation, CreateOrUpdateDocumentTypeTemplateMutationVariables>;
+export function useCreateOrUpdateDocumentTypeTemplateMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateDocumentTypeTemplateMutation,
+    CreateOrUpdateDocumentTypeTemplateMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdateDocumentTypeTemplateMutation,
+    CreateOrUpdateDocumentTypeTemplateMutationVariables
+  >(CreateOrUpdateDocumentTypeTemplateDocument, options);
+}
+export type CreateOrUpdateDocumentTypeTemplateMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateDocumentTypeTemplateMutation
+>;
+export type CreateOrUpdateDocumentTypeTemplateMutationResult =
+  Apollo.MutationResult<CreateOrUpdateDocumentTypeTemplateMutation>;
+export type CreateOrUpdateDocumentTypeTemplateMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateDocumentTypeTemplateMutation,
+  CreateOrUpdateDocumentTypeTemplateMutationVariables
+>;
 export const DocumentTypeFieldDocument = gql`
-    query DocumentTypeField($id: ID!) {
-  docTypeField(id: $id) {
-    id
-    name
-    description
-    fieldType
-    boost
-    searchable
-    exclude
-    fieldName
-    jsonConfig
-    sortable
-    analyzer {
+  query DocumentTypeField($id: ID!) {
+    docTypeField(id: $id) {
       id
       name
-    }
-    translations {
-      key
-      language
-      value
       description
+      fieldType
+      boost
+      searchable
+      exclude
+      fieldName
+      jsonConfig
+      sortable
+      analyzer {
+        id
+        name
+      }
+      translations {
+        key
+        language
+        value
+        description
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypeFieldQuery__
@@ -7660,34 +9625,61 @@ export const DocumentTypeFieldDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypeFieldQuery(baseOptions: Apollo.QueryHookOptions<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>(DocumentTypeFieldDocument, options);
-      }
-export function useDocumentTypeFieldLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>(DocumentTypeFieldDocument, options);
-        }
+export function useDocumentTypeFieldQuery(
+  baseOptions: Apollo.QueryHookOptions<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>(DocumentTypeFieldDocument, options);
+}
+export function useDocumentTypeFieldLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>(
+    DocumentTypeFieldDocument,
+    options,
+  );
+}
 export type DocumentTypeFieldQueryHookResult = ReturnType<typeof useDocumentTypeFieldQuery>;
 export type DocumentTypeFieldLazyQueryHookResult = ReturnType<typeof useDocumentTypeFieldLazyQuery>;
 export type DocumentTypeFieldQueryResult = Apollo.QueryResult<DocumentTypeFieldQuery, DocumentTypeFieldQueryVariables>;
 export const CreateOrUpdateDocumentTypeSubFieldsDocument = gql`
-    mutation createOrUpdateDocumentTypeSubFields($parentDocTypeFieldId: ID!, $name: String!, $fieldName: String!, $jsonConfig: String, $searchable: Boolean!, $boost: Float, $fieldType: FieldType!, $sortable: Boolean!) {
-  createSubField(
-    parentDocTypeFieldId: $parentDocTypeFieldId
-    docTypeFieldDTO: {name: $name, fieldName: $fieldName, jsonConfig: $jsonConfig, searchable: $searchable, boost: $boost, fieldType: $fieldType, sortable: $sortable}
+  mutation createOrUpdateDocumentTypeSubFields(
+    $parentDocTypeFieldId: ID!
+    $name: String!
+    $fieldName: String!
+    $jsonConfig: String
+    $searchable: Boolean!
+    $boost: Float
+    $fieldType: FieldType!
+    $sortable: Boolean!
   ) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
+    createSubField(
+      parentDocTypeFieldId: $parentDocTypeFieldId
+      docTypeFieldDTO: {
+        name: $name
+        fieldName: $fieldName
+        jsonConfig: $jsonConfig
+        searchable: $searchable
+        boost: $boost
+        fieldType: $fieldType
+        sortable: $sortable
+      }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateDocumentTypeSubFieldsMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeSubFieldsMutation, CreateOrUpdateDocumentTypeSubFieldsMutationVariables>;
+`;
+export type CreateOrUpdateDocumentTypeSubFieldsMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateDocumentTypeSubFieldsMutation,
+  CreateOrUpdateDocumentTypeSubFieldsMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateDocumentTypeSubFieldsMutation__
@@ -7713,27 +9705,44 @@ export type CreateOrUpdateDocumentTypeSubFieldsMutationFn = Apollo.MutationFunct
  *   },
  * });
  */
-export function useCreateOrUpdateDocumentTypeSubFieldsMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeSubFieldsMutation, CreateOrUpdateDocumentTypeSubFieldsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocumentTypeSubFieldsMutation, CreateOrUpdateDocumentTypeSubFieldsMutationVariables>(CreateOrUpdateDocumentTypeSubFieldsDocument, options);
-      }
-export type CreateOrUpdateDocumentTypeSubFieldsMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeSubFieldsMutation>;
-export type CreateOrUpdateDocumentTypeSubFieldsMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeSubFieldsMutation>;
-export type CreateOrUpdateDocumentTypeSubFieldsMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeSubFieldsMutation, CreateOrUpdateDocumentTypeSubFieldsMutationVariables>;
+export function useCreateOrUpdateDocumentTypeSubFieldsMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateDocumentTypeSubFieldsMutation,
+    CreateOrUpdateDocumentTypeSubFieldsMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdateDocumentTypeSubFieldsMutation,
+    CreateOrUpdateDocumentTypeSubFieldsMutationVariables
+  >(CreateOrUpdateDocumentTypeSubFieldsDocument, options);
+}
+export type CreateOrUpdateDocumentTypeSubFieldsMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateDocumentTypeSubFieldsMutation
+>;
+export type CreateOrUpdateDocumentTypeSubFieldsMutationResult =
+  Apollo.MutationResult<CreateOrUpdateDocumentTypeSubFieldsMutation>;
+export type CreateOrUpdateDocumentTypeSubFieldsMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateDocumentTypeSubFieldsMutation,
+  CreateOrUpdateDocumentTypeSubFieldsMutationVariables
+>;
 export const CreateOrUpdateDocumentTypeDocument = gql`
-    mutation CreateOrUpdateDocumentType($id: ID, $name: String!, $description: String) {
-  docType(id: $id, docTypeDTO: {name: $name, description: $description}) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
+  mutation CreateOrUpdateDocumentType($id: ID, $name: String!, $description: String) {
+    docType(id: $id, docTypeDTO: { name: $name, description: $description }) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateDocumentTypeMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>;
+`;
+export type CreateOrUpdateDocumentTypeMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateDocumentTypeMutation,
+  CreateOrUpdateDocumentTypeMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateDocumentTypeMutation__
@@ -7754,26 +9763,37 @@ export type CreateOrUpdateDocumentTypeMutationFn = Apollo.MutationFunction<Creat
  *   },
  * });
  */
-export function useCreateOrUpdateDocumentTypeMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>(CreateOrUpdateDocumentTypeDocument, options);
-      }
+export function useCreateOrUpdateDocumentTypeMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateDocumentTypeMutation,
+    CreateOrUpdateDocumentTypeMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>(
+    CreateOrUpdateDocumentTypeDocument,
+    options,
+  );
+}
 export type CreateOrUpdateDocumentTypeMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeMutation>;
 export type CreateOrUpdateDocumentTypeMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeMutation>;
-export type CreateOrUpdateDocumentTypeMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeMutation, CreateOrUpdateDocumentTypeMutationVariables>;
+export type CreateOrUpdateDocumentTypeMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateDocumentTypeMutation,
+  CreateOrUpdateDocumentTypeMutationVariables
+>;
 export const DocumentTypeDocument = gql`
-    query DocumentType($id: ID!) {
-  docType(id: $id) {
-    id
-    name
-    description
-    docTypeTemplate {
+  query DocumentType($id: ID!) {
+    docType(id: $id) {
       id
       name
+      description
+      docTypeTemplate {
+        id
+        name
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypeQuery__
@@ -7791,46 +9811,45 @@ export const DocumentTypeDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypeQuery(baseOptions: Apollo.QueryHookOptions<DocumentTypeQuery, DocumentTypeQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypeQuery, DocumentTypeQueryVariables>(DocumentTypeDocument, options);
-      }
-export function useDocumentTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeQuery, DocumentTypeQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypeQuery, DocumentTypeQueryVariables>(DocumentTypeDocument, options);
-        }
+export function useDocumentTypeQuery(
+  baseOptions: Apollo.QueryHookOptions<DocumentTypeQuery, DocumentTypeQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypeQuery, DocumentTypeQueryVariables>(DocumentTypeDocument, options);
+}
+export function useDocumentTypeLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeQuery, DocumentTypeQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypeQuery, DocumentTypeQueryVariables>(DocumentTypeDocument, options);
+}
 export type DocumentTypeQueryHookResult = ReturnType<typeof useDocumentTypeQuery>;
 export type DocumentTypeLazyQueryHookResult = ReturnType<typeof useDocumentTypeLazyQuery>;
 export type DocumentTypeQueryResult = Apollo.QueryResult<DocumentTypeQuery, DocumentTypeQueryVariables>;
 export const DocTypeFieldsByParentDocument = gql`
-    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
-  docTypeFieldsFromDocTypeByParent(
-    parentId: $parentId
-    searchText: $searchText
-    first: 30
-    docTypeId: $docTypeId
-  ) {
-    edges {
-      node {
-        id
-        name
-        description
-        fieldType
-        boost
-        searchable
-        exclude
-        fieldName
-        jsonConfig
-        sortable
-        parent {
+  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+    docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: 30, docTypeId: $docTypeId) {
+      edges {
+        node {
           id
+          name
+          description
+          fieldType
+          boost
+          searchable
+          exclude
           fieldName
+          jsonConfig
+          sortable
+          parent {
+            id
+            fieldName
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldsByParentQuery__
@@ -7850,35 +9869,75 @@ export const DocTypeFieldsByParentDocument = gql`
  *   },
  * });
  */
-export function useDocTypeFieldsByParentQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(DocTypeFieldsByParentDocument, options);
-      }
-export function useDocTypeFieldsByParentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(DocTypeFieldsByParentDocument, options);
-        }
+export function useDocTypeFieldsByParentQuery(
+  baseOptions: Apollo.QueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(
+    DocTypeFieldsByParentDocument,
+    options,
+  );
+}
+export function useDocTypeFieldsByParentLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>(
+    DocTypeFieldsByParentDocument,
+    options,
+  );
+}
 export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentQuery>;
 export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
-export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
+export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<
+  DocTypeFieldsByParentQuery,
+  DocTypeFieldsByParentQueryVariables
+>;
 export const CreateOrUpdateDocumentTypeFieldDocument = gql`
-    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger) {
-  docTypeFieldWithAnalyzer(
-    docTypeId: $documentTypeId
-    docTypeFieldId: $documentTypeFieldId
-    docTypeFieldWithAnalyzerDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable, analyzerId: $analyzerId}
+  mutation CreateOrUpdateDocumentTypeField(
+    $documentTypeId: ID!
+    $documentTypeFieldId: ID
+    $name: String!
+    $fieldName: String!
+    $description: String
+    $fieldType: FieldType!
+    $boost: Float
+    $searchable: Boolean!
+    $exclude: Boolean
+    $jsonConfig: String
+    $sortable: Boolean!
+    $analyzerId: BigInteger
   ) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
+    docTypeFieldWithAnalyzer(
+      docTypeId: $documentTypeId
+      docTypeFieldId: $documentTypeFieldId
+      docTypeFieldWithAnalyzerDTO: {
+        name: $name
+        description: $description
+        fieldType: $fieldType
+        boost: $boost
+        searchable: $searchable
+        exclude: $exclude
+        fieldName: $fieldName
+        jsonConfig: $jsonConfig
+        sortable: $sortable
+        analyzerId: $analyzerId
+      }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
+`;
+export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateDocumentTypeFieldMutation,
+  CreateOrUpdateDocumentTypeFieldMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateDocumentTypeFieldMutation__
@@ -7908,21 +9967,38 @@ export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<
  *   },
  * });
  */
-export function useCreateOrUpdateDocumentTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>(CreateOrUpdateDocumentTypeFieldDocument, options);
-      }
-export type CreateOrUpdateDocumentTypeFieldMutationHookResult = ReturnType<typeof useCreateOrUpdateDocumentTypeFieldMutation>;
-export type CreateOrUpdateDocumentTypeFieldMutationResult = Apollo.MutationResult<CreateOrUpdateDocumentTypeFieldMutation>;
-export type CreateOrUpdateDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>;
-export const DeleteDocumentTypeDocument = gql`
-    mutation DeleteDocumentType($id: ID!, $docTypeName: String) {
-  deleteDocType(docTypeId: $id, docTypeName: $docTypeName) {
-    id
-  }
+export function useCreateOrUpdateDocumentTypeFieldMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateDocumentTypeFieldMutation,
+    CreateOrUpdateDocumentTypeFieldMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateDocumentTypeFieldMutation, CreateOrUpdateDocumentTypeFieldMutationVariables>(
+    CreateOrUpdateDocumentTypeFieldDocument,
+    options,
+  );
 }
-    `;
-export type DeleteDocumentTypeMutationFn = Apollo.MutationFunction<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>;
+export type CreateOrUpdateDocumentTypeFieldMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateDocumentTypeFieldMutation
+>;
+export type CreateOrUpdateDocumentTypeFieldMutationResult =
+  Apollo.MutationResult<CreateOrUpdateDocumentTypeFieldMutation>;
+export type CreateOrUpdateDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateDocumentTypeFieldMutation,
+  CreateOrUpdateDocumentTypeFieldMutationVariables
+>;
+export const DeleteDocumentTypeDocument = gql`
+  mutation DeleteDocumentType($id: ID!, $docTypeName: String) {
+    deleteDocType(docTypeId: $id, docTypeName: $docTypeName) {
+      id
+    }
+  }
+`;
+export type DeleteDocumentTypeMutationFn = Apollo.MutationFunction<
+  DeleteDocumentTypeMutation,
+  DeleteDocumentTypeMutationVariables
+>;
 
 /**
  * __useDeleteDocumentTypeMutation__
@@ -7942,25 +10018,33 @@ export type DeleteDocumentTypeMutationFn = Apollo.MutationFunction<DeleteDocumen
  *   },
  * });
  */
-export function useDeleteDocumentTypeMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>(DeleteDocumentTypeDocument, options);
-      }
+export function useDeleteDocumentTypeMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>(
+    DeleteDocumentTypeDocument,
+    options,
+  );
+}
 export type DeleteDocumentTypeMutationHookResult = ReturnType<typeof useDeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationResult = Apollo.MutationResult<DeleteDocumentTypeMutation>;
-export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>;
+export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<
+  DeleteDocumentTypeMutation,
+  DeleteDocumentTypeMutationVariables
+>;
 export const DocTypeTemplateListDocument = gql`
-    query docTypeTemplateList {
-  docTypeTemplates {
-    edges {
-      node {
-        name
-        id
+  query docTypeTemplateList {
+    docTypeTemplates {
+      edges {
+        node {
+          name
+          id
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeTemplateListQuery__
@@ -7977,34 +10061,55 @@ export const DocTypeTemplateListDocument = gql`
  *   },
  * });
  */
-export function useDocTypeTemplateListQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>(DocTypeTemplateListDocument, options);
-      }
-export function useDocTypeTemplateListLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>(DocTypeTemplateListDocument, options);
-        }
+export function useDocTypeTemplateListQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>(
+    DocTypeTemplateListDocument,
+    options,
+  );
+}
+export function useDocTypeTemplateListLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>(
+    DocTypeTemplateListDocument,
+    options,
+  );
+}
 export type DocTypeTemplateListQueryHookResult = ReturnType<typeof useDocTypeTemplateListQuery>;
 export type DocTypeTemplateListLazyQueryHookResult = ReturnType<typeof useDocTypeTemplateListLazyQuery>;
-export type DocTypeTemplateListQueryResult = Apollo.QueryResult<DocTypeTemplateListQuery, DocTypeTemplateListQueryVariables>;
+export type DocTypeTemplateListQueryResult = Apollo.QueryResult<
+  DocTypeTemplateListQuery,
+  DocTypeTemplateListQueryVariables
+>;
 export const CreateOrUpdateDocTypeWithTemplateDocument = gql`
-    mutation CreateOrUpdateDocTypeWithTemplate($name: String!, $description: String, $docTypeTemplateId: BigInteger, $id: ID) {
-  docTypeWithTemplate(
-    id: $id
-    docTypeWithTemplateDTO: {name: $name, description: $description, docTypeTemplateId: $docTypeTemplateId}
+  mutation CreateOrUpdateDocTypeWithTemplate(
+    $name: String!
+    $description: String
+    $docTypeTemplateId: BigInteger
+    $id: ID
   ) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
+    docTypeWithTemplate(
+      id: $id
+      docTypeWithTemplateDTO: { name: $name, description: $description, docTypeTemplateId: $docTypeTemplateId }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateDocTypeWithTemplateMutationFn = Apollo.MutationFunction<CreateOrUpdateDocTypeWithTemplateMutation, CreateOrUpdateDocTypeWithTemplateMutationVariables>;
+`;
+export type CreateOrUpdateDocTypeWithTemplateMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateDocTypeWithTemplateMutation,
+  CreateOrUpdateDocTypeWithTemplateMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateDocTypeWithTemplateMutation__
@@ -8026,25 +10131,39 @@ export type CreateOrUpdateDocTypeWithTemplateMutationFn = Apollo.MutationFunctio
  *   },
  * });
  */
-export function useCreateOrUpdateDocTypeWithTemplateMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateDocTypeWithTemplateMutation, CreateOrUpdateDocTypeWithTemplateMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateDocTypeWithTemplateMutation, CreateOrUpdateDocTypeWithTemplateMutationVariables>(CreateOrUpdateDocTypeWithTemplateDocument, options);
-      }
-export type CreateOrUpdateDocTypeWithTemplateMutationHookResult = ReturnType<typeof useCreateOrUpdateDocTypeWithTemplateMutation>;
-export type CreateOrUpdateDocTypeWithTemplateMutationResult = Apollo.MutationResult<CreateOrUpdateDocTypeWithTemplateMutation>;
-export type CreateOrUpdateDocTypeWithTemplateMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateDocTypeWithTemplateMutation, CreateOrUpdateDocTypeWithTemplateMutationVariables>;
+export function useCreateOrUpdateDocTypeWithTemplateMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateDocTypeWithTemplateMutation,
+    CreateOrUpdateDocTypeWithTemplateMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdateDocTypeWithTemplateMutation,
+    CreateOrUpdateDocTypeWithTemplateMutationVariables
+  >(CreateOrUpdateDocTypeWithTemplateDocument, options);
+}
+export type CreateOrUpdateDocTypeWithTemplateMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateDocTypeWithTemplateMutation
+>;
+export type CreateOrUpdateDocTypeWithTemplateMutationResult =
+  Apollo.MutationResult<CreateOrUpdateDocTypeWithTemplateMutation>;
+export type CreateOrUpdateDocTypeWithTemplateMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateDocTypeWithTemplateMutation,
+  CreateOrUpdateDocTypeWithTemplateMutationVariables
+>;
 export const UnboundAnalyzersDocument = gql`
-    query UnboundAnalyzers {
-  analyzers {
-    edges {
-      node {
-        id
-        name
+  query UnboundAnalyzers {
+    analyzers {
+      edges {
+        node {
+          id
+          name
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundAnalyzersQuery__
@@ -8061,31 +10180,35 @@ export const UnboundAnalyzersDocument = gql`
  *   },
  * });
  */
-export function useUnboundAnalyzersQuery(baseOptions?: Apollo.QueryHookOptions<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>(UnboundAnalyzersDocument, options);
-      }
-export function useUnboundAnalyzersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>(UnboundAnalyzersDocument, options);
-        }
+export function useUnboundAnalyzersQuery(
+  baseOptions?: Apollo.QueryHookOptions<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>(UnboundAnalyzersDocument, options);
+}
+export function useUnboundAnalyzersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>(UnboundAnalyzersDocument, options);
+}
 export type UnboundAnalyzersQueryHookResult = ReturnType<typeof useUnboundAnalyzersQuery>;
 export type UnboundAnalyzersLazyQueryHookResult = ReturnType<typeof useUnboundAnalyzersLazyQuery>;
 export type UnboundAnalyzersQueryResult = Apollo.QueryResult<UnboundAnalyzersQuery, UnboundAnalyzersQueryVariables>;
 export const EmbeddingModelsDocument = gql`
-    query EmbeddingModels($searchText: String, $after: String) {
-  embeddingModels(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        enabled
+  query EmbeddingModels($searchText: String, $after: String) {
+    embeddingModels(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          enabled
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useEmbeddingModelsQuery__
@@ -8104,26 +10227,33 @@ export const EmbeddingModelsDocument = gql`
  *   },
  * });
  */
-export function useEmbeddingModelsQuery(baseOptions?: Apollo.QueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
-      }
-export function useEmbeddingModelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
-        }
+export function useEmbeddingModelsQuery(
+  baseOptions?: Apollo.QueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
+}
+export function useEmbeddingModelsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>(EmbeddingModelsDocument, options);
+}
 export type EmbeddingModelsQueryHookResult = ReturnType<typeof useEmbeddingModelsQuery>;
 export type EmbeddingModelsLazyQueryHookResult = ReturnType<typeof useEmbeddingModelsLazyQuery>;
 export type EmbeddingModelsQueryResult = Apollo.QueryResult<EmbeddingModelsQuery, EmbeddingModelsQueryVariables>;
 export const EnableEmbeddingModelDocument = gql`
-    mutation EnableEmbeddingModel($id: ID!) {
-  enableEmbeddingModel(id: $id) {
-    id
-    name
+  mutation EnableEmbeddingModel($id: ID!) {
+    enableEmbeddingModel(id: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type EnableEmbeddingModelMutationFn = Apollo.MutationFunction<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>;
+`;
+export type EnableEmbeddingModelMutationFn = Apollo.MutationFunction<
+  EnableEmbeddingModelMutation,
+  EnableEmbeddingModelMutationVariables
+>;
 
 /**
  * __useEnableEmbeddingModelMutation__
@@ -8142,22 +10272,33 @@ export type EnableEmbeddingModelMutationFn = Apollo.MutationFunction<EnableEmbed
  *   },
  * });
  */
-export function useEnableEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>(EnableEmbeddingModelDocument, options);
-      }
+export function useEnableEmbeddingModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>(
+    EnableEmbeddingModelDocument,
+    options,
+  );
+}
 export type EnableEmbeddingModelMutationHookResult = ReturnType<typeof useEnableEmbeddingModelMutation>;
 export type EnableEmbeddingModelMutationResult = Apollo.MutationResult<EnableEmbeddingModelMutation>;
-export type EnableEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<EnableEmbeddingModelMutation, EnableEmbeddingModelMutationVariables>;
+export type EnableEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<
+  EnableEmbeddingModelMutation,
+  EnableEmbeddingModelMutationVariables
+>;
 export const DeleteEmbeddingModelDocument = gql`
-    mutation DeleteEmbeddingModel($id: ID!) {
-  deleteEmbeddingModel(embeddingModelId: $id) {
-    id
-    name
+  mutation DeleteEmbeddingModel($id: ID!) {
+    deleteEmbeddingModel(embeddingModelId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteEmbeddingModelMutationFn = Apollo.MutationFunction<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
+`;
+export type DeleteEmbeddingModelMutationFn = Apollo.MutationFunction<
+  DeleteEmbeddingModelMutation,
+  DeleteEmbeddingModelMutationVariables
+>;
 
 /**
  * __useDeleteEmbeddingModelMutation__
@@ -8176,29 +10317,37 @@ export type DeleteEmbeddingModelMutationFn = Apollo.MutationFunction<DeleteEmbed
  *   },
  * });
  */
-export function useDeleteEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>(DeleteEmbeddingModelDocument, options);
-      }
+export function useDeleteEmbeddingModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>(
+    DeleteEmbeddingModelDocument,
+    options,
+  );
+}
 export type DeleteEmbeddingModelMutationHookResult = ReturnType<typeof useDeleteEmbeddingModelMutation>;
 export type DeleteEmbeddingModelMutationResult = Apollo.MutationResult<DeleteEmbeddingModelMutation>;
-export type DeleteEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<DeleteEmbeddingModelMutation, DeleteEmbeddingModelMutationVariables>;
+export type DeleteEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<
+  DeleteEmbeddingModelMutation,
+  DeleteEmbeddingModelMutationVariables
+>;
 export const EmbeddingModelDocument = gql`
-    query EmbeddingModel($id: ID!) {
-  embeddingModel(id: $id) {
-    name
-    description
-    apiUrl
-    apiKey
-    vectorSize
-    jsonConfig
-    providerModel {
-      provider
-      model
+  query EmbeddingModel($id: ID!) {
+    embeddingModel(id: $id) {
+      name
+      description
+      apiUrl
+      apiKey
+      vectorSize
+      jsonConfig
+      providerModel {
+        provider
+        model
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useEmbeddingModelQuery__
@@ -8216,35 +10365,59 @@ export const EmbeddingModelDocument = gql`
  *   },
  * });
  */
-export function useEmbeddingModelQuery(baseOptions: Apollo.QueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
-      }
-export function useEmbeddingModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
-        }
+export function useEmbeddingModelQuery(
+  baseOptions: Apollo.QueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
+}
+export function useEmbeddingModelLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EmbeddingModelQuery, EmbeddingModelQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EmbeddingModelQuery, EmbeddingModelQueryVariables>(EmbeddingModelDocument, options);
+}
 export type EmbeddingModelQueryHookResult = ReturnType<typeof useEmbeddingModelQuery>;
 export type EmbeddingModelLazyQueryHookResult = ReturnType<typeof useEmbeddingModelLazyQuery>;
 export type EmbeddingModelQueryResult = Apollo.QueryResult<EmbeddingModelQuery, EmbeddingModelQueryVariables>;
 export const CreateOrUpdateEmbeddingModelDocument = gql`
-    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $vectorSize: Int!, $providerModel: ProviderModelDTOInput!, $jsonConfig: String) {
-  embeddingModel(
-    id: $id
-    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, vectorSize: $vectorSize, providerModel: $providerModel, jsonConfig: $jsonConfig}
+  mutation CreateOrUpdateEmbeddingModel(
+    $id: ID
+    $apiKey: String
+    $apiUrl: String!
+    $description: String!
+    $name: String!
+    $vectorSize: Int!
+    $providerModel: ProviderModelDTOInput!
+    $jsonConfig: String
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    embeddingModel(
+      id: $id
+      embeddingModelDTO: {
+        name: $name
+        apiKey: $apiKey
+        apiUrl: $apiUrl
+        description: $description
+        vectorSize: $vectorSize
+        providerModel: $providerModel
+        jsonConfig: $jsonConfig
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>;
+`;
+export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateEmbeddingModelMutation,
+  CreateOrUpdateEmbeddingModelMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateEmbeddingModelMutation__
@@ -8270,21 +10443,32 @@ export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<Cre
  *   },
  * });
  */
-export function useCreateOrUpdateEmbeddingModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>(CreateOrUpdateEmbeddingModelDocument, options);
-      }
+export function useCreateOrUpdateEmbeddingModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateEmbeddingModelMutation,
+    CreateOrUpdateEmbeddingModelMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>(
+    CreateOrUpdateEmbeddingModelDocument,
+    options,
+  );
+}
 export type CreateOrUpdateEmbeddingModelMutationHookResult = ReturnType<typeof useCreateOrUpdateEmbeddingModelMutation>;
 export type CreateOrUpdateEmbeddingModelMutationResult = Apollo.MutationResult<CreateOrUpdateEmbeddingModelMutation>;
-export type CreateOrUpdateEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateEmbeddingModelMutation, CreateOrUpdateEmbeddingModelMutationVariables>;
+export type CreateOrUpdateEmbeddingModelMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateEmbeddingModelMutation,
+  CreateOrUpdateEmbeddingModelMutationVariables
+>;
 export const UnboundEnrichPipelinesDocument = gql`
-    query UnboundEnrichPipelines($itemId: BigInteger!) {
-  unboundEnrichPipelines(itemId: $itemId) {
-    name
-    id
+  query UnboundEnrichPipelines($itemId: BigInteger!) {
+    unboundEnrichPipelines(itemId: $itemId) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundEnrichPipelinesQuery__
@@ -8302,26 +10486,42 @@ export const UnboundEnrichPipelinesDocument = gql`
  *   },
  * });
  */
-export function useUnboundEnrichPipelinesQuery(baseOptions: Apollo.QueryHookOptions<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>(UnboundEnrichPipelinesDocument, options);
-      }
-export function useUnboundEnrichPipelinesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>(UnboundEnrichPipelinesDocument, options);
-        }
+export function useUnboundEnrichPipelinesQuery(
+  baseOptions: Apollo.QueryHookOptions<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>(
+    UnboundEnrichPipelinesDocument,
+    options,
+  );
+}
+export function useUnboundEnrichPipelinesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>(
+    UnboundEnrichPipelinesDocument,
+    options,
+  );
+}
 export type UnboundEnrichPipelinesQueryHookResult = ReturnType<typeof useUnboundEnrichPipelinesQuery>;
 export type UnboundEnrichPipelinesLazyQueryHookResult = ReturnType<typeof useUnboundEnrichPipelinesLazyQuery>;
-export type UnboundEnrichPipelinesQueryResult = Apollo.QueryResult<UnboundEnrichPipelinesQuery, UnboundEnrichPipelinesQueryVariables>;
+export type UnboundEnrichPipelinesQueryResult = Apollo.QueryResult<
+  UnboundEnrichPipelinesQuery,
+  UnboundEnrichPipelinesQueryVariables
+>;
 export const DeleteEnrichItemDocument = gql`
-    mutation DeleteEnrichItem($id: ID!) {
-  deleteEnrichItem(enrichItemId: $id) {
-    id
-    name
+  mutation DeleteEnrichItem($id: ID!) {
+    deleteEnrichItem(enrichItemId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteEnrichItemMutationFn = Apollo.MutationFunction<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>;
+`;
+export type DeleteEnrichItemMutationFn = Apollo.MutationFunction<
+  DeleteEnrichItemMutation,
+  DeleteEnrichItemMutationVariables
+>;
 
 /**
  * __useDeleteEnrichItemMutation__
@@ -8340,30 +10540,38 @@ export type DeleteEnrichItemMutationFn = Apollo.MutationFunction<DeleteEnrichIte
  *   },
  * });
  */
-export function useDeleteEnrichItemMutation(baseOptions?: Apollo.MutationHookOptions<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>(DeleteEnrichItemDocument, options);
-      }
+export function useDeleteEnrichItemMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>(
+    DeleteEnrichItemDocument,
+    options,
+  );
+}
 export type DeleteEnrichItemMutationHookResult = ReturnType<typeof useDeleteEnrichItemMutation>;
 export type DeleteEnrichItemMutationResult = Apollo.MutationResult<DeleteEnrichItemMutation>;
-export type DeleteEnrichItemMutationOptions = Apollo.BaseMutationOptions<DeleteEnrichItemMutation, DeleteEnrichItemMutationVariables>;
+export type DeleteEnrichItemMutationOptions = Apollo.BaseMutationOptions<
+  DeleteEnrichItemMutation,
+  DeleteEnrichItemMutationVariables
+>;
 export const EnrichItemDocument = gql`
-    query EnrichItem($id: ID!) {
-  enrichItem(id: $id) {
-    id
-    name
-    description
-    type
-    serviceName
-    jsonConfig
-    script
-    behaviorMergeType
-    jsonPath
-    behaviorOnError
-    requestTimeout
+  query EnrichItem($id: ID!) {
+    enrichItem(id: $id) {
+      id
+      name
+      description
+      type
+      serviceName
+      jsonConfig
+      script
+      behaviorMergeType
+      jsonPath
+      behaviorOnError
+      requestTimeout
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichItemQuery__
@@ -8382,34 +10590,62 @@ export const EnrichItemDocument = gql`
  * });
  */
 export function useEnrichItemQuery(baseOptions: Apollo.QueryHookOptions<EnrichItemQuery, EnrichItemQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichItemQuery, EnrichItemQueryVariables>(EnrichItemDocument, options);
-      }
-export function useEnrichItemLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichItemQuery, EnrichItemQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichItemQuery, EnrichItemQueryVariables>(EnrichItemDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichItemQuery, EnrichItemQueryVariables>(EnrichItemDocument, options);
+}
+export function useEnrichItemLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EnrichItemQuery, EnrichItemQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichItemQuery, EnrichItemQueryVariables>(EnrichItemDocument, options);
+}
 export type EnrichItemQueryHookResult = ReturnType<typeof useEnrichItemQuery>;
 export type EnrichItemLazyQueryHookResult = ReturnType<typeof useEnrichItemLazyQuery>;
 export type EnrichItemQueryResult = Apollo.QueryResult<EnrichItemQuery, EnrichItemQueryVariables>;
 export const CreateOrUpdateEnrichItemDocument = gql`
-    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $script: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
-  enrichItem(
-    id: $id
-    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, script: $script, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
+  mutation CreateOrUpdateEnrichItem(
+    $id: ID
+    $name: String!
+    $description: String
+    $type: EnrichItemType!
+    $serviceName: String!
+    $jsonConfig: String
+    $script: String
+    $behaviorMergeType: BehaviorMergeType!
+    $jsonPath: String!
+    $behaviorOnError: BehaviorOnError!
+    $requestTimeout: BigInteger!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    enrichItem(
+      id: $id
+      enrichItemDTO: {
+        name: $name
+        description: $description
+        type: $type
+        serviceName: $serviceName
+        jsonConfig: $jsonConfig
+        script: $script
+        behaviorMergeType: $behaviorMergeType
+        jsonPath: $jsonPath
+        behaviorOnError: $behaviorOnError
+        requestTimeout: $requestTimeout
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>;
+`;
+export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateEnrichItemMutation,
+  CreateOrUpdateEnrichItemMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateEnrichItemMutation__
@@ -8438,35 +10674,43 @@ export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateO
  *   },
  * });
  */
-export function useCreateOrUpdateEnrichItemMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>(CreateOrUpdateEnrichItemDocument, options);
-      }
+export function useCreateOrUpdateEnrichItemMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>(
+    CreateOrUpdateEnrichItemDocument,
+    options,
+  );
+}
 export type CreateOrUpdateEnrichItemMutationHookResult = ReturnType<typeof useCreateOrUpdateEnrichItemMutation>;
 export type CreateOrUpdateEnrichItemMutationResult = Apollo.MutationResult<CreateOrUpdateEnrichItemMutation>;
-export type CreateOrUpdateEnrichItemMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>;
+export type CreateOrUpdateEnrichItemMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateEnrichItemMutation,
+  CreateOrUpdateEnrichItemMutationVariables
+>;
 export const LargeLanguageModelsDocument = gql`
-    query LargeLanguageModels($searchText: String, $after: String) {
-  largeLanguageModels(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        enabled
-        providerModel {
-          provider
-          model
+  query LargeLanguageModels($searchText: String, $after: String) {
+    largeLanguageModels(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          enabled
+          providerModel {
+            provider
+            model
+          }
         }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useLargeLanguageModelsQuery__
@@ -8485,26 +10729,42 @@ export const LargeLanguageModelsDocument = gql`
  *   },
  * });
  */
-export function useLargeLanguageModelsQuery(baseOptions?: Apollo.QueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(LargeLanguageModelsDocument, options);
-      }
-export function useLargeLanguageModelsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(LargeLanguageModelsDocument, options);
-        }
+export function useLargeLanguageModelsQuery(
+  baseOptions?: Apollo.QueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(
+    LargeLanguageModelsDocument,
+    options,
+  );
+}
+export function useLargeLanguageModelsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>(
+    LargeLanguageModelsDocument,
+    options,
+  );
+}
 export type LargeLanguageModelsQueryHookResult = ReturnType<typeof useLargeLanguageModelsQuery>;
 export type LargeLanguageModelsLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelsLazyQuery>;
-export type LargeLanguageModelsQueryResult = Apollo.QueryResult<LargeLanguageModelsQuery, LargeLanguageModelsQueryVariables>;
+export type LargeLanguageModelsQueryResult = Apollo.QueryResult<
+  LargeLanguageModelsQuery,
+  LargeLanguageModelsQueryVariables
+>;
 export const EnableLargeLanguageModelDocument = gql`
-    mutation EnableLargeLanguageModel($id: ID!) {
-  enableLargeLanguageModel(id: $id) {
-    id
-    name
+  mutation EnableLargeLanguageModel($id: ID!) {
+    enableLargeLanguageModel(id: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type EnableLargeLanguageModelMutationFn = Apollo.MutationFunction<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>;
+`;
+export type EnableLargeLanguageModelMutationFn = Apollo.MutationFunction<
+  EnableLargeLanguageModelMutation,
+  EnableLargeLanguageModelMutationVariables
+>;
 
 /**
  * __useEnableLargeLanguageModelMutation__
@@ -8523,22 +10783,33 @@ export type EnableLargeLanguageModelMutationFn = Apollo.MutationFunction<EnableL
  *   },
  * });
  */
-export function useEnableLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>(EnableLargeLanguageModelDocument, options);
-      }
+export function useEnableLargeLanguageModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>(
+    EnableLargeLanguageModelDocument,
+    options,
+  );
+}
 export type EnableLargeLanguageModelMutationHookResult = ReturnType<typeof useEnableLargeLanguageModelMutation>;
 export type EnableLargeLanguageModelMutationResult = Apollo.MutationResult<EnableLargeLanguageModelMutation>;
-export type EnableLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<EnableLargeLanguageModelMutation, EnableLargeLanguageModelMutationVariables>;
+export type EnableLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<
+  EnableLargeLanguageModelMutation,
+  EnableLargeLanguageModelMutationVariables
+>;
 export const DeleteLargeLanguageModelDocument = gql`
-    mutation DeleteLargeLanguageModel($id: ID!) {
-  deleteLargeLanguageModel(largeLanguageModelId: $id) {
-    id
-    name
+  mutation DeleteLargeLanguageModel($id: ID!) {
+    deleteLargeLanguageModel(largeLanguageModelId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteLargeLanguageModelMutationFn = Apollo.MutationFunction<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
+`;
+export type DeleteLargeLanguageModelMutationFn = Apollo.MutationFunction<
+  DeleteLargeLanguageModelMutation,
+  DeleteLargeLanguageModelMutationVariables
+>;
 
 /**
  * __useDeleteLargeLanguageModelMutation__
@@ -8557,31 +10828,61 @@ export type DeleteLargeLanguageModelMutationFn = Apollo.MutationFunction<DeleteL
  *   },
  * });
  */
-export function useDeleteLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>(DeleteLargeLanguageModelDocument, options);
-      }
+export function useDeleteLargeLanguageModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>(
+    DeleteLargeLanguageModelDocument,
+    options,
+  );
+}
 export type DeleteLargeLanguageModelMutationHookResult = ReturnType<typeof useDeleteLargeLanguageModelMutation>;
 export type DeleteLargeLanguageModelMutationResult = Apollo.MutationResult<DeleteLargeLanguageModelMutation>;
-export type DeleteLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<DeleteLargeLanguageModelMutation, DeleteLargeLanguageModelMutationVariables>;
+export type DeleteLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<
+  DeleteLargeLanguageModelMutation,
+  DeleteLargeLanguageModelMutationVariables
+>;
 export const CreateOrUpdateLargeLanguageModelDocument = gql`
-    mutation CreateOrUpdateLargeLanguageModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $jsonConfig: String, $providerModel: ProviderModelDTOInput!, $contextWindow: Int, $retrieveCitations: Boolean) {
-  largeLanguageModel(
-    id: $id
-    largeLanguageModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, jsonConfig: $jsonConfig, providerModel: $providerModel, contextWindow: $contextWindow, retrieveCitations: $retrieveCitations}
+  mutation CreateOrUpdateLargeLanguageModel(
+    $id: ID
+    $apiKey: String
+    $apiUrl: String!
+    $description: String!
+    $name: String!
+    $jsonConfig: String
+    $providerModel: ProviderModelDTOInput!
+    $contextWindow: Int
+    $retrieveCitations: Boolean
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    largeLanguageModel(
+      id: $id
+      largeLanguageModelDTO: {
+        name: $name
+        apiKey: $apiKey
+        apiUrl: $apiUrl
+        description: $description
+        jsonConfig: $jsonConfig
+        providerModel: $providerModel
+        contextWindow: $contextWindow
+        retrieveCitations: $retrieveCitations
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
+`;
+export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateLargeLanguageModelMutation,
+  CreateOrUpdateLargeLanguageModelMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateLargeLanguageModelMutation__
@@ -8608,30 +10909,44 @@ export type CreateOrUpdateLargeLanguageModelMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useCreateOrUpdateLargeLanguageModelMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>(CreateOrUpdateLargeLanguageModelDocument, options);
-      }
-export type CreateOrUpdateLargeLanguageModelMutationHookResult = ReturnType<typeof useCreateOrUpdateLargeLanguageModelMutation>;
-export type CreateOrUpdateLargeLanguageModelMutationResult = Apollo.MutationResult<CreateOrUpdateLargeLanguageModelMutation>;
-export type CreateOrUpdateLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateLargeLanguageModelMutation, CreateOrUpdateLargeLanguageModelMutationVariables>;
+export function useCreateOrUpdateLargeLanguageModelMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateLargeLanguageModelMutation,
+    CreateOrUpdateLargeLanguageModelMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdateLargeLanguageModelMutation,
+    CreateOrUpdateLargeLanguageModelMutationVariables
+  >(CreateOrUpdateLargeLanguageModelDocument, options);
+}
+export type CreateOrUpdateLargeLanguageModelMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateLargeLanguageModelMutation
+>;
+export type CreateOrUpdateLargeLanguageModelMutationResult =
+  Apollo.MutationResult<CreateOrUpdateLargeLanguageModelMutation>;
+export type CreateOrUpdateLargeLanguageModelMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateLargeLanguageModelMutation,
+  CreateOrUpdateLargeLanguageModelMutationVariables
+>;
 export const LargeLanguageModelDocument = gql`
-    query LargeLanguageModel($id: ID!) {
-  largeLanguageModel(id: $id) {
-    name
-    description
-    apiUrl
-    apiKey
-    jsonConfig
-    contextWindow
-    retrieveCitations
-    providerModel {
-      provider
-      model
+  query LargeLanguageModel($id: ID!) {
+    largeLanguageModel(id: $id) {
+      name
+      description
+      apiUrl
+      apiKey
+      jsonConfig
+      contextWindow
+      retrieveCitations
+      providerModel {
+        provider
+        model
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useLargeLanguageModelQuery__
@@ -8649,33 +10964,46 @@ export const LargeLanguageModelDocument = gql`
  *   },
  * });
  */
-export function useLargeLanguageModelQuery(baseOptions: Apollo.QueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(LargeLanguageModelDocument, options);
-      }
-export function useLargeLanguageModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(LargeLanguageModelDocument, options);
-        }
+export function useLargeLanguageModelQuery(
+  baseOptions: Apollo.QueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(
+    LargeLanguageModelDocument,
+    options,
+  );
+}
+export function useLargeLanguageModelLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>(
+    LargeLanguageModelDocument,
+    options,
+  );
+}
 export type LargeLanguageModelQueryHookResult = ReturnType<typeof useLargeLanguageModelQuery>;
 export type LargeLanguageModelLazyQueryHookResult = ReturnType<typeof useLargeLanguageModelLazyQuery>;
-export type LargeLanguageModelQueryResult = Apollo.QueryResult<LargeLanguageModelQuery, LargeLanguageModelQueryVariables>;
+export type LargeLanguageModelQueryResult = Apollo.QueryResult<
+  LargeLanguageModelQuery,
+  LargeLanguageModelQueryVariables
+>;
 export const SchedulersDocument = gql`
-    query Schedulers {
-  schedulers(searchText: "FAILURE") {
-    edges {
-      node {
-        scheduleId
-        datasource {
-          id
-          name
+  query Schedulers {
+    schedulers(searchText: "FAILURE") {
+      edges {
+        node {
+          scheduleId
+          datasource {
+            id
+            name
+          }
+          status
         }
-        status
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSchedulersQuery__
@@ -8693,33 +11021,35 @@ export const SchedulersDocument = gql`
  * });
  */
 export function useSchedulersQuery(baseOptions?: Apollo.QueryHookOptions<SchedulersQuery, SchedulersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SchedulersQuery, SchedulersQueryVariables>(SchedulersDocument, options);
-      }
-export function useSchedulersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SchedulersQuery, SchedulersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SchedulersQuery, SchedulersQueryVariables>(SchedulersDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SchedulersQuery, SchedulersQueryVariables>(SchedulersDocument, options);
+}
+export function useSchedulersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SchedulersQuery, SchedulersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SchedulersQuery, SchedulersQueryVariables>(SchedulersDocument, options);
+}
 export type SchedulersQueryHookResult = ReturnType<typeof useSchedulersQuery>;
 export type SchedulersLazyQueryHookResult = ReturnType<typeof useSchedulersLazyQuery>;
 export type SchedulersQueryResult = Apollo.QueryResult<SchedulersQuery, SchedulersQueryVariables>;
 export const SchedulersErrorDocument = gql`
-    query schedulersError {
-  schedulers(searchText: "ERROR") {
-    edges {
-      node {
-        scheduleId
-        createDate
-        datasource {
-          id
-          name
+  query schedulersError {
+    schedulers(searchText: "ERROR") {
+      edges {
+        node {
+          scheduleId
+          createDate
+          datasource {
+            id
+            name
+          }
+          status
         }
-        status
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSchedulersErrorQuery__
@@ -8736,29 +11066,33 @@ export const SchedulersErrorDocument = gql`
  *   },
  * });
  */
-export function useSchedulersErrorQuery(baseOptions?: Apollo.QueryHookOptions<SchedulersErrorQuery, SchedulersErrorQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SchedulersErrorQuery, SchedulersErrorQueryVariables>(SchedulersErrorDocument, options);
-      }
-export function useSchedulersErrorLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SchedulersErrorQuery, SchedulersErrorQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SchedulersErrorQuery, SchedulersErrorQueryVariables>(SchedulersErrorDocument, options);
-        }
+export function useSchedulersErrorQuery(
+  baseOptions?: Apollo.QueryHookOptions<SchedulersErrorQuery, SchedulersErrorQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SchedulersErrorQuery, SchedulersErrorQueryVariables>(SchedulersErrorDocument, options);
+}
+export function useSchedulersErrorLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SchedulersErrorQuery, SchedulersErrorQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SchedulersErrorQuery, SchedulersErrorQueryVariables>(SchedulersErrorDocument, options);
+}
 export type SchedulersErrorQueryHookResult = ReturnType<typeof useSchedulersErrorQuery>;
 export type SchedulersErrorLazyQueryHookResult = ReturnType<typeof useSchedulersErrorLazyQuery>;
 export type SchedulersErrorQueryResult = Apollo.QueryResult<SchedulersErrorQuery, SchedulersErrorQueryVariables>;
 export const SchedulerDocument = gql`
-    query Scheduler($id: ID!) {
-  scheduler(id: $id) {
-    scheduleId
-    createDate
-    modifiedDate
-    lastIngestionDate
-    status
-    errorDescription
+  query Scheduler($id: ID!) {
+    scheduler(id: $id) {
+      scheduleId
+      createDate
+      modifiedDate
+      lastIngestionDate
+      status
+      errorDescription
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useSchedulerQuery__
@@ -8777,36 +11111,38 @@ export const SchedulerDocument = gql`
  * });
  */
 export function useSchedulerQuery(baseOptions: Apollo.QueryHookOptions<SchedulerQuery, SchedulerQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SchedulerQuery, SchedulerQueryVariables>(SchedulerDocument, options);
-      }
-export function useSchedulerLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SchedulerQuery, SchedulerQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SchedulerQuery, SchedulerQueryVariables>(SchedulerDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SchedulerQuery, SchedulerQueryVariables>(SchedulerDocument, options);
+}
+export function useSchedulerLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SchedulerQuery, SchedulerQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SchedulerQuery, SchedulerQueryVariables>(SchedulerDocument, options);
+}
 export type SchedulerQueryHookResult = ReturnType<typeof useSchedulerQuery>;
 export type SchedulerLazyQueryHookResult = ReturnType<typeof useSchedulerLazyQuery>;
 export type SchedulerQueryResult = Apollo.QueryResult<SchedulerQuery, SchedulerQueryVariables>;
 export const PluginDriverDocument = gql`
-    query PluginDriver($id: ID!) {
-  pluginDriver(id: $id) {
-    id
-    name
-    description
-    type
-    jsonConfig
-    provisioning
-    aclMappings {
-      userField
-      docTypeField {
-        name
-        id
-        fieldName
+  query PluginDriver($id: ID!) {
+    pluginDriver(id: $id) {
+      id
+      name
+      description
+      type
+      jsonConfig
+      provisioning
+      aclMappings {
+        userField
+        docTypeField {
+          name
+          id
+          fieldName
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __usePluginDriverQuery__
@@ -8824,35 +11160,55 @@ export const PluginDriverDocument = gql`
  *   },
  * });
  */
-export function usePluginDriverQuery(baseOptions: Apollo.QueryHookOptions<PluginDriverQuery, PluginDriverQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PluginDriverQuery, PluginDriverQueryVariables>(PluginDriverDocument, options);
-      }
-export function usePluginDriverLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverQuery, PluginDriverQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PluginDriverQuery, PluginDriverQueryVariables>(PluginDriverDocument, options);
-        }
+export function usePluginDriverQuery(
+  baseOptions: Apollo.QueryHookOptions<PluginDriverQuery, PluginDriverQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PluginDriverQuery, PluginDriverQueryVariables>(PluginDriverDocument, options);
+}
+export function usePluginDriverLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverQuery, PluginDriverQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PluginDriverQuery, PluginDriverQueryVariables>(PluginDriverDocument, options);
+}
 export type PluginDriverQueryHookResult = ReturnType<typeof usePluginDriverQuery>;
 export type PluginDriverLazyQueryHookResult = ReturnType<typeof usePluginDriverLazyQuery>;
 export type PluginDriverQueryResult = Apollo.QueryResult<PluginDriverQuery, PluginDriverQueryVariables>;
 export const CreateOrUpdatePluginDriverMutationDocument = gql`
-    mutation CreateOrUpdatePluginDriverMutation($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String, $provisioning: Provisioning!) {
-  pluginDriver(
-    id: $id
-    pluginDriverDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning}
+  mutation CreateOrUpdatePluginDriverMutation(
+    $id: ID
+    $name: String!
+    $description: String
+    $type: PluginDriverType!
+    $jsonConfig: String
+    $provisioning: Provisioning!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    pluginDriver(
+      id: $id
+      pluginDriverDTO: {
+        name: $name
+        description: $description
+        type: $type
+        jsonConfig: $jsonConfig
+        provisioning: $provisioning
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdatePluginDriverMutationMutationFn = Apollo.MutationFunction<CreateOrUpdatePluginDriverMutationMutation, CreateOrUpdatePluginDriverMutationMutationVariables>;
+`;
+export type CreateOrUpdatePluginDriverMutationMutationFn = Apollo.MutationFunction<
+  CreateOrUpdatePluginDriverMutationMutation,
+  CreateOrUpdatePluginDriverMutationMutationVariables
+>;
 
 /**
  * __useCreateOrUpdatePluginDriverMutationMutation__
@@ -8876,24 +11232,38 @@ export type CreateOrUpdatePluginDriverMutationMutationFn = Apollo.MutationFuncti
  *   },
  * });
  */
-export function useCreateOrUpdatePluginDriverMutationMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdatePluginDriverMutationMutation, CreateOrUpdatePluginDriverMutationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdatePluginDriverMutationMutation, CreateOrUpdatePluginDriverMutationMutationVariables>(CreateOrUpdatePluginDriverMutationDocument, options);
-      }
-export type CreateOrUpdatePluginDriverMutationMutationHookResult = ReturnType<typeof useCreateOrUpdatePluginDriverMutationMutation>;
-export type CreateOrUpdatePluginDriverMutationMutationResult = Apollo.MutationResult<CreateOrUpdatePluginDriverMutationMutation>;
-export type CreateOrUpdatePluginDriverMutationMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdatePluginDriverMutationMutation, CreateOrUpdatePluginDriverMutationMutationVariables>;
+export function useCreateOrUpdatePluginDriverMutationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdatePluginDriverMutationMutation,
+    CreateOrUpdatePluginDriverMutationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdatePluginDriverMutationMutation,
+    CreateOrUpdatePluginDriverMutationMutationVariables
+  >(CreateOrUpdatePluginDriverMutationDocument, options);
+}
+export type CreateOrUpdatePluginDriverMutationMutationHookResult = ReturnType<
+  typeof useCreateOrUpdatePluginDriverMutationMutation
+>;
+export type CreateOrUpdatePluginDriverMutationMutationResult =
+  Apollo.MutationResult<CreateOrUpdatePluginDriverMutationMutation>;
+export type CreateOrUpdatePluginDriverMutationMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdatePluginDriverMutationMutation,
+  CreateOrUpdatePluginDriverMutationMutationVariables
+>;
 export const PluginDriverByNameDocument = gql`
-    query PluginDriverByName($name: String) {
-  pluginDrivers(searchText: $name, first: 1) {
-    edges {
-      node {
-        id
+  query PluginDriverByName($name: String) {
+    pluginDrivers(searchText: $name, first: 1) {
+      edges {
+        node {
+          id
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __usePluginDriverByNameQuery__
@@ -8911,41 +11281,54 @@ export const PluginDriverByNameDocument = gql`
  *   },
  * });
  */
-export function usePluginDriverByNameQuery(baseOptions?: Apollo.QueryHookOptions<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>(PluginDriverByNameDocument, options);
-      }
-export function usePluginDriverByNameLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>(PluginDriverByNameDocument, options);
-        }
+export function usePluginDriverByNameQuery(
+  baseOptions?: Apollo.QueryHookOptions<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>(
+    PluginDriverByNameDocument,
+    options,
+  );
+}
+export function usePluginDriverByNameLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>(
+    PluginDriverByNameDocument,
+    options,
+  );
+}
 export type PluginDriverByNameQueryHookResult = ReturnType<typeof usePluginDriverByNameQuery>;
 export type PluginDriverByNameLazyQueryHookResult = ReturnType<typeof usePluginDriverByNameLazyQuery>;
-export type PluginDriverByNameQueryResult = Apollo.QueryResult<PluginDriverByNameQuery, PluginDriverByNameQueryVariables>;
+export type PluginDriverByNameQueryResult = Apollo.QueryResult<
+  PluginDriverByNameQuery,
+  PluginDriverByNameQueryVariables
+>;
 export const PluginDriversInfoQueryDocument = gql`
-    query PluginDriversInfoQuery($searchText: String, $after: String) {
-  pluginDrivers(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        type
-        aclMappings {
-          userField
-          docTypeField {
-            fieldName
+  query PluginDriversInfoQuery($searchText: String, $after: String) {
+    pluginDrivers(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          type
+          aclMappings {
+            userField
+            docTypeField {
+              fieldName
+            }
           }
         }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __usePluginDriversInfoQueryQuery__
@@ -8964,26 +11347,42 @@ export const PluginDriversInfoQueryDocument = gql`
  *   },
  * });
  */
-export function usePluginDriversInfoQueryQuery(baseOptions?: Apollo.QueryHookOptions<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>(PluginDriversInfoQueryDocument, options);
-      }
-export function usePluginDriversInfoQueryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>(PluginDriversInfoQueryDocument, options);
-        }
+export function usePluginDriversInfoQueryQuery(
+  baseOptions?: Apollo.QueryHookOptions<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>(
+    PluginDriversInfoQueryDocument,
+    options,
+  );
+}
+export function usePluginDriversInfoQueryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>(
+    PluginDriversInfoQueryDocument,
+    options,
+  );
+}
 export type PluginDriversInfoQueryQueryHookResult = ReturnType<typeof usePluginDriversInfoQueryQuery>;
 export type PluginDriversInfoQueryLazyQueryHookResult = ReturnType<typeof usePluginDriversInfoQueryLazyQuery>;
-export type PluginDriversInfoQueryQueryResult = Apollo.QueryResult<PluginDriversInfoQueryQuery, PluginDriversInfoQueryQueryVariables>;
+export type PluginDriversInfoQueryQueryResult = Apollo.QueryResult<
+  PluginDriversInfoQueryQuery,
+  PluginDriversInfoQueryQueryVariables
+>;
 export const DeletePluginDriverDocument = gql`
-    mutation DeletePluginDriver($id: ID!) {
-  deletePluginDriver(pluginDriverId: $id) {
-    id
-    name
+  mutation DeletePluginDriver($id: ID!) {
+    deletePluginDriver(pluginDriverId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeletePluginDriverMutationFn = Apollo.MutationFunction<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>;
+`;
+export type DeletePluginDriverMutationFn = Apollo.MutationFunction<
+  DeletePluginDriverMutation,
+  DeletePluginDriverMutationVariables
+>;
 
 /**
  * __useDeletePluginDriverMutation__
@@ -9002,31 +11401,57 @@ export type DeletePluginDriverMutationFn = Apollo.MutationFunction<DeletePluginD
  *   },
  * });
  */
-export function useDeletePluginDriverMutation(baseOptions?: Apollo.MutationHookOptions<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>(DeletePluginDriverDocument, options);
-      }
+export function useDeletePluginDriverMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>(
+    DeletePluginDriverDocument,
+    options,
+  );
+}
 export type DeletePluginDriverMutationHookResult = ReturnType<typeof useDeletePluginDriverMutation>;
 export type DeletePluginDriverMutationResult = Apollo.MutationResult<DeletePluginDriverMutation>;
-export type DeletePluginDriverMutationOptions = Apollo.BaseMutationOptions<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>;
+export type DeletePluginDriverMutationOptions = Apollo.BaseMutationOptions<
+  DeletePluginDriverMutation,
+  DeletePluginDriverMutationVariables
+>;
 export const PluginDriverWithDocTypeDocument = gql`
-    mutation PluginDriverWithDocType($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String!, $provisioning: Provisioning!, $docTypeUserDTOSet: [DocTypeUserDTOInput]) {
-  pluginDriverWithDocType(
-    id: $id
-    pluginWithDocTypeDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning, docTypeUserDTOSet: $docTypeUserDTOSet}
+  mutation PluginDriverWithDocType(
+    $id: ID
+    $name: String!
+    $description: String
+    $type: PluginDriverType!
+    $jsonConfig: String!
+    $provisioning: Provisioning!
+    $docTypeUserDTOSet: [DocTypeUserDTOInput]
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    pluginDriverWithDocType(
+      id: $id
+      pluginWithDocTypeDTO: {
+        name: $name
+        description: $description
+        type: $type
+        jsonConfig: $jsonConfig
+        provisioning: $provisioning
+        docTypeUserDTOSet: $docTypeUserDTOSet
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type PluginDriverWithDocTypeMutationFn = Apollo.MutationFunction<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>;
+`;
+export type PluginDriverWithDocTypeMutationFn = Apollo.MutationFunction<
+  PluginDriverWithDocTypeMutation,
+  PluginDriverWithDocTypeMutationVariables
+>;
 
 /**
  * __usePluginDriverWithDocTypeMutation__
@@ -9051,43 +11476,51 @@ export type PluginDriverWithDocTypeMutationFn = Apollo.MutationFunction<PluginDr
  *   },
  * });
  */
-export function usePluginDriverWithDocTypeMutation(baseOptions?: Apollo.MutationHookOptions<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>(PluginDriverWithDocTypeDocument, options);
-      }
+export function usePluginDriverWithDocTypeMutation(
+  baseOptions?: Apollo.MutationHookOptions<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>(
+    PluginDriverWithDocTypeDocument,
+    options,
+  );
+}
 export type PluginDriverWithDocTypeMutationHookResult = ReturnType<typeof usePluginDriverWithDocTypeMutation>;
 export type PluginDriverWithDocTypeMutationResult = Apollo.MutationResult<PluginDriverWithDocTypeMutation>;
-export type PluginDriverWithDocTypeMutationOptions = Apollo.BaseMutationOptions<PluginDriverWithDocTypeMutation, PluginDriverWithDocTypeMutationVariables>;
+export type PluginDriverWithDocTypeMutationOptions = Apollo.BaseMutationOptions<
+  PluginDriverWithDocTypeMutation,
+  PluginDriverWithDocTypeMutationVariables
+>;
 export const PluginDriverToDocumentTypeFieldsDocument = gql`
-    query PluginDriverToDocumentTypeFields($parentId: ID!, $searchText: String, $cursor: String) {
-  pluginDriver(id: $parentId) {
-    id
-    aclMappings {
-      userField
-      docTypeField {
-        id
-        name
-      }
-    }
-    docTypeFields(searchText: $searchText, first: 25, after: $cursor) {
-      edges {
-        node {
+  query PluginDriverToDocumentTypeFields($parentId: ID!, $searchText: String, $cursor: String) {
+    pluginDriver(id: $parentId) {
+      id
+      aclMappings {
+        userField
+        docTypeField {
           id
           name
-          description
-          docType {
-            id
-          }
         }
       }
-      pageInfo {
-        hasNextPage
-        endCursor
+      docTypeFields(searchText: $searchText, first: 25, after: $cursor) {
+        edges {
+          node {
+            id
+            name
+            description
+            docType {
+              id
+            }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __usePluginDriverToDocumentTypeFieldsQuery__
@@ -9107,33 +11540,56 @@ export const PluginDriverToDocumentTypeFieldsDocument = gql`
  *   },
  * });
  */
-export function usePluginDriverToDocumentTypeFieldsQuery(baseOptions: Apollo.QueryHookOptions<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(PluginDriverToDocumentTypeFieldsDocument, options);
-      }
-export function usePluginDriverToDocumentTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(PluginDriverToDocumentTypeFieldsDocument, options);
-        }
-export type PluginDriverToDocumentTypeFieldsQueryHookResult = ReturnType<typeof usePluginDriverToDocumentTypeFieldsQuery>;
-export type PluginDriverToDocumentTypeFieldsLazyQueryHookResult = ReturnType<typeof usePluginDriverToDocumentTypeFieldsLazyQuery>;
-export type PluginDriverToDocumentTypeFieldsQueryResult = Apollo.QueryResult<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>;
+export function usePluginDriverToDocumentTypeFieldsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    PluginDriverToDocumentTypeFieldsQuery,
+    PluginDriverToDocumentTypeFieldsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(
+    PluginDriverToDocumentTypeFieldsDocument,
+    options,
+  );
+}
+export function usePluginDriverToDocumentTypeFieldsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    PluginDriverToDocumentTypeFieldsQuery,
+    PluginDriverToDocumentTypeFieldsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PluginDriverToDocumentTypeFieldsQuery, PluginDriverToDocumentTypeFieldsQueryVariables>(
+    PluginDriverToDocumentTypeFieldsDocument,
+    options,
+  );
+}
+export type PluginDriverToDocumentTypeFieldsQueryHookResult = ReturnType<
+  typeof usePluginDriverToDocumentTypeFieldsQuery
+>;
+export type PluginDriverToDocumentTypeFieldsLazyQueryHookResult = ReturnType<
+  typeof usePluginDriverToDocumentTypeFieldsLazyQuery
+>;
+export type PluginDriverToDocumentTypeFieldsQueryResult = Apollo.QueryResult<
+  PluginDriverToDocumentTypeFieldsQuery,
+  PluginDriverToDocumentTypeFieldsQueryVariables
+>;
 export const DocumentTypeFieldsForPluginDocument = gql`
-    query DocumentTypeFieldsForPlugin($searchText: String) {
-  docTypeFields(searchText: $searchText) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocumentTypeFieldsForPlugin($searchText: String) {
+    docTypeFields(searchText: $searchText) {
+      edges {
+        node {
+          id
+          name
+          description
+          __typename
+        }
         __typename
       }
       __typename
     }
-    __typename
   }
-}
-    `;
+`;
 
 /**
  * __useDocumentTypeFieldsForPluginQuery__
@@ -9151,43 +11607,54 @@ export const DocumentTypeFieldsForPluginDocument = gql`
  *   },
  * });
  */
-export function useDocumentTypeFieldsForPluginQuery(baseOptions?: Apollo.QueryHookOptions<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(DocumentTypeFieldsForPluginDocument, options);
-      }
-export function useDocumentTypeFieldsForPluginLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(DocumentTypeFieldsForPluginDocument, options);
-        }
+export function useDocumentTypeFieldsForPluginQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(
+    DocumentTypeFieldsForPluginDocument,
+    options,
+  );
+}
+export function useDocumentTypeFieldsForPluginLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    DocumentTypeFieldsForPluginQuery,
+    DocumentTypeFieldsForPluginQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>(
+    DocumentTypeFieldsForPluginDocument,
+    options,
+  );
+}
 export type DocumentTypeFieldsForPluginQueryHookResult = ReturnType<typeof useDocumentTypeFieldsForPluginQuery>;
 export type DocumentTypeFieldsForPluginLazyQueryHookResult = ReturnType<typeof useDocumentTypeFieldsForPluginLazyQuery>;
-export type DocumentTypeFieldsForPluginQueryResult = Apollo.QueryResult<DocumentTypeFieldsForPluginQuery, DocumentTypeFieldsForPluginQueryVariables>;
+export type DocumentTypeFieldsForPluginQueryResult = Apollo.QueryResult<
+  DocumentTypeFieldsForPluginQuery,
+  DocumentTypeFieldsForPluginQueryVariables
+>;
 export const QueryAnalysesRulesDocument = gql`
-    query QueryAnalysesRules($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  queryAnalysis(id: $parentId) {
-    id
-    rules(
-      searchText: $searchText
-      notEqual: $unassociated
-      first: 20
-      after: $cursor
-    ) {
-      edges {
-        node {
-          id
-          name
-          lhs
-          rhs
+  query QueryAnalysesRules($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+    queryAnalysis(id: $parentId) {
+      id
+      rules(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+        edges {
+          node {
+            id
+            name
+            lhs
+            rhs
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysesRulesQuery__
@@ -9208,30 +11675,46 @@ export const QueryAnalysesRulesDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysesRulesQuery(baseOptions: Apollo.QueryHookOptions<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>(QueryAnalysesRulesDocument, options);
-      }
-export function useQueryAnalysesRulesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>(QueryAnalysesRulesDocument, options);
-        }
+export function useQueryAnalysesRulesQuery(
+  baseOptions: Apollo.QueryHookOptions<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>(
+    QueryAnalysesRulesDocument,
+    options,
+  );
+}
+export function useQueryAnalysesRulesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>(
+    QueryAnalysesRulesDocument,
+    options,
+  );
+}
 export type QueryAnalysesRulesQueryHookResult = ReturnType<typeof useQueryAnalysesRulesQuery>;
 export type QueryAnalysesRulesLazyQueryHookResult = ReturnType<typeof useQueryAnalysesRulesLazyQuery>;
-export type QueryAnalysesRulesQueryResult = Apollo.QueryResult<QueryAnalysesRulesQuery, QueryAnalysesRulesQueryVariables>;
+export type QueryAnalysesRulesQueryResult = Apollo.QueryResult<
+  QueryAnalysesRulesQuery,
+  QueryAnalysesRulesQueryVariables
+>;
 export const AddRulesToQueryAnalysesDocument = gql`
-    mutation AddRulesToQueryAnalyses($childId: ID!, $parentId: ID!) {
-  addRuleToQueryAnalysis(ruleId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddRulesToQueryAnalyses($childId: ID!, $parentId: ID!) {
+    addRuleToQueryAnalysis(ruleId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddRulesToQueryAnalysesMutationFn = Apollo.MutationFunction<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>;
+`;
+export type AddRulesToQueryAnalysesMutationFn = Apollo.MutationFunction<
+  AddRulesToQueryAnalysesMutation,
+  AddRulesToQueryAnalysesMutationVariables
+>;
 
 /**
  * __useAddRulesToQueryAnalysesMutation__
@@ -9251,26 +11734,37 @@ export type AddRulesToQueryAnalysesMutationFn = Apollo.MutationFunction<AddRules
  *   },
  * });
  */
-export function useAddRulesToQueryAnalysesMutation(baseOptions?: Apollo.MutationHookOptions<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>(AddRulesToQueryAnalysesDocument, options);
-      }
+export function useAddRulesToQueryAnalysesMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>(
+    AddRulesToQueryAnalysesDocument,
+    options,
+  );
+}
 export type AddRulesToQueryAnalysesMutationHookResult = ReturnType<typeof useAddRulesToQueryAnalysesMutation>;
 export type AddRulesToQueryAnalysesMutationResult = Apollo.MutationResult<AddRulesToQueryAnalysesMutation>;
-export type AddRulesToQueryAnalysesMutationOptions = Apollo.BaseMutationOptions<AddRulesToQueryAnalysesMutation, AddRulesToQueryAnalysesMutationVariables>;
+export type AddRulesToQueryAnalysesMutationOptions = Apollo.BaseMutationOptions<
+  AddRulesToQueryAnalysesMutation,
+  AddRulesToQueryAnalysesMutationVariables
+>;
 export const RemoveRuleFromQueryAnalysesDocument = gql`
-    mutation RemoveRuleFromQueryAnalyses($childId: ID!, $parentId: ID!) {
-  removeRuleFromQueryAnalysis(ruleId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveRuleFromQueryAnalyses($childId: ID!, $parentId: ID!) {
+    removeRuleFromQueryAnalysis(ruleId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveRuleFromQueryAnalysesMutationFn = Apollo.MutationFunction<RemoveRuleFromQueryAnalysesMutation, RemoveRuleFromQueryAnalysesMutationVariables>;
+`;
+export type RemoveRuleFromQueryAnalysesMutationFn = Apollo.MutationFunction<
+  RemoveRuleFromQueryAnalysesMutation,
+  RemoveRuleFromQueryAnalysesMutationVariables
+>;
 
 /**
  * __useRemoveRuleFromQueryAnalysesMutation__
@@ -9290,39 +11784,50 @@ export type RemoveRuleFromQueryAnalysesMutationFn = Apollo.MutationFunction<Remo
  *   },
  * });
  */
-export function useRemoveRuleFromQueryAnalysesMutation(baseOptions?: Apollo.MutationHookOptions<RemoveRuleFromQueryAnalysesMutation, RemoveRuleFromQueryAnalysesMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveRuleFromQueryAnalysesMutation, RemoveRuleFromQueryAnalysesMutationVariables>(RemoveRuleFromQueryAnalysesDocument, options);
-      }
+export function useRemoveRuleFromQueryAnalysesMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveRuleFromQueryAnalysesMutation,
+    RemoveRuleFromQueryAnalysesMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveRuleFromQueryAnalysesMutation, RemoveRuleFromQueryAnalysesMutationVariables>(
+    RemoveRuleFromQueryAnalysesDocument,
+    options,
+  );
+}
 export type RemoveRuleFromQueryAnalysesMutationHookResult = ReturnType<typeof useRemoveRuleFromQueryAnalysesMutation>;
 export type RemoveRuleFromQueryAnalysesMutationResult = Apollo.MutationResult<RemoveRuleFromQueryAnalysesMutation>;
-export type RemoveRuleFromQueryAnalysesMutationOptions = Apollo.BaseMutationOptions<RemoveRuleFromQueryAnalysesMutation, RemoveRuleFromQueryAnalysesMutationVariables>;
+export type RemoveRuleFromQueryAnalysesMutationOptions = Apollo.BaseMutationOptions<
+  RemoveRuleFromQueryAnalysesMutation,
+  RemoveRuleFromQueryAnalysesMutationVariables
+>;
 export const QueryAnalysisDocument = gql`
-    query QueryAnalysis($id: ID!) {
-  queryAnalysis(id: $id) {
-    id
-    name
-    description
-    stopWords
-    annotators {
-      edges {
-        node {
-          id
-          name
+  query QueryAnalysis($id: ID!) {
+    queryAnalysis(id: $id) {
+      id
+      name
+      description
+      stopWords
+      annotators {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
-    }
-    rules {
-      edges {
-        node {
-          id
-          name
+      rules {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysisQuery__
@@ -9340,34 +11845,38 @@ export const QueryAnalysisDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysisQuery(baseOptions: Apollo.QueryHookOptions<QueryAnalysisQuery, QueryAnalysisQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysisQuery, QueryAnalysisQueryVariables>(QueryAnalysisDocument, options);
-      }
-export function useQueryAnalysisLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisQuery, QueryAnalysisQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysisQuery, QueryAnalysisQueryVariables>(QueryAnalysisDocument, options);
-        }
+export function useQueryAnalysisQuery(
+  baseOptions: Apollo.QueryHookOptions<QueryAnalysisQuery, QueryAnalysisQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysisQuery, QueryAnalysisQueryVariables>(QueryAnalysisDocument, options);
+}
+export function useQueryAnalysisLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisQuery, QueryAnalysisQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysisQuery, QueryAnalysisQueryVariables>(QueryAnalysisDocument, options);
+}
 export type QueryAnalysisQueryHookResult = ReturnType<typeof useQueryAnalysisQuery>;
 export type QueryAnalysisLazyQueryHookResult = ReturnType<typeof useQueryAnalysisLazyQuery>;
 export type QueryAnalysisQueryResult = Apollo.QueryResult<QueryAnalysisQuery, QueryAnalysisQueryVariables>;
 export const QueryAnalysesDocument = gql`
-    query QueryAnalyses($searchText: String, $after: String) {
-  queryAnalyses(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query QueryAnalyses($searchText: String, $after: String) {
+    queryAnalyses(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysesQuery__
@@ -9386,26 +11895,33 @@ export const QueryAnalysesDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysesQuery(baseOptions?: Apollo.QueryHookOptions<QueryAnalysesQuery, QueryAnalysesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysesQuery, QueryAnalysesQueryVariables>(QueryAnalysesDocument, options);
-      }
-export function useQueryAnalysesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysesQuery, QueryAnalysesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysesQuery, QueryAnalysesQueryVariables>(QueryAnalysesDocument, options);
-        }
+export function useQueryAnalysesQuery(
+  baseOptions?: Apollo.QueryHookOptions<QueryAnalysesQuery, QueryAnalysesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysesQuery, QueryAnalysesQueryVariables>(QueryAnalysesDocument, options);
+}
+export function useQueryAnalysesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysesQuery, QueryAnalysesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysesQuery, QueryAnalysesQueryVariables>(QueryAnalysesDocument, options);
+}
 export type QueryAnalysesQueryHookResult = ReturnType<typeof useQueryAnalysesQuery>;
 export type QueryAnalysesLazyQueryHookResult = ReturnType<typeof useQueryAnalysesLazyQuery>;
 export type QueryAnalysesQueryResult = Apollo.QueryResult<QueryAnalysesQuery, QueryAnalysesQueryVariables>;
 export const DeleteQueryAnalysisDocument = gql`
-    mutation DeleteQueryAnalysis($id: ID!) {
-  deleteQueryAnalysis(queryAnalysisId: $id) {
-    id
-    name
+  mutation DeleteQueryAnalysis($id: ID!) {
+    deleteQueryAnalysis(queryAnalysisId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteQueryAnalysisMutationFn = Apollo.MutationFunction<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>;
+`;
+export type DeleteQueryAnalysisMutationFn = Apollo.MutationFunction<
+  DeleteQueryAnalysisMutation,
+  DeleteQueryAnalysisMutationVariables
+>;
 
 /**
  * __useDeleteQueryAnalysisMutation__
@@ -9424,31 +11940,55 @@ export type DeleteQueryAnalysisMutationFn = Apollo.MutationFunction<DeleteQueryA
  *   },
  * });
  */
-export function useDeleteQueryAnalysisMutation(baseOptions?: Apollo.MutationHookOptions<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>(DeleteQueryAnalysisDocument, options);
-      }
+export function useDeleteQueryAnalysisMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>(
+    DeleteQueryAnalysisDocument,
+    options,
+  );
+}
 export type DeleteQueryAnalysisMutationHookResult = ReturnType<typeof useDeleteQueryAnalysisMutation>;
 export type DeleteQueryAnalysisMutationResult = Apollo.MutationResult<DeleteQueryAnalysisMutation>;
-export type DeleteQueryAnalysisMutationOptions = Apollo.BaseMutationOptions<DeleteQueryAnalysisMutation, DeleteQueryAnalysisMutationVariables>;
+export type DeleteQueryAnalysisMutationOptions = Apollo.BaseMutationOptions<
+  DeleteQueryAnalysisMutation,
+  DeleteQueryAnalysisMutationVariables
+>;
 export const CreateOrUpdateQueryAnalysisDocument = gql`
-    mutation CreateOrUpdateQueryAnalysis($id: ID, $name: String!, $description: String, $stopWords: String, $annotatorsIds: [BigInteger], $rulesIds: [BigInteger]) {
-  queryAnalysisWithLists(
-    id: $id
-    queryAnalysisWithListsDTO: {name: $name, description: $description, stopWords: $stopWords, annotatorsIds: $annotatorsIds, rulesIds: $rulesIds}
+  mutation CreateOrUpdateQueryAnalysis(
+    $id: ID
+    $name: String!
+    $description: String
+    $stopWords: String
+    $annotatorsIds: [BigInteger]
+    $rulesIds: [BigInteger]
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    queryAnalysisWithLists(
+      id: $id
+      queryAnalysisWithListsDTO: {
+        name: $name
+        description: $description
+        stopWords: $stopWords
+        annotatorsIds: $annotatorsIds
+        rulesIds: $rulesIds
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateQueryAnalysisMutationFn = Apollo.MutationFunction<CreateOrUpdateQueryAnalysisMutation, CreateOrUpdateQueryAnalysisMutationVariables>;
+`;
+export type CreateOrUpdateQueryAnalysisMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateQueryAnalysisMutation,
+  CreateOrUpdateQueryAnalysisMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateQueryAnalysisMutation__
@@ -9472,36 +12012,47 @@ export type CreateOrUpdateQueryAnalysisMutationFn = Apollo.MutationFunction<Crea
  *   },
  * });
  */
-export function useCreateOrUpdateQueryAnalysisMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateQueryAnalysisMutation, CreateOrUpdateQueryAnalysisMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateQueryAnalysisMutation, CreateOrUpdateQueryAnalysisMutationVariables>(CreateOrUpdateQueryAnalysisDocument, options);
-      }
+export function useCreateOrUpdateQueryAnalysisMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateQueryAnalysisMutation,
+    CreateOrUpdateQueryAnalysisMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateQueryAnalysisMutation, CreateOrUpdateQueryAnalysisMutationVariables>(
+    CreateOrUpdateQueryAnalysisDocument,
+    options,
+  );
+}
 export type CreateOrUpdateQueryAnalysisMutationHookResult = ReturnType<typeof useCreateOrUpdateQueryAnalysisMutation>;
 export type CreateOrUpdateQueryAnalysisMutationResult = Apollo.MutationResult<CreateOrUpdateQueryAnalysisMutation>;
-export type CreateOrUpdateQueryAnalysisMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateQueryAnalysisMutation, CreateOrUpdateQueryAnalysisMutationVariables>;
+export type CreateOrUpdateQueryAnalysisMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateQueryAnalysisMutation,
+  CreateOrUpdateQueryAnalysisMutationVariables
+>;
 export const QueryAnalysisAssociationsDocument = gql`
-    query QueryAnalysisAssociations($parentId: ID!, $unassociated: Boolean!) {
-  queryAnalysis(id: $parentId) {
-    id
-    annotators(notEqual: $unassociated) {
-      edges {
-        node {
-          id
-          name
+  query QueryAnalysisAssociations($parentId: ID!, $unassociated: Boolean!) {
+    queryAnalysis(id: $parentId) {
+      id
+      annotators(notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
-    }
-    rules(notEqual: $unassociated) {
-      edges {
-        node {
-          id
-          name
+      rules(notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysisAssociationsQuery__
@@ -9520,35 +12071,48 @@ export const QueryAnalysisAssociationsDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysisAssociationsQuery(baseOptions: Apollo.QueryHookOptions<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>(QueryAnalysisAssociationsDocument, options);
-      }
-export function useQueryAnalysisAssociationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>(QueryAnalysisAssociationsDocument, options);
-        }
+export function useQueryAnalysisAssociationsQuery(
+  baseOptions: Apollo.QueryHookOptions<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>(
+    QueryAnalysisAssociationsDocument,
+    options,
+  );
+}
+export function useQueryAnalysisAssociationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>(
+    QueryAnalysisAssociationsDocument,
+    options,
+  );
+}
 export type QueryAnalysisAssociationsQueryHookResult = ReturnType<typeof useQueryAnalysisAssociationsQuery>;
 export type QueryAnalysisAssociationsLazyQueryHookResult = ReturnType<typeof useQueryAnalysisAssociationsLazyQuery>;
-export type QueryAnalysisAssociationsQueryResult = Apollo.QueryResult<QueryAnalysisAssociationsQuery, QueryAnalysisAssociationsQueryVariables>;
+export type QueryAnalysisAssociationsQueryResult = Apollo.QueryResult<
+  QueryAnalysisAssociationsQuery,
+  QueryAnalysisAssociationsQueryVariables
+>;
 export const RagConfigurationsDocument = gql`
-    query RagConfigurations($searchText: String, $after: String) {
-  ragConfigurations(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        type
+  query RagConfigurations($searchText: String, $after: String) {
+    ragConfigurations(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          type
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useRagConfigurationsQuery__
@@ -9567,34 +12131,41 @@ export const RagConfigurationsDocument = gql`
  *   },
  * });
  */
-export function useRagConfigurationsQuery(baseOptions?: Apollo.QueryHookOptions<RagConfigurationsQuery, RagConfigurationsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<RagConfigurationsQuery, RagConfigurationsQueryVariables>(RagConfigurationsDocument, options);
-      }
-export function useRagConfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RagConfigurationsQuery, RagConfigurationsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<RagConfigurationsQuery, RagConfigurationsQueryVariables>(RagConfigurationsDocument, options);
-        }
+export function useRagConfigurationsQuery(
+  baseOptions?: Apollo.QueryHookOptions<RagConfigurationsQuery, RagConfigurationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<RagConfigurationsQuery, RagConfigurationsQueryVariables>(RagConfigurationsDocument, options);
+}
+export function useRagConfigurationsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<RagConfigurationsQuery, RagConfigurationsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<RagConfigurationsQuery, RagConfigurationsQueryVariables>(
+    RagConfigurationsDocument,
+    options,
+  );
+}
 export type RagConfigurationsQueryHookResult = ReturnType<typeof useRagConfigurationsQuery>;
 export type RagConfigurationsLazyQueryHookResult = ReturnType<typeof useRagConfigurationsLazyQuery>;
 export type RagConfigurationsQueryResult = Apollo.QueryResult<RagConfigurationsQuery, RagConfigurationsQueryVariables>;
 export const RagConfigurationDocument = gql`
-    query RagConfiguration($id: ID!) {
-  ragConfiguration(id: $id) {
-    id
-    name
-    description
-    type
-    reformulate
-    chunkWindow
-    rephrasePrompt
-    prompt
-    jsonConfig
-    ragToolDescription
-    promptNoRag
+  query RagConfiguration($id: ID!) {
+    ragConfiguration(id: $id) {
+      id
+      name
+      description
+      type
+      reformulate
+      chunkWindow
+      rephrasePrompt
+      prompt
+      jsonConfig
+      ragToolDescription
+      promptNoRag
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useRagConfigurationQuery__
@@ -9612,35 +12183,64 @@ export const RagConfigurationDocument = gql`
  *   },
  * });
  */
-export function useRagConfigurationQuery(baseOptions: Apollo.QueryHookOptions<RagConfigurationQuery, RagConfigurationQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<RagConfigurationQuery, RagConfigurationQueryVariables>(RagConfigurationDocument, options);
-      }
-export function useRagConfigurationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RagConfigurationQuery, RagConfigurationQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<RagConfigurationQuery, RagConfigurationQueryVariables>(RagConfigurationDocument, options);
-        }
+export function useRagConfigurationQuery(
+  baseOptions: Apollo.QueryHookOptions<RagConfigurationQuery, RagConfigurationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<RagConfigurationQuery, RagConfigurationQueryVariables>(RagConfigurationDocument, options);
+}
+export function useRagConfigurationLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<RagConfigurationQuery, RagConfigurationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<RagConfigurationQuery, RagConfigurationQueryVariables>(RagConfigurationDocument, options);
+}
 export type RagConfigurationQueryHookResult = ReturnType<typeof useRagConfigurationQuery>;
 export type RagConfigurationLazyQueryHookResult = ReturnType<typeof useRagConfigurationLazyQuery>;
 export type RagConfigurationQueryResult = Apollo.QueryResult<RagConfigurationQuery, RagConfigurationQueryVariables>;
 export const CreateRagConfigDocument = gql`
-    mutation createRAGConfig($name: String!, $description: String, $type: RAGType!, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String) {
-  createRAGConfiguration(
-    createRAGConfigurationDTO: {name: $name, description: $description, type: $type, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag}
+  mutation createRAGConfig(
+    $name: String!
+    $description: String
+    $type: RAGType!
+    $reformulate: Boolean
+    $chunkWindow: Int
+    $rephrasePrompt: String
+    $prompt: String
+    $jsonConfig: String
+    $ragToolDescription: String
+    $promptNoRag: String
   ) {
-    entity {
-      id
-      name
-      type
-    }
-    fieldValidators {
-      field
-      message
+    createRAGConfiguration(
+      createRAGConfigurationDTO: {
+        name: $name
+        description: $description
+        type: $type
+        reformulate: $reformulate
+        chunkWindow: $chunkWindow
+        rephrasePrompt: $rephrasePrompt
+        prompt: $prompt
+        jsonConfig: $jsonConfig
+        ragToolDescription: $ragToolDescription
+        promptNoRag: $promptNoRag
+      }
+    ) {
+      entity {
+        id
+        name
+        type
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateRagConfigMutationFn = Apollo.MutationFunction<CreateRagConfigMutation, CreateRagConfigMutationVariables>;
+`;
+export type CreateRagConfigMutationFn = Apollo.MutationFunction<
+  CreateRagConfigMutation,
+  CreateRagConfigMutationVariables
+>;
 
 /**
  * __useCreateRagConfigMutation__
@@ -9668,33 +12268,66 @@ export type CreateRagConfigMutationFn = Apollo.MutationFunction<CreateRagConfigM
  *   },
  * });
  */
-export function useCreateRagConfigMutation(baseOptions?: Apollo.MutationHookOptions<CreateRagConfigMutation, CreateRagConfigMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateRagConfigMutation, CreateRagConfigMutationVariables>(CreateRagConfigDocument, options);
-      }
+export function useCreateRagConfigMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateRagConfigMutation, CreateRagConfigMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateRagConfigMutation, CreateRagConfigMutationVariables>(
+    CreateRagConfigDocument,
+    options,
+  );
+}
 export type CreateRagConfigMutationHookResult = ReturnType<typeof useCreateRagConfigMutation>;
 export type CreateRagConfigMutationResult = Apollo.MutationResult<CreateRagConfigMutation>;
-export type CreateRagConfigMutationOptions = Apollo.BaseMutationOptions<CreateRagConfigMutation, CreateRagConfigMutationVariables>;
+export type CreateRagConfigMutationOptions = Apollo.BaseMutationOptions<
+  CreateRagConfigMutation,
+  CreateRagConfigMutationVariables
+>;
 export const UpdateRagConfigurationDocument = gql`
-    mutation updateRAGConfiguration($id: ID!, $name: String!, $description: String, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String, $patch: Boolean) {
-  updateRAGConfiguration(
-    id: $id
-    patch: $patch
-    ragConfigurationDTO: {name: $name, description: $description, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag}
+  mutation updateRAGConfiguration(
+    $id: ID!
+    $name: String!
+    $description: String
+    $reformulate: Boolean
+    $chunkWindow: Int
+    $rephrasePrompt: String
+    $prompt: String
+    $jsonConfig: String
+    $ragToolDescription: String
+    $promptNoRag: String
+    $patch: Boolean
   ) {
-    entity {
-      id
-      name
-      type
-    }
-    fieldValidators {
-      field
-      message
+    updateRAGConfiguration(
+      id: $id
+      patch: $patch
+      ragConfigurationDTO: {
+        name: $name
+        description: $description
+        reformulate: $reformulate
+        chunkWindow: $chunkWindow
+        rephrasePrompt: $rephrasePrompt
+        prompt: $prompt
+        jsonConfig: $jsonConfig
+        ragToolDescription: $ragToolDescription
+        promptNoRag: $promptNoRag
+      }
+    ) {
+      entity {
+        id
+        name
+        type
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type UpdateRagConfigurationMutationFn = Apollo.MutationFunction<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>;
+`;
+export type UpdateRagConfigurationMutationFn = Apollo.MutationFunction<
+  UpdateRagConfigurationMutation,
+  UpdateRagConfigurationMutationVariables
+>;
 
 /**
  * __useUpdateRagConfigurationMutation__
@@ -9723,21 +12356,32 @@ export type UpdateRagConfigurationMutationFn = Apollo.MutationFunction<UpdateRag
  *   },
  * });
  */
-export function useUpdateRagConfigurationMutation(baseOptions?: Apollo.MutationHookOptions<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>(UpdateRagConfigurationDocument, options);
-      }
+export function useUpdateRagConfigurationMutation(
+  baseOptions?: Apollo.MutationHookOptions<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>(
+    UpdateRagConfigurationDocument,
+    options,
+  );
+}
 export type UpdateRagConfigurationMutationHookResult = ReturnType<typeof useUpdateRagConfigurationMutation>;
 export type UpdateRagConfigurationMutationResult = Apollo.MutationResult<UpdateRagConfigurationMutation>;
-export type UpdateRagConfigurationMutationOptions = Apollo.BaseMutationOptions<UpdateRagConfigurationMutation, UpdateRagConfigurationMutationVariables>;
+export type UpdateRagConfigurationMutationOptions = Apollo.BaseMutationOptions<
+  UpdateRagConfigurationMutation,
+  UpdateRagConfigurationMutationVariables
+>;
 export const DeleteRagConfigurationDocument = gql`
-    mutation DeleteRagConfiguration($id: ID!) {
-  deleteRAGConfiguration(id: $id) {
-    id
+  mutation DeleteRagConfiguration($id: ID!) {
+    deleteRAGConfiguration(id: $id) {
+      id
+    }
   }
-}
-    `;
-export type DeleteRagConfigurationMutationFn = Apollo.MutationFunction<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>;
+`;
+export type DeleteRagConfigurationMutationFn = Apollo.MutationFunction<
+  DeleteRagConfigurationMutation,
+  DeleteRagConfigurationMutationVariables
+>;
 
 /**
  * __useDeleteRagConfigurationMutation__
@@ -9756,21 +12400,29 @@ export type DeleteRagConfigurationMutationFn = Apollo.MutationFunction<DeleteRag
  *   },
  * });
  */
-export function useDeleteRagConfigurationMutation(baseOptions?: Apollo.MutationHookOptions<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>(DeleteRagConfigurationDocument, options);
-      }
+export function useDeleteRagConfigurationMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>(
+    DeleteRagConfigurationDocument,
+    options,
+  );
+}
 export type DeleteRagConfigurationMutationHookResult = ReturnType<typeof useDeleteRagConfigurationMutation>;
 export type DeleteRagConfigurationMutationResult = Apollo.MutationResult<DeleteRagConfigurationMutation>;
-export type DeleteRagConfigurationMutationOptions = Apollo.BaseMutationOptions<DeleteRagConfigurationMutation, DeleteRagConfigurationMutationVariables>;
+export type DeleteRagConfigurationMutationOptions = Apollo.BaseMutationOptions<
+  DeleteRagConfigurationMutation,
+  DeleteRagConfigurationMutationVariables
+>;
 export const UnboundRagConfigurationsByBucketDocument = gql`
-    query UnboundRagConfigurationsByBucket($bucketId: ID!, $ragType: RAGType!) {
-  unboundRAGConfigurationByBucket(bucketId: $bucketId, ragType: $ragType) {
-    id
-    name
+  query UnboundRagConfigurationsByBucket($bucketId: ID!, $ragType: RAGType!) {
+    unboundRAGConfigurationByBucket(bucketId: $bucketId, ragType: $ragType) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundRagConfigurationsByBucketQuery__
@@ -9789,35 +12441,58 @@ export const UnboundRagConfigurationsByBucketDocument = gql`
  *   },
  * });
  */
-export function useUnboundRagConfigurationsByBucketQuery(baseOptions: Apollo.QueryHookOptions<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>(UnboundRagConfigurationsByBucketDocument, options);
-      }
-export function useUnboundRagConfigurationsByBucketLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>(UnboundRagConfigurationsByBucketDocument, options);
-        }
-export type UnboundRagConfigurationsByBucketQueryHookResult = ReturnType<typeof useUnboundRagConfigurationsByBucketQuery>;
-export type UnboundRagConfigurationsByBucketLazyQueryHookResult = ReturnType<typeof useUnboundRagConfigurationsByBucketLazyQuery>;
-export type UnboundRagConfigurationsByBucketQueryResult = Apollo.QueryResult<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>;
+export function useUnboundRagConfigurationsByBucketQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    UnboundRagConfigurationsByBucketQuery,
+    UnboundRagConfigurationsByBucketQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>(
+    UnboundRagConfigurationsByBucketDocument,
+    options,
+  );
+}
+export function useUnboundRagConfigurationsByBucketLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnboundRagConfigurationsByBucketQuery,
+    UnboundRagConfigurationsByBucketQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundRagConfigurationsByBucketQuery, UnboundRagConfigurationsByBucketQueryVariables>(
+    UnboundRagConfigurationsByBucketDocument,
+    options,
+  );
+}
+export type UnboundRagConfigurationsByBucketQueryHookResult = ReturnType<
+  typeof useUnboundRagConfigurationsByBucketQuery
+>;
+export type UnboundRagConfigurationsByBucketLazyQueryHookResult = ReturnType<
+  typeof useUnboundRagConfigurationsByBucketLazyQuery
+>;
+export type UnboundRagConfigurationsByBucketQueryResult = Apollo.QueryResult<
+  UnboundRagConfigurationsByBucketQuery,
+  UnboundRagConfigurationsByBucketQueryVariables
+>;
 export const RulesDocument = gql`
-    query Rules($searchText: String, $after: String) {
-  rules(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        lhs
-        rhs
+  query Rules($searchText: String, $after: String) {
+    rules(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          lhs
+          rhs
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useRulesQuery__
@@ -9837,24 +12512,24 @@ export const RulesDocument = gql`
  * });
  */
 export function useRulesQuery(baseOptions?: Apollo.QueryHookOptions<RulesQuery, RulesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<RulesQuery, RulesQueryVariables>(RulesDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<RulesQuery, RulesQueryVariables>(RulesDocument, options);
+}
 export function useRulesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RulesQuery, RulesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<RulesQuery, RulesQueryVariables>(RulesDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<RulesQuery, RulesQueryVariables>(RulesDocument, options);
+}
 export type RulesQueryHookResult = ReturnType<typeof useRulesQuery>;
 export type RulesLazyQueryHookResult = ReturnType<typeof useRulesLazyQuery>;
 export type RulesQueryResult = Apollo.QueryResult<RulesQuery, RulesQueryVariables>;
 export const DeleteRulesDocument = gql`
-    mutation DeleteRules($id: ID!) {
-  deleteRule(ruleId: $id) {
-    id
-    name
+  mutation DeleteRules($id: ID!) {
+    deleteRule(ruleId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type DeleteRulesMutationFn = Apollo.MutationFunction<DeleteRulesMutation, DeleteRulesMutationVariables>;
 
 /**
@@ -9874,24 +12549,26 @@ export type DeleteRulesMutationFn = Apollo.MutationFunction<DeleteRulesMutation,
  *   },
  * });
  */
-export function useDeleteRulesMutation(baseOptions?: Apollo.MutationHookOptions<DeleteRulesMutation, DeleteRulesMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteRulesMutation, DeleteRulesMutationVariables>(DeleteRulesDocument, options);
-      }
+export function useDeleteRulesMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteRulesMutation, DeleteRulesMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteRulesMutation, DeleteRulesMutationVariables>(DeleteRulesDocument, options);
+}
 export type DeleteRulesMutationHookResult = ReturnType<typeof useDeleteRulesMutation>;
 export type DeleteRulesMutationResult = Apollo.MutationResult<DeleteRulesMutation>;
 export type DeleteRulesMutationOptions = Apollo.BaseMutationOptions<DeleteRulesMutation, DeleteRulesMutationVariables>;
 export const RuleDocument = gql`
-    query Rule($id: ID!) {
-  rule: rule(id: $id) {
-    id
-    name
-    description
-    lhs
-    rhs
+  query Rule($id: ID!) {
+    rule: rule(id: $id) {
+      id
+      name
+      description
+      lhs
+      rhs
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useRuleQuery__
@@ -9910,34 +12587,34 @@ export const RuleDocument = gql`
  * });
  */
 export function useRuleQuery(baseOptions: Apollo.QueryHookOptions<RuleQuery, RuleQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<RuleQuery, RuleQueryVariables>(RuleDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<RuleQuery, RuleQueryVariables>(RuleDocument, options);
+}
 export function useRuleLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<RuleQuery, RuleQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<RuleQuery, RuleQueryVariables>(RuleDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<RuleQuery, RuleQueryVariables>(RuleDocument, options);
+}
 export type RuleQueryHookResult = ReturnType<typeof useRuleQuery>;
 export type RuleLazyQueryHookResult = ReturnType<typeof useRuleLazyQuery>;
 export type RuleQueryResult = Apollo.QueryResult<RuleQuery, RuleQueryVariables>;
 export const CreateOrUpdateRuleQueryDocument = gql`
-    mutation CreateOrUpdateRuleQuery($id: ID, $name: String!, $description: String, $lhs: String!, $rhs: String!) {
-  rule(
-    id: $id
-    ruleDTO: {name: $name, description: $description, lhs: $lhs, rhs: $rhs}
-  ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+  mutation CreateOrUpdateRuleQuery($id: ID, $name: String!, $description: String, $lhs: String!, $rhs: String!) {
+    rule(id: $id, ruleDTO: { name: $name, description: $description, lhs: $lhs, rhs: $rhs }) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateRuleQueryMutationFn = Apollo.MutationFunction<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>;
+`;
+export type CreateOrUpdateRuleQueryMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateRuleQueryMutation,
+  CreateOrUpdateRuleQueryMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateRuleQueryMutation__
@@ -9960,35 +12637,43 @@ export type CreateOrUpdateRuleQueryMutationFn = Apollo.MutationFunction<CreateOr
  *   },
  * });
  */
-export function useCreateOrUpdateRuleQueryMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>(CreateOrUpdateRuleQueryDocument, options);
-      }
+export function useCreateOrUpdateRuleQueryMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>(
+    CreateOrUpdateRuleQueryDocument,
+    options,
+  );
+}
 export type CreateOrUpdateRuleQueryMutationHookResult = ReturnType<typeof useCreateOrUpdateRuleQueryMutation>;
 export type CreateOrUpdateRuleQueryMutationResult = Apollo.MutationResult<CreateOrUpdateRuleQueryMutation>;
-export type CreateOrUpdateRuleQueryMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateRuleQueryMutation, CreateOrUpdateRuleQueryMutationVariables>;
+export type CreateOrUpdateRuleQueryMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateRuleQueryMutation,
+  CreateOrUpdateRuleQueryMutationVariables
+>;
 export const SearchConfigDocument = gql`
-    query SearchConfig($id: ID!) {
-  searchConfig(id: $id) {
-    id
-    name
-    description
-    minScore
-    minScoreSuggestions
-    minScoreSearch
-    queryParserConfigs {
-      edges {
-        node {
-          id
-          name
-          type
-          jsonConfig
+  query SearchConfig($id: ID!) {
+    searchConfig(id: $id) {
+      id
+      name
+      description
+      minScore
+      minScoreSuggestions
+      minScoreSearch
+      queryParserConfigs {
+        edges {
+          node {
+            id
+            name
+            type
+            jsonConfig
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSearchConfigQuery__
@@ -10006,36 +12691,58 @@ export const SearchConfigDocument = gql`
  *   },
  * });
  */
-export function useSearchConfigQuery(baseOptions: Apollo.QueryHookOptions<SearchConfigQuery, SearchConfigQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SearchConfigQuery, SearchConfigQueryVariables>(SearchConfigDocument, options);
-      }
-export function useSearchConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigQuery, SearchConfigQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SearchConfigQuery, SearchConfigQueryVariables>(SearchConfigDocument, options);
-        }
+export function useSearchConfigQuery(
+  baseOptions: Apollo.QueryHookOptions<SearchConfigQuery, SearchConfigQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SearchConfigQuery, SearchConfigQueryVariables>(SearchConfigDocument, options);
+}
+export function useSearchConfigLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigQuery, SearchConfigQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SearchConfigQuery, SearchConfigQueryVariables>(SearchConfigDocument, options);
+}
 export type SearchConfigQueryHookResult = ReturnType<typeof useSearchConfigQuery>;
 export type SearchConfigLazyQueryHookResult = ReturnType<typeof useSearchConfigLazyQuery>;
 export type SearchConfigQueryResult = Apollo.QueryResult<SearchConfigQuery, SearchConfigQueryVariables>;
 export const CreateOrUpdateSearchConfigDocument = gql`
-    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!, $queryParsersConfig: [QueryParserConfigDTOInput]) {
-  searchConfigWithQueryParsers(
-    id: $id
-    searchConfigWithQueryParsersDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch, queryParsers: $queryParsersConfig}
+  mutation CreateOrUpdateSearchConfig(
+    $id: ID
+    $name: String!
+    $description: String
+    $minScore: Float!
+    $minScoreSuggestions: Boolean!
+    $minScoreSearch: Boolean!
+    $queryParsersConfig: [QueryParserConfigDTOInput]
   ) {
-    entity {
-      id
-      name
-      minScore
-    }
-    fieldValidators {
-      field
-      message
+    searchConfigWithQueryParsers(
+      id: $id
+      searchConfigWithQueryParsersDTO: {
+        name: $name
+        description: $description
+        minScore: $minScore
+        minScoreSuggestions: $minScoreSuggestions
+        minScoreSearch: $minScoreSearch
+        queryParsers: $queryParsersConfig
+      }
+    ) {
+      entity {
+        id
+        name
+        minScore
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<CreateOrUpdateSearchConfigMutation, CreateOrUpdateSearchConfigMutationVariables>;
+`;
+export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateSearchConfigMutation,
+  CreateOrUpdateSearchConfigMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateSearchConfigMutation__
@@ -10060,33 +12767,44 @@ export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<Creat
  *   },
  * });
  */
-export function useCreateOrUpdateSearchConfigMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateSearchConfigMutation, CreateOrUpdateSearchConfigMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateSearchConfigMutation, CreateOrUpdateSearchConfigMutationVariables>(CreateOrUpdateSearchConfigDocument, options);
-      }
+export function useCreateOrUpdateSearchConfigMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateSearchConfigMutation,
+    CreateOrUpdateSearchConfigMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateSearchConfigMutation, CreateOrUpdateSearchConfigMutationVariables>(
+    CreateOrUpdateSearchConfigDocument,
+    options,
+  );
+}
 export type CreateOrUpdateSearchConfigMutationHookResult = ReturnType<typeof useCreateOrUpdateSearchConfigMutation>;
 export type CreateOrUpdateSearchConfigMutationResult = Apollo.MutationResult<CreateOrUpdateSearchConfigMutation>;
-export type CreateOrUpdateSearchConfigMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSearchConfigMutation, CreateOrUpdateSearchConfigMutationVariables>;
+export type CreateOrUpdateSearchConfigMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateSearchConfigMutation,
+  CreateOrUpdateSearchConfigMutationVariables
+>;
 export const SearchConfigsDocument = gql`
-    query SearchConfigs($searchText: String, $after: String) {
-  searchConfigs(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        minScore
-        minScoreSuggestions
-        minScoreSearch
+  query SearchConfigs($searchText: String, $after: String) {
+    searchConfigs(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          minScore
+          minScoreSuggestions
+          minScoreSearch
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useSearchConfigsQuery__
@@ -10105,26 +12823,33 @@ export const SearchConfigsDocument = gql`
  *   },
  * });
  */
-export function useSearchConfigsQuery(baseOptions?: Apollo.QueryHookOptions<SearchConfigsQuery, SearchConfigsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SearchConfigsQuery, SearchConfigsQueryVariables>(SearchConfigsDocument, options);
-      }
-export function useSearchConfigsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigsQuery, SearchConfigsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SearchConfigsQuery, SearchConfigsQueryVariables>(SearchConfigsDocument, options);
-        }
+export function useSearchConfigsQuery(
+  baseOptions?: Apollo.QueryHookOptions<SearchConfigsQuery, SearchConfigsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SearchConfigsQuery, SearchConfigsQueryVariables>(SearchConfigsDocument, options);
+}
+export function useSearchConfigsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SearchConfigsQuery, SearchConfigsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SearchConfigsQuery, SearchConfigsQueryVariables>(SearchConfigsDocument, options);
+}
 export type SearchConfigsQueryHookResult = ReturnType<typeof useSearchConfigsQuery>;
 export type SearchConfigsLazyQueryHookResult = ReturnType<typeof useSearchConfigsLazyQuery>;
 export type SearchConfigsQueryResult = Apollo.QueryResult<SearchConfigsQuery, SearchConfigsQueryVariables>;
 export const DeleteSearchConfigDocument = gql`
-    mutation DeleteSearchConfig($id: ID!) {
-  deleteSearchConfig(searchConfigId: $id) {
-    id
-    name
+  mutation DeleteSearchConfig($id: ID!) {
+    deleteSearchConfig(searchConfigId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteSearchConfigMutationFn = Apollo.MutationFunction<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>;
+`;
+export type DeleteSearchConfigMutationFn = Apollo.MutationFunction<
+  DeleteSearchConfigMutation,
+  DeleteSearchConfigMutationVariables
+>;
 
 /**
  * __useDeleteSearchConfigMutation__
@@ -10143,18 +12868,26 @@ export type DeleteSearchConfigMutationFn = Apollo.MutationFunction<DeleteSearchC
  *   },
  * });
  */
-export function useDeleteSearchConfigMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>(DeleteSearchConfigDocument, options);
-      }
+export function useDeleteSearchConfigMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>(
+    DeleteSearchConfigDocument,
+    options,
+  );
+}
 export type DeleteSearchConfigMutationHookResult = ReturnType<typeof useDeleteSearchConfigMutation>;
 export type DeleteSearchConfigMutationResult = Apollo.MutationResult<DeleteSearchConfigMutation>;
-export type DeleteSearchConfigMutationOptions = Apollo.BaseMutationOptions<DeleteSearchConfigMutation, DeleteSearchConfigMutationVariables>;
+export type DeleteSearchConfigMutationOptions = Apollo.BaseMutationOptions<
+  DeleteSearchConfigMutation,
+  DeleteSearchConfigMutationVariables
+>;
 export const QueryParserConfigDocument = gql`
-    query queryParserConfig {
-  queryParserConfigFormConfigurations
-}
-    `;
+  query queryParserConfig {
+    queryParserConfigFormConfigurations
+  }
+`;
 
 /**
  * __useQueryParserConfigQuery__
@@ -10171,25 +12904,32 @@ export const QueryParserConfigDocument = gql`
  *   },
  * });
  */
-export function useQueryParserConfigQuery(baseOptions?: Apollo.QueryHookOptions<QueryParserConfigQuery, QueryParserConfigQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryParserConfigQuery, QueryParserConfigQueryVariables>(QueryParserConfigDocument, options);
-      }
-export function useQueryParserConfigLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryParserConfigQuery, QueryParserConfigQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryParserConfigQuery, QueryParserConfigQueryVariables>(QueryParserConfigDocument, options);
-        }
+export function useQueryParserConfigQuery(
+  baseOptions?: Apollo.QueryHookOptions<QueryParserConfigQuery, QueryParserConfigQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryParserConfigQuery, QueryParserConfigQueryVariables>(QueryParserConfigDocument, options);
+}
+export function useQueryParserConfigLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryParserConfigQuery, QueryParserConfigQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryParserConfigQuery, QueryParserConfigQueryVariables>(
+    QueryParserConfigDocument,
+    options,
+  );
+}
 export type QueryParserConfigQueryHookResult = ReturnType<typeof useQueryParserConfigQuery>;
 export type QueryParserConfigLazyQueryHookResult = ReturnType<typeof useQueryParserConfigLazyQuery>;
 export type QueryParserConfigQueryResult = Apollo.QueryResult<QueryParserConfigQuery, QueryParserConfigQueryVariables>;
 export const UnboundBucketsBySuggestionCategoryDocument = gql`
-    query UnboundBucketsBySuggestionCategory($id: BigInteger!) {
-  unboundBucketsBySuggestionCategory(suggestionCategoryId: $id) {
-    name
-    id
+  query UnboundBucketsBySuggestionCategory($id: BigInteger!) {
+    unboundBucketsBySuggestionCategory(suggestionCategoryId: $id) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundBucketsBySuggestionCategoryQuery__
@@ -10207,36 +12947,59 @@ export const UnboundBucketsBySuggestionCategoryDocument = gql`
  *   },
  * });
  */
-export function useUnboundBucketsBySuggestionCategoryQuery(baseOptions: Apollo.QueryHookOptions<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>(UnboundBucketsBySuggestionCategoryDocument, options);
-      }
-export function useUnboundBucketsBySuggestionCategoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>(UnboundBucketsBySuggestionCategoryDocument, options);
-        }
-export type UnboundBucketsBySuggestionCategoryQueryHookResult = ReturnType<typeof useUnboundBucketsBySuggestionCategoryQuery>;
-export type UnboundBucketsBySuggestionCategoryLazyQueryHookResult = ReturnType<typeof useUnboundBucketsBySuggestionCategoryLazyQuery>;
-export type UnboundBucketsBySuggestionCategoryQueryResult = Apollo.QueryResult<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>;
+export function useUnboundBucketsBySuggestionCategoryQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    UnboundBucketsBySuggestionCategoryQuery,
+    UnboundBucketsBySuggestionCategoryQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>(
+    UnboundBucketsBySuggestionCategoryDocument,
+    options,
+  );
+}
+export function useUnboundBucketsBySuggestionCategoryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnboundBucketsBySuggestionCategoryQuery,
+    UnboundBucketsBySuggestionCategoryQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundBucketsBySuggestionCategoryQuery, UnboundBucketsBySuggestionCategoryQueryVariables>(
+    UnboundBucketsBySuggestionCategoryDocument,
+    options,
+  );
+}
+export type UnboundBucketsBySuggestionCategoryQueryHookResult = ReturnType<
+  typeof useUnboundBucketsBySuggestionCategoryQuery
+>;
+export type UnboundBucketsBySuggestionCategoryLazyQueryHookResult = ReturnType<
+  typeof useUnboundBucketsBySuggestionCategoryLazyQuery
+>;
+export type UnboundBucketsBySuggestionCategoryQueryResult = Apollo.QueryResult<
+  UnboundBucketsBySuggestionCategoryQuery,
+  UnboundBucketsBySuggestionCategoryQueryVariables
+>;
 export const SuggestionCategoriesDocument = gql`
-    query SuggestionCategories($searchText: String, $after: String) {
-  suggestionCategories(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        priority
-        multiSelect
+  query SuggestionCategories($searchText: String, $after: String) {
+    suggestionCategories(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          priority
+          multiSelect
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSuggestionCategoriesQuery__
@@ -10255,26 +13018,42 @@ export const SuggestionCategoriesDocument = gql`
  *   },
  * });
  */
-export function useSuggestionCategoriesQuery(baseOptions?: Apollo.QueryHookOptions<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>(SuggestionCategoriesDocument, options);
-      }
-export function useSuggestionCategoriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>(SuggestionCategoriesDocument, options);
-        }
+export function useSuggestionCategoriesQuery(
+  baseOptions?: Apollo.QueryHookOptions<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>(
+    SuggestionCategoriesDocument,
+    options,
+  );
+}
+export function useSuggestionCategoriesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>(
+    SuggestionCategoriesDocument,
+    options,
+  );
+}
 export type SuggestionCategoriesQueryHookResult = ReturnType<typeof useSuggestionCategoriesQuery>;
 export type SuggestionCategoriesLazyQueryHookResult = ReturnType<typeof useSuggestionCategoriesLazyQuery>;
-export type SuggestionCategoriesQueryResult = Apollo.QueryResult<SuggestionCategoriesQuery, SuggestionCategoriesQueryVariables>;
+export type SuggestionCategoriesQueryResult = Apollo.QueryResult<
+  SuggestionCategoriesQuery,
+  SuggestionCategoriesQueryVariables
+>;
 export const DeleteSuggestionCategoryDocument = gql`
-    mutation DeleteSuggestionCategory($id: ID!) {
-  deleteSuggestionCategory(suggestionCategoryId: $id) {
-    id
-    name
+  mutation DeleteSuggestionCategory($id: ID!) {
+    deleteSuggestionCategory(suggestionCategoryId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteSuggestionCategoryMutationFn = Apollo.MutationFunction<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>;
+`;
+export type DeleteSuggestionCategoryMutationFn = Apollo.MutationFunction<
+  DeleteSuggestionCategoryMutation,
+  DeleteSuggestionCategoryMutationVariables
+>;
 
 /**
  * __useDeleteSuggestionCategoryMutation__
@@ -10293,44 +13072,52 @@ export type DeleteSuggestionCategoryMutationFn = Apollo.MutationFunction<DeleteS
  *   },
  * });
  */
-export function useDeleteSuggestionCategoryMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>(DeleteSuggestionCategoryDocument, options);
-      }
+export function useDeleteSuggestionCategoryMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>(
+    DeleteSuggestionCategoryDocument,
+    options,
+  );
+}
 export type DeleteSuggestionCategoryMutationHookResult = ReturnType<typeof useDeleteSuggestionCategoryMutation>;
 export type DeleteSuggestionCategoryMutationResult = Apollo.MutationResult<DeleteSuggestionCategoryMutation>;
-export type DeleteSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<DeleteSuggestionCategoryMutation, DeleteSuggestionCategoryMutationVariables>;
+export type DeleteSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<
+  DeleteSuggestionCategoryMutation,
+  DeleteSuggestionCategoryMutationVariables
+>;
 export const SuggestionCategoryDocumentTypeFieldsDocument = gql`
-    query SuggestionCategoryDocumentTypeFields($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  suggestionCategory(id: $parentId) {
-    id
-    docTypeField {
-      name
-      subFields(
-        searchText: $searchText
-        notEqual: $unassociated
-        first: 20
-        after: $cursor
-      ) {
-        edges {
-          node {
-            id
-            name
-            description
-            docType {
+  query SuggestionCategoryDocumentTypeFields(
+    $parentId: ID!
+    $searchText: String
+    $unassociated: Boolean!
+    $cursor: String
+  ) {
+    suggestionCategory(id: $parentId) {
+      id
+      docTypeField {
+        name
+        subFields(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+          edges {
+            node {
               id
+              name
+              description
+              docType {
+                id
+              }
             }
           }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
+          pageInfo {
+            hasNextPage
+            endCursor
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSuggestionCategoryDocumentTypeFieldsQuery__
@@ -10351,33 +13138,56 @@ export const SuggestionCategoryDocumentTypeFieldsDocument = gql`
  *   },
  * });
  */
-export function useSuggestionCategoryDocumentTypeFieldsQuery(baseOptions: Apollo.QueryHookOptions<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>(SuggestionCategoryDocumentTypeFieldsDocument, options);
-      }
-export function useSuggestionCategoryDocumentTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>(SuggestionCategoryDocumentTypeFieldsDocument, options);
-        }
-export type SuggestionCategoryDocumentTypeFieldsQueryHookResult = ReturnType<typeof useSuggestionCategoryDocumentTypeFieldsQuery>;
-export type SuggestionCategoryDocumentTypeFieldsLazyQueryHookResult = ReturnType<typeof useSuggestionCategoryDocumentTypeFieldsLazyQuery>;
-export type SuggestionCategoryDocumentTypeFieldsQueryResult = Apollo.QueryResult<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>;
+export function useSuggestionCategoryDocumentTypeFieldsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    SuggestionCategoryDocumentTypeFieldsQuery,
+    SuggestionCategoryDocumentTypeFieldsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SuggestionCategoryDocumentTypeFieldsQuery, SuggestionCategoryDocumentTypeFieldsQueryVariables>(
+    SuggestionCategoryDocumentTypeFieldsDocument,
+    options,
+  );
+}
+export function useSuggestionCategoryDocumentTypeFieldsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    SuggestionCategoryDocumentTypeFieldsQuery,
+    SuggestionCategoryDocumentTypeFieldsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    SuggestionCategoryDocumentTypeFieldsQuery,
+    SuggestionCategoryDocumentTypeFieldsQueryVariables
+  >(SuggestionCategoryDocumentTypeFieldsDocument, options);
+}
+export type SuggestionCategoryDocumentTypeFieldsQueryHookResult = ReturnType<
+  typeof useSuggestionCategoryDocumentTypeFieldsQuery
+>;
+export type SuggestionCategoryDocumentTypeFieldsLazyQueryHookResult = ReturnType<
+  typeof useSuggestionCategoryDocumentTypeFieldsLazyQuery
+>;
+export type SuggestionCategoryDocumentTypeFieldsQueryResult = Apollo.QueryResult<
+  SuggestionCategoryDocumentTypeFieldsQuery,
+  SuggestionCategoryDocumentTypeFieldsQueryVariables
+>;
 export const AddDocumentTypeFieldToSuggestionCategoryDocument = gql`
-    mutation AddDocumentTypeFieldToSuggestionCategory($childId: ID!, $parentId: ID!) {
-  addDocTypeFieldToSuggestionCategory(
-    docTypeFieldId: $childId
-    suggestionCategoryId: $parentId
-  ) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddDocumentTypeFieldToSuggestionCategory($childId: ID!, $parentId: ID!) {
+    addDocTypeFieldToSuggestionCategory(docTypeFieldId: $childId, suggestionCategoryId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddDocumentTypeFieldToSuggestionCategoryMutationFn = Apollo.MutationFunction<AddDocumentTypeFieldToSuggestionCategoryMutation, AddDocumentTypeFieldToSuggestionCategoryMutationVariables>;
+`;
+export type AddDocumentTypeFieldToSuggestionCategoryMutationFn = Apollo.MutationFunction<
+  AddDocumentTypeFieldToSuggestionCategoryMutation,
+  AddDocumentTypeFieldToSuggestionCategoryMutationVariables
+>;
 
 /**
  * __useAddDocumentTypeFieldToSuggestionCategoryMutation__
@@ -10397,34 +13207,48 @@ export type AddDocumentTypeFieldToSuggestionCategoryMutationFn = Apollo.Mutation
  *   },
  * });
  */
-export function useAddDocumentTypeFieldToSuggestionCategoryMutation(baseOptions?: Apollo.MutationHookOptions<AddDocumentTypeFieldToSuggestionCategoryMutation, AddDocumentTypeFieldToSuggestionCategoryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddDocumentTypeFieldToSuggestionCategoryMutation, AddDocumentTypeFieldToSuggestionCategoryMutationVariables>(AddDocumentTypeFieldToSuggestionCategoryDocument, options);
-      }
-export type AddDocumentTypeFieldToSuggestionCategoryMutationHookResult = ReturnType<typeof useAddDocumentTypeFieldToSuggestionCategoryMutation>;
-export type AddDocumentTypeFieldToSuggestionCategoryMutationResult = Apollo.MutationResult<AddDocumentTypeFieldToSuggestionCategoryMutation>;
-export type AddDocumentTypeFieldToSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<AddDocumentTypeFieldToSuggestionCategoryMutation, AddDocumentTypeFieldToSuggestionCategoryMutationVariables>;
+export function useAddDocumentTypeFieldToSuggestionCategoryMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddDocumentTypeFieldToSuggestionCategoryMutation,
+    AddDocumentTypeFieldToSuggestionCategoryMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddDocumentTypeFieldToSuggestionCategoryMutation,
+    AddDocumentTypeFieldToSuggestionCategoryMutationVariables
+  >(AddDocumentTypeFieldToSuggestionCategoryDocument, options);
+}
+export type AddDocumentTypeFieldToSuggestionCategoryMutationHookResult = ReturnType<
+  typeof useAddDocumentTypeFieldToSuggestionCategoryMutation
+>;
+export type AddDocumentTypeFieldToSuggestionCategoryMutationResult =
+  Apollo.MutationResult<AddDocumentTypeFieldToSuggestionCategoryMutation>;
+export type AddDocumentTypeFieldToSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<
+  AddDocumentTypeFieldToSuggestionCategoryMutation,
+  AddDocumentTypeFieldToSuggestionCategoryMutationVariables
+>;
 export const SuggestionCategoryDocument = gql`
-    query SuggestionCategory($id: ID!) {
-  suggestionCategory(id: $id) {
-    id
-    name
-    description
-    priority
-    multiSelect
-    docTypeField {
+  query SuggestionCategory($id: ID!) {
+    suggestionCategory(id: $id) {
       id
       name
-    }
-    translations {
-      key
-      language
-      value
       description
+      priority
+      multiSelect
+      docTypeField {
+        id
+        name
+      }
+      translations {
+        key
+        language
+        value
+        description
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useSuggestionCategoryQuery__
@@ -10442,31 +13266,52 @@ export const SuggestionCategoryDocument = gql`
  *   },
  * });
  */
-export function useSuggestionCategoryQuery(baseOptions: Apollo.QueryHookOptions<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>(SuggestionCategoryDocument, options);
-      }
-export function useSuggestionCategoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>(SuggestionCategoryDocument, options);
-        }
+export function useSuggestionCategoryQuery(
+  baseOptions: Apollo.QueryHookOptions<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>(
+    SuggestionCategoryDocument,
+    options,
+  );
+}
+export function useSuggestionCategoryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>(
+    SuggestionCategoryDocument,
+    options,
+  );
+}
 export type SuggestionCategoryQueryHookResult = ReturnType<typeof useSuggestionCategoryQuery>;
 export type SuggestionCategoryLazyQueryHookResult = ReturnType<typeof useSuggestionCategoryLazyQuery>;
-export type SuggestionCategoryQueryResult = Apollo.QueryResult<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>;
+export type SuggestionCategoryQueryResult = Apollo.QueryResult<
+  SuggestionCategoryQuery,
+  SuggestionCategoryQueryVariables
+>;
 export const AddSuggestionCategoryTranslationDocument = gql`
-    mutation AddSuggestionCategoryTranslation($suggestionCategoryId: ID!, $language: String!, $key: String, $value: String!) {
-  addSuggestionCategoryTranslation(
-    suggestionCategoryId: $suggestionCategoryId
-    language: $language
-    key: $key
-    value: $value
+  mutation AddSuggestionCategoryTranslation(
+    $suggestionCategoryId: ID!
+    $language: String!
+    $key: String
+    $value: String!
   ) {
-    left
-    right
+    addSuggestionCategoryTranslation(
+      suggestionCategoryId: $suggestionCategoryId
+      language: $language
+      key: $key
+      value: $value
+    ) {
+      left
+      right
+    }
   }
-}
-    `;
-export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
+`;
+export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<
+  AddSuggestionCategoryTranslationMutation,
+  AddSuggestionCategoryTranslationMutationVariables
+>;
 
 /**
  * __useAddSuggestionCategoryTranslationMutation__
@@ -10488,23 +13333,35 @@ export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useAddSuggestionCategoryTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>(AddSuggestionCategoryTranslationDocument, options);
-      }
-export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<typeof useAddSuggestionCategoryTranslationMutation>;
-export type AddSuggestionCategoryTranslationMutationResult = Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
-export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
-export const UnboundDocTypeFieldsBySuggestionCategoryDocument = gql`
-    query UnboundDocTypeFieldsBySuggestionCategory($suggestionCategoryId: BigInteger!) {
-  unboundDocTypeFieldsBySuggestionCategory(
-    suggestionCategoryId: $suggestionCategoryId
-  ) {
-    id
-    name
-  }
+export function useAddSuggestionCategoryTranslationMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddSuggestionCategoryTranslationMutation,
+    AddSuggestionCategoryTranslationMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    AddSuggestionCategoryTranslationMutation,
+    AddSuggestionCategoryTranslationMutationVariables
+  >(AddSuggestionCategoryTranslationDocument, options);
 }
-    `;
+export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<
+  typeof useAddSuggestionCategoryTranslationMutation
+>;
+export type AddSuggestionCategoryTranslationMutationResult =
+  Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<
+  AddSuggestionCategoryTranslationMutation,
+  AddSuggestionCategoryTranslationMutationVariables
+>;
+export const UnboundDocTypeFieldsBySuggestionCategoryDocument = gql`
+  query UnboundDocTypeFieldsBySuggestionCategory($suggestionCategoryId: BigInteger!) {
+    unboundDocTypeFieldsBySuggestionCategory(suggestionCategoryId: $suggestionCategoryId) {
+      id
+      name
+    }
+  }
+`;
 
 /**
  * __useUnboundDocTypeFieldsBySuggestionCategoryQuery__
@@ -10522,33 +13379,56 @@ export const UnboundDocTypeFieldsBySuggestionCategoryDocument = gql`
  *   },
  * });
  */
-export function useUnboundDocTypeFieldsBySuggestionCategoryQuery(baseOptions: Apollo.QueryHookOptions<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>(UnboundDocTypeFieldsBySuggestionCategoryDocument, options);
-      }
-export function useUnboundDocTypeFieldsBySuggestionCategoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>(UnboundDocTypeFieldsBySuggestionCategoryDocument, options);
-        }
-export type UnboundDocTypeFieldsBySuggestionCategoryQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldsBySuggestionCategoryQuery>;
-export type UnboundDocTypeFieldsBySuggestionCategoryLazyQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldsBySuggestionCategoryLazyQuery>;
-export type UnboundDocTypeFieldsBySuggestionCategoryQueryResult = Apollo.QueryResult<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>;
+export function useUnboundDocTypeFieldsBySuggestionCategoryQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    UnboundDocTypeFieldsBySuggestionCategoryQuery,
+    UnboundDocTypeFieldsBySuggestionCategoryQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    UnboundDocTypeFieldsBySuggestionCategoryQuery,
+    UnboundDocTypeFieldsBySuggestionCategoryQueryVariables
+  >(UnboundDocTypeFieldsBySuggestionCategoryDocument, options);
+}
+export function useUnboundDocTypeFieldsBySuggestionCategoryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnboundDocTypeFieldsBySuggestionCategoryQuery,
+    UnboundDocTypeFieldsBySuggestionCategoryQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    UnboundDocTypeFieldsBySuggestionCategoryQuery,
+    UnboundDocTypeFieldsBySuggestionCategoryQueryVariables
+  >(UnboundDocTypeFieldsBySuggestionCategoryDocument, options);
+}
+export type UnboundDocTypeFieldsBySuggestionCategoryQueryHookResult = ReturnType<
+  typeof useUnboundDocTypeFieldsBySuggestionCategoryQuery
+>;
+export type UnboundDocTypeFieldsBySuggestionCategoryLazyQueryHookResult = ReturnType<
+  typeof useUnboundDocTypeFieldsBySuggestionCategoryLazyQuery
+>;
+export type UnboundDocTypeFieldsBySuggestionCategoryQueryResult = Apollo.QueryResult<
+  UnboundDocTypeFieldsBySuggestionCategoryQuery,
+  UnboundDocTypeFieldsBySuggestionCategoryQueryVariables
+>;
 export const DocTypeFieldsDocument = gql`
-    query DocTypeFields($after: String) {
-  docTypeFields(first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
+  query DocTypeFields($searchText: String, $first: Int = 20, $after: String) {
+    docTypeFields(searchText: $searchText, first: $first, after: $after) {
+      edges {
+        node {
+          id
+          name
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldsQuery__
@@ -10562,39 +13442,61 @@ export const DocTypeFieldsDocument = gql`
  * @example
  * const { data, loading, error } = useDocTypeFieldsQuery({
  *   variables: {
+ *      searchText: // value for 'searchText'
+ *      first: // value for 'first'
  *      after: // value for 'after'
  *   },
  * });
  */
-export function useDocTypeFieldsQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>(DocTypeFieldsDocument, options);
-      }
-export function useDocTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>(DocTypeFieldsDocument, options);
-        }
+export function useDocTypeFieldsQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>(DocTypeFieldsDocument, options);
+}
+export function useDocTypeFieldsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>(DocTypeFieldsDocument, options);
+}
 export type DocTypeFieldsQueryHookResult = ReturnType<typeof useDocTypeFieldsQuery>;
 export type DocTypeFieldsLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsLazyQuery>;
 export type DocTypeFieldsQueryResult = Apollo.QueryResult<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>;
 export const CreateOrUpdateSuggestionCategoryDocument = gql`
-    mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!, $multiSelect: Boolean!, $docTypeFieldId: BigInteger) {
-  suggestionCategoryWithDocTypeField(
-    id: $id
-    suggestionCategoryWithDocTypeFieldDTO: {name: $name, description: $description, priority: $priority, multiSelect: $multiSelect, docTypeFieldId: $docTypeFieldId}
+  mutation CreateOrUpdateSuggestionCategory(
+    $id: ID
+    $name: String!
+    $description: String
+    $priority: Float!
+    $multiSelect: Boolean!
+    $docTypeFieldId: BigInteger
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    suggestionCategoryWithDocTypeField(
+      id: $id
+      suggestionCategoryWithDocTypeFieldDTO: {
+        name: $name
+        description: $description
+        priority: $priority
+        multiSelect: $multiSelect
+        docTypeFieldId: $docTypeFieldId
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateSuggestionCategoryMutationFn = Apollo.MutationFunction<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>;
+`;
+export type CreateOrUpdateSuggestionCategoryMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateSuggestionCategoryMutation,
+  CreateOrUpdateSuggestionCategoryMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateSuggestionCategoryMutation__
@@ -10618,31 +13520,45 @@ export type CreateOrUpdateSuggestionCategoryMutationFn = Apollo.MutationFunction
  *   },
  * });
  */
-export function useCreateOrUpdateSuggestionCategoryMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>(CreateOrUpdateSuggestionCategoryDocument, options);
-      }
-export type CreateOrUpdateSuggestionCategoryMutationHookResult = ReturnType<typeof useCreateOrUpdateSuggestionCategoryMutation>;
-export type CreateOrUpdateSuggestionCategoryMutationResult = Apollo.MutationResult<CreateOrUpdateSuggestionCategoryMutation>;
-export type CreateOrUpdateSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>;
+export function useCreateOrUpdateSuggestionCategoryMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateSuggestionCategoryMutation,
+    CreateOrUpdateSuggestionCategoryMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    CreateOrUpdateSuggestionCategoryMutation,
+    CreateOrUpdateSuggestionCategoryMutationVariables
+  >(CreateOrUpdateSuggestionCategoryDocument, options);
+}
+export type CreateOrUpdateSuggestionCategoryMutationHookResult = ReturnType<
+  typeof useCreateOrUpdateSuggestionCategoryMutation
+>;
+export type CreateOrUpdateSuggestionCategoryMutationResult =
+  Apollo.MutationResult<CreateOrUpdateSuggestionCategoryMutation>;
+export type CreateOrUpdateSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateSuggestionCategoryMutation,
+  CreateOrUpdateSuggestionCategoryMutationVariables
+>;
 export const TabsDocument = gql`
-    query Tabs($searchText: String, $after: String) {
-  tabs(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        priority
+  query Tabs($searchText: String, $after: String) {
+    tabs(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          priority
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useTabsQuery__
@@ -10662,24 +13578,24 @@ export const TabsDocument = gql`
  * });
  */
 export function useTabsQuery(baseOptions?: Apollo.QueryHookOptions<TabsQuery, TabsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabsQuery, TabsQueryVariables>(TabsDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabsQuery, TabsQueryVariables>(TabsDocument, options);
+}
 export function useTabsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabsQuery, TabsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabsQuery, TabsQueryVariables>(TabsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabsQuery, TabsQueryVariables>(TabsDocument, options);
+}
 export type TabsQueryHookResult = ReturnType<typeof useTabsQuery>;
 export type TabsLazyQueryHookResult = ReturnType<typeof useTabsLazyQuery>;
 export type TabsQueryResult = Apollo.QueryResult<TabsQuery, TabsQueryVariables>;
 export const DeleteTabsDocument = gql`
-    mutation DeleteTabs($id: ID!) {
-  deleteTab(tabId: $id) {
-    id
-    name
+  mutation DeleteTabs($id: ID!) {
+    deleteTab(tabId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type DeleteTabsMutationFn = Apollo.MutationFunction<DeleteTabsMutation, DeleteTabsMutationVariables>;
 
 /**
@@ -10699,21 +13615,23 @@ export type DeleteTabsMutationFn = Apollo.MutationFunction<DeleteTabsMutation, D
  *   },
  * });
  */
-export function useDeleteTabsMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTabsMutation, DeleteTabsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTabsMutation, DeleteTabsMutationVariables>(DeleteTabsDocument, options);
-      }
+export function useDeleteTabsMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTabsMutation, DeleteTabsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTabsMutation, DeleteTabsMutationVariables>(DeleteTabsDocument, options);
+}
 export type DeleteTabsMutationHookResult = ReturnType<typeof useDeleteTabsMutation>;
 export type DeleteTabsMutationResult = Apollo.MutationResult<DeleteTabsMutation>;
 export type DeleteTabsMutationOptions = Apollo.BaseMutationOptions<DeleteTabsMutation, DeleteTabsMutationVariables>;
 export const UnboundBucketsByTabDocument = gql`
-    query UnboundBucketsByTab($id: BigInteger!) {
-  unboundBucketsByTab(tabId: $id) {
-    name
-    id
+  query UnboundBucketsByTab($id: BigInteger!) {
+    unboundBucketsByTab(tabId: $id) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundBucketsByTabQuery__
@@ -10731,26 +13649,42 @@ export const UnboundBucketsByTabDocument = gql`
  *   },
  * });
  */
-export function useUnboundBucketsByTabQuery(baseOptions: Apollo.QueryHookOptions<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>(UnboundBucketsByTabDocument, options);
-      }
-export function useUnboundBucketsByTabLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>(UnboundBucketsByTabDocument, options);
-        }
+export function useUnboundBucketsByTabQuery(
+  baseOptions: Apollo.QueryHookOptions<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>(
+    UnboundBucketsByTabDocument,
+    options,
+  );
+}
+export function useUnboundBucketsByTabLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>(
+    UnboundBucketsByTabDocument,
+    options,
+  );
+}
 export type UnboundBucketsByTabQueryHookResult = ReturnType<typeof useUnboundBucketsByTabQuery>;
 export type UnboundBucketsByTabLazyQueryHookResult = ReturnType<typeof useUnboundBucketsByTabLazyQuery>;
-export type UnboundBucketsByTabQueryResult = Apollo.QueryResult<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>;
+export type UnboundBucketsByTabQueryResult = Apollo.QueryResult<
+  UnboundBucketsByTabQuery,
+  UnboundBucketsByTabQueryVariables
+>;
 export const AddTabTranslationDocument = gql`
-    mutation AddTabTranslation($tabId: ID!, $language: String!, $key: String, $value: String!) {
-  addTabTranslation(tabId: $tabId, language: $language, key: $key, value: $value) {
-    left
-    right
+  mutation AddTabTranslation($tabId: ID!, $language: String!, $key: String, $value: String!) {
+    addTabTranslation(tabId: $tabId, language: $language, key: $key, value: $value) {
+      left
+      right
+    }
   }
-}
-    `;
-export type AddTabTranslationMutationFn = Apollo.MutationFunction<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
+`;
+export type AddTabTranslationMutationFn = Apollo.MutationFunction<
+  AddTabTranslationMutation,
+  AddTabTranslationMutationVariables
+>;
 
 /**
  * __useAddTabTranslationMutation__
@@ -10772,37 +13706,45 @@ export type AddTabTranslationMutationFn = Apollo.MutationFunction<AddTabTranslat
  *   },
  * });
  */
-export function useAddTabTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTabTranslationMutation, AddTabTranslationMutationVariables>(AddTabTranslationDocument, options);
-      }
+export function useAddTabTranslationMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddTabTranslationMutation, AddTabTranslationMutationVariables>(
+    AddTabTranslationDocument,
+    options,
+  );
+}
 export type AddTabTranslationMutationHookResult = ReturnType<typeof useAddTabTranslationMutation>;
 export type AddTabTranslationMutationResult = Apollo.MutationResult<AddTabTranslationMutation>;
-export type AddTabTranslationMutationOptions = Apollo.BaseMutationOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
+export type AddTabTranslationMutationOptions = Apollo.BaseMutationOptions<
+  AddTabTranslationMutation,
+  AddTabTranslationMutationVariables
+>;
 export const TabDocument = gql`
-    query Tab($id: ID!, $unasociated: Boolean) {
-  tab(id: $id) {
-    id
-    name
-    description
-    priority
-    tokenTabs(notEqual: $unasociated) {
-      edges {
-        node {
-          name
-          id
+  query Tab($id: ID!, $unasociated: Boolean) {
+    tab(id: $id) {
+      id
+      name
+      description
+      priority
+      tokenTabs(notEqual: $unasociated) {
+        edges {
+          node {
+            name
+            id
+          }
         }
       }
-    }
-    translations {
-      key
-      language
-      value
-      description
+      translations {
+        key
+        language
+        value
+        description
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useTabQuery__
@@ -10822,34 +13764,43 @@ export const TabDocument = gql`
  * });
  */
 export function useTabQuery(baseOptions: Apollo.QueryHookOptions<TabQuery, TabQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabQuery, TabQueryVariables>(TabDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabQuery, TabQueryVariables>(TabDocument, options);
+}
 export function useTabLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabQuery, TabQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabQuery, TabQueryVariables>(TabDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabQuery, TabQueryVariables>(TabDocument, options);
+}
 export type TabQueryHookResult = ReturnType<typeof useTabQuery>;
 export type TabLazyQueryHookResult = ReturnType<typeof useTabLazyQuery>;
 export type TabQueryResult = Apollo.QueryResult<TabQuery, TabQueryVariables>;
 export const CreateOrUpdateTabDocument = gql`
-    mutation CreateOrUpdateTab($id: ID, $name: String!, $description: String, $priority: Int!, $tokenTabIds: [BigInteger]) {
-  tabWithTokenTabs(
-    id: $id
-    tabWithTokenTabsDTO: {name: $name, description: $description, priority: $priority, tokenTabIds: $tokenTabIds}
+  mutation CreateOrUpdateTab(
+    $id: ID
+    $name: String!
+    $description: String
+    $priority: Int!
+    $tokenTabIds: [BigInteger]
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    tabWithTokenTabs(
+      id: $id
+      tabWithTokenTabsDTO: { name: $name, description: $description, priority: $priority, tokenTabIds: $tokenTabIds }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateTabMutationFn = Apollo.MutationFunction<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>;
+`;
+export type CreateOrUpdateTabMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateTabMutation,
+  CreateOrUpdateTabMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateTabMutation__
@@ -10872,38 +13823,41 @@ export type CreateOrUpdateTabMutationFn = Apollo.MutationFunction<CreateOrUpdate
  *   },
  * });
  */
-export function useCreateOrUpdateTabMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>(CreateOrUpdateTabDocument, options);
-      }
+export function useCreateOrUpdateTabMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>(
+    CreateOrUpdateTabDocument,
+    options,
+  );
+}
 export type CreateOrUpdateTabMutationHookResult = ReturnType<typeof useCreateOrUpdateTabMutation>;
 export type CreateOrUpdateTabMutationResult = Apollo.MutationResult<CreateOrUpdateTabMutation>;
-export type CreateOrUpdateTabMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTabMutation, CreateOrUpdateTabMutationVariables>;
+export type CreateOrUpdateTabMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateTabMutation,
+  CreateOrUpdateTabMutationVariables
+>;
 export const TabTokenTabsDocument = gql`
-    query TabTokenTabs($parentId: ID!, $searchText: String, $cursor: String, $unassociated: Boolean!) {
-  tab(id: $parentId) {
-    id
-    tokenTabs(
-      searchText: $searchText
-      notEqual: $unassociated
-      first: 20
-      after: $cursor
-    ) {
-      edges {
-        node {
-          id
-          name
-          description
+  query TabTokenTabs($parentId: ID!, $searchText: String, $cursor: String, $unassociated: Boolean!) {
+    tab(id: $parentId) {
+      id
+      tokenTabs(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useTabTokenTabsQuery__
@@ -10924,30 +13878,37 @@ export const TabTokenTabsDocument = gql`
  *   },
  * });
  */
-export function useTabTokenTabsQuery(baseOptions: Apollo.QueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
-      }
-export function useTabTokenTabsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
-        }
+export function useTabTokenTabsQuery(
+  baseOptions: Apollo.QueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
+}
+export function useTabTokenTabsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TabTokenTabsQuery, TabTokenTabsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabTokenTabsQuery, TabTokenTabsQueryVariables>(TabTokenTabsDocument, options);
+}
 export type TabTokenTabsQueryHookResult = ReturnType<typeof useTabTokenTabsQuery>;
 export type TabTokenTabsLazyQueryHookResult = ReturnType<typeof useTabTokenTabsLazyQuery>;
 export type TabTokenTabsQueryResult = Apollo.QueryResult<TabTokenTabsQuery, TabTokenTabsQueryVariables>;
 export const AddTokenTabToTabDocument = gql`
-    mutation AddTokenTabToTab($childId: ID!, $parentId: ID!) {
-  addTokenTabToTab(id: $parentId, tokenTabId: $childId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddTokenTabToTab($childId: ID!, $parentId: ID!) {
+    addTokenTabToTab(id: $parentId, tokenTabId: $childId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddTokenTabToTabMutationFn = Apollo.MutationFunction<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>;
+`;
+export type AddTokenTabToTabMutationFn = Apollo.MutationFunction<
+  AddTokenTabToTabMutation,
+  AddTokenTabToTabMutationVariables
+>;
 
 /**
  * __useAddTokenTabToTabMutation__
@@ -10967,26 +13928,37 @@ export type AddTokenTabToTabMutationFn = Apollo.MutationFunction<AddTokenTabToTa
  *   },
  * });
  */
-export function useAddTokenTabToTabMutation(baseOptions?: Apollo.MutationHookOptions<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>(AddTokenTabToTabDocument, options);
-      }
+export function useAddTokenTabToTabMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>(
+    AddTokenTabToTabDocument,
+    options,
+  );
+}
 export type AddTokenTabToTabMutationHookResult = ReturnType<typeof useAddTokenTabToTabMutation>;
 export type AddTokenTabToTabMutationResult = Apollo.MutationResult<AddTokenTabToTabMutation>;
-export type AddTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<AddTokenTabToTabMutation, AddTokenTabToTabMutationVariables>;
+export type AddTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<
+  AddTokenTabToTabMutation,
+  AddTokenTabToTabMutationVariables
+>;
 export const RemoveTokenTabToTabDocument = gql`
-    mutation RemoveTokenTabToTab($childId: ID!, $parentId: ID!) {
-  removeTokenTabToTab(id: $parentId, tokenTabId: $childId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveTokenTabToTab($childId: ID!, $parentId: ID!) {
+    removeTokenTabToTab(id: $parentId, tokenTabId: $childId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveTokenTabToTabMutationFn = Apollo.MutationFunction<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
+`;
+export type RemoveTokenTabToTabMutationFn = Apollo.MutationFunction<
+  RemoveTokenTabToTabMutation,
+  RemoveTokenTabToTabMutationVariables
+>;
 
 /**
  * __useRemoveTokenTabToTabMutation__
@@ -11006,33 +13978,41 @@ export type RemoveTokenTabToTabMutationFn = Apollo.MutationFunction<RemoveTokenT
  *   },
  * });
  */
-export function useRemoveTokenTabToTabMutation(baseOptions?: Apollo.MutationHookOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>(RemoveTokenTabToTabDocument, options);
-      }
+export function useRemoveTokenTabToTabMutation(
+  baseOptions?: Apollo.MutationHookOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>(
+    RemoveTokenTabToTabDocument,
+    options,
+  );
+}
 export type RemoveTokenTabToTabMutationHookResult = ReturnType<typeof useRemoveTokenTabToTabMutation>;
 export type RemoveTokenTabToTabMutationResult = Apollo.MutationResult<RemoveTokenTabToTabMutation>;
-export type RemoveTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<RemoveTokenTabToTabMutation, RemoveTokenTabToTabMutationVariables>;
+export type RemoveTokenTabToTabMutationOptions = Apollo.BaseMutationOptions<
+  RemoveTokenTabToTabMutation,
+  RemoveTokenTabToTabMutationVariables
+>;
 export const TabTokensDocument = gql`
-    query TabTokens($searchText: String, $cursor: String) {
-  totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        tokenType
-        value
-        filter
-        extraParams
+  query TabTokens($searchText: String, $cursor: String) {
+    totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          tokenType
+          value
+          filter
+          extraParams
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useTabTokensQuery__
@@ -11052,33 +14032,35 @@ export const TabTokensDocument = gql`
  * });
  */
 export function useTabTokensQuery(baseOptions?: Apollo.QueryHookOptions<TabTokensQuery, TabTokensQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabTokensQuery, TabTokensQueryVariables>(TabTokensDocument, options);
-      }
-export function useTabTokensLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabTokensQuery, TabTokensQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabTokensQuery, TabTokensQueryVariables>(TabTokensDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabTokensQuery, TabTokensQueryVariables>(TabTokensDocument, options);
+}
+export function useTabTokensLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TabTokensQuery, TabTokensQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabTokensQuery, TabTokensQueryVariables>(TabTokensDocument, options);
+}
 export type TabTokensQueryHookResult = ReturnType<typeof useTabTokensQuery>;
 export type TabTokensLazyQueryHookResult = ReturnType<typeof useTabTokensLazyQuery>;
 export type TabTokensQueryResult = Apollo.QueryResult<TabTokensQuery, TabTokensQueryVariables>;
 export const TokenFiltersDocument = gql`
-    query TokenFilters($searchText: String, $after: String) {
-  tokenFilters(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query TokenFilters($searchText: String, $after: String) {
+    tokenFilters(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useTokenFiltersQuery__
@@ -11097,26 +14079,33 @@ export const TokenFiltersDocument = gql`
  *   },
  * });
  */
-export function useTokenFiltersQuery(baseOptions?: Apollo.QueryHookOptions<TokenFiltersQuery, TokenFiltersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TokenFiltersQuery, TokenFiltersQueryVariables>(TokenFiltersDocument, options);
-      }
-export function useTokenFiltersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TokenFiltersQuery, TokenFiltersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TokenFiltersQuery, TokenFiltersQueryVariables>(TokenFiltersDocument, options);
-        }
+export function useTokenFiltersQuery(
+  baseOptions?: Apollo.QueryHookOptions<TokenFiltersQuery, TokenFiltersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TokenFiltersQuery, TokenFiltersQueryVariables>(TokenFiltersDocument, options);
+}
+export function useTokenFiltersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TokenFiltersQuery, TokenFiltersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TokenFiltersQuery, TokenFiltersQueryVariables>(TokenFiltersDocument, options);
+}
 export type TokenFiltersQueryHookResult = ReturnType<typeof useTokenFiltersQuery>;
 export type TokenFiltersLazyQueryHookResult = ReturnType<typeof useTokenFiltersLazyQuery>;
 export type TokenFiltersQueryResult = Apollo.QueryResult<TokenFiltersQuery, TokenFiltersQueryVariables>;
 export const DeleteTokenFiltersDocument = gql`
-    mutation DeleteTokenFilters($id: ID!) {
-  deleteTokenFilter(tokenFilterId: $id) {
-    id
-    name
+  mutation DeleteTokenFilters($id: ID!) {
+    deleteTokenFilter(tokenFilterId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteTokenFiltersMutationFn = Apollo.MutationFunction<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>;
+`;
+export type DeleteTokenFiltersMutationFn = Apollo.MutationFunction<
+  DeleteTokenFiltersMutation,
+  DeleteTokenFiltersMutationVariables
+>;
 
 /**
  * __useDeleteTokenFiltersMutation__
@@ -11135,26 +14124,37 @@ export type DeleteTokenFiltersMutationFn = Apollo.MutationFunction<DeleteTokenFi
  *   },
  * });
  */
-export function useDeleteTokenFiltersMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>(DeleteTokenFiltersDocument, options);
-      }
+export function useDeleteTokenFiltersMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>(
+    DeleteTokenFiltersDocument,
+    options,
+  );
+}
 export type DeleteTokenFiltersMutationHookResult = ReturnType<typeof useDeleteTokenFiltersMutation>;
 export type DeleteTokenFiltersMutationResult = Apollo.MutationResult<DeleteTokenFiltersMutation>;
-export type DeleteTokenFiltersMutationOptions = Apollo.BaseMutationOptions<DeleteTokenFiltersMutation, DeleteTokenFiltersMutationVariables>;
+export type DeleteTokenFiltersMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTokenFiltersMutation,
+  DeleteTokenFiltersMutationVariables
+>;
 export const AddTokenFilterToAnalyzerDocument = gql`
-    mutation AddTokenFilterToAnalyzer($childId: ID!, $parentId: ID!) {
-  addTokenFilterToAnalyzer(tokenFilterId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddTokenFilterToAnalyzer($childId: ID!, $parentId: ID!) {
+    addTokenFilterToAnalyzer(tokenFilterId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddTokenFilterToAnalyzerMutationFn = Apollo.MutationFunction<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>;
+`;
+export type AddTokenFilterToAnalyzerMutationFn = Apollo.MutationFunction<
+  AddTokenFilterToAnalyzerMutation,
+  AddTokenFilterToAnalyzerMutationVariables
+>;
 
 /**
  * __useAddTokenFilterToAnalyzerMutation__
@@ -11174,21 +14174,29 @@ export type AddTokenFilterToAnalyzerMutationFn = Apollo.MutationFunction<AddToke
  *   },
  * });
  */
-export function useAddTokenFilterToAnalyzerMutation(baseOptions?: Apollo.MutationHookOptions<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>(AddTokenFilterToAnalyzerDocument, options);
-      }
+export function useAddTokenFilterToAnalyzerMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>(
+    AddTokenFilterToAnalyzerDocument,
+    options,
+  );
+}
 export type AddTokenFilterToAnalyzerMutationHookResult = ReturnType<typeof useAddTokenFilterToAnalyzerMutation>;
 export type AddTokenFilterToAnalyzerMutationResult = Apollo.MutationResult<AddTokenFilterToAnalyzerMutation>;
-export type AddTokenFilterToAnalyzerMutationOptions = Apollo.BaseMutationOptions<AddTokenFilterToAnalyzerMutation, AddTokenFilterToAnalyzerMutationVariables>;
+export type AddTokenFilterToAnalyzerMutationOptions = Apollo.BaseMutationOptions<
+  AddTokenFilterToAnalyzerMutation,
+  AddTokenFilterToAnalyzerMutationVariables
+>;
 export const UnboundAnalyzersByTokenFilterDocument = gql`
-    query UnboundAnalyzersByTokenFilter($tokenFilterId: BigInteger!) {
-  unboundAnalyzersByTokenFilter(tokenFilterId: $tokenFilterId) {
-    name
-    id
+  query UnboundAnalyzersByTokenFilter($tokenFilterId: BigInteger!) {
+    unboundAnalyzersByTokenFilter(tokenFilterId: $tokenFilterId) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundAnalyzersByTokenFilterQuery__
@@ -11206,28 +14214,46 @@ export const UnboundAnalyzersByTokenFilterDocument = gql`
  *   },
  * });
  */
-export function useUnboundAnalyzersByTokenFilterQuery(baseOptions: Apollo.QueryHookOptions<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>(UnboundAnalyzersByTokenFilterDocument, options);
-      }
-export function useUnboundAnalyzersByTokenFilterLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>(UnboundAnalyzersByTokenFilterDocument, options);
-        }
-export type UnboundAnalyzersByTokenFilterQueryHookResult = ReturnType<typeof useUnboundAnalyzersByTokenFilterQuery>;
-export type UnboundAnalyzersByTokenFilterLazyQueryHookResult = ReturnType<typeof useUnboundAnalyzersByTokenFilterLazyQuery>;
-export type UnboundAnalyzersByTokenFilterQueryResult = Apollo.QueryResult<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>;
-export const TokenFilterDocument = gql`
-    query TokenFilter($id: ID!) {
-  tokenFilter(id: $id) {
-    id
-    name
-    description
-    jsonConfig
-    type
-  }
+export function useUnboundAnalyzersByTokenFilterQuery(
+  baseOptions: Apollo.QueryHookOptions<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>(
+    UnboundAnalyzersByTokenFilterDocument,
+    options,
+  );
 }
-    `;
+export function useUnboundAnalyzersByTokenFilterLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnboundAnalyzersByTokenFilterQuery,
+    UnboundAnalyzersByTokenFilterQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundAnalyzersByTokenFilterQuery, UnboundAnalyzersByTokenFilterQueryVariables>(
+    UnboundAnalyzersByTokenFilterDocument,
+    options,
+  );
+}
+export type UnboundAnalyzersByTokenFilterQueryHookResult = ReturnType<typeof useUnboundAnalyzersByTokenFilterQuery>;
+export type UnboundAnalyzersByTokenFilterLazyQueryHookResult = ReturnType<
+  typeof useUnboundAnalyzersByTokenFilterLazyQuery
+>;
+export type UnboundAnalyzersByTokenFilterQueryResult = Apollo.QueryResult<
+  UnboundAnalyzersByTokenFilterQuery,
+  UnboundAnalyzersByTokenFilterQueryVariables
+>;
+export const TokenFilterDocument = gql`
+  query TokenFilter($id: ID!) {
+    tokenFilter(id: $id) {
+      id
+      name
+      description
+      jsonConfig
+      type
+    }
+  }
+`;
 
 /**
  * __useTokenFilterQuery__
@@ -11246,34 +14272,45 @@ export const TokenFilterDocument = gql`
  * });
  */
 export function useTokenFilterQuery(baseOptions: Apollo.QueryHookOptions<TokenFilterQuery, TokenFilterQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TokenFilterQuery, TokenFilterQueryVariables>(TokenFilterDocument, options);
-      }
-export function useTokenFilterLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TokenFilterQuery, TokenFilterQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TokenFilterQuery, TokenFilterQueryVariables>(TokenFilterDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TokenFilterQuery, TokenFilterQueryVariables>(TokenFilterDocument, options);
+}
+export function useTokenFilterLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TokenFilterQuery, TokenFilterQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TokenFilterQuery, TokenFilterQueryVariables>(TokenFilterDocument, options);
+}
 export type TokenFilterQueryHookResult = ReturnType<typeof useTokenFilterQuery>;
 export type TokenFilterLazyQueryHookResult = ReturnType<typeof useTokenFilterLazyQuery>;
 export type TokenFilterQueryResult = Apollo.QueryResult<TokenFilterQuery, TokenFilterQueryVariables>;
 export const CreateOrUpdateTokenFilterDocument = gql`
-    mutation CreateOrUpdateTokenFilter($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
-  tokenFilter(
-    id: $id
-    tokenFilterDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
+  mutation CreateOrUpdateTokenFilter(
+    $id: ID
+    $name: String!
+    $description: String
+    $jsonConfig: String
+    $type: String!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    tokenFilter(
+      id: $id
+      tokenFilterDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateTokenFilterMutationFn = Apollo.MutationFunction<CreateOrUpdateTokenFilterMutation, CreateOrUpdateTokenFilterMutationVariables>;
+`;
+export type CreateOrUpdateTokenFilterMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateTokenFilterMutation,
+  CreateOrUpdateTokenFilterMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateTokenFilterMutation__
@@ -11296,30 +14333,41 @@ export type CreateOrUpdateTokenFilterMutationFn = Apollo.MutationFunction<Create
  *   },
  * });
  */
-export function useCreateOrUpdateTokenFilterMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTokenFilterMutation, CreateOrUpdateTokenFilterMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateTokenFilterMutation, CreateOrUpdateTokenFilterMutationVariables>(CreateOrUpdateTokenFilterDocument, options);
-      }
+export function useCreateOrUpdateTokenFilterMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateTokenFilterMutation,
+    CreateOrUpdateTokenFilterMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateTokenFilterMutation, CreateOrUpdateTokenFilterMutationVariables>(
+    CreateOrUpdateTokenFilterDocument,
+    options,
+  );
+}
 export type CreateOrUpdateTokenFilterMutationHookResult = ReturnType<typeof useCreateOrUpdateTokenFilterMutation>;
 export type CreateOrUpdateTokenFilterMutationResult = Apollo.MutationResult<CreateOrUpdateTokenFilterMutation>;
-export type CreateOrUpdateTokenFilterMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTokenFilterMutation, CreateOrUpdateTokenFilterMutationVariables>;
+export type CreateOrUpdateTokenFilterMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateTokenFilterMutation,
+  CreateOrUpdateTokenFilterMutationVariables
+>;
 export const TabTokenTabDocument = gql`
-    query TabTokenTab($id: ID!) {
-  tokenTab(id: $id) {
-    id
-    name
-    description
-    value
-    filter
-    tokenType
-    docTypeField {
+  query TabTokenTab($id: ID!) {
+    tokenTab(id: $id) {
       id
       name
+      description
+      value
+      filter
+      tokenType
+      docTypeField {
+        id
+        name
+      }
+      extraParams
     }
-    extraParams
   }
-}
-    `;
+`;
 
 /**
  * __useTabTokenTabQuery__
@@ -11338,33 +14386,55 @@ export const TabTokenTabDocument = gql`
  * });
  */
 export function useTabTokenTabQuery(baseOptions: Apollo.QueryHookOptions<TabTokenTabQuery, TabTokenTabQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabTokenTabQuery, TabTokenTabQueryVariables>(TabTokenTabDocument, options);
-      }
-export function useTabTokenTabLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabTokenTabQuery, TabTokenTabQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabTokenTabQuery, TabTokenTabQueryVariables>(TabTokenTabDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabTokenTabQuery, TabTokenTabQueryVariables>(TabTokenTabDocument, options);
+}
+export function useTabTokenTabLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TabTokenTabQuery, TabTokenTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabTokenTabQuery, TabTokenTabQueryVariables>(TabTokenTabDocument, options);
+}
 export type TabTokenTabQueryHookResult = ReturnType<typeof useTabTokenTabQuery>;
 export type TabTokenTabLazyQueryHookResult = ReturnType<typeof useTabTokenTabLazyQuery>;
 export type TabTokenTabQueryResult = Apollo.QueryResult<TabTokenTabQuery, TabTokenTabQueryVariables>;
 export const CreateOrUpdateTabTokenDocument = gql`
-    mutation CreateOrUpdateTabToken($tokenTabId: ID, $name: String!, $description: String, $value: String!, $filter: Boolean!, $tokenType: TokenType!, $docTypeFieldId: BigInteger, $extraParams: String) {
-  tokenTabWithDocTypeField(
-    id: $tokenTabId
-    tokenTabWithDocTypeFieldDTO: {name: $name, description: $description, filter: $filter, tokenType: $tokenType, value: $value, extraParams: $extraParams, docTypeFieldId: $docTypeFieldId}
+  mutation CreateOrUpdateTabToken(
+    $tokenTabId: ID
+    $name: String!
+    $description: String
+    $value: String!
+    $filter: Boolean!
+    $tokenType: TokenType!
+    $docTypeFieldId: BigInteger
+    $extraParams: String
   ) {
-    entity {
-      id
-    }
-    fieldValidators {
-      field
-      message
+    tokenTabWithDocTypeField(
+      id: $tokenTabId
+      tokenTabWithDocTypeFieldDTO: {
+        name: $name
+        description: $description
+        filter: $filter
+        tokenType: $tokenType
+        value: $value
+        extraParams: $extraParams
+        docTypeFieldId: $docTypeFieldId
+      }
+    ) {
+      entity {
+        id
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateTabTokenMutationFn = Apollo.MutationFunction<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>;
+`;
+export type CreateOrUpdateTabTokenMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateTabTokenMutation,
+  CreateOrUpdateTabTokenMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateTabTokenMutation__
@@ -11390,22 +14460,30 @@ export type CreateOrUpdateTabTokenMutationFn = Apollo.MutationFunction<CreateOrU
  *   },
  * });
  */
-export function useCreateOrUpdateTabTokenMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>(CreateOrUpdateTabTokenDocument, options);
-      }
+export function useCreateOrUpdateTabTokenMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>(
+    CreateOrUpdateTabTokenDocument,
+    options,
+  );
+}
 export type CreateOrUpdateTabTokenMutationHookResult = ReturnType<typeof useCreateOrUpdateTabTokenMutation>;
 export type CreateOrUpdateTabTokenMutationResult = Apollo.MutationResult<CreateOrUpdateTabTokenMutation>;
-export type CreateOrUpdateTabTokenMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTabTokenMutation, CreateOrUpdateTabTokenMutationVariables>;
+export type CreateOrUpdateTabTokenMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateTabTokenMutation,
+  CreateOrUpdateTabTokenMutationVariables
+>;
 export const DocTypeFieldValueDocument = gql`
-    query DocTypeFieldValue($id: ID!) {
-  value: docTypeField(id: $id) {
-    id
-    name
-    description
+  query DocTypeFieldValue($id: ID!) {
+    value: docTypeField(id: $id) {
+      id
+      name
+      description
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldValueQuery__
@@ -11423,34 +14501,41 @@ export const DocTypeFieldValueDocument = gql`
  *   },
  * });
  */
-export function useDocTypeFieldValueQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>(DocTypeFieldValueDocument, options);
-      }
-export function useDocTypeFieldValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>(DocTypeFieldValueDocument, options);
-        }
+export function useDocTypeFieldValueQuery(
+  baseOptions: Apollo.QueryHookOptions<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>(DocTypeFieldValueDocument, options);
+}
+export function useDocTypeFieldValueLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>(
+    DocTypeFieldValueDocument,
+    options,
+  );
+}
 export type DocTypeFieldValueQueryHookResult = ReturnType<typeof useDocTypeFieldValueQuery>;
 export type DocTypeFieldValueLazyQueryHookResult = ReturnType<typeof useDocTypeFieldValueLazyQuery>;
 export type DocTypeFieldValueQueryResult = Apollo.QueryResult<DocTypeFieldValueQuery, DocTypeFieldValueQueryVariables>;
 export const DocTypeFieldOptionsTokenTabDocument = gql`
-    query DocTypeFieldOptionsTokenTab($searchText: String, $after: String) {
-  options: docTypeFields(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocTypeFieldOptionsTokenTab($searchText: String, $after: String) {
+    options: docTypeFields(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldOptionsTokenTabQuery__
@@ -11469,37 +14554,53 @@ export const DocTypeFieldOptionsTokenTabDocument = gql`
  *   },
  * });
  */
-export function useDocTypeFieldOptionsTokenTabQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>(DocTypeFieldOptionsTokenTabDocument, options);
-      }
-export function useDocTypeFieldOptionsTokenTabLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>(DocTypeFieldOptionsTokenTabDocument, options);
-        }
+export function useDocTypeFieldOptionsTokenTabQuery(
+  baseOptions?: Apollo.QueryHookOptions<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>(
+    DocTypeFieldOptionsTokenTabDocument,
+    options,
+  );
+}
+export function useDocTypeFieldOptionsTokenTabLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    DocTypeFieldOptionsTokenTabQuery,
+    DocTypeFieldOptionsTokenTabQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>(
+    DocTypeFieldOptionsTokenTabDocument,
+    options,
+  );
+}
 export type DocTypeFieldOptionsTokenTabQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsTokenTabQuery>;
 export type DocTypeFieldOptionsTokenTabLazyQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsTokenTabLazyQuery>;
-export type DocTypeFieldOptionsTokenTabQueryResult = Apollo.QueryResult<DocTypeFieldOptionsTokenTabQuery, DocTypeFieldOptionsTokenTabQueryVariables>;
+export type DocTypeFieldOptionsTokenTabQueryResult = Apollo.QueryResult<
+  DocTypeFieldOptionsTokenTabQuery,
+  DocTypeFieldOptionsTokenTabQueryVariables
+>;
 export const TabTokensQueryDocument = gql`
-    query TabTokensQuery($searchText: String, $cursor: String) {
-  totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        tokenType
-        value
-        filter
-        extraParams
+  query TabTokensQuery($searchText: String, $cursor: String) {
+    totalTokenTabs(searchText: $searchText, first: 20, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          tokenType
+          value
+          filter
+          extraParams
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useTabTokensQueryQuery__
@@ -11518,25 +14619,29 @@ export const TabTokensQueryDocument = gql`
  *   },
  * });
  */
-export function useTabTokensQueryQuery(baseOptions?: Apollo.QueryHookOptions<TabTokensQueryQuery, TabTokensQueryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TabTokensQueryQuery, TabTokensQueryQueryVariables>(TabTokensQueryDocument, options);
-      }
-export function useTabTokensQueryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TabTokensQueryQuery, TabTokensQueryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TabTokensQueryQuery, TabTokensQueryQueryVariables>(TabTokensQueryDocument, options);
-        }
+export function useTabTokensQueryQuery(
+  baseOptions?: Apollo.QueryHookOptions<TabTokensQueryQuery, TabTokensQueryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TabTokensQueryQuery, TabTokensQueryQueryVariables>(TabTokensQueryDocument, options);
+}
+export function useTabTokensQueryLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TabTokensQueryQuery, TabTokensQueryQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TabTokensQueryQuery, TabTokensQueryQueryVariables>(TabTokensQueryDocument, options);
+}
 export type TabTokensQueryQueryHookResult = ReturnType<typeof useTabTokensQueryQuery>;
 export type TabTokensQueryLazyQueryHookResult = ReturnType<typeof useTabTokensQueryLazyQuery>;
 export type TabTokensQueryQueryResult = Apollo.QueryResult<TabTokensQueryQuery, TabTokensQueryQueryVariables>;
 export const DeleteTabTokenDocument = gql`
-    mutation DeleteTabToken($id: ID!) {
-  deleteTokenTab(tokenTabId: $id) {
-    id
-    name
+  mutation DeleteTabToken($id: ID!) {
+    deleteTokenTab(tokenTabId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type DeleteTabTokenMutationFn = Apollo.MutationFunction<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>;
 
 /**
@@ -11556,21 +14661,26 @@ export type DeleteTabTokenMutationFn = Apollo.MutationFunction<DeleteTabTokenMut
  *   },
  * });
  */
-export function useDeleteTabTokenMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>(DeleteTabTokenDocument, options);
-      }
+export function useDeleteTabTokenMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>(DeleteTabTokenDocument, options);
+}
 export type DeleteTabTokenMutationHookResult = ReturnType<typeof useDeleteTabTokenMutation>;
 export type DeleteTabTokenMutationResult = Apollo.MutationResult<DeleteTabTokenMutation>;
-export type DeleteTabTokenMutationOptions = Apollo.BaseMutationOptions<DeleteTabTokenMutation, DeleteTabTokenMutationVariables>;
+export type DeleteTabTokenMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTabTokenMutation,
+  DeleteTabTokenMutationVariables
+>;
 export const UnassociatedTokenTabsInTabDocument = gql`
-    query unassociatedTokenTabsInTab($id: BigInteger!) {
-  unboundTabsByTokenTab(tokenTabId: $id) {
-    id
-    name
+  query unassociatedTokenTabsInTab($id: BigInteger!) {
+    unboundTabsByTokenTab(tokenTabId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnassociatedTokenTabsInTabQuery__
@@ -11588,28 +14698,41 @@ export const UnassociatedTokenTabsInTabDocument = gql`
  *   },
  * });
  */
-export function useUnassociatedTokenTabsInTabQuery(baseOptions: Apollo.QueryHookOptions<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>(UnassociatedTokenTabsInTabDocument, options);
-      }
-export function useUnassociatedTokenTabsInTabLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>(UnassociatedTokenTabsInTabDocument, options);
-        }
+export function useUnassociatedTokenTabsInTabQuery(
+  baseOptions: Apollo.QueryHookOptions<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>(
+    UnassociatedTokenTabsInTabDocument,
+    options,
+  );
+}
+export function useUnassociatedTokenTabsInTabLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>(
+    UnassociatedTokenTabsInTabDocument,
+    options,
+  );
+}
 export type UnassociatedTokenTabsInTabQueryHookResult = ReturnType<typeof useUnassociatedTokenTabsInTabQuery>;
 export type UnassociatedTokenTabsInTabLazyQueryHookResult = ReturnType<typeof useUnassociatedTokenTabsInTabLazyQuery>;
-export type UnassociatedTokenTabsInTabQueryResult = Apollo.QueryResult<UnassociatedTokenTabsInTabQuery, UnassociatedTokenTabsInTabQueryVariables>;
+export type UnassociatedTokenTabsInTabQueryResult = Apollo.QueryResult<
+  UnassociatedTokenTabsInTabQuery,
+  UnassociatedTokenTabsInTabQueryVariables
+>;
 export const TokenizerDocument = gql`
-    query Tokenizer($id: ID!) {
-  tokenizer(id: $id) {
-    id
-    name
-    description
-    jsonConfig
-    type
+  query Tokenizer($id: ID!) {
+    tokenizer(id: $id) {
+      id
+      name
+      description
+      jsonConfig
+      type
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useTokenizerQuery__
@@ -11628,34 +14751,36 @@ export const TokenizerDocument = gql`
  * });
  */
 export function useTokenizerQuery(baseOptions: Apollo.QueryHookOptions<TokenizerQuery, TokenizerQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TokenizerQuery, TokenizerQueryVariables>(TokenizerDocument, options);
-      }
-export function useTokenizerLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TokenizerQuery, TokenizerQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TokenizerQuery, TokenizerQueryVariables>(TokenizerDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TokenizerQuery, TokenizerQueryVariables>(TokenizerDocument, options);
+}
+export function useTokenizerLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TokenizerQuery, TokenizerQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TokenizerQuery, TokenizerQueryVariables>(TokenizerDocument, options);
+}
 export type TokenizerQueryHookResult = ReturnType<typeof useTokenizerQuery>;
 export type TokenizerLazyQueryHookResult = ReturnType<typeof useTokenizerLazyQuery>;
 export type TokenizerQueryResult = Apollo.QueryResult<TokenizerQuery, TokenizerQueryVariables>;
 export const CreateOrUpdateTokenizerDocument = gql`
-    mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
-  tokenizer(
-    id: $id
-    tokenizerDTO: {name: $name, description: $description, jsonConfig: $jsonConfig, type: $type}
-  ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+  mutation CreateOrUpdateTokenizer($id: ID, $name: String!, $description: String, $jsonConfig: String, $type: String!) {
+    tokenizer(id: $id, tokenizerDTO: { name: $name, description: $description, jsonConfig: $jsonConfig, type: $type }) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateTokenizerMutationFn = Apollo.MutationFunction<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>;
+`;
+export type CreateOrUpdateTokenizerMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateTokenizerMutation,
+  CreateOrUpdateTokenizerMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateTokenizerMutation__
@@ -11678,30 +14803,38 @@ export type CreateOrUpdateTokenizerMutationFn = Apollo.MutationFunction<CreateOr
  *   },
  * });
  */
-export function useCreateOrUpdateTokenizerMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>(CreateOrUpdateTokenizerDocument, options);
-      }
+export function useCreateOrUpdateTokenizerMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>(
+    CreateOrUpdateTokenizerDocument,
+    options,
+  );
+}
 export type CreateOrUpdateTokenizerMutationHookResult = ReturnType<typeof useCreateOrUpdateTokenizerMutation>;
 export type CreateOrUpdateTokenizerMutationResult = Apollo.MutationResult<CreateOrUpdateTokenizerMutation>;
-export type CreateOrUpdateTokenizerMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTokenizerMutation, CreateOrUpdateTokenizerMutationVariables>;
+export type CreateOrUpdateTokenizerMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateTokenizerMutation,
+  CreateOrUpdateTokenizerMutationVariables
+>;
 export const TokenizersDocument = gql`
-    query Tokenizers($searchText: String, $after: String) {
-  tokenizers(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query Tokenizers($searchText: String, $after: String) {
+    tokenizers(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useTokenizersQuery__
@@ -11721,25 +14854,30 @@ export const TokenizersDocument = gql`
  * });
  */
 export function useTokenizersQuery(baseOptions?: Apollo.QueryHookOptions<TokenizersQuery, TokenizersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TokenizersQuery, TokenizersQueryVariables>(TokenizersDocument, options);
-      }
-export function useTokenizersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TokenizersQuery, TokenizersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TokenizersQuery, TokenizersQueryVariables>(TokenizersDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<TokenizersQuery, TokenizersQueryVariables>(TokenizersDocument, options);
+}
+export function useTokenizersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<TokenizersQuery, TokenizersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<TokenizersQuery, TokenizersQueryVariables>(TokenizersDocument, options);
+}
 export type TokenizersQueryHookResult = ReturnType<typeof useTokenizersQuery>;
 export type TokenizersLazyQueryHookResult = ReturnType<typeof useTokenizersLazyQuery>;
 export type TokenizersQueryResult = Apollo.QueryResult<TokenizersQuery, TokenizersQueryVariables>;
 export const DeleteTokenizerDocument = gql`
-    mutation DeleteTokenizer($id: ID!) {
-  deleteTokenizer(tokenizerId: $id) {
-    id
-    name
+  mutation DeleteTokenizer($id: ID!) {
+    deleteTokenizer(tokenizerId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteTokenizerMutationFn = Apollo.MutationFunction<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
+`;
+export type DeleteTokenizerMutationFn = Apollo.MutationFunction<
+  DeleteTokenizerMutation,
+  DeleteTokenizerMutationVariables
+>;
 
 /**
  * __useDeleteTokenizerMutation__
@@ -11758,34 +14896,42 @@ export type DeleteTokenizerMutationFn = Apollo.MutationFunction<DeleteTokenizerM
  *   },
  * });
  */
-export function useDeleteTokenizerMutation(baseOptions?: Apollo.MutationHookOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>(DeleteTokenizerDocument, options);
-      }
+export function useDeleteTokenizerMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>(
+    DeleteTokenizerDocument,
+    options,
+  );
+}
 export type DeleteTokenizerMutationHookResult = ReturnType<typeof useDeleteTokenizerMutation>;
 export type DeleteTokenizerMutationResult = Apollo.MutationResult<DeleteTokenizerMutation>;
-export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<DeleteTokenizerMutation, DeleteTokenizerMutationVariables>;
+export type DeleteTokenizerMutationOptions = Apollo.BaseMutationOptions<
+  DeleteTokenizerMutation,
+  DeleteTokenizerMutationVariables
+>;
 export const AnnotatorsDocument = gql`
-    query Annotators($searchText: String, $after: String) {
-  annotators(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        size
-        type
-        fieldName
-        fuziness
+  query Annotators($searchText: String, $after: String) {
+    annotators(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          size
+          type
+          fieldName
+          fuziness
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useAnnotatorsQuery__
@@ -11805,25 +14951,30 @@ export const AnnotatorsDocument = gql`
  * });
  */
 export function useAnnotatorsQuery(baseOptions?: Apollo.QueryHookOptions<AnnotatorsQuery, AnnotatorsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnnotatorsQuery, AnnotatorsQueryVariables>(AnnotatorsDocument, options);
-      }
-export function useAnnotatorsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnnotatorsQuery, AnnotatorsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnnotatorsQuery, AnnotatorsQueryVariables>(AnnotatorsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnnotatorsQuery, AnnotatorsQueryVariables>(AnnotatorsDocument, options);
+}
+export function useAnnotatorsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnnotatorsQuery, AnnotatorsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnnotatorsQuery, AnnotatorsQueryVariables>(AnnotatorsDocument, options);
+}
 export type AnnotatorsQueryHookResult = ReturnType<typeof useAnnotatorsQuery>;
 export type AnnotatorsLazyQueryHookResult = ReturnType<typeof useAnnotatorsLazyQuery>;
 export type AnnotatorsQueryResult = Apollo.QueryResult<AnnotatorsQuery, AnnotatorsQueryVariables>;
 export const DeleteAnnotatosDocument = gql`
-    mutation DeleteAnnotatos($id: ID!) {
-  deleteAnnotator(annotatorId: $id) {
-    id
-    name
+  mutation DeleteAnnotatos($id: ID!) {
+    deleteAnnotator(annotatorId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteAnnotatosMutationFn = Apollo.MutationFunction<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>;
+`;
+export type DeleteAnnotatosMutationFn = Apollo.MutationFunction<
+  DeleteAnnotatosMutation,
+  DeleteAnnotatosMutationVariables
+>;
 
 /**
  * __useDeleteAnnotatosMutation__
@@ -11842,30 +14993,38 @@ export type DeleteAnnotatosMutationFn = Apollo.MutationFunction<DeleteAnnotatosM
  *   },
  * });
  */
-export function useDeleteAnnotatosMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>(DeleteAnnotatosDocument, options);
-      }
+export function useDeleteAnnotatosMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>(
+    DeleteAnnotatosDocument,
+    options,
+  );
+}
 export type DeleteAnnotatosMutationHookResult = ReturnType<typeof useDeleteAnnotatosMutation>;
 export type DeleteAnnotatosMutationResult = Apollo.MutationResult<DeleteAnnotatosMutation>;
-export type DeleteAnnotatosMutationOptions = Apollo.BaseMutationOptions<DeleteAnnotatosMutation, DeleteAnnotatosMutationVariables>;
+export type DeleteAnnotatosMutationOptions = Apollo.BaseMutationOptions<
+  DeleteAnnotatosMutation,
+  DeleteAnnotatosMutationVariables
+>;
 export const DocTypeFieldOptionsAnnotatorsDocument = gql`
-    query DocTypeFieldOptionsAnnotators($searchText: String, $cursor: String) {
-  options: docTypeFields(searchText: $searchText, first: 20, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocTypeFieldOptionsAnnotators($searchText: String, $cursor: String) {
+    options: docTypeFields(searchText: $searchText, first: 20, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldOptionsAnnotatorsQuery__
@@ -11884,35 +15043,56 @@ export const DocTypeFieldOptionsAnnotatorsDocument = gql`
  *   },
  * });
  */
-export function useDocTypeFieldOptionsAnnotatorsQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>(DocTypeFieldOptionsAnnotatorsDocument, options);
-      }
-export function useDocTypeFieldOptionsAnnotatorsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>(DocTypeFieldOptionsAnnotatorsDocument, options);
-        }
-export type DocTypeFieldOptionsAnnotatorsQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsAnnotatorsQuery>;
-export type DocTypeFieldOptionsAnnotatorsLazyQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsAnnotatorsLazyQuery>;
-export type DocTypeFieldOptionsAnnotatorsQueryResult = Apollo.QueryResult<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>;
-export const AnnotatorDocument = gql`
-    query Annotator($id: ID!) {
-  annotator(id: $id) {
-    id
-    fuziness
-    size
-    type
-    description
-    name
-    fieldName
-    docTypeField {
-      id
-      name
-    }
-    extraParams
-  }
+export function useDocTypeFieldOptionsAnnotatorsQuery(
+  baseOptions?: Apollo.QueryHookOptions<
+    DocTypeFieldOptionsAnnotatorsQuery,
+    DocTypeFieldOptionsAnnotatorsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>(
+    DocTypeFieldOptionsAnnotatorsDocument,
+    options,
+  );
 }
-    `;
+export function useDocTypeFieldOptionsAnnotatorsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    DocTypeFieldOptionsAnnotatorsQuery,
+    DocTypeFieldOptionsAnnotatorsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldOptionsAnnotatorsQuery, DocTypeFieldOptionsAnnotatorsQueryVariables>(
+    DocTypeFieldOptionsAnnotatorsDocument,
+    options,
+  );
+}
+export type DocTypeFieldOptionsAnnotatorsQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsAnnotatorsQuery>;
+export type DocTypeFieldOptionsAnnotatorsLazyQueryHookResult = ReturnType<
+  typeof useDocTypeFieldOptionsAnnotatorsLazyQuery
+>;
+export type DocTypeFieldOptionsAnnotatorsQueryResult = Apollo.QueryResult<
+  DocTypeFieldOptionsAnnotatorsQuery,
+  DocTypeFieldOptionsAnnotatorsQueryVariables
+>;
+export const AnnotatorDocument = gql`
+  query Annotator($id: ID!) {
+    annotator(id: $id) {
+      id
+      fuziness
+      size
+      type
+      description
+      name
+      fieldName
+      docTypeField {
+        id
+        name
+      }
+      extraParams
+    }
+  }
+`;
 
 /**
  * __useAnnotatorQuery__
@@ -11931,34 +15111,58 @@ export const AnnotatorDocument = gql`
  * });
  */
 export function useAnnotatorQuery(baseOptions: Apollo.QueryHookOptions<AnnotatorQuery, AnnotatorQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AnnotatorQuery, AnnotatorQueryVariables>(AnnotatorDocument, options);
-      }
-export function useAnnotatorLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AnnotatorQuery, AnnotatorQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AnnotatorQuery, AnnotatorQueryVariables>(AnnotatorDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AnnotatorQuery, AnnotatorQueryVariables>(AnnotatorDocument, options);
+}
+export function useAnnotatorLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AnnotatorQuery, AnnotatorQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AnnotatorQuery, AnnotatorQueryVariables>(AnnotatorDocument, options);
+}
 export type AnnotatorQueryHookResult = ReturnType<typeof useAnnotatorQuery>;
 export type AnnotatorLazyQueryHookResult = ReturnType<typeof useAnnotatorLazyQuery>;
 export type AnnotatorQueryResult = Apollo.QueryResult<AnnotatorQuery, AnnotatorQueryVariables>;
 export const CreateOrUpdateAnnotatorDocument = gql`
-    mutation CreateOrUpdateAnnotator($id: ID, $fieldName: String!, $fuziness: Fuzziness!, $type: AnnotatorType!, $description: String, $size: Int, $name: String!, $docTypeFieldId: BigInteger, $extraParams: String) {
-  annotatorWithDocTypeField(
-    id: $id
-    annotatorDTO: {fieldName: $fieldName, fuziness: $fuziness, size: $size, type: $type, description: $description, name: $name, docTypeFieldId: $docTypeFieldId, extraParams: $extraParams}
+  mutation CreateOrUpdateAnnotator(
+    $id: ID
+    $fieldName: String!
+    $fuziness: Fuzziness!
+    $type: AnnotatorType!
+    $description: String
+    $size: Int
+    $name: String!
+    $docTypeFieldId: BigInteger
+    $extraParams: String
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    annotatorWithDocTypeField(
+      id: $id
+      annotatorDTO: {
+        fieldName: $fieldName
+        fuziness: $fuziness
+        size: $size
+        type: $type
+        description: $description
+        name: $name
+        docTypeFieldId: $docTypeFieldId
+        extraParams: $extraParams
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateAnnotatorMutationFn = Apollo.MutationFunction<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>;
+`;
+export type CreateOrUpdateAnnotatorMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateAnnotatorMutation,
+  CreateOrUpdateAnnotatorMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateAnnotatorMutation__
@@ -11985,35 +15189,38 @@ export type CreateOrUpdateAnnotatorMutationFn = Apollo.MutationFunction<CreateOr
  *   },
  * });
  */
-export function useCreateOrUpdateAnnotatorMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>(CreateOrUpdateAnnotatorDocument, options);
-      }
+export function useCreateOrUpdateAnnotatorMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>(
+    CreateOrUpdateAnnotatorDocument,
+    options,
+  );
+}
 export type CreateOrUpdateAnnotatorMutationHookResult = ReturnType<typeof useCreateOrUpdateAnnotatorMutation>;
 export type CreateOrUpdateAnnotatorMutationResult = Apollo.MutationResult<CreateOrUpdateAnnotatorMutation>;
-export type CreateOrUpdateAnnotatorMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateAnnotatorMutation, CreateOrUpdateAnnotatorMutationVariables>;
+export type CreateOrUpdateAnnotatorMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateAnnotatorMutation,
+  CreateOrUpdateAnnotatorMutationVariables
+>;
 export const DocTypeFieldOptionsDocument = gql`
-    query DocTypeFieldOptions($searchText: String, $cursor: String, $annotatorId: ID!) {
-  options: docTypeFieldNotInAnnotator(
-    annotatorId: $annotatorId
-    searchText: $searchText
-    first: 5
-    after: $cursor
-  ) {
-    edges {
-      node {
-        id
-        name
-        description
+  query DocTypeFieldOptions($searchText: String, $cursor: String, $annotatorId: ID!) {
+    options: docTypeFieldNotInAnnotator(annotatorId: $annotatorId, searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDocTypeFieldOptionsQuery__
@@ -12033,36 +15240,49 @@ export const DocTypeFieldOptionsDocument = gql`
  *   },
  * });
  */
-export function useDocTypeFieldOptionsQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>(DocTypeFieldOptionsDocument, options);
-      }
-export function useDocTypeFieldOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>(DocTypeFieldOptionsDocument, options);
-        }
+export function useDocTypeFieldOptionsQuery(
+  baseOptions: Apollo.QueryHookOptions<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>(
+    DocTypeFieldOptionsDocument,
+    options,
+  );
+}
+export function useDocTypeFieldOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>(
+    DocTypeFieldOptionsDocument,
+    options,
+  );
+}
 export type DocTypeFieldOptionsQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsQuery>;
 export type DocTypeFieldOptionsLazyQueryHookResult = ReturnType<typeof useDocTypeFieldOptionsLazyQuery>;
-export type DocTypeFieldOptionsQueryResult = Apollo.QueryResult<DocTypeFieldOptionsQuery, DocTypeFieldOptionsQueryVariables>;
+export type DocTypeFieldOptionsQueryResult = Apollo.QueryResult<
+  DocTypeFieldOptionsQuery,
+  DocTypeFieldOptionsQueryVariables
+>;
 export const BindDocTypeFieldToDataSourceDocument = gql`
-    mutation BindDocTypeFieldToDataSource($documentTypeFieldId: ID!, $annotatorId: ID!) {
-  bindAnnotatorToDocTypeField(
-    docTypeFieldId: $documentTypeFieldId
-    id: $annotatorId
-  ) {
-    left {
-      id
-      docTypeField {
+  mutation BindDocTypeFieldToDataSource($documentTypeFieldId: ID!, $annotatorId: ID!) {
+    bindAnnotatorToDocTypeField(docTypeFieldId: $documentTypeFieldId, id: $annotatorId) {
+      left {
+        id
+        docTypeField {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<BindDocTypeFieldToDataSourceMutation, BindDocTypeFieldToDataSourceMutationVariables>;
+`;
+export type BindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<
+  BindDocTypeFieldToDataSourceMutation,
+  BindDocTypeFieldToDataSourceMutationVariables
+>;
 
 /**
  * __useBindDocTypeFieldToDataSourceMutation__
@@ -12082,26 +15302,37 @@ export type BindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<Bin
  *   },
  * });
  */
-export function useBindDocTypeFieldToDataSourceMutation(baseOptions?: Apollo.MutationHookOptions<BindDocTypeFieldToDataSourceMutation, BindDocTypeFieldToDataSourceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindDocTypeFieldToDataSourceMutation, BindDocTypeFieldToDataSourceMutationVariables>(BindDocTypeFieldToDataSourceDocument, options);
-      }
+export function useBindDocTypeFieldToDataSourceMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    BindDocTypeFieldToDataSourceMutation,
+    BindDocTypeFieldToDataSourceMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindDocTypeFieldToDataSourceMutation, BindDocTypeFieldToDataSourceMutationVariables>(
+    BindDocTypeFieldToDataSourceDocument,
+    options,
+  );
+}
 export type BindDocTypeFieldToDataSourceMutationHookResult = ReturnType<typeof useBindDocTypeFieldToDataSourceMutation>;
 export type BindDocTypeFieldToDataSourceMutationResult = Apollo.MutationResult<BindDocTypeFieldToDataSourceMutation>;
-export type BindDocTypeFieldToDataSourceMutationOptions = Apollo.BaseMutationOptions<BindDocTypeFieldToDataSourceMutation, BindDocTypeFieldToDataSourceMutationVariables>;
+export type BindDocTypeFieldToDataSourceMutationOptions = Apollo.BaseMutationOptions<
+  BindDocTypeFieldToDataSourceMutation,
+  BindDocTypeFieldToDataSourceMutationVariables
+>;
 export const UnbindDocTypeFieldToDataSourceDocument = gql`
-    mutation UnbindDocTypeFieldToDataSource($documentTypeFieldId: ID!, $annotatorId: ID!) {
-  unbindAnnotatorFromDocTypeField(
-    docTypeFieldId: $documentTypeFieldId
-    id: $annotatorId
-  ) {
-    left {
-      id
+  mutation UnbindDocTypeFieldToDataSource($documentTypeFieldId: ID!, $annotatorId: ID!) {
+    unbindAnnotatorFromDocTypeField(docTypeFieldId: $documentTypeFieldId, id: $annotatorId) {
+      left {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<UnbindDocTypeFieldToDataSourceMutation, UnbindDocTypeFieldToDataSourceMutationVariables>;
+`;
+export type UnbindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<
+  UnbindDocTypeFieldToDataSourceMutation,
+  UnbindDocTypeFieldToDataSourceMutationVariables
+>;
 
 /**
  * __useUnbindDocTypeFieldToDataSourceMutation__
@@ -12121,31 +15352,45 @@ export type UnbindDocTypeFieldToDataSourceMutationFn = Apollo.MutationFunction<U
  *   },
  * });
  */
-export function useUnbindDocTypeFieldToDataSourceMutation(baseOptions?: Apollo.MutationHookOptions<UnbindDocTypeFieldToDataSourceMutation, UnbindDocTypeFieldToDataSourceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindDocTypeFieldToDataSourceMutation, UnbindDocTypeFieldToDataSourceMutationVariables>(UnbindDocTypeFieldToDataSourceDocument, options);
-      }
-export type UnbindDocTypeFieldToDataSourceMutationHookResult = ReturnType<typeof useUnbindDocTypeFieldToDataSourceMutation>;
-export type UnbindDocTypeFieldToDataSourceMutationResult = Apollo.MutationResult<UnbindDocTypeFieldToDataSourceMutation>;
-export type UnbindDocTypeFieldToDataSourceMutationOptions = Apollo.BaseMutationOptions<UnbindDocTypeFieldToDataSourceMutation, UnbindDocTypeFieldToDataSourceMutationVariables>;
+export function useUnbindDocTypeFieldToDataSourceMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UnbindDocTypeFieldToDataSourceMutation,
+    UnbindDocTypeFieldToDataSourceMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnbindDocTypeFieldToDataSourceMutation, UnbindDocTypeFieldToDataSourceMutationVariables>(
+    UnbindDocTypeFieldToDataSourceDocument,
+    options,
+  );
+}
+export type UnbindDocTypeFieldToDataSourceMutationHookResult = ReturnType<
+  typeof useUnbindDocTypeFieldToDataSourceMutation
+>;
+export type UnbindDocTypeFieldToDataSourceMutationResult =
+  Apollo.MutationResult<UnbindDocTypeFieldToDataSourceMutation>;
+export type UnbindDocTypeFieldToDataSourceMutationOptions = Apollo.BaseMutationOptions<
+  UnbindDocTypeFieldToDataSourceMutation,
+  UnbindDocTypeFieldToDataSourceMutationVariables
+>;
 export const BucketsDocument = gql`
-    query Buckets($searchText: String, $after: String) {
-  buckets(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        enabled
+  query Buckets($searchText: String, $after: String) {
+    buckets(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          enabled
+        }
       }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketsQuery__
@@ -12165,33 +15410,33 @@ export const BucketsDocument = gql`
  * });
  */
 export function useBucketsQuery(baseOptions?: Apollo.QueryHookOptions<BucketsQuery, BucketsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketsQuery, BucketsQueryVariables>(BucketsDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketsQuery, BucketsQueryVariables>(BucketsDocument, options);
+}
 export function useBucketsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketsQuery, BucketsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketsQuery, BucketsQueryVariables>(BucketsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketsQuery, BucketsQueryVariables>(BucketsDocument, options);
+}
 export type BucketsQueryHookResult = ReturnType<typeof useBucketsQuery>;
 export type BucketsLazyQueryHookResult = ReturnType<typeof useBucketsLazyQuery>;
 export type BucketsQueryResult = Apollo.QueryResult<BucketsQuery, BucketsQueryVariables>;
 export const QueryAnalysisOptionsDocument = gql`
-    query QueryAnalysisOptions($searchText: String, $cursor: String) {
-  options: queryAnalyses(searchText: $searchText, first: 5, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        description
+  query QueryAnalysisOptions($searchText: String, $cursor: String) {
+    options: queryAnalyses(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysisOptionsQuery__
@@ -12210,26 +15455,39 @@ export const QueryAnalysisOptionsDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysisOptionsQuery(baseOptions?: Apollo.QueryHookOptions<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>(QueryAnalysisOptionsDocument, options);
-      }
-export function useQueryAnalysisOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>(QueryAnalysisOptionsDocument, options);
-        }
+export function useQueryAnalysisOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>(
+    QueryAnalysisOptionsDocument,
+    options,
+  );
+}
+export function useQueryAnalysisOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>(
+    QueryAnalysisOptionsDocument,
+    options,
+  );
+}
 export type QueryAnalysisOptionsQueryHookResult = ReturnType<typeof useQueryAnalysisOptionsQuery>;
 export type QueryAnalysisOptionsLazyQueryHookResult = ReturnType<typeof useQueryAnalysisOptionsLazyQuery>;
-export type QueryAnalysisOptionsQueryResult = Apollo.QueryResult<QueryAnalysisOptionsQuery, QueryAnalysisOptionsQueryVariables>;
+export type QueryAnalysisOptionsQueryResult = Apollo.QueryResult<
+  QueryAnalysisOptionsQuery,
+  QueryAnalysisOptionsQueryVariables
+>;
 export const QueryAnalysisValueDocument = gql`
-    query QueryAnalysisValue($id: ID!) {
-  value: queryAnalysis(id: $id) {
-    id
-    name
-    description
+  query QueryAnalysisValue($id: ID!) {
+    value: queryAnalysis(id: $id) {
+      id
+      name
+      description
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useQueryAnalysisValueQuery__
@@ -12247,33 +15505,49 @@ export const QueryAnalysisValueDocument = gql`
  *   },
  * });
  */
-export function useQueryAnalysisValueQuery(baseOptions: Apollo.QueryHookOptions<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>(QueryAnalysisValueDocument, options);
-      }
-export function useQueryAnalysisValueLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>(QueryAnalysisValueDocument, options);
-        }
+export function useQueryAnalysisValueQuery(
+  baseOptions: Apollo.QueryHookOptions<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>(
+    QueryAnalysisValueDocument,
+    options,
+  );
+}
+export function useQueryAnalysisValueLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>(
+    QueryAnalysisValueDocument,
+    options,
+  );
+}
 export type QueryAnalysisValueQueryHookResult = ReturnType<typeof useQueryAnalysisValueQuery>;
 export type QueryAnalysisValueLazyQueryHookResult = ReturnType<typeof useQueryAnalysisValueLazyQuery>;
-export type QueryAnalysisValueQueryResult = Apollo.QueryResult<QueryAnalysisValueQuery, QueryAnalysisValueQueryVariables>;
+export type QueryAnalysisValueQueryResult = Apollo.QueryResult<
+  QueryAnalysisValueQuery,
+  QueryAnalysisValueQueryVariables
+>;
 export const BindQueryAnalysisToBucketDocument = gql`
-    mutation BindQueryAnalysisToBucket($bucketId: ID!, $queryAnalysis: ID!) {
-  bindQueryAnalysisToBucket(bucketId: $bucketId, queryAnalysisId: $queryAnalysis) {
-    left {
-      id
-      queryAnalysis {
+  mutation BindQueryAnalysisToBucket($bucketId: ID!, $queryAnalysis: ID!) {
+    bindQueryAnalysisToBucket(bucketId: $bucketId, queryAnalysisId: $queryAnalysis) {
+      left {
+        id
+        queryAnalysis {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindQueryAnalysisToBucketMutationFn = Apollo.MutationFunction<BindQueryAnalysisToBucketMutation, BindQueryAnalysisToBucketMutationVariables>;
+`;
+export type BindQueryAnalysisToBucketMutationFn = Apollo.MutationFunction<
+  BindQueryAnalysisToBucketMutation,
+  BindQueryAnalysisToBucketMutationVariables
+>;
 
 /**
  * __useBindQueryAnalysisToBucketMutation__
@@ -12293,23 +15567,37 @@ export type BindQueryAnalysisToBucketMutationFn = Apollo.MutationFunction<BindQu
  *   },
  * });
  */
-export function useBindQueryAnalysisToBucketMutation(baseOptions?: Apollo.MutationHookOptions<BindQueryAnalysisToBucketMutation, BindQueryAnalysisToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindQueryAnalysisToBucketMutation, BindQueryAnalysisToBucketMutationVariables>(BindQueryAnalysisToBucketDocument, options);
-      }
+export function useBindQueryAnalysisToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    BindQueryAnalysisToBucketMutation,
+    BindQueryAnalysisToBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindQueryAnalysisToBucketMutation, BindQueryAnalysisToBucketMutationVariables>(
+    BindQueryAnalysisToBucketDocument,
+    options,
+  );
+}
 export type BindQueryAnalysisToBucketMutationHookResult = ReturnType<typeof useBindQueryAnalysisToBucketMutation>;
 export type BindQueryAnalysisToBucketMutationResult = Apollo.MutationResult<BindQueryAnalysisToBucketMutation>;
-export type BindQueryAnalysisToBucketMutationOptions = Apollo.BaseMutationOptions<BindQueryAnalysisToBucketMutation, BindQueryAnalysisToBucketMutationVariables>;
+export type BindQueryAnalysisToBucketMutationOptions = Apollo.BaseMutationOptions<
+  BindQueryAnalysisToBucketMutation,
+  BindQueryAnalysisToBucketMutationVariables
+>;
 export const UnbindQueryAnalysisFromBucketDocument = gql`
-    mutation UnbindQueryAnalysisFromBucket($bucketId: ID!) {
-  unbindQueryAnalysisFromBucket(bucketId: $bucketId) {
-    right {
-      id
+  mutation UnbindQueryAnalysisFromBucket($bucketId: ID!) {
+    unbindQueryAnalysisFromBucket(bucketId: $bucketId) {
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindQueryAnalysisFromBucketMutationFn = Apollo.MutationFunction<UnbindQueryAnalysisFromBucketMutation, UnbindQueryAnalysisFromBucketMutationVariables>;
+`;
+export type UnbindQueryAnalysisFromBucketMutationFn = Apollo.MutationFunction<
+  UnbindQueryAnalysisFromBucketMutation,
+  UnbindQueryAnalysisFromBucketMutationVariables
+>;
 
 /**
  * __useUnbindQueryAnalysisFromBucketMutation__
@@ -12328,29 +15616,45 @@ export type UnbindQueryAnalysisFromBucketMutationFn = Apollo.MutationFunction<Un
  *   },
  * });
  */
-export function useUnbindQueryAnalysisFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<UnbindQueryAnalysisFromBucketMutation, UnbindQueryAnalysisFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindQueryAnalysisFromBucketMutation, UnbindQueryAnalysisFromBucketMutationVariables>(UnbindQueryAnalysisFromBucketDocument, options);
-      }
-export type UnbindQueryAnalysisFromBucketMutationHookResult = ReturnType<typeof useUnbindQueryAnalysisFromBucketMutation>;
+export function useUnbindQueryAnalysisFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UnbindQueryAnalysisFromBucketMutation,
+    UnbindQueryAnalysisFromBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnbindQueryAnalysisFromBucketMutation, UnbindQueryAnalysisFromBucketMutationVariables>(
+    UnbindQueryAnalysisFromBucketDocument,
+    options,
+  );
+}
+export type UnbindQueryAnalysisFromBucketMutationHookResult = ReturnType<
+  typeof useUnbindQueryAnalysisFromBucketMutation
+>;
 export type UnbindQueryAnalysisFromBucketMutationResult = Apollo.MutationResult<UnbindQueryAnalysisFromBucketMutation>;
-export type UnbindQueryAnalysisFromBucketMutationOptions = Apollo.BaseMutationOptions<UnbindQueryAnalysisFromBucketMutation, UnbindQueryAnalysisFromBucketMutationVariables>;
+export type UnbindQueryAnalysisFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  UnbindQueryAnalysisFromBucketMutation,
+  UnbindQueryAnalysisFromBucketMutationVariables
+>;
 export const BindSearchConfigToBucketDocument = gql`
-    mutation BindSearchConfigToBucket($bucketId: ID!, $searchConfigId: ID!) {
-  bindSearchConfigToBucket(bucketId: $bucketId, searchConfigId: $searchConfigId) {
-    left {
-      id
-      searchConfig {
+  mutation BindSearchConfigToBucket($bucketId: ID!, $searchConfigId: ID!) {
+    bindSearchConfigToBucket(bucketId: $bucketId, searchConfigId: $searchConfigId) {
+      left {
+        id
+        searchConfig {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindSearchConfigToBucketMutationFn = Apollo.MutationFunction<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>;
+`;
+export type BindSearchConfigToBucketMutationFn = Apollo.MutationFunction<
+  BindSearchConfigToBucketMutation,
+  BindSearchConfigToBucketMutationVariables
+>;
 
 /**
  * __useBindSearchConfigToBucketMutation__
@@ -12370,23 +15674,34 @@ export type BindSearchConfigToBucketMutationFn = Apollo.MutationFunction<BindSea
  *   },
  * });
  */
-export function useBindSearchConfigToBucketMutation(baseOptions?: Apollo.MutationHookOptions<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>(BindSearchConfigToBucketDocument, options);
-      }
+export function useBindSearchConfigToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>(
+    BindSearchConfigToBucketDocument,
+    options,
+  );
+}
 export type BindSearchConfigToBucketMutationHookResult = ReturnType<typeof useBindSearchConfigToBucketMutation>;
 export type BindSearchConfigToBucketMutationResult = Apollo.MutationResult<BindSearchConfigToBucketMutation>;
-export type BindSearchConfigToBucketMutationOptions = Apollo.BaseMutationOptions<BindSearchConfigToBucketMutation, BindSearchConfigToBucketMutationVariables>;
+export type BindSearchConfigToBucketMutationOptions = Apollo.BaseMutationOptions<
+  BindSearchConfigToBucketMutation,
+  BindSearchConfigToBucketMutationVariables
+>;
 export const UnbindSearchConfigFromBucketDocument = gql`
-    mutation UnbindSearchConfigFromBucket($bucketId: ID!) {
-  unbindSearchConfigFromBucket(bucketId: $bucketId) {
-    right {
-      id
+  mutation UnbindSearchConfigFromBucket($bucketId: ID!) {
+    unbindSearchConfigFromBucket(bucketId: $bucketId) {
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindSearchConfigFromBucketMutationFn = Apollo.MutationFunction<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>;
+`;
+export type UnbindSearchConfigFromBucketMutationFn = Apollo.MutationFunction<
+  UnbindSearchConfigFromBucketMutation,
+  UnbindSearchConfigFromBucketMutationVariables
+>;
 
 /**
  * __useUnbindSearchConfigFromBucketMutation__
@@ -12405,29 +15720,43 @@ export type UnbindSearchConfigFromBucketMutationFn = Apollo.MutationFunction<Unb
  *   },
  * });
  */
-export function useUnbindSearchConfigFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>(UnbindSearchConfigFromBucketDocument, options);
-      }
+export function useUnbindSearchConfigFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UnbindSearchConfigFromBucketMutation,
+    UnbindSearchConfigFromBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>(
+    UnbindSearchConfigFromBucketDocument,
+    options,
+  );
+}
 export type UnbindSearchConfigFromBucketMutationHookResult = ReturnType<typeof useUnbindSearchConfigFromBucketMutation>;
 export type UnbindSearchConfigFromBucketMutationResult = Apollo.MutationResult<UnbindSearchConfigFromBucketMutation>;
-export type UnbindSearchConfigFromBucketMutationOptions = Apollo.BaseMutationOptions<UnbindSearchConfigFromBucketMutation, UnbindSearchConfigFromBucketMutationVariables>;
+export type UnbindSearchConfigFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  UnbindSearchConfigFromBucketMutation,
+  UnbindSearchConfigFromBucketMutationVariables
+>;
 export const BindLanguageToBucketDocument = gql`
-    mutation BindLanguageToBucket($bucketId: ID!, $languageId: ID!) {
-  bindLanguageToBucket(bucketId: $bucketId, languageId: $languageId) {
-    left {
-      id
-      language {
+  mutation BindLanguageToBucket($bucketId: ID!, $languageId: ID!) {
+    bindLanguageToBucket(bucketId: $bucketId, languageId: $languageId) {
+      left {
+        id
+        language {
+          id
+        }
+      }
+      right {
         id
       }
     }
-    right {
-      id
-    }
   }
-}
-    `;
-export type BindLanguageToBucketMutationFn = Apollo.MutationFunction<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>;
+`;
+export type BindLanguageToBucketMutationFn = Apollo.MutationFunction<
+  BindLanguageToBucketMutation,
+  BindLanguageToBucketMutationVariables
+>;
 
 /**
  * __useBindLanguageToBucketMutation__
@@ -12447,23 +15776,34 @@ export type BindLanguageToBucketMutationFn = Apollo.MutationFunction<BindLanguag
  *   },
  * });
  */
-export function useBindLanguageToBucketMutation(baseOptions?: Apollo.MutationHookOptions<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>(BindLanguageToBucketDocument, options);
-      }
+export function useBindLanguageToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>(
+    BindLanguageToBucketDocument,
+    options,
+  );
+}
 export type BindLanguageToBucketMutationHookResult = ReturnType<typeof useBindLanguageToBucketMutation>;
 export type BindLanguageToBucketMutationResult = Apollo.MutationResult<BindLanguageToBucketMutation>;
-export type BindLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<BindLanguageToBucketMutation, BindLanguageToBucketMutationVariables>;
+export type BindLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<
+  BindLanguageToBucketMutation,
+  BindLanguageToBucketMutationVariables
+>;
 export const UnbindLanguageFromBucketDocument = gql`
-    mutation UnbindLanguageFromBucket($bucketId: ID!) {
-  unbindLanguageFromBucket(bucketId: $bucketId) {
-    right {
-      id
+  mutation UnbindLanguageFromBucket($bucketId: ID!) {
+    unbindLanguageFromBucket(bucketId: $bucketId) {
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type UnbindLanguageFromBucketMutationFn = Apollo.MutationFunction<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>;
+`;
+export type UnbindLanguageFromBucketMutationFn = Apollo.MutationFunction<
+  UnbindLanguageFromBucketMutation,
+  UnbindLanguageFromBucketMutationVariables
+>;
 
 /**
  * __useUnbindLanguageFromBucketMutation__
@@ -12482,52 +15822,60 @@ export type UnbindLanguageFromBucketMutationFn = Apollo.MutationFunction<UnbindL
  *   },
  * });
  */
-export function useUnbindLanguageFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>(UnbindLanguageFromBucketDocument, options);
-      }
+export function useUnbindLanguageFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>(
+    UnbindLanguageFromBucketDocument,
+    options,
+  );
+}
 export type UnbindLanguageFromBucketMutationHookResult = ReturnType<typeof useUnbindLanguageFromBucketMutation>;
 export type UnbindLanguageFromBucketMutationResult = Apollo.MutationResult<UnbindLanguageFromBucketMutation>;
-export type UnbindLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<UnbindLanguageFromBucketMutation, UnbindLanguageFromBucketMutationVariables>;
+export type UnbindLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  UnbindLanguageFromBucketMutation,
+  UnbindLanguageFromBucketMutationVariables
+>;
 export const BucketDocument = gql`
-    query Bucket($id: ID!) {
-  bucket(id: $id) {
-    id
-    name
-    description
-    enabled
-    refreshOnDate
-    refreshOnQuery
-    refreshOnSuggestionCategory
-    refreshOnTab
-    retrieveType
-    queryAnalysis {
+  query Bucket($id: ID!) {
+    bucket(id: $id) {
       id
       name
-    }
-    searchConfig {
-      id
-      name
-    }
-    ragConfigurationChat {
-      id
-      name
-    }
-    ragConfigurationChatTool {
-      id
-      name
-    }
-    ragConfigurationSimpleGenerate {
-      id
-      name
-    }
-    language {
-      id
-      name
+      description
+      enabled
+      refreshOnDate
+      refreshOnQuery
+      refreshOnSuggestionCategory
+      refreshOnTab
+      retrieveType
+      queryAnalysis {
+        id
+        name
+      }
+      searchConfig {
+        id
+        name
+      }
+      ragConfigurationChat {
+        id
+        name
+      }
+      ragConfigurationChatTool {
+        id
+        name
+      }
+      ragConfigurationSimpleGenerate {
+        id
+        name
+      }
+      language {
+        id
+        name
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketQuery__
@@ -12546,24 +15894,24 @@ export const BucketDocument = gql`
  * });
  */
 export function useBucketQuery(baseOptions: Apollo.QueryHookOptions<BucketQuery, BucketQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketQuery, BucketQueryVariables>(BucketDocument, options);
-      }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketQuery, BucketQueryVariables>(BucketDocument, options);
+}
 export function useBucketLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketQuery, BucketQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketQuery, BucketQueryVariables>(BucketDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketQuery, BucketQueryVariables>(BucketDocument, options);
+}
 export type BucketQueryHookResult = ReturnType<typeof useBucketQuery>;
 export type BucketLazyQueryHookResult = ReturnType<typeof useBucketLazyQuery>;
 export type BucketQueryResult = Apollo.QueryResult<BucketQuery, BucketQueryVariables>;
 export const EnableBucketDocument = gql`
-    mutation EnableBucket($id: ID!) {
-  enableBucket(id: $id) {
-    id
-    name
+  mutation EnableBucket($id: ID!) {
+    enableBucket(id: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type EnableBucketMutationFn = Apollo.MutationFunction<EnableBucketMutation, EnableBucketMutationVariables>;
 
 /**
@@ -12583,21 +15931,26 @@ export type EnableBucketMutationFn = Apollo.MutationFunction<EnableBucketMutatio
  *   },
  * });
  */
-export function useEnableBucketMutation(baseOptions?: Apollo.MutationHookOptions<EnableBucketMutation, EnableBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<EnableBucketMutation, EnableBucketMutationVariables>(EnableBucketDocument, options);
-      }
+export function useEnableBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<EnableBucketMutation, EnableBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<EnableBucketMutation, EnableBucketMutationVariables>(EnableBucketDocument, options);
+}
 export type EnableBucketMutationHookResult = ReturnType<typeof useEnableBucketMutation>;
 export type EnableBucketMutationResult = Apollo.MutationResult<EnableBucketMutation>;
-export type EnableBucketMutationOptions = Apollo.BaseMutationOptions<EnableBucketMutation, EnableBucketMutationVariables>;
+export type EnableBucketMutationOptions = Apollo.BaseMutationOptions<
+  EnableBucketMutation,
+  EnableBucketMutationVariables
+>;
 export const DeleteBucketDocument = gql`
-    mutation DeleteBucket($id: ID!) {
-  deleteBucket(bucketId: $id) {
-    id
-    name
+  mutation DeleteBucket($id: ID!) {
+    deleteBucket(bucketId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
+`;
 export type DeleteBucketMutationFn = Apollo.MutationFunction<DeleteBucketMutation, DeleteBucketMutationVariables>;
 
 /**
@@ -12617,63 +15970,53 @@ export type DeleteBucketMutationFn = Apollo.MutationFunction<DeleteBucketMutatio
  *   },
  * });
  */
-export function useDeleteBucketMutation(baseOptions?: Apollo.MutationHookOptions<DeleteBucketMutation, DeleteBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteBucketMutation, DeleteBucketMutationVariables>(DeleteBucketDocument, options);
-      }
+export function useDeleteBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteBucketMutation, DeleteBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteBucketMutation, DeleteBucketMutationVariables>(DeleteBucketDocument, options);
+}
 export type DeleteBucketMutationHookResult = ReturnType<typeof useDeleteBucketMutation>;
 export type DeleteBucketMutationResult = Apollo.MutationResult<DeleteBucketMutation>;
-export type DeleteBucketMutationOptions = Apollo.BaseMutationOptions<DeleteBucketMutation, DeleteBucketMutationVariables>;
+export type DeleteBucketMutationOptions = Apollo.BaseMutationOptions<
+  DeleteBucketMutation,
+  DeleteBucketMutationVariables
+>;
 export const BucketDataSourcesDocument = gql`
-    query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  bucket(id: $parentId) {
-    id
-    tabs(
-      searchText: $searchText
-      first: 20
-      after: $cursor
-      notEqual: $unassociated
-    ) {
-      edges {
-        node {
-          name
-          id
+  query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+    bucket(id: $parentId) {
+      id
+      tabs(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+        edges {
+          node {
+            name
+            id
+          }
         }
       }
-    }
-    suggestionCategories(
-      searchText: $searchText
-      first: 20
-      after: $cursor
-      notEqual: $unassociated
-    ) {
-      edges {
-        node {
-          id
-          name
+      suggestionCategories(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
-    }
-    datasources(
-      searchText: $searchText
-      first: 20
-      after: $cursor
-      notEqual: $unassociated
-    ) {
-      edges {
-        node {
-          id
-          name
+      datasources(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketDataSourcesQuery__
@@ -12694,36 +16037,81 @@ export const BucketDataSourcesDocument = gql`
  *   },
  * });
  */
-export function useBucketDataSourcesQuery(baseOptions: Apollo.QueryHookOptions<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>(BucketDataSourcesDocument, options);
-      }
-export function useBucketDataSourcesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>(BucketDataSourcesDocument, options);
-        }
+export function useBucketDataSourcesQuery(
+  baseOptions: Apollo.QueryHookOptions<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>(BucketDataSourcesDocument, options);
+}
+export function useBucketDataSourcesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>(
+    BucketDataSourcesDocument,
+    options,
+  );
+}
 export type BucketDataSourcesQueryHookResult = ReturnType<typeof useBucketDataSourcesQuery>;
 export type BucketDataSourcesLazyQueryHookResult = ReturnType<typeof useBucketDataSourcesLazyQuery>;
 export type BucketDataSourcesQueryResult = Apollo.QueryResult<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger) {
-  bucketWithLists(
-    id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate}
+  mutation CreateOrUpdateBucket(
+    $id: ID
+    $name: String!
+    $description: String
+    $refreshOnDate: Boolean!
+    $refreshOnQuery: Boolean!
+    $refreshOnSuggestionCategory: Boolean!
+    $refreshOnTab: Boolean!
+    $retrieveType: RetrieveType!
+    $datasourceIds: [BigInteger]
+    $suggestionCategoryIds: [BigInteger]
+    $tabIds: [BigInteger]
+    $queryAnalysisId: BigInteger
+    $defaultLanguageId: BigInteger
+    $searchConfigId: BigInteger
+    $ragConfigurationChat: BigInteger
+    $ragConfigurationChatTool: BigInteger
+    $ragConfigurationSimpleGenerate: BigInteger
   ) {
-    entity {
-      id
-      name
-      enabled
-    }
-    fieldValidators {
-      field
-      message
+    bucketWithLists(
+      id: $id
+      bucketWithListsDTO: {
+        name: $name
+        description: $description
+        refreshOnDate: $refreshOnDate
+        refreshOnQuery: $refreshOnQuery
+        refreshOnSuggestionCategory: $refreshOnSuggestionCategory
+        refreshOnTab: $refreshOnTab
+        retrieveType: $retrieveType
+        datasourceIds: $datasourceIds
+        suggestionCategoryIds: $suggestionCategoryIds
+        tabIds: $tabIds
+        queryAnalysisId: $queryAnalysisId
+        defaultLanguageId: $defaultLanguageId
+        searchConfigId: $searchConfigId
+        ragConfigurationChat: $ragConfigurationChat
+        ragConfigurationChatTool: $ragConfigurationChatTool
+        ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
+      }
+    ) {
+      entity {
+        id
+        name
+        enabled
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>;
+`;
+export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateBucketMutation,
+  CreateOrUpdateBucketMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateBucketMutation__
@@ -12758,26 +16146,37 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *   },
  * });
  */
-export function useCreateOrUpdateBucketMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>(CreateOrUpdateBucketDocument, options);
-      }
+export function useCreateOrUpdateBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>(
+    CreateOrUpdateBucketDocument,
+    options,
+  );
+}
 export type CreateOrUpdateBucketMutationHookResult = ReturnType<typeof useCreateOrUpdateBucketMutation>;
 export type CreateOrUpdateBucketMutationResult = Apollo.MutationResult<CreateOrUpdateBucketMutation>;
-export type CreateOrUpdateBucketMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateBucketMutation, CreateOrUpdateBucketMutationVariables>;
+export type CreateOrUpdateBucketMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateBucketMutation,
+  CreateOrUpdateBucketMutationVariables
+>;
 export const AddDataSourceToBucketDocument = gql`
-    mutation AddDataSourceToBucket($childId: ID!, $parentId: ID!) {
-  addDatasourceToBucket(datasourceId: $childId, bucketId: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddDataSourceToBucket($childId: ID!, $parentId: ID!) {
+    addDatasourceToBucket(datasourceId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddDataSourceToBucketMutationFn = Apollo.MutationFunction<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>;
+`;
+export type AddDataSourceToBucketMutationFn = Apollo.MutationFunction<
+  AddDataSourceToBucketMutation,
+  AddDataSourceToBucketMutationVariables
+>;
 
 /**
  * __useAddDataSourceToBucketMutation__
@@ -12797,26 +16196,37 @@ export type AddDataSourceToBucketMutationFn = Apollo.MutationFunction<AddDataSou
  *   },
  * });
  */
-export function useAddDataSourceToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>(AddDataSourceToBucketDocument, options);
-      }
+export function useAddDataSourceToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>(
+    AddDataSourceToBucketDocument,
+    options,
+  );
+}
 export type AddDataSourceToBucketMutationHookResult = ReturnType<typeof useAddDataSourceToBucketMutation>;
 export type AddDataSourceToBucketMutationResult = Apollo.MutationResult<AddDataSourceToBucketMutation>;
-export type AddDataSourceToBucketMutationOptions = Apollo.BaseMutationOptions<AddDataSourceToBucketMutation, AddDataSourceToBucketMutationVariables>;
+export type AddDataSourceToBucketMutationOptions = Apollo.BaseMutationOptions<
+  AddDataSourceToBucketMutation,
+  AddDataSourceToBucketMutationVariables
+>;
 export const RemoveDataSourceFromBucketDocument = gql`
-    mutation RemoveDataSourceFromBucket($childId: ID!, $parentId: ID!) {
-  removeDatasourceFromBucket(datasourceId: $childId, bucketId: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveDataSourceFromBucket($childId: ID!, $parentId: ID!) {
+    removeDatasourceFromBucket(datasourceId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveDataSourceFromBucketMutationFn = Apollo.MutationFunction<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>;
+`;
+export type RemoveDataSourceFromBucketMutationFn = Apollo.MutationFunction<
+  RemoveDataSourceFromBucketMutation,
+  RemoveDataSourceFromBucketMutationVariables
+>;
 
 /**
  * __useRemoveDataSourceFromBucketMutation__
@@ -12836,38 +16246,44 @@ export type RemoveDataSourceFromBucketMutationFn = Apollo.MutationFunction<Remov
  *   },
  * });
  */
-export function useRemoveDataSourceFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>(RemoveDataSourceFromBucketDocument, options);
-      }
+export function useRemoveDataSourceFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveDataSourceFromBucketMutation,
+    RemoveDataSourceFromBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>(
+    RemoveDataSourceFromBucketDocument,
+    options,
+  );
+}
 export type RemoveDataSourceFromBucketMutationHookResult = ReturnType<typeof useRemoveDataSourceFromBucketMutation>;
 export type RemoveDataSourceFromBucketMutationResult = Apollo.MutationResult<RemoveDataSourceFromBucketMutation>;
-export type RemoveDataSourceFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveDataSourceFromBucketMutation, RemoveDataSourceFromBucketMutationVariables>;
+export type RemoveDataSourceFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  RemoveDataSourceFromBucketMutation,
+  RemoveDataSourceFromBucketMutationVariables
+>;
 export const BucketLanguagesDocument = gql`
-    query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  bucket(id: $parentId) {
-    id
-    languages(
-      searchText: $searchText
-      first: 20
-      after: $cursor
-      notEqual: $unassociated
-    ) {
-      edges {
-        node {
-          id
-          name
-          value
+  query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+    bucket(id: $parentId) {
+      id
+      languages(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+            value
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketLanguagesQuery__
@@ -12888,30 +16304,37 @@ export const BucketLanguagesDocument = gql`
  *   },
  * });
  */
-export function useBucketLanguagesQuery(baseOptions: Apollo.QueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
-      }
-export function useBucketLanguagesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
-        }
+export function useBucketLanguagesQuery(
+  baseOptions: Apollo.QueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
+}
+export function useBucketLanguagesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BucketLanguagesQuery, BucketLanguagesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketLanguagesQuery, BucketLanguagesQueryVariables>(BucketLanguagesDocument, options);
+}
 export type BucketLanguagesQueryHookResult = ReturnType<typeof useBucketLanguagesQuery>;
 export type BucketLanguagesLazyQueryHookResult = ReturnType<typeof useBucketLanguagesLazyQuery>;
 export type BucketLanguagesQueryResult = Apollo.QueryResult<BucketLanguagesQuery, BucketLanguagesQueryVariables>;
 export const AddLanguageToBucketDocument = gql`
-    mutation AddLanguageToBucket($childId: ID!, $parentId: ID!) {
-  addLanguageToBucket(languageId: $childId, bucketId: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddLanguageToBucket($childId: ID!, $parentId: ID!) {
+    addLanguageToBucket(languageId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddLanguageToBucketMutationFn = Apollo.MutationFunction<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>;
+`;
+export type AddLanguageToBucketMutationFn = Apollo.MutationFunction<
+  AddLanguageToBucketMutation,
+  AddLanguageToBucketMutationVariables
+>;
 
 /**
  * __useAddLanguageToBucketMutation__
@@ -12931,26 +16354,37 @@ export type AddLanguageToBucketMutationFn = Apollo.MutationFunction<AddLanguageT
  *   },
  * });
  */
-export function useAddLanguageToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>(AddLanguageToBucketDocument, options);
-      }
+export function useAddLanguageToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>(
+    AddLanguageToBucketDocument,
+    options,
+  );
+}
 export type AddLanguageToBucketMutationHookResult = ReturnType<typeof useAddLanguageToBucketMutation>;
 export type AddLanguageToBucketMutationResult = Apollo.MutationResult<AddLanguageToBucketMutation>;
-export type AddLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<AddLanguageToBucketMutation, AddLanguageToBucketMutationVariables>;
+export type AddLanguageToBucketMutationOptions = Apollo.BaseMutationOptions<
+  AddLanguageToBucketMutation,
+  AddLanguageToBucketMutationVariables
+>;
 export const RemoveLanguageFromBucketDocument = gql`
-    mutation RemoveLanguageFromBucket($childId: ID!, $parentId: ID!) {
-  removeLanguageFromBucket(languageId: $childId, bucketId: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveLanguageFromBucket($childId: ID!, $parentId: ID!) {
+    removeLanguageFromBucket(languageId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveLanguageFromBucketMutationFn = Apollo.MutationFunction<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>;
+`;
+export type RemoveLanguageFromBucketMutationFn = Apollo.MutationFunction<
+  RemoveLanguageFromBucketMutation,
+  RemoveLanguageFromBucketMutationVariables
+>;
 
 /**
  * __useRemoveLanguageFromBucketMutation__
@@ -12970,38 +16404,41 @@ export type RemoveLanguageFromBucketMutationFn = Apollo.MutationFunction<RemoveL
  *   },
  * });
  */
-export function useRemoveLanguageFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>(RemoveLanguageFromBucketDocument, options);
-      }
+export function useRemoveLanguageFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>(
+    RemoveLanguageFromBucketDocument,
+    options,
+  );
+}
 export type RemoveLanguageFromBucketMutationHookResult = ReturnType<typeof useRemoveLanguageFromBucketMutation>;
 export type RemoveLanguageFromBucketMutationResult = Apollo.MutationResult<RemoveLanguageFromBucketMutation>;
-export type RemoveLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveLanguageFromBucketMutation, RemoveLanguageFromBucketMutationVariables>;
+export type RemoveLanguageFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  RemoveLanguageFromBucketMutation,
+  RemoveLanguageFromBucketMutationVariables
+>;
 export const BucketTabsDocument = gql`
-    query BucketTabs($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  bucket(id: $parentId) {
-    id
-    tabs(
-      searchText: $searchText
-      notEqual: $unassociated
-      first: 20
-      after: $cursor
-    ) {
-      edges {
-        node {
-          id
-          name
-          description
+  query BucketTabs($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+    bucket(id: $parentId) {
+      id
+      tabs(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketTabsQuery__
@@ -13023,28 +16460,30 @@ export const BucketTabsDocument = gql`
  * });
  */
 export function useBucketTabsQuery(baseOptions: Apollo.QueryHookOptions<BucketTabsQuery, BucketTabsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketTabsQuery, BucketTabsQueryVariables>(BucketTabsDocument, options);
-      }
-export function useBucketTabsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketTabsQuery, BucketTabsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketTabsQuery, BucketTabsQueryVariables>(BucketTabsDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketTabsQuery, BucketTabsQueryVariables>(BucketTabsDocument, options);
+}
+export function useBucketTabsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BucketTabsQuery, BucketTabsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketTabsQuery, BucketTabsQueryVariables>(BucketTabsDocument, options);
+}
 export type BucketTabsQueryHookResult = ReturnType<typeof useBucketTabsQuery>;
 export type BucketTabsLazyQueryHookResult = ReturnType<typeof useBucketTabsLazyQuery>;
 export type BucketTabsQueryResult = Apollo.QueryResult<BucketTabsQuery, BucketTabsQueryVariables>;
 export const AddTabToBucketDocument = gql`
-    mutation AddTabToBucket($childId: ID!, $parentId: ID!) {
-  addTabToBucket(tabId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddTabToBucket($childId: ID!, $parentId: ID!) {
+    addTabToBucket(tabId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
+`;
 export type AddTabToBucketMutationFn = Apollo.MutationFunction<AddTabToBucketMutation, AddTabToBucketMutationVariables>;
 
 /**
@@ -13065,26 +16504,34 @@ export type AddTabToBucketMutationFn = Apollo.MutationFunction<AddTabToBucketMut
  *   },
  * });
  */
-export function useAddTabToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddTabToBucketMutation, AddTabToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddTabToBucketMutation, AddTabToBucketMutationVariables>(AddTabToBucketDocument, options);
-      }
+export function useAddTabToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<AddTabToBucketMutation, AddTabToBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddTabToBucketMutation, AddTabToBucketMutationVariables>(AddTabToBucketDocument, options);
+}
 export type AddTabToBucketMutationHookResult = ReturnType<typeof useAddTabToBucketMutation>;
 export type AddTabToBucketMutationResult = Apollo.MutationResult<AddTabToBucketMutation>;
-export type AddTabToBucketMutationOptions = Apollo.BaseMutationOptions<AddTabToBucketMutation, AddTabToBucketMutationVariables>;
+export type AddTabToBucketMutationOptions = Apollo.BaseMutationOptions<
+  AddTabToBucketMutation,
+  AddTabToBucketMutationVariables
+>;
 export const RemoveTabFromBucketDocument = gql`
-    mutation RemoveTabFromBucket($childId: ID!, $parentId: ID!) {
-  removeTabFromBucket(tabId: $childId, id: $parentId) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveTabFromBucket($childId: ID!, $parentId: ID!) {
+    removeTabFromBucket(tabId: $childId, id: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveTabFromBucketMutationFn = Apollo.MutationFunction<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>;
+`;
+export type RemoveTabFromBucketMutationFn = Apollo.MutationFunction<
+  RemoveTabFromBucketMutation,
+  RemoveTabFromBucketMutationVariables
+>;
 
 /**
  * __useRemoveTabFromBucketMutation__
@@ -13104,38 +16551,41 @@ export type RemoveTabFromBucketMutationFn = Apollo.MutationFunction<RemoveTabFro
  *   },
  * });
  */
-export function useRemoveTabFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>(RemoveTabFromBucketDocument, options);
-      }
+export function useRemoveTabFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>(
+    RemoveTabFromBucketDocument,
+    options,
+  );
+}
 export type RemoveTabFromBucketMutationHookResult = ReturnType<typeof useRemoveTabFromBucketMutation>;
 export type RemoveTabFromBucketMutationResult = Apollo.MutationResult<RemoveTabFromBucketMutation>;
-export type RemoveTabFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveTabFromBucketMutation, RemoveTabFromBucketMutationVariables>;
+export type RemoveTabFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  RemoveTabFromBucketMutation,
+  RemoveTabFromBucketMutationVariables
+>;
 export const BucketSuggestionCategoriesDocument = gql`
-    query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
-  bucket(id: $parentId) {
-    id
-    suggestionCategories(
-      searchText: $searchText
-      notEqual: $unassociated
-      first: 20
-      after: $cursor
-    ) {
-      edges {
-        node {
-          id
-          name
-          description
+  query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
+    bucket(id: $parentId) {
+      id
+      suggestionCategories(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useBucketSuggestionCategoriesQuery__
@@ -13156,33 +16606,46 @@ export const BucketSuggestionCategoriesDocument = gql`
  *   },
  * });
  */
-export function useBucketSuggestionCategoriesQuery(baseOptions: Apollo.QueryHookOptions<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>(BucketSuggestionCategoriesDocument, options);
-      }
-export function useBucketSuggestionCategoriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>(BucketSuggestionCategoriesDocument, options);
-        }
+export function useBucketSuggestionCategoriesQuery(
+  baseOptions: Apollo.QueryHookOptions<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>(
+    BucketSuggestionCategoriesDocument,
+    options,
+  );
+}
+export function useBucketSuggestionCategoriesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>(
+    BucketSuggestionCategoriesDocument,
+    options,
+  );
+}
 export type BucketSuggestionCategoriesQueryHookResult = ReturnType<typeof useBucketSuggestionCategoriesQuery>;
 export type BucketSuggestionCategoriesLazyQueryHookResult = ReturnType<typeof useBucketSuggestionCategoriesLazyQuery>;
-export type BucketSuggestionCategoriesQueryResult = Apollo.QueryResult<BucketSuggestionCategoriesQuery, BucketSuggestionCategoriesQueryVariables>;
+export type BucketSuggestionCategoriesQueryResult = Apollo.QueryResult<
+  BucketSuggestionCategoriesQuery,
+  BucketSuggestionCategoriesQueryVariables
+>;
 export const AddSuggestionCategoryToBucketDocument = gql`
-    mutation AddSuggestionCategoryToBucket($childId: ID!, $parentId: ID!) {
-  addSuggestionCategoryToBucket(
-    suggestionCategoryId: $childId
-    bucketId: $parentId
-  ) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddSuggestionCategoryToBucket($childId: ID!, $parentId: ID!) {
+    addSuggestionCategoryToBucket(suggestionCategoryId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddSuggestionCategoryToBucketMutationFn = Apollo.MutationFunction<AddSuggestionCategoryToBucketMutation, AddSuggestionCategoryToBucketMutationVariables>;
+`;
+export type AddSuggestionCategoryToBucketMutationFn = Apollo.MutationFunction<
+  AddSuggestionCategoryToBucketMutation,
+  AddSuggestionCategoryToBucketMutationVariables
+>;
 
 /**
  * __useAddSuggestionCategoryToBucketMutation__
@@ -13202,29 +16665,42 @@ export type AddSuggestionCategoryToBucketMutationFn = Apollo.MutationFunction<Ad
  *   },
  * });
  */
-export function useAddSuggestionCategoryToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryToBucketMutation, AddSuggestionCategoryToBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddSuggestionCategoryToBucketMutation, AddSuggestionCategoryToBucketMutationVariables>(AddSuggestionCategoryToBucketDocument, options);
-      }
-export type AddSuggestionCategoryToBucketMutationHookResult = ReturnType<typeof useAddSuggestionCategoryToBucketMutation>;
+export function useAddSuggestionCategoryToBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddSuggestionCategoryToBucketMutation,
+    AddSuggestionCategoryToBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddSuggestionCategoryToBucketMutation, AddSuggestionCategoryToBucketMutationVariables>(
+    AddSuggestionCategoryToBucketDocument,
+    options,
+  );
+}
+export type AddSuggestionCategoryToBucketMutationHookResult = ReturnType<
+  typeof useAddSuggestionCategoryToBucketMutation
+>;
 export type AddSuggestionCategoryToBucketMutationResult = Apollo.MutationResult<AddSuggestionCategoryToBucketMutation>;
-export type AddSuggestionCategoryToBucketMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryToBucketMutation, AddSuggestionCategoryToBucketMutationVariables>;
+export type AddSuggestionCategoryToBucketMutationOptions = Apollo.BaseMutationOptions<
+  AddSuggestionCategoryToBucketMutation,
+  AddSuggestionCategoryToBucketMutationVariables
+>;
 export const RemoveSuggestionCategoryFromBucketDocument = gql`
-    mutation RemoveSuggestionCategoryFromBucket($childId: ID!, $parentId: ID!) {
-  removeSuggestionCategoryFromBucket(
-    suggestionCategoryId: $childId
-    bucketId: $parentId
-  ) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveSuggestionCategoryFromBucket($childId: ID!, $parentId: ID!) {
+    removeSuggestionCategoryFromBucket(suggestionCategoryId: $childId, bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveSuggestionCategoryFromBucketMutationFn = Apollo.MutationFunction<RemoveSuggestionCategoryFromBucketMutation, RemoveSuggestionCategoryFromBucketMutationVariables>;
+`;
+export type RemoveSuggestionCategoryFromBucketMutationFn = Apollo.MutationFunction<
+  RemoveSuggestionCategoryFromBucketMutation,
+  RemoveSuggestionCategoryFromBucketMutationVariables
+>;
 
 /**
  * __useRemoveSuggestionCategoryFromBucketMutation__
@@ -13244,26 +16720,64 @@ export type RemoveSuggestionCategoryFromBucketMutationFn = Apollo.MutationFuncti
  *   },
  * });
  */
-export function useRemoveSuggestionCategoryFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveSuggestionCategoryFromBucketMutation, RemoveSuggestionCategoryFromBucketMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveSuggestionCategoryFromBucketMutation, RemoveSuggestionCategoryFromBucketMutationVariables>(RemoveSuggestionCategoryFromBucketDocument, options);
-      }
-export type RemoveSuggestionCategoryFromBucketMutationHookResult = ReturnType<typeof useRemoveSuggestionCategoryFromBucketMutation>;
-export type RemoveSuggestionCategoryFromBucketMutationResult = Apollo.MutationResult<RemoveSuggestionCategoryFromBucketMutation>;
-export type RemoveSuggestionCategoryFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveSuggestionCategoryFromBucketMutation, RemoveSuggestionCategoryFromBucketMutationVariables>;
+export function useRemoveSuggestionCategoryFromBucketMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveSuggestionCategoryFromBucketMutation,
+    RemoveSuggestionCategoryFromBucketMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveSuggestionCategoryFromBucketMutation,
+    RemoveSuggestionCategoryFromBucketMutationVariables
+  >(RemoveSuggestionCategoryFromBucketDocument, options);
+}
+export type RemoveSuggestionCategoryFromBucketMutationHookResult = ReturnType<
+  typeof useRemoveSuggestionCategoryFromBucketMutation
+>;
+export type RemoveSuggestionCategoryFromBucketMutationResult =
+  Apollo.MutationResult<RemoveSuggestionCategoryFromBucketMutation>;
+export type RemoveSuggestionCategoryFromBucketMutationOptions = Apollo.BaseMutationOptions<
+  RemoveSuggestionCategoryFromBucketMutation,
+  RemoveSuggestionCategoryFromBucketMutationVariables
+>;
 export const CreateDataIndexDocument = gql`
-    mutation CreateDataIndex($name: String!, $datasourceId: ID!, $description: String, $knnIndex: Boolean, $docTypeIds: [BigInteger], $chunkType: ChunkType, $chunkWindowSize: Int, $embeddingJsonConfig: String, $embeddingDocTypeFieldId: BigInteger, $settings: String) {
-  dataIndex(
-    datasourceId: $datasourceId
-    dataIndexDTO: {name: $name, description: $description, knnIndex: $knnIndex, docTypeIds: $docTypeIds, chunkType: $chunkType, chunkWindowSize: $chunkWindowSize, embeddingJsonConfig: $embeddingJsonConfig, embeddingDocTypeFieldId: $embeddingDocTypeFieldId, settings: $settings}
+  mutation CreateDataIndex(
+    $name: String!
+    $datasourceId: ID!
+    $description: String
+    $knnIndex: Boolean
+    $docTypeIds: [BigInteger]
+    $chunkType: ChunkType
+    $chunkWindowSize: Int
+    $embeddingJsonConfig: String
+    $embeddingDocTypeFieldId: BigInteger
+    $settings: String
   ) {
-    entity {
-      name
+    dataIndex(
+      datasourceId: $datasourceId
+      dataIndexDTO: {
+        name: $name
+        description: $description
+        knnIndex: $knnIndex
+        docTypeIds: $docTypeIds
+        chunkType: $chunkType
+        chunkWindowSize: $chunkWindowSize
+        embeddingJsonConfig: $embeddingJsonConfig
+        embeddingDocTypeFieldId: $embeddingDocTypeFieldId
+        settings: $settings
+      }
+    ) {
+      entity {
+        name
+      }
     }
   }
-}
-    `;
-export type CreateDataIndexMutationFn = Apollo.MutationFunction<CreateDataIndexMutation, CreateDataIndexMutationVariables>;
+`;
+export type CreateDataIndexMutationFn = Apollo.MutationFunction<
+  CreateDataIndexMutation,
+  CreateDataIndexMutationVariables
+>;
 
 /**
  * __useCreateDataIndexMutation__
@@ -13291,36 +16805,44 @@ export type CreateDataIndexMutationFn = Apollo.MutationFunction<CreateDataIndexM
  *   },
  * });
  */
-export function useCreateDataIndexMutation(baseOptions?: Apollo.MutationHookOptions<CreateDataIndexMutation, CreateDataIndexMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateDataIndexMutation, CreateDataIndexMutationVariables>(CreateDataIndexDocument, options);
-      }
+export function useCreateDataIndexMutation(
+  baseOptions?: Apollo.MutationHookOptions<CreateDataIndexMutation, CreateDataIndexMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateDataIndexMutation, CreateDataIndexMutationVariables>(
+    CreateDataIndexDocument,
+    options,
+  );
+}
 export type CreateDataIndexMutationHookResult = ReturnType<typeof useCreateDataIndexMutation>;
 export type CreateDataIndexMutationResult = Apollo.MutationResult<CreateDataIndexMutation>;
-export type CreateDataIndexMutationOptions = Apollo.BaseMutationOptions<CreateDataIndexMutation, CreateDataIndexMutationVariables>;
+export type CreateDataIndexMutationOptions = Apollo.BaseMutationOptions<
+  CreateDataIndexMutation,
+  CreateDataIndexMutationVariables
+>;
 export const DataIndicesDocument = gql`
-    query DataIndices($searchText: String, $first: Int, $after: String) {
-  dataIndices(
-    searchText: $searchText
-    first: $first
-    before: $after
-    sortByList: [{column: "modifiedDate", direction: DESC}]
-  ) {
-    edges {
-      node {
-        id
-        name
-        description
-        createDate
+  query DataIndices($searchText: String, $first: Int, $after: String) {
+    dataIndices(
+      searchText: $searchText
+      first: $first
+      before: $after
+      sortByList: [{ column: "modifiedDate", direction: DESC }]
+    ) {
+      edges {
+        node {
+          id
+          name
+          description
+          createDate
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useDataIndicesQuery__
@@ -13340,52 +16862,56 @@ export const DataIndicesDocument = gql`
  *   },
  * });
  */
-export function useDataIndicesQuery(baseOptions?: Apollo.QueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
-      }
-export function useDataIndicesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
-        }
+export function useDataIndicesQuery(
+  baseOptions?: Apollo.QueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
+}
+export function useDataIndicesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataIndicesQuery, DataIndicesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataIndicesQuery, DataIndicesQueryVariables>(DataIndicesDocument, options);
+}
 export type DataIndicesQueryHookResult = ReturnType<typeof useDataIndicesQuery>;
 export type DataIndicesLazyQueryHookResult = ReturnType<typeof useDataIndicesLazyQuery>;
 export type DataIndicesQueryResult = Apollo.QueryResult<DataIndicesQuery, DataIndicesQueryVariables>;
 export const DataIndexDocument = gql`
-    query DataIndex($id: ID!) {
-  dataIndex(id: $id) {
-    name
-    description
-    settings
-    chunkType
-    chunkWindowSize
-    embeddingJsonConfig
-    knnIndex
-    settings
-    datasource {
-      id
+  query DataIndex($id: ID!) {
+    dataIndex(id: $id) {
       name
-    }
-    embeddingDocTypeField {
-      id
-      name
-    }
-    docTypes {
-      edges {
-        node {
-          id
-          name
+      description
+      settings
+      chunkType
+      chunkWindowSize
+      embeddingJsonConfig
+      knnIndex
+      settings
+      datasource {
+        id
+        name
+      }
+      embeddingDocTypeField {
+        id
+        name
+      }
+      docTypes {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
-    }
-    cat {
-      docsCount
-      docsDeleted
-      storeSize
+      cat {
+        docsCount
+        docsDeleted
+        storeSize
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDataIndexQuery__
@@ -13404,23 +16930,25 @@ export const DataIndexDocument = gql`
  * });
  */
 export function useDataIndexQuery(baseOptions: Apollo.QueryHookOptions<DataIndexQuery, DataIndexQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
-      }
-export function useDataIndexLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexQuery, DataIndexQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
+}
+export function useDataIndexLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataIndexQuery, DataIndexQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataIndexQuery, DataIndexQueryVariables>(DataIndexDocument, options);
+}
 export type DataIndexQueryHookResult = ReturnType<typeof useDataIndexQuery>;
 export type DataIndexLazyQueryHookResult = ReturnType<typeof useDataIndexLazyQuery>;
 export type DataIndexQueryResult = Apollo.QueryResult<DataIndexQuery, DataIndexQueryVariables>;
 export const DataIndexMappingDocument = gql`
-    query DataIndexMapping($id: ID!) {
-  dataIndex(id: $id) {
-    mappings
+  query DataIndexMapping($id: ID!) {
+    dataIndex(id: $id) {
+      mappings
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useDataIndexMappingQuery__
@@ -13438,47 +16966,46 @@ export const DataIndexMappingDocument = gql`
  *   },
  * });
  */
-export function useDataIndexMappingQuery(baseOptions: Apollo.QueryHookOptions<DataIndexMappingQuery, DataIndexMappingQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataIndexMappingQuery, DataIndexMappingQueryVariables>(DataIndexMappingDocument, options);
-      }
-export function useDataIndexMappingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataIndexMappingQuery, DataIndexMappingQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataIndexMappingQuery, DataIndexMappingQueryVariables>(DataIndexMappingDocument, options);
-        }
+export function useDataIndexMappingQuery(
+  baseOptions: Apollo.QueryHookOptions<DataIndexMappingQuery, DataIndexMappingQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataIndexMappingQuery, DataIndexMappingQueryVariables>(DataIndexMappingDocument, options);
+}
+export function useDataIndexMappingLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataIndexMappingQuery, DataIndexMappingQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataIndexMappingQuery, DataIndexMappingQueryVariables>(DataIndexMappingDocument, options);
+}
 export type DataIndexMappingQueryHookResult = ReturnType<typeof useDataIndexMappingQuery>;
 export type DataIndexMappingLazyQueryHookResult = ReturnType<typeof useDataIndexMappingLazyQuery>;
 export type DataIndexMappingQueryResult = Apollo.QueryResult<DataIndexMappingQuery, DataIndexMappingQueryVariables>;
 export const DataSourcesDocument = gql`
-    query DataSources($searchText: String, $after: String, $first: Int = 10, $sortByList: [SortByInput!]) {
-  datasources(
-    searchText: $searchText
-    first: $first
-    after: $after
-    sortByList: $sortByList
-  ) {
-    edges {
-      node {
-        id
-        name
-        schedulable
-        lastIngestionDate
-        scheduling
-        jsonConfig
-        description
+  query DataSources($searchText: String, $after: String, $first: Int = 10, $sortByList: [SortByInput!]) {
+    datasources(searchText: $searchText, first: $first, after: $after, sortByList: $sortByList) {
+      edges {
+        node {
+          id
+          name
+          schedulable
+          lastIngestionDate
+          scheduling
+          jsonConfig
+          description
+          __typename
+        }
+        __typename
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
         __typename
       }
       __typename
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-      __typename
-    }
-    __typename
   }
-}
-    `;
+`;
 
 /**
  * __useDataSourcesQuery__
@@ -13499,26 +17026,33 @@ export const DataSourcesDocument = gql`
  *   },
  * });
  */
-export function useDataSourcesQuery(baseOptions?: Apollo.QueryHookOptions<DataSourcesQuery, DataSourcesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataSourcesQuery, DataSourcesQueryVariables>(DataSourcesDocument, options);
-      }
-export function useDataSourcesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataSourcesQuery, DataSourcesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataSourcesQuery, DataSourcesQueryVariables>(DataSourcesDocument, options);
-        }
+export function useDataSourcesQuery(
+  baseOptions?: Apollo.QueryHookOptions<DataSourcesQuery, DataSourcesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataSourcesQuery, DataSourcesQueryVariables>(DataSourcesDocument, options);
+}
+export function useDataSourcesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataSourcesQuery, DataSourcesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataSourcesQuery, DataSourcesQueryVariables>(DataSourcesDocument, options);
+}
 export type DataSourcesQueryHookResult = ReturnType<typeof useDataSourcesQuery>;
 export type DataSourcesLazyQueryHookResult = ReturnType<typeof useDataSourcesLazyQuery>;
 export type DataSourcesQueryResult = Apollo.QueryResult<DataSourcesQuery, DataSourcesQueryVariables>;
 export const DeleteDataSourceDocument = gql`
-    mutation DeleteDataSource($id: ID!, $datasourceName: String!) {
-  deleteDatasource(datasourceId: $id, datasourceName: $datasourceName) {
-    id
-    name
+  mutation DeleteDataSource($id: ID!, $datasourceName: String!) {
+    deleteDatasource(datasourceId: $id, datasourceName: $datasourceName) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteDataSourceMutationFn = Apollo.MutationFunction<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>;
+`;
+export type DeleteDataSourceMutationFn = Apollo.MutationFunction<
+  DeleteDataSourceMutation,
+  DeleteDataSourceMutationVariables
+>;
 
 /**
  * __useDeleteDataSourceMutation__
@@ -13538,21 +17072,29 @@ export type DeleteDataSourceMutationFn = Apollo.MutationFunction<DeleteDataSourc
  *   },
  * });
  */
-export function useDeleteDataSourceMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>(DeleteDataSourceDocument, options);
-      }
+export function useDeleteDataSourceMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>(
+    DeleteDataSourceDocument,
+    options,
+  );
+}
 export type DeleteDataSourceMutationHookResult = ReturnType<typeof useDeleteDataSourceMutation>;
 export type DeleteDataSourceMutationResult = Apollo.MutationResult<DeleteDataSourceMutation>;
-export type DeleteDataSourceMutationOptions = Apollo.BaseMutationOptions<DeleteDataSourceMutation, DeleteDataSourceMutationVariables>;
+export type DeleteDataSourceMutationOptions = Apollo.BaseMutationOptions<
+  DeleteDataSourceMutation,
+  DeleteDataSourceMutationVariables
+>;
 export const UnboundBucketsByDatasourceDocument = gql`
-    query UnboundBucketsByDatasource($datasourceId: BigInteger!) {
-  unboundBucketsByDatasource(datasourceId: $datasourceId) {
-    name
-    id
+  query UnboundBucketsByDatasource($datasourceId: BigInteger!) {
+    unboundBucketsByDatasource(datasourceId: $datasourceId) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useUnboundBucketsByDatasourceQuery__
@@ -13570,59 +17112,72 @@ export const UnboundBucketsByDatasourceDocument = gql`
  *   },
  * });
  */
-export function useUnboundBucketsByDatasourceQuery(baseOptions: Apollo.QueryHookOptions<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>(UnboundBucketsByDatasourceDocument, options);
-      }
-export function useUnboundBucketsByDatasourceLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>(UnboundBucketsByDatasourceDocument, options);
-        }
+export function useUnboundBucketsByDatasourceQuery(
+  baseOptions: Apollo.QueryHookOptions<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>(
+    UnboundBucketsByDatasourceDocument,
+    options,
+  );
+}
+export function useUnboundBucketsByDatasourceLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>(
+    UnboundBucketsByDatasourceDocument,
+    options,
+  );
+}
 export type UnboundBucketsByDatasourceQueryHookResult = ReturnType<typeof useUnboundBucketsByDatasourceQuery>;
 export type UnboundBucketsByDatasourceLazyQueryHookResult = ReturnType<typeof useUnboundBucketsByDatasourceLazyQuery>;
-export type UnboundBucketsByDatasourceQueryResult = Apollo.QueryResult<UnboundBucketsByDatasourceQuery, UnboundBucketsByDatasourceQueryVariables>;
+export type UnboundBucketsByDatasourceQueryResult = Apollo.QueryResult<
+  UnboundBucketsByDatasourceQuery,
+  UnboundBucketsByDatasourceQueryVariables
+>;
 export const DataSourceDocument = gql`
-    query DataSource($id: ID!, $searchText: String) {
-  datasource(id: $id) {
-    id
-    name
-    description
-    schedulable
-    scheduling
-    jsonConfig
-    reindexable
-    reindexing
-    purgeable
-    purging
-    purgeMaxAge
-    lastIngestionDate
-    pluginDriver {
-      id
-      name
-      provisioning
-      jsonConfig
-    }
-    dataIndex {
+  query DataSource($id: ID!, $searchText: String) {
+    datasource(id: $id) {
       id
       name
       description
-      knnIndex
-    }
-    enrichPipeline {
-      id
-      name
-    }
-    dataIndexes(searchText: $searchText) {
-      edges {
-        node {
-          id
-          name
+      schedulable
+      scheduling
+      jsonConfig
+      reindexable
+      reindexing
+      purgeable
+      purging
+      purgeMaxAge
+      lastIngestionDate
+      pluginDriver {
+        id
+        name
+        provisioning
+        jsonConfig
+      }
+      dataIndex {
+        id
+        name
+        description
+        knnIndex
+      }
+      enrichPipeline {
+        id
+        name
+      }
+      dataIndexes(searchText: $searchText) {
+        edges {
+          node {
+            id
+            name
+          }
         }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDataSourceQuery__
@@ -13642,33 +17197,68 @@ export const DataSourceDocument = gql`
  * });
  */
 export function useDataSourceQuery(baseOptions: Apollo.QueryHookOptions<DataSourceQuery, DataSourceQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataSourceQuery, DataSourceQueryVariables>(DataSourceDocument, options);
-      }
-export function useDataSourceLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataSourceQuery, DataSourceQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataSourceQuery, DataSourceQueryVariables>(DataSourceDocument, options);
-        }
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataSourceQuery, DataSourceQueryVariables>(DataSourceDocument, options);
+}
+export function useDataSourceLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataSourceQuery, DataSourceQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataSourceQuery, DataSourceQueryVariables>(DataSourceDocument, options);
+}
 export type DataSourceQueryHookResult = ReturnType<typeof useDataSourceQuery>;
 export type DataSourceLazyQueryHookResult = ReturnType<typeof useDataSourceLazyQuery>;
 export type DataSourceQueryResult = Apollo.QueryResult<DataSourceQuery, DataSourceQueryVariables>;
 export const CreateDatasourceConnectionDocument = gql`
-    mutation createDatasourceConnection($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $pluginDriverId: BigInteger!, $pipeline: PipelineWithItemsDTOInput, $pipelineId: BigInteger, $reindexable: Boolean!, $reindexing: String!, $purgeable: Boolean!, $purging: String!, $purgeMaxAge: String!, $dataIndex: DataIndexDTOInput!) {
-  createDatasourceConnection(
-    datasourceConnection: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, pluginDriverId: $pluginDriverId, pipeline: $pipeline, pipelineId: $pipelineId, reindexable: $reindexable, reindexing: $reindexing, purgeable: $purgeable, purging: $purging, purgeMaxAge: $purgeMaxAge, dataIndex: $dataIndex}
+  mutation createDatasourceConnection(
+    $name: String!
+    $description: String
+    $schedulable: Boolean!
+    $scheduling: String!
+    $jsonConfig: String
+    $pluginDriverId: BigInteger!
+    $pipeline: PipelineWithItemsDTOInput
+    $pipelineId: BigInteger
+    $reindexable: Boolean!
+    $reindexing: String!
+    $purgeable: Boolean!
+    $purging: String!
+    $purgeMaxAge: String!
+    $dataIndex: DataIndexDTOInput!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    createDatasourceConnection(
+      datasourceConnection: {
+        name: $name
+        description: $description
+        schedulable: $schedulable
+        scheduling: $scheduling
+        jsonConfig: $jsonConfig
+        pluginDriverId: $pluginDriverId
+        pipeline: $pipeline
+        pipelineId: $pipelineId
+        reindexable: $reindexable
+        reindexing: $reindexing
+        purgeable: $purgeable
+        purging: $purging
+        purgeMaxAge: $purgeMaxAge
+        dataIndex: $dataIndex
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateDatasourceConnectionMutationFn = Apollo.MutationFunction<CreateDatasourceConnectionMutation, CreateDatasourceConnectionMutationVariables>;
+`;
+export type CreateDatasourceConnectionMutationFn = Apollo.MutationFunction<
+  CreateDatasourceConnectionMutation,
+  CreateDatasourceConnectionMutationVariables
+>;
 
 /**
  * __useCreateDatasourceConnectionMutation__
@@ -13700,30 +17290,74 @@ export type CreateDatasourceConnectionMutationFn = Apollo.MutationFunction<Creat
  *   },
  * });
  */
-export function useCreateDatasourceConnectionMutation(baseOptions?: Apollo.MutationHookOptions<CreateDatasourceConnectionMutation, CreateDatasourceConnectionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateDatasourceConnectionMutation, CreateDatasourceConnectionMutationVariables>(CreateDatasourceConnectionDocument, options);
-      }
+export function useCreateDatasourceConnectionMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateDatasourceConnectionMutation,
+    CreateDatasourceConnectionMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateDatasourceConnectionMutation, CreateDatasourceConnectionMutationVariables>(
+    CreateDatasourceConnectionDocument,
+    options,
+  );
+}
 export type CreateDatasourceConnectionMutationHookResult = ReturnType<typeof useCreateDatasourceConnectionMutation>;
 export type CreateDatasourceConnectionMutationResult = Apollo.MutationResult<CreateDatasourceConnectionMutation>;
-export type CreateDatasourceConnectionMutationOptions = Apollo.BaseMutationOptions<CreateDatasourceConnectionMutation, CreateDatasourceConnectionMutationVariables>;
+export type CreateDatasourceConnectionMutationOptions = Apollo.BaseMutationOptions<
+  CreateDatasourceConnectionMutation,
+  CreateDatasourceConnectionMutationVariables
+>;
 export const UpdateDatasourceConnectionDocument = gql`
-    mutation updateDatasourceConnection($name: String!, $description: String, $schedulable: Boolean!, $scheduling: String!, $jsonConfig: String, $pipeline: PipelineWithItemsDTOInput, $pipelineId: BigInteger, $dataIndexId: BigInteger!, $datasourceId: BigInteger!, $reindexable: Boolean!, $reindexing: String!, $purging: String!, $purgeable: Boolean!, $purgeMaxAge: String!) {
-  updateDatasourceConnection(
-    datasourceConnection: {name: $name, description: $description, schedulable: $schedulable, scheduling: $scheduling, jsonConfig: $jsonConfig, pipeline: $pipeline, pipelineId: $pipelineId, dataIndexId: $dataIndexId, datasourceId: $datasourceId, reindexable: $reindexable, reindexing: $reindexing, purging: $purging, purgeable: $purgeable, purgeMaxAge: $purgeMaxAge}
+  mutation updateDatasourceConnection(
+    $name: String!
+    $description: String
+    $schedulable: Boolean!
+    $scheduling: String!
+    $jsonConfig: String
+    $pipeline: PipelineWithItemsDTOInput
+    $pipelineId: BigInteger
+    $dataIndexId: BigInteger!
+    $datasourceId: BigInteger!
+    $reindexable: Boolean!
+    $reindexing: String!
+    $purging: String!
+    $purgeable: Boolean!
+    $purgeMaxAge: String!
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    updateDatasourceConnection(
+      datasourceConnection: {
+        name: $name
+        description: $description
+        schedulable: $schedulable
+        scheduling: $scheduling
+        jsonConfig: $jsonConfig
+        pipeline: $pipeline
+        pipelineId: $pipelineId
+        dataIndexId: $dataIndexId
+        datasourceId: $datasourceId
+        reindexable: $reindexable
+        reindexing: $reindexing
+        purging: $purging
+        purgeable: $purgeable
+        purgeMaxAge: $purgeMaxAge
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type UpdateDatasourceConnectionMutationFn = Apollo.MutationFunction<UpdateDatasourceConnectionMutation, UpdateDatasourceConnectionMutationVariables>;
+`;
+export type UpdateDatasourceConnectionMutationFn = Apollo.MutationFunction<
+  UpdateDatasourceConnectionMutation,
+  UpdateDatasourceConnectionMutationVariables
+>;
 
 /**
  * __useUpdateDatasourceConnectionMutation__
@@ -13755,38 +17389,45 @@ export type UpdateDatasourceConnectionMutationFn = Apollo.MutationFunction<Updat
  *   },
  * });
  */
-export function useUpdateDatasourceConnectionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateDatasourceConnectionMutation, UpdateDatasourceConnectionMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateDatasourceConnectionMutation, UpdateDatasourceConnectionMutationVariables>(UpdateDatasourceConnectionDocument, options);
-      }
+export function useUpdateDatasourceConnectionMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    UpdateDatasourceConnectionMutation,
+    UpdateDatasourceConnectionMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<UpdateDatasourceConnectionMutation, UpdateDatasourceConnectionMutationVariables>(
+    UpdateDatasourceConnectionDocument,
+    options,
+  );
+}
 export type UpdateDatasourceConnectionMutationHookResult = ReturnType<typeof useUpdateDatasourceConnectionMutation>;
 export type UpdateDatasourceConnectionMutationResult = Apollo.MutationResult<UpdateDatasourceConnectionMutation>;
-export type UpdateDatasourceConnectionMutationOptions = Apollo.BaseMutationOptions<UpdateDatasourceConnectionMutation, UpdateDatasourceConnectionMutationVariables>;
+export type UpdateDatasourceConnectionMutationOptions = Apollo.BaseMutationOptions<
+  UpdateDatasourceConnectionMutation,
+  UpdateDatasourceConnectionMutationVariables
+>;
 export const QDatasourceSchedulersDocument = gql`
-    query qDatasourceSchedulers($id: ID!, $first: Int, $after: String) {
-  datasource(id: $id) {
-    id
-    schedulers(
-      first: $first
-      before: $after
-      sortByList: {column: "modifiedDate", direction: DESC}
-    ) {
-      edges {
-        node {
-          id
-          status
-          modifiedDate
+  query qDatasourceSchedulers($id: ID!, $first: Int, $after: String) {
+    datasource(id: $id) {
+      id
+      schedulers(first: $first, before: $after, sortByList: { column: "modifiedDate", direction: DESC }) {
+        edges {
+          node {
+            id
+            status
+            modifiedDate
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
-        __typename
+        pageInfo {
+          hasNextPage
+          endCursor
+          __typename
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useQDatasourceSchedulersQuery__
@@ -13806,37 +17447,50 @@ export const QDatasourceSchedulersDocument = gql`
  *   },
  * });
  */
-export function useQDatasourceSchedulersQuery(baseOptions: Apollo.QueryHookOptions<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>(QDatasourceSchedulersDocument, options);
-      }
-export function useQDatasourceSchedulersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>(QDatasourceSchedulersDocument, options);
-        }
+export function useQDatasourceSchedulersQuery(
+  baseOptions: Apollo.QueryHookOptions<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>(
+    QDatasourceSchedulersDocument,
+    options,
+  );
+}
+export function useQDatasourceSchedulersLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>(
+    QDatasourceSchedulersDocument,
+    options,
+  );
+}
 export type QDatasourceSchedulersQueryHookResult = ReturnType<typeof useQDatasourceSchedulersQuery>;
 export type QDatasourceSchedulersLazyQueryHookResult = ReturnType<typeof useQDatasourceSchedulersLazyQuery>;
-export type QDatasourceSchedulersQueryResult = Apollo.QueryResult<QDatasourceSchedulersQuery, QDatasourceSchedulersQueryVariables>;
+export type QDatasourceSchedulersQueryResult = Apollo.QueryResult<
+  QDatasourceSchedulersQuery,
+  QDatasourceSchedulersQueryVariables
+>;
 export const DataSourceInformationDocument = gql`
-    query DataSourceInformation($id: ID!) {
-  datasource(id: $id) {
-    dataIndex {
-      cat {
-        docsCount
-        docsDeleted
-        health
-        index
-        pri
-        priStoreSize
-        rep
-        status
-        storeSize
-        uuid
+  query DataSourceInformation($id: ID!) {
+    datasource(id: $id) {
+      dataIndex {
+        cat {
+          docsCount
+          docsDeleted
+          health
+          index
+          pri
+          priStoreSize
+          rep
+          status
+          storeSize
+          uuid
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useDataSourceInformationQuery__
@@ -13854,34 +17508,47 @@ export const DataSourceInformationDocument = gql`
  *   },
  * });
  */
-export function useDataSourceInformationQuery(baseOptions: Apollo.QueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(DataSourceInformationDocument, options);
-      }
-export function useDataSourceInformationLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(DataSourceInformationDocument, options);
-        }
+export function useDataSourceInformationQuery(
+  baseOptions: Apollo.QueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(
+    DataSourceInformationDocument,
+    options,
+  );
+}
+export function useDataSourceInformationLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<DataSourceInformationQuery, DataSourceInformationQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<DataSourceInformationQuery, DataSourceInformationQueryVariables>(
+    DataSourceInformationDocument,
+    options,
+  );
+}
 export type DataSourceInformationQueryHookResult = ReturnType<typeof useDataSourceInformationQuery>;
 export type DataSourceInformationLazyQueryHookResult = ReturnType<typeof useDataSourceInformationLazyQuery>;
-export type DataSourceInformationQueryResult = Apollo.QueryResult<DataSourceInformationQuery, DataSourceInformationQueryVariables>;
+export type DataSourceInformationQueryResult = Apollo.QueryResult<
+  DataSourceInformationQuery,
+  DataSourceInformationQueryVariables
+>;
 export const EnrichPipelineOptionsDocument = gql`
-    query EnrichPipelineOptions($searchText: String, $cursor: String) {
-  options: enrichPipelines(searchText: $searchText, after: $cursor) {
-    edges {
-      node {
-        id
-        name
-        description
+  query EnrichPipelineOptions($searchText: String, $cursor: String) {
+    options: enrichPipelines(searchText: $searchText, after: $cursor) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichPipelineOptionsQuery__
@@ -13900,42 +17567,55 @@ export const EnrichPipelineOptionsDocument = gql`
  *   },
  * });
  */
-export function useEnrichPipelineOptionsQuery(baseOptions?: Apollo.QueryHookOptions<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>(EnrichPipelineOptionsDocument, options);
-      }
-export function useEnrichPipelineOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>(EnrichPipelineOptionsDocument, options);
-        }
+export function useEnrichPipelineOptionsQuery(
+  baseOptions?: Apollo.QueryHookOptions<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>(
+    EnrichPipelineOptionsDocument,
+    options,
+  );
+}
+export function useEnrichPipelineOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>(
+    EnrichPipelineOptionsDocument,
+    options,
+  );
+}
 export type EnrichPipelineOptionsQueryHookResult = ReturnType<typeof useEnrichPipelineOptionsQuery>;
 export type EnrichPipelineOptionsLazyQueryHookResult = ReturnType<typeof useEnrichPipelineOptionsLazyQuery>;
-export type EnrichPipelineOptionsQueryResult = Apollo.QueryResult<EnrichPipelineOptionsQuery, EnrichPipelineOptionsQueryVariables>;
+export type EnrichPipelineOptionsQueryResult = Apollo.QueryResult<
+  EnrichPipelineOptionsQuery,
+  EnrichPipelineOptionsQueryVariables
+>;
 export const EnrichItemsDocument = gql`
-    query EnrichItems($searchText: String, $after: String) {
-  enrichItems(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
-        type
-        serviceName
-        jsonConfig
-        script
-        behaviorMergeType
-        jsonPath
-        behaviorOnError
-        requestTimeout
+  query EnrichItems($searchText: String, $after: String) {
+    enrichItems(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+          type
+          serviceName
+          jsonConfig
+          script
+          behaviorMergeType
+          jsonPath
+          behaviorOnError
+          requestTimeout
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichItemsQuery__
@@ -13954,31 +17634,35 @@ export const EnrichItemsDocument = gql`
  *   },
  * });
  */
-export function useEnrichItemsQuery(baseOptions?: Apollo.QueryHookOptions<EnrichItemsQuery, EnrichItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichItemsQuery, EnrichItemsQueryVariables>(EnrichItemsDocument, options);
-      }
-export function useEnrichItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichItemsQuery, EnrichItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichItemsQuery, EnrichItemsQueryVariables>(EnrichItemsDocument, options);
-        }
+export function useEnrichItemsQuery(
+  baseOptions?: Apollo.QueryHookOptions<EnrichItemsQuery, EnrichItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichItemsQuery, EnrichItemsQueryVariables>(EnrichItemsDocument, options);
+}
+export function useEnrichItemsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EnrichItemsQuery, EnrichItemsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichItemsQuery, EnrichItemsQueryVariables>(EnrichItemsDocument, options);
+}
 export type EnrichItemsQueryHookResult = ReturnType<typeof useEnrichItemsQuery>;
 export type EnrichItemsLazyQueryHookResult = ReturnType<typeof useEnrichItemsLazyQuery>;
 export type EnrichItemsQueryResult = Apollo.QueryResult<EnrichItemsQuery, EnrichItemsQueryVariables>;
 export const PluginDriversDocument = gql`
-    query PluginDrivers {
-  pluginDriversPageFilter(pageable: {}) {
-    content {
-      id
-      name
-      description
-      jsonConfig
-      provisioning
-      type
+  query PluginDrivers {
+    pluginDriversPageFilter(pageable: {}) {
+      content {
+        id
+        name
+        description
+        jsonConfig
+        provisioning
+        type
+      }
     }
   }
-}
-    `;
+`;
 
 /**
  * __usePluginDriversQuery__
@@ -13995,35 +17679,55 @@ export const PluginDriversDocument = gql`
  *   },
  * });
  */
-export function usePluginDriversQuery(baseOptions?: Apollo.QueryHookOptions<PluginDriversQuery, PluginDriversQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PluginDriversQuery, PluginDriversQueryVariables>(PluginDriversDocument, options);
-      }
-export function usePluginDriversLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PluginDriversQuery, PluginDriversQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PluginDriversQuery, PluginDriversQueryVariables>(PluginDriversDocument, options);
-        }
+export function usePluginDriversQuery(
+  baseOptions?: Apollo.QueryHookOptions<PluginDriversQuery, PluginDriversQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<PluginDriversQuery, PluginDriversQueryVariables>(PluginDriversDocument, options);
+}
+export function usePluginDriversLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<PluginDriversQuery, PluginDriversQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<PluginDriversQuery, PluginDriversQueryVariables>(PluginDriversDocument, options);
+}
 export type PluginDriversQueryHookResult = ReturnType<typeof usePluginDriversQuery>;
 export type PluginDriversLazyQueryHookResult = ReturnType<typeof usePluginDriversLazyQuery>;
 export type PluginDriversQueryResult = Apollo.QueryResult<PluginDriversQuery, PluginDriversQueryVariables>;
 export const CreateOrUpdatePluginDriverDocument = gql`
-    mutation CreateOrUpdatePluginDriver($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String, $provisioning: Provisioning) {
-  pluginDriver(
-    id: $id
-    pluginDriverDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning}
+  mutation CreateOrUpdatePluginDriver(
+    $id: ID
+    $name: String!
+    $description: String
+    $type: PluginDriverType!
+    $jsonConfig: String
+    $provisioning: Provisioning
   ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+    pluginDriver(
+      id: $id
+      pluginDriverDTO: {
+        name: $name
+        description: $description
+        type: $type
+        jsonConfig: $jsonConfig
+        provisioning: $provisioning
+      }
+    ) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdatePluginDriverMutationFn = Apollo.MutationFunction<CreateOrUpdatePluginDriverMutation, CreateOrUpdatePluginDriverMutationVariables>;
+`;
+export type CreateOrUpdatePluginDriverMutationFn = Apollo.MutationFunction<
+  CreateOrUpdatePluginDriverMutation,
+  CreateOrUpdatePluginDriverMutationVariables
+>;
 
 /**
  * __useCreateOrUpdatePluginDriverMutation__
@@ -14047,30 +17751,41 @@ export type CreateOrUpdatePluginDriverMutationFn = Apollo.MutationFunction<Creat
  *   },
  * });
  */
-export function useCreateOrUpdatePluginDriverMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdatePluginDriverMutation, CreateOrUpdatePluginDriverMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdatePluginDriverMutation, CreateOrUpdatePluginDriverMutationVariables>(CreateOrUpdatePluginDriverDocument, options);
-      }
+export function useCreateOrUpdatePluginDriverMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdatePluginDriverMutation,
+    CreateOrUpdatePluginDriverMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdatePluginDriverMutation, CreateOrUpdatePluginDriverMutationVariables>(
+    CreateOrUpdatePluginDriverDocument,
+    options,
+  );
+}
 export type CreateOrUpdatePluginDriverMutationHookResult = ReturnType<typeof useCreateOrUpdatePluginDriverMutation>;
 export type CreateOrUpdatePluginDriverMutationResult = Apollo.MutationResult<CreateOrUpdatePluginDriverMutation>;
-export type CreateOrUpdatePluginDriverMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdatePluginDriverMutation, CreateOrUpdatePluginDriverMutationVariables>;
+export type CreateOrUpdatePluginDriverMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdatePluginDriverMutation,
+  CreateOrUpdatePluginDriverMutationVariables
+>;
 export const EnrichPipelinesDocument = gql`
-    query EnrichPipelines($searchText: String, $after: String) {
-  enrichPipelines(searchText: $searchText, first: 20, after: $after) {
-    edges {
-      node {
-        id
-        name
-        description
+  query EnrichPipelines($searchText: String, $after: String) {
+    enrichPipelines(searchText: $searchText, first: 20, after: $after) {
+      edges {
+        node {
+          id
+          name
+          description
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichPipelinesQuery__
@@ -14089,25 +17804,29 @@ export const EnrichPipelinesDocument = gql`
  *   },
  * });
  */
-export function useEnrichPipelinesQuery(baseOptions?: Apollo.QueryHookOptions<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>(EnrichPipelinesDocument, options);
-      }
-export function useEnrichPipelinesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>(EnrichPipelinesDocument, options);
-        }
+export function useEnrichPipelinesQuery(
+  baseOptions?: Apollo.QueryHookOptions<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>(EnrichPipelinesDocument, options);
+}
+export function useEnrichPipelinesLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>(EnrichPipelinesDocument, options);
+}
 export type EnrichPipelinesQueryHookResult = ReturnType<typeof useEnrichPipelinesQuery>;
 export type EnrichPipelinesLazyQueryHookResult = ReturnType<typeof useEnrichPipelinesLazyQuery>;
 export type EnrichPipelinesQueryResult = Apollo.QueryResult<EnrichPipelinesQuery, EnrichPipelinesQueryVariables>;
 export const EnrichPipelinesValueOptionsDocument = gql`
-    query EnrichPipelinesValueOptions($id: BigInteger!) {
-  unboundEnrichPipelines(itemId: $id) {
-    name
-    id
+  query EnrichPipelinesValueOptions($id: BigInteger!) {
+    unboundEnrichPipelines(itemId: $id) {
+      name
+      id
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichPipelinesValueOptionsQuery__
@@ -14125,26 +17844,45 @@ export const EnrichPipelinesValueOptionsDocument = gql`
  *   },
  * });
  */
-export function useEnrichPipelinesValueOptionsQuery(baseOptions: Apollo.QueryHookOptions<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>(EnrichPipelinesValueOptionsDocument, options);
-      }
-export function useEnrichPipelinesValueOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>(EnrichPipelinesValueOptionsDocument, options);
-        }
+export function useEnrichPipelinesValueOptionsQuery(
+  baseOptions: Apollo.QueryHookOptions<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>(
+    EnrichPipelinesValueOptionsDocument,
+    options,
+  );
+}
+export function useEnrichPipelinesValueOptionsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    EnrichPipelinesValueOptionsQuery,
+    EnrichPipelinesValueOptionsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>(
+    EnrichPipelinesValueOptionsDocument,
+    options,
+  );
+}
 export type EnrichPipelinesValueOptionsQueryHookResult = ReturnType<typeof useEnrichPipelinesValueOptionsQuery>;
 export type EnrichPipelinesValueOptionsLazyQueryHookResult = ReturnType<typeof useEnrichPipelinesValueOptionsLazyQuery>;
-export type EnrichPipelinesValueOptionsQueryResult = Apollo.QueryResult<EnrichPipelinesValueOptionsQuery, EnrichPipelinesValueOptionsQueryVariables>;
+export type EnrichPipelinesValueOptionsQueryResult = Apollo.QueryResult<
+  EnrichPipelinesValueOptionsQuery,
+  EnrichPipelinesValueOptionsQueryVariables
+>;
 export const DeleteEnrichPipelineDocument = gql`
-    mutation DeleteEnrichPipeline($id: ID!) {
-  deleteEnrichPipeline(enrichPipelineId: $id) {
-    id
-    name
+  mutation DeleteEnrichPipeline($id: ID!) {
+    deleteEnrichPipeline(enrichPipelineId: $id) {
+      id
+      name
+    }
   }
-}
-    `;
-export type DeleteEnrichPipelineMutationFn = Apollo.MutationFunction<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>;
+`;
+export type DeleteEnrichPipelineMutationFn = Apollo.MutationFunction<
+  DeleteEnrichPipelineMutation,
+  DeleteEnrichPipelineMutationVariables
+>;
 
 /**
  * __useDeleteEnrichPipelineMutation__
@@ -14163,22 +17901,30 @@ export type DeleteEnrichPipelineMutationFn = Apollo.MutationFunction<DeleteEnric
  *   },
  * });
  */
-export function useDeleteEnrichPipelineMutation(baseOptions?: Apollo.MutationHookOptions<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>(DeleteEnrichPipelineDocument, options);
-      }
+export function useDeleteEnrichPipelineMutation(
+  baseOptions?: Apollo.MutationHookOptions<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>(
+    DeleteEnrichPipelineDocument,
+    options,
+  );
+}
 export type DeleteEnrichPipelineMutationHookResult = ReturnType<typeof useDeleteEnrichPipelineMutation>;
 export type DeleteEnrichPipelineMutationResult = Apollo.MutationResult<DeleteEnrichPipelineMutation>;
-export type DeleteEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<DeleteEnrichPipelineMutation, DeleteEnrichPipelineMutationVariables>;
+export type DeleteEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<
+  DeleteEnrichPipelineMutation,
+  DeleteEnrichPipelineMutationVariables
+>;
 export const EnrichPipelineDocument = gql`
-    query EnrichPipeline($id: ID!) {
-  enrichPipeline(id: $id) {
-    id
-    name
-    description
+  query EnrichPipeline($id: ID!) {
+    enrichPipeline(id: $id) {
+      id
+      name
+      description
+    }
   }
-}
-    `;
+`;
 
 /**
  * __useEnrichPipelineQuery__
@@ -14196,37 +17942,41 @@ export const EnrichPipelineDocument = gql`
  *   },
  * });
  */
-export function useEnrichPipelineQuery(baseOptions: Apollo.QueryHookOptions<EnrichPipelineQuery, EnrichPipelineQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<EnrichPipelineQuery, EnrichPipelineQueryVariables>(EnrichPipelineDocument, options);
-      }
-export function useEnrichPipelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelineQuery, EnrichPipelineQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<EnrichPipelineQuery, EnrichPipelineQueryVariables>(EnrichPipelineDocument, options);
-        }
+export function useEnrichPipelineQuery(
+  baseOptions: Apollo.QueryHookOptions<EnrichPipelineQuery, EnrichPipelineQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<EnrichPipelineQuery, EnrichPipelineQueryVariables>(EnrichPipelineDocument, options);
+}
+export function useEnrichPipelineLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<EnrichPipelineQuery, EnrichPipelineQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<EnrichPipelineQuery, EnrichPipelineQueryVariables>(EnrichPipelineDocument, options);
+}
 export type EnrichPipelineQueryHookResult = ReturnType<typeof useEnrichPipelineQuery>;
 export type EnrichPipelineLazyQueryHookResult = ReturnType<typeof useEnrichPipelineLazyQuery>;
 export type EnrichPipelineQueryResult = Apollo.QueryResult<EnrichPipelineQuery, EnrichPipelineQueryVariables>;
 export const AssociatedEnrichPipelineEnrichItemsDocument = gql`
-    query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
-  enrichPipeline(id: $enrichPipelineId) {
-    id
-    enrichItems {
-      edges {
-        node {
-          id
-          name
-          description
+  query AssociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!) {
+    enrichPipeline(id: $enrichPipelineId) {
+      id
+      enrichItems {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useAssociatedEnrichPipelineEnrichItemsQuery__
@@ -14244,37 +17994,60 @@ export const AssociatedEnrichPipelineEnrichItemsDocument = gql`
  *   },
  * });
  */
-export function useAssociatedEnrichPipelineEnrichItemsQuery(baseOptions: Apollo.QueryHookOptions<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>(AssociatedEnrichPipelineEnrichItemsDocument, options);
-      }
-export function useAssociatedEnrichPipelineEnrichItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>(AssociatedEnrichPipelineEnrichItemsDocument, options);
-        }
-export type AssociatedEnrichPipelineEnrichItemsQueryHookResult = ReturnType<typeof useAssociatedEnrichPipelineEnrichItemsQuery>;
-export type AssociatedEnrichPipelineEnrichItemsLazyQueryHookResult = ReturnType<typeof useAssociatedEnrichPipelineEnrichItemsLazyQuery>;
-export type AssociatedEnrichPipelineEnrichItemsQueryResult = Apollo.QueryResult<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>;
+export function useAssociatedEnrichPipelineEnrichItemsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    AssociatedEnrichPipelineEnrichItemsQuery,
+    AssociatedEnrichPipelineEnrichItemsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AssociatedEnrichPipelineEnrichItemsQuery, AssociatedEnrichPipelineEnrichItemsQueryVariables>(
+    AssociatedEnrichPipelineEnrichItemsDocument,
+    options,
+  );
+}
+export function useAssociatedEnrichPipelineEnrichItemsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    AssociatedEnrichPipelineEnrichItemsQuery,
+    AssociatedEnrichPipelineEnrichItemsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    AssociatedEnrichPipelineEnrichItemsQuery,
+    AssociatedEnrichPipelineEnrichItemsQueryVariables
+  >(AssociatedEnrichPipelineEnrichItemsDocument, options);
+}
+export type AssociatedEnrichPipelineEnrichItemsQueryHookResult = ReturnType<
+  typeof useAssociatedEnrichPipelineEnrichItemsQuery
+>;
+export type AssociatedEnrichPipelineEnrichItemsLazyQueryHookResult = ReturnType<
+  typeof useAssociatedEnrichPipelineEnrichItemsLazyQuery
+>;
+export type AssociatedEnrichPipelineEnrichItemsQueryResult = Apollo.QueryResult<
+  AssociatedEnrichPipelineEnrichItemsQuery,
+  AssociatedEnrichPipelineEnrichItemsQueryVariables
+>;
 export const UnassociatedEnrichPipelineEnrichItemsDocument = gql`
-    query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
-  enrichPipeline(id: $enrichPipelineId) {
-    id
-    enrichItems(searchText: $searchText, not: true, first: 20) {
-      edges {
-        node {
-          id
-          name
-          description
+  query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
+    enrichPipeline(id: $enrichPipelineId) {
+      id
+      enrichItems(searchText: $searchText, not: true, first: 20) {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       }
     }
   }
-}
-    `;
+`;
 
 /**
  * __useUnassociatedEnrichPipelineEnrichItemsQuery__
@@ -14293,35 +18066,58 @@ export const UnassociatedEnrichPipelineEnrichItemsDocument = gql`
  *   },
  * });
  */
-export function useUnassociatedEnrichPipelineEnrichItemsQuery(baseOptions: Apollo.QueryHookOptions<UnassociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<UnassociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQueryVariables>(UnassociatedEnrichPipelineEnrichItemsDocument, options);
-      }
-export function useUnassociatedEnrichPipelineEnrichItemsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnassociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<UnassociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQueryVariables>(UnassociatedEnrichPipelineEnrichItemsDocument, options);
-        }
-export type UnassociatedEnrichPipelineEnrichItemsQueryHookResult = ReturnType<typeof useUnassociatedEnrichPipelineEnrichItemsQuery>;
-export type UnassociatedEnrichPipelineEnrichItemsLazyQueryHookResult = ReturnType<typeof useUnassociatedEnrichPipelineEnrichItemsLazyQuery>;
-export type UnassociatedEnrichPipelineEnrichItemsQueryResult = Apollo.QueryResult<UnassociatedEnrichPipelineEnrichItemsQuery, UnassociatedEnrichPipelineEnrichItemsQueryVariables>;
+export function useUnassociatedEnrichPipelineEnrichItemsQuery(
+  baseOptions: Apollo.QueryHookOptions<
+    UnassociatedEnrichPipelineEnrichItemsQuery,
+    UnassociatedEnrichPipelineEnrichItemsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<
+    UnassociatedEnrichPipelineEnrichItemsQuery,
+    UnassociatedEnrichPipelineEnrichItemsQueryVariables
+  >(UnassociatedEnrichPipelineEnrichItemsDocument, options);
+}
+export function useUnassociatedEnrichPipelineEnrichItemsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<
+    UnassociatedEnrichPipelineEnrichItemsQuery,
+    UnassociatedEnrichPipelineEnrichItemsQueryVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<
+    UnassociatedEnrichPipelineEnrichItemsQuery,
+    UnassociatedEnrichPipelineEnrichItemsQueryVariables
+  >(UnassociatedEnrichPipelineEnrichItemsDocument, options);
+}
+export type UnassociatedEnrichPipelineEnrichItemsQueryHookResult = ReturnType<
+  typeof useUnassociatedEnrichPipelineEnrichItemsQuery
+>;
+export type UnassociatedEnrichPipelineEnrichItemsLazyQueryHookResult = ReturnType<
+  typeof useUnassociatedEnrichPipelineEnrichItemsLazyQuery
+>;
+export type UnassociatedEnrichPipelineEnrichItemsQueryResult = Apollo.QueryResult<
+  UnassociatedEnrichPipelineEnrichItemsQuery,
+  UnassociatedEnrichPipelineEnrichItemsQueryVariables
+>;
 export const CreateOrUpdateEnrichPipelineDocument = gql`
-    mutation CreateOrUpdateEnrichPipeline($id: ID, $name: String!, $description: String) {
-  enrichPipeline(
-    id: $id
-    enrichPipelineDTO: {name: $name, description: $description}
-  ) {
-    entity {
-      id
-      name
-    }
-    fieldValidators {
-      field
-      message
+  mutation CreateOrUpdateEnrichPipeline($id: ID, $name: String!, $description: String) {
+    enrichPipeline(id: $id, enrichPipelineDTO: { name: $name, description: $description }) {
+      entity {
+        id
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type CreateOrUpdateEnrichPipelineMutationFn = Apollo.MutationFunction<CreateOrUpdateEnrichPipelineMutation, CreateOrUpdateEnrichPipelineMutationVariables>;
+`;
+export type CreateOrUpdateEnrichPipelineMutationFn = Apollo.MutationFunction<
+  CreateOrUpdateEnrichPipelineMutation,
+  CreateOrUpdateEnrichPipelineMutationVariables
+>;
 
 /**
  * __useCreateOrUpdateEnrichPipelineMutation__
@@ -14342,29 +18138,40 @@ export type CreateOrUpdateEnrichPipelineMutationFn = Apollo.MutationFunction<Cre
  *   },
  * });
  */
-export function useCreateOrUpdateEnrichPipelineMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateEnrichPipelineMutation, CreateOrUpdateEnrichPipelineMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateEnrichPipelineMutation, CreateOrUpdateEnrichPipelineMutationVariables>(CreateOrUpdateEnrichPipelineDocument, options);
-      }
+export function useCreateOrUpdateEnrichPipelineMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    CreateOrUpdateEnrichPipelineMutation,
+    CreateOrUpdateEnrichPipelineMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<CreateOrUpdateEnrichPipelineMutation, CreateOrUpdateEnrichPipelineMutationVariables>(
+    CreateOrUpdateEnrichPipelineDocument,
+    options,
+  );
+}
 export type CreateOrUpdateEnrichPipelineMutationHookResult = ReturnType<typeof useCreateOrUpdateEnrichPipelineMutation>;
 export type CreateOrUpdateEnrichPipelineMutationResult = Apollo.MutationResult<CreateOrUpdateEnrichPipelineMutation>;
-export type CreateOrUpdateEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateEnrichPipelineMutation, CreateOrUpdateEnrichPipelineMutationVariables>;
+export type CreateOrUpdateEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<
+  CreateOrUpdateEnrichPipelineMutation,
+  CreateOrUpdateEnrichPipelineMutationVariables
+>;
 export const AddEnrichItemToEnrichPipelineDocument = gql`
-    mutation AddEnrichItemToEnrichPipeline($childId: ID!, $parentId: ID!) {
-  addEnrichItemToEnrichPipeline(
-    enrichItemId: $childId
-    enrichPipelineId: $parentId
-  ) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation AddEnrichItemToEnrichPipeline($childId: ID!, $parentId: ID!) {
+    addEnrichItemToEnrichPipeline(enrichItemId: $childId, enrichPipelineId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type AddEnrichItemToEnrichPipelineMutationFn = Apollo.MutationFunction<AddEnrichItemToEnrichPipelineMutation, AddEnrichItemToEnrichPipelineMutationVariables>;
+`;
+export type AddEnrichItemToEnrichPipelineMutationFn = Apollo.MutationFunction<
+  AddEnrichItemToEnrichPipelineMutation,
+  AddEnrichItemToEnrichPipelineMutationVariables
+>;
 
 /**
  * __useAddEnrichItemToEnrichPipelineMutation__
@@ -14384,29 +18191,42 @@ export type AddEnrichItemToEnrichPipelineMutationFn = Apollo.MutationFunction<Ad
  *   },
  * });
  */
-export function useAddEnrichItemToEnrichPipelineMutation(baseOptions?: Apollo.MutationHookOptions<AddEnrichItemToEnrichPipelineMutation, AddEnrichItemToEnrichPipelineMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddEnrichItemToEnrichPipelineMutation, AddEnrichItemToEnrichPipelineMutationVariables>(AddEnrichItemToEnrichPipelineDocument, options);
-      }
-export type AddEnrichItemToEnrichPipelineMutationHookResult = ReturnType<typeof useAddEnrichItemToEnrichPipelineMutation>;
+export function useAddEnrichItemToEnrichPipelineMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    AddEnrichItemToEnrichPipelineMutation,
+    AddEnrichItemToEnrichPipelineMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<AddEnrichItemToEnrichPipelineMutation, AddEnrichItemToEnrichPipelineMutationVariables>(
+    AddEnrichItemToEnrichPipelineDocument,
+    options,
+  );
+}
+export type AddEnrichItemToEnrichPipelineMutationHookResult = ReturnType<
+  typeof useAddEnrichItemToEnrichPipelineMutation
+>;
 export type AddEnrichItemToEnrichPipelineMutationResult = Apollo.MutationResult<AddEnrichItemToEnrichPipelineMutation>;
-export type AddEnrichItemToEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<AddEnrichItemToEnrichPipelineMutation, AddEnrichItemToEnrichPipelineMutationVariables>;
+export type AddEnrichItemToEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<
+  AddEnrichItemToEnrichPipelineMutation,
+  AddEnrichItemToEnrichPipelineMutationVariables
+>;
 export const RemoveEnrichItemFromEnrichPipelineDocument = gql`
-    mutation RemoveEnrichItemFromEnrichPipeline($childId: ID!, $parentId: ID!) {
-  removeEnrichItemFromEnrichPipeline(
-    enrichItemId: $childId
-    enrichPipelineId: $parentId
-  ) {
-    left {
-      id
-    }
-    right {
-      id
+  mutation RemoveEnrichItemFromEnrichPipeline($childId: ID!, $parentId: ID!) {
+    removeEnrichItemFromEnrichPipeline(enrichItemId: $childId, enrichPipelineId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
     }
   }
-}
-    `;
-export type RemoveEnrichItemFromEnrichPipelineMutationFn = Apollo.MutationFunction<RemoveEnrichItemFromEnrichPipelineMutation, RemoveEnrichItemFromEnrichPipelineMutationVariables>;
+`;
+export type RemoveEnrichItemFromEnrichPipelineMutationFn = Apollo.MutationFunction<
+  RemoveEnrichItemFromEnrichPipelineMutation,
+  RemoveEnrichItemFromEnrichPipelineMutationVariables
+>;
 
 /**
  * __useRemoveEnrichItemFromEnrichPipelineMutation__
@@ -14426,33 +18246,47 @@ export type RemoveEnrichItemFromEnrichPipelineMutationFn = Apollo.MutationFuncti
  *   },
  * });
  */
-export function useRemoveEnrichItemFromEnrichPipelineMutation(baseOptions?: Apollo.MutationHookOptions<RemoveEnrichItemFromEnrichPipelineMutation, RemoveEnrichItemFromEnrichPipelineMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<RemoveEnrichItemFromEnrichPipelineMutation, RemoveEnrichItemFromEnrichPipelineMutationVariables>(RemoveEnrichItemFromEnrichPipelineDocument, options);
-      }
-export type RemoveEnrichItemFromEnrichPipelineMutationHookResult = ReturnType<typeof useRemoveEnrichItemFromEnrichPipelineMutation>;
-export type RemoveEnrichItemFromEnrichPipelineMutationResult = Apollo.MutationResult<RemoveEnrichItemFromEnrichPipelineMutation>;
-export type RemoveEnrichItemFromEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<RemoveEnrichItemFromEnrichPipelineMutation, RemoveEnrichItemFromEnrichPipelineMutationVariables>;
+export function useRemoveEnrichItemFromEnrichPipelineMutation(
+  baseOptions?: Apollo.MutationHookOptions<
+    RemoveEnrichItemFromEnrichPipelineMutation,
+    RemoveEnrichItemFromEnrichPipelineMutationVariables
+  >,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<
+    RemoveEnrichItemFromEnrichPipelineMutation,
+    RemoveEnrichItemFromEnrichPipelineMutationVariables
+  >(RemoveEnrichItemFromEnrichPipelineDocument, options);
+}
+export type RemoveEnrichItemFromEnrichPipelineMutationHookResult = ReturnType<
+  typeof useRemoveEnrichItemFromEnrichPipelineMutation
+>;
+export type RemoveEnrichItemFromEnrichPipelineMutationResult =
+  Apollo.MutationResult<RemoveEnrichItemFromEnrichPipelineMutation>;
+export type RemoveEnrichItemFromEnrichPipelineMutationOptions = Apollo.BaseMutationOptions<
+  RemoveEnrichItemFromEnrichPipelineMutation,
+  RemoveEnrichItemFromEnrichPipelineMutationVariables
+>;
 export const SortEnrichItemsDocument = gql`
-    mutation SortEnrichItems($enrichPipelineId: ID!, $enrichItemIdList: [BigInteger]) {
-  sortEnrichItems(
-    enrichPipelineId: $enrichPipelineId
-    enrichItemIdList: $enrichItemIdList
-  ) {
-    id
-    enrichItems {
-      edges {
-        node {
-          id
-          name
-          description
+  mutation SortEnrichItems($enrichPipelineId: ID!, $enrichItemIdList: [BigInteger]) {
+    sortEnrichItems(enrichPipelineId: $enrichPipelineId, enrichItemIdList: $enrichItemIdList) {
+      id
+      enrichItems {
+        edges {
+          node {
+            id
+            name
+            description
+          }
         }
       }
     }
   }
-}
-    `;
-export type SortEnrichItemsMutationFn = Apollo.MutationFunction<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>;
+`;
+export type SortEnrichItemsMutationFn = Apollo.MutationFunction<
+  SortEnrichItemsMutation,
+  SortEnrichItemsMutationVariables
+>;
 
 /**
  * __useSortEnrichItemsMutation__
@@ -14472,30 +18306,41 @@ export type SortEnrichItemsMutationFn = Apollo.MutationFunction<SortEnrichItemsM
  *   },
  * });
  */
-export function useSortEnrichItemsMutation(baseOptions?: Apollo.MutationHookOptions<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>(SortEnrichItemsDocument, options);
-      }
+export function useSortEnrichItemsMutation(
+  baseOptions?: Apollo.MutationHookOptions<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>(
+    SortEnrichItemsDocument,
+    options,
+  );
+}
 export type SortEnrichItemsMutationHookResult = ReturnType<typeof useSortEnrichItemsMutation>;
 export type SortEnrichItemsMutationResult = Apollo.MutationResult<SortEnrichItemsMutation>;
-export type SortEnrichItemsMutationOptions = Apollo.BaseMutationOptions<SortEnrichItemsMutation, SortEnrichItemsMutationVariables>;
+export type SortEnrichItemsMutationOptions = Apollo.BaseMutationOptions<
+  SortEnrichItemsMutation,
+  SortEnrichItemsMutationVariables
+>;
 export const EnrichPipelineWithItemsDocument = gql`
-    mutation EnrichPipelineWithItems($id: ID, $items: [ItemDTOInput], $name: String!, $description: String!) {
-  enrichPipelineWithEnrichItems(
-    id: $id
-    pipelineWithItemsDTO: {items: $items, name: $name, description: $description}
-  ) {
-    entity {
-      name
-    }
-    fieldValidators {
-      field
-      message
+  mutation EnrichPipelineWithItems($id: ID, $items: [ItemDTOInput], $name: String!, $description: String!) {
+    enrichPipelineWithEnrichItems(
+      id: $id
+      pipelineWithItemsDTO: { items: $items, name: $name, description: $description }
+    ) {
+      entity {
+        name
+      }
+      fieldValidators {
+        field
+        message
+      }
     }
   }
-}
-    `;
-export type EnrichPipelineWithItemsMutationFn = Apollo.MutationFunction<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
+`;
+export type EnrichPipelineWithItemsMutationFn = Apollo.MutationFunction<
+  EnrichPipelineWithItemsMutation,
+  EnrichPipelineWithItemsMutationVariables
+>;
 
 /**
  * __useEnrichPipelineWithItemsMutation__
@@ -14517,11 +18362,19 @@ export type EnrichPipelineWithItemsMutationFn = Apollo.MutationFunction<EnrichPi
  *   },
  * });
  */
-export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.MutationHookOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>(EnrichPipelineWithItemsDocument, options);
-      }
+export function useEnrichPipelineWithItemsMutation(
+  baseOptions?: Apollo.MutationHookOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useMutation<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>(
+    EnrichPipelineWithItemsDocument,
+    options,
+  );
+}
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
-export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-09-30T14:21:46+02:00
+export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<
+  EnrichPipelineWithItemsMutation,
+  EnrichPipelineWithItemsMutationVariables
+>;
+// Generated on 2025-09-01T16:37:26+02:00
