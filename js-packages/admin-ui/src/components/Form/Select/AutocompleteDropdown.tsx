@@ -6,7 +6,12 @@ import { AutocompleteOptionsList } from "./AutocompleteOptionsList";
 
 export type Option = { value: string; label: string };
 export type SelectedValue = { id: string; name: string };
-export type UseOptionsResult = { options: Option[]; loading: boolean };
+export type UseOptionsResult = {
+  options: Option[];
+  loading: boolean;
+  hasNextPage?: boolean;
+  loadMore?: () => Promise<void>;
+};
 export type UseOptionsHook = (searchText: string) => UseOptionsResult;
 
 type Props = {
@@ -36,12 +41,13 @@ export function AutocompleteDropdown({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [loadingMore, setLoadingMore] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [inputValue, setInputValue] = useState("");
   const justClearedRef = useRefAlias(false);
 
   const debouncedText = useDebounced(inputValue, 300);
-  const { options, loading } = useOptions(debouncedText);
+  const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText);
 
   const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
   const showClear = allowClear && !!value;
@@ -155,6 +161,19 @@ export function AutocompleteDropdown({
     }
   };
 
+  const handleScroll = async (e: React.UIEvent<HTMLUListElement>) => {
+    if (!hasNextPage || !loadMore || loadingMore) return;
+    const list = e.currentTarget;
+    const nearBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 10;
+    if (!nearBottom) return;
+    setLoadingMore(true);
+    try {
+      await loadMore();
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const handleSelect = (option: Option) => {
     if (option.value === "__CLEAR__") {
       justClearedRef.current = true;
@@ -198,9 +217,9 @@ export function AutocompleteDropdown({
         <AutocompleteOptionsList
           options={visibleOptions}
           highlightedIndex={highlightedIndex}
-          loading={loading}
+          loading={loading || loadingMore}
           onSelect={handleSelect}
-          onScroll={() => {}}
+          onScroll={handleScroll}
           clearValue="__CLEAR__"
         />
       )}

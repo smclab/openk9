@@ -377,8 +377,35 @@ export default function DataIndexFormsource({
 }
 
 export const useDocTypeOptions: UseOptionsHook = (searchText: string): UseOptionsResult => {
-  const { data, loading } = useDocTypeFieldsQuery({ variables: { searchText } });
+  const { data, loading, fetchMore } = useDocTypeFieldsQuery({
+    variables: { searchText, first: 20, after: null },
+    notifyOnNetworkStatusChange: true,
+  });
+
   const edges = data?.docTypeFields?.edges ?? [];
   const options: Option[] = edges.map((e: any) => ({ value: e?.node?.id ?? "", label: e?.node?.name ?? "" }));
-  return { options, loading: !!loading };
+
+  const pageInfo = data?.docTypeFields?.pageInfo;
+  const hasNextPage = !!pageInfo?.hasNextPage;
+
+  const loadMore = hasNextPage
+    ? async () => {
+        await fetchMore({
+          variables: { searchText, first: 20, after: pageInfo?.endCursor },
+          updateQuery: (prev: any, { fetchMoreResult }: any) => {
+            const prevEdges = prev?.docTypeFields?.edges ?? [];
+            const nextEdges = fetchMoreResult?.docTypeFields?.edges ?? [];
+            return {
+              docTypeFields: {
+                __typename: prev?.docTypeFields?.__typename ?? "DocTypeFieldConnection",
+                edges: [...prevEdges, ...nextEdges],
+                pageInfo: fetchMoreResult?.docTypeFields?.pageInfo,
+              },
+            };
+          },
+        });
+      }
+    : undefined;
+
+  return { options, loading: !!loading, hasNextPage, loadMore };
 };

@@ -11,10 +11,7 @@ import {
 import ClearIcon from "@mui/icons-material/Clear";
 import React, { useEffect, useRef } from "react";
 
-type Option = {
-  value: string;
-  label: string;
-};
+type Option = { value: string; label: string };
 
 type Props = {
   options: Option[];
@@ -48,12 +45,10 @@ export function AutocompleteOptionsList({
         left: 0,
         right: 0,
         zIndex: 10,
-        maxHeight: 240,
-        overflowY: "auto",
         mb: "4px",
       }}
     >
-      <List dense onScroll={onScroll} role="listbox" id="doc-type-listbox">
+      <List dense onScroll={onScroll} role="listbox" id="doc-type-listbox" sx={{ maxHeight: 240, overflowY: "auto" }}>
         {options.map((option, index) => {
           const isClear = option.value === clearValue;
           const content = (
