@@ -5,16 +5,10 @@ slug: /tika
 
 ---
 
-File Manager is delegated to handle binary files management.
+Tika is delegated to parse binaries files ingested in Openk9.
 
 ![img](../../static/img/file-manager.png)
 
-### Minio Client
+### Apache Tika
 
-Read data from queue and adds on them context information. In particular it recovers tenant and datasource information,
-as well as enrich pipeline and enrich item definition, based on tenantId and datasourceId present on ingestion payload,
-and links these to the data. Then send again data to queuing system.
-
-### Rest Api
-
-See more on [Openk9 Api Documentation](/)
+To parse binaries ingested by Openk9, this component wraps [Apache Tika](https://tika.apache.org/).

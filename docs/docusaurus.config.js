@@ -10,7 +10,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'My Site',
+  title: 'Openk9 site',
   tagline: 'Search. Everywhere. Intelligently.',
   favicon: 'img/favicon.ico',
 

@@ -1,10 +1,7 @@
 ---
-id: file-handling-overview
-title: Overview
-slug: /file-handling-overview
-
+id: handle-document-types-mappings
+title: Handle document types and mapping
 ---
-
 
 # This Page is Coming Soon
 

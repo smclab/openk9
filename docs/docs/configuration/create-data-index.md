@@ -1,6 +1,6 @@
 ---
-id: add-data-source
-title: Create new datasource
+id: create-data-index
+title: Create data index
 ---
 
 # This Page is Coming Soon

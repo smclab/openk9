@@ -21,8 +21,4 @@ It uses Liquibase as library to handle database populating and schema versioning
 
 ### Rest Api
 
-See more on [Api Documentation](/)
-
-### Graphql Api
-
-See more on [Api Documentation](/)
+See more on [Api Documentation](../api/api-tenant-manager.md)

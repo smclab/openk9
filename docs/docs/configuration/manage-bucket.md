@@ -1,6 +1,6 @@
 ---
-id: add-data-source
-title: Create new datasource
+id: manage-bucket
+title: Manage Bucket
 ---
 
 # This Page is Coming Soon

@@ -28,7 +28,22 @@ const sidebars = {
     			"items": [
     			"openk9-packages", "using-docker", "using-kubernetes-openshift"]}, "first-configuration"]
         ,
-        "Advanced Configuration": ["configuration/overview"],
+        "Advanced Configuration": ["configuration/overview", "configuration/manage-bucket",
+    		{
+                "type": "category",
+                "label": "Datasource and data enrichments",
+    			"items": [
+    			"configuration/add-data-source", "configuration/connect-custom-connector", "configuration/configure-enrich-pipeline"]},
+    		{
+                "type": "category",
+                "label": "Mappings and data indices",
+    			"items": [
+    			"configuration/handle-document-types-mappings", "configuration/create-data-index"]},
+        {
+                "type": "category",
+                "label": "Search configuration",
+    			"items": [
+    			"configuration/tune-search-config", "configuration/create-filters", "configuration/create-tabs"]}],
 "Create your own connector": ["plugins/connector-requirements", "plugins/archetype-project"],
    "Openk9 Ui": ["standalone-apps", "openk9-ui-library", "openk9-ui-example-project", "openk9-ui-faqs"],
    "APIs": ['api/api-searcher', 'api/api-rag','api/api-datasource', 'api/api-tenant-manager', 'api/api-file-manager', 'api/api-ingestion'],

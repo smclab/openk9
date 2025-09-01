@@ -70,7 +70,7 @@ function Roadmap() {
     <Layout title="OpenK9">
       <header>
         <div className="openK9-wrapper">
-          <h1 className={styles.pageTitle}>Roadmap</h1>
+{/*           <h1 className={styles.pageTitle}>Roadmap</h1>
             Here you can find our product roadmap.
             We work realising LTS version approximately every 4/6 months. 
             During period between two LTS versions we release also preview versions (approximately every 2 months).<br></br><br></br>
@@ -78,10 +78,24 @@ function Roadmap() {
             <br></br>
             For every release is possibile to search on Github Wiki for release detailed changelog, migration guide and compatibility matrix.
         <p>End of life information are also provided.</p>
-        </p>
+        </p> */}
+        <h1 className={styles.pageTitle}>
+                      This Page is{" "}
+                      <span className={clsx(styles.primary, styles.secondRow)}>
+                        Coming Soon
+                      </span>
+                    </h1>
+                    <p className={styles.pageDescription}>
+                      We are working hard to build great docs to help you quickstart your
+                      search engine.
+                    </p>
+                    <p className={styles.pageDescription}>
+                      In the meantime, you can check out{" "}
+                      <a href="https://github.com/smclab/openk9/tree/main/connectors">GitHub repository</a> for universal connectors available.
+                    </p>
         </div>
       </header>
-      <main>
+      {/* <main>
         <div className="openK9-wrapper">
           {milestones &&
             milestones.length > 0 &&
@@ -110,8 +124,8 @@ function Roadmap() {
       </ul>
           </div>
         </div>
-        </footer>
-    </Layout>
+        </footer>*/}
+    </Layout> 
   );
 }
 

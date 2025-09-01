@@ -213,16 +213,6 @@ components:
           type: boolean
         scheduling:
           type: string
-    DatasourceHealthStatus:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        status:
-          $ref: "#/components/schemas/HealthStatus"
     DatasourceJobStatus:
       type: object
       properties:
@@ -579,67 +569,6 @@ components:
       - SHAPE
       - PERCOLATOR
       - I18N
-    FieldValue:
-      type: object
-      properties:
-        value: {}
-        isDefault:
-          type: boolean
-    FormField:
-      type: object
-      properties:
-        info:
-          type: string
-        label:
-          type: string
-        name:
-          type: string
-        type:
-          $ref: "#/components/schemas/FormFieldType"
-        size:
-          type: integer
-          format: int32
-        required:
-          type: boolean
-        values:
-          type: array
-          items:
-            $ref: "#/components/schemas/FieldValue"
-        validator:
-          $ref: "#/components/schemas/FormFieldValidator"
-    FormFieldType:
-      type: string
-      enum:
-      - text
-      - number
-      - select
-      - multiselect
-      - list
-      - date
-      - email
-      - password
-      - time
-      - url
-      - checkbox
-      - stringMap
-    FormFieldValidator:
-      type: object
-      properties:
-        min:
-          type: integer
-          format: int32
-        max:
-          type: integer
-          format: int32
-        regex:
-          type: string
-    FormTemplate:
-      type: object
-      properties:
-        fields:
-          type: array
-          items:
-            $ref: "#/components/schemas/FormField"
     GetMappingsOrSettingsFromDocTypesRequest:
       type: object
       properties:
@@ -648,12 +577,6 @@ components:
           items:
             type: integer
             format: int64
-    HealthStatus:
-      type: string
-      enum:
-      - RUNNING
-      - ERROR
-      - IDLE
     HybridSearchPipelineDTO:
       type: object
       properties:
@@ -768,15 +691,6 @@ components:
           $ref: "#/components/schemas/SuggestionCategory"
         previousEntity:
           $ref: "#/components/schemas/SuggestionCategory"
-    KeycloakSettings:
-      type: object
-      properties:
-        url:
-          type: string
-        realm:
-          type: string
-        clientId:
-          type: string
     NormalizationTechnique:
       type: string
       enum:
@@ -864,30 +778,6 @@ components:
           $ref: "#/components/schemas/Provisioning"
         jsonConfig:
           type: string
-    PluginDriverDocType:
-      type: object
-      properties:
-        docTypeId:
-          type: integer
-          format: int64
-        name:
-          type: string
-        selected:
-          type: boolean
-    PluginDriverDocTypesDTO:
-      type: object
-      properties:
-        docTypes:
-          type: array
-          items:
-            $ref: "#/components/schemas/PluginDriverDocType"
-    PluginDriverHealthDTO:
-      type: object
-      required:
-      - status
-      properties:
-        status:
-          $ref: "#/components/schemas/Status"
     PluginDriverType:
       type: string
       enum:
@@ -944,35 +834,6 @@ components:
           type: boolean
         minScoreSearch:
           type: boolean
-    SearchPipelineResponseDTO:
-      type: object
-      properties:
-        status:
-          type: integer
-          format: int32
-        body:
-          type: string
-        reason:
-          type: string
-    Status:
-      type: string
-      enum:
-      - UP
-      - DOWN
-      - UNKOWN
-    StatusResponse:
-      type: object
-      properties:
-        datasources:
-          type: array
-          items:
-            $ref: "#/components/schemas/DatasourceHealthStatus"
-        total:
-          type: integer
-          format: int32
-        errors:
-          type: integer
-          format: int32
     SuggestionCategory:
       type: object
       properties:
@@ -1023,16 +884,6 @@ components:
           items:
             type: integer
             format: int64
-    TriggerV2ResourceDTO:
-      type: object
-      properties:
-        datasourceId:
-          type: integer
-          format: int64
-        reindex:
-          type: boolean
-        startIngestionDate:
-          $ref: "#/components/schemas/OffsetDateTime"
     Tuple2BucketDatasource:
       type: object
       properties:
@@ -1217,16 +1068,11 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+                refreshOnSuggestionCategory: false
+                refreshOnTab: false
+                refreshOnDate: false
+                refreshOnQuery: false
+                retrieveType: HYBRID
               schema: {}
         "404":
           description: not found
@@ -1244,16 +1090,31 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+              - id: 3
+                createDate: 2025-07-28T12:13:08.884263Z
+                modifiedDate: 2025-07-28T12:13:08.884309Z
+                name: German
+                value: de_DE
+              - id: 7
+                createDate: 2025-07-28T12:13:08.898766Z
+                modifiedDate: 2025-07-28T12:13:08.898778Z
+                name: English
+                value: en_US
+              - id: 8
+                createDate: 2025-07-28T12:13:08.90197Z
+                modifiedDate: 2025-07-28T12:13:08.901989Z
+                name: French
+                value: fr_FR
+              - id: 9
+                createDate: 2025-07-28T12:13:08.913523Z
+                modifiedDate: 2025-07-28T12:13:08.913536Z
+                name: Italian
+                value: it_IT
+              - id: 12
+                createDate: 2025-07-28T12:13:08.940398Z
+                modifiedDate: 2025-07-28T12:13:08.940428Z
+                name: Spanish
+                value: es_ES
               schema: {}
         "404":
           description: not found
@@ -1271,16 +1132,11 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+                id: 7
+                createDate: 2025-07-28T12:13:08.898766Z
+                modifiedDate: 2025-07-28T12:13:08.898778Z
+                name: English
+                value: en_US
               schema: {}
         "404":
           description: not found
@@ -1305,16 +1161,10 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+              - field: web.title
+                id: 221
+                label: web.title
+                translationMap: null
               schema: {}
         "404":
           description: not found
@@ -1373,16 +1223,14 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+              - translationMap: null
+                id: 752
+                createDate: 2025-08-04T10:49:05.81171Z
+                modifiedDate: 2025-08-04T10:49:05.832618Z
+                name: test
+                description: ""
+                priority: 0.0
+                multiSelect: false
               schema: {}
         "404":
           description: not found
@@ -1407,16 +1255,20 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+              - label: All
+                tokens: []
+                sortings: []
+                translationMap: null
+              - label: web
+                tokens:
+                - tokenType: DOCTYPE
+                  keywordKey: documentTypes.keyword
+                  filter: true
+                  values:
+                  - web
+                  extra: null
+                sortings: []
+                translationMap: null
               schema: {}
         "404":
           description: not found
@@ -1434,16 +1286,8 @@ paths:
           content:
             application/json:
               example:
-                datasourceId: 12
-                tenantId: tenantId
-                contentId: 12fs4e3cds3ew32
-                parsingDate: 1743007437740
-                rawContent: string
-                datasourcePayload:
-                  additionalProp1: string
-                  additionalProp2: string
-                  additionalProp3: string
-                scheduleId: bf988b9c-92a2-4a44-9558-5ebeb94c790e
+              - name: test
+                id: 751
               schema: {}
         "404":
           description: not found
@@ -3705,28 +3549,36 @@ paths:
         - k9-admin
   /api/datasource/oauth2/settings:
     get:
+      operationId: settings
+      tags:
+      - Keycloak Settings API
       responses:
         "200":
-          description: OK
+          description: Keycloak Settings returned
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/KeycloakSettings"
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
       summary: Keycloak Settings
-      tags:
-      - Keycloak Settings Resource
   /api/datasource/oauth2/settings.js:
     get:
+      operationId: settings.js
+      tags:
+      - Keycloak Settings JS API
       responses:
         "200":
-          description: OK
+          description: Keycloak Settings returned
           content:
-            text/javascript:
-              schema:
-                type: string
+            application/json:
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
       summary: Settings Js
-      tags:
-      - Keycloak Settings Resource
   /api/datasource/pipeline/callback/{token-id}:
     post:
       parameters:
@@ -4024,8 +3876,12 @@ paths:
         - k9-admin
   /api/datasource/pluginDrivers/documentTypes/{id}:
     get:
+      operationId: document-types-plugin-driver
+      tags:
+      - Get Document Types API
       parameters:
-      - name: id
+      - description: Id of Plugin Driver
+        name: id
         in: path
         required: true
         schema:
@@ -4033,18 +3889,22 @@ paths:
           format: int64
       responses:
         "200":
-          description: OK
+          description: List of templates returned
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/PluginDriverDocTypesDTO"
+              example:
+              - name: test
+                id: 751
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Get Doc Types
-      tags:
-      - Plugin Driver Resource
       security:
       - SecurityScheme:
         - k9-admin
@@ -4076,37 +3936,14 @@ paths:
       security:
       - SecurityScheme:
         - k9-admin
-  /api/datasource/pluginDrivers/form:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PluginDriverDTO"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FormTemplate"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Get Form
-      tags:
-      - Plugin Driver Resource
-      security:
-      - SecurityScheme:
-        - k9-admin
   /api/datasource/pluginDrivers/form/{id}:
     get:
+      operationId: form
+      tags:
+      - Form API
       parameters:
-      - name: id
+      - description: Id of Plugin Driver
+        name: id
         in: path
         required: true
         schema:
@@ -4114,50 +3951,69 @@ paths:
           format: int64
       responses:
         "200":
-          description: OK
+          description: Form returned
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/FormTemplate"
+              example:
+              - name: test
+                id: 751
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Get Form
-      tags:
-      - Plugin Driver Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/pluginDrivers/health:
     post:
+      operationId: health-dto
+      tags:
+      - Health with DTO API
       requestBody:
         content:
           application/json:
+            examples:
+              Health DTO:
+                value:
+                  datasourceId: 209
+                  reindex: false
+                  startIngestionDate: 2025-07-28T12:47:00+02:00
             schema:
               $ref: "#/components/schemas/PluginDriverDTO"
         required: true
       responses:
         "200":
-          description: OK
+          description: Health Check Ok
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/PluginDriverHealthDTO"
+              example:
+                id: 209
+                name: test-mp3
+                status: ON_SCHEDULING
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-        "400":
-          description: Bad Request
       summary: Get Health
-      tags:
-      - Plugin Driver Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/pluginDrivers/health/{id}:
     get:
+      operationId: health
+      tags:
+      - Health API
       parameters:
       - name: id
         in: path
@@ -4167,86 +4023,125 @@ paths:
           format: int64
       responses:
         "200":
-          description: OK
+          description: Health Check Ok
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/PluginDriverHealthDTO"
+              example:
+              - name: test
+                id: 751
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Get Health
-      tags:
-      - Plugin Driver Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/schedulers/status:
     get:
+      operationId: status
+      tags:
+      - Get scheduling status API
       responses:
         "200":
-          description: OK
+          description: Status of scheduling system up
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/StatusResponse"
+              example:
+                datasources:
+                - id: 209
+                  name: test
+                  status: IDLE
+                - id: 237
+                  name: test2
+                  status: ERROR
+                total: 1
+                errors: 1
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Status
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/schedulers/{schedulerId}/cancelScheduling:
     post:
+      operationId: cancelScheduling
+      tags:
+      - Cancel Scheduling API
       parameters:
-      - name: schedulerId
+      - description: Id of scheduling
+        name: schedulerId
         in: path
         required: true
         schema:
           type: integer
           format: int64
       responses:
-        "201":
-          description: Created
+        "204":
+          description: Scheduling cancelled
+          content:
+            application/json:
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Cancel Scheduling
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/schedulers/{schedulerId}/closeScheduling:
     post:
+      operationId: closeScheduling
+      tags:
+      - Close Scheduling API
       parameters:
-      - name: schedulerId
+      - description: Id of scheduling
+        name: schedulerId
         in: path
         required: true
         schema:
           type: integer
           format: int64
       responses:
-        "201":
-          description: Created
+        "204":
+          description: Scheduling closed
+          content:
+            application/json:
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Close Scheduling
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/schedulers/{schedulerId}/getDeletedContentIds:
     get:
+      operationId: getDeletedContentIds
+      tags:
+      - Get Deleted Content Ids API
       parameters:
       - name: schedulerId
         in: path
@@ -4256,42 +4151,51 @@ paths:
           format: int64
       responses:
         "200":
-          description: OK
+          description: List of deleted content ids returned
           content:
             application/json:
-              schema:
-                type: array
-                items:
-                  type: string
+              example: "[\"121321321, \"432342343\"]"
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Get Deleted Content Ids
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/schedulers/{schedulerId}/rerouteScheduling:
     post:
+      operationId: rerouteScheduling
+      tags:
+      - Reroute Scheduling API
       parameters:
-      - name: schedulerId
+      - description: Id of scheduling
+        name: schedulerId
         in: path
         required: true
         schema:
           type: integer
           format: int64
       responses:
-        "201":
-          description: Created
+        "204":
+          description: Scheduling rerouted successfully
+          content:
+            application/json:
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Reroute Scheduling
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
@@ -4875,24 +4779,34 @@ paths:
       - Template Resource
   /api/datasource/v1/data-index/auto-generate-doc-types:
     post:
+      operationId: auto-generate-doc-types
+      tags:
+      - Auto Generate DocumentTypes API
       requestBody:
         content:
           application/json:
+            examples:
+              Auto Generate DTO:
+                value:
+                  datasourceId: 12
             schema:
               $ref: "#/components/schemas/AutoGenerateDocTypesRequest"
         required: true
       responses:
-        "201":
-          description: Created
+        "204":
+          description: Auto Generate successful
+          content:
+            application/json:
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-        "400":
-          description: Bad Request
       summary: Auto Generate Doc Types
-      tags:
-      - Data Index Resource
       security:
       - SecurityScheme:
         - k9-admin
@@ -4933,57 +4847,106 @@ paths:
         - k9-admin
   /api/datasource/v1/data-index/get-mappings-from-doc-types:
     post:
+      operationId: get-mappings-from-doc-types
+      tags:
+      - Get Mappings from DocumentTypes API
       requestBody:
         content:
           application/json:
+            examples:
+              Auto Generate DTO:
+                value:
+                  docTypeIds:
+                  - 12
+                  - 13
+                  - 14
             schema:
               $ref: "#/components/schemas/GetMappingsOrSettingsFromDocTypesRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Get mapping successfully
           content:
             application/json:
-              schema:
-                type: object
-                additionalProperties: {}
+              example:
+                properties:
+                  web:
+                    properties:
+                      content:
+                        type: text
+                        fields:
+                          keyword:
+                            type: keyword
+                            ignore_above: 256
+                      favicon:
+                        type: text
+                        fields:
+                          keyword:
+                            type: keyword
+                            ignore_above: 256
+                      title:
+                        type: text
+                        fields:
+                          keyword:
+                            type: keyword
+                            ignore_above: 256
+                      url:
+                        type: text
+                        fields:
+                          keyword:
+                            type: keyword
+                            ignore_above: 256
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-        "400":
-          description: Bad Request
       summary: Get Mappings
-      tags:
-      - Data Index Resource
       security:
       - SecurityScheme:
         - k9-admin
   /api/datasource/v1/data-index/get-settings-from-doc-types:
     post:
+      operationId: get-settings-from-doc-types
+      tags:
+      - Get Settings from DocumentTypes API
       requestBody:
         content:
           application/json:
+            examples:
+              Auto Generate DTO:
+                value:
+                  docTypeIds:
+                  - 12
+                  - 13
+                  - 14
             schema:
               $ref: "#/components/schemas/GetMappingsOrSettingsFromDocTypesRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Get setting successfully
           content:
             application/json:
-              schema:
-                type: object
-                additionalProperties: {}
+              example:
+                analysis: {}
+                index:
+                  highlight:
+                    max_analyzed_offset: "10000000"
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-        "400":
-          description: Bad Request
       summary: Get Settings
-      tags:
-      - Data Index Resource
       security:
       - SecurityScheme:
         - k9-admin
@@ -5040,6 +5003,9 @@ paths:
         - k9-admin
   /api/datasource/v1/search-config/{id}/configure-hybrid-search:
     post:
+      operationId: configure-hybrid-search
+      tags:
+      - Configure Hybrid Search API
       parameters:
       - name: id
         in: path
@@ -5050,21 +5016,32 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              Configure Hybrid Search DTO:
+                value:
+                  normalizationTechnique: MIN_MAX
+                  combinationTechnique: ARITHMETIC_MEAN
+                  weights:
+                  - 0.5
+                  - 0.5
             schema:
               $ref: "#/components/schemas/HybridSearchPipelineDTO"
         required: true
       responses:
         "200":
-          description: OK
+          description: Hybrid search configure successfully
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/SearchPipelineResponseDTO"
+              example:
+                status: 200
+                body: "{\"acknowledged\":true}"
+                reason: OK
+              schema: {}
+        "404":
+          description: not found
         "400":
-          description: Bad Request
+          description: invalid
       summary: Configure Hybrid Search
-      tags:
-      - Search Config Resource
   /api/datasource/v1/trigger:
     post:
       deprecated: true
@@ -5097,38 +5074,82 @@ paths:
         - k9-admin
   /api/datasource/v2/trigger:
     post:
+      operationId: v2-trigger
+      tags:
+      - Trigger Datasource API
       requestBody:
         content:
           application/json:
+            examples:
+              Trigger DTO:
+                value:
+                  datasourceId: 209
+                  reindex: false
+                  startIngestionDate: 2025-07-28T12:47:00+02:00
             schema:
-              $ref: "#/components/schemas/TriggerV2ResourceDTO"
+              $ref: "#/components/schemas/AutoGenerateDocTypesRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Auto Generate successful
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/DatasourceJobStatus"
+              example:
+                id: 209
+                name: test-mp3
+                status: ON_SCHEDULING
+              schema: {}
+        "404":
+          description: not found
+        "400":
+          description: invalid
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-        "400":
-          description: Bad Request
       summary: Trigger
-      tags:
-      - Trigger With Date Resource
       security:
       - SecurityScheme:
         - k9-admin
 tags:
+- name: Auto Generate DocumentTypes API
+  description: Permits to generate document types starting from a specific datasource
+    and data index
 - name: Available Languages API
   description: "Return, if configured, available languages for the bucket"
+- name: Cancel Scheduling API
+  description: Permits to cancel active scheduling
+- name: Close Scheduling API
+  description: Permits to close active scheduling
+- name: Configure Hybrid Search API
+  description: Permits to configure behaviour of hybrid search for specific search
+    config
 - name: Current Bucket API
   description: Return general configuration for the bucket
 - name: Default Language API
   description: "Return, if configured, default language for the bucket"
+- name: Form API
+  description: Return form template for specific plugin driver
+- name: Get Deleted Content Ids API
+  description: Return list of deleted content ids
+- name: Get Document Types API
+  description: Return document types for a specific plugin driver
+- name: Get Mappings from DocumentTypes API
+  description: Get mappings generate from a list of document types.
+- name: Get Settings from DocumentTypes API
+  description: Get settings generate from a list of document types.
+- name: Get scheduling status API
+  description: Return status of scheduling system
+- name: Health API
+  description: Perform health check for specific plugin driver by id
+- name: Health with DTO API
+  description: Perform health check for specific plugin driver using DTO
+- name: Keycloak Settings API
+  description: Return keycloak settings
+- name: Keycloak Settings JS API
+  description: Return keycloak settings as javascript file
+- name: Reroute Scheduling API
+  description: Permits to reroute scheduling with error messages
 - name: Sortable Doctype Fields API
   description: Return list of sortable doctype fields
 - name: Sorting Rules API
@@ -5139,6 +5160,8 @@ tags:
   description: Return configured tabs for the bucket
 - name: Templates API
   description: Return javascript templates configured for the bucket
+- name: Trigger Datasource API
+  description: Permits to trigger an ingestion schedule for a specific datasource
 info:
   title: datasource API
   version: 3.1.0-SNAPSHOT

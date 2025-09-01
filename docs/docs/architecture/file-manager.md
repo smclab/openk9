@@ -17,4 +17,4 @@ and links these to the data. Then send again data to queuing system.
 
 ### Rest Api
 
-See more on [Openk9 Api Documentation](/)
+See more on [Openk9 Api Documentation](../api/api-file-manager.md)

@@ -3,18 +3,37 @@ id: openk9-requirements
 title: OpenK9 Requirements
 ---
 
-## Minimum Hardware Requirements
+# Compatibility matrix for third party products
 
-- **CPU Cores:** 8
-- **Memory:** 32 GB
+# Compatibility matrix
+
+This table outlines the tested and supported versions of third-party components for **Openk9** across multiple releases.
+
+| Component   | Openk9 1.7.x |  Openk9 2.0.x   | Openk9 3.0.x               | 
+|-------------|-----------------------------|-----------------------------|-----------------------------|
+| Elasticsearch  | 7.x.x                        | N/A                        | N/A
+| OpenSearch  | N/A | 2.x.x                        | 2.x.x                        | 
+| RabbitMQ    | 3.12.x, 3.13.x | 3.12.x, 3.13.x                       | 4.x.x                       | 
+| Keycloak    | 21.x, 22.x                   | 21.x, 22.x                   | 25.x                         |
+| PostgreSQL  | 14.x, 15.x  | 14.x, 15.x                   | 15.x, 16.x                   | 
+| MinIO       | RELEASE.2023-x.x | RELEASE.2023-x.x, 2024-x.x | RELEASE.2025-x.x             | 
+
+
+## Minimum hardware requirements
+
+- **CPU Cores:** 4
+- **Memory:** 16 GB
 - **Storage:** Variable based on data ingested
 
-## Software Requirements
+## Software requirements
 
-- **Kubernetes:** v1.x
-- **OpenShift:** v1.x
+Openk9 needs to run of one of following sofware environments:
 
-## Tips for Configuring Resources and CPU Limits
+- Docker compose
+- Kubernetes
+- OpenShift
+
+## Tips for configuring cpu and memory limits
 
 Resources and CPU Limits are based on workload requirements.
 
@@ -26,22 +45,20 @@ In any case it is recommended for core services, based on the use of JVM, to set
 
 For third party services follows owners guidelines.
 
-## Storage Sizing Guidelines
+## Storage sizing guidelines
 
-### OpenSearch
+### OpenSearch/Elasticsearch
 
 To estimate the storage required for OpenSearch, consider a **medium document size** of approximately **10 KB per indexed document**. Additionally, factor in the **monthly growth rate** of the database size.
 
 The storage needed for a single OpenSearch node can be calculated as follows:
 
-**Total Storage for an OpenSearch Node:**  
+**Total storage for an OpenSearch node:**  
 `(Average document size) × (Initial number of indexed documents) + (Average document size) × (Monthly growth factor of total documents)`
 
 ### MinIO
 
 To size the storage for MinIO, consider the **full size of the original data source**. This is particularly important during the initial data ingestion phase when all data is being processed at once.
-
-_(Further details to be confirmed.)_
 
 ### RabbitMQ
 
@@ -55,7 +72,7 @@ Under high back-pressure conditions (e.g., during the initial data ingestion whe
 
 A general storage estimation can be made using the formula:
 
-**Total Storage for RabbitMQ:**  
+**Total storage for RabbitMQ:**  
 `(Average message size) × (Initial number of indexed documents)`
 
 Considering an average document size of **10 KB**, you can use this value for estimation.

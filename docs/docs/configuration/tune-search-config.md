@@ -1,6 +1,6 @@
 ---
-id: add-data-source
-title: Create new datasource
+id: tune-search-config
+title: Tune search configuration
 ---
 
 # This Page is Coming Soon

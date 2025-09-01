@@ -34,4 +34,4 @@ as message broker. See [client documentation](https://www.rabbitmq.com/clients.h
 
 ### Rest Api
 
-See more on [Openk9 Api Documentation](/)
+See more on [Openk9 Api Documentation](../api/api-datasource.md)

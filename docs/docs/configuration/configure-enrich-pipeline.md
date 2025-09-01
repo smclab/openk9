@@ -1,7 +1,8 @@
 ---
-id: add-data-source
-title: Create new datasource
+id: configure-enrich-pipeline
+title: Configure enrich pipeline
 ---
+
 
 # This Page is Coming Soon
 

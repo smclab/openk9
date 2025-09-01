@@ -1,6 +1,6 @@
 ---
-id: add-data-source
-title: Create new datasource
+id: create-tabs
+title: Create tabs
 ---
 
 # This Page is Coming Soon
