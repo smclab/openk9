@@ -134,8 +134,8 @@ gql`
 `;
 
 export const DocTypeFields = gql`
-  query DocTypeFields($after: String) {
-    docTypeFields(first: 20, after: $after) {
+  query DocTypeFields($searchText: String, $first: Int = 20, $after: String) {
+    docTypeFields(searchText: $searchText, first: $first, after: $after) {
       edges {
         node {
           id

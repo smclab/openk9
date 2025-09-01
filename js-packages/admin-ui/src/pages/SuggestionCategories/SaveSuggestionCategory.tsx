@@ -174,8 +174,8 @@ export function SaveSuggestionCategory() {
   );
 }
 
-export const useOptions = () => {
-  const docTypes = useDocTypeFieldsQuery();
+export const useOptions = (searchText?: string) => {
+  const docTypes = useDocTypeFieldsQuery({ variables: { searchText } });
 
   const getOptions = (data: any, key: "docTypeFields") => {
     return (
