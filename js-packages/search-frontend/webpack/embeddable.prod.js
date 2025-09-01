@@ -1,6 +1,7 @@
 // builds a script with react inside for use with <script src=""/>
 
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = (env = {}) => {
   const isKeycloakEnabled = env.keycloak === "true";

@@ -1,6 +1,7 @@
 // builds production version of the standalone app
 
 const path = require("path");
+const webpack = require("webpack");
 
 module.exports = (env = {}) => {
   const isKeycloakEnabled = env.keycloak === "true";
