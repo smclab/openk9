@@ -1,18 +1,9 @@
-// builds production version of the standalone app
-
 const path = require("path");
 const webpack = require("webpack");
-const dotenv = require("dotenv");
-const fs = require("fs");
 
-module.exports = () => {
-  const envFilePath = path.resolve(__dirname, "../.env");
-  const fileEnv = fs.existsSync(envFilePath)
-    ? dotenv.config({ path: envFilePath }).parsed
-    : {};
-
-  const envKeys = Object.keys(fileEnv || {}).reduce((prev, next) => {
-    prev[`process.env.${next}`] = JSON.stringify(fileEnv[next]);
+module.exports = (env = {}) => {
+  const envKeys = Object.keys(env).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(env[next]);
     return prev;
   }, {});
 
@@ -57,8 +48,6 @@ module.exports = () => {
         },
       ],
     },
-    // decomment this to analyze bundle size
-    // plugins: [new require("webpack-bundle-analyzer").BundleAnalyzerPlugin()],
     resolve: {
       extensions: [".tsx", ".ts", ".js"],
     },

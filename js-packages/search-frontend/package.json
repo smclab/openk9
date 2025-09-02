@@ -35,9 +35,9 @@
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
     "precommit": "lint-staged",
     "prepare": "cross-env NODE_ENV=production yarn build",
-    "build:keycloak": "webpack --config webpack/standalone.prod.js --env keycloak=true --env chatbot=false",
-    "build:nokeycloak": "webpack --config webpack/standalone.prod.js --env keycloak=false --env chatbot=false",
-    "build:chatbot": "webpack --config webpack/standalone.prod.js --env keycloak=true --env chatbot=true"
+    "build:keycloak": "webpack --config ./webpack/standalone.prod.js --env REACT_APP_KEYCLOAK_ENABLED=true --env REACT_APP_CHATBOT_ENABLED=false && cp public/* dist/",
+    "build:nokeycloak": "webpack --config ./webpack/standalone.prod.js --env REACT_APP_KEYCLOAK_ENABLED=false --env REACT_APP_CHATBOT_ENABLED=false && cp public/* dist/",
+    "build:chatbot": "webpack --config ./webpack/standalone.prod.js --env REACT_APP_KEYCLOAK_ENABLED=true --env REACT_APP_CHATBOT_ENABLED=true && cp public/* dist/"
   },
   "targets": {
     "main": false
@@ -117,7 +117,6 @@
   "dependencies": {
     "@openk9ui/openk9-chatbot": "^3.0.1",
     "@types/react-dates": "^21.8.5",
-    "dotenv": "^17.2.1",
     "i18next": "^22.5.1",
     "react-i18next": "^12.3.1",
     "sanitize-html": "^2.11.0"

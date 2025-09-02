@@ -17,7 +17,6 @@ import { FilterSvg } from "./svgElement/FiltersSvg";
 
 const isKeycloakEnabled = process.env.REACT_APP_KEYCLOAK_ENABLED === "true";
 const isChatbotEnabled = process.env.REACT_APP_CHATBOT_ENABLED === "true";
-console.log(process.env.REACT_APP_KEYCLOAK_ENABLED, isKeycloakEnabled);
 
 export const openk9 = new OpenK9({
   enabled: true,

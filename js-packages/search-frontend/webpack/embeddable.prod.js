@@ -2,17 +2,10 @@
 
 const path = require("path");
 const webpack = require("webpack");
-const dotenv = require("dotenv");
-const fs = require("fs");
 
-module.exports = () => {
-  const envFilePath = path.resolve(__dirname, "../.env");
-  const fileEnv = fs.existsSync(envFilePath)
-    ? dotenv.config({ path: envFilePath }).parsed
-    : {};
-
-  const envKeys = Object.keys(fileEnv || {}).reduce((prev, next) => {
-    prev[`process.env.${next}`] = JSON.stringify(fileEnv[next]);
+module.exports = (env = {}) => {
+  const envKeys = Object.keys(env).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(env[next]);
     return prev;
   }, {});
 
