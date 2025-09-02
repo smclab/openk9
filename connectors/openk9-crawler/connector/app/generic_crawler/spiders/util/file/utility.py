@@ -33,6 +33,12 @@ def extension_from_mimetype(mimetype, mimetype_map=None):
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
         'application/zip': 'zip',
         'application/json': 'json',
+        'application/vnd.ms-powerpoint': 'ppt',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+        'application/epub+zip': 'epub',
+        'application/xml': 'xml',
+        'application/pkcs7-mime': 'p7m',
+        'audio/mpeg': 'mp3'
     }
 
     # Use custom map if provided
