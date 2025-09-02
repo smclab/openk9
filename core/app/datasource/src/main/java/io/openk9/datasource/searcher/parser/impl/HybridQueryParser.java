@@ -52,7 +52,7 @@ public class HybridQueryParser implements QueryParser {
 
 	// use 0 or a negative value to disable maximum text query length enforcement
 	@ConfigProperty(
-		name = "openk9.datasource.text-query-parser.max-text-query-length",
+		name = "openk9.datasource.query-parser.max-text-query-length",
 		defaultValue = "0"
 	)
 	Integer maxTextQueryLength;
