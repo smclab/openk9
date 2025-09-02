@@ -15,12 +15,17 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import { FilterSvg } from "./svgElement/FiltersSvg";
 
+const isKeycloakEnabled = process.env.REACT_APP_KEYCLOAK_ENABLED === "true";
+const isChatbotEnabled = process.env.REACT_APP_CHATBOT_ENABLED === "true";
+console.log(process.env.REACT_APP_KEYCLOAK_ENABLED, isKeycloakEnabled);
+
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
   memoryResults: false,
   useGenerativeApi: true,
+  useKeycloak: isKeycloakEnabled,
 });
 
 export function App() {

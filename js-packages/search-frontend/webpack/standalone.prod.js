@@ -2,10 +2,19 @@
 
 const path = require("path");
 const webpack = require("webpack");
+const dotenv = require("dotenv");
+const fs = require("fs");
 
-module.exports = (env = {}) => {
-  const isKeycloakEnabled = env.keycloak === "true";
-  const isChatbotEnabled = env.chatbot === "true";
+module.exports = () => {
+  const envFilePath = path.resolve(__dirname, "../.env");
+  const fileEnv = fs.existsSync(envFilePath)
+    ? dotenv.config({ path: envFilePath }).parsed
+    : {};
+
+  const envKeys = Object.keys(fileEnv || {}).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(fileEnv[next]);
+    return prev;
+  }, {});
 
   return {
     mode: "production",
@@ -58,13 +67,6 @@ module.exports = (env = {}) => {
       filename: "[name].js",
       libraryTarget: "umd",
     },
-    plugins: [
-      new webpack.DefinePlugin({
-        "process.env.REACT_APP_KEYCLOAK_ENABLED":
-          JSON.stringify(isKeycloakEnabled),
-        "process.env.REACT_APP_CHATBOT_ENABLED":
-          JSON.stringify(isChatbotEnabled),
-      }),
-    ],
+    plugins: [new webpack.DefinePlugin(envKeys)],
   };
 };

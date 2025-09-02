@@ -115,7 +115,9 @@
     "access": "public"
   },
   "dependencies": {
+    "@openk9ui/openk9-chatbot": "^3.0.1",
     "@types/react-dates": "^21.8.5",
+    "dotenv": "^17.2.1",
     "i18next": "^22.5.1",
     "react-i18next": "^12.3.1",
     "sanitize-html": "^2.11.0"
