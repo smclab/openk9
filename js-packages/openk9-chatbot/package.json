@@ -1,5 +1,5 @@
 {
-  "name": "openk9-chatbot",
+  "name": "@openk9ui/openk9-chatbot",
   "private": false,
   "version": "3.1.0-SNAPSHOT",
   "license": "MIT",
