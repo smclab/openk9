@@ -1,11 +1,5 @@
 import { CodeInput, CustomSelect, NumberInput } from "@components/Form";
-import { SelectedValue } from "@components/Form/Association/MultiLinkedAssociation/types";
-import {
-  AutocompleteDropdown,
-  Option,
-  UseOptionsHook,
-  UseOptionsResult,
-} from "@components/Form/Select/AutocompleteDropdown";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -26,7 +20,8 @@ import {
 import { useOptions } from "@pages/SuggestionCategories";
 import { PluginDriverDocType } from "openapi-generated";
 import React, { useEffect, useState } from "react";
-import { ChunkType, useDocTypeFieldsQuery } from "../../../../../graphql-generated";
+import { useDocTypeOptions } from "../../../../../utils/RelationOneToOne";
+import { ChunkType } from "../../../../../graphql-generated";
 
 interface DefaultDataIndex {
   id: string;
@@ -375,37 +370,3 @@ export default function DataIndexFormsource({
     </div>
   );
 }
-
-export const useDocTypeOptions: UseOptionsHook = (searchText: string): UseOptionsResult => {
-  const { data, loading, fetchMore } = useDocTypeFieldsQuery({
-    variables: { searchText, first: 20, after: null },
-    notifyOnNetworkStatusChange: true,
-  });
-
-  const edges = data?.docTypeFields?.edges ?? [];
-  const options: Option[] = edges.map((e: any) => ({ value: e?.node?.id ?? "", label: e?.node?.name ?? "" }));
-
-  const pageInfo = data?.docTypeFields?.pageInfo;
-  const hasNextPage = !!pageInfo?.hasNextPage;
-
-  const loadMore = hasNextPage
-    ? async () => {
-        await fetchMore({
-          variables: { searchText, first: 20, after: pageInfo?.endCursor },
-          updateQuery: (prev: any, { fetchMoreResult }: any) => {
-            const prevEdges = prev?.docTypeFields?.edges ?? [];
-            const nextEdges = fetchMoreResult?.docTypeFields?.edges ?? [];
-            return {
-              docTypeFields: {
-                __typename: prev?.docTypeFields?.__typename ?? "DocTypeFieldConnection",
-                edges: [...prevEdges, ...nextEdges],
-                pageInfo: fetchMoreResult?.docTypeFields?.pageInfo,
-              },
-            };
-          },
-        });
-      }
-    : undefined;
-
-  return { options, loading: !!loading, hasNextPage, loadMore };
-};

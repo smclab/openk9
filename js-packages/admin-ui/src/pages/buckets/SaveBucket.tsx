@@ -37,6 +37,8 @@ import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../
 import useOptions from "../../utils/getOptions";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { useOptionSearchConfig } from "../../../src/utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
@@ -118,16 +120,6 @@ export function SaveBucket() {
     fetchPolicy: "network-only",
   });
 
-  const { OptionQuery: optionSearchConfig } = useOptions({
-    queryKeyPath: "searchConfigs.edges",
-    useQuery: useSearchConfigsQuery,
-    accessKey: "node",
-  });
-  const { OptionQuery: languageOptions } = useOptions({
-    queryKeyPath: "languages.edges",
-    useQuery: useLanguagesQuery,
-    accessKey: "node",
-  });
   const { OptionQuery: queryAnalysisOption } = useOptions({
     queryKeyPath: "queryAnalyses.edges",
     useQuery: useQueryAnalysesQuery,
@@ -196,18 +188,24 @@ export function SaveBucket() {
         datasourceIds: datasources?.associated || [],
         suggestionCategoryIds: suggestionCategories?.associated || [],
         tabIds: tabs?.associated || [],
-        queryAnalysisId: {
-          id: bucketQuery.data?.bucket?.queryAnalysis?.id || "-1",
-          name: bucketQuery.data?.bucket?.queryAnalysis?.name || "",
-        },
-        defaultLanguageId: {
-          id: bucketQuery.data?.bucket?.language?.id || "-1",
-          name: bucketQuery.data?.bucket?.language?.name || "",
-        },
-        searchConfigId: {
-          id: bucketQuery.data?.bucket?.searchConfig?.id || "-1",
-          name: bucketQuery.data?.bucket?.searchConfig?.name || "",
-        },
+        queryAnalysisId: bucketQuery.data?.bucket?.queryAnalysis?.id
+          ? {
+              id: bucketQuery.data?.bucket?.queryAnalysis?.id,
+              name: bucketQuery.data?.bucket?.queryAnalysis?.name,
+            }
+          : undefined,
+        defaultLanguageId: bucketQuery.data?.bucket?.language?.id
+          ? {
+              id: bucketQuery.data?.bucket?.language?.id,
+              name: bucketQuery.data?.bucket?.language?.name,
+            }
+          : undefined,
+        searchConfigId: bucketQuery.data?.bucket?.searchConfig?.id
+          ? {
+              id: bucketQuery.data?.bucket?.searchConfig?.id,
+              name: bucketQuery.data?.bucket?.searchConfig?.name,
+            }
+          : undefined,
         ragConfigurationChatId: {
           id: bucketQuery.data?.bucket?.ragConfigurationChat?.id || "-1",
           name: bucketQuery.data?.bucket?.ragConfigurationChat?.name || "",
@@ -240,9 +238,9 @@ export function SaveBucket() {
           tabIds: formatQueryToBE({
             information: data.tabIds,
           }),
-          searchConfigId: data.searchConfigId.id !== "-1" ? data.searchConfigId.id : null,
-          defaultLanguageId: data.defaultLanguageId.id !== "-1" ? data.defaultLanguageId.id : null,
-          queryAnalysisId: data.queryAnalysisId.id !== "-1" ? data.queryAnalysisId.id : null,
+          searchConfigId: data?.searchConfigId?.id ? data.searchConfigId.id : undefined,
+          defaultLanguageId: data.defaultLanguageId?.id ? data?.defaultLanguageId?.id : undefined,
+          queryAnalysisId: data?.queryAnalysisId?.id ? data?.queryAnalysisId?.id : undefined,
           ragConfigurationChat: data.ragConfigurationChatId.id !== "-1" ? data.ragConfigurationChatId.id : null,
           ragConfigurationChatTool:
             data.ragConfigurationChatToolId.id !== "-1" ? data.ragConfigurationChatToolId.id : null,
@@ -445,18 +443,39 @@ export function SaveBucket() {
                       />
                     </AssociationsLayout>
                     <Box display={"grid"} gridTemplateColumns={"1fr 1fr"} gap={"10px"} mt={"16px"}>
-                      <CustomSelectRelationsOneToOne
-                        options={optionSearchConfig}
+                      <AutocompleteDropdown
                         label="Search Config"
                         onChange={(val) => form.inputProps("searchConfigId").onChange({ id: val.id, name: val.name })}
-                        value={{
-                          id: form.inputProps("searchConfigId").value.id,
-                          name: form.inputProps("searchConfigId").value.name || "",
-                        }}
+                        value={
+                          !form?.inputProps("searchConfigId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("searchConfigId")?.value?.id || "",
+                                name: form?.inputProps("searchConfigId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("searchConfigId").onChange(undefined)}
                         disabled={page === 1}
-                        description="Search Configuration for current bucket"
+                        useOptions={useOptionSearchConfig}
                       />
-                      <CustomSelectRelationsOneToOne
+                      <AutocompleteDropdown
+                        label="Language"
+                        onChange={(val) =>
+                          form.inputProps("defaultLanguageId").onChange({ id: val.id, name: val.name })
+                        }
+                        value={
+                          !form?.inputProps("defaultLanguageId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("defaultLanguageId")?.value?.id || "",
+                                name: form?.inputProps("defaultLanguageId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("defaultLanguageId").onChange(undefined)}
+                        disabled={page === 1}
+                        useOptions={useOptionSearchConfig}
+                      />
+                      {/* <CustomSelectRelationsOneToOne
                         options={queryAnalysisOption}
                         label="Query Analyzer"
                         onChange={(val) => form.inputProps("queryAnalysisId").onChange({ id: val.id, name: val.name })}
@@ -479,7 +498,7 @@ export function SaveBucket() {
                         }}
                         disabled={page === 1}
                         description="Default Language for current bucket"
-                      />
+                      /> */}
                       <RagConfigurationSelect />
                     </Box>
                   </>

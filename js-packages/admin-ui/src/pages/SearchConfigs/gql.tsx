@@ -58,8 +58,8 @@ gql`
 `;
 
 gql`
-  query SearchConfigs($searchText: String, $after: String) {
-    searchConfigs(searchText: $searchText, first: 20, after: $after) {
+  query SearchConfigs($searchText: String, $first: Int, $after: String) {
+    searchConfigs(searchText: $searchText, first: $first, after: $after) {
       edges {
         node {
           id

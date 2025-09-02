@@ -4665,6 +4665,7 @@ export type UnbindQueryAnalysisFromDocTypeFieldMutation = {
 
 export type SearchConfigOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
   cursor?: InputMaybe<Scalars["String"]>;
 }>;
 
@@ -6165,6 +6166,7 @@ export type CreateOrUpdateSearchConfigMutation = {
 
 export type SearchConfigsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
   after?: InputMaybe<Scalars["String"]>;
 }>;
 
@@ -8336,8 +8338,8 @@ export type UnbindQueryAnalysisFromDocTypeFieldMutationOptions = Apollo.BaseMuta
   UnbindQueryAnalysisFromDocTypeFieldMutationVariables
 >;
 export const SearchConfigOptionsDocument = gql`
-  query SearchConfigOptions($searchText: String, $cursor: String) {
-    options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
+  query SearchConfigOptions($searchText: String, $first: Int, $cursor: String) {
+    options: searchConfigs(searchText: $searchText, first: $first, after: $cursor) {
       edges {
         node {
           id
@@ -8366,6 +8368,7 @@ export const SearchConfigOptionsDocument = gql`
  * const { data, loading, error } = useSearchConfigOptionsQuery({
  *   variables: {
  *      searchText: // value for 'searchText'
+ *      first: // value for 'first'
  *      cursor: // value for 'cursor'
  *   },
  * });
@@ -12786,8 +12789,8 @@ export type CreateOrUpdateSearchConfigMutationOptions = Apollo.BaseMutationOptio
   CreateOrUpdateSearchConfigMutationVariables
 >;
 export const SearchConfigsDocument = gql`
-  query SearchConfigs($searchText: String, $after: String) {
-    searchConfigs(searchText: $searchText, first: 20, after: $after) {
+  query SearchConfigs($searchText: String, $first: Int, $after: String) {
+    searchConfigs(searchText: $searchText, first: $first, after: $after) {
       edges {
         node {
           id
@@ -12819,6 +12822,7 @@ export const SearchConfigsDocument = gql`
  * const { data, loading, error } = useSearchConfigsQuery({
  *   variables: {
  *      searchText: // value for 'searchText'
+ *      first: // value for 'first'
  *      after: // value for 'after'
  *   },
  * });
@@ -18377,4 +18381,4 @@ export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<
   EnrichPipelineWithItemsMutation,
   EnrichPipelineWithItemsMutationVariables
 >;
-// Generated on 2025-09-01T17:38:30+02:00
+// Generated on 2025-09-02T16:31:10+02:00
