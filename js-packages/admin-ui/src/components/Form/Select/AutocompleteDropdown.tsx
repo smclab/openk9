@@ -1,5 +1,5 @@
 import { Box, TextField, Typography, SxProps, Theme } from "@mui/material";
-import React, { useEffect, useRef, useState, useCallback, useMemo, useRef as useRefAlias } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import useDebounced from "@components/common/useDebounced";
 import { InformationField } from "../utils/informationField";
 import { AutocompleteOptionsList } from "./AutocompleteOptionsList";
@@ -44,12 +44,13 @@ export function AutocompleteDropdown({
   const [loadingMore, setLoadingMore] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [inputValue, setInputValue] = useState("");
-  const justClearedRef = useRefAlias(false);
+  const justClearedRef = useRef(false);
 
   const debouncedText = useDebounced(inputValue, 300);
   const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText);
 
   const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
+
   const showClear = allowClear && !!value;
   const visibleOptions = useMemo<Option[]>(
     () => (showClear ? [CLEAR_OPTION, ...options] : options),
@@ -74,17 +75,22 @@ export function AutocompleteDropdown({
 
   const validateAndClose = useCallback(() => {
     setOpen(false);
+
     if (justClearedRef.current) {
       justClearedRef.current = false;
       setInputValue("");
       return;
     }
+
     const matched = options.find((o) => o.label === inputValue);
     if (matched) {
-      if (value?.id !== matched.value) onChange({ id: matched.value, name: matched.label });
+      if (value?.id !== matched.value) {
+        onChange({ id: matched.value, name: matched.label });
+      }
       if (inputValue !== matched.label) setInputValue(matched.label);
       return;
     }
+
     if (value && inputValue !== value.name) setInputValue(value.name);
     else if (!value && inputValue !== "") setInputValue("");
   }, [options, inputValue, onChange, value]);
@@ -116,34 +122,48 @@ export function AutocompleteDropdown({
       setHighlightedIndex(visibleOptions.length ? 0 : -1);
       return;
     }
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((i) => clampIndex((i < 0 ? -1 : i) + 1, visibleOptions));
+      return;
     }
+
     if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((i) => clampIndex((i < 0 ? 0 : i) - 1, visibleOptions));
+      return;
     }
+
     if (e.key === "Home") {
       e.preventDefault();
       setHighlightedIndex(visibleOptions.length ? 0 : -1);
+      return;
     }
+
     if (e.key === "End") {
       e.preventDefault();
       setHighlightedIndex(visibleOptions.length ? visibleOptions.length - 1 : -1);
+      return;
     }
+
     if (e.key === "PageDown") {
       e.preventDefault();
       setHighlightedIndex((i) => clampIndex((i < 0 ? -1 : i) + 5, visibleOptions));
+      return;
     }
+
     if (e.key === "PageUp") {
       e.preventDefault();
       setHighlightedIndex((i) => clampIndex((i < 0 ? 0 : i) - 5, visibleOptions));
+      return;
     }
+
     if (e.key === "Enter") {
       if ((e.nativeEvent as any)?.isComposing || highlightedIndex < 0) return;
       const selected = visibleOptions[highlightedIndex];
       if (!selected) return;
+
       if (selected.value === "__CLEAR__") {
         justClearedRef.current = true;
         onClear?.();
@@ -151,13 +171,22 @@ export function AutocompleteDropdown({
         setOpen(false);
         return;
       }
+
       onChange({ id: selected.value, name: selected.label });
       setInputValue(selected.label);
       setOpen(false);
+      return;
     }
-    if (e.key === "Escape" || e.key === "Tab") {
+
+    if (e.key === "Escape") {
       e.preventDefault();
       validateAndClose();
+      return;
+    }
+
+    if (e.key === "Tab") {
+      validateAndClose();
+      return;
     }
   };
 
@@ -195,6 +224,7 @@ export function AutocompleteDropdown({
         </Typography>
         {description && <InformationField description={description} />}
       </Box>
+
       <TextField
         fullWidth
         disabled={disabled}
@@ -213,6 +243,7 @@ export function AutocompleteDropdown({
           "aria-activedescendant": open && highlightedIndex >= 0 ? `doc-type-option-${highlightedIndex}` : undefined,
         }}
       />
+
       {open && (
         <AutocompleteOptionsList
           options={visibleOptions}
