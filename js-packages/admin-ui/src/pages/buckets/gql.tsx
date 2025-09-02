@@ -71,8 +71,8 @@ gql`
 `;
 
 export const searchConfigOptions = gql`
-  query SearchConfigOptions($searchText: String, $cursor: String) {
-    options: searchConfigs(searchText: $searchText, first: 5, after: $cursor) {
+  query SearchConfigOptions($searchText: String, $first: Int, $cursor: String) {
+    options: searchConfigs(searchText: $searchText, first: $first, after: $cursor) {
       edges {
         node {
           id
