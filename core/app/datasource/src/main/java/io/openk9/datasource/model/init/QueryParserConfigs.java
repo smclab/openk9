@@ -325,6 +325,7 @@ public class QueryParserConfigs {
 				.value(FieldValue.builder()
 					.value("BOOL_PREFIX")
 					.build())
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -334,6 +335,7 @@ public class QueryParserConfigs {
 					.value(0.0f)
 					.build()
 				)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.build();
@@ -542,6 +544,7 @@ public class QueryParserConfigs {
 				.value(FieldValue.builder()
 					.value("BOOL_PREFIX")
 					.build())
+				.type(FormFieldType.SELECT)
 				.build()
 			)
 			.field(FormField.builder()
@@ -551,6 +554,7 @@ public class QueryParserConfigs {
 					.value(0.0f)
 					.build()
 				)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.build();
