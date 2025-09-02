@@ -1,5 +1,5 @@
 ---
-id: create-connector
+id: create-custom-connector
 title: Create connector
 ---
 
@@ -15,7 +15,7 @@ Once connector is installed, you can:
 
 In following image there is an example of form correctly compilated.
 
-![create-connector](../static/img/create-connector.png)
+![create-connector](../../static/img/create-custom-connector.png)
 
 To connect new connector you must insert:
 

@@ -38,7 +38,7 @@ Gen Ai components are:
 File handlign components are:
 
 - [**File Manager**](file-manager): is the component that handles binary files management logic.
-- [**Tika**](file-manager): is the component that performs data parsing.
+- [**Tika**](tika): is the component that performs data parsing.
 
 <br />
 <br />

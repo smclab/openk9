@@ -33,7 +33,7 @@ const sidebars = {
                 "type": "category",
                 "label": "Datasource and data enrichments",
     			"items": [
-    			"configuration/add-data-source", "configuration/connect-custom-connector", "configuration/configure-enrich-pipeline"]},
+    			"configuration/add-data-source", "configuration/create-custom-connector", "configuration/configure-enrich-pipeline"]},
     		{
                 "type": "category",
                 "label": "Mappings and data indices",
