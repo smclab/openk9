@@ -50,6 +50,13 @@ public class HybridQueryParser implements QueryParser {
 	@Inject
 	EmbeddingService embeddingService;
 
+	// use 0 or a negative value to disable maximum text query length enforcement
+	@ConfigProperty(
+		name = "openk9.datasource.text-query-parser.max-text-query-length",
+		defaultValue = "0"
+	)
+	Integer maxTextQueryLength;
+
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 		throw new UnsupportedOperationException(
@@ -79,9 +86,14 @@ public class HybridQueryParser implements QueryParser {
 		if (values.hasNext()) {
 			var value = values.next();
 
+			// enforce a maximum text query length (disabled if set to 0 or a negative value)
+			var textQueryValue = (maxTextQueryLength > 0 && value.length() > maxTextQueryLength)
+				? value.substring(0, maxTextQueryLength)
+				: value;
+
 			var matchQuery = new MatchQuery.Builder()
 				.field("chunkText")
-				.query(q -> q.stringValue(value))
+				.query(q -> q.stringValue(textQueryValue))
 				.fuzziness(fuzziness.asString())
 				.boost(boost)
 				.build()

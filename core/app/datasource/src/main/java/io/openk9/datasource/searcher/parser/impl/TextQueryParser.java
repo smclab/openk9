@@ -17,15 +17,6 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Default;
-import jakarta.inject.Named;
-
 import io.openk9.datasource.mapper.FuzzinessMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -38,12 +29,22 @@ import io.openk9.datasource.searcher.parser.QueryParser;
 import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
-
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Default;
+import jakarta.inject.Named;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Named("TextQueryParser")
@@ -56,6 +57,13 @@ public class TextQueryParser implements QueryParser {
 	public static final String VALUES_QUERY_TYPE = "valuesQueryType";
 	public static final String MULTI_MATCH_TYPE = "multiMatchType";
 	public static final String TIE_BREAKER = "tieBreaker";
+
+	// use 0 or a negative value to disable maximum text query length enforcement
+	@ConfigProperty(
+		name = "openk9.datasource.text-query-parser.max-text-query-length",
+		defaultValue = "0"
+	)
+	Integer maxTextQueryLength;
 
 	@Override
 	public QueryParserType getType() {
@@ -129,6 +137,11 @@ public class TextQueryParser implements QueryParser {
 				}
 
 				int length = Utils.countWords(value);
+
+				// enforce a maximum text query length (disabled if set to 0 or a negative value)
+				if (maxTextQueryLength > 0 && value.length() > maxTextQueryLength) {
+					value = value.substring(0, maxTextQueryLength);
+				}
 
 				if (!inQuote || length == 1) {
 
