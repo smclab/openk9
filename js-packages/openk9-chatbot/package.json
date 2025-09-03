@@ -1,5 +1,5 @@
 {
-  "name": "openk9-chatbot",
+  "name": "@openk9ui/openk9-chatbot",
   "private": false,
   "version": "3.1.0-SNAPSHOT",
   "license": "MIT",
@@ -17,7 +17,7 @@
   },
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
+    "@emotion/styled": "^5.1.14",
     "@fontsource/roboto": "^5.1.0",
     "@fontsource/titillium-web": "^5.1.0",
     "@mui/material": "^6.1.6",
@@ -27,16 +27,16 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-markdown": "^9.0.1",
-    "styled-components": "^6.1.13",
+    "styled-components": "^5.1.14",
+    "@types/react": "^18.3.12",
+    "@types/styled-components": "^5.1.14",
+    "@types/react-dom": "^18.3.1",
     "uuid": "^11.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@rollup/plugin-commonjs": "^28.0.1",
     "@types/node": "^22.8.6",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@types/styled-components": "^5.1.34",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.3",
     "eslint": "^9.13.0",
@@ -50,8 +50,6 @@
     "vite": "^5.4.10",
     "vite-plugin-commonjs": "^0.10.3",
     "vite-plugin-dts": "^4.3.0",
-    "@fontsource/roboto": "^5.1.0",
-    "@fontsource/titillium-web": "^5.1.0",
     "vite-plugin-lib-inject-css": "^2.1.1"
   },
   "resolutions": {
