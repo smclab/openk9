@@ -18,8 +18,6 @@
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^5.1.14",
-    "@fontsource/roboto": "^5.1.0",
-    "@fontsource/titillium-web": "^5.1.0",
     "@mui/material": "^6.1.6",
     "@mui/icons-material": "^6.1.6",
     "@mui/system": "^6.1.6",
@@ -36,6 +34,8 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@rollup/plugin-commonjs": "^28.0.1",
+    "@fontsource/roboto": "^5.1.0",
+    "@fontsource/titillium-web": "^5.1.0",
     "@types/node": "^22.8.6",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.3",
