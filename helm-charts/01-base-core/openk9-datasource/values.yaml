@@ -97,6 +97,10 @@ quarkus:
 datasource:
   aclQueryExtraParamsEnabled: true
 
+## QueryParser configuration
+queryParser:
+  maxTextQueryLength: 0
+
 ## Java Debug configuration
 debug:
   enabled: false
