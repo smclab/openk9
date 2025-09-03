@@ -3,7 +3,7 @@ id: create-filters
 title: Create filter
 ---
 
-This is the procedure to create and user new filter in Openk9.
+This is the procedure to create and use new filter in Openk9.
 
 To crete a new filter in Openk9:
 
@@ -19,10 +19,9 @@ To create new filter you must insert:
 
 - name
 - optional description
-- priority: is the url where preinstalled connector is reachable
-- multiSelect: is the REST api path used to triggere data extraction
-- doc type file: HTTP method associated with path
-- secure: set to true if baseUri is under http secure
+- priority: is the priority to return list of filters to frontend
+- multiSelect: if is a multi select filter or not
+- doc type field: doc type field associated with filter
 
 Once filter is created, you can add it to your active bucket in following ways:
 

@@ -26,6 +26,6 @@ Read more on following sections or go to specific section based on your needs.
 
 ### Search configuration
 
-- [**Tune search configuration**](tune-search-config): 
-- [**Create filters**](manage-bucket): 
-- [**Create tabs**](manage-bucket): 
+- [**Tune search configuration**](tune-search-config): tune search configuration and setup search behaviour
+- [**Create filters**](manage-bucket): create and use search filters
+- [**Create tabs**](manage-bucket): create and use search tabs
