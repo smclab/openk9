@@ -29,6 +29,7 @@ import io.openk9.datasource.searcher.util.QueryType;
 import io.openk9.datasource.searcher.util.Utils;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -53,6 +54,13 @@ public class TextQueryParser implements QueryParser {
 	public static final String VALUES_QUERY_TYPE = "valuesQueryType";
 	public static final String MULTI_MATCH_TYPE = "multiMatchType";
 	public static final String TIE_BREAKER = "tieBreaker";
+
+	// use 0 or a negative value to disable maximum text query length enforcement
+	@ConfigProperty(
+		name = "openk9.datasource.query-parser.max-text-query-length",
+		defaultValue = "0"
+	)
+	Integer maxTextQueryLength;
 
 	public String getType() {
 		return "TEXT";
@@ -125,6 +133,11 @@ public class TextQueryParser implements QueryParser {
 				}
 
 				int length = Utils.countWords(value);
+
+				// enforce a maximum text query length (disabled if set to 0 or a negative value)
+				if (maxTextQueryLength > 0 && value.length() > maxTextQueryLength) {
+					value = value.substring(0, maxTextQueryLength);
+				}
 
 				if (!inQuote || length == 1) {
 
