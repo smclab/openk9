@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import useDebounced from "@components/common/useDebounced";
 import { InformationField } from "../utils/informationField";
 import { AutocompleteOptionsList } from "./AutocompleteOptionsList";
+import { UseOptionsHook } from "utils/RelationOneToOne";
 
 export type Option = { value: string; label: string };
 export type SelectedValue = { id: string; name: string };
@@ -12,7 +13,6 @@ export type UseOptionsResult = {
   hasNextPage?: boolean;
   loadMore?: () => Promise<void>;
 };
-export type UseOptionsHook = (searchText: string) => UseOptionsResult;
 
 type Props = {
   onChange: (value: SelectedValue) => void;
@@ -25,6 +25,7 @@ type Props = {
   disabled?: boolean;
   useOptions: UseOptionsHook;
   sx?: SxProps<Theme>;
+  extraVariables?: Record<string, any>;
 };
 
 export function AutocompleteDropdown({
@@ -37,6 +38,7 @@ export function AutocompleteDropdown({
   disabled,
   description,
   useOptions,
+  extraVariables = {},
   sx,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -47,7 +49,7 @@ export function AutocompleteDropdown({
   const justClearedRef = useRef(false);
 
   const debouncedText = useDebounced(inputValue, 300);
-  const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText);
+  const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText, { ...extraVariables });
 
   const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);
 

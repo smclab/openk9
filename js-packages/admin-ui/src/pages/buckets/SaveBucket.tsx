@@ -4,7 +4,6 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
-  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   MultiAssociationCustomQuery,
   TextArea,
@@ -26,9 +25,7 @@ import {
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
   useDataSourcesQuery,
-  useLanguagesQuery,
   useQueryAnalysesQuery,
-  useSearchConfigsQuery,
   useSuggestionCategoriesQuery,
   useTabsQuery,
   useUnboundRagConfigurationsByBucketQuery,
@@ -38,7 +35,7 @@ import useOptions from "../../utils/getOptions";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
-import { useOptionSearchConfig } from "../../../src/utils/RelationOneToOne";
+import { useOptionSearchConfig, useRagConfigurationChatRag } from "../../../src/utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
@@ -93,11 +90,6 @@ export function SaveBucket() {
     fetchPolicy: "network-only",
   });
 
-  const ragConfigurationChatRag = useUnboundRagConfigurationsByBucketQuery({
-    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRag },
-    fetchPolicy: "network-only",
-  });
-
   const ragConfigurationChatRagTool = useUnboundRagConfigurationsByBucketQuery({
     variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRagTool },
     fetchPolicy: "network-only",
@@ -120,23 +112,6 @@ export function SaveBucket() {
     fetchPolicy: "network-only",
   });
 
-  const { OptionQuery: queryAnalysisOption } = useOptions({
-    queryKeyPath: "queryAnalyses.edges",
-    useQuery: useQueryAnalysesQuery,
-    accessKey: "node",
-  });
-  const { OptionQuery: ragChatConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRag,
-  });
-  const { OptionQuery: ragChatSimpleGenerateConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationSimpleGenerate,
-  });
-  const { OptionQuery: ragChatToolConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRagTool,
-  });
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
     refetchQueries: ["Buckets", "BucketDataSources"],
@@ -206,18 +181,24 @@ export function SaveBucket() {
               name: bucketQuery.data?.bucket?.searchConfig?.name,
             }
           : undefined,
-        ragConfigurationChatId: {
-          id: bucketQuery.data?.bucket?.ragConfigurationChat?.id || "-1",
-          name: bucketQuery.data?.bucket?.ragConfigurationChat?.name || "",
-        },
-        ragConfigurationChatToolId: {
-          id: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id || "-1",
-          name: bucketQuery.data?.bucket?.ragConfigurationChatTool?.name || "",
-        },
-        ragConfigurationSimpleGenerateId: {
-          id: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id || "-1",
-          name: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.name || "",
-        },
+        ragConfigurationChatId: bucketQuery.data?.bucket?.ragConfigurationChat?.id
+          ? {
+              id: bucketQuery.data?.bucket?.ragConfigurationChat?.id,
+              name: bucketQuery.data?.bucket?.ragConfigurationChat?.name,
+            }
+          : undefined,
+        ragConfigurationChatToolId: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id
+          ? {
+              id: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id,
+              name: bucketQuery.data?.bucket?.ragConfigurationChatTool?.name,
+            }
+          : undefined,
+        ragConfigurationSimpleGenerateId: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id
+          ? {
+              id: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id,
+              name: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.name,
+            }
+          : undefined,
       }),
       [datasources, suggestionCategories, tabs, bucketQuery],
     ),
@@ -241,11 +222,13 @@ export function SaveBucket() {
           searchConfigId: data?.searchConfigId?.id ? data.searchConfigId.id : undefined,
           defaultLanguageId: data.defaultLanguageId?.id ? data?.defaultLanguageId?.id : undefined,
           queryAnalysisId: data?.queryAnalysisId?.id ? data?.queryAnalysisId?.id : undefined,
-          ragConfigurationChat: data.ragConfigurationChatId.id !== "-1" ? data.ragConfigurationChatId.id : null,
-          ragConfigurationChatTool:
-            data.ragConfigurationChatToolId.id !== "-1" ? data.ragConfigurationChatToolId.id : null,
-          ragConfigurationSimpleGenerate:
-            data.ragConfigurationSimpleGenerateId.id !== "-1" ? data.ragConfigurationSimpleGenerateId.id : null,
+          ragConfigurationChat: data?.ragConfigurationChatId?.id ? data?.ragConfigurationChatId?.id : undefined,
+          ragConfigurationChatTool: data.ragConfigurationChatToolId?.id
+            ? data?.ragConfigurationChatToolId?.id
+            : undefined,
+          ragConfigurationSimpleGenerate: data?.ragConfigurationSimpleGenerateId?.id
+            ? data.ragConfigurationSimpleGenerateId.id
+            : undefined,
         },
       });
     },
@@ -253,48 +236,6 @@ export function SaveBucket() {
   });
 
   if (bucketQuery.loading) return null;
-
-  const RagConfigurationSelect = () => {
-    return (
-      <>
-        <CustomSelectRelationsOneToOne
-          options={ragChatConfigurationOption}
-          label="Chat Rag"
-          onChange={(val) => form.inputProps("ragConfigurationChatId").onChange({ id: val.id, name: val.name })}
-          value={{
-            id: form.inputProps("ragConfigurationChatId").value.id,
-            name: form.inputProps("ragConfigurationChatId").value.name || "",
-          }}
-          disabled={page === 1}
-          // description="Search Configuration for current bucket"
-        />
-        <CustomSelectRelationsOneToOne
-          options={ragChatToolConfigurationOption}
-          label="Chat Rag Tool"
-          onChange={(val) => form.inputProps("ragConfigurationChatToolId").onChange({ id: val.id, name: val.name })}
-          value={{
-            id: form.inputProps("ragConfigurationChatToolId").value.id,
-            name: form.inputProps("ragConfigurationChatToolId").value.name || "",
-          }}
-          disabled={page === 1}
-          // description="Query Analysis for current bucket"
-        />
-        <CustomSelectRelationsOneToOne
-          options={ragChatSimpleGenerateConfigurationOption}
-          label="Simple Generate"
-          onChange={(val) =>
-            form.inputProps("ragConfigurationSimpleGenerateId").onChange({ id: val.id, name: val.name })
-          }
-          value={{
-            id: form.inputProps("ragConfigurationSimpleGenerateId").value.id,
-            name: form.inputProps("ragConfigurationSimpleGenerateId").value.name || "",
-          }}
-          disabled={page === 1}
-          // description="Default Language for current bucket"
-        />
-      </>
-    );
-  };
 
   return (
     <ContainerFluid style={{ width: "55%" }}>
@@ -475,6 +416,64 @@ export function SaveBucket() {
                         disabled={page === 1}
                         useOptions={useOptionSearchConfig}
                       />
+                      <AutocompleteDropdown
+                        label="Chat Rag "
+                        onChange={(val) =>
+                          form.inputProps("ragConfigurationChatId").onChange({ id: val.id, name: val.name })
+                        }
+                        value={
+                          !form?.inputProps("ragConfigurationChatId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("ragConfigurationChatId")?.value?.id || "",
+                                name: form?.inputProps("ragConfigurationChatId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("ragConfigurationChatId").onChange(undefined)}
+                        disabled={page === 1}
+                        useOptions={useRagConfigurationChatRag}
+                        extraVariables={{ bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRag }}
+                      />
+                      <AutocompleteDropdown
+                        label="Chat Rag Tool"
+                        onChange={(val) =>
+                          form.inputProps("ragConfigurationChatToolId").onChange({ id: val.id, name: val.name })
+                        }
+                        value={
+                          !form?.inputProps("ragConfigurationChatToolId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("ragConfigurationChatToolId")?.value?.id || "",
+                                name: form?.inputProps("ragConfigurationChatToolId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("ragConfigurationChatToolId").onChange(undefined)}
+                        disabled={page === 1}
+                        useOptions={useRagConfigurationChatRag}
+                        extraVariables={{ bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRagTool }}
+                      />
+                      <AutocompleteDropdown
+                        label="Simple Generate"
+                        onChange={(val) =>
+                          form.inputProps("ragConfigurationSimpleGenerateId").onChange({ id: val.id, name: val.name })
+                        }
+                        value={
+                          !form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.id || "",
+                                name: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("ragConfigurationSimpleGenerateId").onChange(undefined)}
+                        disabled={page === 1}
+                        useOptions={useRagConfigurationChatRag}
+                        extraVariables={{
+                          bucketId: bucketId === "new" ? "0" : bucketId,
+                          ragType: RagType.SimpleGenerate,
+                        }}
+                      />
+
                       {/* <CustomSelectRelationsOneToOne
                         options={queryAnalysisOption}
                         label="Query Analyzer"
@@ -499,7 +498,6 @@ export function SaveBucket() {
                         disabled={page === 1}
                         description="Default Language for current bucket"
                       /> */}
-                      <RagConfigurationSelect />
                     </Box>
                   </>
                 ),
