@@ -18,7 +18,7 @@ type Props = {
   highlightedIndex: number;
   loading: boolean;
   onSelect: (option: Option) => void;
-  onScroll: (e: React.UIEvent<HTMLUListElement, UIEvent>) => void;
+  onScroll?: (e: React.UIEvent<HTMLUListElement, UIEvent>) => void;
   clearValue?: string;
 };
 
