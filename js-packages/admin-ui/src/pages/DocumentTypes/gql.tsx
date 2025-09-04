@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 
- gql`
+gql`
   query DocumentTypeTemplates($searchText: String, $after: String) {
     docTypeTemplates(searchText: $searchText, first: 20, after: $after) {
       edges {
@@ -27,7 +27,7 @@ gql`
   }
 `;
 
- gql`
+gql`
   query DocumentTypes($searchText: String, $cursor: String) {
     docTypes(searchText: $searchText, first: 20, after: $cursor) {
       edges {
@@ -89,7 +89,7 @@ gql`
   }
 `;
 
- gql`
+gql`
   query DocumentTypeField($id: ID!) {
     docTypeField(id: $id) {
       id
@@ -254,8 +254,8 @@ gql`
 `;
 
 gql`
-  query docTypeTemplateList {
-    docTypeTemplates {
+  query docTypeTemplateList($searchText: String, $after: String, $first: Int) {
+    docTypeTemplates(searchText: $searchText, first: $first, after: $after) {
       edges {
         node {
           name

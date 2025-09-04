@@ -5229,7 +5229,11 @@ export type DeleteDocumentTypeMutation = {
   deleteDocType?: { __typename?: "DocType"; id?: string | null } | null;
 };
 
-export type DocTypeTemplateListQueryVariables = Exact<{ [key: string]: never }>;
+export type DocTypeTemplateListQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars["String"]>;
+  after?: InputMaybe<Scalars["String"]>;
+  first?: InputMaybe<Scalars["Int"]>;
+}>;
 
 export type DocTypeTemplateListQuery = {
   __typename?: "Query";
@@ -10037,8 +10041,8 @@ export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<
   DeleteDocumentTypeMutationVariables
 >;
 export const DocTypeTemplateListDocument = gql`
-  query docTypeTemplateList {
-    docTypeTemplates {
+  query docTypeTemplateList($searchText: String, $after: String, $first: Int) {
+    docTypeTemplates(searchText: $searchText, first: $first, after: $after) {
       edges {
         node {
           name
@@ -10061,6 +10065,9 @@ export const DocTypeTemplateListDocument = gql`
  * @example
  * const { data, loading, error } = useDocTypeTemplateListQuery({
  *   variables: {
+ *      searchText: // value for 'searchText'
+ *      after: // value for 'after'
+ *      first: // value for 'first'
  *   },
  * });
  */
@@ -18381,4 +18388,4 @@ export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<
   EnrichPipelineWithItemsMutation,
   EnrichPipelineWithItemsMutationVariables
 >;
-// Generated on 2025-09-04T11:17:44+02:00
+// Generated on 2025-09-04T11:39:36+02:00
