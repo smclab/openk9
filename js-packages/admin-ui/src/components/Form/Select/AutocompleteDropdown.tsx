@@ -1,9 +1,9 @@
-import { Box, TextField, Typography, SxProps, Theme } from "@mui/material";
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import useDebounced from "@components/common/useDebounced";
+import { Box, SxProps, TextField, Theme, Typography } from "@mui/material";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UseOptionsHook } from "utils/RelationOneToOne";
 import { InformationField } from "../utils/informationField";
 import { AutocompleteOptionsList } from "./AutocompleteOptionsList";
-import { UseOptionsHook } from "utils/RelationOneToOne";
 
 export type Option = { value: string; label: string };
 export type SelectedValue = { id: string; name: string };
@@ -267,6 +267,7 @@ export function AutocompleteDropdown({
           onSelect={handleSelect}
           onScroll={handleScroll}
           clearValue="__CLEAR__"
+          viewClear={inputValue.length > 0}
         />
       )}
     </Box>
@@ -482,6 +483,7 @@ export function AutocompleteDropdownWithOptions({
           loading={false}
           onSelect={handleSelect}
           clearValue="__CLEAR__"
+          viewClear={inputValue.length > 0}
         />
       )}
     </Box>
