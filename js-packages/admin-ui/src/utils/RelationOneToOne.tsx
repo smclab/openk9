@@ -1,4 +1,9 @@
-import { useDocTypeFieldsQuery, useSearchConfigsQuery } from "../graphql-generated";
+import {
+  RagType,
+  useDocTypeFieldsQuery,
+  useSearchConfigsQuery,
+  useUnboundRagConfigurationsByBucketQuery,
+} from "../graphql-generated";
 
 export type Option = { value: string; label: string };
 export type UseOptionsResult = {
@@ -7,7 +12,7 @@ export type UseOptionsResult = {
   hasNextPage: boolean;
   loadMore?: () => Promise<void>;
 };
-export type UseOptionsHook = (searchText: string) => UseOptionsResult;
+export type UseOptionsHook = (searchText: string, extraVariables?: Record<string, any>) => UseOptionsResult;
 
 type ConnectionLike<Node = any> =
   | {
@@ -44,30 +49,60 @@ export function makeUseOptionsHook<
     toOption = (n: any) => ({ value: n?.id ?? "", label: n?.name ?? "" }),
     first = 20,
   } = p;
-  return (searchText: string) => {
+  return (searchText: string, extraVariables: Record<string, any> = {}) => {
     const { data, loading, fetchMore } = useQuery({
-      variables: { searchText, first, after: null } as any,
+      variables: { searchText, first, after: null, ...extraVariables } as any,
       notifyOnNetworkStatusChange: true,
     });
-    const conn = (data?.[connectionKey] as ConnectionLike<TNode>) ?? null;
-    const options = (conn?.edges ?? []).map((e: any) => toOption(e?.node));
-    const hasNextPage = !!conn?.pageInfo?.hasNextPage;
+    const conn = data?.[connectionKey] as ConnectionLike<TNode> | TNode[] | undefined;
+    let nodes: TNode[] = [];
+    let hasNextPage = false;
+
+    if (Array.isArray(conn)) {
+      nodes = conn;
+      hasNextPage = false;
+    } else if (conn && typeof conn === "object" && "edges" in conn) {
+      nodes = (conn.edges ?? []).map((e) => e?.node as TNode).filter(Boolean);
+      hasNextPage = !!conn.pageInfo?.hasNextPage;
+    }
+
+    const options = nodes.map((n) => toOption(n));
     const loadMore = hasNextPage
       ? async () => {
           await fetchMore({
-            variables: { searchText, first, after: conn?.pageInfo?.endCursor ?? null } as any,
+            variables: {
+              searchText,
+              first,
+              after: (conn as ConnectionLike<TNode>)?.pageInfo?.endCursor ?? null,
+              ...extraVariables,
+            } as any,
             updateQuery: (prev: any, { fetchMoreResult }: { fetchMoreResult?: any }) => {
               if (!fetchMoreResult) return prev;
-              const prevConn = prev?.[connectionKey] as ConnectionLike<TNode>;
-              const nextConn = fetchMoreResult?.[connectionKey] as ConnectionLike<TNode>;
-              return {
-                ...prev,
-                [connectionKey]: {
-                  __typename: prevConn?.__typename ?? nextConn?.__typename,
-                  edges: [...(prevConn?.edges ?? []), ...(nextConn?.edges ?? [])],
-                  pageInfo: nextConn?.pageInfo ?? prevConn?.pageInfo,
-                },
-              } as TData;
+              const prevConn = prev?.[connectionKey];
+              const nextConn = fetchMoreResult?.[connectionKey];
+              if (Array.isArray(prevConn) && Array.isArray(nextConn)) {
+                return {
+                  ...prev,
+                  [connectionKey]: [...prevConn, ...nextConn],
+                } as TData;
+              } else if (
+                prevConn &&
+                typeof prevConn === "object" &&
+                "edges" in prevConn &&
+                nextConn &&
+                typeof nextConn === "object" &&
+                "edges" in nextConn
+              ) {
+                return {
+                  ...prev,
+                  [connectionKey]: {
+                    __typename: prevConn?.__typename ?? nextConn?.__typename,
+                    edges: [...(prevConn?.edges ?? []), ...(nextConn?.edges ?? [])],
+                    pageInfo: nextConn?.pageInfo ?? prevConn?.pageInfo,
+                  },
+                } as TData;
+              }
+              return prev;
             },
           });
         }
@@ -81,7 +116,30 @@ export const useOptionSearchConfig: UseOptionsHook = makeUseOptionsHook({
   connectionKey: "searchConfigs",
   first: 20,
 });
+export const useRagConfigurationChatRag: UseOptionsHook = makeUseOptionsHook({
+  useQuery: ({ variables, ...rest }) => {
+    const { bucketId, ragType } = variables;
+    if (!bucketId || !ragType) {
+      throw new Error("bucketId and ragType must be provided in extraVariables for useRagConfigurationChatRag");
+    }
+
+    return useUnboundRagConfigurationsByBucketQuery({
+      variables: {
+        bucketId: bucketId as string,
+        ragType: ragType as RagType,
+      },
+      ...rest,
+    });
+  },
+  connectionKey: "unboundRAGConfigurationByBucket",
+  first: 20,
+});
 export const useDocTypeOptions: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDocTypeFieldsQuery,
+  connectionKey: "docTypeFields",
+  first: 20,
+});
+export const useQuery: UseOptionsHook = makeUseOptionsHook({
   useQuery: useDocTypeFieldsQuery,
   connectionKey: "docTypeFields",
   first: 20,
