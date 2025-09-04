@@ -62,6 +62,7 @@ export function AutocompleteDropdown({
   const justClearedRef = useRef(false);
 
   const debouncedText = useDebounced(inputValue, 300);
+
   const { options, loading, hasNextPage, loadMore } = useOptions(debouncedText, { ...extraVariables });
 
   const CLEAR_OPTION: Option = useMemo(() => ({ value: "__CLEAR__", label: clearLabel }), [clearLabel]);

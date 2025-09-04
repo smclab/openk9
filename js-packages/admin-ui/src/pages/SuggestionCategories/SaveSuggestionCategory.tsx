@@ -3,7 +3,6 @@ import {
   combineErrorMessages,
   ContainerFluid,
   CreateDataEntity,
-  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   NumberInput,
   TextArea,
@@ -12,9 +11,11 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { isValidId, useDocTypes } from "../../utils/RelationOneToOne";
 import {
   useCreateOrUpdateSuggestionCategoryMutation,
   useDocTypeFieldsQuery,
@@ -82,10 +83,7 @@ export function SaveSuggestionCategory() {
         name: "",
         description: "",
         priority: 0,
-        docTypeFieldId: {
-          id: suggestionCategoryQuery.data?.suggestionCategory?.docTypeField?.id || "-1",
-          name: suggestionCategoryQuery.data?.suggestionCategory?.docTypeField?.name || "",
-        },
+        docTypeFieldId: isValidId(suggestionCategoryQuery.data?.suggestionCategory?.docTypeField),
         multiSelect: false,
       }),
       [suggestionCategoryQuery.data],
@@ -97,7 +95,7 @@ export function SaveSuggestionCategory() {
         variables: {
           id: suggestionCategoryId !== "new" ? suggestionCategoryId : undefined,
           ...data,
-          docTypeFieldId: data.docTypeFieldId.id !== "-1" ? data.docTypeFieldId.id : null,
+          docTypeFieldId: isValidId(data.docTypeFieldId)?.id,
         },
       });
     },
@@ -146,7 +144,23 @@ export function SaveSuggestionCategory() {
                       {...form.inputProps("multiSelect")}
                       description="If currente Filter is rendered as multi label filter or not"
                     />
-                    <CustomSelectRelationsOneToOne
+                    <AutocompleteDropdown
+                      label="Search Config"
+                      onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
+                      value={
+                        !form?.inputProps("docTypeFieldId")?.value?.id
+                          ? undefined
+                          : {
+                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
+                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                            }
+                      }
+                      onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
+                      disabled={page === 1}
+                      useOptions={useDocTypes}
+                      extraVariables={{ suggestionCategoryId: Number(suggestionCategoryId) || 0 }}
+                    />
+                    {/* <CustomSelectRelationsOneToOne
                       options={OptionDocType}
                       label="Doc Type"
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
@@ -155,7 +169,7 @@ export function SaveSuggestionCategory() {
                         name: form.inputProps("docTypeFieldId").value.name || "",
                       }}
                       disabled={page === 1}
-                    />
+                    /> */}
                   </div>
                 ),
                 page: 0,
