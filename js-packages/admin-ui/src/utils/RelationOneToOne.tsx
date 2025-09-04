@@ -1,6 +1,8 @@
 import {
   RagType,
   useDocTypeFieldsQuery,
+  useLanguagesQuery,
+  useQueryAnalysesQuery,
   useSearchConfigsQuery,
   useUnboundRagConfigurationsByBucketQuery,
 } from "../graphql-generated";
@@ -142,5 +144,15 @@ export const useDocTypeOptions: UseOptionsHook = makeUseOptionsHook({
 export const useQuery: UseOptionsHook = makeUseOptionsHook({
   useQuery: useDocTypeFieldsQuery,
   connectionKey: "docTypeFields",
+  first: 20,
+});
+export const useQueryAnaylyses: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useQueryAnalysesQuery,
+  connectionKey: "queryAnalyses",
+  first: 20,
+});
+export const useLanguages: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useLanguagesQuery,
+  connectionKey: "languages",
   first: 20,
 });

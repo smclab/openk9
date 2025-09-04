@@ -35,7 +35,12 @@ import useOptions from "../../utils/getOptions";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
-import { useOptionSearchConfig, useRagConfigurationChatRag } from "../../../src/utils/RelationOneToOne";
+import {
+  useLanguages,
+  useOptionSearchConfig,
+  useQueryAnaylyses,
+  useRagConfigurationChatRag,
+} from "../../../src/utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
@@ -87,16 +92,6 @@ export function SaveBucket() {
   const bucketQuery = useBucketQuery({
     variables: { id: bucketId as string },
     skip: !bucketId || bucketId === "new",
-    fetchPolicy: "network-only",
-  });
-
-  const ragConfigurationChatRagTool = useUnboundRagConfigurationsByBucketQuery({
-    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRagTool },
-    fetchPolicy: "network-only",
-  });
-
-  const ragConfigurationSimpleGenerate = useUnboundRagConfigurationsByBucketQuery({
-    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.SimpleGenerate },
     fetchPolicy: "network-only",
   });
 
@@ -414,7 +409,22 @@ export function SaveBucket() {
                         }
                         onClear={() => form.inputProps("defaultLanguageId").onChange(undefined)}
                         disabled={page === 1}
-                        useOptions={useOptionSearchConfig}
+                        useOptions={useLanguages}
+                      />
+                      <AutocompleteDropdown
+                        label="Query analysis"
+                        onChange={(val) => form.inputProps("queryAnalysisId").onChange({ id: val.id, name: val.name })}
+                        value={
+                          !form?.inputProps("queryAnalysisId")?.value?.id
+                            ? undefined
+                            : {
+                                id: form?.inputProps("queryAnalysisId")?.value?.id || "",
+                                name: form?.inputProps("queryAnalysisId")?.value?.name || "",
+                              }
+                        }
+                        onClear={() => form.inputProps("queryAnalysisId").onChange(undefined)}
+                        disabled={page === 1}
+                        useOptions={useQueryAnaylyses}
                       />
                       <AutocompleteDropdown
                         label="Chat Rag "
