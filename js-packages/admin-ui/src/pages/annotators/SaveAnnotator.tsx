@@ -2,7 +2,6 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
-  CustomSelectRelationsOneToOne,
   NumberInput,
   TextArea,
   TextInput,
@@ -12,16 +11,17 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { isValidId, useDocTypesAnnotators } from "../../utils/RelationOneToOne";
 import {
   AnnotatorType,
   Fuzziness,
   useAnnotatorQuery,
   useCreateOrUpdateAnnotatorMutation,
-  useDocTypeFieldOptionsAnnotatorsQuery,
 } from "../../graphql-generated";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SaveAnnotator() {
@@ -30,7 +30,6 @@ export function SaveAnnotator() {
     variables: { id: annotatorId as string },
     skip: !annotatorId || annotatorId === "new",
   });
-  const { DocTypeQuery, OptionSearchConfig } = useOptions();
 
   const navigate = useNavigate();
   const [page, setPage] = React.useState(0);
@@ -109,10 +108,7 @@ export function SaveAnnotator() {
         boost: extraParams.boost || boostDefaultValue,
         valuesQueryType: extraParams.valuesQueryType || valuesQueryTypeDefaultValue,
         globalQueryType: extraParams.globalQueryType || globalQueryTypeDefaultValue,
-        docTypeFieldId: {
-          id: annotatorQuery.data?.annotator?.docTypeField?.id,
-          name: annotatorQuery.data?.annotator?.docTypeField?.name,
-        },
+        docTypeFieldId: isValidId(annotatorQuery.data?.annotator?.docTypeField),
       }),
       [annotatorQuery.data?.annotator?.docTypeField?.id, extraParams],
     ),
@@ -130,7 +126,7 @@ export function SaveAnnotator() {
       const variables = {
         id: annotatorId !== "new" ? annotatorId : undefined,
         ...data,
-        docTypeFieldId: data.docTypeFieldId.id === "-1" ? null : data.docTypeFieldId.id,
+        docTypeFieldId: data?.docTypeFieldId?.id ? data?.docTypeFieldId?.id : null,
         ...(isExtraParamsType
           ? {
               extraParams: JSON.stringify({
@@ -153,46 +149,6 @@ export function SaveAnnotator() {
 
   const isDisabled = (inputName: formInput): boolean => {
     return view === "view" || page === 1 || form.inputProps(inputName).disabled;
-  };
-
-  const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
-    if (!DocTypeQuery.data?.options?.pageInfo?.hasNextPage) return [];
-
-    try {
-      const response = await DocTypeQuery.fetchMore({
-        variables: {
-          first: 20,
-          cursor: DocTypeQuery.data.options.pageInfo.endCursor,
-        },
-      });
-
-      const newEdges = response.data?.options?.edges || [];
-      const newPageInfo = response.data?.options?.pageInfo;
-
-      if (!newEdges.length || !newPageInfo) {
-        console.warn("No new data fetched or pageInfo is missing.");
-        return [];
-      }
-
-      DocTypeQuery.updateQuery((prev) => ({
-        ...prev,
-        options: {
-          ...prev.options,
-          edges: [...(prev.options?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
-
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Error loading more options:", error);
-      return [];
-    }
   };
 
   return (
@@ -269,7 +225,22 @@ export function SaveAnnotator() {
                       {...form.inputProps("size")}
                       description="Size for result retrieved by annotator"
                     />
-                    <CustomSelectRelationsOneToOne
+                    <AutocompleteDropdown
+                      label="Doc type field"
+                      onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
+                      value={
+                        !form?.inputProps("docTypeFieldId")?.value?.id
+                          ? undefined
+                          : {
+                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
+                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                            }
+                      }
+                      onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
+                      disabled={page === 1}
+                      useOptions={useDocTypesAnnotators}
+                    />
+                    {/* <CustomSelectRelationsOneToOne
                       options={OptionSearchConfig}
                       label="Doc type field"
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
@@ -283,7 +254,7 @@ export function SaveAnnotator() {
                         response: loadMoreOptions,
                         hasNextPage: DocTypeQuery.data?.options?.pageInfo?.hasNextPage || false,
                       }}
-                    />
+                    /> */}
                     {[
                       AnnotatorType.Autocomplete,
                       AnnotatorType.NerAutocomplete,
@@ -361,26 +332,3 @@ type formInput =
   | "boost"
   | "valuesQueryType"
   | "globalQueryType";
-
-const useOptions = (): {
-  DocTypeQuery: ReturnType<typeof useDocTypeFieldOptionsAnnotatorsQuery>;
-  OptionSearchConfig: { value: string; label: string }[];
-} => {
-  const DocTypeQuery = useDocTypeFieldOptionsAnnotatorsQuery();
-
-  const getOptions = (data: typeof DocTypeQuery.data, key: "options"): { value: string; label: string }[] => {
-    return (
-      data?.[key]?.edges?.map((item) => ({
-        value: item?.node?.id || "",
-        label: item?.node?.name || "",
-      })) || []
-    );
-  };
-
-  const OptionSearchConfig = getOptions(DocTypeQuery.data, "options");
-
-  return {
-    DocTypeQuery,
-    OptionSearchConfig,
-  };
-};

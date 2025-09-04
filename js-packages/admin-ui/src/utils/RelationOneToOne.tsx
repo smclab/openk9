@@ -1,10 +1,13 @@
 import {
   RagType,
+  useDocTypeFieldOptionsAnnotatorsQuery,
+  useDocTypeFieldOptionsTokenTabQuery,
   useDocTypeFieldsQuery,
   useDocTypeTemplateListQuery,
   useLanguagesQuery,
   useQueryAnalysesQuery,
   useSearchConfigsQuery,
+  useUnboundDocTypeFieldsBySuggestionCategoryQuery,
   useUnboundRagConfigurationsByBucketQuery,
 } from "../graphql-generated";
 
@@ -160,6 +163,36 @@ export const useLanguages: UseOptionsHook = makeUseOptionsHook({
 export const useDocTypesTemplates: UseOptionsHook = makeUseOptionsHook({
   useQuery: useDocTypeTemplateListQuery,
   connectionKey: "docTypeTemplates",
+  first: 20,
+});
+export const useDocTypesAnnotators: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDocTypeFieldOptionsAnnotatorsQuery,
+  connectionKey: "options",
+  first: 20,
+});
+export const useDocTypeTokenTab: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDocTypeFieldOptionsTokenTabQuery,
+  connectionKey: "options",
+  first: 20,
+});
+
+export const useDocTypes: UseOptionsHook = makeUseOptionsHook({
+  useQuery: ({ variables, ...rest }) => {
+    const { suggestionCategoryId } = variables;
+    if (suggestionCategoryId === undefined || suggestionCategoryId === null) {
+      console.log(suggestionCategoryId);
+
+      throw new Error("SuggestionCategoryId must be provided in extraVariables for useDocTypes ");
+    }
+
+    return useUnboundDocTypeFieldsBySuggestionCategoryQuery({
+      variables: {
+        suggestionCategoryId: suggestionCategoryId as string,
+      },
+      ...rest,
+    });
+  },
+  connectionKey: "unboundDocTypeFieldsBySuggestionCategory",
   first: 20,
 });
 

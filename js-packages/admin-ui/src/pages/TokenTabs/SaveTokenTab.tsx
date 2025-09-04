@@ -4,7 +4,6 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
-  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   TextArea,
   TextInput,
@@ -13,15 +12,12 @@ import {
   useForm,
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  TokenType,
-  useCreateOrUpdateTabTokenMutation,
-  useDocTypeFieldOptionsTokenTabQuery,
-  useTabTokenTabQuery,
-} from "../../graphql-generated";
+import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
+import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 enum fuzziness {
@@ -79,7 +75,6 @@ export function SaveTokenTab() {
     variables: { id: tokenTabId as string },
     skip: !tokenTabId || tokenTabId === "new",
   });
-  const { DocTypeQuery, OptionDocType } = useOptions();
   const toast = useToast();
   const [createOrUpdateTabTokenMutate, createOrUpdateTabTokenMutation] = useCreateOrUpdateTabTokenMutation({
     refetchQueries: ["TabTokenTab", "TabTokens"],
@@ -141,10 +136,7 @@ export function SaveTokenTab() {
         description: "",
         value: "",
         filter: true,
-        docTypeFieldId: {
-          id: tabTokenTabQuery.data?.tokenTab?.docTypeField?.id || "-1",
-          name: tabTokenTabQuery.data?.tokenTab?.docTypeField?.name || "",
-        },
+        docTypeFieldId: isValidId(tabTokenTabQuery.data?.tokenTab?.docTypeField),
         tokenType: TokenType.Autocomplete,
         boost: extraParams.boost || boostDefaultValue,
         fuzziness: extraParams.fuziness || fuzzinessDefaultValue,
@@ -172,7 +164,7 @@ export function SaveTokenTab() {
                 }),
               }
             : {}),
-          docTypeFieldId: data.docTypeFieldId.id !== "-1" ? data.docTypeFieldId.id : null,
+          docTypeFieldId: data?.docTypeFieldId?.id ? data?.docTypeFieldId?.id : null,
         },
       });
     },
@@ -180,46 +172,6 @@ export function SaveTokenTab() {
       createOrUpdateTabTokenMutation.data?.tokenTabWithDocTypeField?.fieldValidators,
     ),
   });
-
-  const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
-    if (!DocTypeQuery.data?.options?.pageInfo?.hasNextPage) return [];
-
-    try {
-      const response = await DocTypeQuery.fetchMore({
-        variables: {
-          first: 20,
-          cursor: DocTypeQuery.data.options.pageInfo.endCursor,
-        },
-      });
-
-      const newEdges = response.data?.options?.edges || [];
-      const newPageInfo = response.data?.options?.pageInfo;
-
-      if (!newEdges.length || !newPageInfo) {
-        console.warn("No new data fetched or pageInfo is missing.");
-        return [];
-      }
-
-      DocTypeQuery.updateQuery((prev) => ({
-        ...prev,
-        options: {
-          ...prev.options,
-          edges: [...(prev.options?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
-
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Error loading more options:", error);
-      return [];
-    }
-  };
 
   return (
     <ContainerFluid>
@@ -289,20 +241,20 @@ export function SaveTokenTab() {
                         }}
                       />
                     </TooltipDescription>
-                    <CustomSelectRelationsOneToOne
-                      options={OptionDocType}
-                      description="Document Type Field associated to this token"
+                    <AutocompleteDropdown
                       label="DocType Field"
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
-                      value={{
-                        id: form.inputProps("docTypeFieldId").value.id,
-                        name: form.inputProps("docTypeFieldId").value.name || "",
-                      }}
+                      value={
+                        !form?.inputProps("docTypeFieldId")?.value?.id
+                          ? undefined
+                          : {
+                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
+                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                            }
+                      }
+                      onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
                       disabled={page === 1}
-                      loadMoreOptions={{
-                        response: loadMoreOptions,
-                        hasNextPage: DocTypeQuery.data?.options?.pageInfo?.hasNextPage || false,
-                      }}
+                      useOptions={useDocTypeTokenTab}
                     />
                     {(form.inputProps("tokenType").value === "TEXT" ||
                       form.inputProps("tokenType").value === "FILTER") && (
@@ -346,26 +298,3 @@ export function SaveTokenTab() {
     </ContainerFluid>
   );
 }
-
-const useOptions = (): {
-  DocTypeQuery: ReturnType<typeof useDocTypeFieldOptionsTokenTabQuery>;
-  OptionDocType: { value: string; label: string }[];
-} => {
-  const DocTypeQuery = useDocTypeFieldOptionsTokenTabQuery();
-
-  const getOptions = (data: typeof DocTypeQuery.data, key: "options"): { value: string; label: string }[] => {
-    return (
-      data?.[key]?.edges?.map((item) => ({
-        value: item?.node?.id || "",
-        label: item?.node?.name || "",
-      })) || []
-    );
-  };
-
-  const OptionDocType = getOptions(DocTypeQuery.data, "options");
-
-  return {
-    DocTypeQuery,
-    OptionDocType,
-  };
-};
