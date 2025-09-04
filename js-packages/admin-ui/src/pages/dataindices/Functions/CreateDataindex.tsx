@@ -28,6 +28,8 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChunkType, useDataSourcesQuery, useDocumentTypesQuery } from "../../../graphql-generated";
 import { DataindexData } from "../SaveDataindex";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { useDocTypeOptions } from "../../../utils/RelationOneToOne";
 
 export function CreateDataindex({
   dataindexData,
@@ -384,9 +386,8 @@ export function CreateDataindex({
                 value={dataindexData?.embeddingJsonConfig || "{}"}
                 validationMessages={[]}
               />
-              <CustomSelectRelationsOneToOne
-                options={OptionDocType}
-                label="Doc Type Field"
+              <AutocompleteDropdown
+                label="Doc Type"
                 onChange={(val) => {
                   setDataindexData((prevData) =>
                     prevData
@@ -402,10 +403,17 @@ export function CreateDataindex({
                   name: dataindexData?.embeddingDocTypeFieldId?.name || "",
                 }}
                 disabled={isReadOnly}
-                loadMoreOptions={{
-                  response: loadMoreOptions,
-                  hasNextPage: docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage || false,
-                }}
+                onClear={() =>
+                  setDataindexData((prevData) =>
+                    prevData
+                      ? {
+                          ...prevData,
+                          embeddingDocTypeFieldId: { id: "", name: "" },
+                        }
+                      : null,
+                  )
+                }
+                useOptions={useDocTypeOptions}
               />
 
               <div

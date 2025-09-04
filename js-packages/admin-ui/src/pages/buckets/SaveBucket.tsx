@@ -27,11 +27,12 @@ import {
   useDataSourcesQuery,
   useSuggestionCategoriesQuery,
   useTabsQuery,
+  useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import {
   useLanguages,
   useOptionSearchConfig,
@@ -103,7 +104,20 @@ export function SaveBucket() {
     skip: !bucketId || bucketId === "new",
     fetchPolicy: "network-only",
   });
+  const ragConfigurationChatRag = useUnboundRagConfigurationsByBucketQuery({
+    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRag },
+    fetchPolicy: "network-only",
+  });
 
+  const ragConfigurationChatRagTool = useUnboundRagConfigurationsByBucketQuery({
+    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRagTool },
+    fetchPolicy: "network-only",
+  });
+
+  const ragConfigurationSimpleGenerate = useUnboundRagConfigurationsByBucketQuery({
+    variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.SimpleGenerate },
+    fetchPolicy: "network-only",
+  });
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
     refetchQueries: ["Buckets", "BucketDataSources"],
@@ -423,7 +437,7 @@ export function SaveBucket() {
                         disabled={page === 1}
                         useOptions={useQueryAnaylyses}
                       />
-                      <AutocompleteDropdown
+                      <AutocompleteDropdownWithOptions
                         label="Chat Rag "
                         onChange={(val) =>
                           form.inputProps("ragConfigurationChatId").onChange({ id: val.id, name: val.name })
@@ -438,10 +452,14 @@ export function SaveBucket() {
                         }
                         onClear={() => form.inputProps("ragConfigurationChatId").onChange(undefined)}
                         disabled={page === 1}
-                        useOptions={useRagConfigurationChatRag}
-                        extraVariables={{ bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRag }}
+                        optionsDefault={
+                          ragConfigurationChatRag?.data?.unboundRAGConfigurationByBucket?.map((unbound) => ({
+                            value: unbound?.id || "",
+                            label: unbound?.name || "",
+                          })) || []
+                        }
                       />
-                      <AutocompleteDropdown
+                      <AutocompleteDropdownWithOptions
                         label="Chat Rag Tool"
                         onChange={(val) =>
                           form.inputProps("ragConfigurationChatToolId").onChange({ id: val.id, name: val.name })
@@ -456,10 +474,14 @@ export function SaveBucket() {
                         }
                         onClear={() => form.inputProps("ragConfigurationChatToolId").onChange(undefined)}
                         disabled={page === 1}
-                        useOptions={useRagConfigurationChatRag}
-                        extraVariables={{ bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRagTool }}
+                        optionsDefault={
+                          ragConfigurationChatRagTool?.data?.unboundRAGConfigurationByBucket?.map((unbound) => ({
+                            value: unbound?.id || "",
+                            label: unbound?.name || "",
+                          })) || []
+                        }
                       />
-                      <AutocompleteDropdown
+                      <AutocompleteDropdownWithOptions
                         label="Simple Generate"
                         onChange={(val) =>
                           form.inputProps("ragConfigurationSimpleGenerateId").onChange({ id: val.id, name: val.name })
@@ -474,37 +496,13 @@ export function SaveBucket() {
                         }
                         onClear={() => form.inputProps("ragConfigurationSimpleGenerateId").onChange(undefined)}
                         disabled={page === 1}
-                        useOptions={useRagConfigurationChatRag}
-                        extraVariables={{
-                          bucketId: bucketId === "new" ? "0" : bucketId,
-                          ragType: RagType.SimpleGenerate,
-                        }}
-                      />
-
-                      {/* <CustomSelectRelationsOneToOne
-                        options={queryAnalysisOption}
-                        label="Query Analyzer"
-                        onChange={(val) => form.inputProps("queryAnalysisId").onChange({ id: val.id, name: val.name })}
-                        value={{
-                          id: form.inputProps("queryAnalysisId").value.id,
-                          name: form.inputProps("queryAnalysisId").value.name || "",
-                        }}
-                        disabled={page === 1}
-                        description="Query Analysis for current bucket"
-                      />
-                      <CustomSelectRelationsOneToOne
-                        options={languageOptions}
-                        label="Default Language"
-                        onChange={(val) =>
-                          form.inputProps("defaultLanguageId").onChange({ id: val.id, name: val.name })
+                        optionsDefault={
+                          ragConfigurationSimpleGenerate?.data?.unboundRAGConfigurationByBucket?.map((unbound) => ({
+                            value: unbound?.id || "",
+                            label: unbound?.name || "",
+                          })) || []
                         }
-                        value={{
-                          id: form.inputProps("defaultLanguageId").value.id,
-                          name: form.inputProps("defaultLanguageId").value.name || "",
-                        }}
-                        disabled={page === 1}
-                        description="Default Language for current bucket"
-                      /> */}
+                      />
                     </Box>
                   </>
                 ),
