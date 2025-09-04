@@ -2,8 +2,9 @@ import { Box, FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { TemplateType } from "@pages/Analyzer/gql";
 import React from "react";
 import { BooleanInput, NumberInputSimple, TextInputSimple } from "../Inputs";
-import Autocomplete from "./AutoComplete";
+import { AutocompleteDropdownWithOptions } from "../Select/AutocompleteDropdown";
 import { InformationField } from "../utils/informationField";
+import Autocomplete from "./AutoComplete";
 
 function GenerateDynamicFields<E extends Record<string, any>>({
   templates,
@@ -111,32 +112,20 @@ function GenerateDynamicFields<E extends Record<string, any>>({
 
     return jsx;
   };
-  const selectedValue = type ?? "-";
 
   return (
     <div>
       <Box display={"flex"} flexDirection={"column"} gap={"20px"}>
         <Box display={"flex"} flexDirection={"column"}>
-          <Typography variant="subtitle1" component="label" htmlFor={"select-template"}>
-            Type
-          </Typography>{" "}
-          <Select
-            value={selectedValue}
-            id={"select-template"}
-            onChange={(event) => setType(event.target.value as E[string])}
-            displayEmpty
+          <AutocompleteDropdownWithOptions
+            onChange={(event) => setType(event.id as E[string])}
+            label="Type"
             disabled={isRecap}
-            renderValue={(selected) => (!selected ? <span style={{ color: "#888" }}>Select Type</span> : selected)}
-          >
-            <MenuItem value="-">
-              <em>Select Type</em>
-            </MenuItem>
-            {templates.map((filter: TemplateType) => (
-              <MenuItem key={filter.title} value={filter.title}>
-                {filter.title}
-              </MenuItem>
-            ))}
-          </Select>
+            value={{ id: type, name: type }}
+            clearLabel="Unset"
+            onClear={() => setType("")}
+            optionsDefault={templates.map((item) => ({ label: item.title, value: item.title }))}
+          />
         </Box>
         <div>{template && renderField(template)}</div>
       </Box>
