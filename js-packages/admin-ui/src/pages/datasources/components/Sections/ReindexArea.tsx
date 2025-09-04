@@ -1,11 +1,10 @@
-import { Box, Button, CircularProgress, FormControl, MenuItem, Select } from "@mui/material";
-import { ConnectionData } from "../../types";
+import { ModalConfirm } from "@components/Form";
+import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+import { Box, Button } from "@mui/material";
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
-import { DataIndicesQuery } from "@pages/dataindices/gql";
 import { useNavigate } from "react-router-dom";
 import { defaultModal } from "../../Function";
-import { ModalConfirm } from "@components/Form";
+import { ConnectionData } from "../../types";
 
 export default function ReindexArea({
   connectionData,
@@ -47,14 +46,30 @@ export default function ReindexArea({
           />
         )}
         <Box>
-          <label>Data Index</label>
-          <Box display={"flex"} flexDirection={"row"} gap={"10px"} alignItems={"center"}>
-            <InfiniteScrollSelect
-              connectionData={connectionData}
-              isNew={isNew}
-              isView={isView}
-              setConnectionData={setConnectionData}
-              defaultValue={{ id: connectionData?.dataIndex?.id || "", name: connectionData?.dataIndex?.name || "" }}
+          <Box display={"flex"} flexDirection={"row"} gap={"10px"} alignItems={"end"}>
+            <AutocompleteDropdownWithOptions
+              label="Data Index"
+              value={
+                connectionData?.dataIndex?.id
+                  ? { id: connectionData.dataIndex.id, name: connectionData.dataIndex.name ?? "" }
+                  : undefined
+              }
+              onChange={(val) => {
+                setConnectionData((prev: any) => ({
+                  ...prev,
+                  dataIndex: { id: val.id, name: val.name },
+                }));
+              }}
+              onClear={() => {
+                setConnectionData((prev: any) => ({
+                  ...prev,
+                  dataIndex: { id: "", name: "" },
+                }));
+              }}
+              disabled={isView}
+              optionsDefault={connectionData.optionDataindex.map((item: any) => ({ value: item.id, label: item.name }))}
+              description="Select the data index to reindex your data into."
+              sx={{ width: 400 }}
             />
             <Button
               variant="contained"
@@ -74,7 +89,7 @@ export default function ReindexArea({
                   },
                 });
               }}
-              sx={{ marginLeft: "auto" }}
+              sx={{ marginLeft: "auto", minHeight: "56px" }}
             >
               Create Data Index
             </Button>
@@ -113,59 +128,3 @@ export default function ReindexArea({
     </>
   );
 }
-
-type InfiniteScrollSelectProps = {
-  connectionData: any;
-  setConnectionData: React.Dispatch<React.SetStateAction<any>>;
-  isView: boolean;
-  isNew: boolean;
-  defaultValue: {
-    id: string;
-    name: string;
-  };
-};
-const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
-  connectionData,
-  setConnectionData,
-  isView,
-  isNew,
-  defaultValue,
-}) => {
-  const [options] = useState<Option[]>(connectionData.optionDataindex);
-
-  return (
-    <>
-      <FormControl fullWidth>
-        <Select
-          value={connectionData?.dataIndex?.id || ""}
-          sx={{ width: "100%", minWidth: "350px" }}
-          disabled={isView}
-          onChange={(event) => {
-            const id = event.target.value;
-            const name = options.find((item) => item.id === id)?.name || "";
-            setConnectionData((prevData: any) => ({
-              ...prevData,
-              dataIndex: { id, name },
-            }));
-          }}
-          displayEmpty
-        >
-          <MenuItem value={defaultValue.id}>{defaultValue.name}</MenuItem>
-          {options.map(
-            (item) =>
-              defaultValue.id !== item.id && (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ),
-          )}
-        </Select>
-      </FormControl>
-    </>
-  );
-};
-
-type Option = {
-  id: string;
-  name: string;
-};

@@ -25,13 +25,10 @@ import {
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
   useDataSourcesQuery,
-  useQueryAnalysesQuery,
   useSuggestionCategoriesQuery,
   useTabsQuery,
-  useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
-import useOptions from "../../utils/getOptions";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";

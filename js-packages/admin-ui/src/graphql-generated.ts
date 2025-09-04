@@ -18381,4 +18381,4 @@ export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<
   EnrichPipelineWithItemsMutation,
   EnrichPipelineWithItemsMutationVariables
 >;
-// Generated on 2025-09-04T10:23:42+02:00
+// Generated on 2025-09-04T11:17:44+02:00
