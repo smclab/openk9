@@ -1,6 +1,7 @@
 import {
   RagType,
   useDocTypeFieldsQuery,
+  useDocTypeTemplateListQuery,
   useLanguagesQuery,
   useQueryAnalysesQuery,
   useSearchConfigsQuery,
@@ -156,3 +157,15 @@ export const useLanguages: UseOptionsHook = makeUseOptionsHook({
   connectionKey: "languages",
   first: 20,
 });
+export const useDocTypesTemplates: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDocTypeTemplateListQuery,
+  connectionKey: "docTypeTemplates",
+  first: 20,
+});
+
+export function isValidId(
+  input: { id?: string | null | undefined; name?: string | null | undefined } | undefined | null,
+) {
+  if (!input?.id) return undefined;
+  return { id: input.id, name: input.name || input.id };
+}

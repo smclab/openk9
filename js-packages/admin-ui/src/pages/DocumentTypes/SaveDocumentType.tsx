@@ -1,21 +1,18 @@
 import {
   ContainerFluid,
   CreateDataEntity,
-  CustomSelectRelationsOneToOne,
   TextArea,
   TextInput,
   TitleEntity,
   useForm,
   useToast,
 } from "@components/Form";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  useCreateOrUpdateDocTypeWithTemplateMutation,
-  useDocTypeTemplateListQuery,
-  useDocumentTypeQuery,
-} from "../../graphql-generated";
+import { useCreateOrUpdateDocTypeWithTemplateMutation, useDocumentTypeQuery } from "../../graphql-generated";
+import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 export function SaveDocumentType() {
@@ -26,7 +23,6 @@ export function SaveDocumentType() {
     body: "Are you sure you want to edit this Document Type?",
     labelConfirm: "Edit",
   });
-  const { docTypeTemplates } = useOptions();
   const handleEditClick = async () => {
     const confirmed = await openConfirmModal();
     if (confirmed) {
@@ -56,10 +52,7 @@ export function SaveDocumentType() {
       () => ({
         name: "",
         description: "",
-        docTypeTemplateId: {
-          id: documentTypeQuery.data?.docType?.docTypeTemplate?.id || "-1",
-          name: documentTypeQuery.data?.docType?.docTypeTemplate?.name || "",
-        },
+        docTypeTemplateId: isValidId(documentTypeQuery?.data?.docType?.docTypeTemplate),
       }),
       [documentTypeQuery],
     ),
@@ -71,8 +64,8 @@ export function SaveDocumentType() {
           id: documentTypeId !== "new" ? documentTypeId : undefined,
           name: data.name,
           description: data.description,
-          ...(data.docTypeTemplateId.id !== "-1" && {
-            docTypeTemplateId: data.docTypeTemplateId.id,
+          ...(data?.docTypeTemplateId?.id && {
+            docTypeTemplateId: data?.docTypeTemplateId?.id,
           }),
         },
       });
@@ -109,16 +102,20 @@ export function SaveDocumentType() {
                   <div>
                     <TextInput label="Name" {...form.inputProps("name")} />
                     <TextArea label="Description" {...form.inputProps("description")} />
-                    <CustomSelectRelationsOneToOne
-                      options={docTypeTemplates}
+                    <AutocompleteDropdown
                       label="Document type template"
                       onChange={(val) => form.inputProps("docTypeTemplateId").onChange({ id: val.id, name: val.name })}
-                      value={{
-                        id: form.inputProps("docTypeTemplateId").value.id,
-                        name: form.inputProps("docTypeTemplateId").value.name || "",
-                      }}
+                      value={
+                        !form?.inputProps("docTypeTemplateId")?.value?.id
+                          ? undefined
+                          : {
+                              id: form?.inputProps("docTypeTemplateId")?.value?.id || "",
+                              name: form?.inputProps("docTypeTemplateId")?.value?.name || "",
+                            }
+                      }
+                      onClear={() => form.inputProps("docTypeTemplateId").onChange(undefined)}
                       disabled={page === 1}
-                      description="Document type template for current Document Type"
+                      useOptions={useDocTypesTemplates}
                     />
                   </div>
                 ),
@@ -137,22 +134,3 @@ export function SaveDocumentType() {
     </ContainerFluid>
   );
 }
-
-const useOptions = () => {
-  const searchConfigQuery = useDocTypeTemplateListQuery();
-
-  const getOptions = (data: any, key: "docTypeTemplates") => {
-    return (
-      data?.[key]?.edges?.map((item: { node: { id: string; name: string } }) => ({
-        value: item?.node?.id || "",
-        label: item?.node?.name || "",
-      })) || []
-    );
-  };
-
-  const docTypeTemplates = getOptions(searchConfigQuery.data, "docTypeTemplates");
-
-  return {
-    docTypeTemplates,
-  };
-};
