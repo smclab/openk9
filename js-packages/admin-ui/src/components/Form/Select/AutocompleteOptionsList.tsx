@@ -43,6 +43,8 @@ export function AutocompleteOptionsList({
     if (el) el.scrollIntoView({ block: "nearest" });
   }, [highlightedIndex]);
 
+  const filteredOptions = !viewClear ? options.filter((option) => option.value !== clearValue) : options;
+
   return (
     <Paper
       sx={{
@@ -55,7 +57,7 @@ export function AutocompleteOptionsList({
       role="presentation"
     >
       <List dense onScroll={onScroll} role="listbox" id="doc-type-listbox" sx={{ maxHeight: 240, overflowY: "auto" }}>
-        {options.map((option, index) => {
+        {filteredOptions.map((option, index) => {
           const isClear = option.value === clearValue;
 
           const handlePointerDown: React.PointerEventHandler<HTMLDivElement> = (e) => {
@@ -81,7 +83,7 @@ export function AutocompleteOptionsList({
                   onMouseDown={handleMouseDown}
                   sx={isClear ? { color: "error.main", fontWeight: 700 } : undefined}
                 >
-                  {isClear && viewClear && (
+                  {isClear && (
                     <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
                       <ClearIcon fontSize="small" />
                     </ListItemIcon>
