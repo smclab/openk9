@@ -7,6 +7,7 @@ import {
   Paper,
   Divider,
   ListItemIcon,
+  useTheme,
 } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import React, { useEffect, useRef } from "react";
@@ -32,6 +33,10 @@ export function AutocompleteOptionsList({
   clearValue = "__CLEAR__",
   viewClear = true,
 }: Props) {
+  const theme = useTheme();
+  const clearColor = theme.palette.mode === "light" ? theme.palette.error.light : theme.palette.error.main;
+  const clearHoverColor = theme.palette.error.main;
+
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -81,7 +86,19 @@ export function AutocompleteOptionsList({
                   aria-selected={index === highlightedIndex}
                   onPointerDown={handlePointerDown}
                   onMouseDown={handleMouseDown}
-                  sx={isClear ? { color: "error.main", fontWeight: 700 } : undefined}
+                  sx={
+                    isClear
+                      ? {
+                          color: clearColor,
+                          fontWeight: 700,
+                          "&:hover": {
+                            color: clearHoverColor,
+                            textDecoration: "underline",
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }
+                      : undefined
+                  }
                 >
                   {isClear && (
                     <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
@@ -91,7 +108,6 @@ export function AutocompleteOptionsList({
                   {option.label}
                 </ListItemButton>
               </ListItem>
-              {isClear && <Divider />}
             </React.Fragment>
           );
         })}
@@ -134,7 +150,9 @@ export function AutocompleteOptionsListString({
   viewClear = true,
 }: PropsString) {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-
+  const theme = useTheme();
+  const clearColor = theme.palette.mode === "light" ? theme.palette.error.light : theme.palette.error.main;
+  const clearHoverColor = theme.palette.error.main;
   useEffect(() => {
     itemRefs.current = [];
   }, [options]);
@@ -180,7 +198,19 @@ export function AutocompleteOptionsListString({
                   aria-selected={index === highlightedIndex}
                   onPointerDown={handlePointerDown}
                   onMouseDown={handleMouseDown}
-                  sx={isClear ? { color: "error.main", fontWeight: 700 } : undefined}
+                  sx={
+                    isClear
+                      ? {
+                          color: clearColor,
+                          fontWeight: 700,
+                          "&:hover": {
+                            color: clearHoverColor,
+                            textDecoration: "underline",
+                            backgroundColor: theme.palette.action.hover,
+                          },
+                        }
+                      : undefined
+                  }
                 >
                   {isClear && viewClear && (
                     <ListItemIcon sx={{ minWidth: 28, color: "inherit" }}>
