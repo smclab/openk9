@@ -88,9 +88,9 @@ Build Verifier:
   - yarn install
   - yarn build
   rules:
-  - changes:
-    - js-packages/tenant-ui/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/tenant-ui/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -112,7 +112,7 @@ Trigger Restart:
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "tenant-frontend"
+    COMPONENT_NAME: "tenant-ui"
     COMPONENT_TYPE: "frontend"
   rules:
   # Rule for main branch
@@ -137,6 +137,8 @@ Publish Tenant Frontend:
   - npm publish --access public
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/tenant-ui/**/*
     when: manual
   - when: never
 
@@ -144,7 +146,8 @@ Publish Tenant Frontend:
 Dependency Check Tenant UI:
   stage: dependency-check
   needs:
-  - job: "Trigger Tenant Frontend"
+  - job: Fetch version
+    artifacts: true
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:

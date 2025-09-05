@@ -1,0 +1,174 @@
+stages:
+- deploy
+
+variables:
+  GIT_STRATEGY: none
+  ARGOCD_SERVER: "argocd.openk9.io"
+
+  # User-Namespace Mappings - All in one place
+  # Format: USERNAME_NAMESPACES (space-separated list)
+  MIRKO_ZIZZARI_NAMESPACES: "k9-backend k9-backend-oracle"
+  MICHELE_BASTIANELLI_NAMESPACES: "k9-backend01"
+  LORENZO_VENNERI_NAMESPACES: "k9-frontend"
+  GIORGIO_BARTOLOMEO_NAMESPACES: "k9-frontend"
+  LUCA_CALLOCCHIA_NAMESPACES: "k9-ai"
+  DMYTRO_KOZAK_NAMESPACES: "k9-backend k9-backend01 k9-frontend"
+
+# Main restart job - completely self-contained
+restart-component:
+  image: smclab/argocd-cli:latest
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+    ARGOCD_SERVER: "argocd.openk9.io"
+  before_script:
+  - |
+    echo "🚀 OpenK9 Component Restart Pipeline (Self-Contained)"
+    echo "▶️ Trigger Job: $TRIGGER_JOB"
+    echo "▶️ Component Type: $COMPONENT_TYPE"
+    echo "▶️ GitLab User: $GITLAB_USER_LOGIN"
+    echo "▶️ Image Tag: $IMAGE_TAG"
+    echo "▶️ Source Branch: $CI_COMMIT_BRANCH"
+    echo "----------------------------------------"
+    argocd login "${ARGOCD_SERVER}" --username "${ARGOCD_USERNAME}" --password "${ARGOCD_PASSWORD}" --grpc-web
+  script:
+  - |
+    COMPONENT_NAME="${TRIGGER_JOB#restart-}"
+    echo "📦 Component resolved: $COMPONENT_NAME"
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
+      echo "🚀 Main branch/tag: restart in all appropriate namespaces"
+      
+      case "$COMPONENT_TYPE" in
+        "backend")
+          NAMESPACES="k9-ai k9-frontend"
+          ;;
+        "backend-oracle")
+          NAMESPACES="k9-backend-oracle"
+          ;;
+        "ai")
+          NAMESPACES="k9-backend k9-backend01 k9-test k9-frontend"
+          ;;
+        "frontend")
+          NAMESPACES="k9-backend k9-backend01 k9-test k9-ai"
+          ;;
+        "test")
+          NAMESPACES="k9-test"
+          ;;
+        *)
+          echo "🔍 Component type not specified, determining from component name: $COMPONENT_NAME"
+          case "$COMPONENT_NAME" in
+            *-ui|admin-ui|tenant-ui|search-frontend)
+              NAMESPACES="k9-backend k9-backend01 k9-test k9-ai"
+              echo "📱 Detected frontend component: $COMPONENT_NAME - propagating to other environments"
+              ;;
+            datasource|searcher|ingestion|tenant-manager|file-manager|tika|resources-validator|k8s-client|entity-manager)
+              NAMESPACES="k9-ai k9-frontend"
+              echo "🔧 Detected backend component: $COMPONENT_NAME - propagating to other environments"
+              ;;
+            *-ai|embedding-*|rag-*|talk-to)
+              NAMESPACES="k9-backend k9-backend01 k9-test k9-frontend"
+              echo "🤖 Detected AI component: $COMPONENT_NAME - propagating to other environments"
+              ;;
+            *)
+              echo "⚠️ Unknown component '$COMPONENT_NAME', using conservative backend propagation"
+              NAMESPACES="k9-ai k9-frontend"
+              ;;
+          esac
+          ;;
+      esac
+      
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      echo "🌿 Feature branch: restart in user's dedicated namespace(s)"
+      
+      USER_VAR=$(echo "${GITLAB_USER_LOGIN}" | tr '.-' '_' | tr '[:lower:]' '[:upper:]')_NAMESPACES
+      USER_NAMESPACES=$(eval echo \$${USER_VAR})
+      
+      if [[ -n "$USER_NAMESPACES" ]]; then
+        NAMESPACES="$USER_NAMESPACES"
+        echo "✅ User $GITLAB_USER_LOGIN authorized for namespaces: $NAMESPACES"
+      else
+        echo "⛔ User $GITLAB_USER_LOGIN not found in configuration"
+        echo "💡 Available users: mirko.zizzari, michele.bastianelli, lorenzo.venneri, giorgio.bartolomeo, luca.callocchia"
+        exit 1
+      fi
+      
+    else
+      echo "⛔ Unsupported branch pattern: $CI_COMMIT_BRANCH"
+      exit 1
+    fi
+
+    echo "🎯 Target Namespaces: $NAMESPACES"
+  - |
+    get_argocd_app_name() {
+      local component=$1
+      local target_ns=$2
+      
+      case "$component" in
+        "ingestion")
+          component="openk9-ingestion"
+          ;;
+        "datasource")
+          if [[ "$target_ns" == "k9-backend-oracle" ]]; then
+            echo "openk9-datasource"
+            return
+          fi
+          ;;
+      esac
+      
+      case "$target_ns" in
+        "k9-backend") echo "${component}-backend" ;;
+        "k9-backend01") echo "${component}-backend01" ;;
+        "k9-backend-oracle") echo "${component}-oracle" ;;
+        "k9-ai") echo "${component}-ai" ;;
+        "k9-frontend") echo "${component}-frontend" ;;
+        "k9-test") echo "${component}-test" ;;
+        "k9-stable") echo "${component}-stable" ;;
+        *) echo "${component}-${target_ns#k9-}" ;;
+      esac
+    }
+  - |
+    echo "🚀 Restarting $COMPONENT_NAME in namespaces: $NAMESPACES"
+    FAILED_DEPLOYMENTS=""
+
+    for ns in $NAMESPACES; do
+      echo "🔧 Processing namespace: $ns"
+      
+      ARGOCD_APP_NAME=$(get_argocd_app_name "$COMPONENT_NAME" "$ns")
+      echo "🎯 ArgoCD app name: $ARGOCD_APP_NAME"
+      
+      if argocd app get "$ARGOCD_APP_NAME" --grpc-web >/dev/null 2>&1; then
+        echo "✅ Found app $ARGOCD_APP_NAME in argocd namespace"
+        
+        if argocd app set "$ARGOCD_APP_NAME" --helm-set image.tag=$IMAGE_TAG --grpc-web; then
+          echo "✅ Updated image.tag=$IMAGE_TAG for $ARGOCD_APP_NAME"
+          
+          if argocd app actions run "$ARGOCD_APP_NAME" restart --kind Deployment --namespace "$ns" --grpc-web; then
+            echo "✅ Successfully restarted $COMPONENT_NAME in $ns"
+          else
+            echo "❌ Failed to restart $COMPONENT_NAME in $ns"
+            FAILED_DEPLOYMENTS="$FAILED_DEPLOYMENTS $ns"
+          fi
+        else
+          echo "❌ Failed to update image tag for $ARGOCD_APP_NAME"
+          FAILED_DEPLOYMENTS="$FAILED_DEPLOYMENTS $ns"
+        fi
+      else
+        echo "⚠️ App $ARGOCD_APP_NAME not found, skipping..."
+        echo "💡 Available apps in argocd namespace:"
+        argocd app list --output name | grep -E "(${COMPONENT_NAME}|${ns#k9-})" || echo "   (none found)"
+      fi
+    done
+
+    if [[ -n "$FAILED_DEPLOYMENTS" ]]; then
+      echo "⚠️ Some deployments failed in namespaces:$FAILED_DEPLOYMENTS"
+      echo "✅ Check individual namespace logs above for details"
+    else
+      echo "🎉 All deployments completed successfully!"
+    fi
+  after_script:
+  - |
+    echo "✅ Restart pipeline completed for $COMPONENT_NAME"
+  rules:
+  - if: '$TRIGGER_JOB =~ /^restart-.*$/'
+  - when: never
