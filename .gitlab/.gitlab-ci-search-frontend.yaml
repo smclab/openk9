@@ -68,7 +68,7 @@ Build Search Frontend:
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-      --destination "registry.smc.it:49083/openk9/search-frontend:$DOCKER_TAG"
+      --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -88,9 +88,9 @@ Build Verifier:
   - yarn install
   - yarn build
   rules:
-  - changes:
-    - js-packages/search-frontend/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/search-frontend/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
