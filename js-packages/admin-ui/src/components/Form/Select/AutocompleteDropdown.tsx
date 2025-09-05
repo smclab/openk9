@@ -1,5 +1,6 @@
 import useDebounced from "@components/common/useDebounced";
 import { Box, SxProps, TextField, Theme, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UseOptionsHook } from "utils/RelationOneToOne";
 import { InformationField } from "../utils/informationField";
@@ -241,24 +242,50 @@ export function AutocompleteDropdown({
         {description && <InformationField description={description} />}
       </Box>
 
-      <TextField
-        fullWidth
-        disabled={disabled}
-        value={inputValue}
-        onChange={handleInputChange}
-        onFocus={openWithReset}
-        onClick={openWithReset}
-        onBlur={validateAndClose}
-        onKeyDown={handleKeyDown}
-        placeholder="Seleziona..."
-        inputProps={{
-          autoComplete: "off",
-          role: "combobox",
-          "aria-expanded": open,
-          "aria-controls": open ? "doc-type-listbox" : undefined,
-          "aria-activedescendant": open && highlightedIndex >= 0 ? `doc-type-option-${highlightedIndex}` : undefined,
-        }}
-      />
+      <Box sx={{ position: "relative" }}>
+        <TextField
+          fullWidth
+          disabled={disabled}
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={openWithReset}
+          onClick={openWithReset}
+          onBlur={validateAndClose}
+          onKeyDown={handleKeyDown}
+          placeholder="Seleziona..."
+          inputProps={{
+            autoComplete: "off",
+            role: "combobox",
+            "aria-expanded": open,
+            "aria-controls": open ? "doc-type-listbox" : undefined,
+            "aria-activedescendant": open && highlightedIndex >= 0 ? `doc-type-option-${highlightedIndex}` : undefined,
+          }}
+        />
+        {inputValue.length > 0 && allowClear && (
+          <Box
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              zIndex: 2,
+              color: "#888",
+              display: disabled ? "none" : "flex",
+              alignItems: "center",
+            }}
+            onClick={() => {
+              justClearedRef.current = true;
+              onClear?.();
+              setInputValue("");
+              setOpen(false);
+            }}
+            aria-label={clearLabel}
+          >
+            <CloseIcon fontSize="small" />
+          </Box>
+        )}
+      </Box>
 
       {open && (
         <AutocompleteOptionsList
@@ -458,24 +485,50 @@ export function AutocompleteDropdownWithOptions({
         {description && <InformationField description={description} />}
       </Box>
 
-      <TextField
-        fullWidth
-        disabled={disabled}
-        value={inputValue}
-        onChange={handleInputChange}
-        onFocus={openWithReset}
-        onClick={openWithReset}
-        onBlur={validateAndClose}
-        onKeyDown={handleKeyDown}
-        placeholder="Seleziona..."
-        inputProps={{
-          autoComplete: "off",
-          role: "combobox",
-          "aria-expanded": open,
-          "aria-controls": open ? "doc-type-listbox" : undefined,
-          "aria-activedescendant": open && highlightedIndex >= 0 ? `doc-type-option-${highlightedIndex}` : undefined,
-        }}
-      />
+      <Box sx={{ position: "relative" }}>
+        <TextField
+          fullWidth
+          disabled={disabled}
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={openWithReset}
+          onClick={openWithReset}
+          onBlur={validateAndClose}
+          onKeyDown={handleKeyDown}
+          placeholder="Seleziona..."
+          inputProps={{
+            autoComplete: "off",
+            role: "combobox",
+            "aria-expanded": open,
+            "aria-controls": open ? "doc-type-listbox" : undefined,
+            "aria-activedescendant": open && highlightedIndex >= 0 ? `doc-type-option-${highlightedIndex}` : undefined,
+          }}
+        />
+        {inputValue.length > 0 && allowClear && (
+          <Box
+            sx={{
+              position: "absolute",
+              right: 8,
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              zIndex: 2,
+              color: "#888",
+              display: disabled ? "none" : "flex",
+              alignItems: "center",
+            }}
+            onClick={() => {
+              justClearedRef.current = true;
+              onClear?.();
+              setInputValue("");
+              setOpen(false);
+            }}
+            aria-label={clearLabel}
+          >
+            <CloseIcon fontSize="small" />
+          </Box>
+        )}
+      </Box>
 
       {open && (
         <AutocompleteOptionsList
