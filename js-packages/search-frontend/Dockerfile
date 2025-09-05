@@ -1,5 +1,6 @@
 # Stage 1 - build environment
 FROM node:18-alpine as react-build
+ARG BUILD_ENV=keycloak
 
 RUN mkdir -p /app/js-packages/search-frontend
 
@@ -12,7 +13,21 @@ RUN yarn install --frozen-lockfile
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend
-RUN NODE_ENV=production yarn build
+
+# Conditional building - BUILD_ENV
+RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
+      echo "Building for Keycloak environment..." && \
+      NODE_ENV=production yarn build:standalone; \
+    elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
+      echo "Building for No-Keycloak environment..." && \
+      NODE_ENV=production yarn build:embeddable; \
+    elif [ "$BUILD_ENV" = "chatbot" ]; then \
+      echo "Building for Chatbot environment..." && \
+      NODE_ENV=production yarn build:importable; \
+    else \
+      echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
+      NODE_ENV=production yarn build:standalone; \
+    fi
 
 # Stage 2 - the production environment
 FROM nginx:1.25.3
@@ -24,3 +39,4 @@ RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && chmod g+rw /var/cache/nginx /var/run
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
+ 
