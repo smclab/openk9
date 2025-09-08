@@ -8,6 +8,7 @@
 		"logout": "Logout",
 		"login": "Login",
 		"new-chat": "New Chat",
+		"no-chats": "No chats available",
 		"write-a-message": "Write a message..."
 	}
 }

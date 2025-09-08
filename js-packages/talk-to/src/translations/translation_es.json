@@ -8,6 +8,7 @@
 		"logout": "Cerrar sesión",
 		"login": "Iniciar sesión",
 		"new-chat": "Nuevo chat",
+		"no-chats": "No hay chats disponibles",
 		"write-a-message": "Escribe un mensaje..."
 	}
 }
