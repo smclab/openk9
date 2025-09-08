@@ -1,0 +1,14 @@
+{
+	"translation": {
+		"error": "Bitte versuchen Sie es erneut, ein Fehler ist aufgetreten...",
+		"version": "Version",
+		"welcome-to": "Willkommen bei",
+		"where-knowledge-has-no-limits": "wo Wissen keine Grenzen kennt!",
+		"recents-chat": "Letzte Chats",
+		"logout": "Abmelden",
+		"login": "Anmelden",
+		"new-chat": "Neuer Chat",
+		"no-chats": "Keine Chats verfügbar",
+		"write-a-message": "Schreiben Sie eine Nachricht..."
+	}
+}
