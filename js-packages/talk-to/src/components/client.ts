@@ -66,7 +66,7 @@ export function OpenK9Client() {
 		async getDefaultLanguage(): Promise<language | null> {
 			const res = await fetch("/api/datasource/buckets/current/defaultLanguage");
 			if (!res.ok) throw new Error("Failed to fetch default language");
-			return res.json();
+			return res?.statusText !== "No Content" ? res.json() : { value: "en_US" };
 		},
 		async getUserInfo(): Promise<getUserInfo> {
 			const response = await fetch(`/api/datasource/buckets/current`);
