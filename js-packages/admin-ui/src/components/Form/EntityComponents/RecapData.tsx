@@ -96,7 +96,7 @@ export function RecapData({
 
   return (
     <React.Fragment>
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
         {viewPreSubmit && preSubmit}
         {React.Children.map(allData, (child, index) => {
           if (!React.isValidElement(child)) return null;

@@ -185,71 +185,65 @@ export function SaveRagConfiguration() {
                         description="Type of RAG Configuration"
                       />
                     )}
+                    <>
+                      <TextArea
+                        label="Prompt"
+                        {...form.inputProps("prompt")}
+                        disabled={view === "view" || page === 1}
+                        description="The main prompt for the RAG system"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            name="Reformulate"
+                            checked={form.inputProps("reformulate").value}
+                            onChange={(e, checked) => form.inputProps("reformulate").onChange(checked)}
+                            disabled={view === "view" || page === 1}
+                          />
+                        }
+                        sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
+                        label="Reformulate"
+                        labelPlacement="start"
+                      />
+                      <TextArea
+                        label="Rephrase Prompt"
+                        {...form.inputProps("rephrasePrompt")}
+                        disabled={view === "view" || page === 1}
+                        description="Prompt used for rephrasing"
+                      />
 
-                    {page === 1 ||
-                      (selectedType && (
+                      <NumberInput
+                        label="Chunk Window"
+                        {...form.inputProps("chunkWindow")}
+                        disabled={view === "view" || page === 1}
+                        description="Number of chunks to consider"
+                      />
+
+                      <TextArea
+                        label="JSON Config"
+                        {...form.inputProps("jsonConfig")}
+                        disabled={view === "view" || page === 1}
+                        description="JSON configuration for the RAG system"
+                      />
+
+                      {selectedType === RagType.ChatRagTool && (
                         <>
                           <TextArea
-                            label="Prompt"
-                            {...form.inputProps("prompt")}
-                            disabled={view === "view"}
-                            description="The main prompt for the RAG system"
-                          />
-
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                name="Reformulate"
-                                checked={form.inputProps("reformulate").value}
-                                onChange={(e, checked) => form.inputProps("reformulate").onChange(checked)}
-                                disabled={view === "view"}
-                              />
-                            }
-                            sx={{ marginLeft: "0", marginRight: "0" }}
-                            label="Reformulate"
-                            labelPlacement="start"
+                            label="RAG Tool Description"
+                            {...form.inputProps("ragToolDescription")}
+                            disabled={view === "view" || page === 1}
+                            description="Description of the RAG tool"
                           />
 
                           <TextArea
-                            label="Rephrase Prompt"
-                            {...form.inputProps("rephrasePrompt")}
-                            disabled={view === "view"}
-                            description="Prompt used for rephrasing"
+                            label="Prompt No RAG"
+                            {...form.inputProps("promptNoRag")}
+                            disabled={view === "view" || page === 1}
+                            description="Prompt to use when RAG is not available"
                           />
-
-                          <NumberInput
-                            label="Chunk Window"
-                            {...form.inputProps("chunkWindow")}
-                            disabled={view === "view"}
-                            description="Number of chunks to consider"
-                          />
-
-                          <TextArea
-                            label="JSON Config"
-                            {...form.inputProps("jsonConfig")}
-                            disabled={view === "view"}
-                            description="JSON configuration for the RAG system"
-                          />
-
-                          {selectedType === RagType.ChatRagTool && (
-                            <>
-                              <TextArea
-                                label="RAG Tool Description"
-                                {...form.inputProps("ragToolDescription")}
-                                disabled={view === "view"}
-                                description="Description of the RAG tool"
-                              />
-
-                              <TextArea
-                                label="Prompt No RAG"
-                                {...form.inputProps("promptNoRag")}
-                                disabled={view === "view"}
-                                description="Prompt to use when RAG is not available"
-                              />
-                            </>
-                          )}
                         </>
-                      ))}
+                      )}
+                    </>
                   </>
                 ),
                 page: 0,
