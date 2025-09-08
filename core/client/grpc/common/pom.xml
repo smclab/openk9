@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.client.grpc</groupId>
 		<artifactId>grpc</artifactId>
-		<version>1.7.4</version>
+		<version>1.7.5-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>common</artifactId>
