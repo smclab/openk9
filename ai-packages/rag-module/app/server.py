@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from opensearchpy import OpenSearch
@@ -56,6 +56,16 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
+UPLOAD_FILE_EXTENSIONS = [
+    ".pdf",
+    ".md",
+    ".docx",
+    ".xlsx",
+    ".pptx",
+    ".csv",
+]
+MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024
+MAX_UPLOAD_FILES_NUMBER = 5
 
 if ARIZE_PHOENIX_ENABLED:
     tracer_provider = register(
@@ -852,6 +862,39 @@ async def rename_chat(
         )
 
     content = {"message": "Title updated successfully.", "status": "success"}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+
+
+@app.post("/api/rag/uploadfile")
+async def create_upload_file(
+    request: Request,
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
+    files: Annotated[
+        list[UploadFile], File(description="Multiple files as UploadFile")
+    ],
+    chat_id: str,
+):
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if not headers.authorization:
+        unauthorized_response()
+
+    token = headers.authorization.replace(TOKEN_PREFIX, "")
+
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
+        unauthorized_response()
+
+    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+
+    if len(files) > MAX_UPLOAD_FILES_NUMBER:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
+        )
+
+    content = {"message": "Documents uploaded successfully.", "status": "success"}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
