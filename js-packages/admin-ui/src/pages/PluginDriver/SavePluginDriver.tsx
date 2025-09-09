@@ -196,6 +196,10 @@ export const SavePluginnDriverModel = React.forwardRef(
       }
     }, [pluginDriverQuery.data?.pluginDriver?.jsonConfig]);
 
+    React.useEffect(() => {
+      setTestResult(null);
+    }, [config?.baseUri, config?.path, config?.method, config?.secure]);
+
     const form = useForm({
       initialValues: React.useMemo(
         () => ({
