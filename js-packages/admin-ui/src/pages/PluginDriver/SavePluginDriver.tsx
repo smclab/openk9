@@ -16,6 +16,8 @@ import {
 import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 import { FieldDocType, SelectedValue } from "@components/Form/Association/MultiLinkedAssociation/types";
 import CheckboxList from "@components/Form/List/CheckboxList";
+import { useRestClient } from "@components/queryClient";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import { Box, Button, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -30,10 +32,10 @@ import {
   usePluginDriverWithDocTypeMutation,
   UserField,
 } from "../../graphql-generated";
+import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-generated/models/PluginDriverType";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigType } from "./gql";
-import { useRestClient } from "@components/queryClient";
 
 export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
@@ -92,6 +94,7 @@ export const SavePluginnDriverModel = React.forwardRef(
 
     const [selectedItems, setSelectedItems] = React.useState<SelectedValue[]>([]);
     const [fields, setFields] = React.useState<FieldDocType[]>([]);
+    const [testResult, setTestResult] = React.useState<"success" | "error" | null>(null);
 
     React.useEffect(() => {
       const mappings = pluginDriverQuery.data?.pluginDriver?.aclMappings;
@@ -350,6 +353,57 @@ export const SavePluginnDriverModel = React.forwardRef(
                         <MenuItem value="DELETE">DELETE</MenuItem>
                         <MenuItem value="PATCH">PATCH</MenuItem>
                       </Select>
+                      <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center" }}>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
+                                name: form.inputProps("name").value,
+                                type: OpenApiPluginDriverType.HTTP,
+                                jsonConfig: JSON.stringify(config),
+                              });
+                              setTestResult(res ? "success" : "error");
+                            } catch {
+                              setTestResult("error");
+                            }
+                          }}
+                          variant="outlined"
+                        >
+                          Test Connector
+                        </Button>
+                      </Box>
+                      <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                        {testResult === null && (
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                          >
+                            <FiberManualRecordIcon sx={{ color: "text.secondary", fontSize: 18 }} />
+                            Status: Waiting for test
+                          </Typography>
+                        )}
+                        {testResult === "success" && (
+                          <Typography
+                            variant="body2"
+                            color="success.main"
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                          >
+                            <FiberManualRecordIcon sx={{ color: "success.main", fontSize: 18 }} />
+                            Connection successful
+                          </Typography>
+                        )}
+                        {testResult === "error" && (
+                          <Typography
+                            variant="body2"
+                            color="error.main"
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                          >
+                            <FiberManualRecordIcon sx={{ color: "error.main", fontSize: 18 }} />
+                            Endpoint unreachable
+                          </Typography>
+                        )}
+                      </Box>
                       {/* <ConnectorManager /> */}
                       <DataCardManager
                         options={userFieldsOptions}
