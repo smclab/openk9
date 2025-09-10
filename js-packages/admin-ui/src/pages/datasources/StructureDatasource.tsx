@@ -416,7 +416,11 @@ export const Header = ({
 
   return (
     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-      <TitleEntity nameEntity="Datasource" description="Descrizione del datasource" id="new" />
+      <TitleEntity
+        nameEntity="Datasource"
+        description="Create or Edit a Datasource to define the connection to an external or internal data source. Configure indexing options, document type associations, and connector to control how data is ingested and processed by Openk9."
+        id="new"
+      />
       <Box sx={{ display: "flex", gap: "10px" }}>
         {mode === "view" && (
           <Button variant="contained" onClick={() => handleEditClick("editModal")}>
