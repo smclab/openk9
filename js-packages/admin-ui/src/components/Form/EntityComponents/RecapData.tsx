@@ -163,7 +163,7 @@ export function RecapData({
                   }
                 }}
               >
-                {isCreate ? "Create entity" : "Update entity"}{" "}
+                {isCreate ? "Create entity" : "Update entity"}
               </Button>
             )}
           </Box>

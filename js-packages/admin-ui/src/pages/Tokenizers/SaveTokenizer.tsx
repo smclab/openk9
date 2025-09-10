@@ -1,6 +1,7 @@
 import {
   combineErrorMessages,
   ContainerFluid,
+  CreateDataEntity,
   fromFieldValidators,
   TextArea,
   TextInput,
@@ -9,13 +10,13 @@ import {
   useToast,
 } from "@components/Form";
 import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamicFields";
-import useTemplate, { createJsonString, NavigationButtons } from "@components/Form/Hook/Template";
+import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
-import { TemplateTokenizer } from "./gql";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { TemplateTokenizer } from "./gql";
 
 export function SaveTokenizer() {
   const { tokenizerId = "new", view } = useParams();
@@ -125,22 +126,37 @@ export function SaveTokenizer() {
             )}
           </Box>
           <form style={{ borderStyle: "unset", padding: "0 16px" }}>
-            <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-            <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
-            <GenerateDynamicFieldsMemo
-              templates={TemplateTokenizer}
-              type={typeSelected}
-              template={template}
-              setType={changeType}
-              isRecap={isRecap}
-              changeValueKey={changeValueKey}
-            />
-            <NavigationButtons
-              isRecap={isRecap}
-              submitForm={form.submit}
-              goToRecap={() => setPage(1)}
-              removeRecap={() => setPage(0)}
-              pathBack="/tokenizers"
+            <CreateDataEntity
+              form={form}
+              page={page}
+              id={tokenizerId}
+              pathBack="/tokenizers/"
+              setPage={setPage}
+              haveConfirmButton={view ? false : true}
+              informationSuggestion={[
+                {
+                  content: (
+                    <>
+                      <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
+                      <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                      <GenerateDynamicFieldsMemo
+                        templates={TemplateTokenizer}
+                        type={typeSelected}
+                        template={template}
+                        setType={changeType}
+                        isRecap={isRecap}
+                        changeValueKey={changeValueKey}
+                      />{" "}
+                    </>
+                  ),
+                  page: 0,
+                  validation: view ? true : false,
+                },
+                {
+                  validation: true,
+                },
+              ]}
+              fieldsControll={["name"]}
             />
           </form>
           <ConfirmModal />

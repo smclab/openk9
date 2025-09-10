@@ -297,7 +297,7 @@ export const TabsSection = ({
 
             const updatedTypes = isPresentDataIndex
               ? formValues.dataIndices?.filter((item) => item.id !== dataIndex.id)
-              : [...(formValues.dataIndices || []), dataIndex.id];
+              : [...(formValues.dataIndices || []), dataIndex];
             setFormValues((prev: ConnectionData) => ({
               ...prev,
               dataIndices: updatedTypes,

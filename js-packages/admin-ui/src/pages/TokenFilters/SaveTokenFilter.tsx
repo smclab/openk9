@@ -1,7 +1,7 @@
-import { gql } from "@apollo/client";
 import {
   combineErrorMessages,
   ContainerFluid,
+  CreateDataEntity,
   fromFieldValidators,
   TextArea,
   TextInput,
@@ -10,13 +10,13 @@ import {
 } from "@components/Form";
 import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamicFields";
 import { useToast } from "@components/Form/Form/ToastProvider";
-import useTemplate, { createJsonString, NavigationButtons } from "@components/Form/Hook/Template";
-import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
-import { Filters } from "./gql";
+import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import { Box, Button } from "@mui/material";
 import React from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { Filters } from "./gql";
 
 export function SaveTokenFilter() {
   const { tokenFilterId = "new", view } = useParams();
@@ -121,22 +121,37 @@ export function SaveTokenFilter() {
           )}
         </Box>
         <form style={{ borderStyle: "unset", padding: "0 16px" }}>
-          <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-          <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
-          <GenerateDynamicFieldsMemo
-            templates={Filters}
-            type={typeSelected}
-            template={template}
-            setType={changeType}
-            isRecap={isRecap}
-            changeValueKey={changeValueKey}
-          />
-          <NavigationButtons
-            isRecap={isRecap}
-            submitForm={form.submit}
-            goToRecap={() => setPage(1)}
-            removeRecap={() => setPage(0)}
-            pathBack="/filters"
+          <CreateDataEntity
+            form={form}
+            page={page}
+            id={tokenFilterId}
+            pathBack="/token-filters/"
+            setPage={setPage}
+            haveConfirmButton={view ? false : true}
+            informationSuggestion={[
+              {
+                content: (
+                  <>
+                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <GenerateDynamicFieldsMemo
+                      templates={Filters}
+                      type={typeSelected}
+                      template={template}
+                      setType={changeType}
+                      isRecap={isRecap}
+                      changeValueKey={changeValueKey}
+                    />
+                  </>
+                ),
+                page: 0,
+                validation: view ? true : false,
+              },
+              {
+                validation: true,
+              },
+            ]}
+            fieldsControll={["name"]}
           />
         </form>
       </>
