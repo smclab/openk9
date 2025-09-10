@@ -153,7 +153,7 @@ export const DateTimeSection: React.FC<DateTimeSectionProps> = ({
                         ml: isLockExpanded ? 0.5 : 0,
                       }}
                     >
-                      {isLockExpanded && (isActive ? "Disabilita" : "Abilita")}
+                      {isLockExpanded && (isActive ? "Disable" : "Enable")}
                     </Typography>
                   </IconButton>
                 </Grid>

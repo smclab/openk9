@@ -17,9 +17,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useOptions } from "@pages/SuggestionCategories";
-import { ChunkType } from "../../../../../graphql-generated";
 import { PluginDriverDocType } from "openapi-generated";
 import React, { useEffect, useState } from "react";
+import { ChunkType } from "../../../../../graphql-generated";
 
 interface DefaultDataIndex {
   id: string;

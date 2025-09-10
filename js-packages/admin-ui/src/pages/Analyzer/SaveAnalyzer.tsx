@@ -1,6 +1,7 @@
 import {
   combineErrorMessages,
   ContainerFluid,
+  CreateDataEntity,
   CustomSelectRelationsOneToOne,
   fromFieldValidators,
   MultiAssociationCustomQuery,
@@ -11,7 +12,7 @@ import {
   useToast,
 } from "@components/Form";
 import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamicFields";
-import useTemplate, { createJsonString, NavigationButtons } from "@components/Form/Hook/Template";
+import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
 import { useMemo, useState } from "react";
@@ -187,57 +188,71 @@ export function SaveAnalyzer() {
             </Button>
           )}
         </Box>
-
         <form style={{ borderStyle: "unset", padding: "0 16px" }}>
-          <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-          <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
-          <GenerateDynamicFieldsMemo
-            templates={TemplateAnalyzers}
-            type={typeSelected}
-            template={template}
-            setType={changeType}
-            isRecap={isRecap}
-            changeValueKey={changeValueKey}
-          />
-          {isCustom && (
-            <>
-              <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
-                <MultiAssociationCustomQuery
-                  list={{ ...charFilters, associated: form.inputProps("charFilters").value }}
-                  sx={selectedAssociationTabs === "charFilters" ? {} : { display: "none" }}
-                  disabled={isRecap || view === "view"}
-                  isRecap={isRecap}
-                  createPath={{ path: "/char-filter/new", entity: "char-filters" }}
-                  onSelect={handleAssociationSelect("charFilters")}
-                />
-                <MultiAssociationCustomQuery
-                  list={{ ...tokenFilters, associated: form.inputProps("tokenFilters").value }}
-                  sx={selectedAssociationTabs === "tokenFilters" ? {} : { display: "none" }}
-                  disabled={isRecap || view === "view"}
-                  createPath={{ path: "/token-filter/new", entity: "token-filters" }}
-                  isRecap={isRecap}
-                  onSelect={handleAssociationSelect("tokenFilters")}
-                />
-              </AssociationsLayout>
-              <CustomSelectRelationsOneToOne
-                sx={{ mt: 2 }}
-                options={OptionsTokenizer}
-                label="Tokenizer"
-                onChange={(val) => form.inputProps("tokenizerId").onChange({ id: val.id, name: val.name })}
-                value={{
-                  id: form.inputProps("tokenizerId").value.id,
-                  name: form.inputProps("tokenizerId").value.name || "",
-                }}
-                disabled={isRecap}
-              />
-            </>
-          )}
-          <NavigationButtons
-            isRecap={isRecap}
-            submitForm={form.submit}
-            goToRecap={() => setPage(1)}
-            removeRecap={() => setPage(0)}
-            pathBack="/analyzers"
+          <CreateDataEntity
+            form={form}
+            page={page}
+            id={analyzerId}
+            pathBack="/analyzers/"
+            setPage={setPage}
+            haveConfirmButton={view ? false : true}
+            informationSuggestion={[
+              {
+                content: (
+                  <>
+                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <GenerateDynamicFieldsMemo
+                      templates={TemplateAnalyzers}
+                      type={typeSelected}
+                      template={template}
+                      setType={changeType}
+                      isRecap={isRecap}
+                      changeValueKey={changeValueKey}
+                    />
+                    {isCustom && (
+                      <>
+                        <AssociationsLayout tabs={associationTabs} setTabsId={setSelectedAssociationTabs}>
+                          <MultiAssociationCustomQuery
+                            list={{ ...charFilters, associated: form.inputProps("charFilters").value }}
+                            sx={selectedAssociationTabs === "charFilters" ? {} : { display: "none" }}
+                            disabled={isRecap || view === "view"}
+                            isRecap={isRecap}
+                            createPath={{ path: "/char-filter/new", entity: "char-filters" }}
+                            onSelect={handleAssociationSelect("charFilters")}
+                          />
+                          <MultiAssociationCustomQuery
+                            list={{ ...tokenFilters, associated: form.inputProps("tokenFilters").value }}
+                            sx={selectedAssociationTabs === "tokenFilters" ? {} : { display: "none" }}
+                            disabled={isRecap || view === "view"}
+                            createPath={{ path: "/token-filter/new", entity: "token-filters" }}
+                            isRecap={isRecap}
+                            onSelect={handleAssociationSelect("tokenFilters")}
+                          />
+                        </AssociationsLayout>
+                        <CustomSelectRelationsOneToOne
+                          sx={{ mt: 2 }}
+                          options={OptionsTokenizer}
+                          label="Tokenizer"
+                          onChange={(val) => form.inputProps("tokenizerId").onChange({ id: val.id, name: val.name })}
+                          value={{
+                            id: form.inputProps("tokenizerId").value.id,
+                            name: form.inputProps("tokenizerId").value.name || "",
+                          }}
+                          disabled={isRecap}
+                        />
+                      </>
+                    )}
+                  </>
+                ),
+                page: 0,
+                validation: view ? true : false,
+              },
+              {
+                validation: true,
+              },
+            ]}
+            fieldsControll={["name"]}
           />
         </form>
       </>
