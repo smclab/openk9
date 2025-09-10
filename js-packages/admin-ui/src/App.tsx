@@ -4,13 +4,14 @@ import { ToastProvider } from "@components/Form/Form/ToastProvider";
 import { useFilteredMenuItems } from "@components/Navigation/menuItems";
 import { SideNavigationItem } from "@components/Navigation/SideNavigationItem";
 import { SideNavigationContextProvider } from "@components/sideNavigationContext";
-import { Clear, KeyboardArrowUp, Search } from "@mui/icons-material";
+import { Clear, KeyboardArrowUp, Search, RateReview } from "@mui/icons-material";
 import {
   AppBar,
   Box,
   createTheme,
   CssBaseline,
   Fab,
+  IconButton,
   InputAdornment,
   List,
   TextField,
@@ -18,7 +19,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { red } from "@mui/material/colors";
+import { red, yellow } from "@mui/material/colors";
 import {
   Analyzers,
   Annotators,
@@ -506,7 +507,35 @@ export default function App() {
                             K9
                           </Typography>
                         </Box>
-                        <ThemeSwitcher isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0 }}>
+                          <IconButton
+                            sx={{
+                              borderRadius: "10px",
+                              "&:hover": {
+                                backgroundColor: "rgba(0, 0, 0, 0.04)",
+                              },
+                            }}
+                            component="a"
+                            href="https://clearflask.openk9.io/feedback"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            color="warning"
+                          >
+                            <RateReview />
+                          </IconButton>
+
+                          {/* Vertical divider */}
+                          <Box
+                            sx={{
+                              width: "1px",
+                              height: "24px",
+                              backgroundColor: borderColor,
+                              mx: 1.5,
+                            }}
+                          />
+
+                          <ThemeSwitcher isDarkMode={isDarkMode} toggleTheme={toggleTheme} />
+                        </Box>
                       </Toolbar>
                     </AppBar>
 

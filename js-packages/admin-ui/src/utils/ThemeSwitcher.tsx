@@ -1,8 +1,7 @@
-import React from "react";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import IconButton from "@mui/material/IconButton";
-import { red } from "@mui/material/colors";
+import React from "react";
 
 interface ThemeSwitcherProps {
   isDarkMode: boolean;
@@ -11,7 +10,20 @@ interface ThemeSwitcherProps {
 
 const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({ isDarkMode, toggleTheme }) => {
   return (
-    <IconButton sx={{ border: `2px solid ${red[100]}` }} onClick={toggleTheme}>
+    <IconButton
+      sx={{
+        borderRadius: "10px",
+        transition: "transform 0.3s ease",
+        "&:hover": {
+          backgroundColor: "rgba(0, 0, 0, 0.04)",
+          "& > *": {
+            transform: "rotate(20deg)",
+            transition: "transform 0.3s ease",
+          },
+        },
+      }}
+      onClick={toggleTheme}
+    >
       {isDarkMode ? <DarkModeIcon /> : <LightModeIcon />}
     </IconButton>
   );
