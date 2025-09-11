@@ -53,7 +53,7 @@ export function TokenFilters() {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box sx={{ width: "50%", ml: 2 }}>
           <Typography component="h1" variant="h1" fontWeight="600">
-            Token FIlters
+            Token Filters
           </Typography>
           <Typography variant="body1">
             In this section you can create and handle Token Filters to use to define advanced analysis logic and bind to
@@ -125,14 +125,6 @@ export function TokenFilters() {
               content: (tab) => (
                 <Typography variant="body2" className="pipeline-title">
                   {tab?.description}
-                </Typography>
-              ),
-            },
-            {
-              header: "Priority",
-              content: (tab: any) => (
-                <Typography variant="body2" className="pipeline-title">
-                  {tab?.priority}
                 </Typography>
               ),
             },

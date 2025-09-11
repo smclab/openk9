@@ -53,8 +53,8 @@ export function Datasources() {
               Datasources
             </Typography>
             <Typography variant="body1">
-              This is your datasources list, lorem Ipsum has been the industry's standard dummy text ever since the,
-              when an unknown printer took a galley of type and scrambled it to make a type specimen hook.
+              In this section you can create and handle Datasources. A Datasource defines the connection to an external
+              or internal data source and how it is indexed and processed within Openk9.
             </Typography>
           </Box>
           <Box>

@@ -242,6 +242,11 @@ export function CreateDataindex({
                   />
                 </FormControl>
               </FormControl>
+              <Box sx={{ marginBottom: 1 }}>
+                <Typography variant="subtitle1" component="label">
+                  {"Document types"}
+                </Typography>
+              </Box>
 
               <TableContainer component={Paper}>
                 <Table>
