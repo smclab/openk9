@@ -1,4 +1,12 @@
-export function CloseIcon({ color, size }: { color: string; size: string }) {
+import React from "react";
+
+export function CloseIcon({
+  color,
+  size,
+}: {
+  color: string;
+  size: string | number;
+}) {
   return (
     <svg
       width={size}

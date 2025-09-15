@@ -19,6 +19,7 @@ import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import { FilterSvg } from "./svgElement/FiltersSvg";
 import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
 import { User } from "./svgElement/UserSvg";
+import { CloseIcon } from "./svgElement/CloseSvg";
 
 const isKeycloakEnabled = process.env.REACT_APP_KEYCLOAK_ENABLED === "true";
 const isChatbotEnabled = process.env.REACT_APP_CHATBOT_ENABLED === "true";
@@ -758,27 +759,32 @@ export function App() {
       <div
         ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
       />
-      <Chatbot
-        icon={{
-          buttonIcon: <Logo size={35} color="white" />,
-          userIcon: <User />,
-          chatbotIcon: <Logo size={25} />,
-          refreshChatIcon: <TrashIcon />,
-          searchIcon: (
-            <FontAwesomeIcon
-              className="openk9--search-icon"
-              icon={faSearch}
-              style={{
-                opacity: 0.5,
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-              }}
-            />
-          ),
-          logoIcon: <Logo size={35} />,
-          closeIcon: <div>x</div>,
-          closeModal: <div>x</div>,
-        }}
-      />
+      {isChatbotEnabled && (
+        <div style={{ position: "absolute", bottom: "20px", right: "20px" }}>
+          <Chatbot
+            icon={{
+              buttonIcon: <Logo size={35} color="white" />,
+              userIcon: <User />,
+              chatbotIcon: <Logo size={25} color="#c22525" />,
+              refreshChatIcon: <TrashIcon />,
+              searchIcon: (
+                <FontAwesomeIcon
+                  className="openk9--search-icon"
+                  icon={faSearch}
+                  style={{
+                    opacity: 0.5,
+                    color:
+                      "var(--openk9-embeddable-search--secondary-text-color)",
+                  }}
+                />
+              ),
+              logoIcon: <Logo size={35} color="#c22525" />,
+              closeIcon: <CloseIcon size={25} color="white" />,
+              closeModal: <CloseIcon size={18} color="#c22525" />,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

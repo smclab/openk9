@@ -17,7 +17,7 @@
   },
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^5.1.14",
+    "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.1.6",
     "@mui/icons-material": "^6.1.6",
     "@mui/system": "^6.1.6",
