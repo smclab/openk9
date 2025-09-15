@@ -96,6 +96,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -494,9 +495,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				.map(embeddingModel -> {
 
 					if (embeddingModel == null) {
-						throw new StatusRuntimeException(
-							Status.NOT_FOUND.withDescription("Missing active embedding model.")
-						);
+						throw new NoResultException();
 					}
 
 					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
@@ -525,6 +524,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 					return responseBuilder.build();
 				})
+				.onFailure(NoResultException.class)
+				.recoverWithUni(
+					Uni.createFrom().failure(
+						new StatusRuntimeException(
+							Status.NOT_FOUND.withDescription("Missing active embedding model.")
+						)
+					)
+				)
 			);
 	}
 
