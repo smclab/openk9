@@ -164,12 +164,14 @@ cython_debug/
 #vscode
 .vscode/
 
-# Other
-.directory
-application_default_credentials.json
-
 # grpc
 app/external_services/grpc/searcher/searcher_pb2_grpc.py
 app/external_services/grpc/searcher/searcher_pb2.py
 app/external_services/grpc/tenant_manager/tenant_manager_pb2_grpc.py
 app/external_services/grpc/tenant_manager/tenant_manager_pb2.py
+app/external_services/grpc/embedding/embedding_pb2_grpc.py
+app/external_services/grpc/embedding/embedding_pb2.py
+
+# Other
+.directory
+application_default_credentials.json

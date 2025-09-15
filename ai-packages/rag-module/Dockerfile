@@ -18,7 +18,7 @@ RUN if [ "$PYTORCH_CPU" = false ]; then \
 COPY ./app ./app
 
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
-./app/external_services/grpc/searcher/searcher.proto ./app/external_services/grpc/tenant_manager/tenant_manager.proto
+./app/external_services/grpc/searcher/searcher.proto ./app/external_services/grpc/tenant_manager/tenant_manager.proto ./app/external_services/grpc/embedding/embedding.proto
 
 EXPOSE 5000
 
