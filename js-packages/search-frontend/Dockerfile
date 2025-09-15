@@ -4,17 +4,17 @@ ARG BUILD_ENV=keycloak
 
 RUN mkdir -p /app/js-packages/search-frontend
 
-# Copia il package.json della root
+# Copy the package.json from the root
 COPY ./package.json /app
 COPY ./yarn.lock /app
 
-# Copia il package.json del pacchetto search-frontend
+# Copy the package.json.conf file from the search-frontend package (package.json with MUI library)
 COPY ./js-packages/search-frontend/package.json.conf /app/js-packages/search-frontend/package.json
 
-# Imposta la root del progetto
+# Set the project root
 WORKDIR /app
 
-# Installa tutte le dipendenze dei workspace
+# Install all workspace dependencies
 RUN yarn install --frozen-lockfile
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
