@@ -20,6 +20,7 @@ package io.openk9.datasource.grpc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
@@ -199,6 +200,29 @@ public class SearcherGrpcTest {
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
 		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_TOOL_ONE));
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_embedding_model_configurations(UniAsserter asserter) {
+		asserter.assertThat(
+			() -> searcher.getEmbeddingModelConfigurations(
+				GetEmbeddingModelConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+
+				log.info(String.format("getEmbeddingModelConfigurations response: %s", response));
+
+				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
+				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
+				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				assertEquals(PROVIDER, response.getProviderModel().getProvider());
+				assertEquals(MODEL, response.getProviderModel().getModel());
+				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
+			}
+		);
 	}
 
 	@Test
