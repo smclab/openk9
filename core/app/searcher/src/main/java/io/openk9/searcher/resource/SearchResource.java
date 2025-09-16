@@ -33,6 +33,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -297,6 +301,52 @@ public class SearchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<Response> search(SearchRequest searchRequest) {
 
+
+		var virtualHost = request.authority().host();
+		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build();
+
+		// retrieve Autocorrection configurations
+		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
+			.flatMap(autocorrectionConfigurationsResponse -> {
+				var doAutocorrection = false;
+				var field = autocorrectionConfigurationsResponse.getField();
+
+				// retrieve the values array for the searchToken associated with
+				// the text entered by the user in the search input.
+				var isSearchTokenValues = searchRequest.getSearchQuery().stream()
+					.filter(ParserSearchToken::isSearch)
+					.findFirst()
+					.map(ParserSearchToken::getValues)
+					.orElse(List.of());
+
+				// parserSearchToken.getValues().size() == 1
+				if (isSearchTokenValues.size() == 1) {
+					// TODO: get autocorrection suggest
+
+					// TODO: if enableSearchWithCorrection is true replace query text
+					//  with autocorrection suggest -> searchRequest.getSearchQuery().getFirst().setValues();
+				}
+				else {
+					log.warn("Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values.");
+				}
+
+				// TODO: if was executed autocorrection add autocorrection JSON object result
+				//  in the doSearch result
+				return _doSearch(searchRequest);
+			})
+			// TODO: al fallimento del recupero delle configurazioni dell'autocorrezione procedere
+			// senza autocorrezione
+			.onFailure()
+			.recoverWithUni(failure -> {
+
+				return _doSearch(searchRequest);
+			});
+	}
+
+	private Uni<Response> _doSearch(SearchRequest searchRequest) {
+		// TODO: quello che segue è il flusso vecchio
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
 
@@ -361,7 +411,6 @@ public class SearchResource {
 			.transform(throwable -> new WebApplicationException(
 				getErrorResponse(throwable))
 			);
-
 	}
 
 	@Operation(operationId = "query-analysis")
