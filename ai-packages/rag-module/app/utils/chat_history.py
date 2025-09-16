@@ -24,6 +24,8 @@ from opensearchpy import OpenSearch
 
 from app.utils.logger import logger
 
+UPLOADED_DOCUMENTS_INDEX = "uploaded_documents_index"
+
 
 def get_chat_history(
     open_search_client, user_id: str, chat_id: str
@@ -312,3 +314,61 @@ def delete_documents(opensearch_host, interval_in_days=180):
                     logger.error(f"Failed to delete document: {item['delete']}")
         else:
             logger.info("Bulk delete completed successfully")
+
+
+def save_uploaded_documents(opensearch_host: str, documents: list):
+    """Save uploaded documents to OpenSearch index.
+
+    Stores uploaded documents in a specific OpenSearch index.
+    Creates the index if it doesn't exist.
+
+    :param opensearch_host: The host URL of the OpenSearch instance (e.g., "http://localhost:9200")
+    :type opensearch_host: str
+    :param documents: List of uploaded documents
+    :type sources: list
+
+    :return: None
+
+    .. note::
+        - Creates index if not exists
+    """
+
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
+    )
+
+    index_actions = []
+    for doc in documents:
+        index_actions.append({"index": {"_index": UPLOADED_DOCUMENTS_INDEX}})
+        index_actions.append(doc)
+
+    if not open_search_client.indices.exists(index=UPLOADED_DOCUMENTS_INDEX):
+        index_body = {
+            "mappings": {
+                "properties": {
+                    "timestamp": {"type": "date"},
+                }
+            },
+        }
+        open_search_client.indices.create(
+            index=UPLOADED_DOCUMENTS_INDEX,
+            body=index_body,
+        )
+
+    if index_actions:
+        try:
+            logger.info(f"Indexing {len(index_actions)} documents in bulk")
+            response = open_search_client.bulk(body=index_actions)
+
+            if response.get("errors"):
+                logger.error("Some documents failed to index:")
+                for item in response.get("items", []):
+                    if "error" in item.get("index", {}):
+                        logger.error(
+                            f"Failed to index document: {item['index']['error']}"
+                        )
+            else:
+                logger.info(f"Successfully indexed {len(documents)} documents")
+
+        except Exception as e:
+            print(f"Bulk indexing failed: {e}")
