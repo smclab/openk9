@@ -16,16 +16,27 @@
 #
 
 import os
+import shutil
+import uuid
 from contextlib import asynccontextmanager
 from enum import Enum
+from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlparse
 
 import uvicorn
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import (
+    DocumentConverter,
+    InputFormat,
+    PdfFormatOption,
+)
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
@@ -34,7 +45,7 @@ from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
-from app.utils.llm import get_configurations
+from app.utils.llm import embedding, get_configurations
 from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
@@ -44,6 +55,7 @@ ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
+GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
 CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
@@ -56,6 +68,8 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
 UPLOAD_FILE_EXTENSIONS = [
     ".pdf",
     ".md",
@@ -876,23 +890,101 @@ async def create_upload_file(
 ):
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    if not headers.authorization:
-        unauthorized_response()
+    # if not headers.authorization:
+    #     unauthorized_response()
 
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
+    # token = headers.authorization.replace(TOKEN_PREFIX, "")
 
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+    # user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
 
-    if not user_info:
-        unauthorized_response()
+    # if not user_info:
+    #     unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    # user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+
+    user_id = 666
 
     if len(files) > MAX_UPLOAD_FILES_NUMBER:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
         )
+
+    for file in files:
+        unique_id = uuid.uuid4()
+        filename, file_extension = os.path.splitext(file.filename)
+
+        if file_extension not in UPLOAD_FILE_EXTENSIONS:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="Invalid document type"
+            )
+
+        file_size = 0
+        for chunk in file.file:
+            file_size += len(chunk)
+            if file_size > MAX_UPLOAD_FILE_SIZE:
+                raise HTTPException(
+                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail=f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
+                )
+
+        await file.seek(0)
+
+        uploaded_file = f"{UPLOAD_DIR}/{file.filename}"
+        renamed_uploaded_file = f"{UPLOAD_DIR}/{filename}_{unique_id}{file_extension}"
+
+        try:
+            with open(uploaded_file, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to save file: {str(e)}",
+            )
+
+        os.rename(uploaded_file, renamed_uploaded_file)
+
+        converter = None
+        chunker = None
+        export_type = ExportType.MARKDOWN
+
+        if file_extension == ".pdf":
+            pipeline_options = PdfPipelineOptions(do_ocr=False)
+
+            converter = DocumentConverter(
+                format_options={
+                    InputFormat.PDF: PdfFormatOption(
+                        pipeline_options=pipeline_options,
+                    ),
+                },
+            )
+
+        loader = DoclingLoader(
+            converter=converter,
+            export_type=export_type,
+            chunker=chunker,
+            file_path=renamed_uploaded_file,
+        )
+
+        docs = loader.load()
+
+        for doc in docs:
+            page_content = doc.page_content
+            document = {
+                "filename": filename,
+                "file_extension": file_extension,
+                "user_id": user_id,
+                "chat_id": chat_id,
+                "text": page_content,
+            }
+            embedding(
+                grpc_host=GRPC_EMBEDDING_MODULE_HOST,
+                virtual_host=virtual_host,
+                openserach_host=OPENSEARCH_HOST,
+                document=document,
+            )
+
+        os.remove(renamed_uploaded_file)
 
     content = {"message": "Documents uploaded successfully.", "status": "success"}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
