@@ -146,7 +146,12 @@ public class SearcherGrpcTest {
 
 		// Bucket
 		createBucketOne();
-		enableBucket(getBucketOne());
+		var bucketOne = EntitiesUtils.getBucket(
+			sessionFactory,
+			bucketService,
+			BUCKET_ONE
+		);
+		enableBucket(bucketOne);
 
 		// LargeLanguageModel
 		createLargeLanguageModelOne();
@@ -197,9 +202,9 @@ public class SearcherGrpcTest {
 				.build()
 		);
 
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_TOOL_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_SEARCH_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_TOOL_ONE));
 	}
 
 	@Test
@@ -430,24 +435,34 @@ public class SearcherGrpcTest {
 		removeLargeLanguageModelOne();
 
 		// Bucket
-		enableBucket(getBucketDefault());
-		removeBucketOne();
+		var bucketDefault = EntitiesUtils.getBucket(
+			sessionFactory,
+			bucketService,
+			io.openk9.datasource.model.init.Bucket.INSTANCE.getName()
+		);
+
+		enableBucket(bucketDefault);
+		EntitiesUtils.removeBucket(
+			sessionFactory,
+			bucketService,
+			BUCKET_ONE
+		);
 
 		// RAGConfiguration
-		removeRAGConfiguration(RAG_CHAT_ONE);
-		removeRAGConfiguration(RAG_SEARCH_ONE);
-		removeRAGConfiguration(RAG_CHAT_TOOL_ONE);
-	}
-
-	private static <T> void failureAssertions(Throwable throwable) {
-
-		Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-		var exception = (StatusRuntimeException) throwable;
-
-		assertTrue(exception
-			.getMessage()
-			.contains(InternalServiceMockException.class.getName())
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CHAT_ONE
+		);
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_SEARCH_ONE
+		);
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CHAT_TOOL_ONE
 		);
 	}
 
@@ -527,26 +542,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private void createRAGConfiguration(String name, RAGType type) {
-		CreateRAGConfigurationDTO dto = CreateRAGConfigurationDTO.builder()
-			.name(name)
-			.type(type)
-			.chunkWindow(CHUNK_WINDOW)
-			.prompt(PROMPT_TEST)
-			.promptNoRag(PROMPT_TEST)
-			.ragToolDescription(PROMPT_TEST)
-			.rephrasePrompt(PROMPT_TEST)
-			.reformulate(REFORMULATE)
-			.jsonConfig(JSON_CONFIG)
-			.build();
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private void enableBucket(Bucket bucket) {
 		sessionFactory.withTransaction(
 			session ->
@@ -596,26 +591,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private Bucket getBucketDefault() {
-		return sessionFactory.withTransaction(
-				session ->
-					bucketService.findByName(
-						session,
-						io.openk9.datasource.model.init.Bucket.INSTANCE.getName())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private Bucket getBucketOne() {
-		return sessionFactory.withTransaction(
-				session ->
-					bucketService.findByName(session, BUCKET_ONE)
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private EmbeddingModel getEmbeddingModelDefaultPrimary() {
 		return sessionFactory.withTransaction(
 				s ->
@@ -659,17 +634,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private void removeBucketOne() {
-		var bucket = getBucketOne();
-
-		sessionFactory.withTransaction(
-				session ->
-					bucketService.deleteById(session, bucket.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private EmbeddingModel removeEmbeddingModelOne() {
 		var embeddingModel = getEmbeddingModelOne();
 
@@ -689,17 +653,6 @@ public class SearcherGrpcTest {
 				SCHEMA_NAME,
 				(session, transaction) ->
 					largeLanguageModelService.deleteById(session, largeLanguageModel.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void removeRAGConfiguration(String name) {
-		var ragConfiguration = getRAGConfiguration(name);
-
-		sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.deleteById(session, ragConfiguration.getId())
 			)
 			.await()
 			.indefinitely();
