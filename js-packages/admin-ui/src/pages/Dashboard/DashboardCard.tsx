@@ -15,27 +15,41 @@ export default function DashboardCard({ children, sx = {}, title }: DashboardCar
         borderRadius: "12px",
         p: "16px 14px",
         width: "100%",
-        backgroundColor: (theme) =>
-          (theme.components?.MuiCard?.defaultProps?.sx as any)?.backgroundColor || theme.palette.background.paper,
         maxHeight: 265,
         overflow: "auto",
         ...sx,
       }}
     >
       {title && (
-        <Typography
-          variant="h6"
+        <Box
           sx={{
-            fontWeight: 600,
-            color: theme.palette.text.primary,
-            letterSpacing: 0.2,
-            pb: 1,
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            backgroundColor: theme.palette.background.default,
           }}
         >
-          {title}
-        </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 600,
+              color: theme.palette.text.primary,
+              letterSpacing: 0.2,
+              pb: 1,
+            }}
+          >
+            {title}
+          </Typography>
+        </Box>
       )}
-      {children}
+      <Box
+        sx={{
+          overflowY: "auto",
+          flexGrow: 1,
+        }}
+      >
+        {children}
+      </Box>
     </Card>
   );
 }

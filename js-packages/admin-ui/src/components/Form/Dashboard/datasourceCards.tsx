@@ -215,97 +215,85 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
       color: getStatusColor(datasource?.schedulable ? "active" : "syncing"),
       bgcolor: "#e3f2fd",
     };
-    //getTypeConfig(datasource?.schedulable ? "active" : "syncing");
 
     return (
-      <StyledCard sx={{ minWidth: 280 }}>
-        <CardContent sx={{ p: 2.5 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2.5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flex: 1, minWidth: 0 }}>
-              <TypeAvatar bgcolor={typeConfig.bgcolor}>{typeConfig.icon}</TypeAvatar>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
-                  variant="subtitle1"
-                  sx={{
-                    fontWeight: 600,
-                    mb: 0.5,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  {datasource.name}
-                </Typography>
-                <Chip
-                  label={datasource?.schedulable ? "active" : "idle"}
-                  size="small"
-                  color={typeConfig?.color}
-                  variant="outlined"
-                  sx={{
-                    height: 20,
-                    fontSize: "0.7rem",
-                    fontWeight: 500,
-                    textTransform: "capitalize",
-                  }}
-                />
-              </Box>
+      <StyledCard>
+        <CardContent style={{ padding: "10px" }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              gridTemplateRows: "auto auto",
+              alignItems: "start",
+            }}
+          >
+            <Box sx={{ gridRow: "1 / 3", alignSelf: "center" }}>
+              <TypeAvatar bgcolor={typeConfig.bgcolor} style={{ marginRight: "10px" }}>
+                {typeConfig.icon}
+              </TypeAvatar>
             </Box>
-            <Stack direction="row" spacing={0.5}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 600,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                fontSize: "0.95rem",
+                gridColumn: "2",
+                gridRow: "1",
+              }}
+            >
+              {datasource.name}
+            </Typography>
+            <Box sx={{ gridColumn: "3", gridRow: "1" }}>
               <IconButton
                 size="small"
                 onClick={() => handleEditOrCreateClick({ datasourceId: datasource.id, type: "Edit" })}
               >
                 <SettingsIcon fontSize="small" />
               </IconButton>
-            </Stack>
+            </Box>
+
+            <Box sx={{ gridColumn: "2 / 4", gridRow: "2" }}>
+              <Divider sx={{ mb: 1 }} />
+              <Stack>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    Status
+                  </Typography>
+                  <Chip
+                    label={datasource?.schedulable ? "active" : "idle"}
+                    size="small"
+                    color={getStatusColor(datasource?.schedulable ? "active" : "syncing")}
+                    variant="filled"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.7rem",
+                      fontWeight: 500,
+                      textTransform: "capitalize",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    Sync Scheduled: {getReadableCronDescription(datasource?.scheduling)}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 500,
+                      color: "text.primary",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      maxWidth: 100,
+                    }}
+                  >
+                    {datasource.lastSync}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
           </Box>
-
-          <Divider sx={{ mb: 2 }} />
-
-          <Stack spacing={1.5}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Status
-              </Typography>
-              <Chip
-                label={datasource?.schedulable ? "active" : "idle"}
-                size="small"
-                color={getStatusColor(datasource?.schedulable ? "active" : "syncing")}
-                variant="filled"
-                sx={{
-                  height: 20,
-                  fontSize: "0.7rem",
-                  fontWeight: 500,
-                  textTransform: "capitalize",
-                }}
-              />
-            </Box>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              {/* <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Documents
-              </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600, color: "text.primary" }}>
-                {datasource?.documentsCount?.toLocaleString()}
-              </Typography> */}
-            </Box>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                Sync Scheduled: {getReadableCronDescription(datasource?.scheduling)}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontWeight: 500,
-                  color: "text.primary",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  maxWidth: 100,
-                }}
-              >
-                {datasource.lastSync}
-              </Typography>
-            </Box>
-          </Stack>
         </CardContent>
       </StyledCard>
     );
@@ -313,7 +301,13 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
 
   return (
     <>
-      <Box sx={{ width: "100%", mt: "2rem" }}>
+      <Card
+        sx={{
+          width: "100%",
+          boxShadow: "none",
+          padding: "16px 14px",
+        }}
+      >
         {/* Header */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
           <Box>
@@ -358,9 +352,18 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
         {datasources.length === 0 ? (
           <EmptyState />
         ) : (
-          <Box sx={{ display: "flex", gap: 2, overflowX: "auto", pb: 1, pt: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              gap: 2,
+              px: 0,
+            }}
+          >
             {datasources.map((datasource) => (
-              <DatasourceCard key={datasource.id} datasource={datasource} />
+              <Box key={datasource.id} sx={{ width: "100%" }}>
+                <DatasourceCard datasource={datasource} />
+              </Box>
             ))}
           </Box>
         )}
@@ -491,7 +494,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
             </Button>
           </DialogActions>
         </StyledDialog>
-      </Box>
+      </Card>
       <ConfirmModal />
     </>
   );

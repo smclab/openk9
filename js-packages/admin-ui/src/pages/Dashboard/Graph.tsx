@@ -1,8 +1,7 @@
 import TrashIcon from "@mui/icons-material/Delete";
 import DocumentIcon from "@mui/icons-material/Description";
 import RulerIcon from "@mui/icons-material/Straighten";
-import { Box, Divider, Typography, useTheme } from "@mui/material";
-import DashboardCard from "./DashboardCard";
+import { Box, Card, Typography, useTheme } from "@mui/material";
 import DashboardInfoRow from "./DashboardInfoRow";
 
 type detailGraphProps = {
@@ -31,121 +30,126 @@ export function DetailGraph({
   const theme = useTheme();
 
   return (
-    <Box display="flex" flexDirection="column" gap="14px">
-      <DashboardCard title="Document information">
-        <Box display="flex" flexDirection="column" gap="14px">
-          <DashboardInfoRow
-            icon={
-              <DocumentIcon
-                sx={{
-                  color: theme.palette.info.main,
-                  fontSize: 26,
-                }}
-              />
-            }
-            label={firstCardLabel}
-            value={
-              <Typography
-                variant="h6"
-                sx={{
-                  color: theme.palette.info.main,
-                  fontWeight: 800,
-                  fontFamily: "Nunito Sans",
-                  ml: "auto",
-                  fontSize: "1.3rem",
-                }}
-              >
-                {firstCardNumber}
-                <span
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 400,
-                    marginLeft: 4,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  {firstCardUnity}
-                </span>
-              </Typography>
-            }
-            borderColor={theme.palette.info.main}
-          />
-          <Divider></Divider>
-          <DashboardInfoRow
-            icon={
-              <TrashIcon
-                sx={{
-                  color: theme.palette.error.main,
-                  fontSize: 26,
-                }}
-              />
-            }
-            label={secondCardLabel}
-            value={
-              <Typography
-                variant="h6"
-                sx={{
-                  color: theme.palette.error.main,
-                  fontWeight: 800,
-                  fontFamily: "Nunito Sans",
-                  ml: "auto",
-                  fontSize: "1.3rem",
+    <Box display="flex" flexDirection="row" gap="14px" flex={1}>
+      {/* <DashboardCard title="Document information"> */}
+      {/* <Box display="flex" flexDirection="column" gap="14px"> */}
+      <Card sx={{ flex: 1 }}>
+        <DashboardInfoRow
+          icon={
+            <DocumentIcon
+              sx={{
+                color: theme.palette.info.main,
+                fontSize: 26,
+              }}
+            />
+          }
+          label={firstCardLabel}
+          value={
+            <Typography
+              variant="h6"
+              sx={{
+                color: theme.palette.info.main,
+                fontWeight: 800,
+                fontFamily: "Nunito Sans",
+                ml: "auto",
+                fontSize: "1.3rem",
+              }}
+            >
+              {firstCardNumber}
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 400,
+                  marginLeft: 4,
+                  color: theme.palette.text.secondary,
                 }}
               >
-                {secondCardNumber}
-                <span
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 400,
-                    marginLeft: 4,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  {secondCardUnity}
-                </span>
-              </Typography>
-            }
-            borderColor={theme.palette.error.main}
-          />
-          <Divider></Divider>
-          <DashboardInfoRow
-            icon={
-              <RulerIcon
-                sx={{
-                  color: theme.palette.success.main,
-                  fontSize: 26,
-                }}
-              />
-            }
-            label={thirdCardLabel}
-            value={
-              <Typography
-                variant="h6"
-                sx={{
-                  color: theme.palette.success.main,
-                  fontWeight: 800,
-                  fontFamily: "Nunito Sans",
-                  ml: "auto",
-                  fontSize: "1.3rem",
+                {firstCardUnity}
+              </span>
+            </Typography>
+          }
+          borderColor={theme.palette.info.main}
+        />
+      </Card>
+      {/* <Divider></Divider> */}
+      <Card sx={{ flex: 1 }}>
+        <DashboardInfoRow
+          icon={
+            <TrashIcon
+              sx={{
+                color: theme.palette.error.main,
+                fontSize: 26,
+              }}
+            />
+          }
+          label={secondCardLabel}
+          value={
+            <Typography
+              variant="h6"
+              sx={{
+                color: theme.palette.error.main,
+                fontWeight: 800,
+                fontFamily: "Nunito Sans",
+                ml: "auto",
+                fontSize: "1.3rem",
+              }}
+            >
+              {secondCardNumber}
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 400,
+                  marginLeft: 4,
+                  color: theme.palette.text.secondary,
                 }}
               >
-                {thirdCardNumber}
-                <span
-                  style={{
-                    fontSize: "0.95rem",
-                    fontWeight: 400,
-                    marginLeft: 4,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
-                  {thirdCardUnity}
-                </span>
-              </Typography>
-            }
-            borderColor={theme.palette.success.main}
-          />
-        </Box>
-      </DashboardCard>
+                {secondCardUnity}
+              </span>
+            </Typography>
+          }
+          borderColor={theme.palette.error.main}
+        />
+      </Card>
+
+      {/* <Divider></Divider> */}
+      <Card sx={{ flex: 1 }}>
+        <DashboardInfoRow
+          icon={
+            <RulerIcon
+              sx={{
+                color: theme.palette.success.main,
+                fontSize: 26,
+              }}
+            />
+          }
+          label={thirdCardLabel}
+          value={
+            <Typography
+              variant="h6"
+              sx={{
+                color: theme.palette.success.main,
+                fontWeight: 800,
+                fontFamily: "Nunito Sans",
+                ml: "auto",
+                fontSize: "1.3rem",
+              }}
+            >
+              {thirdCardNumber}
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: 400,
+                  marginLeft: 4,
+                  color: theme.palette.text.secondary,
+                }}
+              >
+                {thirdCardUnity}
+              </span>
+            </Typography>
+          }
+          borderColor={theme.palette.success.main}
+        />
+      </Card>
     </Box>
   );
 }

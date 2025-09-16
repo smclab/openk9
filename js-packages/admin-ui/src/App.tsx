@@ -108,9 +108,13 @@ const lightTheme = createTheme({
       },
     },
     MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#ffffff",
+        },
+      },
       defaultProps: {
         variant: "outlined",
-        sx: { backgroundColor: "#ffffff" },
       },
     },
     MuiListItemButton: {
@@ -240,9 +244,13 @@ const darkTheme = createTheme({
       },
     },
     MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#3b3b3b",
+        },
+      },
       defaultProps: {
         variant: "outlined",
-        sx: { backgroundColor: "#3b3b3b" },
       },
     },
     MuiListItemButton: {
@@ -441,10 +449,6 @@ export default function App() {
     localStorage.setItem("isDarkMode", newTheme.toString());
   };
 
-  const handleSideMenuToggle = useCallback(() => setIsSideMenuOpen((prev) => !prev), []);
-  const handleNotificationToggle = useCallback(() => setIsNotification((prev) => !prev), []);
-
-  // Definisci il colore del bordo in base al tema
   const borderColor = isDarkMode ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.12)";
 
   const [showScrollTop, setShowScrollTop] = React.useState(false);
