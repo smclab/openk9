@@ -21,6 +21,7 @@ from enum import Enum
 from typing import List
 
 from google.auth import default, transport
+from google.protobuf.struct_pb2 import Struct
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
@@ -35,6 +36,8 @@ from opensearchpy import OpenSearch
 from pydantic import BaseModel, Field
 
 from app.external_services.grpc.grpc_client import (
+    generate_documents_embeddings,
+    get_embedding_model_configuration,
     get_llm_configuration,
     get_rag_configuration,
 )
@@ -175,7 +178,12 @@ def initialize_language_model(configuration):
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     match model_type:
         case ModelType.OPENAI.value:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key, openai_api_base=api_url, stream_usage=True)
+            llm = ChatOpenAI(
+                model=model,
+                openai_api_key=api_key,
+                openai_api_base=api_url,
+                stream_usage=True,
+            )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
             llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
@@ -655,3 +663,40 @@ def stream_rag_conversation(
         )
 
     yield json.dumps({"chunk": "", "type": "END"})
+
+
+def embedding(grpc_host, virtual_host, openserach_host, document):
+    # embedding_model_configuration = get_embedding_model_configuration(
+    #     grpc_host=grpc_host,
+    #     virtual_host=virtual_host,
+    # )
+
+    json_config = Struct()
+    json_config.update(
+        {
+            "separator": ".",
+            "size": 100,
+            "overlap": 20,
+            "model_name": "gpt-4",
+            "encoding": "cl100k_base",
+        }
+    )
+    chunk = {"type": 1, "jsonConfig": json_config}
+    json_config = Struct()
+    json_config.update(
+        {
+            "api_url": "api_url",
+            "watsonx_project_id": "watsonx_project_id",
+            "chat_vertex_ai_model_garden": "chat_vertex_ai_model_garden",
+        }
+    )
+    provider_model = {"provider": "openai", "model": "text-embedding-3-small"}
+    embedding_model = {
+        "apiKey": "",
+        "providerModel": provider_model,
+        "jsonConfig": json_config,
+    }
+
+    generate_documents_embeddings(
+        grpc_host, openserach_host, chunk, embedding_model, document
+    )
