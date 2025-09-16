@@ -23,7 +23,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
-from app.rag.retriever import OpenSearchRetriever
+from app.rag.retrievers.retriever import OpenSearchRetriever
 from app.utils.chat_history import (
     get_chat_history,
     get_chat_history_from_frontend,

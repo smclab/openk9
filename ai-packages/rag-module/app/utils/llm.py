@@ -42,7 +42,7 @@ from app.external_services.grpc.grpc_client import (
     get_rag_configuration,
 )
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
-from app.rag.retriever import OpenSearchRetriever
+from app.rag.retrievers.retriever import OpenSearchRetriever
 from app.utils.chat_history import (
     get_chat_history,
     get_chat_history_from_frontend,
