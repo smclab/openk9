@@ -318,7 +318,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               Last created datasources
             </Typography>
           </Box>
-          <Box display={"flex"} gap={"10px"}>
+          <Box display={"flex"} gap={"10px"} flexWrap={"wrap"} justifyContent={"end"}>
             <Button
               variant="contained"
               startIcon={<VisibilityIcon />}
