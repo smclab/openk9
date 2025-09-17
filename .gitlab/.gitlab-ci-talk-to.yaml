@@ -21,7 +21,7 @@ include:
 #################
 Fetch version:
   stage: build
-  image: node:18-alpine
+  image: node:20.9.0-alpine
   script:
   - cd js-packages/talk-to
   - export VERSION=$(node -p "require('./package.json').version")
@@ -82,7 +82,7 @@ Build Talk-To:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:18
+  image: node:20.9.0
   script:
   - cd js-packages/talk-to
   - yarn install
