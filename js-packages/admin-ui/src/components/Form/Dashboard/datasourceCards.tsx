@@ -185,10 +185,6 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
     }
   };
 
-  const handleDeleteDatasource = (id: number) => {
-    setDatasources(datasources.filter((d) => d.id !== id));
-  };
-
   const EmptyState: React.FC = () => (
     <StyledCard>
       <CardContent sx={{ textAlign: "center", py: 8 }}>
