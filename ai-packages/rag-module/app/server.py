@@ -45,6 +45,7 @@ from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
+from app.utils.chat_history import save_uploaded_documents
 from app.utils.llm import embedding, get_configurations
 from app.utils.scheduler import start_document_deletion_scheduler
 
@@ -977,12 +978,14 @@ async def create_upload_file(
                 "chat_id": chat_id,
                 "text": page_content,
             }
-            embedding(
+            embedded_documents = embedding(
                 grpc_host=GRPC_EMBEDDING_MODULE_HOST,
                 virtual_host=virtual_host,
                 openserach_host=OPENSEARCH_HOST,
                 document=document,
             )
+
+            save_uploaded_documents(OPENSEARCH_HOST, embedded_documents)
 
         os.remove(renamed_uploaded_file)
 

@@ -697,6 +697,8 @@ def embedding(grpc_host, virtual_host, openserach_host, document):
         "jsonConfig": json_config,
     }
 
-    generate_documents_embeddings(
+    embedded_documents = generate_documents_embeddings(
         grpc_host, openserach_host, chunk, embedding_model, document
     )
+
+    return embedded_documents

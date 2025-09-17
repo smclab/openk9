@@ -27,7 +27,6 @@ from app.external_services.grpc.tenant_manager import (
     tenant_manager_pb2,
     tenant_manager_pb2_grpc,
 )
-from app.utils.chat_history import save_uploaded_documents
 from app.utils.logger import logger
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
@@ -295,8 +294,6 @@ def generate_documents_embeddings(
                     "vector": list(chunk.vectors),
                 }
                 documents.append(document)
-
-            save_uploaded_documents(openserach_host, documents)
 
             return documents
 
