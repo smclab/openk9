@@ -316,6 +316,7 @@ const darkTheme = createTheme({
     },
     secondary: {
       main: themeColor.light.primary, // Secondario chiaro per contrasto
+      dark: "#3b3b3b",
     },
     text: {
       primary: "#FFFFFF", // Testo chiaro per il tema scuro

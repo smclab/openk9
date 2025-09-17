@@ -26,7 +26,8 @@ export default function DashboardCard({ children, sx = {}, title }: DashboardCar
             position: "sticky",
             top: 0,
             zIndex: 10,
-            backgroundColor: theme.palette.background.default,
+            backgroundColor:
+              theme.palette.mode === "dark" ? theme.palette.secondary.dark : theme.palette.background.default,
           }}
         >
           <Typography
