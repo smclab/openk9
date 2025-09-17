@@ -8,7 +8,6 @@ stages:
 - container-scanning
 - dependency-check
 - restart
-- publish
 
 include:
 - local: "/.gitlab/.gitlab-templates.yaml"
@@ -24,7 +23,7 @@ Fetch version:
   stage: build
   image: node:18-alpine
   script:
-  - cd js-packages/tenant-ui
+  - cd js-packages/talk-to
   - export VERSION=$(node -p "require('./package.json').version")
   - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
   artifacts:
@@ -32,8 +31,8 @@ Fetch version:
     - version.env
     expire_in: 1 day
 
-######################## BUILD TENANT FRONTEND ########################
-Build Tenant Frontend:
+######################## BUILD TALK-TO ########################
+Build Talk-To:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -56,42 +55,42 @@ Build Tenant Frontend:
     if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
       # For main, use version from package.json
       source $CI_PROJECT_DIR/version.env
-      echo "=== Building Tenant Frontend with VERSION=$VERSION ==="
+      echo "=== Building Talk-To with VERSION=$VERSION ==="
       DOCKER_TAG="$VERSION"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       # For feature branch, use 996-SNAPSHOT
-      echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for feature branch ==="
+      echo "=== Building Talk-To with VERSION=996-SNAPSHOT for feature branch ==="
       DOCKER_TAG="996-SNAPSHOT"
     fi
 
-  # Run build with the determined tag
+  # Execute build with the previously determined tag
   - |
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG"
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
+      --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/tenant-ui/**/*
+    - js-packages/talk-to/**/*
   # Rule for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
-    - js-packages/tenant-ui/**/*
+    - js-packages/talk-to/**/*
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
   image: node:18
   script:
-  - cd js-packages/tenant-ui
+  - cd js-packages/talk-to
   - yarn install
   - yarn build
   rules:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - js-packages/tenant-ui/**/*
+    - js-packages/talk-to/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -99,11 +98,11 @@ Container Scanning:
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
   - "Fetch version"
-  - "Build Tenant Frontend"
+  - "Build Talk-To"
   script:
   - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/talk-to:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/talk-to:$VERSION"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -113,28 +112,23 @@ Trigger Restart:
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "tenant-ui"
+    COMPONENT_NAME: "talk-to"
     COMPONENT_TYPE: "frontend"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/tenant-ui/**/*
+    - js-packages/talk-to/**/*
   # Rule for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
-    - js-packages/tenant-ui/**/*
-
-# PUBLISH JOB REMOVED - Not needed for tenant frontend
+    - js-packages/talk-to/**/*
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Tenant UI:
+Dependency Check Talk-To:
   stage: dependency-check
-  needs:
-  - job: Fetch version
-    artifacts: true
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-  - cd js-packages/tenant-ui
+  - cd js-packages/talk-to
   - /analyzer run

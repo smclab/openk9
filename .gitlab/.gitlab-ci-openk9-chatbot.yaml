@@ -24,16 +24,44 @@ Fetch version:
   stage: build
   image: node:18-alpine
   script:
-  - cd js-packages/tenant-ui
+  - cd js-packages/openk9-chatbot
   - export VERSION=$(node -p "require('./package.json').version")
   - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
   artifacts:
     paths:
     - version.env
     expire_in: 1 day
+  rules:
+  # Run on merge requests and main branch only
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
 
-######################## BUILD TENANT FRONTEND ########################
-Build Tenant Frontend:
+######################## BUILD VERIFIER ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:18
+  needs:
+  - job: Fetch version
+    artifacts: true
+  script:
+  - cd js-packages/openk9-chatbot
+  - yarn install
+  - yarn build
+  rules:
+  # Run on merge requests and main branch only
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
+
+######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
+Build OpenK9-Chatbot:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -51,47 +79,21 @@ Build Tenant Frontend:
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
-  # Conditional logic to determine which tag to use
-  - |
-    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-      # For main, use version from package.json
-      source $CI_PROJECT_DIR/version.env
-      echo "=== Building Tenant Frontend with VERSION=$VERSION ==="
-      DOCKER_TAG="$VERSION"
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # For feature branch, use 996-SNAPSHOT
-      echo "=== Building Tenant Frontend with VERSION=996-SNAPSHOT for feature branch ==="
-      DOCKER_TAG="996-SNAPSHOT"
-    fi
+  # Use version from package.json for main branch
+  - source $CI_PROJECT_DIR/version.env
+  - echo "=== Building OpenK9-Chatbot with VERSION=$VERSION ==="
 
-  # Run build with the determined tag
+  # Execute build
   - |
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/tenant-ui/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG"
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/openk9-chatbot/Dockerfile" \
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION"
   rules:
-  # Rule for main branch
+  # Only run on main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/tenant-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/tenant-ui/**/*
-
-######################## BUILD VERIFIER ########################
-Build Verifier:
-  stage: build-verifier
-  image: node:18
-  script:
-  - cd js-packages/tenant-ui
-  - yarn install
-  - yarn build
-  rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/tenant-ui/**/*
+    - js-packages/openk9-chatbot/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -99,42 +101,42 @@ Container Scanning:
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
   - "Fetch version"
-  - "Build Tenant Frontend"
+  - "Build OpenK9-Chatbot"
   script:
   - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
 
-######################## TRIGGER RESTART ########################
-Trigger Restart:
-  extends: .restart_job_template
-  dependencies:
-  - Fetch version
-  variables:
-    COMPONENT_NAME: "tenant-ui"
-    COMPONENT_TYPE: "frontend"
+####################### PUBLISH OPENK9-CHATBOT #######################
+Publish OpenK9-Chatbot:
+  stage: publish
+  image: node:18
+  needs:
+  - job: Build Verifier
+  - job: Build OpenK9-Chatbot
+  script:
+  - cd js-packages/openk9-chatbot
+  - pwd
+  - whoami
+  - yarn install
+  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+  - npm publish --access public
   rules:
-  # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/tenant-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/tenant-ui/**/*
-
-# PUBLISH JOB REMOVED - Not needed for tenant frontend
+    - js-packages/openk9-chatbot/**/*
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Tenant UI:
+Dependency Check OpenK9-Chatbot:
   stage: dependency-check
   needs:
-  - job: Fetch version
-    artifacts: true
+  - job: Publish OpenK9-Chatbot
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-  - cd js-packages/tenant-ui
+  - cd js-packages/openk9-chatbot
   - /analyzer run
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
