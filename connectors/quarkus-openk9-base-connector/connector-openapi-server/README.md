@@ -1,6 +1,6 @@
 # Connector OpenAPI Server
 
-This project is a Quarkus application that consumes an OpenAPI document conforming to the OpenAPI Specification to generate REST API classes and modules, it is used as custom library within the [Archetype](../archetype/README.md).  
+This project is a Quarkus application that consumes an OpenAPI document conforming to the OpenAPI Specification to generate REST API classes and modules, it is used as custom library within the [Archetype](../archetype).  
 To learn how classes can be generated from an OpenAPI document in Quarkus, [see this](https://docs.quarkiverse.io/quarkus-openapi-generator/dev/server.html).
 
 ## Generated Classes
