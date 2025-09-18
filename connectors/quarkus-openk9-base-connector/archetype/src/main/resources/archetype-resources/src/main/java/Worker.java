@@ -16,7 +16,6 @@ import io.vertx.core.eventbus.MessageProducer;
  * @see io.vertx.core.eventbus.MessageProducer
  * @see io.openk9.connector.api.beans.IngestionDTO
  */
-
 public interface Worker {
 
     void work(Promise<?> promise, MessageProducer<IngestionDTO> producer);

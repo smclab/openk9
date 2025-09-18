@@ -10,9 +10,7 @@ import io.openk9.connector.api.beans.InvokeRequest;
  * @see Worker
  * @see InvokeRequest
  */
-
 public interface WorkerFactory {
-
     /**
      * Creates a new {@link Worker} instance using the given {@link InvokeRequest}.
      *
