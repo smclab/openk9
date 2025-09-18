@@ -73,6 +73,7 @@ def verify_token(grpc_host: str, virtual_host: str, token: str) -> dict:
         )
 
         userinfo = keycloak_openid.userinfo(token=token)
+        userinfo.update({"realm_name": keycloak_realm})
         return userinfo
 
     except KeycloakInvalidTokenError as e:
