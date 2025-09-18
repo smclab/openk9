@@ -16,13 +16,13 @@ public class CrawlingService {
     WorkerFactory workerFactory;
 
 
-    @ConfigProperty(name = "ingestion.port")
+    @ConfigProperty(name = "io.openk9.connector.port")
     private int port;
 
-    @ConfigProperty(name = "ingestion.host")
+    @ConfigProperty(name = "io.openk9.connector.host")
     private String host;
 
-    @ConfigProperty(name = "ingestion.path")
+    @ConfigProperty(name = "io.openk9.connector.path")
     private String path;
 
 
