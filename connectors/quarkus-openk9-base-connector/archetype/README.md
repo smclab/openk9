@@ -1,7 +1,10 @@
 # Archetype
 
-This Maven archetype generates a base connector for OpenK9, built with Quarkus.  
-It provides a custom library from **connector-openapi-server** module, to know what the library implements [click here](../connector-openapi-server/README.md).
+This Maven archetype generates a base connector for OpenK9, built with Quarkus.
+
+![design.png](design.png)
+
+It provides a custom library from **connector-openapi-server** module, to know what the library implements [click here](../connector-openapi-server).
 
 ## How to Develop a New Connector
 
