@@ -119,6 +119,7 @@ export function Main({
       useQueryString,
       defaultString: configuration.defaultString || "",
       queryStringValues,
+      queryStringMap,
     });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
