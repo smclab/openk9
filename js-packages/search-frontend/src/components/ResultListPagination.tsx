@@ -16,6 +16,7 @@ import {
 } from "./client";
 import styled from "styled-components";
 import { Renderers, useRenderers } from "./useRenderers";
+import { useRange } from "./useRange";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -139,6 +140,15 @@ export function InfiniteResults<E>({
     elementForPage,
     result,
   );
+  const { setNumberOfResults } = useRange();
+  React.useEffect(() => {
+    if (results.data && results.data.pages[0].total) {
+      setTotalResult(results.data.pages[0].total);
+      setNumberOfResults(results.data.pages[0].total);
+    } else {
+      setNumberOfResults(0);
+    }
+  }, [results.data, setTotalResult, setNumberOfResults]);
 
   const itemsPerPage = 3; // Numero di elementi per pagina
   const pagesToShow = 3; // Numero di pagine da mostrare per volta
