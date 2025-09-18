@@ -7,18 +7,20 @@ import {
 } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
-import { queryStringValues } from "../embeddable/entry";
+import { queryStringMapType, queryStringValues } from "../embeddable/entry";
 
 export function useSelections({
   useKeycloak = true,
   useQueryString = true,
   defaultString = "",
   queryStringValues,
+  queryStringMap,
 }: {
   useKeycloak?: boolean;
   useQueryString?: boolean;
   defaultString?: string;
   queryStringValues: queryStringValues;
+  queryStringMap?: queryStringMapType;
 }) {
   const defaultSearch = {
     text: defaultString,
@@ -30,7 +32,8 @@ export function useSelections({
   const [state, dispatch] = React.useReducer(
     reducer,
     defaultSearch,
-    (defaultSearch) => loadQueryString<SelectionsState>(defaultSearch),
+    (defaultSearch) =>
+      loadQueryString<SelectionsState>(defaultSearch, queryStringMap),
   );
 
   const [canSave, setCanSave] = React.useState(false);
@@ -48,10 +51,10 @@ export function useSelections({
   }, []);
   React.useEffect(() => {
     if (useKeycloak && canSave && useQueryString) {
-      saveQueryString(state, queryStringValues);
+      saveQueryString(state, queryStringMap);
     } else {
       if (!useKeycloak && useQueryString) {
-        saveQueryString(state, queryStringValues);
+        saveQueryString(state, queryStringMap);
       }
     }
   }, [canSave, state]);
@@ -63,13 +66,6 @@ export type SelectionsState = {
   selection: Array<Selection>;
   textOnChange: string;
   filters: SearchToken[];
-};
-
-const initial: SelectionsState = {
-  text: "",
-  selection: [],
-  textOnChange: "",
-  filters: [],
 };
 
 export type SelectionsAction =
