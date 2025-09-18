@@ -24,7 +24,8 @@ from opensearchpy import OpenSearch
 
 from app.utils.logger import logger
 
-UPLOADED_DOCUMENTS_INDEX = "uploaded_documents_index"
+UPLOADED_DOCUMENTS_INDEX = "uploaded-documents-index"
+SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
 
 
 def get_chat_history(
@@ -316,7 +317,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
             logger.info("Bulk delete completed successfully")
 
 
-def save_uploaded_documents(opensearch_host: str, documents: list):
+def save_uploaded_documents(opensearch_host: str, realm_name: str, documents: list):
     """Save uploaded documents to OpenSearch index.
 
     Stores uploaded documents in a specific OpenSearch index.
@@ -324,6 +325,8 @@ def save_uploaded_documents(opensearch_host: str, documents: list):
 
     :param opensearch_host: The host URL of the OpenSearch instance (e.g., "http://localhost:9200")
     :type opensearch_host: str
+    :param realm_name: The name of the keykloak realm of ther user
+    :type realm_name: str
     :param documents: List of uploaded documents
     :type sources: list
 
@@ -336,28 +339,66 @@ def save_uploaded_documents(opensearch_host: str, documents: list):
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )
+    uploaded_documents_index = f"{realm_name}-{UPLOADED_DOCUMENTS_INDEX}"
 
     index_actions = []
     for doc in documents:
-        index_actions.append({"index": {"_index": UPLOADED_DOCUMENTS_INDEX}})
+        index_actions.append({"index": {"_index": uploaded_documents_index}})
         index_actions.append(doc)
 
-    if not open_search_client.indices.exists(index=UPLOADED_DOCUMENTS_INDEX):
+    if not open_search_client.indices.exists(index=uploaded_documents_index):
         index_body = {
+            "settings": {"index": {"knn": True}},
             "mappings": {
                 "properties": {
                     "timestamp": {"type": "date"},
+                    "user_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "chat_id": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "vector": {
+                        "type": "knn_vector",
+                        "dimension": 1536,
+                    },
                 }
             },
         }
         open_search_client.indices.create(
-            index=UPLOADED_DOCUMENTS_INDEX,
+            index=uploaded_documents_index,
             body=index_body,
+        )
+
+        pipeline_body = {
+            "description": "Post processor for hybrid search",
+            "phase_results_processors": [
+                {
+                    "normalization-processor": {
+                        "normalization": {"technique": "min_max"},
+                        "combination": {
+                            "technique": "arithmetic_mean",
+                            "parameters": {"weights": [0.5, 0.5]},
+                        },
+                    }
+                }
+            ],
+        }
+
+        open_search_client.transport.perform_request(
+            "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
+        )
+
+        open_search_client.indices.put_settings(
+            index=uploaded_documents_index,
+            body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
         )
 
     if index_actions:
         try:
-            logger.info(f"Indexing {len(index_actions)} documents in bulk")
+            logger.info(f"Indexing {len(documents)} documents in bulk")
             response = open_search_client.bulk(body=index_actions)
 
             if response.get("errors"):

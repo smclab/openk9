@@ -284,10 +284,10 @@ def generate_documents_embeddings(
             chunks = response.chunks
             for chunk in chunks:
                 document = {
-                    "filename": document["filename"],
-                    "file_extension": document["file_extension"],
-                    "user_id": document["user_id"],
-                    "chat_id": document["chat_id"],
+                    "filename": document.get("filename"),
+                    "file_extension": document.get("file_extension"),
+                    "user_id": document.get("user_id"),
+                    "chat_id": document.get("chat_id"),
                     "chunk_number": chunk.number,
                     "total_chunks": chunk.total,
                     "chunkText": chunk.text,
