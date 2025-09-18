@@ -20,9 +20,10 @@ import { FilterSvg } from "./svgElement/FiltersSvg";
 import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
 import { User } from "./svgElement/UserSvg";
 import { CloseIcon } from "./svgElement/CloseSvg";
+import { SearchToken } from "./components/client";
 
-const isKeycloakEnabled = process.env.REACT_APP_KEYCLOAK_ENABLED === "true";
-const isChatbotEnabled = process.env.REACT_APP_CHATBOT_ENABLED === "true";
+const isKeycloakEnabled = true;
+const isChatbotEnabled = true;
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -31,6 +32,8 @@ export const openk9 = new OpenK9({
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
+  queryStringValues: ["text"],
+  queryStringMap: { textOnChange: "www", text: "pluto", filters: "zzz" },
 });
 
 export function App() {
@@ -49,6 +52,16 @@ export function App() {
   const [searchText, setSearchText] = React.useState<string | null | undefined>(
     undefined,
   );
+  const [token, setToken] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    openk9.updateConfiguration({
+      defaultTokens: [
+        { tokenType: "DATASOURCE", values: ["" + token], filter: true },
+      ],
+    });
+  }, [token]);
+
   React.useEffect(() => {
     document.body.classList.toggle(
       "no-scroll",
@@ -207,14 +220,15 @@ export function App() {
             <Logo size={32} />
           </span>
           <span>Open</span>
-          <span
+          <button
+            onClick={() => setToken((t) => t + 1)}
             className="openk9-navbar-name-logo"
             css={css`
               font-weight: 700;
             `}
           >
             K9
-          </span>
+          </button>
         </div>
         <div
           css={css`
@@ -626,9 +640,8 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            resultList: {
+            resultListPagination: {
               element,
-              changeOnOver: false,
             },
           })
         }
