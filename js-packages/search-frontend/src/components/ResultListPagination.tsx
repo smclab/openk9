@@ -1,4 +1,3 @@
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
@@ -14,9 +13,8 @@ import {
   SortField,
   useOpenK9Client,
 } from "./client";
-import styled from "styled-components";
-import { Renderers, useRenderers } from "./useRenderers";
 import { useRange } from "./useRange";
+import { Renderers, useRenderers } from "./useRenderers";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -67,7 +65,7 @@ function ResultsPagination<E>({
     case "virtual":
     case "infinite":
       return (
-        <React.Suspense>
+        <React.Suspense fallback={<SkeletonResult />}>
           <InfiniteResults
             setTotalResult={setTotalResult}
             renderers={renderers}
@@ -181,22 +179,6 @@ export function InfiniteResults<E>({
     }));
   };
 
-  const resetEndClick = (paginationMax: number) => {
-    setViewButton((view) => ({
-      ...view,
-      start: paginationMax - pagesToShow,
-      end: paginationMax,
-    }));
-  };
-
-  const handleNextClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: Math.min(view.start + pagesToShow, numberOfPage - pagesToShow),
-      end: Math.min(view.end + pagesToShow, numberOfPage),
-    }));
-  };
-
   setTotalResult(results.data?.pages[0].total ?? null);
 
   return (
@@ -250,67 +232,6 @@ export function InfiniteResults<E>({
                 </React.Fragment>
               );
             })}
-            <React.Fragment>
-              <div
-                className="openk9-container-button-for-pagination"
-                css={css`
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  margin-top: 10px;
-                  gap: 10px;
-                `}
-              >
-                <PaginationsButton
-                  onClick={resetClick}
-                  disabled={viewButton.start === 0}
-                  aria-label="bottone per mostrare le prime pagine"
-                >
-                  {"<<"}
-                </PaginationsButton>
-                <PaginationsButton
-                  onClick={handlePrevClick}
-                  disabled={viewButton.start === 0}
-                >
-                  {"<"}
-                </PaginationsButton>
-                {Array.from({ length: numberOfPage }).map(
-                  (_, index) =>
-                    ((index === viewButton.start && index === viewButton.end) ||
-                      (index >= viewButton.start &&
-                        index < viewButton.end)) && (
-                      <PaginationsButton
-                        key={index}
-                        onClick={() => {
-                          results.fetchNextPage();
-                          setCurrentPage(index);
-                          callback && callback();
-                        }}
-                        isActive={currentPage === index}
-                        aria-label={
-                          "clicca per vedere la " + (index + 1) + " pagina"
-                        }
-                      >
-                        {"" + (index + 1)}
-                      </PaginationsButton>
-                    ),
-                )}
-                <PaginationsButton
-                  onClick={handleNextClick}
-                  disabled={viewButton.end >= numberOfPage}
-                  aria-label="bottone per mostrare le tre pagine successive"
-                >
-                  {">"}
-                </PaginationsButton>
-                <PaginationsButton
-                  onClick={() => resetEndClick(numberOfPage)}
-                  disabled={viewButton.end >= numberOfPage}
-                  aria-label="bottone per mostrare le ultime tre pagine"
-                >
-                  {">>"}
-                </PaginationsButton>
-              </div>
-            </React.Fragment>
           </div>
         ) : (
           <React.Fragment>
@@ -410,17 +331,3 @@ export function SkeletonResult() {
     </React.Fragment>
   );
 }
-
-const PaginationsButton = styled.button<{
-  isActive?: boolean;
-}>`
-  ${({ isActive = false }) => `
-        padding: 4px 8px !important;
-        background: ${isActive ? "#c83939" : "white"};
-        border-radius: 50px;
-        border: 1px solid #c83939;
-        font-size: 15px;
-        cursor: pointer;
-        color: ${isActive ? "white" : "#c83939"};
-  `}
-`;

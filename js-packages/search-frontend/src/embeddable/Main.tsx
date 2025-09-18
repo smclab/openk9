@@ -1,16 +1,45 @@
+import i18next from "i18next";
+import _, { isEqual } from "lodash";
 import React from "react";
 import ReactDOM from "react-dom";
-import { useDebounce } from "../components/useDebounce";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { useQuery } from "react-query";
+import { ActiveFilter } from "../components/ActiveFilters";
+import { CalendarMobile } from "../components/CalendarModal";
+import { ChangeLanguage } from "../components/ChangeLanguage";
+import {
+  DataRangePicker,
+  resetFilterCalendar,
+} from "../components/DateRangePicker";
+import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { DetailMemo } from "../components/Detail";
+import { DetailMobileMemo } from "../components/DetailMobile";
+import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
+import { FiltersMemo, SkeletonFilters } from "../components/Filters";
+import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
+import { FiltersMobileMemo } from "../components/FiltersMobile";
+import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
+import GenerateResponse from "../components/GenerateResponse";
+import ListPaginations from "../components/ListPaginations";
+import { LoginInfoComponentMemo } from "../components/LoginInfo";
+import { RemoveFilters } from "../components/RemoveFilters";
 import { ResultsMemo } from "../components/ResultList";
 import {
-  SelectionsAction,
-  SelectionsState,
-  getAutoSelections,
-  isOverlapping,
-  useSelections,
-} from "../components/useSelections";
-import { LoginInfoComponentMemo } from "../components/LoginInfo";
+  ResultsPaginationMemo,
+  SkeletonResult,
+} from "../components/ResultListPagination";
+import { Search } from "../components/Search";
+import { SearchMobile } from "../components/SearchMobile";
+import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
+import SelectComponent from "../components/Select";
+import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
+import CustomSkeleton from "../components/Skeleton";
+import { SortResultListMemo } from "../components/SortResultList";
+import { SortResultListCustomMemo } from "../components/SortResultListCustom";
+import SortResults, { Options } from "../components/SortResults";
+import { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
+import { TotalResults } from "../components/TotalResults";
+import { TotalResultsMobile } from "../components/TotalResultsMobile";
 import {
   AnalysisRequest,
   AnalysisRequestEntry,
@@ -19,47 +48,19 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
+  useOpenK9Client,
 } from "../components/client";
-import { Configuration, ConfigurationUpdateFunction } from "./entry";
-import TabsSkeleton, { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
-import { FiltersMemo, SkeletonFilters } from "../components/Filters";
-import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
-import { Search } from "../components/Search";
-import { useOpenK9Client } from "../components/client";
-import { useQuery } from "react-query";
-import { SortResultListMemo } from "../components/SortResultList";
-import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
-import { DetailMobileMemo } from "../components/DetailMobile";
-import "../i18n";
-import { I18nextProvider, useTranslation } from "react-i18next";
-import i18next from "i18next";
-import { ActiveFilter } from "../components/ActiveFilters";
-import { FiltersMobileMemo } from "../components/FiltersMobile";
-import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
-import {
-  DataRangePicker,
-  resetFilterCalendar,
-} from "../components/DateRangePicker";
-import { SearchMobile } from "../components/SearchMobile";
-import { CalendarMobile } from "../components/CalendarModal";
-import { ChangeLanguage } from "../components/ChangeLanguage";
-import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
-import { TotalResults } from "../components/TotalResults";
-import { TotalResultsMobile } from "../components/TotalResultsMobile";
-import {
-  ResultsPaginationMemo,
-  SkeletonResult,
-} from "../components/ResultListPagination";
-import _, { isEqual } from "lodash";
-import { RemoveFilters } from "../components/RemoveFilters";
-import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
-import SelectComponent from "../components/Select";
-import SortResults, { Options } from "../components/SortResults";
-import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
-import GenerateResponse from "../components/GenerateResponse";
-import { SortResultListCustomMemo } from "../components/SortResultListCustom";
+import { useDebounce } from "../components/useDebounce";
 import { useRange } from "../components/useRange";
-import CustomSkeleton from "../components/Skeleton";
+import {
+  SelectionsAction,
+  SelectionsState,
+  getAutoSelections,
+  isOverlapping,
+  useSelections,
+} from "../components/useSelections";
+import "../i18n";
+import { Configuration, ConfigurationUpdateFunction } from "./entry";
 
 type MainProps = {
   configuration: Configuration;
@@ -672,24 +673,27 @@ export function Main({
               isActiveSkeleton && <SkeletonResult />
             )
           ) : (
-            <ResultsPaginationMemo
-              setTotalResult={setTotalResult}
-              displayMode={configuration.resultsDisplayMode}
-              searchQuery={searchQuery}
-              onDetail={setDetail}
-              setDetailMobile={setDetailMobile}
-              sort={completelySort}
-              setSortResult={setSort}
-              isMobile={isMobile}
-              overChangeCard={false}
-              language={languageSelect}
-              sortAfterKey={sortAfterKey}
-              numberOfResults={totalResult || 0}
-              pagination={numberOfResults}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              callback={configuration.resultListPagination?.callback}
-            />
+            <>
+              <ResultsPaginationMemo
+                setTotalResult={setTotalResult}
+                displayMode={configuration.resultsDisplayMode}
+                searchQuery={searchQuery}
+                onDetail={setDetail}
+                setDetailMobile={setDetailMobile}
+                sort={completelySort}
+                setSortResult={setSort}
+                isMobile={isMobile}
+                overChangeCard={false}
+                language={languageSelect}
+                sortAfterKey={sortAfterKey}
+                numberOfResults={totalResult || 0}
+                pagination={numberOfResults}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                callback={configuration.resultListPagination?.callback}
+              />
+              <ListPaginations />
+            </>
           )}
         </I18nextProvider>,
         configuration.resultListPagination

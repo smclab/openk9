@@ -6,6 +6,8 @@ interface RangeContextType {
   setRange: (range: [number, number]) => void;
   numberOfResults: number;
   setNumberOfResults: (num: number) => void;
+  actuallyPage: number;
+  setActuallyPage: (page: number) => void;
 }
 
 const RangeContext = createContext<RangeContextType | undefined>(undefined);
@@ -17,10 +19,18 @@ interface RangeProviderProps {
 export const RangeProvider: React.FC<RangeProviderProps> = ({ children }) => {
   const [range, setRange] = useState<[number, number]>([0, 0]);
   const [numberOfResults, setNumberOfResults] = React.useState<number>(0);
+  const [actuallyPage, setActuallyPage] = React.useState<number>(0);
 
   return (
     <RangeContext.Provider
-      value={{ range, setRange, numberOfResults, setNumberOfResults }}
+      value={{
+        range,
+        setRange,
+        numberOfResults,
+        setNumberOfResults,
+        actuallyPage,
+        setActuallyPage,
+      }}
     >
       {children}
     </RangeContext.Provider>
