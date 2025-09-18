@@ -5,6 +5,14 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageCodec;
 import io.vertx.core.json.Json;
 
+/**
+ * A message codec allows a custom message type to be marshalled across the event bus.
+ * Usually the event bus only allows a certain set of message types to be sent across the event bus, including primitive types, boxed primitive types, byte[], io.vertx.core.json.JsonObject, io.vertx.core.json.JsonArray, Buffer.
+ * By using this class you can pass {@link IngestionDTO} objects across the event bus.
+ *
+ * @see MessageCodec
+ * @see JsonObjectMessageCodec
+ */
 public class IngestionDTOCodec implements MessageCodec<IngestionDTO, IngestionDTO> {
 
     @Override
