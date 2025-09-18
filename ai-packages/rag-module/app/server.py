@@ -902,8 +902,10 @@ async def create_upload_file(
     #     unauthorized_response()
 
     # user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    # realm_name = user_info["realm_name"]
 
     user_id = 666
+    realm_name = "raichu"
 
     if len(files) > MAX_UPLOAD_FILES_NUMBER:
         raise HTTPException(
@@ -985,7 +987,7 @@ async def create_upload_file(
                 document=document,
             )
 
-            save_uploaded_documents(OPENSEARCH_HOST, embedded_documents)
+            save_uploaded_documents(OPENSEARCH_HOST, realm_name, embedded_documents)
 
         os.remove(renamed_uploaded_file)
 
