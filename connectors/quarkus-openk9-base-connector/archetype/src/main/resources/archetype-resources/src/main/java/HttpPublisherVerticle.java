@@ -7,6 +7,17 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import org.jboss.logging.Logger;
 
+/**
+ * This class extends {@link AbstractVerticle}.
+ * It overrides {@code start} method to set a {@link io.vertx.ext.web.client.WebClient} object
+ * to send IngestionDTO objects to OpenK9 asynchronously.
+ * Initializes the verticle using host, port, and path from application properties.
+ * The class name is used as address to allow {@link io.vertx.core.eventbus.EventBus}
+ * to consume messages from {@link io.vertx.core.eventbus.MessageProducer}.
+ *
+ * @see CrawlerVerticle
+ * @see CrawlingService
+ */
 public class HttpPublisherVerticle extends AbstractVerticle {
 
     private static final Logger LOGGER = Logger.getLogger(HttpPublisherVerticle.class);
