@@ -1,0 +1,123 @@
+openapi: 3.0.1
+info:
+  title: openk9-enricher
+  version: 1.0.0-SNAPSHOT
+paths:
+  /health:
+    get:
+      description: Chiedi all'enricher il suo stato di salute
+      operationId: health
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Health"
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /form:
+    get:
+      description: Chiedi all'enricher le specifiche che possono essere configurate da OpenK9
+      operationId: form
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/Form"
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /process:
+    post:
+      tags:
+        - Enricher API
+      description: Invoca l'enricher per iniziare il processo di arricchimento del dato
+      operationId: process
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/OpenK9Input"
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    Health:
+      type: object
+      properties:
+        status: string
+        enum: ["UP", "DOWN", "UNKNOWN"]
+    Form:
+      type: object
+      properties:
+        formFields:
+          type: array
+          items:
+            $ref: "#/components/schemas/FormField"
+    FormField:
+      type: object
+      properties:
+        info:
+          type: string
+        label:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: ['string', 'number', 'date']
+        size:
+          type: number
+        required:
+          type: boolean
+        values:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldValue"
+        validator:
+          type: object
+          $ref: "#/components/schemas/FormFieldValidator"
+    FieldValue:
+      type: object
+      properties:
+        value: {}
+        isDefault:
+          type: boolean
+    FormFieldValidator:
+      type: object
+      properties:
+        min:
+          type: integer
+          format: int64
+        max:
+          type: integer
+          format: int64
+        regex:
+          type: string
+        datasourceConfig:
+          type: object
+          additionalProperties: {}
+    OpenK9Input:
+      type: object
+      properties:
+        payload:
+          type: object
+          additionalProperties: {}
+        enrichItemConfig:
+          type: object
+          $ref: "#/components/schemas/Form"
+        token:
+          type: string
+
