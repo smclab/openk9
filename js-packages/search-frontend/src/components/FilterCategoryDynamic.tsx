@@ -14,6 +14,7 @@ import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
 import { Logo } from "./Logo";
+import { useRange } from "./useRange";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -56,6 +57,8 @@ function FilterCategoryDynamic({
   haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
+  const { resetPage } = useRange();
+
   const suggestions = useInfiniteSuggestions(
     isDynamicElement,
     tokens,
@@ -510,6 +513,8 @@ function SingleSelect({
   suggestionValue: string;
   suggestionCategoryId: string;
 }) {
+  const { resetPage } = useRange();
+
   return (
     <React.Fragment>
       <div>
@@ -528,6 +533,7 @@ function SingleSelect({
           type="radio"
           checked={false}
           onChange={(event) => {
+            resetPage();
             if (event.currentTarget.checked) {
               if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
@@ -538,6 +544,7 @@ function SingleSelect({
           }}
           onClick={(event) => {
             if (isChecked) {
+              resetPage();
               onRemove(asSearchToken);
             }
           }}
@@ -711,6 +718,8 @@ function CheckBoxSelect({
   tokens: SearchToken[];
   onRemove: (searchToken: SearchToken) => void;
 }) {
+  const { resetPage } = useRange();
+
   return (
     <React.Fragment>
       <input
@@ -725,8 +734,10 @@ function CheckBoxSelect({
         onChange={(event) => {
           if (event.currentTarget.checked) {
             onAdd(asSearchToken);
+            resetPage();
           } else {
             onRemove(asSearchToken);
+            resetPage();
           }
         }}
         css={css`

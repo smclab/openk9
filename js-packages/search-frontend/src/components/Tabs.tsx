@@ -373,7 +373,7 @@ export type Tab = {
   sortings: Options;
 };
 
-export function useTabTokens(): Array<Tab> {
+export function useTabTokens(): { tab: Array<Tab>; isLoading: boolean } {
   const client = useOpenK9Client();
   const tabsByVirtualHostQuery = useQuery(
     ["tabs-by-virtualhost"] as const,
@@ -381,7 +381,10 @@ export function useTabTokens(): Array<Tab> {
       return client.getTabsByVirtualHost();
     },
   );
-  return tabsByVirtualHostQuery.data ?? [];
+  return {
+    tab: tabsByVirtualHostQuery.data ?? [],
+    isLoading: tabsByVirtualHostQuery.isLoading,
+  };
 }
 
 export function translationTab({

@@ -101,7 +101,7 @@ export function Main({
   };
 
   //state
-  const [currentPage, setCurrentPage] = React.useState<number>(0);
+  const { resetPage, numberOfResults: numberOfResultsSearch } = useRange();
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
@@ -143,7 +143,9 @@ export function Main({
     tabTokens,
     sortList,
     setSort,
+    isLoadingTab,
   } = useTabs(configuration.overrideTabs, languageSelect);
+
   const { resetSort, setSelectedSort } = useSortResult({
     configuration,
     onConfigurationChange,
@@ -167,7 +169,6 @@ export function Main({
       filterTokens,
       dateTokens,
       onQueryStateChange,
-      setCurrentPage,
       selectionsState,
       selectionsDispatch,
       retrieveType,
@@ -243,7 +244,8 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading;
+    languages.isLoading ||
+    isLoadingTab;
 
   return (
     <React.Fragment>
@@ -257,6 +259,9 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             viewColor={configuration.showSyntax}
             btnSearch={false}
+            actionOnClick={() => {
+              resetPage();
+            }}
           />
         </I18nextProvider>,
         configuration.search,
@@ -271,6 +276,9 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             btnSearch={true}
             viewColor={configuration.showSyntax}
+            actionOnClick={() => {
+              resetPage();
+            }}
           />
         </I18nextProvider>,
         configuration.searchWithButton,
@@ -296,7 +304,7 @@ export function Main({
               const functionCallback =
                 configuration?.searchConfigurable?.actionOnClick;
               if (functionCallback) functionCallback();
-              setCurrentPage(0);
+              resetPage();
             }}
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
@@ -420,7 +428,7 @@ export function Main({
             onAction={() => {
               const callback = configuration.tabsConfigurable?.onAction;
               if (callback) callback();
-              setCurrentPage(0);
+              resetPage();
             }}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
@@ -686,13 +694,11 @@ export function Main({
                 overChangeCard={false}
                 language={languageSelect}
                 sortAfterKey={sortAfterKey}
-                numberOfResults={totalResult || 0}
-                pagination={numberOfResults}
-                currentPage={currentPage}
-                setCurrentPage={setCurrentPage}
                 callback={configuration.resultListPagination?.callback}
               />
-              <ListPaginations />
+              {numberOfResultsSearch > 0 && (
+                <ListPaginations itemsPerPage={numberOfResults} />
+              )}
             </>
           )}
         </I18nextProvider>,
@@ -1120,7 +1126,6 @@ function useSearch({
   filterTokens,
   dateTokens,
   onQueryStateChange,
-  setCurrentPage,
   selectionsState,
   selectionsDispatch,
   retrieveType,
@@ -1141,7 +1146,6 @@ function useSearch({
   };
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
@@ -1352,7 +1356,7 @@ function useTabs(
   const tenantTabs = useTabTokens();
 
   const tabs = React.useMemo(
-    () => overrideTabs(tenantTabs),
+    () => overrideTabs(tenantTabs.tab),
     [tenantTabs, overrideTabs, language],
   );
 
@@ -1360,7 +1364,7 @@ function useTabs(
     () => tabs[selectedTabIndex],
     [tabs, selectedTabIndex],
   );
-  const sortList = tabSelected?.sortings;
+  const sortList = tabSelected?.sortings || undefined;
 
   const tabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
@@ -1396,6 +1400,7 @@ function useTabs(
     sortList,
     tabSelected,
     setSort,
+    isLoadingTab: tenantTabs.isLoading,
   };
 }
 

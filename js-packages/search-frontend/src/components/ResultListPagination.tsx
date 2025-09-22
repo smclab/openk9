@@ -33,12 +33,11 @@ type ResultsProps<E> = {
   language: string;
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
-  numberOfResults: number;
-  pagination: number;
-  currentPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  pageSize?: number;
+  initialPage?: number;
   callback?: () => void;
 };
+
 function ResultsPagination<E>({
   displayMode,
   onDetail,
@@ -51,47 +50,48 @@ function ResultsPagination<E>({
   language,
   sortAfterKey,
   setTotalResult,
-  numberOfResults,
-  pagination,
-  currentPage,
-  setCurrentPage,
+  pageSize = 10,
+  initialPage = 0,
   callback,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
-
   if (!renderers) return null;
-  switch (displayMode.type) {
-    case "finite":
-    case "virtual":
-    case "infinite":
-      return (
-        <React.Suspense fallback={<SkeletonResult />}>
-          <InfiniteResults
-            setTotalResult={setTotalResult}
-            renderers={renderers}
-            searchQuery={searchQuery}
-            onDetail={onDetail}
-            setDetailMobile={setDetailMobile}
-            sort={sort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={overChangeCard}
-            language={language}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={numberOfResults}
-            currentPage={currentPage}
-            elementForPage={pagination}
-            setCurrentPage={setCurrentPage}
-            callback={callback}
-          />
-        </React.Suspense>
-      );
-  }
+
+  const { setRange, setActuallyPage } = useRange();
+  const bootstrappedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (bootstrappedRef.current) return;
+    const size = pageSize;
+    const page = initialPage;
+    setActuallyPage(page);
+    setRange([page * size, size]);
+    bootstrappedRef.current = true;
+  }, [initialPage, pageSize, setActuallyPage, setRange]);
+
+  return (
+    <React.Suspense fallback={<SkeletonResult />}>
+      <InfiniteResults
+        setTotalResult={setTotalResult}
+        renderers={renderers}
+        searchQuery={searchQuery}
+        onDetail={onDetail}
+        setDetailMobile={setDetailMobile}
+        sort={sort}
+        setSortResult={setSortResult}
+        isMobile={isMobile}
+        overChangeCard={overChangeCard}
+        language={language}
+        sortAfterKey={sortAfterKey}
+        callback={callback}
+      />
+    </React.Suspense>
+  );
 }
 
 export const ResultsPaginationMemo = React.memo(ResultsPagination);
 
-type ResulListProps<E> = {
+type InfiniteResultsProps<E> = {
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
@@ -102,16 +102,10 @@ type ResulListProps<E> = {
   overChangeCard?: boolean;
   language: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
-};
-
-type InfiniteResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
-  numberOfResults: number;
-  currentPage: number;
-  elementForPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   callback?: () => void;
 };
+
 export function InfiniteResults<E>({
   renderers,
   searchQuery,
@@ -123,123 +117,71 @@ export function InfiniteResults<E>({
   language,
   sortAfterKey,
   setTotalResult,
-  currentPage,
-  numberOfResults,
-  elementForPage,
   callback,
-  setCurrentPage,
 }: InfiniteResultsProps<E>) {
-  const result = currentPage * elementForPage;
+  const { range, setNumberOfResults } = useRange();
+  const [offset, elementForPage] = range;
+
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
     language,
     sortAfterKey,
     elementForPage,
-    result,
+    offset,
   );
-  const { setNumberOfResults } = useRange();
+
   React.useEffect(() => {
-    if (results.data && results.data.pages[0].total) {
-      setTotalResult(results.data.pages[0].total);
-      setNumberOfResults(results.data.pages[0].total);
-    } else {
-      setNumberOfResults(0);
-    }
+    const total = results.data?.pages[0]?.total ?? 0;
+    setTotalResult(total);
+    setNumberOfResults(total);
   }, [results.data, setTotalResult, setNumberOfResults]);
 
-  const itemsPerPage = 3; // Numero di elementi per pagina
-  const pagesToShow = 3; // Numero di pagine da mostrare per volta
-  const partialResult = numberOfResults / elementForPage;
-  const numberOfPage = Math.ceil(partialResult);
-  const [viewButton, setViewButton] = React.useState({
-    start: currentPage,
-    end: itemsPerPage,
-  });
-
-  React.useEffect(() => {
-    if (currentPage === 0) {
-      resetClick();
-    }
-  }, [currentPage]);
-
-  const handlePrevClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: Math.max(view.start - pagesToShow, 0),
-      end: Math.max(view.end - pagesToShow, itemsPerPage),
-    }));
-  };
-
-  const resetClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: 0,
-      end: pagesToShow,
-    }));
-  };
-
-  setTotalResult(results.data?.pages[0].total ?? null);
-
   return (
-    <React.Fragment>
-      <div style={{ overflowX: "hidden" }} className="scroll">
-        {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-          <div
-            className="openk9-infinite-results-container-wrapper"
-            css={css`
-              padding-bottom: 16px;
-              ::-webkit-scrollbar {
-                width: 10px;
-              }
-
-              /* Track */
-              ::-webkit-scrollbar-track {
-                box-shadow: inset 0 0 5px grey;
-                border-radius: 10px;
-              }
-
-              /* Handle */
-              ::-webkit-scrollbar-thumb {
-                background: gray;
-                border-radius: 10px;
-                height: 5px;
-              }
-
-              /* Handle on hover */
-              ::-webkit-scrollbar-thumb:hover {
-                background: black;
-                height: 5px;
-              }
-            `}
-          >
-            {results.data?.pages.map((page, pageIndex) => {
-              return (
-                <React.Fragment key={pageIndex}>
-                  {page.result.map((result, resultIndex) => {
-                    return (
-                      <ResultMemo<E>
-                        renderers={renderers}
-                        key={resultIndex}
-                        result={result}
-                        onDetail={onDetail}
-                        setDetailMobile={setDetailMobile}
-                        isMobile={isMobile}
-                        overChangeCard={overChangeCard}
-                      />
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-          </div>
-        ) : (
-          <React.Fragment>
-            <NoResults />
-          </React.Fragment>
-        )}
-      </div>
-    </React.Fragment>
+    <div style={{ overflowX: "hidden" }} className="scroll">
+      {results.data?.pages[0]?.total ?? 0 > 0 ? (
+        <div
+          className="openk9-infinite-results-container-wrapper"
+          css={css`
+            padding-bottom: 16px;
+            ::-webkit-scrollbar {
+              width: 10px;
+            }
+            ::-webkit-scrollbar-track {
+              box-shadow: inset 0 0 5px grey;
+              border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb {
+              background: gray;
+              border-radius: 10px;
+              height: 5px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+              background: black;
+              height: 5px;
+            }
+          `}
+        >
+          {results?.data?.pages.map((page, pageIndex) => (
+            <React.Fragment key={pageIndex}>
+              {page.result.map((result, resultIndex) => (
+                <ResultMemo<E>
+                  renderers={renderers}
+                  key={resultIndex}
+                  result={result}
+                  onDetail={onDetail}
+                  setDetailMobile={setDetailMobile}
+                  isMobile={isMobile}
+                  overChangeCard={overChangeCard}
+                />
+              ))}
+            </React.Fragment>
+          ))}
+        </div>
+      ) : (
+        <NoResults />
+      )}
+    </div>
   );
 }
 
@@ -264,24 +206,31 @@ function NoResults() {
   );
 }
 
-function useInfiniteResults<E>(
+export function useInfiniteResults<E>(
   searchQuery: Array<SearchToken>,
   sort: SortField[],
   language: string,
   sortAfterKey: string,
   elementForPage: number,
-  result: number,
+  offset: number,
 ) {
-  const pageSize = elementForPage;
   const client = useOpenK9Client();
 
   return useInfiniteQuery(
-    ["results", searchQuery, sort, language, sortAfterKey, result] as const,
-    async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
-      const RangePage: [number, number] =
-        sortAfterKey === "" ? [result, pageSize] : [0, pageSize];
+    [
+      "results",
+      searchQuery,
+      sort,
+      language,
+      sortAfterKey,
+      offset,
+      elementForPage,
+    ] as const,
+    async ({ queryKey: [, searchQuery, sort] }) => {
+      const range: [number, number] =
+        sortAfterKey === "" ? [offset, elementForPage] : [0, elementForPage];
       return client.doSearch<E>({
-        range: RangePage,
+        range,
         language,
         searchQuery,
         sort,
@@ -289,6 +238,7 @@ function useInfiniteResults<E>(
       });
     },
     {
+      enabled: elementForPage > 0,
       keepPreviousData: false,
       suspense: true,
       notifyOnChangeProps: ["isFetching"],
@@ -298,14 +248,13 @@ function useInfiniteResults<E>(
 
 export function SkeletonResult() {
   return (
-    <React.Fragment>
-      {new Array(3).fill(null).map((_, index) => (
+    <>
+      {Array.from({ length: 3 }).map((_, index) => (
         <div
           className="openk9-embeddable-search--result-container openk9-skeleton-container--result-container"
           key={index}
         >
           <div
-            className=""
             css={css`
               display: flex;
               justify-content: space-between;
@@ -328,6 +277,6 @@ export function SkeletonResult() {
           </div>
         </div>
       ))}
-    </React.Fragment>
+    </>
   );
 }

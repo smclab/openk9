@@ -1,25 +1,37 @@
-import { createContext, useContext, useState, ReactNode } from "react";
 import React from "react";
 
+type Range = [number, number];
+
 interface RangeContextType {
-  range: [number, number];
-  setRange: (range: [number, number]) => void;
+  range: Range;
+  setRange: (r: Range) => void;
   numberOfResults: number;
-  setNumberOfResults: (num: number) => void;
+  setNumberOfResults: (n: number) => void;
   actuallyPage: number;
-  setActuallyPage: (page: number) => void;
+  setActuallyPage: (p: number) => void;
+  resetPage: (pageSize?: number) => void;
 }
 
-const RangeContext = createContext<RangeContextType | undefined>(undefined);
+const RangeContext = React.createContext<RangeContextType | undefined>(
+  undefined,
+);
 
-interface RangeProviderProps {
-  children: ReactNode;
-}
+export const RangeProvider: React.FC<{
+  children: React.ReactNode;
+  defaultPageSize?: number;
+}> = ({ children, defaultPageSize = 10 }) => {
+  const [range, setRange] = React.useState<Range>([0, defaultPageSize]);
+  const [numberOfResults, setNumberOfResults] = React.useState(0);
+  const [actuallyPage, setActuallyPage] = React.useState(0);
 
-export const RangeProvider: React.FC<RangeProviderProps> = ({ children }) => {
-  const [range, setRange] = useState<[number, number]>([0, 0]);
-  const [numberOfResults, setNumberOfResults] = React.useState<number>(0);
-  const [actuallyPage, setActuallyPage] = React.useState<number>(0);
+  const resetPage = React.useCallback(
+    (pageSize?: number) => {
+      const size = pageSize ?? range[1] ?? defaultPageSize;
+      setActuallyPage(0);
+      setRange([0, size]);
+    },
+    [range[1], defaultPageSize],
+  );
 
   return (
     <RangeContext.Provider
@@ -30,6 +42,7 @@ export const RangeProvider: React.FC<RangeProviderProps> = ({ children }) => {
         setNumberOfResults,
         actuallyPage,
         setActuallyPage,
+        resetPage,
       }}
     >
       {children}
@@ -38,9 +51,7 @@ export const RangeProvider: React.FC<RangeProviderProps> = ({ children }) => {
 };
 
 export const useRange = () => {
-  const context = useContext(RangeContext);
-  if (!context) {
-    throw new Error("useRange must be used within a RangeProvider");
-  }
-  return context;
+  const ctx = React.useContext(RangeContext);
+  if (!ctx) throw new Error("useRange must be used within RangeProvider");
+  return ctx;
 };

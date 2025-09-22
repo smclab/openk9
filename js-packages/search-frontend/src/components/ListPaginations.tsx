@@ -2,12 +2,25 @@ import styled, { css } from "styled-components";
 import React from "react";
 import { useRange } from "./useRange";
 
-export default function ListPaginations() {
-  const itemsPerPage = 10;
-  const pagesToShow = 3;
+export default function ListPaginations({
+  itemsPerPage = 10,
+  pagesToShow = 3,
+}: {
+  itemsPerPage?: number;
+  pagesToShow?: number;
+}) {
+  const { range, setRange, numberOfResults, actuallyPage, setActuallyPage } =
+    useRange();
 
-  const { actuallyPage, setActuallyPage, numberOfResults } = useRange();
-  const numberOfPage = Math.max(1, Math.ceil(numberOfResults / itemsPerPage));
+  React.useEffect(() => {
+    const size = itemsPerPage;
+    if (range[1] !== size) {
+      setRange([actuallyPage * size, size]);
+    }
+  }, [itemsPerPage, range, setRange, actuallyPage]);
+
+  const size = range[1] || itemsPerPage;
+  const numberOfPage = Math.max(1, Math.ceil(numberOfResults / size));
 
   const getPageRange = () => {
     let start = Math.max(0, actuallyPage - Math.floor(pagesToShow / 2));
@@ -21,11 +34,16 @@ export default function ListPaginations() {
 
   const { start, end } = getPageRange();
 
-  const handleFirstClick = () => setActuallyPage(0);
-  const handlePrevClick = () => setActuallyPage(Math.max(0, actuallyPage - 1));
-  const handleNextClick = () =>
-    setActuallyPage(Math.min(numberOfPage - 1, actuallyPage + 1));
-  const handleLastClick = () => setActuallyPage(numberOfPage - 1);
+  const goToPage = (page: number) => {
+    const next = Math.max(0, Math.min(numberOfPage - 1, page));
+    setActuallyPage(next);
+    setRange([next * size, size]);
+  };
+
+  const handleFirstClick = () => goToPage(0);
+  const handlePrevClick = () => goToPage(actuallyPage - 1);
+  const handleNextClick = () => goToPage(actuallyPage + 1);
+  const handleLastClick = () => goToPage(numberOfPage - 1);
 
   return (
     <PaginationContainer>
@@ -46,7 +64,7 @@ export default function ListPaginations() {
       {Array.from({ length: end - start }, (_, i) => start + i).map((page) => (
         <PaginationsButton
           key={page}
-          onClick={() => setActuallyPage(page)}
+          onClick={() => goToPage(page)}
           isActive={actuallyPage === page}
           aria-label={`Vai alla pagina ${page + 1}`}
         >
@@ -84,7 +102,7 @@ const PaginationsButton = styled.button<{ isActive?: boolean }>`
     padding: 6px 14px;
     background: ${isActive ? "#c83939" : "#fff"};
     border-radius: 8px;
-    border: 2px solid #c83939;
+    border: 2px solid #c83939};
     font-size: 16px;
     font-weight: ${isActive ? "bold" : "normal"};
     cursor: pointer;
