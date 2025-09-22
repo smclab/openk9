@@ -11,7 +11,10 @@
          "type":"file_type"
       },
       "document":{
-         "title":"title"
+         "title":"title",
+         "content": "sample content",
+         "summary": "sample summary",
+         "url": "http://test.pdf"
       }
    },
    "resources":{
