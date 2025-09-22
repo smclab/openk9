@@ -21,7 +21,6 @@ from enum import Enum
 from typing import List
 
 from google.auth import default, transport
-from google.protobuf.struct_pb2 import Struct
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
@@ -36,19 +35,23 @@ from opensearchpy import OpenSearch
 from pydantic import BaseModel, Field
 
 from app.external_services.grpc.grpc_client import (
-    generate_documents_embeddings,
-    get_embedding_model_configuration,
     get_llm_configuration,
     get_rag_configuration,
 )
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retrievers.retriever import OpenSearchRetriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
+from app.utils.authentication import unauthorized_response
 from app.utils.chat_history import (
     get_chat_history,
     get_chat_history_from_frontend,
     save_chat_message,
 )
 from app.utils.logger import logger
+
+UPLOADED_DOCUMENTS_INDEX = os.getenv("UPLOADED_DOCUMENTS_INDEX")
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -319,9 +322,12 @@ def stream_rag_conversation(
     sort_after_key: str,
     language: str,
     opensearch_host: str,
-    grpc_host: str,
+    grpc_host_embedding: str,
+    grpc_host_datasource: str,
     chat_id: str,
     user_id: str,
+    realm_name: str,
+    retrieve_from_uploaded_documents: bool,
     chat_history: list,
     timestamp: str,
     chat_sequence_number: int,
@@ -409,27 +415,42 @@ def stream_rag_conversation(
         hosts=[opensearch_host],
     )
 
-    retriever = OpenSearchRetriever(
-        search_text=search_text,
-        rerank=rerank,
-        reranker_api_url=reranker_api_url,
-        chunk_window=chunk_window,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        virtual_host=virtual_host,
-        jwt=jwt,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
-        context_window=context_window,
-        metadata=metadata,
-        retrieve_type=retrieve_type,
-        opensearch_host=opensearch_host,
-        grpc_host=grpc_host,
-    )
+    if retrieve_from_uploaded_documents and user_id and realm_name:
+        retriever = OpenSearchUploadedDocumentsRetriever(
+            opensearch_host=opensearch_host,
+            grpc_host_datasource=grpc_host_datasource,
+            grpc_host_embedding=grpc_host_embedding,
+            virtual_host=virtual_host,
+            uploaded_documents_index=f"{realm_name}-{UPLOADED_DOCUMENTS_INDEX}",
+            retrieve_type=retrieve_type,
+            user_id=user_id,
+            chat_id=chat_id,
+            search_text=search_text,
+        )
+    elif retrieve_from_uploaded_documents and (not user_id or not realm_name):
+        unauthorized_response()
+    else:
+        retriever = OpenSearchRetriever(
+            search_text=search_text,
+            rerank=rerank,
+            reranker_api_url=reranker_api_url,
+            chunk_window=chunk_window,
+            range_values=range_values,
+            after_key=after_key,
+            suggest_keyword=suggest_keyword,
+            suggestion_category_id=suggestion_category_id,
+            virtual_host=virtual_host,
+            jwt=jwt,
+            extra=extra,
+            sort=sort,
+            sort_after_key=sort_after_key,
+            language=language,
+            context_window=context_window,
+            metadata=metadata,
+            retrieve_type=retrieve_type,
+            opensearch_host=opensearch_host,
+            grpc_host=grpc_host_datasource,
+        )
 
     llm = initialize_language_model(configuration)
 
@@ -658,47 +679,9 @@ def stream_rag_conversation(
             documents,
             chat_id,
             user_id,
+            realm_name,
             timestamp,
             chat_sequence_number,
         )
 
     yield json.dumps({"chunk": "", "type": "END"})
-
-
-def embedding(grpc_host, virtual_host, openserach_host, document):
-    # embedding_model_configuration = get_embedding_model_configuration(
-    #     grpc_host=grpc_host,
-    #     virtual_host=virtual_host,
-    # )
-
-    json_config = Struct()
-    json_config.update(
-        {
-            "separator": ".",
-            "size": 100,
-            "overlap": 20,
-            "model_name": "gpt-4",
-            "encoding": "cl100k_base",
-        }
-    )
-    chunk = {"type": 1, "jsonConfig": json_config}
-    json_config = Struct()
-    json_config.update(
-        {
-            "api_url": "api_url",
-            "watsonx_project_id": "watsonx_project_id",
-            "chat_vertex_ai_model_garden": "chat_vertex_ai_model_garden",
-        }
-    )
-    provider_model = {"provider": "openai", "model": "text-embedding-3-small"}
-    embedding_model = {
-        "apiKey": "",
-        "providerModel": provider_model,
-        "jsonConfig": json_config,
-    }
-
-    embedded_documents = generate_documents_embeddings(
-        grpc_host, openserach_host, chunk, embedding_model, document
-    )
-
-    return embedded_documents
