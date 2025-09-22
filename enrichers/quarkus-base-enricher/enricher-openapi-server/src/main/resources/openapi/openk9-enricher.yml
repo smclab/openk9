@@ -57,7 +57,7 @@ components:
     Health:
       type: object
       properties:
-        status: string
+        type: string
         enum: ["UP", "DOWN", "UNKNOWN"]
     Form:
       type: object
