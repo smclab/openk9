@@ -204,8 +204,6 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
                 )
             )
 
-        print(response)
-
         api_url = response.apiUrl
         api_key = response.apiKey
         model_type = response.providerModel.provider
@@ -218,6 +216,8 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
             "api_key": api_key,
             "model_type": model_type,
             "model": model,
+            "vector_size": vector_size,
+            "json_config": json_config,
         }
 
         return configuration
@@ -267,9 +267,7 @@ def get_tenant_manager_configuration(grpc_host, virtual_host):
     )
 
 
-def generate_documents_embeddings(
-    grpc_host, openserach_host, chunk, embedding_model, document
-):
+def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
     """Embedd uploaded documents."""
     try:
         with grpc.insecure_channel(grpc_host) as channel:
