@@ -31,10 +31,16 @@
 		  <artifactId>quarkus-smallrye-openapi</artifactId>
 	  </dependency>
 
+	  <!-- // OpenSearch -->
 	  <dependency>
 		  <groupId>io.quarkiverse.opensearch</groupId>
 		  <artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
 	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkiverse.opensearch</groupId>
+		  <artifactId>quarkus-opensearch-java-client</artifactId>
+	  </dependency>
+	  <!-- OpenSearch // -->
 
 	  <!-- // authentication -->
 	  <dependency>

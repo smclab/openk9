@@ -32,7 +32,9 @@ public class Response {
 	private Object result;
 	@Schema(description = "Number of results obtained")
 	long total;
+	@Schema(description = "Autocorrection result")
+	private Object autocorrection;
 
-	public static final Response EMPTY = new Response(List.of(), 0);
+	public static final Response EMPTY = new Response(List.of(), 0, null);
 
 }

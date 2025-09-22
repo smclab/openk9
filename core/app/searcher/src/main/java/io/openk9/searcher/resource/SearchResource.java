@@ -30,13 +30,15 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
-import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
+import io.openk9.searcher.grpc.SortType;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -63,7 +65,6 @@ import io.openk9.searcher.mapper.InternalSearcherMapper;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
-import io.openk9.searcher.resource.SearchRequestExamples;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
@@ -93,6 +94,14 @@ import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch._types.SuggestMode;
+import org.opensearch.client.opensearch.core.search.Suggest;
+import org.opensearch.client.opensearch.core.search.SuggestSort;
+import org.opensearch.client.opensearch.core.search.Suggester;
+import org.opensearch.client.opensearch.core.search.TermSuggest;
+import org.opensearch.client.opensearch.core.search.TermSuggestOption;
 import org.opensearch.common.CheckedFunction;
 import org.opensearch.core.common.text.Text;
 import org.opensearch.core.xcontent.DeprecationHandler;
@@ -107,15 +116,27 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightField;
 @RequestScoped
 public class SearchResource {
 
+	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
+	private static final String AUTOCORRECTION_TEXT = "autocorrectionText";
+	private static final String ORIGINAL_TEXT = "originalText";
+	private static final String SEARCHED_WITH_CORRECTED_TEXT = "searchedWithCorrectedText";
+	private static final String SUGGESTIONS = "suggestions";
+	private static final String TEXT = "text";
+	private static final String OFFSET = "offset";
+	private static final String LENGTH = "length";
+	private static final String CORRECTION = "correction";
 	private static final Logger log = Logger.getLogger(SearchResource.class);
 	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
 	private static final String DETAILS_FIELD = "details";
-	private static final int NONE_STASUS_CODE = 0;
+	private static final int NONE_STATUS_CODE = 0;
 	private static final int NOT_FOUND_STATUS_CODE = 404;
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
+
+	@Inject
+	OpenSearchAsyncClient client;
 	@GrpcClient("searcher")
 	Searcher searcherClient;
 	@Inject
@@ -200,7 +221,7 @@ public class SearchResource {
 
 	}
 
-	@Operation(operationId = "suggestions")
+	@Operation(operationId = SUGGESTIONS)
 	@Tag(name = "Suggestions API", description = "Return filter options for a specific filed based on search results.")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
@@ -309,108 +330,134 @@ public class SearchResource {
 
 		// retrieve Autocorrection configurations
 		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
-			.flatMap(autocorrectionConfigurationsResponse -> {
-				var doAutocorrection = false;
-				var field = autocorrectionConfigurationsResponse.getField();
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				log.error("Retrieve autocorrection configurations failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocorrectionException(
+						"Retrieve autocorrection configurations failed", throwable
+					)
+				);
+			})
+			.flatMap(autocorrectionConfig -> {
 
-				// retrieve the values array for the searchToken associated with
-				// the text entered by the user in the search input.
-				var isSearchTokenValues = searchRequest.getSearchQuery().stream()
+				// retrieve the searchToken associated with the text entered by the user in the search input.
+				var searchTokenUserInput = searchRequest.getSearchQuery().stream()
 					.filter(ParserSearchToken::isSearch)
-					.findFirst()
-					.map(ParserSearchToken::getValues)
-					.orElse(List.of());
+					.findFirst();
 
-				// parserSearchToken.getValues().size() == 1
-				if (isSearchTokenValues.size() == 1) {
-					// TODO: get autocorrection suggest
+				if (searchTokenUserInput.isPresent()) {
+					// retrieve the values list for the searchTokenUserInput
+					var searchTokenUserInputValues = searchTokenUserInput
+						.map(ParserSearchToken::getValues)
+						.orElse(List.of());
 
-					// TODO: if enableSearchWithCorrection is true replace query text
-					//  with autocorrection suggest -> searchRequest.getSearchQuery().getFirst().setValues();
+					if (searchTokenUserInputValues.size() == 1) {
+
+						// retrieve the text entered by the user in the search input.
+						var queryText = searchTokenUserInputValues.getFirst();
+
+						if (queryText != null && !queryText.isEmpty()) {
+							// retrieve autocorrection suggest
+							var autocorrectionRequest =
+								org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
+									.index(autocorrectionConfig.getIndexNameList())
+									// to retrieve only suggestions, not documents
+									.size(0)
+									.suggest(Suggester.of(sug -> sug
+										.text(queryText)
+										.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
+											fsb.term(tsb -> tsb
+												.field(autocorrectionConfig.getField())
+												// max number of suggestions to retrieve for each term
+												.size(1)
+												.sort(
+													_grpcEnumToSuggestSort(
+														autocorrectionConfig.getSort())
+												)
+												.suggestMode(
+													_grpcEnumToSuggestMode(
+														autocorrectionConfig.getSuggestMode()
+													)
+												)
+												.prefixLength(autocorrectionConfig.getPrefixLength())
+												.minWordLength(autocorrectionConfig.getMinWordLength())
+												.maxEdits(autocorrectionConfig.getMaxEdit())
+											)
+										)
+									))
+								);
+
+							return Uni.createFrom().completionStage(() -> {
+									try {
+										return client.search(autocorrectionRequest, Void.class);
+									} catch (IOException | OpenSearchException e) {
+										return CompletableFuture.failedFuture(e);
+									}
+								})
+								.onFailure()
+								.recoverWithUni(throwable -> {
+									log.error("Autocorrection failed", throwable);
+									return Uni.createFrom().failure(
+										new AutocorrectionException("Autocorrection failed", throwable)
+									);
+								})
+								.map(voidSearchResponse ->
+									_parseAutocorrectionResponse(
+										queryText,
+										voidSearchResponse,
+										autocorrectionConfig.getEnableSearchWithCorrection()
+									)
+								)
+								.map(autocorrectionMap -> {
+									if (!autocorrectionMap.isEmpty()) {
+										if (autocorrectionConfig.getEnableSearchWithCorrection()) {
+											// replace query text with the correction
+											searchTokenUserInput.get().setValues(List.of(
+												(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
+											);
+										}
+										// do search and add autocorrection to the search response
+										return _doSearch(searchRequest)
+											.invoke(response ->
+												response.setAutocorrection(autocorrectionMap)
+											);
+									}
+									return _doSearch(searchRequest);
+								})
+								.flatMap(responseUni -> responseUni);
+
+						}
+						else {
+							log.warn("Autocorrection was not performed because the user input text is null or empty.");
+							return Uni.createFrom().failure(
+								new AutocorrectionException(
+									"Autocorrection was not performed because the user input text is null or empty."
+								)
+							);
+						}
+					}
+					else {
+						log.warn("Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values.");
+						return Uni.createFrom().failure(
+							new AutocorrectionException(
+								"Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values."
+							)
+						);
+					}
 				}
 				else {
-					log.warn("Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values.");
+					log.warn("Autocorrection was not performed because no search token with isSearch is present.");
+					return Uni.createFrom().failure(
+						new AutocorrectionException(
+							"Autocorrection was not performed because no search token with isSearch is present."
+						)
+					);
 				}
-
-				// TODO: if was executed autocorrection add autocorrection JSON object result
-				//  in the doSearch result
-				return _doSearch(searchRequest);
 			})
-			// TODO: al fallimento del recupero delle configurazioni dell'autocorrezione procedere
-			// senza autocorrezione
+			// fallback to standard search on autocorrection failure
 			.onFailure()
-			.recoverWithUni(failure -> {
-
-				return _doSearch(searchRequest);
-			});
-	}
-
-	private Uni<Response> _doSearch(SearchRequest searchRequest) {
-		// TODO: quello che segue è il flusso vecchio
-		QueryParserRequest queryParserRequest =
-			getQueryParserRequest(searchRequest);
-
-		Uni<QueryParserResponse> queryParserResponseUni =
-			searcherClient.queryParser(queryParserRequest);
-
-		return queryParserResponseUni
-			.flatMap(queryParserResponse -> {
-
-				ByteString query = queryParserResponse.getQuery();
-
-				String searchRequestBody = query.toStringUtf8();
-
-				ProtocolStringList indexNameList =
-					queryParserResponse.getIndexNameList();
-
-				if (indexNameList.isEmpty()) {
-					return Uni.createFrom().item(Response.EMPTY);
-				}
-
-				String indexNames =
-					String.join(",", indexNameList);
-
-				var queryParams = queryParserResponse.getQueryParametersMap();
-
-				org.opensearch.client.Request request =
-					new org.opensearch.client.Request(
-						"GET", "/" + indexNames + "/_search");
-
-				request.addParameters(queryParams);
-
-				request.setJsonEntity(searchRequestBody);
-
-				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
-						.getLowLevelClient()
-						.performRequestAsync(request, new ResponseListener() {
-							@Override
-							public void onSuccess(
-								org.opensearch.client.Response response) {
-								try {
-									SearchResponse searchResponse =
-										parseEntity(
-											response.getEntity(),
-											SearchResponse::fromXContent
-										);
-
-									sink.complete(searchResponse);
-								}
-								catch (IOException e) {
-									sink.fail(e);
-								}
-							}
-
-							@Override
-							public void onFailure(Exception e) {
-								sink.fail(e);
-							}
-						}))
-					.map(this::toSearchResponse);
-			})
-			.onFailure()
-			.transform(throwable -> new WebApplicationException(
-				getErrorResponse(throwable))
-			);
+			.recoverWithUni(failure -> _doSearch(searchRequest));
 	}
 
 	@Operation(operationId = "query-analysis")
@@ -768,7 +815,7 @@ public class SearchResource {
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
 
-		int statusCode = NONE_STASUS_CODE;
+		int statusCode = NONE_STATUS_CODE;
 		String reason = "Unable to serve search request";
 
 		if (throwable instanceof ResponseException responseException) {
@@ -780,7 +827,7 @@ public class SearchResource {
 		jakarta.ws.rs.core.Response.Status responseStatus = null;
 
 		switch (statusCode) {
-			case NONE_STASUS_CODE, NOT_FOUND_STATUS_CODE -> {
+			case NONE_STATUS_CODE, NOT_FOUND_STATUS_CODE -> {
 				responseStatus =
 					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
@@ -800,6 +847,127 @@ public class SearchResource {
 			.entity(JsonObject
 				.of(DETAILS_FIELD, reason))
 			.build();
+	}
+
+	// TODO: _generateAutocorrectionText implementation
+	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
+		return "";
+	}
+
+	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
+		return SuggestSort.valueOf(sort.name());
+	}
+
+	private SuggestMode _grpcEnumToSuggestMode(io.openk9.searcher.grpc.SuggestMode suggestMode) {
+		return SuggestMode.valueOf(suggestMode.name());
+	}
+
+	private Uni<Response> _doSearch(SearchRequest searchRequest) {
+		QueryParserRequest queryParserRequest =
+			getQueryParserRequest(searchRequest);
+
+		Uni<QueryParserResponse> queryParserResponseUni =
+			searcherClient.queryParser(queryParserRequest);
+
+		return queryParserResponseUni
+			.flatMap(queryParserResponse -> {
+
+				ByteString query = queryParserResponse.getQuery();
+
+				String searchRequestBody = query.toStringUtf8();
+
+				ProtocolStringList indexNameList =
+					queryParserResponse.getIndexNameList();
+
+				if (indexNameList.isEmpty()) {
+					return Uni.createFrom().item(Response.EMPTY);
+				}
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				var queryParams = queryParserResponse.getQueryParametersMap();
+
+				org.opensearch.client.Request request =
+					new org.opensearch.client.Request(
+						"GET", "/" + indexNames + "/_search");
+
+				request.addParameters(queryParams);
+
+				request.setJsonEntity(searchRequestBody);
+
+				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
+						.getLowLevelClient()
+						.performRequestAsync(request, new ResponseListener() {
+							@Override
+							public void onSuccess(
+								org.opensearch.client.Response response) {
+								try {
+									SearchResponse searchResponse =
+										parseEntity(
+											response.getEntity(),
+											SearchResponse::fromXContent
+										);
+
+									sink.complete(searchResponse);
+								}
+								catch (IOException e) {
+									sink.fail(e);
+								}
+							}
+
+							@Override
+							public void onFailure(Exception e) {
+								sink.fail(e);
+							}
+						}))
+					.map(this::toSearchResponse);
+			})
+			.onFailure()
+			.transform(throwable -> new WebApplicationException(
+				getErrorResponse(throwable))
+			);
+	}
+
+	// TODO: add javadocs
+	private Map<String, Object> _parseAutocorrectionResponse(
+		String originalText,
+		org.opensearch.client.opensearch.core.SearchResponse<Void> response,
+		Boolean enableSearchWithCorrection) {
+
+		var suggestions = response.suggest().get(AUTOCORRECTION_SUGGESTION);
+
+		Map<String, Object> autocorrection = new HashMap<>();
+
+		if (suggestions == null || suggestions.isEmpty()) {
+			return autocorrection;
+		}
+		else {
+			autocorrection.put(ORIGINAL_TEXT, originalText);
+			autocorrection.put(SEARCHED_WITH_CORRECTED_TEXT, enableSearchWithCorrection);
+
+			List<Map<String, Object>> resultSuggestions = suggestions.stream()
+				.filter(Suggest::isTerm)
+				.map(Suggest::term)
+				.filter(termSuggest -> !termSuggest.options().isEmpty())
+				.map(termSuggest -> {
+					Map<String, Object> resultSuggestion = new HashMap<>();
+					resultSuggestion.put(TEXT, termSuggest.text());
+					resultSuggestion.put(OFFSET, termSuggest.offset());
+					resultSuggestion.put(LENGTH, termSuggest.length());
+					resultSuggestion.put(CORRECTION, termSuggest.options().getFirst().text());
+
+					return resultSuggestion;
+				})
+				.toList();
+
+			autocorrection.put(SUGGESTIONS, resultSuggestions);
+
+			String autocorrectionText = _generateAutocorrectionText(autocorrection);
+
+			autocorrection.put(AUTOCORRECTION_TEXT, autocorrectionText);
+		}
+		return autocorrection;
 	}
 
 	private <Resp> Resp parseEntity(
@@ -904,7 +1072,7 @@ public class SearchResource {
 			? Math.min(totalHits.value, totalResultLimit)
 			: 0;
 
-		return new Response(result, totalResult);
+		return new Response(result, totalResult, null);
 	}
 
 	private void printShardFailures(SearchResponse searchResponse) {
