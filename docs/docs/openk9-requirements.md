@@ -3,7 +3,7 @@ id: openk9-requirements
 title: OpenK9 Requirements
 ---
 
-# Compatibility matrix for third party products
+# OpenK9 Requirements
 
 # Compatibility matrix
 
@@ -21,9 +21,9 @@ This table outlines the tested and supported versions of third-party components 
 
 ## Minimum hardware requirements
 
-- **CPU Cores:** 4
+- **CPU Cores:** 8
 - **Memory:** 16 GB
-- **Storage:** Variable based on data ingested
+- **Storage:** Variable, based on data ingested
 
 ## Software requirements
 
@@ -32,6 +32,15 @@ Openk9 needs to run of one of following sofware environments:
 - Docker compose
 - Kubernetes
 - OpenShift
+
+## Integration for Large Language Models to enable generative ai features
+
+Openk9 supports the following integrations to enable the generative part features:
+
+- Openai APIs
+- Google VertxAI integration
+- IBM Watsonx integration
+- LLMs on premise through Ollama and Vllm
 
 ## Tips for configuring cpu and memory limits
 
