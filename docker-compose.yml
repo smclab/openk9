@@ -16,7 +16,7 @@ services:
             timeout: 10s
             retries: 5
     elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.15
         container_name: elasticsearch
         hostname: elasticsearch
         environment:
@@ -63,7 +63,7 @@ services:
         ports:
             - 5050:8080
     keycloak:
-        image: bitnami/keycloak:20.0.5-debian-11-r4
+        image: bitnamilegacy/keycloak:20.0.5-debian-11-r4
         hostname: keycloak.openk9.localhost
         environment:
             KEYCLOAK_CREATE_ADMIN_USER: 'true'
