@@ -57,8 +57,9 @@ components:
     Health:
       type: object
       properties:
-        type: string
-        enum: ["UP", "DOWN", "UNKNOWN"]
+        status:
+          type: string
+          enum: [ "UP", "DOWN", "UNKNOWN" ]
     Form:
       type: object
       properties:
@@ -77,7 +78,7 @@ components:
           type: string
         type:
           type: string
-          enum: ['string', 'number', 'date']
+          enum: [ 'string', 'number', 'date' ]
         size:
           type: number
         required:
@@ -92,7 +93,7 @@ components:
     FieldValue:
       type: object
       properties:
-        value: {}
+        value: { }
         isDefault:
           type: boolean
     FormFieldValidator:
@@ -108,13 +109,13 @@ components:
           type: string
         datasourceConfig:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
     OpenK9Input:
       type: object
       properties:
         payload:
           type: object
-          additionalProperties: {}
+          additionalProperties: { }
         enrichItemConfig:
           type: object
           $ref: "#/components/schemas/Form"
