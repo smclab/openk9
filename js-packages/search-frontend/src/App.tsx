@@ -20,7 +20,6 @@ import { FilterSvg } from "./svgElement/FiltersSvg";
 import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
 import { User } from "./svgElement/UserSvg";
 import { CloseIcon } from "./svgElement/CloseSvg";
-import { SearchToken } from "./components/client";
 
 const isKeycloakEnabled = true;
 const isChatbotEnabled = true;
@@ -32,8 +31,6 @@ export const openk9 = new OpenK9({
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
-  queryStringValues: ["text"],
-  queryStringMap: { textOnChange: "www", text: "pluto", filters: "zzz" },
 });
 
 export function App() {
@@ -52,16 +49,6 @@ export function App() {
   const [searchText, setSearchText] = React.useState<string | null | undefined>(
     undefined,
   );
-  const [token, setToken] = React.useState<number>(0);
-
-  React.useEffect(() => {
-    openk9.updateConfiguration({
-      defaultTokens: [
-        { tokenType: "DATASOURCE", values: ["" + token], filter: true },
-      ],
-    });
-  }, [token]);
-
   React.useEffect(() => {
     document.body.classList.toggle(
       "no-scroll",
@@ -220,15 +207,14 @@ export function App() {
             <Logo size={32} />
           </span>
           <span>Open</span>
-          <button
-            onClick={() => setToken((t) => t + 1)}
+          <span
             className="openk9-navbar-name-logo"
             css={css`
               font-weight: 700;
             `}
           >
             K9
-          </button>
+          </span>
         </div>
         <div
           css={css`
@@ -640,8 +626,9 @@ export function App() {
         className="openk9-results-container openk9-box"
         ref={(element) =>
           openk9.updateConfiguration({
-            resultListPagination: {
+            resultList: {
               element,
+              changeOnOver: false,
             },
           })
         }
