@@ -72,7 +72,6 @@ services:
       - minio-data:/data
   adminer:
     image: adminer
-    restart: always
     ports:
       - 5050:8080
   keycloak:
