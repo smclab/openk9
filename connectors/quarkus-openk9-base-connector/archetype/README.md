@@ -175,7 +175,7 @@ They are responsible for crawling data and sending them one by one to OpenK9 asy
 
 ## Install
 
-To install the archetype:
+To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
 mvn install
