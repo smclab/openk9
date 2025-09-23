@@ -11,7 +11,7 @@ import io.vertx.core.json.Json;
  * By using this class you can pass {@link IngestionDTO} objects across the event bus.
  *
  * @see MessageCodec
- * @see JsonObjectMessageCodec
+ * @see io.vertx.core.eventbus.impl.codecs.JsonObjectMessageCodec
  */
 public class IngestionDTOCodec implements MessageCodec<IngestionDTO, IngestionDTO> {
 
