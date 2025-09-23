@@ -188,7 +188,6 @@ Changes need to be made to the connector to create a concrete implementation(**I
           formFieldValidator.setMin(0L);
           formFieldValidator.setMax(50L);
           formFieldValidator.setRegex("/[[:strapi]]");
-          formFieldValidator.setDatasourceConfig(null);
           return formFieldValidator;
       }
 

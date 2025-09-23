@@ -257,7 +257,6 @@ After generating it, changes need to be made to the connector to create a concre
           formFieldValidator.setMin(0L);
           formFieldValidator.setMax(50L);
           formFieldValidator.setRegex("/[[:strapi]]");
-          formFieldValidator.setDatasourceConfig(null);
           return formFieldValidator;
       }
 
