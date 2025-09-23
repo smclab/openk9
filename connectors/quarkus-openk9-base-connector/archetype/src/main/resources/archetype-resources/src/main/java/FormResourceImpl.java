@@ -49,7 +49,6 @@ public class FormResourceImpl implements FormResource {
         formFieldValidator.setMin(0L);
         formFieldValidator.setMax(10L);
         formFieldValidator.setRegex("/[[:test]]");
-        formFieldValidator.setDatasourceConfig(getDatasourceConfig());
         return formFieldValidator;
     }
 
@@ -60,11 +59,5 @@ public class FormResourceImpl implements FormResource {
         formFieldValue.setValue("Value example");
         formFieldValueList.add(formFieldValue);
         return formFieldValueList;
-    }
-
-    private DatasourceConfig getDatasourceConfig() {
-        DatasourceConfig datasourceConfig = new DatasourceConfig();
-        datasourceConfig.setAdditionalProperty("datasourceExample", 0);
-        return datasourceConfig;
     }
 }
