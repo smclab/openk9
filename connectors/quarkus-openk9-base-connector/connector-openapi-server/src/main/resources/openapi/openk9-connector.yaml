@@ -141,7 +141,7 @@ components:
         timestamp:
           type: integer
           format: int64
-        datasourceConfig:
+        jsonConfig:
           type: object
           additionalProperties: { }
     BinaryDTO:
