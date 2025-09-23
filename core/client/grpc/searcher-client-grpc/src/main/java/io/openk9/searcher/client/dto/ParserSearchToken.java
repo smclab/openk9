@@ -36,7 +36,7 @@ public class ParserSearchToken {
 	@Schema(description = "Used for specify entityName to search in case of tokenType ENTITY")
 	private String entityName;
 	@Schema(description = "Used to identify the ParserSearchToken that contains the text entered in the search input")
-	private boolean isSearch;
+	private boolean search;
 	@Schema(description = "Token Type to specify type of ParserSearchToken")
 	private String tokenType;
 	@Schema(description = "Used to specify specific keyword field to perform search")
@@ -60,10 +60,10 @@ public class ParserSearchToken {
 	}
 
 	public static ParserSearchToken ofText(
-		List<String> values, String keywordKey, boolean filter, boolean isSearch) {
+		List<String> values, String keywordKey, boolean filter, boolean search) {
 
 		return new ParserSearchToken(
-			null, null, isSearch, TEXT, keywordKey, values, Map.of(), filter);
+			null, null, search, TEXT, keywordKey, values, Map.of(), filter);
 	}
 
 	public static final String TEXT = "TEXT";
