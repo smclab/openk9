@@ -69,6 +69,7 @@ It is the body request sent by OpenK9 to connector.
 - **scheduleId**: ID of schedule.
 - **tenantId**: ID of tenant.
 - **timestamp**: Timestamp relative to last ingestion date.
+- **datasourceConfig**: Defines the configuration needed to use the connector.
 
 **Form**  
 It is the class used in `FormResource`.
