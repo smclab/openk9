@@ -5,17 +5,26 @@ ARG BUILD_ENV=keycloak
 RUN mkdir -p /app/js-packages/search-frontend
 
 # Copy the package.json from the root
-COPY ./package.json /app
+COPY ./package.json /app/package.json
 COPY ./yarn.lock /app
+# COPY ./.yarn/ /app/.yarn/
+# COPY ./.yarnrc.yml /app/
 
 # Copy the package.json.conf file from the search-frontend package (package.json with MUI library)
 COPY ./js-packages/search-frontend/package.json.conf /app/js-packages/search-frontend/package.json
 
 # Set the project root
 WORKDIR /app
+#Yarn v4 disabled in Docker
+# # Enable Corepack (required to manage modern Yarn versions)
+# RUN corepack enable
 
-# Install all workspace dependencies
+# # Set the Yarn version specified in package.json
+# RUN corepack prepare yarn@4.10.0 --activate
+
+# Install all workspace dependencies - For Yarn v4: RUN yarn install --immutable --immutable-cache
 RUN yarn install --frozen-lockfile
+
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend

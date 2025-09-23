@@ -1,6 +1,6 @@
 {
   "packages": ["js-packages/*", "plugins/**/js", "!js-packages/openk9-chatbot"],
   "npmClient": "yarn",
-  "useWorkspaces": true,
-  "version": "independent"
+  "version": "independent",
+  "linkWorkspacePackages": false
 }
