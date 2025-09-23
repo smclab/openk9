@@ -29,8 +29,8 @@ It is the class used in `HealthResource`, has an enum with 3 values:
 **OpenK9Input**
 It is the class used in `ProcessResource`.
 - **payload**: Contains a map of data to enrich.
-- **enrichItemConfig**: It is a `Form` object, defines the configuration needed to use the enricher.
-- **token**: The token needed to callback OpenK9.
+- **enrichItemConfig**: Defines the configuration needed to use the enricher.
+- **replyTo**: The token needed to callback OpenK9.
 
 **Form**  
 It is the class used in `FormResource`.
