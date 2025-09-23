@@ -269,6 +269,8 @@ public abstract class BaseSearchService {
 
 		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
 
+		tenantRoot.fetch(Bucket_.autocorrection, JoinType.LEFT);
+
 		Predicate conjunction = criteriaBuilder.conjunction();
 
 		if (suggestion) {
