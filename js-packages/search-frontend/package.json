@@ -118,9 +118,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@emotion/styled": "^11.14.1",
-    "@mui/material": "6.1.6",
-    "@mui/system": "6.1.6",
     "@openk9ui/openk9-chatbot": "npm:@openk9ui/openk9-chatbot@3.1.1-SNAPSHOT",
     "@types/react-dates": "^21.8.5",
     "i18next": "^22.5.1",
