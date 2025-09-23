@@ -31,7 +31,8 @@ These classes implement the REST classes from the library and adapt their behavi
     "datasourceId": 984573908,
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
-    "timestamp": 1753866303
+    "timestamp": 1753866303,
+    "datasourceConfig": {}
   }
   ```
 
@@ -56,11 +57,7 @@ These classes implement the REST classes from the library and adapt their behavi
         "validator": {
           "min": 0,
           "max": 10,
-          "regex": "/[[:test]]",
-          "datasourceConfig" :
-          {
-             "datasourceExample": 0
-          }
+          "regex": "/[[:test]]"
         }
       },
       {
@@ -79,11 +76,7 @@ These classes implement the REST classes from the library and adapt their behavi
          "validator": {
            "min": 0,
            "max": 10,
-           "regex": "/[[:test]]",
-           "datasourceConfig" :
-           {
-              "datasourceExample": 0
-           }
+           "regex": "/[[:test]]"
          }
        }
      ]
@@ -176,7 +169,7 @@ They are responsible for crawling data and sending them one by one to OpenK9 asy
 - **HttpPublisherVerticle**  
    A verticle responsible for consuming event bus messages and sending `IngestionDTO` objects one by one to OpenK9 using **_/ingest_** POST endpoint.  
    The HTTP client configuration is configured through `CrawlingService`.  
-   This class’s name is used as the virtual address on the event bus to send messages to it.
+   The class name is used as the virtual address on the event bus to send messages to it.
 
 ---
 
@@ -201,7 +194,7 @@ mvn archetype:generate                      \
 -DarchetypeVersion=1.0.0-SNAPSHOT           \
 -DgroupId=<my.groupId>                      \
 -DartifactId=<my-artifactId>                \
--Dversion=<myVersion>                       \
+-Dversion=<myVersion>                       
 ```
 
 ### Windows (PowerShell)
