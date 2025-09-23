@@ -22,7 +22,8 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
     "datasourceId": 984573908,
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
-    "timestamp": 1753866303
+    "timestamp": 1753866303,
+    "datasourceConfig": {}
   }
   ```
 
@@ -47,11 +48,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
         "validator": {
           "min": 0,
           "max": 10,
-          "regex": "/[[:test]]",
-          "datasourceConfig" :
-          {
-             "datasourceExample": 0
-          }
+          "regex": "/[[:test]]"
         }
       },
       {
@@ -70,11 +67,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
          "validator": {
            "min": 0,
            "max": 10,
-           "regex": "/[[:test]]",
-           "datasourceConfig" :
-           {
-              "datasourceExample": 0
-           }
+           "regex": "/[[:test]]"
          }
        }
      ]
@@ -164,7 +157,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
 - **HttpPublisherVerticle**  
   A verticle responsible for consuming event bus messages and sending `IngestionDTO` objects one by one to OpenK9 using **_/ingest_** POST endpoint.  
   The HTTP client configuration is configured through `CrawlingService`.  
-  This class’s name is used as the virtual address on the event bus to send messages to it.
+  The class name is used as the virtual address on the event bus to send messages to it.
 
 
 ## Modify Connector
@@ -342,6 +335,7 @@ docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
 ```
 
 ### Run Container
+
 ```shell
 docker run -p 8080:8080 --name <containerName> <imageName> 
 ```
