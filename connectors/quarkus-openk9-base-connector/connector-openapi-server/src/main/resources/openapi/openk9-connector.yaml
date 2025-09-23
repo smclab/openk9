@@ -128,9 +128,6 @@ components:
           format: int64
         regex:
           type: string
-        datasourceConfig:
-          type: object
-          additionalProperties: { }
     InvokeRequest:
       type: object
       properties:
@@ -144,6 +141,9 @@ components:
         timestamp:
           type: integer
           format: int64
+        datasourceConfig:
+          type: object
+          additionalProperties: { }
     BinaryDTO:
       type: object
       properties:
