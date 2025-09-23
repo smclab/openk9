@@ -118,7 +118,6 @@ components:
           additionalProperties: { }
         enrichItemConfig:
           type: object
-          $ref: "#/components/schemas/Form"
-        token:
+          additionalProperties: { }
+        replyTo:
           type: string
-
