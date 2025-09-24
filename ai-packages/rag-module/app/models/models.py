@@ -96,6 +96,9 @@ class SearchQueryChat(BaseModel):
         description="Unique identifier for chat session",
         example="chat_abc123def456",
     )
+    retrieveFromUploadedDocuments: Optional[bool] = Field(
+        False, description="Whether to retrieve from uploaded documents", example=False
+    )
     range: Optional[list] = Field(
         [0, 5],
         description="Result window range as [offset, limit]",
