@@ -24,7 +24,6 @@ from opensearchpy import OpenSearch
 
 from app.utils.logger import logger
 
-UPLOADED_DOCUMENTS_INDEX = "uploaded-documents-index"
 SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
 
 
@@ -104,6 +103,7 @@ def save_chat_message(
     sources: list,
     chat_id: str,
     user_id: str,
+    realm_name: str,
     timestamp: str,
     chat_sequence_number: int,
 ):
@@ -161,6 +161,8 @@ def save_chat_message(
         "timestamp": timestamp,
         "chat_sequence_number": chat_sequence_number,
     }
+
+    # open_search_index = f"{realm_name}-{user_id}"
 
     if not open_search_client.indices.exists(index=user_id):
         index_body = {
@@ -317,7 +319,9 @@ def delete_documents(opensearch_host, interval_in_days=180):
             logger.info("Bulk delete completed successfully")
 
 
-def save_uploaded_documents(opensearch_host: str, realm_name: str, documents: list):
+def save_uploaded_documents(
+    opensearch_host: str, realm_name: str, documents: list, vector_size: int
+):
     """Save uploaded documents to OpenSearch index.
 
     Stores uploaded documents in a specific OpenSearch index.
@@ -339,7 +343,7 @@ def save_uploaded_documents(opensearch_host: str, realm_name: str, documents: li
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )
-    uploaded_documents_index = f"{realm_name}-{UPLOADED_DOCUMENTS_INDEX}"
+    uploaded_documents_index = f"{realm_name}-uploaded-documents-index"
 
     index_actions = []
     for doc in documents:
@@ -362,7 +366,7 @@ def save_uploaded_documents(opensearch_host: str, realm_name: str, documents: li
                     },
                     "vector": {
                         "type": "knn_vector",
-                        "dimension": 1536,
+                        "dimension": vector_size,
                     },
                 }
             },
