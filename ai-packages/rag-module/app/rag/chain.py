@@ -169,6 +169,7 @@ def get_chat_chain(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
+    embedding_model_configuration,
     reranker_api_url,
     opensearch_host,
     grpc_host_embedding,
@@ -241,6 +242,7 @@ def get_chat_chain(
             timestamp,
             chat_sequence_number,
             configuration,
+            embedding_model_configuration,
         )
 
     except Exception as e:
@@ -278,6 +280,7 @@ def get_chat_chain_tool(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
+    embedding_model_configuration,
     reranker_api_url,
     opensearch_host,
     grpc_host_embedding,
@@ -391,6 +394,7 @@ def get_chat_chain_tool(
                 timestamp,
                 chat_sequence_number,
                 configuration,
+                embedding_model_configuration,
             )
 
         else:
@@ -439,6 +443,7 @@ def get_chat_chain_tool(
                     documents,
                     chat_id,
                     user_id,
+                    realm_name,
                     timestamp,
                     chat_sequence_number,
                 )
