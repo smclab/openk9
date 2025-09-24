@@ -41,12 +41,16 @@ from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
 from app.utils.chat_history import save_uploaded_documents
-from app.utils.llm import embedding, get_configurations
+from app.utils.embedding import documents_embedding
+from app.utils.llm import get_configurations
 from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
@@ -272,6 +276,7 @@ async def rag_chat(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
+            - retrieveFromUploadedDocuments
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -315,6 +320,7 @@ async def rag_chat(
         - Stores conversation history for authenticated users
     """
     chat_id = search_query_chat.chatId
+    retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
@@ -337,19 +343,27 @@ async def rag_chat(
         if headers.authorization
         else None
     )
-    user_id = None
 
     if token:
         user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
         if not user_info:
             unauthorized_response()
-        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+        realm_name = user_info.get("realm_name")
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
+
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
@@ -368,13 +382,17 @@ async def rag_chat(
         search_text,
         chat_id,
         user_id,
+        realm_name,
+        retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
@@ -399,6 +417,7 @@ async def rag_chat_tool(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
+            - retrieveFromUploadedDocuments
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -445,6 +464,7 @@ async def rag_chat_tool(
         - Tools are selected based on query intent analysis
     """
     chat_id = search_query_chat.chatId
+    retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
@@ -468,18 +488,28 @@ async def rag_chat_tool(
         else None
     )
     user_id = None
+    realm_name = None
 
     if token:
         user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
         if not user_info:
             unauthorized_response()
-        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+        realm_name = user_info.get("realm_name")
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
+
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
@@ -498,13 +528,17 @@ async def rag_chat_tool(
         search_text,
         chat_id,
         user_id,
+        realm_name,
+        retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
@@ -563,7 +597,7 @@ async def get_user_chats(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -647,7 +681,8 @@ async def get_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -739,7 +774,9 @@ async def delete_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
+
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
     )
@@ -823,7 +860,8 @@ async def rename_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -891,21 +929,18 @@ async def create_upload_file(
 ):
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
-    # if not headers.authorization:
-    #     unauthorized_response()
+    if not headers.authorization:
+        unauthorized_response()
 
-    # token = headers.authorization.replace(TOKEN_PREFIX, "")
+    token = headers.authorization.replace(TOKEN_PREFIX, "")
 
-    # user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
 
-    # if not user_info:
-    #     unauthorized_response()
+    if not user_info:
+        unauthorized_response()
 
-    # user_id = user_info[KEYCLOAK_USER_INFO_KEY]
-    # realm_name = user_info["realm_name"]
-
-    user_id = 666
-    realm_name = "raichu"
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
 
     if len(files) > MAX_UPLOAD_FILES_NUMBER:
         raise HTTPException(
@@ -971,6 +1006,13 @@ async def create_upload_file(
 
         docs = loader.load()
 
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
+
+        vector_size = embedding_model_configuration.get("vector_size")
+
         for doc in docs:
             page_content = doc.page_content
             document = {
@@ -980,14 +1022,15 @@ async def create_upload_file(
                 "chat_id": chat_id,
                 "text": page_content,
             }
-            embedded_documents = embedding(
-                grpc_host=GRPC_EMBEDDING_MODULE_HOST,
-                virtual_host=virtual_host,
-                openserach_host=OPENSEARCH_HOST,
+            embedded_documents = documents_embedding(
+                grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
+                embedding_model_configuration=embedding_model_configuration,
                 document=document,
             )
 
-            save_uploaded_documents(OPENSEARCH_HOST, realm_name, embedded_documents)
+            save_uploaded_documents(
+                OPENSEARCH_HOST, realm_name, embedded_documents, vector_size
+            )
 
         os.remove(renamed_uploaded_file)
 
