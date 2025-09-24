@@ -88,6 +88,7 @@ This endpoint takes different arguments in JSON raw body:
 - **depth**: depth to search contents
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified get all body page)
+- **linksToFollow**: list of href xpath to follow during extraction (optional, if not specified is ignored)
 - **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl
@@ -113,6 +114,7 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "allowedDomains": ["www.smc.it"],
     "allowedPaths": [],
     "excludedPaths": [".pdf"],
+    "linksToFollow": ["//a[@class="class-name"]/@href"],
     "datasourceId": 1,
     "timestamp": 0,
     "bodyTag": "div#main-content",

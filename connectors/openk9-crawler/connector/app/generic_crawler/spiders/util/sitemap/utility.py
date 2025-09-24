@@ -1,4 +1,5 @@
 import re
+from urllib.parse import urlparse
 
 
 def regex(x):
@@ -23,3 +24,8 @@ def iterlastmod(it, alt=False):
         # Also consider alternate URLs (xhtml:link rel="alternate")
         if alt and 'alternate' in d:
             yield from d['alternate']
+
+
+def is_absolute(url: str) -> bool:
+    parsed = urlparse(url)
+    return bool(parsed.scheme and parsed.netloc)
