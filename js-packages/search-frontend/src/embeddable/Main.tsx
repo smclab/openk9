@@ -457,6 +457,7 @@ export function Main({
             ) : null
           ) : (
             <FiltersMemo
+              state={selectionsState}
               searchQuery={searchQuery}
               onAddFilterToken={addFilterToken}
               numberOfResults={numberOfResults}
@@ -484,6 +485,7 @@ export function Main({
             )
           ) : (
             <FiltersMemo
+              state={selectionsState}
               searchQuery={searchQuery}
               onAddFilterToken={addFilterToken}
               onRemoveFilterToken={removeFilterToken}
@@ -682,7 +684,6 @@ export function Main({
             )
           ) : (
             <>
-              {JSON.stringify(selectionsState.range)}
               <ResultsPaginationMemo
                 setTotalResult={setTotalResult}
                 displayMode={configuration.resultsDisplayMode}
@@ -952,6 +953,7 @@ export function Main({
               selectionsDispatch={selectionsDispatch}
               memoryResults={memoryResults}
               haveSearch={configuration.filtersMobileLiveChange?.haveSearch}
+              state={selectionsState}
             />
           )}
         </I18nextProvider>,
@@ -964,6 +966,7 @@ export function Main({
           {isSearchLoading ? null : (
             <FiltersMobileLiveChangeMemo
               searchQuery={searchQuery}
+              state={selectionsState}
               addExtraClass={
                 configuration.mobileFiltersBasicLiveChange?.addExtraClass ||
                 undefined

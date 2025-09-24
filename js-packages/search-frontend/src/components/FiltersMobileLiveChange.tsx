@@ -11,7 +11,6 @@ import { FilterSvg } from "../svgElement/FiltersSvg";
 import { DeleteLogo } from "./DeleteLogo";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { FiltersMemo } from "./Filters";
-import { useInfiniteResults } from "./ResultList";
 import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
 import { useTranslation } from "react-i18next";
@@ -55,6 +54,7 @@ export type FiltersMobileProps<E> = {
   callbackClose?: () => void;
   callbackApply?: () => void;
   addExtraClass?: string;
+  state: any;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,
@@ -84,15 +84,8 @@ function FiltersMobileLiveChange<E>({
   haveSearch,
   callbackClose,
   callbackApply,
+  state,
 }: FiltersMobileProps<E>) {
-  const results = useInfiniteResults<any>(
-    searchQuery,
-    sort,
-    language,
-    sortAfterKey,
-    numberOfResults,
-    memoryResults,
-  );
   const { t } = useTranslation();
   const [trapFocus] = useFocusTrap(true);
   const componet = (
@@ -180,6 +173,7 @@ function FiltersMobileLiveChange<E>({
         }}
       >
         <FiltersMemo
+          state={state}
           memoryResults={memoryResults}
           iconCustom={null}
           searchQuery={searchQuery}
@@ -317,8 +311,8 @@ function FiltersMobileLiveChange<E>({
           }}
         >
           <div>
-            {t("result-view")} {results.data?.pages[0].total}{" "}
-            {results.data?.pages[0].total !== 1 ? t("results") : t("result")}
+            {t("result-view")} {numberOfResults}
+            {numberOfResults !== 1 ? t("results") : t("result")}
           </div>
           <div>
             <AddFiltersSvg size="21px" />

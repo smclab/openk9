@@ -44,7 +44,6 @@ type ResultsProps<E> = {
 function ResultsPagination<E>({
   state,
   dispatch,
-  displayMode,
   onDetail,
   searchQuery,
   sort,

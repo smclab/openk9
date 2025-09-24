@@ -9,8 +9,8 @@ import {
   WhoIsDynamic,
 } from "./FilterCategoryDynamic";
 import { Logo } from "./Logo";
-import { useInfiniteResults } from "./ResultList";
 import CustomSkeleton from "./Skeleton";
+import { useInfiniteResults } from "./ResultListPagination";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -30,6 +30,7 @@ type FiltersProps = {
   placeholder?: string | null | undefined;
   iconCustom: IconsCustom;
   haveSearch?: boolean | null | undefined;
+  state: any;
 };
 function Filters({
   searchQuery,
@@ -49,19 +50,25 @@ function Filters({
   placeholder,
   iconCustom,
   haveSearch = true,
+  state,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
 
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
-  const { isPreviousData } = useInfiniteResults(
+
+  const [offset, elementForPage] = state.range;
+
+  const { isPreviousData } = useInfiniteResults<any>(
+    state,
     searchQuery,
     sort,
     language,
     sortAfterKey,
-    numberOfResults,
-    memoryResults,
+    elementForPage,
+    offset,
   );
+
   React.useEffect(() => {
     if (!isPreviousData) {
       setLastSearchQueryWithResults(searchQuery);
