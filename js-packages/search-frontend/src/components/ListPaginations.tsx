@@ -1,26 +1,36 @@
 import styled, { css } from "styled-components";
 import React from "react";
 import { useRange } from "./useRange";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 
 export default function ListPaginations({
   itemsPerPage = 10,
   pagesToShow = 3,
+  state,
+  dispatch,
 }: {
   itemsPerPage?: number;
   pagesToShow?: number;
+  state: SelectionsState;
+  dispatch: React.Dispatch<SelectionsAction>;
 }) {
-  const { range, setRange, numberOfResults, actuallyPage, setActuallyPage } =
-    useRange();
+  const { numberOfResults, actuallyPage, setActuallyPage } = useRange();
 
   React.useEffect(() => {
     const size = itemsPerPage;
-    if (range[1] !== size) {
-      setRange([actuallyPage * size, size]);
+    if (state.range[1] !== size) {
+      dispatch({ type: "set-page-size", pageSize: size });
+      setActuallyPage(0);
     }
-  }, [itemsPerPage, range, setRange, actuallyPage]);
+  }, [itemsPerPage, state.range, dispatch, setActuallyPage]);
 
-  const size = range[1] || itemsPerPage;
+  const size = state.range[1] || itemsPerPage;
   const numberOfPage = Math.max(1, Math.ceil(numberOfResults / size));
+  const derivedPage = Math.floor((state.range[0] || 0) / size);
+
+  React.useEffect(() => {
+    if (derivedPage !== actuallyPage) setActuallyPage(derivedPage);
+  }, [derivedPage, actuallyPage, setActuallyPage]);
 
   const getPageRange = () => {
     let start = Math.max(0, actuallyPage - Math.floor(pagesToShow / 2));
@@ -37,7 +47,7 @@ export default function ListPaginations({
   const goToPage = (page: number) => {
     const next = Math.max(0, Math.min(numberOfPage - 1, page));
     setActuallyPage(next);
-    setRange([next * size, size]);
+    dispatch({ type: "set-range", range: [next * size, size] });
   };
 
   const handleFirstClick = () => goToPage(0);
@@ -110,7 +120,6 @@ const PaginationsButton = styled.button<{ isActive?: boolean }>`
     box-shadow: ${isActive ? "0 2px 8px rgba(200,57,57,0.15)" : "none"};
     transition: background 0.2s, color 0.2s;
     outline: none;
-
     &:hover:not(:disabled) {
       background: #c83939;
       color: #fff;

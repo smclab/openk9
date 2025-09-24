@@ -101,7 +101,7 @@ export function Main({
   };
 
   //state
-  const { resetPage, numberOfResults: numberOfResultsSearch } = useRange();
+  const { numberOfResults: numberOfResultsSearch } = useRange();
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
@@ -112,6 +112,7 @@ export function Main({
     defaultString: configuration.defaultString || "",
     queryStringValues,
   });
+
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
     useSelections({
       useKeycloak,
@@ -259,9 +260,6 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             viewColor={configuration.showSyntax}
             btnSearch={false}
-            actionOnClick={() => {
-              resetPage();
-            }}
           />
         </I18nextProvider>,
         configuration.search,
@@ -276,9 +274,6 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             btnSearch={true}
             viewColor={configuration.showSyntax}
-            actionOnClick={() => {
-              resetPage();
-            }}
           />
         </I18nextProvider>,
         configuration.searchWithButton,
@@ -304,7 +299,6 @@ export function Main({
               const functionCallback =
                 configuration?.searchConfigurable?.actionOnClick;
               if (functionCallback) functionCallback();
-              resetPage();
             }}
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
@@ -428,7 +422,10 @@ export function Main({
             onAction={() => {
               const callback = configuration.tabsConfigurable?.onAction;
               if (callback) callback();
-              resetPage();
+              selectionsDispatch({
+                type: "set-range",
+                range: [0, selectionsState.range[1]],
+              });
             }}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
@@ -682,6 +679,7 @@ export function Main({
             )
           ) : (
             <>
+              {JSON.stringify(selectionsState.range)}
               <ResultsPaginationMemo
                 setTotalResult={setTotalResult}
                 displayMode={configuration.resultsDisplayMode}
@@ -695,9 +693,15 @@ export function Main({
                 language={languageSelect}
                 sortAfterKey={sortAfterKey}
                 callback={configuration.resultListPagination?.callback}
+                state={selectionsState}
+                dispatch={selectionsDispatch}
               />
               {numberOfResultsSearch > 0 && (
-                <ListPaginations itemsPerPage={numberOfResults} />
+                <ListPaginations
+                  itemsPerPage={numberOfResults}
+                  state={selectionsState}
+                  dispatch={selectionsDispatch}
+                />
               )}
             </>
           )}
@@ -1249,7 +1253,7 @@ function useSearch({
       filterTokens,
       searchTokens,
       numberOfFilters: counterTotalFilters,
-      numberOfResults: numberOfResults,
+      numberOfResults,
     });
   }, [
     onQueryStateChange,

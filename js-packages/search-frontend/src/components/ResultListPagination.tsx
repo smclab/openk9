@@ -13,8 +13,9 @@ import {
   SortField,
   useOpenK9Client,
 } from "./client";
-import { useRange } from "./useRange";
 import { Renderers, useRenderers } from "./useRenderers";
+import { SelectionsAction, SelectionsState } from "./useSelections";
+import { useRange } from "./useRange";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -22,6 +23,8 @@ export type ResultsDisplayMode =
   | { type: "virtual" };
 
 type ResultsProps<E> = {
+  state: SelectionsState;
+  dispatch: React.Dispatch<SelectionsAction>;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
@@ -39,6 +42,8 @@ type ResultsProps<E> = {
 };
 
 function ResultsPagination<E>({
+  state,
+  dispatch,
   displayMode,
   onDetail,
   searchQuery,
@@ -57,21 +62,20 @@ function ResultsPagination<E>({
   const renderers = useRenderers();
   if (!renderers) return null;
 
-  const { setRange, setActuallyPage } = useRange();
   const bootstrappedRef = React.useRef(false);
 
   React.useEffect(() => {
     if (bootstrappedRef.current) return;
-    const size = pageSize;
-    const page = initialPage;
-    setActuallyPage(page);
-    setRange([page * size, size]);
+    const size = pageSize ?? state.range[1];
+    const page = initialPage ?? 0;
+    dispatch({ type: "set-range", range: [page * size, size] });
     bootstrappedRef.current = true;
-  }, [initialPage, pageSize, setActuallyPage, setRange]);
+  }, [initialPage, pageSize, dispatch, state.range]);
 
   return (
     <React.Suspense fallback={<SkeletonResult />}>
       <InfiniteResults
+        state={state}
         setTotalResult={setTotalResult}
         renderers={renderers}
         searchQuery={searchQuery}
@@ -92,6 +96,7 @@ function ResultsPagination<E>({
 export const ResultsPaginationMemo = React.memo(ResultsPagination);
 
 type InfiniteResultsProps<E> = {
+  state: SelectionsState;
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
@@ -107,6 +112,7 @@ type InfiniteResultsProps<E> = {
 };
 
 export function InfiniteResults<E>({
+  state,
   renderers,
   searchQuery,
   onDetail,
@@ -119,10 +125,11 @@ export function InfiniteResults<E>({
   setTotalResult,
   callback,
 }: InfiniteResultsProps<E>) {
-  const { range, setNumberOfResults } = useRange();
-  const [offset, elementForPage] = range;
+  const [offset, elementForPage] = state.range;
+  const { setNumberOfResults } = useRange();
 
   const results = useInfiniteResults<E>(
+    state,
     searchQuery,
     sort,
     language,
@@ -207,6 +214,7 @@ function NoResults() {
 }
 
 export function useInfiniteResults<E>(
+  state: SelectionsState,
   searchQuery: Array<SearchToken>,
   sort: SortField[],
   language: string,
@@ -215,6 +223,10 @@ export function useInfiniteResults<E>(
   offset: number,
 ) {
   const client = useOpenK9Client();
+  const suppressIntermediate = React.useMemo(
+    () => state.text.trim().length > 0 && searchQuery.length === 0,
+    [state.text, searchQuery],
+  );
 
   return useInfiniteQuery(
     [
@@ -226,19 +238,32 @@ export function useInfiniteResults<E>(
       offset,
       elementForPage,
     ] as const,
-    async ({ queryKey: [, searchQuery, sort] }) => {
+    async ({ queryKey }) => {
+      const [
+        ,
+        qSearchQuery,
+        qSort,
+        qLanguage,
+        qSortAfterKey,
+        qOffset,
+        qElementForPage,
+      ] = queryKey;
+
       const range: [number, number] =
-        sortAfterKey === "" ? [offset, elementForPage] : [0, elementForPage];
+        qSortAfterKey === ""
+          ? [qOffset, qElementForPage]
+          : [0, qElementForPage];
+
       return client.doSearch<E>({
         range,
-        language,
-        searchQuery,
-        sort,
-        sortAfterKey: sortAfterKey || "",
+        language: qLanguage,
+        searchQuery: qSearchQuery,
+        sort: qSort,
+        sortAfterKey: qSortAfterKey || "",
       });
     },
     {
-      enabled: elementForPage > 0,
+      enabled: elementForPage > 0 && !suppressIntermediate,
       keepPreviousData: false,
       suspense: true,
       notifyOnChangeProps: ["isFetching"],

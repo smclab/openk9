@@ -57,7 +57,6 @@ function FilterCategoryDynamic({
   haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
-  const { resetPage } = useRange();
 
   const suggestions = useInfiniteSuggestions(
     isDynamicElement,
@@ -513,8 +512,6 @@ function SingleSelect({
   suggestionValue: string;
   suggestionCategoryId: string;
 }) {
-  const { resetPage } = useRange();
-
   return (
     <React.Fragment>
       <div>
@@ -533,7 +530,6 @@ function SingleSelect({
           type="radio"
           checked={false}
           onChange={(event) => {
-            resetPage();
             if (event.currentTarget.checked) {
               if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
@@ -544,7 +540,6 @@ function SingleSelect({
           }}
           onClick={(event) => {
             if (isChecked) {
-              resetPage();
               onRemove(asSearchToken);
             }
           }}
