@@ -39,6 +39,7 @@ type ResultsProps<E> = {
   pageSize?: number;
   initialPage?: number;
   callback?: () => void;
+  CustomNoResults?: React.ReactNode | null;
 };
 
 function ResultsPagination<E>({
@@ -57,6 +58,7 @@ function ResultsPagination<E>({
   pageSize = 10,
   initialPage = 0,
   callback,
+  CustomNoResults,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
   if (!renderers) return null;
@@ -87,6 +89,7 @@ function ResultsPagination<E>({
         language={language}
         sortAfterKey={sortAfterKey}
         callback={callback}
+        customNoResults={CustomNoResults}
       />
     </React.Suspense>
   );
@@ -108,6 +111,7 @@ type InfiniteResultsProps<E> = {
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
   sortAfterKey: string;
   callback?: () => void;
+  customNoResults?: React.ReactNode | null;
 };
 
 export function InfiniteResults<E>({
@@ -123,6 +127,7 @@ export function InfiniteResults<E>({
   sortAfterKey,
   setTotalResult,
   callback,
+  customNoResults,
 }: InfiniteResultsProps<E>) {
   const [offset, elementForPage] = state.range;
   const { setNumberOfResults } = useRange();
@@ -185,7 +190,7 @@ export function InfiniteResults<E>({
           ))}
         </div>
       ) : (
-        <NoResults />
+        <>{customNoResults ? customNoResults : <NoResults />}</>
       )}
     </div>
   );

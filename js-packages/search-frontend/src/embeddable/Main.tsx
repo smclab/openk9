@@ -699,6 +699,9 @@ export function Main({
                 callback={configuration.resultListPagination?.callback}
                 state={selectionsState}
                 dispatch={selectionsDispatch}
+                CustomNoResults={
+                  configuration.resultListPagination?.noResultsCustom
+                }
               />
               {numberOfResultsSearch > 0 && (
                 <ListPaginations

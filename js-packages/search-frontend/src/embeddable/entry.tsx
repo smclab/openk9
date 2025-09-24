@@ -285,6 +285,7 @@ type FilterProps = {
 type ResulListPaginationProps = {
   element: Element | string | null;
   callback?: () => void | null | undefined;
+  noResultsCustom?: React.ReactNode | null | undefined;
 };
 
 type TabsProps = {
