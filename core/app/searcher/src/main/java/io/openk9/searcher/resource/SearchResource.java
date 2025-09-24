@@ -454,7 +454,10 @@ public class SearchResource {
 			})
 			// fallback to standard search on autocorrection failure
 			.onFailure()
-			.recoverWithUni(failure -> _doSearch(searchRequest));
+			.recoverWithUni(failure -> {
+				log.warn("Something went wrong during the autocorrected search.", failure);
+				return _doSearch(searchRequest);
+			});
 	}
 
 	@Operation(operationId = "query-analysis")
@@ -928,9 +931,9 @@ public class SearchResource {
 
 	// TODO: add javadocs
 	private Map<String, Object> _parseAutocorrectionResponse(
-		String originalText,
-		org.opensearch.client.opensearch.core.SearchResponse<Void> response,
-		Boolean enableSearchWithCorrection) {
+			String originalText,
+			org.opensearch.client.opensearch.core.SearchResponse<Void> response,
+			Boolean enableSearchWithCorrection) {
 
 		var suggestions = response.suggest().get(AUTOCORRECTION_SUGGESTION);
 
