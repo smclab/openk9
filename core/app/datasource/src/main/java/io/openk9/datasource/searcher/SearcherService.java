@@ -32,6 +32,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+
+import io.openk9.datasource.service.EmbeddingModelService;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
@@ -92,6 +96,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -134,6 +139,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Inject
 	RestHighLevelClient client;
+
+	@Inject
+	EmbeddingModelService embeddingModelService;
 
 	@Inject
 	GrammarProvider grammarProvider;
@@ -200,46 +208,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		return -Double.compare(scoreO1, scoreO2);
 
-	}
-
-	private SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket tenant, String language) {
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-		searchSourceBuilder.trackTotalHits(true);
-
-		if (request.getRangeCount() == 2) {
-			searchSourceBuilder.from(Math.min(
-				request.getRange(0), maxSearchPageFrom));
-
-			searchSourceBuilder.size(Math.min(
-				request.getRange(1), maxSearchPageSize));
-		}
-
-		List<DocTypeField> docTypeFieldList = Utils
-			.getDocTypeFieldsFrom(tenant)
-			.filter(docTypeField -> !docTypeField.isI18N())
-			.toList();
-
-		applySort(
-			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-			searchSourceBuilder
-		);
-
-		applyHighlightAndIncludeExclude(
-			searchSourceBuilder,
-			docTypeFieldList,
-			language
-		);
-
-		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
-
-		SearchConfig searchConfig = tenant.getSearchConfig();
-
-		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-		return searchSourceBuilder;
 	}
 
 	private static double _toDouble(Object score) {
@@ -505,6 +473,63 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						String.format(
 							"RAGConfiguration of type %s missing for the specified bucket.",
 							ragType.name())
+					)
+				)
+			);
+	}
+
+	/**
+	 * Retrieves the current embedding model configurations for a tenant identified by virtual host.
+	 *
+	 * @param request the request containing the virtual host identifier
+	 * @return a {@link Uni} emitting the embedding model configuration response
+	 * @throws StatusRuntimeException with {@link Status#NOT_FOUND} if no active embedding model exists
+	 */
+	@Override
+	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
+		GetEmbeddingModelConfigurationsRequest request) {
+
+		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
+			.flatMap(tenant -> embeddingModelService
+				.fetchCurrent(tenant.schemaName())
+				.map(embeddingModel -> {
+
+					if (embeddingModel == null) {
+						throw new NoResultException();
+					}
+
+					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
+						.setApiUrl(embeddingModel.getApiUrl())
+						.setVectorSize(embeddingModel.getVectorSize());
+
+					if (embeddingModel.getProviderModel() != null) {
+						responseBuilder
+							.setProviderModel(
+								ProviderModel.newBuilder()
+									.setProvider(embeddingModel.getProviderModel().getProvider())
+									.setModel(embeddingModel.getProviderModel().getModel())
+							);
+					}
+
+					if (embeddingModel.getApiKey() != null) {
+						responseBuilder
+							.setApiKey(embeddingModel.getApiKey());
+					}
+
+					if (embeddingModel.getJsonConfig() != null) {
+						responseBuilder
+							.setJsonConfig(
+								StructUtils.fromJson(embeddingModel.getJsonConfig()));
+					}
+
+					return responseBuilder.build();
+				})
+				.onFailure(NoResultException.class)
+				.recoverWithUni(
+					Uni.createFrom().failure(
+						new StatusRuntimeException(
+							Status.NOT_FOUND.withDescription("Missing active embedding model.")
+						)
 					)
 				)
 			);
@@ -1235,6 +1260,46 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		return result;
+	}
+
+	private SearchSourceBuilder _getSearchSourceBuilder(
+		QueryParserRequest request, Bucket tenant, String language) {
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.trackTotalHits(true);
+
+		if (request.getRangeCount() == 2) {
+			searchSourceBuilder.from(Math.min(
+				request.getRange(0), maxSearchPageFrom));
+
+			searchSourceBuilder.size(Math.min(
+				request.getRange(1), maxSearchPageSize));
+		}
+
+		List<DocTypeField> docTypeFieldList = Utils
+			.getDocTypeFieldsFrom(tenant)
+			.filter(docTypeField -> !docTypeField.isI18N())
+			.toList();
+
+		applySort(
+			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+			searchSourceBuilder
+		);
+
+		applyHighlightAndIncludeExclude(
+			searchSourceBuilder,
+			docTypeFieldList,
+			language
+		);
+
+		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+
+		return searchSourceBuilder;
 	}
 
 	private Map<String, Object> _queryAnalysisTokenToMap(

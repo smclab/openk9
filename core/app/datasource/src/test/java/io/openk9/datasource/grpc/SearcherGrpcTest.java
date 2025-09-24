@@ -20,6 +20,7 @@ package io.openk9.datasource.grpc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
@@ -145,7 +146,12 @@ public class SearcherGrpcTest {
 
 		// Bucket
 		createBucketOne();
-		enableBucket(getBucketOne());
+		var bucketOne = EntitiesUtils.getBucket(
+			sessionFactory,
+			bucketService,
+			BUCKET_ONE
+		);
+		enableBucket(bucketOne);
 
 		// LargeLanguageModel
 		createLargeLanguageModelOne();
@@ -196,9 +202,32 @@ public class SearcherGrpcTest {
 				.build()
 		);
 
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_ONE));
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_SEARCH_ONE));
-		bindRAGConfigurationToBucket(getBucketOne(), getRAGConfiguration(RAG_CHAT_TOOL_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_SEARCH_ONE));
+		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_TOOL_ONE));
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_get_embedding_model_configurations(UniAsserter asserter) {
+		asserter.assertThat(
+			() -> searcher.getEmbeddingModelConfigurations(
+				GetEmbeddingModelConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+
+				log.info(String.format("getEmbeddingModelConfigurations response: %s", response));
+
+				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
+				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
+				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				assertEquals(PROVIDER, response.getProviderModel().getProvider());
+				assertEquals(MODEL, response.getProviderModel().getModel());
+				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
+			}
+		);
 	}
 
 	@Test
@@ -406,24 +435,34 @@ public class SearcherGrpcTest {
 		removeLargeLanguageModelOne();
 
 		// Bucket
-		enableBucket(getBucketDefault());
-		removeBucketOne();
+		var bucketDefault = EntitiesUtils.getBucket(
+			sessionFactory,
+			bucketService,
+			io.openk9.datasource.model.init.Bucket.INSTANCE.getName()
+		);
+
+		enableBucket(bucketDefault);
+		EntitiesUtils.removeBucket(
+			sessionFactory,
+			bucketService,
+			BUCKET_ONE
+		);
 
 		// RAGConfiguration
-		removeRAGConfiguration(RAG_CHAT_ONE);
-		removeRAGConfiguration(RAG_SEARCH_ONE);
-		removeRAGConfiguration(RAG_CHAT_TOOL_ONE);
-	}
-
-	private static <T> void failureAssertions(Throwable throwable) {
-
-		Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-		var exception = (StatusRuntimeException) throwable;
-
-		assertTrue(exception
-			.getMessage()
-			.contains(InternalServiceMockException.class.getName())
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CHAT_ONE
+		);
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_SEARCH_ONE
+		);
+		EntitiesUtils.removeRAGConfiguration(
+			sessionFactory,
+			ragConfigurationService,
+			RAG_CHAT_TOOL_ONE
 		);
 	}
 
@@ -503,26 +542,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private void createRAGConfiguration(String name, RAGType type) {
-		CreateRAGConfigurationDTO dto = CreateRAGConfigurationDTO.builder()
-			.name(name)
-			.type(type)
-			.chunkWindow(CHUNK_WINDOW)
-			.prompt(PROMPT_TEST)
-			.promptNoRag(PROMPT_TEST)
-			.ragToolDescription(PROMPT_TEST)
-			.rephrasePrompt(PROMPT_TEST)
-			.reformulate(REFORMULATE)
-			.jsonConfig(JSON_CONFIG)
-			.build();
-
-		sessionFactory.withTransaction(
-				session -> ragConfigurationService.create(session, dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private void enableBucket(Bucket bucket) {
 		sessionFactory.withTransaction(
 			session ->
@@ -572,26 +591,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private Bucket getBucketDefault() {
-		return sessionFactory.withTransaction(
-				session ->
-					bucketService.findByName(
-						session,
-						io.openk9.datasource.model.init.Bucket.INSTANCE.getName())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private Bucket getBucketOne() {
-		return sessionFactory.withTransaction(
-				session ->
-					bucketService.findByName(session, BUCKET_ONE)
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private EmbeddingModel getEmbeddingModelDefaultPrimary() {
 		return sessionFactory.withTransaction(
 				s ->
@@ -635,17 +634,6 @@ public class SearcherGrpcTest {
 			.indefinitely();
 	}
 
-	private void removeBucketOne() {
-		var bucket = getBucketOne();
-
-		sessionFactory.withTransaction(
-				session ->
-					bucketService.deleteById(session, bucket.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
 	private EmbeddingModel removeEmbeddingModelOne() {
 		var embeddingModel = getEmbeddingModelOne();
 
@@ -665,17 +653,6 @@ public class SearcherGrpcTest {
 				SCHEMA_NAME,
 				(session, transaction) ->
 					largeLanguageModelService.deleteById(session, largeLanguageModel.getId())
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void removeRAGConfiguration(String name) {
-		var ragConfiguration = getRAGConfiguration(name);
-
-		sessionFactory.withTransaction(
-				session ->
-					ragConfigurationService.deleteById(session, ragConfiguration.getId())
 			)
 			.await()
 			.indefinitely();
