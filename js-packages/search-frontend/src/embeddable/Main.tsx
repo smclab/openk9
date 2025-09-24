@@ -4,10 +4,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { useQuery } from "react-query";
-import { useQuery } from "react-query";
 import { ActiveFilter } from "../components/ActiveFilters";
-import { CalendarMobile } from "../components/CalendarModal";
-import { ChangeLanguage } from "../components/ChangeLanguage";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import {
