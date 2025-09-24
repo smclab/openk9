@@ -14,9 +14,8 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving uploaded documents."""
 
     opensearch_host: str
-    grpc_host_datasource: str
     grpc_host_embedding: str
-    virtual_host: str
+    embedding_model_configuration: dict
     uploaded_documents_index: str
     retrieve_type: str
     user_id: str
@@ -35,9 +34,8 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
         }
 
         embedded_query = documents_embedding(
-            grpc_host_datasource=self.grpc_host_datasource,
             grpc_host_embedding=self.grpc_host_embedding,
-            virtual_host=self.virtual_host,
+            embedding_model_configuration=self.embedding_model_configuration,
             document=document,
         )
 
