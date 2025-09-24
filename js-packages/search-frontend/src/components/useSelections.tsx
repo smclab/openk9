@@ -7,54 +7,75 @@ import {
 } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
-import { queryStringValues } from "../embeddable/entry";
+import { queryStringMapType, queryStringValues } from "../embeddable/entry";
+
+type Range = [number, number];
 
 export function useSelections({
   useKeycloak = true,
   useQueryString = true,
   defaultString = "",
   queryStringValues,
+  queryStringMap,
 }: {
   useKeycloak?: boolean;
   useQueryString?: boolean;
   defaultString?: string;
   queryStringValues: queryStringValues;
+  queryStringMap?: queryStringMapType;
 }) {
-  const defaultSearch = {
+  const defaultSearch: SelectionsState = {
     text: defaultString,
     selection: [],
     textOnChange: defaultString,
     filters: [],
+    range: [0, 10],
+    commitId: 0,
   };
 
+  const remappedQueryStringMap: queryStringMapType = {
+    keyObj: queryStringMap?.keyObj,
+    text: queryStringValues?.find((k) => k === "text")
+      ? queryStringMap?.text
+      : undefined,
+    textOnChange: queryStringValues?.find((k) => k === "textOnChange")
+      ? queryStringMap?.textOnChange
+      : undefined,
+    selection: queryStringValues?.find((k) => k === "selection")
+      ? queryStringMap?.selection
+      : undefined,
+    filters: queryStringValues?.find((k) => k === "filters")
+      ? queryStringMap?.filters
+      : undefined,
+  };
   const [state, dispatch] = React.useReducer(
     reducer,
     defaultSearch,
-    (defaultSearch) => loadQueryString<SelectionsState>(defaultSearch),
+    (defaultSearch) =>
+      loadQueryString<SelectionsState>(defaultSearch, remappedQueryStringMap),
   );
 
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
+
   React.useEffect(() => {
     if (useKeycloak && client.authInit) {
-      client.authInit.then(() => {
-        setCanSave(true);
-      });
-    } else {
-      if (!useKeycloak) {
-        setCanSave(true);
-      }
+      client.authInit.then(() => setCanSave(true));
+    } else if (!useKeycloak) {
+      setCanSave(true);
     }
   }, []);
+
   React.useEffect(() => {
     if (useKeycloak && canSave && useQueryString) {
-      saveQueryString(state, queryStringValues);
+      saveQueryString(state, remappedQueryStringMap);
     } else {
       if (!useKeycloak && useQueryString) {
-        saveQueryString(state, queryStringValues);
+        saveQueryString(state, remappedQueryStringMap);
       }
     }
   }, [canSave, state]);
+
   return [state, dispatch] as const;
 }
 
@@ -63,37 +84,27 @@ export type SelectionsState = {
   selection: Array<Selection>;
   textOnChange: string;
   filters: SearchToken[];
-};
-
-const initial: SelectionsState = {
-  text: "",
-  selection: [],
-  textOnChange: "",
-  filters: [],
+  range: Range;
+  commitId: number;
 };
 
 export type SelectionsAction =
-  | {
-      type: "set-text";
-      text: string;
-      textOnchange: string;
-    }
-  | {
-      type: "set-text-btn";
-      textOnchange: string;
-    }
+  | { type: "set-text"; text: string; textOnchange: string; pageSize?: number }
+  | { type: "set-text-btn"; textOnchange: string }
   | { type: "reset-search" }
   | {
       type: "set-selection";
       replaceText: boolean;
       selection: Selection;
-      textEntity?: string | string | undefined;
+      textEntity?: string;
     }
   | { type: "remove-filter"; filter: SearchToken }
-  | { type: "set-filters"; filter: any }
-  | { type: "reset-filters" };
+  | { type: "set-filters"; filter: SearchToken }
+  | { type: "reset-filters" }
+  | { type: "set-range"; range: Range }
+  | { type: "set-page-size"; pageSize: number };
 
-type Selection = {
+export type Selection = {
   text: string;
   textOnChange: string;
   start: number;
@@ -108,21 +119,26 @@ function reducer(
 ): SelectionsState {
   switch (action.type) {
     case "set-text": {
+      const size =
+        action.pageSize && action.pageSize > 0
+          ? action.pageSize
+          : state.range[1] ?? 10;
       return {
+        ...state,
         text: action.text,
-        filters: state.filters,
         textOnChange: action.textOnchange,
         selection: shiftSelection(
           state.textOnChange,
           action.textOnchange,
           state.selection,
         ),
+        range: [0, size],
+        commitId: state.commitId + 1,
       };
     }
     case "set-text-btn": {
       return {
-        text: state.text,
-        filters: state.filters,
+        ...state,
         textOnChange: action.textOnchange,
         selection: shiftSelection(
           state.textOnChange,
@@ -133,10 +149,12 @@ function reducer(
     }
     case "reset-search": {
       return {
+        ...state,
         text: "",
         textOnChange: "",
-        filters: state.filters,
         selection: [],
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
       };
     }
     case "set-selection": {
@@ -151,12 +169,10 @@ function reducer(
                 action.selection.start,
                 action.selection.end,
               ) as string);
-
           const text =
             state.textOnChange?.slice(0, action.selection.start) +
             tokenText +
             state.textOnChange?.slice(action.selection.end);
-
           const selection: Selection | null =
             action.selection.token?.tokenType === "AUTOCORRECT"
               ? null
@@ -168,20 +184,16 @@ function reducer(
                   token: action.selection.token,
                   isAuto: action.selection.isAuto,
                 };
-
-          return {
-            text,
-            selection,
-          };
+          return { text, selection };
         } else {
           return { text: state.text, selection: action.selection };
         }
       })();
 
       return {
-        text: text,
+        ...state,
+        text,
         textOnChange: text,
-        filters: state.filters,
         selection: shiftSelection(
           state.textOnChange || "",
           state.textOnChange || "",
@@ -189,22 +201,24 @@ function reducer(
             ? state.selection.filter((s) => !isOverlapping(s, selection))
             : state.selection,
         ).concat(selection ? [selection] : []),
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
       };
     }
     case "set-filters": {
       return {
-        text: state.text,
-        textOnChange: state.textOnChange,
+        ...state,
         filters: [...state.filters, action.filter],
-        selection: state.selection,
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
       };
     }
     case "reset-filters": {
       return {
-        text: state.text,
-        textOnChange: state.textOnChange,
+        ...state,
         filters: [],
-        selection: state.selection,
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
       };
     }
     case "remove-filter": {
@@ -221,12 +235,24 @@ function reducer(
         return true;
       });
       return {
-        filters: filters,
-        textOnChange: state.textOnChange,
-        selection: state.selection,
-        text: state.text,
+        ...state,
+        filters,
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
       };
     }
+    case "set-range": {
+      return { ...state, range: action.range };
+    }
+    case "set-page-size": {
+      const size =
+        action.pageSize && action.pageSize > 0
+          ? action.pageSize
+          : state.range[1];
+      return { ...state, range: [0, size], commitId: state.commitId + 1 };
+    }
+    default:
+      return state;
   }
 }
 
@@ -235,66 +261,47 @@ function shiftSelection(
   nextText: string,
   prevSelection: Array<Selection>,
 ): Array<Selection> {
-  if (prevText === nextText) {
-    return prevSelection;
-  }
+  if (prevText === nextText) return prevSelection;
   const commonPrefixLength = findCommonPrefixLength(prevText, nextText);
   const commonSuffixLength = findCommonSuffixLength(
     prevText,
     nextText,
     commonPrefixLength,
   );
-  const changeStart = commonPrefixLength;
   const changePrevEnd = prevText.length - commonSuffixLength;
   const changeNextEnd = nextText.length - commonSuffixLength;
   const changeDelta = changeNextEnd - changePrevEnd;
   const prefixAttributes = prevSelection.filter(
-    (attribute) =>
-      attribute.start <= changeStart && attribute.end <= changeStart,
+    (a) => a.start <= commonPrefixLength && a.end <= commonPrefixLength,
   );
-  // const deletedAttributes = prevSelection.filter(
-  //   (attribute) =>
-  //     !(attribute.start <= changeStart && attribute.end <= changeStart) &&
-  //     !(attribute.start >= changePrevEnd),
-  // );
   const suffixAttributes = prevSelection
-    .filter((attribute) => attribute.start >= changePrevEnd)
-    .map((attribute) => ({
-      ...attribute,
-      start: attribute.start + changeDelta,
-      end: attribute.end + changeDelta,
+    .filter((a) => a.start >= changePrevEnd)
+    .map((a) => ({
+      ...a,
+      start: a.start + changeDelta,
+      end: a.end + changeDelta,
     }));
   return prefixAttributes.concat(suffixAttributes);
 }
 
 function findCommonPrefixLength(a: string, b: string) {
   const length = Math.min(a.length, b.length);
-  let prefixLength = 0;
-  for (
-    ;
-    prefixLength < length &&
-    a.charCodeAt(prefixLength) === b.charCodeAt(prefixLength);
-    ++prefixLength
-  ) {}
-
-  return prefixLength;
+  let i = 0;
+  for (; i < length && a.charCodeAt(i) === b.charCodeAt(i); ++i) {}
+  return i;
 }
 
 function findCommonSuffixLength(a: string, b: string, startFromIndex: number) {
   const length = Math.min(a.length, b.length) - startFromIndex;
-  if (length <= 0) {
-    return 0;
-  }
-  let suffixLength = 0;
+  if (length <= 0) return 0;
+  let i = 0;
   for (
     ;
-    suffixLength < length &&
-    a.charCodeAt(a.length - suffixLength - 1) ===
-      b.charCodeAt(b.length - suffixLength - 1);
-    ++suffixLength
+    i < length &&
+    a.charCodeAt(a.length - i - 1) === b.charCodeAt(b.length - i - 1);
+    ++i
   ) {}
-
-  return suffixLength;
+  return i;
 }
 
 function getTokenText(token: AnalysisToken) {
@@ -332,7 +339,7 @@ export function getAutoSelections(
     .filter((entry, index, autoSelections) => {
       return selection
         .concat(autoSelections.slice(0, index))
-        .every((selection) => !isOverlapping(entry, selection));
+        .every((s) => !isOverlapping(entry, s));
     });
 }
 

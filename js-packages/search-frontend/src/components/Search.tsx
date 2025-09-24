@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { TokenSelect } from "../components/TokenSelect";
 import { characterControlType, Configuration } from "../embeddable/entry";
-import { AnalysisResponseEntry, AnalysisToken, SearchToken } from "./client";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,7 @@ type SearchProps = {
   characterControl?: characterControlType;
   callbackChangeSearch?(text: string): void;
 };
+
 export function Search({
   configuration,
   spans,
@@ -56,6 +57,7 @@ export function Search({
     selectionStart: number;
     selectionEnd: number;
   }>({ selectionStart: 0, selectionEnd: 0 });
+
   React.useLayoutEffect(() => {
     if (inputRef.current) {
       inputRef.current.selectionStart = adjustedSelection.selectionStart;
@@ -65,7 +67,7 @@ export function Search({
 
   const { setText, search, clearSearch } = setValueSearch({
     isBtn: btnSearch,
-    selectionsDispatch: selectionsDispatch,
+    selectionsDispatch,
     characterControl,
     actionSearch: characterControl?.actionCharacter,
   });
@@ -142,11 +144,8 @@ export function Search({
                     span.tokens.length > 0;
                   const optionIndex = openedDropdown?.optionPosition ?? null;
                   const selection = selectionsState.selection.find(
-                    (selection) =>
-                      selection.start === span.start &&
-                      selection.end === span.end,
+                    (s) => s.start === span.start && s.end === span.end,
                   );
-
                   const selected = selection?.token ?? null;
                   const onSelect = (token: AnalysisToken | null): void => {
                     selectionsDispatch({
@@ -172,11 +171,9 @@ export function Search({
                     }
                   };
                   const isAutoSelected = selection?.isAuto ?? false;
-                  const onOptionIndexChange = (optionIndex: number) => {
-                    setOpenedDropdown((openedDropdown) =>
-                      openedDropdown
-                        ? { ...openedDropdown, optionPosition: optionIndex }
-                        : openedDropdown,
+                  const onOptionIndexChange = (i: number) => {
+                    setOpenedDropdown((o) =>
+                      o ? { ...o, optionPosition: i } : o,
                     );
                   };
                   return (
@@ -207,15 +204,8 @@ export function Search({
                   height: 1px;
                   width: 1px;
                   overflow: hidden;
-                  clip: rect(
-                    1px 1px 1px 1px
-                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-                  clip: rect(
-                    1px,
-                    1px,
-                    1px,
-                    1px
-                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip: rect(1px 1px 1px 1px);
+                  clip: rect(1px, 1px, 1px, 1px);
                   clip-path: inset(50%);
                   white-space: nowrap;
                 `}
@@ -277,9 +267,9 @@ export function Search({
                 const span =
                   openedDropdown &&
                   spans.find(
-                    (span) =>
-                      openedDropdown.textPosition > span.start &&
-                      openedDropdown.textPosition <= span.end,
+                    (s) =>
+                      openedDropdown.textPosition > s.start &&
+                      openedDropdown.textPosition <= s.end,
                   );
                 const option =
                   openedDropdown &&
@@ -311,9 +301,7 @@ export function Search({
                   inputRef &&
                     inputRef.current &&
                     search(inputRef?.current?.value || "");
-                  if (actionOnClick) {
-                    actionOnClick();
-                  }
+                  if (actionOnClick) actionOnClick();
                   if (span && option) {
                     selectionsDispatch({
                       type: "set-selection",
@@ -363,15 +351,8 @@ export function Search({
                   height: 1px;
                   width: 1px;
                   overflow: hidden;
-                  clip: rect(
-                    1px 1px 1px 1px
-                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-                  clip: rect(
-                    1px,
-                    1px,
-                    1px,
-                    1px
-                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip: rect(1px 1px 1px 1px);
+                  clip: rect(1px, 1px, 1px, 1px);
                   clip-path: inset(50%);
                   white-space: nowrap;
                 `}
@@ -437,7 +418,7 @@ export function Search({
               onClick={() => {
                 inputRef &&
                   inputRef.current &&
-                  search(inputRef?.current?.value || "");
+                  search(inputRef.current.value || "");
                 if (actionOnClick) actionOnClick();
               }}
             >
@@ -473,20 +454,21 @@ function setValueSearch({
     !isBtn
       ? selectionsDispatch({
           type: "set-text",
-          text: text,
+          text,
           textOnchange: text,
         })
       : selectionsDispatch({
           type: "set-text-btn",
           textOnchange: text,
         });
+
   const search = (text: string) => {
     (!characterControl?.numberOfCharacters ||
       text === "" ||
       text.length > characterControl.numberOfCharacters) &&
       selectionsDispatch({
         type: "set-text",
-        text: text,
+        text,
         textOnchange: text,
       });
     if (
@@ -497,10 +479,12 @@ function setValueSearch({
       actionSearch && actionSearch();
     }
   };
+
   const clearSearch = () =>
     selectionsDispatch({
       type: "reset-search",
     });
+
   return { setText, search, clearSearch };
 }
 

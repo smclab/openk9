@@ -21,8 +21,8 @@ import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
 import { User } from "./svgElement/UserSvg";
 import { CloseIcon } from "./svgElement/CloseSvg";
 
-const isKeycloakEnabled = process.env.REACT_APP_KEYCLOAK_ENABLED === "true";
-const isChatbotEnabled = process.env.REACT_APP_CHATBOT_ENABLED === "true";
+const isKeycloakEnabled = true;
+const isChatbotEnabled = true;
 
 export const openk9 = new OpenK9({
   enabled: true,

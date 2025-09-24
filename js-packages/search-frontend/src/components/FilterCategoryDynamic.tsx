@@ -14,6 +14,7 @@ import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
 import { Logo } from "./Logo";
+import { useRange } from "./useRange";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -56,6 +57,7 @@ function FilterCategoryDynamic({
   haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState("");
+
   const suggestions = useInfiniteSuggestions(
     isDynamicElement,
     tokens,
@@ -711,6 +713,8 @@ function CheckBoxSelect({
   tokens: SearchToken[];
   onRemove: (searchToken: SearchToken) => void;
 }) {
+  const { resetPage } = useRange();
+
   return (
     <React.Fragment>
       <input
@@ -725,8 +729,10 @@ function CheckBoxSelect({
         onChange={(event) => {
           if (event.currentTarget.checked) {
             onAdd(asSearchToken);
+            resetPage();
           } else {
             onRemove(asSearchToken);
+            resetPage();
           }
         }}
         css={css`

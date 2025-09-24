@@ -1,4 +1,3 @@
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
@@ -14,8 +13,9 @@ import {
   SortField,
   useOpenK9Client,
 } from "./client";
-import styled from "styled-components";
 import { Renderers, useRenderers } from "./useRenderers";
+import { SelectionsAction, SelectionsState } from "./useSelections";
+import { useRange } from "./useRange";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -23,6 +23,8 @@ export type ResultsDisplayMode =
   | { type: "virtual" };
 
 type ResultsProps<E> = {
+  state: SelectionsState;
+  dispatch: React.Dispatch<SelectionsAction>;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E>): void;
   displayMode: ResultsDisplayMode;
@@ -34,13 +36,14 @@ type ResultsProps<E> = {
   language: string;
   sortAfterKey: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
-  numberOfResults: number;
-  pagination: number;
-  currentPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  pageSize?: number;
+  initialPage?: number;
   callback?: () => void;
 };
+
 function ResultsPagination<E>({
+  state,
+  dispatch,
   displayMode,
   onDetail,
   searchQuery,
@@ -52,47 +55,48 @@ function ResultsPagination<E>({
   language,
   sortAfterKey,
   setTotalResult,
-  numberOfResults,
-  pagination,
-  currentPage,
-  setCurrentPage,
+  pageSize = 10,
+  initialPage = 0,
   callback,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
-
   if (!renderers) return null;
-  switch (displayMode.type) {
-    case "finite":
-    case "virtual":
-    case "infinite":
-      return (
-        <React.Suspense>
-          <InfiniteResults
-            setTotalResult={setTotalResult}
-            renderers={renderers}
-            searchQuery={searchQuery}
-            onDetail={onDetail}
-            setDetailMobile={setDetailMobile}
-            sort={sort}
-            setSortResult={setSortResult}
-            isMobile={isMobile}
-            overChangeCard={overChangeCard}
-            language={language}
-            sortAfterKey={sortAfterKey}
-            numberOfResults={numberOfResults}
-            currentPage={currentPage}
-            elementForPage={pagination}
-            setCurrentPage={setCurrentPage}
-            callback={callback}
-          />
-        </React.Suspense>
-      );
-  }
+
+  const bootstrappedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (bootstrappedRef.current) return;
+    const size = pageSize ?? state.range[1];
+    const page = initialPage ?? 0;
+    dispatch({ type: "set-range", range: [page * size, size] });
+    bootstrappedRef.current = true;
+  }, [initialPage, pageSize, dispatch, state.range]);
+
+  return (
+    <React.Suspense fallback={<SkeletonResult />}>
+      <InfiniteResults
+        state={state}
+        setTotalResult={setTotalResult}
+        renderers={renderers}
+        searchQuery={searchQuery}
+        onDetail={onDetail}
+        setDetailMobile={setDetailMobile}
+        sort={sort}
+        setSortResult={setSortResult}
+        isMobile={isMobile}
+        overChangeCard={overChangeCard}
+        language={language}
+        sortAfterKey={sortAfterKey}
+        callback={callback}
+      />
+    </React.Suspense>
+  );
 }
 
 export const ResultsPaginationMemo = React.memo(ResultsPagination);
 
-type ResulListProps<E> = {
+type InfiniteResultsProps<E> = {
+  state: SelectionsState;
   renderers: Renderers;
   searchQuery: Array<SearchToken>;
   onDetail(result: GenericResultItem<E> | null): void;
@@ -103,17 +107,12 @@ type ResulListProps<E> = {
   overChangeCard?: boolean;
   language: string;
   setTotalResult: React.Dispatch<React.SetStateAction<number | null>>;
-};
-
-type InfiniteResultsProps<E> = ResulListProps<E> & {
   sortAfterKey: string;
-  numberOfResults: number;
-  currentPage: number;
-  elementForPage: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   callback?: () => void;
 };
+
 export function InfiniteResults<E>({
+  state,
   renderers,
   searchQuery,
   onDetail,
@@ -124,191 +123,72 @@ export function InfiniteResults<E>({
   language,
   sortAfterKey,
   setTotalResult,
-  currentPage,
-  numberOfResults,
-  elementForPage,
   callback,
-  setCurrentPage,
 }: InfiniteResultsProps<E>) {
-  const result = currentPage * elementForPage;
+  const [offset, elementForPage] = state.range;
+  const { setNumberOfResults } = useRange();
+
   const results = useInfiniteResults<E>(
+    state,
     searchQuery,
     sort,
     language,
     sortAfterKey,
     elementForPage,
-    result,
+    offset,
   );
 
-  const itemsPerPage = 3; // Numero di elementi per pagina
-  const pagesToShow = 3; // Numero di pagine da mostrare per volta
-  const partialResult = numberOfResults / elementForPage;
-  const numberOfPage = Math.ceil(partialResult);
-  const [viewButton, setViewButton] = React.useState({
-    start: currentPage,
-    end: itemsPerPage,
-  });
-
   React.useEffect(() => {
-    if (currentPage === 0) {
-      resetClick();
-    }
-  }, [currentPage]);
-
-  const handlePrevClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: Math.max(view.start - pagesToShow, 0),
-      end: Math.max(view.end - pagesToShow, itemsPerPage),
-    }));
-  };
-
-  const resetClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: 0,
-      end: pagesToShow,
-    }));
-  };
-
-  const resetEndClick = (paginationMax: number) => {
-    setViewButton((view) => ({
-      ...view,
-      start: paginationMax - pagesToShow,
-      end: paginationMax,
-    }));
-  };
-
-  const handleNextClick = () => {
-    setViewButton((view) => ({
-      ...view,
-      start: Math.min(view.start + pagesToShow, numberOfPage - pagesToShow),
-      end: Math.min(view.end + pagesToShow, numberOfPage),
-    }));
-  };
-
-  setTotalResult(results.data?.pages[0].total ?? null);
+    const total = results.data?.pages[0]?.total ?? 0;
+    setTotalResult(total);
+    setNumberOfResults(total);
+  }, [results.data, setTotalResult, setNumberOfResults]);
 
   return (
-    <React.Fragment>
-      <div style={{ overflowX: "hidden" }} className="scroll">
-        {results?.data?.pages[0].total && results.data.pages[0].total > 0 ? (
-          <div
-            className="openk9-infinite-results-container-wrapper"
-            css={css`
-              padding-bottom: 16px;
-              ::-webkit-scrollbar {
-                width: 10px;
-              }
-
-              /* Track */
-              ::-webkit-scrollbar-track {
-                box-shadow: inset 0 0 5px grey;
-                border-radius: 10px;
-              }
-
-              /* Handle */
-              ::-webkit-scrollbar-thumb {
-                background: gray;
-                border-radius: 10px;
-                height: 5px;
-              }
-
-              /* Handle on hover */
-              ::-webkit-scrollbar-thumb:hover {
-                background: black;
-                height: 5px;
-              }
-            `}
-          >
-            {results.data?.pages.map((page, pageIndex) => {
-              return (
-                <React.Fragment key={pageIndex}>
-                  {page.result.map((result, resultIndex) => {
-                    return (
-                      <ResultMemo<E>
-                        renderers={renderers}
-                        key={resultIndex}
-                        result={result}
-                        onDetail={onDetail}
-                        setDetailMobile={setDetailMobile}
-                        isMobile={isMobile}
-                        overChangeCard={overChangeCard}
-                      />
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
-            <React.Fragment>
-              <div
-                className="openk9-container-button-for-pagination"
-                css={css`
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  margin-top: 10px;
-                  gap: 10px;
-                `}
-              >
-                <PaginationsButton
-                  onClick={resetClick}
-                  disabled={viewButton.start === 0}
-                  aria-label="bottone per mostrare le prime pagine"
-                >
-                  {"<<"}
-                </PaginationsButton>
-                <PaginationsButton
-                  onClick={handlePrevClick}
-                  disabled={viewButton.start === 0}
-                >
-                  {"<"}
-                </PaginationsButton>
-                {Array.from({ length: numberOfPage }).map(
-                  (_, index) =>
-                    ((index === viewButton.start && index === viewButton.end) ||
-                      (index >= viewButton.start &&
-                        index < viewButton.end)) && (
-                      <PaginationsButton
-                        key={index}
-                        onClick={() => {
-                          results.fetchNextPage();
-                          setCurrentPage(index);
-                          callback && callback();
-                        }}
-                        isActive={currentPage === index}
-                        aria-label={
-                          "clicca per vedere la " + (index + 1) + " pagina"
-                        }
-                      >
-                        {"" + (index + 1)}
-                      </PaginationsButton>
-                    ),
-                )}
-                <PaginationsButton
-                  onClick={handleNextClick}
-                  disabled={viewButton.end >= numberOfPage}
-                  aria-label="bottone per mostrare le tre pagine successive"
-                >
-                  {">"}
-                </PaginationsButton>
-                <PaginationsButton
-                  onClick={() => resetEndClick(numberOfPage)}
-                  disabled={viewButton.end >= numberOfPage}
-                  aria-label="bottone per mostrare le ultime tre pagine"
-                >
-                  {">>"}
-                </PaginationsButton>
-              </div>
+    <div style={{ overflowX: "hidden" }} className="scroll">
+      {results.data?.pages[0]?.total ?? 0 > 0 ? (
+        <div
+          className="openk9-infinite-results-container-wrapper"
+          css={css`
+            padding-bottom: 16px;
+            ::-webkit-scrollbar {
+              width: 10px;
+            }
+            ::-webkit-scrollbar-track {
+              box-shadow: inset 0 0 5px grey;
+              border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb {
+              background: gray;
+              border-radius: 10px;
+              height: 5px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+              background: black;
+              height: 5px;
+            }
+          `}
+        >
+          {results?.data?.pages.map((page, pageIndex) => (
+            <React.Fragment key={pageIndex}>
+              {page.result.map((result, resultIndex) => (
+                <ResultMemo<E>
+                  renderers={renderers}
+                  key={resultIndex}
+                  result={result}
+                  onDetail={onDetail}
+                  setDetailMobile={setDetailMobile}
+                  isMobile={isMobile}
+                  overChangeCard={overChangeCard}
+                />
+              ))}
             </React.Fragment>
-          </div>
-        ) : (
-          <React.Fragment>
-            <NoResults />
-          </React.Fragment>
-        )}
-      </div>
-    </React.Fragment>
+          ))}
+        </div>
+      ) : (
+        <NoResults />
+      )}
+    </div>
   );
 }
 
@@ -333,31 +213,57 @@ function NoResults() {
   );
 }
 
-function useInfiniteResults<E>(
+export function useInfiniteResults<E>(
+  state: SelectionsState,
   searchQuery: Array<SearchToken>,
   sort: SortField[],
   language: string,
   sortAfterKey: string,
   elementForPage: number,
-  result: number,
+  offset: number,
 ) {
-  const pageSize = elementForPage;
   const client = useOpenK9Client();
+  const suppressIntermediate = React.useMemo(
+    () => state.text.trim().length > 0 && searchQuery.length === 0,
+    [state.text, searchQuery],
+  );
 
   return useInfiniteQuery(
-    ["results", searchQuery, sort, language, sortAfterKey, result] as const,
-    async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
-      const RangePage: [number, number] =
-        sortAfterKey === "" ? [result, pageSize] : [0, pageSize];
+    [
+      "results",
+      searchQuery,
+      sort,
+      language,
+      sortAfterKey,
+      offset,
+      elementForPage,
+    ] as const,
+    async ({ queryKey }) => {
+      const [
+        ,
+        qSearchQuery,
+        qSort,
+        qLanguage,
+        qSortAfterKey,
+        qOffset,
+        qElementForPage,
+      ] = queryKey;
+
+      const range: [number, number] =
+        qSortAfterKey === ""
+          ? [qOffset, qElementForPage]
+          : [0, qElementForPage];
+
       return client.doSearch<E>({
-        range: RangePage,
-        language,
-        searchQuery,
-        sort,
-        sortAfterKey: sortAfterKey || "",
+        range,
+        language: qLanguage,
+        searchQuery: qSearchQuery,
+        sort: qSort,
+        sortAfterKey: qSortAfterKey || "",
       });
     },
     {
+      enabled: elementForPage > 0 && !suppressIntermediate,
       keepPreviousData: false,
       suspense: true,
       notifyOnChangeProps: ["isFetching"],
@@ -367,14 +273,13 @@ function useInfiniteResults<E>(
 
 export function SkeletonResult() {
   return (
-    <React.Fragment>
-      {new Array(3).fill(null).map((_, index) => (
+    <>
+      {Array.from({ length: 3 }).map((_, index) => (
         <div
           className="openk9-embeddable-search--result-container openk9-skeleton-container--result-container"
           key={index}
         >
           <div
-            className=""
             css={css`
               display: flex;
               justify-content: space-between;
@@ -397,20 +302,6 @@ export function SkeletonResult() {
           </div>
         </div>
       ))}
-    </React.Fragment>
+    </>
   );
 }
-
-const PaginationsButton = styled.button<{
-  isActive?: boolean;
-}>`
-  ${({ isActive = false }) => `
-        padding: 4px 8px !important;
-        background: ${isActive ? "#c83939" : "white"};
-        border-radius: 50px;
-        border: 1px solid #c83939;
-        font-size: 15px;
-        cursor: pointer;
-        color: ${isActive ? "white" : "#c83939"};
-  `}
-`;

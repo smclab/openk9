@@ -376,6 +376,18 @@ export type IconsCustom =
   | null
   | undefined;
 
+export type queryStringMapType =
+  | ({
+      keyObj?: string | null | undefined;
+    } & Partial<{
+      text: string;
+      textOnChange: string;
+      filters: string;
+      selection: string;
+    }>)
+  | null
+  | undefined;
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -435,6 +447,7 @@ export type Configuration = {
   generateResponse: Element | string | null;
   login: Element | string | null;
   queryStringValues: queryStringValues;
+  queryStringMap: queryStringMapType;
   results: Element | string | null;
   search: Element | string | null;
   searchWithButton: Element | string | null;
@@ -512,6 +525,7 @@ const defaultConfiguration: Configuration = {
   numberResult: null,
   numberResultOfFilters: null,
   queryStringValues: null,
+  queryStringMap: null,
   removeFilters: null,
   removeFiltersConfigurable: null,
   resultList: null,

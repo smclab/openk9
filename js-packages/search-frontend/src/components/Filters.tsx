@@ -1,17 +1,16 @@
 import React from "react";
-import { css } from "styled-components/macro";
-import { SearchToken, SortField } from "./client";
-import { useOpenK9Client } from "./client";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "react-query";
-import { useInfiniteResults } from "./ResultList";
-import { Logo } from "./Logo";
+import { css } from "styled-components/macro";
+import { IconsCustom } from "../embeddable/entry";
+import { SearchToken, SortField, useOpenK9Client } from "./client";
 import {
   FilterCategoryDynamicMemo,
   WhoIsDynamic,
 } from "./FilterCategoryDynamic";
-import { useTranslation } from "react-i18next";
+import { Logo } from "./Logo";
+import { useInfiniteResults } from "./ResultList";
 import CustomSkeleton from "./Skeleton";
-import { IconsCustom } from "../embeddable/entry";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -52,6 +51,7 @@ function Filters({
   haveSearch = true,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
+
   const [lastSearchQueryWithResults, setLastSearchQueryWithResults] =
     React.useState(searchQuery);
   const { isPreviousData } = useInfiniteResults(

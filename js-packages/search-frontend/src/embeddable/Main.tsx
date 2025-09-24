@@ -1,16 +1,45 @@
+import i18next from "i18next";
+import _, { isEqual } from "lodash";
 import React from "react";
 import ReactDOM from "react-dom";
-import { useDebounce } from "../components/useDebounce";
+import { I18nextProvider, useTranslation } from "react-i18next";
+import { useQuery } from "react-query";
+import { ActiveFilter } from "../components/ActiveFilters";
+import { CalendarMobile } from "../components/CalendarModal";
+import { ChangeLanguage } from "../components/ChangeLanguage";
+import {
+  DataRangePicker,
+  resetFilterCalendar,
+} from "../components/DateRangePicker";
+import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { DetailMemo } from "../components/Detail";
+import { DetailMobileMemo } from "../components/DetailMobile";
+import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
+import { FiltersMemo, SkeletonFilters } from "../components/Filters";
+import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
+import { FiltersMobileMemo } from "../components/FiltersMobile";
+import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
+import GenerateResponse from "../components/GenerateResponse";
+import ListPaginations from "../components/ListPaginations";
+import { LoginInfoComponentMemo } from "../components/LoginInfo";
+import { RemoveFilters } from "../components/RemoveFilters";
 import { ResultsMemo } from "../components/ResultList";
 import {
-  SelectionsAction,
-  SelectionsState,
-  getAutoSelections,
-  isOverlapping,
-  useSelections,
-} from "../components/useSelections";
-import { LoginInfoComponentMemo } from "../components/LoginInfo";
+  ResultsPaginationMemo,
+  SkeletonResult,
+} from "../components/ResultListPagination";
+import { Search } from "../components/Search";
+import { SearchMobile } from "../components/SearchMobile";
+import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
+import SelectComponent from "../components/Select";
+import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
+import CustomSkeleton from "../components/Skeleton";
+import { SortResultListMemo } from "../components/SortResultList";
+import { SortResultListCustomMemo } from "../components/SortResultListCustom";
+import SortResults, { Options } from "../components/SortResults";
+import { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
+import { TotalResults } from "../components/TotalResults";
+import { TotalResultsMobile } from "../components/TotalResultsMobile";
 import {
   AnalysisRequest,
   AnalysisRequestEntry,
@@ -19,47 +48,19 @@ import {
   AnalysisToken,
   GenericResultItem,
   SearchToken,
+  useOpenK9Client,
 } from "../components/client";
-import { Configuration, ConfigurationUpdateFunction } from "./entry";
-import TabsSkeleton, { Tab, TabsMemo, useTabTokens } from "../components/Tabs";
-import { FiltersMemo, SkeletonFilters } from "../components/Filters";
-import { SimpleErrorBoundary } from "../components/SimpleErrorBoundary";
-import { Search } from "../components/Search";
-import { useOpenK9Client } from "../components/client";
-import { useQuery } from "react-query";
-import { SortResultListMemo } from "../components/SortResultList";
-import { FiltersHorizontalMemo } from "../components/FiltersHorizontal";
-import { DetailMobileMemo } from "../components/DetailMobile";
-import "../i18n";
-import { I18nextProvider, useTranslation } from "react-i18next";
-import i18next from "i18next";
-import { ActiveFilter } from "../components/ActiveFilters";
-import { FiltersMobileMemo } from "../components/FiltersMobile";
-import { FiltersMobileLiveChangeMemo } from "../components/FiltersMobileLiveChange";
-import {
-  DataRangePicker,
-  resetFilterCalendar,
-} from "../components/DateRangePicker";
-import { SearchMobile } from "../components/SearchMobile";
-import { CalendarMobile } from "../components/CalendarModal";
-import { ChangeLanguage } from "../components/ChangeLanguage";
-import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
-import { TotalResults } from "../components/TotalResults";
-import { TotalResultsMobile } from "../components/TotalResultsMobile";
-import {
-  ResultsPaginationMemo,
-  SkeletonResult,
-} from "../components/ResultListPagination";
-import _, { isEqual } from "lodash";
-import { RemoveFilters } from "../components/RemoveFilters";
-import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
-import SelectComponent from "../components/Select";
-import SortResults, { Options } from "../components/SortResults";
-import { SearchWithSuggestions } from "../components/SearchWithSuggestions";
-import GenerateResponse from "../components/GenerateResponse";
-import { SortResultListCustomMemo } from "../components/SortResultListCustom";
+import { useDebounce } from "../components/useDebounce";
 import { useRange } from "../components/useRange";
-import CustomSkeleton from "../components/Skeleton";
+import {
+  SelectionsAction,
+  SelectionsState,
+  getAutoSelections,
+  isOverlapping,
+  useSelections,
+} from "../components/useSelections";
+import "../i18n";
+import { Configuration, ConfigurationUpdateFunction } from "./entry";
 
 type MainProps = {
   configuration: Configuration;
@@ -76,6 +77,7 @@ export function Main({
   //retrieving information from the configuration.
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
   const memoryResults = configuration.memoryResults || false;
+  const queryStringMap = configuration.queryStringMap || null;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
   const useGenerativeApi = configuration.useGenerativeApi;
@@ -100,7 +102,7 @@ export function Main({
   };
 
   //state
-  const [currentPage, setCurrentPage] = React.useState<number>(0);
+  const { numberOfResults: numberOfResultsSearch } = useRange();
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
@@ -110,13 +112,16 @@ export function Main({
     useQueryString,
     defaultString: configuration.defaultString || "",
     queryStringValues,
+    queryStringMap,
   });
+
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
     useSelections({
       useKeycloak,
       useQueryString,
       defaultString: configuration.defaultString || "",
       queryStringValues,
+      queryStringMap,
     });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);
@@ -142,7 +147,9 @@ export function Main({
     tabTokens,
     sortList,
     setSort,
+    isLoadingTab,
   } = useTabs(configuration.overrideTabs, languageSelect);
+
   const { resetSort, setSelectedSort } = useSortResult({
     configuration,
     onConfigurationChange,
@@ -166,7 +173,6 @@ export function Main({
       filterTokens,
       dateTokens,
       onQueryStateChange,
-      setCurrentPage,
       selectionsState,
       selectionsDispatch,
       retrieveType,
@@ -242,7 +248,8 @@ export function Main({
     dynamicFilters.isLoading ||
     languageQuery.isLoading ||
     whoIsDynamicResponse.isLoading ||
-    languages.isLoading;
+    languages.isLoading ||
+    isLoadingTab;
 
   return (
     <React.Fragment>
@@ -295,7 +302,6 @@ export function Main({
               const functionCallback =
                 configuration?.searchConfigurable?.actionOnClick;
               if (functionCallback) functionCallback();
-              setCurrentPage(0);
             }}
             callbackClickSearch={
               configuration?.searchConfigurable?.callbackClickSearch
@@ -419,7 +425,10 @@ export function Main({
             onAction={() => {
               const callback = configuration.tabsConfigurable?.onAction;
               if (callback) callback();
-              setCurrentPage(0);
+              selectionsDispatch({
+                type: "set-range",
+                range: [0, selectionsState.range[1]],
+              });
             }}
             scrollMode={configuration.tabsConfigurable?.scrollMode}
             speed={configuration.tabsConfigurable?.speed}
@@ -672,24 +681,32 @@ export function Main({
               isActiveSkeleton && <SkeletonResult />
             )
           ) : (
-            <ResultsPaginationMemo
-              setTotalResult={setTotalResult}
-              displayMode={configuration.resultsDisplayMode}
-              searchQuery={searchQuery}
-              onDetail={setDetail}
-              setDetailMobile={setDetailMobile}
-              sort={completelySort}
-              setSortResult={setSort}
-              isMobile={isMobile}
-              overChangeCard={false}
-              language={languageSelect}
-              sortAfterKey={sortAfterKey}
-              numberOfResults={totalResult || 0}
-              pagination={numberOfResults}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              callback={configuration.resultListPagination?.callback}
-            />
+            <>
+              {JSON.stringify(selectionsState.range)}
+              <ResultsPaginationMemo
+                setTotalResult={setTotalResult}
+                displayMode={configuration.resultsDisplayMode}
+                searchQuery={searchQuery}
+                onDetail={setDetail}
+                setDetailMobile={setDetailMobile}
+                sort={completelySort}
+                setSortResult={setSort}
+                isMobile={isMobile}
+                overChangeCard={false}
+                language={languageSelect}
+                sortAfterKey={sortAfterKey}
+                callback={configuration.resultListPagination?.callback}
+                state={selectionsState}
+                dispatch={selectionsDispatch}
+              />
+              {numberOfResultsSearch > 0 && (
+                <ListPaginations
+                  itemsPerPage={numberOfResults}
+                  state={selectionsState}
+                  dispatch={selectionsDispatch}
+                />
+              )}
+            </>
           )}
         </I18nextProvider>,
         configuration.resultListPagination
@@ -1116,7 +1133,6 @@ function useSearch({
   filterTokens,
   dateTokens,
   onQueryStateChange,
-  setCurrentPage,
   selectionsState,
   selectionsDispatch,
   retrieveType,
@@ -1137,7 +1153,6 @@ function useSearch({
   };
   filterTokens: SearchToken[];
   dateTokens: SearchToken[];
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   onQueryStateChange(queryState: QueryState): void;
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
@@ -1241,7 +1256,7 @@ function useSearch({
       filterTokens,
       searchTokens,
       numberOfFilters: counterTotalFilters,
-      numberOfResults: numberOfResults,
+      numberOfResults,
     });
   }, [
     onQueryStateChange,
@@ -1348,7 +1363,7 @@ function useTabs(
   const tenantTabs = useTabTokens();
 
   const tabs = React.useMemo(
-    () => overrideTabs(tenantTabs),
+    () => overrideTabs(tenantTabs.tab),
     [tenantTabs, overrideTabs, language],
   );
 
@@ -1356,7 +1371,7 @@ function useTabs(
     () => tabs[selectedTabIndex],
     [tabs, selectedTabIndex],
   );
-  const sortList = tabSelected?.sortings;
+  const sortList = tabSelected?.sortings || undefined;
 
   const tabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
@@ -1392,6 +1407,7 @@ function useTabs(
     sortList,
     tabSelected,
     setSort,
+    isLoadingTab: tenantTabs.isLoading,
   };
 }
 

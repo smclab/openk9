@@ -65,27 +65,27 @@ export function OpenK9Client({
     if (callback) {
       callback();
     }
-    if (
-      waitKeycloackForToken &&
-      !keycloak.authenticated &&
-      !useKeycloak &&
-      appendToBody.token === ""
-    ) {
-      await waitForToken();
+
+    let headers = init.headers;
+
+    if (useKeycloak && keycloak.authenticated) {
+      headers = {
+        Authorization: `Bearer ${keycloak.token}`,
+        ...init.headers,
+      };
+    } else if (!useKeycloak && waitKeycloackForToken) {
+      if (!keycloak.authenticated && appendToBody.token === "") {
+        await waitForToken();
+      }
+      headers = {
+        Authorization: `Bearer ${appendToBody.token}`,
+        ...init.headers,
+      };
     }
+
     return fetch(tenant + route, {
       ...init,
-      headers: keycloak.authenticated
-        ? {
-            Authorization: `Bearer ${keycloak.token}`,
-            ...init.headers,
-          }
-        : !useKeycloak
-        ? {
-            Authorization: `Bearer ${appendToBody.token}`,
-            ...init.headers,
-          }
-        : init.headers,
+      headers,
     });
   }
   return {
