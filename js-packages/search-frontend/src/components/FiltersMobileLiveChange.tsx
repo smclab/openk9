@@ -20,7 +20,7 @@ import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { Tab, translationTab } from "./Tabs";
 import { capitalize } from "lodash";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
-import { SelectionsAction } from "./useSelections";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 import { useFocusTrap } from "./useFocusTrap";
 
 export type FiltersMobileProps<E> = {
@@ -54,7 +54,7 @@ export type FiltersMobileProps<E> = {
   callbackClose?: () => void;
   callbackApply?: () => void;
   addExtraClass?: string;
-  state: any;
+  state: SelectionsState;
 };
 function FiltersMobileLiveChange<E>({
   dynamicFilters,

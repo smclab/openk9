@@ -11,6 +11,7 @@ import {
 import { Logo } from "./Logo";
 import CustomSkeleton from "./Skeleton";
 import { useInfiniteResults } from "./ResultListPagination";
+import { SelectionsState } from "./useSelections";
 
 type FiltersProps = {
   searchQuery: SearchToken[];
@@ -30,7 +31,7 @@ type FiltersProps = {
   placeholder?: string | null | undefined;
   iconCustom: IconsCustom;
   haveSearch?: boolean | null | undefined;
-  state: any;
+  state: SelectionsState;
 };
 function Filters({
   searchQuery,
