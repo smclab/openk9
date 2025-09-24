@@ -90,6 +90,7 @@ import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
+import org.opensearch.client.Request;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
@@ -854,12 +855,33 @@ public class SearchResource {
 		return "";
 	}
 
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.SortType} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch.core.search.SuggestSort} enum.
+	 *
+	 * @param sort the gRPC SortType to convert
+	 * @return the corresponding SuggestSort value (Score for SCORE/UNRECOGNIZED, Frequency for FREQUENCY)
+	 */
 	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
-		return SuggestSort.valueOf(sort.name());
+		return switch (sort) {
+			case SCORE, UNRECOGNIZED -> SuggestSort.Score;
+			case FREQUENCY -> SuggestSort.Frequency;
+		};
 	}
 
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.SuggestMode} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch._types.SuggestMode} enum.
+	 *
+	 * @param suggestMode the gRPC SuggestMode to convert
+	 * @return the corresponding SuggestMode value (Missing for MISSING/UNRECOGNIZED, Popular for POPULAR, Always for ALWAYS)
+	 */
 	private SuggestMode _grpcEnumToSuggestMode(io.openk9.searcher.grpc.SuggestMode suggestMode) {
-		return SuggestMode.valueOf(suggestMode.name());
+		return switch (suggestMode) {
+			case MISSING, UNRECOGNIZED -> SuggestMode.Missing;
+			case POPULAR -> SuggestMode.Popular;
+			case ALWAYS -> SuggestMode.Always;
+		};
 	}
 
 	private Uni<Response> _doSearch(SearchRequest searchRequest) {
