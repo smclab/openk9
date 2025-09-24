@@ -70,6 +70,7 @@ class BaseRequest(ABC, BaseModel):
 class SitemapRequest(BaseRequest):
     sitemapUrls: list
     replaceRule: Optional[list] = ["", ""]
+    linksToFollow: Optional[list[str]] = []
 
 
 class CrawlRequest(BaseRequest):
@@ -104,6 +105,7 @@ def set_up_sitemap_endpoint(request):
     allowed_domains = request["allowedDomains"]
     max_length = request["maxLength"]
     tenant_id = request["tenantId"]
+    links_to_follow = request["linksToFollow"]
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
     document_file_extensions = request["documentFileExtensions"]
@@ -131,6 +133,7 @@ def set_up_sitemap_endpoint(request):
         "max_size_bytes": max_size_bytes,
         "tenant_id": tenant_id,
         "replace_rule": json.dumps(replace_rule),
+        "links_to_follow": json.dumps(links_to_follow),
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),

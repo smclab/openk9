@@ -177,6 +177,20 @@
         "required": false,
         "info": "Custom metadata using xpath expression",
         "values": []
+      },
+      {
+        "label": "Links to follow",
+        "name": "linksToFollow",
+        "type": "list",
+        "size": 4,
+        "required": false,
+        "info": "Formato xpath",
+        "values": [],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
       }
     ]
 }
