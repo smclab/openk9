@@ -54,7 +54,6 @@ It is used in `Form`.
 - **min**
 - **max**
 - **regex**
-- **datasourceConfig**
 
 ---
 

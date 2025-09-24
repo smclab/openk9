@@ -107,9 +107,6 @@ components:
           format: int64
         regex:
           type: string
-        datasourceConfig:
-          type: object
-          additionalProperties: { }
     OpenK9Input:
       type: object
       properties:
