@@ -51,8 +51,6 @@ from app.utils.chat_history import (
 )
 from app.utils.logger import logger
 
-UPLOADED_DOCUMENTS_INDEX = os.getenv("UPLOADED_DOCUMENTS_INDEX")
-
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
 
@@ -332,6 +330,7 @@ def stream_rag_conversation(
     timestamp: str,
     chat_sequence_number: int,
     configuration: dict,
+    embedding_model_configuration: dict,
 ):
     """
     Orchestrates a conversational RAG (Retrieval-Augmented Generation) pipeline with memory.
@@ -418,10 +417,9 @@ def stream_rag_conversation(
     if retrieve_from_uploaded_documents and user_id and realm_name:
         retriever = OpenSearchUploadedDocumentsRetriever(
             opensearch_host=opensearch_host,
-            grpc_host_datasource=grpc_host_datasource,
             grpc_host_embedding=grpc_host_embedding,
-            virtual_host=virtual_host,
-            uploaded_documents_index=f"{realm_name}-{UPLOADED_DOCUMENTS_INDEX}",
+            embedding_model_configuration=embedding_model_configuration,
+            uploaded_documents_index=f"{realm_name}-uploaded-documents-index",
             retrieve_type=retrieve_type,
             user_id=user_id,
             chat_id=chat_id,
