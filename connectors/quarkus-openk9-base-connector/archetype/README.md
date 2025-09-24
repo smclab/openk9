@@ -32,7 +32,7 @@ These classes implement the REST classes from the library and adapt their behavi
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
     "timestamp": 1753866303,
-    "datasourceConfig": {}
+    "jsonConfig": {}
   }
   ```
 

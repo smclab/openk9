@@ -24,7 +24,7 @@ Exposes **_/sample_** GET endpoint, it is used to get an example of IngestionDTO
 ### Model Classes
 
 **IngestionDTO**  
-It is the DTO that OpenK9 accept to receive documents.
+It is the DTO that OpenK9 accepts to receive documents.
 - **datasourceId**: Unique ID that identifies the datasource the ingested message belongs to.
 - **tenantId**: Unique string that identifies the tenant the ingested message belongs to.
 - **contentId**: Unique ID by datasource that identifies the resource inside Openk9.
@@ -69,7 +69,7 @@ It is the body request sent by OpenK9 to connector.
 - **scheduleId**: ID of schedule.
 - **tenantId**: ID of tenant.
 - **timestamp**: Timestamp relative to last ingestion date.
-- **datasourceConfig**: Defines the configuration needed to use the connector.
+- **jsonConfig**: Defines the configuration needed to use the connector.
 
 **Form**  
 It is the class used in `FormResource`.
@@ -93,7 +93,6 @@ It is used in `Form`.
 - **min**
 - **max**
 - **regex**
-- **datasourceConfig**: Get connector configuration for a specific datasource
 
 ---
 
