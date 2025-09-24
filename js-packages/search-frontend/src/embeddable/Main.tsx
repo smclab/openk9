@@ -4,7 +4,10 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { useQuery } from "react-query";
+import { useQuery } from "react-query";
 import { ActiveFilter } from "../components/ActiveFilters";
+import { CalendarMobile } from "../components/CalendarModal";
+import { ChangeLanguage } from "../components/ChangeLanguage";
 import { CalendarMobile } from "../components/CalendarModal";
 import { ChangeLanguage } from "../components/ChangeLanguage";
 import {
@@ -77,6 +80,7 @@ export function Main({
   //retrieving information from the configuration.
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
   const memoryResults = configuration.memoryResults || false;
+  const queryStringMap = configuration.queryStringMap || null;
   const numberOfResults = configuration.numberResult || 10;
   const numberResultOfFilters = configuration.numberResultOfFilters || 10;
   const useGenerativeApi = configuration.useGenerativeApi;
@@ -111,6 +115,7 @@ export function Main({
     useQueryString,
     defaultString: configuration.defaultString || "",
     queryStringValues,
+    queryStringMap,
   });
 
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
@@ -119,6 +124,7 @@ export function Main({
       useQueryString,
       defaultString: configuration.defaultString || "",
       queryStringValues,
+      queryStringMap,
     });
   const [sortAfterKey, setSortAfterKey] = React.useState("");
   const [totalResult, setTotalResult] = React.useState<number | null>(null);

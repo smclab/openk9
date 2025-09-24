@@ -7,7 +7,7 @@ import {
 } from "./client";
 import { loadQueryString, saveQueryString } from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
-import { queryStringValues } from "../embeddable/entry";
+import { queryStringMapType, queryStringValues } from "../embeddable/entry";
 
 type Range = [number, number];
 
@@ -16,11 +16,13 @@ export function useSelections({
   useQueryString = true,
   defaultString = "",
   queryStringValues,
+  queryStringMap,
 }: {
   useKeycloak?: boolean;
   useQueryString?: boolean;
   defaultString?: string;
   queryStringValues: queryStringValues;
+  queryStringMap?: queryStringMapType;
 }) {
   const defaultSearch: SelectionsState = {
     text: defaultString,
@@ -31,8 +33,26 @@ export function useSelections({
     commitId: 0,
   };
 
-  const [state, dispatch] = React.useReducer(reducer, defaultSearch, (s) =>
-    loadQueryString<SelectionsState>(s),
+  const remappedQueryStringMap: queryStringMapType = {
+    keyObj: queryStringMap?.keyObj,
+    text: queryStringValues?.find((k) => k === "text")
+      ? queryStringMap?.text
+      : undefined,
+    textOnChange: queryStringValues?.find((k) => k === "textOnChange")
+      ? queryStringMap?.textOnChange
+      : undefined,
+    selection: queryStringValues?.find((k) => k === "selection")
+      ? queryStringMap?.selection
+      : undefined,
+    filters: queryStringValues?.find((k) => k === "filters")
+      ? queryStringMap?.filters
+      : undefined,
+  };
+  const [state, dispatch] = React.useReducer(
+    reducer,
+    defaultSearch,
+    (defaultSearch) =>
+      loadQueryString<SelectionsState>(defaultSearch, remappedQueryStringMap),
   );
 
   const [canSave, setCanSave] = React.useState(false);
@@ -47,8 +67,12 @@ export function useSelections({
   }, []);
 
   React.useEffect(() => {
-    if (useQueryString && (canSave || !useKeycloak)) {
-      saveQueryString(state, queryStringValues);
+    if (useKeycloak && canSave && useQueryString) {
+      saveQueryString(state, remappedQueryStringMap);
+    } else {
+      if (!useKeycloak && useQueryString) {
+        saveQueryString(state, remappedQueryStringMap);
+      }
     }
   }, [canSave, state]);
 

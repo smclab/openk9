@@ -15,6 +15,9 @@ Read more about compatibility matrix on Github.
     - [Namespace](#namespace)
     - [Domain](#domain)
     - [Tls](#tls)
+    - [Utilities](#utilities)
+      - [Adminer](#adminer)
+      - [Netutils](#netutils)
 2. [Requirements Installation](#requirements-installation)
     - [Opensearch](#opensearch-v2150)
     - [Rabbitmq](#rabbitmq-v3127)
@@ -97,6 +100,52 @@ To add a certificate to secret follow official kubernetes documentation [here](h
 
 If you don't have valid certifacate, use [certmanager](https://cert-manager.io/v1.1-docs/installation/kubernetes/) to create your self managed certificate.
 
+
+### Utilities
+
+In this section you find advices about installing some utilities, helpful to test and debugging application during installation and configuration
+
+#### Adminer
+
+[Adminer](https://www.adminer.org/en/) is a lightweight DB client.
+
+To install it on your Kubernetes/Openshift cluster run following command.
+
+```bash
+helm upgrade -i adminer 00-base-requirements/07-adminer -n openk9
+```
+
+#### Verify installation
+
+To verify correct installation port forward 8080 on your host.
+
+For Kubernetes execute:
+
+```bash
+kubectl port-forward -n openk9 svc/adminer 8080
+```
+
+For Openshift execute:
+
+```bash
+oc port-forward -n openk9 svc/adminer 8080
+```
+
+Open browser on [http://localhost:8080](http://localhost:8080). You view adminer enter panel.
+
+#### Netutils
+
+Netutils is lightweight image with linux network utilities available.
+
+To install it on your Kubernetes/Openshift cluster run following command.
+
+```bash
+helm upgrade -i netutils 00-base-requirements/10-netutils -n openk9
+```
+
+#### Verify installation
+
+To verify correct installation enter interactively in pod and test operation using for example ping command.
 
 ## Requirements Installation
 
