@@ -17,22 +17,19 @@
 
 from app.external_services.grpc.grpc_client import (
     generate_documents_embeddings,
-    get_embedding_model_configuration,
 )
 
 
 def documents_embedding(
-    grpc_host_datasource, grpc_host_embedding, virtual_host, document
+    grpc_host_embedding,
+    embedding_model_configuration,
+    document,
 ):
-    embedding_model_configuration = get_embedding_model_configuration(
-        grpc_host=grpc_host_datasource,
-        virtual_host=virtual_host,
-    )
-
     api_url = embedding_model_configuration.get("api_url")
     api_key = embedding_model_configuration.get("api_key")
     model_type = embedding_model_configuration.get("model_type")
     model = embedding_model_configuration.get("model")
+    vector_size = embedding_model_configuration.get("vector_size")
     json_config = embedding_model_configuration.get("json_config")
 
     chunk = {"type": 1, "jsonConfig": json_config}
