@@ -628,7 +628,7 @@ export function App() {
           openk9.updateConfiguration({
             resultList: {
               element,
-              changeOnOver: false,
+              changeOnOver: true,
             },
           })
         }
