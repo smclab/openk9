@@ -22,7 +22,7 @@ include:
 #################
 Fetch version:
   stage: build
-  image: node:18-alpine
+  image: node:20.9.0-alpine
   script:
   - cd js-packages/admin-ui
   - export VERSION=$(node -p "require('./package.json').version")
@@ -45,6 +45,7 @@ Build Admin Frontend:
     artifacts: true
   script:
   # Docker credentials configuration
+  - export NODE_OPTIONS="--max-old-space-size=4096"
   - mkdir -p /kaniko/.docker
   - |
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
@@ -82,7 +83,7 @@ Build Admin Frontend:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:20.9.0
   script:
   - cd js-packages/admin-ui
   - yarn install
@@ -124,23 +125,7 @@ Trigger Restart:
     changes:
     - js-packages/admin-ui/**/*
 
-####################### PUBLISH Admin FRONTEND #######################
-Publish Admin Frontend:
-  stage: publish
-  image: node:18
-  script:
-  - cd js-packages/admin-ui
-  - pwd
-  - whoami
-  - yarn install
-  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-  - npm publish --access public
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/admin-ui/**/*
-    when: manual
-  - when: never
+# PUBLISH JOB REMOVED - Not needed for admin frontend
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Admin UI:

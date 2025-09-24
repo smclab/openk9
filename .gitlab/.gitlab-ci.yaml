@@ -276,13 +276,11 @@ Trigger Search Frontend:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/search-frontend/**/*
-    when: manual
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/search-frontend/**/*
-    when: manual
-  # Caso per frontend developers (Lorenzo e Giorgio) su branch feature
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'lorenzo.venneri' || $GITLAB_USER_LOGIN == 'giorgio.bartolomeo')"
+  # Caso per branch feature (rimosso controllo autore)
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/search-frontend/**/*
   # Blocco della prima esecuzione quando branch appena creato
@@ -299,13 +297,11 @@ Trigger Admin Frontend:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/admin-ui/**/*
-    when: manual
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/admin-ui/**/*
-    when: manual
-  # Caso per frontend developers (Lorenzo e Giorgio) su branch feature
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'lorenzo.venneri' || $GITLAB_USER_LOGIN == 'giorgio.bartolomeo')"
+  # Caso per branch feature (rimosso controllo autore)
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/admin-ui/**/*
   # Blocco della prima esecuzione quando branch appena creato
@@ -322,13 +318,11 @@ Trigger Tenant Frontend:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/tenant-ui/**/*
-    when: manual
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/tenant-ui/**/*
-    when: manual
-  # Caso per frontend developers (Lorenzo e Giorgio) su branch feature
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'lorenzo.venneri' || $GITLAB_USER_LOGIN == 'giorgio.bartolomeo')"
+  # Caso per branch feature (rimosso controllo autore)
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/tenant-ui/**/*
   # Blocco della prima esecuzione quando branch appena creato
@@ -336,6 +330,47 @@ Trigger Tenant Frontend:
     when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-frontend.yaml"
+    strategy: depend
+
+# TALK-TO FRONTEND
+Trigger Talk-To Frontend:
+  stage: trigger
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/talk-to/**/*
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/talk-to/**/*
+  # Caso per branch feature (rimosso controllo autore)
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/talk-to/**/*
+  # Blocco della prima esecuzione quando branch appena creato
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/.gitlab-ci-talk-to.yaml"
+    strategy: depend
+
+# OPENK9-CHATBOT
+Trigger OpenK9-Chatbot:
+  stage: trigger
+  rules:
+  # Feature branch: non parte nessuna pipeline
+  # Merge request: fetch version -> build verifier
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
+  # Main: fetch version -> build verifier -> Publish -> dependency check
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/openk9-chatbot/**/*
+  # Blocco della prima esecuzione quando branch appena creato
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
     strategy: depend
 
 ################################################################################

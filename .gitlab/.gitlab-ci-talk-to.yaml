@@ -1,19 +1,19 @@
 ################################################################################
 #                                   STAGES                                     #
 ################################################################################
+
 stages:
 - build
 - build-verifier
 - container-scanning
 - dependency-check
 - restart
-- publish
 
 include:
 - local: "/.gitlab/.gitlab-templates.yaml"
 
 ################################################################################
-#                                  JOBS                                        #
+#                                    JOBS                                       #
 ################################################################################
 
 #################
@@ -23,16 +23,16 @@ Fetch version:
   stage: build
   image: node:20.9.0-alpine
   script:
-  - cd js-packages/search-frontend
-  - export VERSION=$(node -p "require('./package.json').version") # Reads version from package.json
-  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Saves version to a file
+  - cd js-packages/talk-to
+  - export VERSION=$(node -p "require('./package.json').version")
+  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
   artifacts:
     paths:
     - version.env
     expire_in: 1 day
 
-######################## BUILD SEARCH FRONTEND ########################
-Build Search Frontend:
+######################## BUILD TALK-TO ########################
+Build Talk-To:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -55,42 +55,42 @@ Build Search Frontend:
     if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
       # For main, use version from package.json
       source $CI_PROJECT_DIR/version.env
-      echo "=== Building Search Frontend with VERSION=$VERSION ==="
+      echo "=== Building Talk-To with VERSION=$VERSION ==="
       DOCKER_TAG="$VERSION"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       # For feature branch, use 996-SNAPSHOT
-      echo "=== Building Search Frontend with VERSION=996-SNAPSHOT for feature branch ==="
+      echo "=== Building Talk-To with VERSION=996-SNAPSHOT for feature branch ==="
       DOCKER_TAG="996-SNAPSHOT"
     fi
 
-  # Run build with the determined tag
+  # Execute build with the previously determined tag
   - |
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG"
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
+      --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/search-frontend/**/*
+    - js-packages/talk-to/**/*
   # Rule for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
-    - js-packages/search-frontend/**/*
+    - js-packages/talk-to/**/*
 
-######################## BUILD VERIFIER (NODE) ########################
+######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
   image: node:20.9.0
   script:
-  - cd js-packages/search-frontend
+  - cd js-packages/talk-to
   - yarn install
   - yarn build
   rules:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - js-packages/search-frontend/**/*
+    - js-packages/talk-to/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -98,11 +98,11 @@ Container Scanning:
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
   dependencies:
   - "Fetch version"
-  - "Build Search Frontend"
+  - "Build Talk-To"
   script:
-  - source version.env # Loads version from artifact
-  - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Scans the image
+  - source version.env
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/talk-to:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/talk-to:$VERSION"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
 
@@ -112,41 +112,23 @@ Trigger Restart:
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "search-frontend"
+    COMPONENT_NAME: "talk-to"
     COMPONENT_TYPE: "frontend"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - js-packages/search-frontend/**/*
+    - js-packages/talk-to/**/*
   # Rule for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
-    - js-packages/search-frontend/**/*
-
-####################### PUBLISH SEARCH FRONTEND #######################
-Publish Search Frontend:
-  stage: publish
-  image: node:20.9.0
-  script:
-  - cd js-packages/search-frontend
-  - pwd
-  - whoami
-  - yarn install
-  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-  - npm publish --access public
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/search-frontend/**/*
-    when: manual
-  - when: never
+    - js-packages/talk-to/**/*
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Search Frontend:
+Dependency Check Talk-To:
   stage: dependency-check
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-  - cd js-packages/search-frontend
+  - cd js-packages/talk-to
   - /analyzer run
