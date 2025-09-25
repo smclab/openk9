@@ -73,18 +73,12 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
 UPLOAD_DIR.mkdir(exist_ok=True)
-UPLOAD_FILE_EXTENSIONS = [
-    ".pdf",
-    ".md",
-    ".docx",
-    ".xlsx",
-    ".pptx",
-    ".csv",
-]
-MAX_UPLOAD_FILE_SIZE = 10 * 1024 * 1024
-MAX_UPLOAD_FILES_NUMBER = 5
+UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
+MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
+MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
+
 
 if ARIZE_PHOENIX_ENABLED:
     tracer_provider = register(
@@ -787,10 +781,12 @@ async def delete_chat(
             detail="Item not found.",
         )
 
-    delete_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
+    delete_messages_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
 
     try:
-        response = open_search_client.delete_by_query(index=user_id, body=delete_query)
+        response = open_search_client.delete_by_query(
+            index=user_id, body=delete_messages_query
+        )
     except OpenSearch.exceptions.NotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -801,6 +797,23 @@ async def delete_chat(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found.",
+        )
+
+    uploaded_documents_index = f"{realm_name}-uploaded-documents-index"
+
+    if open_search_client.indices.exists(index=uploaded_documents_index):
+        delete_uploaded_documents_query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match": {"user_id.keyword": user_id}},
+                        {"match": {"chat_id.keyword": chat_id}},
+                    ]
+                }
+            }
+        }
+        open_search_client.delete_by_query(
+            index=uploaded_documents_index, body=delete_uploaded_documents_query
         )
 
     content = {"message": "Chat deleted successfully.", "status": "success"}
