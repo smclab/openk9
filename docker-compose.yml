@@ -39,7 +39,7 @@ services:
         soft: -1
         hard: -1
     volumes:
-    - opensearch-data:/usr/share/opensearch/data
+      - opensearch-data:/usr/share/opensearch/data
   postgresql:
     image: postgres:16
     hostname: postgresql
@@ -116,7 +116,7 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS: 'true'
-      QUARKUS_HTTP_CORS_ORIGINS : /.*/
+      QUARKUS_HTTP_CORS_ORIGINS: /.*/
       QUARKUS_LOG_LEVEL: 'INFO'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
@@ -158,7 +158,7 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS: 'true'
-      QUARKUS_HTTP_CORS_ORIGINS : '/.*/'
+      QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
@@ -270,9 +270,14 @@ services:
       ORIGINS: '*'
       OPENSEARCH_USERNAME: 'opensearch'
       OPENSEARCH_HOST: 'opensearch:9200'
-      GRPC_DATASOURCE_HOST : 'datasource:9000'
-      GRPC_TENANT_MANAGER_HOST : 'tenant-manager:9000'
-      KEYCLOAK_URL : 'http://keycloak.openk9.localhost:8081'
+      GRPC_DATASOURCE_HOST: 'datasource:9000'
+      GRPC_TENANT_MANAGER_HOST: 'tenant-manager:9000'
+      GRPC_EMBEDDING_MODULE_HOST: 'embedding-module:5000'
+      KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
+      UPLOAD_DIR: 'uploads'
+      UPLOAD_FILE_EXTENSIONS: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+      MAX_UPLOAD_FILE_SIZE: '10'
+      MAX_UPLOAD_FILES_NUMBER: '5'
   embedding-module:
     image: smclab/openk9-embedding-module-base:3.1.0-SNAPSHOT
     container_name: embedding-module
@@ -293,12 +298,12 @@ services:
     ports:
       - "8082:80"
   gateway:
-      image: smclab/openk9-gateway:3.1.0-SNAPSHOT
-      hostname: gateway
-      ports:
-          - '80:8080'
+    image: smclab/openk9-gateway:3.1.0-SNAPSHOT
+    hostname: gateway
+    ports:
+      - '80:8080'
 
 volumes:
-  opensearch-data: 
+  opensearch-data:
   postgres-data:
   minio-data:

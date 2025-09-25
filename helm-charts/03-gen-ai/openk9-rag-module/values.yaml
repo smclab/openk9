@@ -37,7 +37,6 @@ image:
   pullSecrets:
     - docker-registry-secret
 
-
 ## Annotations to add to all deployed objects
 commonAnnotations: {}
 
@@ -71,7 +70,7 @@ opensearch:
 ## Logging configuration
 log:
   level: "INFO"
-  
+
 ## Cors configuration
 cors:
   origins: "*"
@@ -86,20 +85,28 @@ retention:
 keycloak:
   url: "keycloak.openk9.local"
 
-
 ## OpenK9 grpc services configuration
 openk9:
-    ## Openk9 Datasource configuration
-    datasource:
-      host: "openk9-datasource:9000"
-    ## Openk Tenant Manager configuration
-    tenantManager:
-      host: "openk9-tenant-manager:9000"
+  ## Openk9 Datasource configuration
+  datasource:
+    host: "openk9-datasource:9000"
+  ## Openk Tenant Manager configuration
+  tenantManager:
+    host: "openk9-tenant-manager:9000"
+  ## Openk Embedding Module configuration
+  embeddingModule:
+    host: "openk9-embedding-module:5000"
 
 phoenix:
   enabled: ""
   endpoint: "http://127.0.0.1:6006/v1/traces"
   projectName: "default"
+
+uploadDocuments:
+  uploadDir: "uploads"
+  uploadFileExtensions: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+  maxUploadFileSize: "10"
+  maxUploadFilesNumber: "5"
 
 ## Rag Module pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -129,18 +136,18 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Rag Module pod's Security Context fsGroup
 ##
-podSecurityContext: {}
+podSecurityContext:
+  {}
   # fsGroup: 2000
 
-
-securityContext: {}
+securityContext:
+  {}
   # capabilities:
   #   drop:
   #   - ALL
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
 
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
@@ -157,7 +164,7 @@ ingress:
   enabled: false
   ## @param ingress.enabled Enable ingress resource for Rag Module console
   ##
-  host: openk9.local   #-TBMD
+  host: openk9.local #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.
   ## For a full list of possible ingress annotations, please see
   ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
@@ -179,7 +186,7 @@ ingress:
   ##
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 # In OpenShift use Route instead of Ingress
 route:
@@ -189,7 +196,7 @@ route:
   path: /api/k8s-client
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
 ## Example:
