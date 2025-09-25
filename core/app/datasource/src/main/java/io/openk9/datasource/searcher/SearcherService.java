@@ -46,6 +46,8 @@ import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;

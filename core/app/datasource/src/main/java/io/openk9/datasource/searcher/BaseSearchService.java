@@ -333,8 +333,7 @@ public abstract class BaseSearchService {
 
 		return tenantRegistry.getTenantByVirtualHost(virtualHost)
 			.flatMap(tenant -> sf
-				.withTransaction(
-					tenant.schemaName(), (s, t) -> {
+				.withTransaction(tenant.schemaName(), (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 

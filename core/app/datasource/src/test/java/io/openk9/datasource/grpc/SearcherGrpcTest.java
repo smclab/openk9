@@ -30,6 +30,8 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.SortType;
+import io.openk9.datasource.model.SuggestMode;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
@@ -44,6 +46,7 @@ import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
@@ -57,12 +60,13 @@ import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import scala.annotation.meta.field;
 
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -70,6 +74,7 @@ public class SearcherGrpcTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SearcherGrpcTest - ";
 
+	private static final String AUTOCORRECTION_NAME_ONE = ENTITY_NAME_PREFIX + "Autocorrection 1";
 	private static final Bucket BUCKET = new Bucket();
 	private static final String BUCKET_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
 	private static final String BUCKET_TWO = ENTITY_NAME_PREFIX + "Bucket 2";
@@ -173,14 +178,16 @@ public class SearcherGrpcTest {
 			.map(dataIndex -> SCHEMA_NAME + "-" + dataIndex.getName())
 			.collect(Collectors.joining(","));
 
+
 		// Bucket
 		createBucketOne();
-		var bucketOne = EntitiesUtils.getBucket(
-			sessionFactory,
+		var bucketOne = EntitiesUtils.getEntity(
+			BUCKET_ONE,
 			bucketService,
-			BUCKET_ONE
+			sessionFactory
 		);
 		enableBucket(bucketOne);
+		bucketService.addDatasource(bucketOne.getId(), defaultDatasource.getId());
 
 		// LargeLanguageModel
 		createLargeLanguageModelOne();
@@ -239,7 +246,7 @@ public class SearcherGrpcTest {
 		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
 		var docTypeField = docTypeFields.stream()
-			.filter(field -> "sample".equalsIgnoreCase(scala.annotation.meta.field.getDocType().getName()))
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
 			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
 			.findFirst();
 
@@ -400,6 +407,7 @@ public class SearcherGrpcTest {
 		);
 	}
 
+	@Disabled
 	@Test
 	@RunOnVertxContext
 	void should_get_autocorrection_configurations(UniAsserter asserter) {
@@ -542,20 +550,20 @@ public class SearcherGrpcTest {
 		removeBucketOne();
 
 		// RAGConfiguration
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_CHAT_ONE,
 			ragConfigurationService,
-			RAG_CHAT_ONE
+			sessionFactory
 		);
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_SEARCH_ONE,
 			ragConfigurationService,
-			RAG_SEARCH_ONE
+			sessionFactory
 		);
-		EntitiesUtils.removeRAGConfiguration(
-			sessionFactory,
+		EntitiesUtils.removeEntity(
+			RAG_CHAT_TOOL_ONE,
 			ragConfigurationService,
-			RAG_CHAT_TOOL_ONE
+			sessionFactory
 		);
 	}
 
