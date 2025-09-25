@@ -4,17 +4,18 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
-import { SearchToken, SuggestionResult } from "./client";
 import { useInfiniteQuery } from "react-query";
 import { useDebounce } from "./useDebounce";
-import { useOpenK9Client } from "./client";
-import { NoFilter, mapSuggestionToSearchToken } from "./FilterCategory";
+import { SearchToken, SuggestionResult, useOpenK9Client } from "./client";
 import { useTranslation } from "react-i18next";
 import { capitalize } from "lodash";
 import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
 import { IconsCustom } from "../embeddable/entry";
 import { Logo } from "./Logo";
 import { useRange } from "./useRange";
+import { NoFilter } from "./FilterCategory";
+
+export type WhoIsDynamic = "tab" | "filter" | "search" | "date";
 
 type FilterCategoryDynamicallyProps = {
   suggestionCategoryId: number;
@@ -37,6 +38,7 @@ type FilterCategoryDynamicallyProps = {
     React.SetStateAction<boolean>
   >;
 };
+
 function FilterCategoryDynamic({
   suggestionCategoryId,
   suggestionCategoryName,
@@ -56,7 +58,7 @@ function FilterCategoryDynamic({
   iconCustom,
   haveSearch = true,
 }: FilterCategoryDynamicallyProps) {
-  const [text, setText] = React.useState("");
+  const [text, setText] = React.useState<string>("");
 
   const suggestions = useInfiniteSuggestions(
     isDynamicElement,
@@ -69,27 +71,24 @@ function FilterCategoryDynamic({
   );
 
   const { t } = useTranslation();
-  const resultValue = suggestions.data?.pages || [];
-
-  const filters = mergeAndSortObjects(
-    resultValue,
-    searchQuery,
+  const resultPages = suggestions?.data?.pages ?? [];
+  const filters: SuggestionResult[] = mergeAndSortObjects(
+    resultPages,
+    searchQuery ?? [],
     suggestionCategoryId,
   );
-  React.useEffect(() => {
-    if (
-      setHasMoreSuggestionsCategories &&
-      suggestions &&
-      suggestions.hasNextPage
-    )
-      setHasMoreSuggestionsCategories(suggestions.hasNextPage);
-  }, []);
 
-  const [isOpen, setIsOpen] = React.useState(true);
+  React.useEffect(() => {
+    if (setHasMoreSuggestionsCategories && suggestions?.hasNextPage != null) {
+      setHasMoreSuggestionsCategories(Boolean(suggestions?.hasNextPage));
+    }
+  }, [suggestions?.hasNextPage, setHasMoreSuggestionsCategories]);
+
+  const [isOpen, setIsOpen] = React.useState<boolean>(true);
   const [singleSelect, setSingleselect] = React.useState<
     SearchToken | undefined
-  >();
-  const show = Boolean(text || (filters.length ?? 0) > 0);
+  >(undefined);
+  const show = Boolean(text || (filters?.length ?? 0) > 0);
 
   if (!show)
     return (
@@ -108,7 +107,7 @@ function FilterCategoryDynamic({
       className={`openk9-filter-category-container openk9-filter-category-${suggestionCategoryName}`}
       css={css`
         ${isUniqueLoadMore ? "width: 50%" : null}
-        @media  (max-width: 768px) {
+        @media (max-width: 768px) {
           ${isUniqueLoadMore ? "height: 50%" : null}
         }
         @media (max-width: 480px) {
@@ -187,15 +186,8 @@ function FilterCategoryDynamic({
                   height: 1px;
                   width: 1px;
                   overflow: hidden;
-                  clip: rect(
-                    1px 1px 1px 1px
-                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-                  clip: rect(
-                    1px,
-                    1px,
-                    1px,
-                    1px
-                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip: rect(1px 1px 1px 1px);
+                  clip: rect(1px, 1px, 1px, 1px);
                   clip-path: inset(50%);
                   white-space: nowrap;
                 `}
@@ -231,7 +223,9 @@ function FilterCategoryDynamic({
                 <input
                   type="text"
                   placeholder={placeholder || t("search-filters") || ""}
-                  onChange={(event) => setText(event.currentTarget.value)}
+                  onChange={(event) =>
+                    setText(event?.currentTarget?.value ?? "")
+                  }
                   className="openk9-filter-category-search"
                   id={"search-category-" + suggestionCategoryId}
                   value={text}
@@ -274,30 +268,39 @@ function FilterCategoryDynamic({
               margin: 0;
             `}
           >
-            {filters.length === 0 && <NoFiltersSearch />}
-            {filters.map((suggestion, index) => {
+            {(filters?.length ?? 0) === 0 && <NoFiltersSearch />}
+            {filters?.map((suggestion, index) => {
               const asSearchToken = mapSuggestionToSearchToken(
                 suggestion,
                 true,
               );
-              const isChecked = tokens.some((searchToken) => {
-                if (
-                  haveSomeValue(
-                    searchToken.values || [],
-                    asSearchToken.values || [""],
-                  ) &&
-                  searchToken.suggestionCategoryId ===
-                    asSearchToken.suggestionCategoryId &&
-                  searchToken.keywordKey === asSearchToken.keywordKey
-                )
-                  return true;
-                return false;
-              });
+              const isChecked =
+                tokens?.some((searchToken) => {
+                  const sameCategory =
+                    (searchToken?.suggestionCategoryId ?? -1) ===
+                    (asSearchToken?.suggestionCategoryId ?? -2);
+                  const sameKey =
+                    (searchToken as any)?.keywordKey ===
+                    (asSearchToken as any)?.keywordKey;
+                  const hasValue = haveSomeValue(
+                    (searchToken as any)?.values ?? [],
+                    (asSearchToken as any)?.values ?? [],
+                  );
+                  return sameCategory && sameKey && hasValue;
+                }) ?? false;
+
+              const idValue =
+                suggestion?.tokenType === "ENTITY"
+                  ? `${(suggestion as any)?.entityType ?? ""}-${
+                      (suggestion as any)?.entityValue ?? ""
+                    }`
+                  : (suggestion as any)?.value ?? String(index);
 
               return (
-                <React.Fragment key={"fragment-filter-dynamic " + index}>
+                <React.Fragment
+                  key={`fragment-filter-dynamic-${index}-${idValue}`}
+                >
                   <li
-                    key={index}
                     className="form-check"
                     css={css`
                       display: flex;
@@ -315,23 +318,20 @@ function FilterCategoryDynamic({
                         isChecked={isChecked}
                         suggestion={suggestion}
                         asSearchToken={asSearchToken}
-                        multiSelect={multiSelect}
+                        suggestionCategoryId={suggestionCategoryId}
                         onAdd={onAdd}
                         onRemove={onRemove}
-                        suggestionCategoryId={suggestionCategoryId}
-                        tokens={tokens}
                       />
                     ) : (
                       <SingleSelect
                         isChecked={isChecked}
-                        multiSelect={multiSelect}
                         asSearchToken={asSearchToken}
                         onAdd={onAdd}
                         onRemove={onRemove}
                         singleSelect={singleSelect}
                         setSingleSelect={setSingleselect}
-                        suggestionValue={suggestion.value}
-                        suggestionCategoryId={"" + suggestionCategoryId}
+                        suggestionValue={idValue}
+                        suggestionCategoryId={String(suggestionCategoryId)}
                       />
                     )}
                     <label
@@ -339,11 +339,11 @@ function FilterCategoryDynamic({
                       htmlFor={
                         multiSelect
                           ? "checkbox-dynamic-" +
-                            suggestion.value +
+                            idValue +
                             "-" +
                             suggestionCategoryId
                           : "radio-button-dynamic-" +
-                            suggestion.value +
+                            idValue +
                             "-" +
                             suggestionCategoryId
                       }
@@ -355,7 +355,7 @@ function FilterCategoryDynamic({
                         color: #000000;
                       `}
                     >
-                      {suggestion.tokenType === "ENTITY" ? (
+                      {suggestion?.tokenType === "ENTITY" ? (
                         <>
                           <strong
                             className="openk9-filter-category-suggestion-value"
@@ -366,12 +366,12 @@ function FilterCategoryDynamic({
                               display: inline-block;
                             `}
                           >
-                            {suggestion.entityType}
+                            {suggestion?.entityType}
                           </strong>
-                          : {suggestion.entityValue}
+                          : {suggestion?.entityValue}
                         </>
                       ) : (
-                        capitalize(suggestion.value)
+                        capitalize(suggestion?.value ?? "")
                       )}
                     </label>
                   </li>
@@ -379,7 +379,7 @@ function FilterCategoryDynamic({
               );
             })}
           </ul>
-          {!isUniqueLoadMore && suggestions.hasNextPage && (
+          {!isUniqueLoadMore && suggestions?.hasNextPage && (
             <div
               className="openk9-container-load-more"
               css={css`
@@ -414,7 +414,7 @@ function FilterCategoryDynamic({
                   border-radius: 8px;
                 `}
                 onClick={() => {
-                  suggestions.fetchNextPage();
+                  suggestions?.fetchNextPage?.();
                 }}
               >
                 {t("load-more") || "Load More"}
@@ -440,12 +440,13 @@ export function useInfiniteSuggestions(
   numberItems: number | null | undefined,
   allDynamic = false,
 ) {
-  const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
-  const NPageSize = numberItems ? numberItems : pageSize;
+  const pageSizeBase = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
+  const NPageSize = numberItems ?? pageSizeBase;
   const client = useOpenK9Client();
   const searchQuery = allDynamic
     ? searchQueryNotFilter
     : createSuggestion(searchQueryNotFilter, isDynamicElement);
+
   const suggestionCategories = useInfiniteQuery(
     [
       "suggestions",
@@ -455,32 +456,30 @@ export function useInfiniteSuggestions(
       loadAll,
       language,
     ] as const,
-    async ({
-      queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
-      pageParam,
-    }) => {
-      if (!searchQuery) throw new Error();
-      const result = await client.getSuggestions({
-        searchQuery,
+    async ({ queryKey: [_, sq, activeId, sk], pageParam }) => {
+      if (!sq) throw new Error("missing searchQuery");
+      const result = await client?.getSuggestions?.({
+        searchQuery: sq,
         range: [0, NPageSize + 1],
         afterKey: pageParam,
-        suggestionCategoryId: activeSuggestionCategory,
-        suggestKeyword,
-        order: suggestKeyword ? "desc" : "asc",
-        language: language,
+        suggestionCategoryId: activeId,
+        suggestKeyword: sk,
+        order: sk ? "desc" : "asc",
+        language,
       });
       return {
-        result: result.result,
-        afterKey: result.afterKey,
+        result: result?.result ?? [],
+        afterKey: result?.afterKey ?? undefined,
       };
     },
     {
       enabled: searchQuery !== null,
       keepPreviousData: true,
       getNextPageParam(lastPage, pages) {
-        if (!lastPage.afterKey) return undefined;
-        if (pages[pages.length - 1].result.length < pageSize) return undefined;
-        return lastPage.afterKey;
+        if (!lastPage?.afterKey) return undefined;
+        if ((pages?.[pages.length - 1]?.result?.length ?? 0) < pageSizeBase)
+          return undefined;
+        return lastPage?.afterKey;
       },
       suspense: true,
     },
@@ -491,7 +490,6 @@ export function useInfiniteSuggestions(
 
 function SingleSelect({
   isChecked,
-  multiSelect,
   asSearchToken,
   onAdd,
   onRemove,
@@ -501,7 +499,6 @@ function SingleSelect({
   suggestionCategoryId,
 }: {
   isChecked: boolean;
-  multiSelect: boolean;
   asSearchToken: SearchToken;
   onAdd: (searchToken: SearchToken) => void;
   onRemove: (searchToken: SearchToken) => void;
@@ -528,9 +525,10 @@ function SingleSelect({
               : "is-not-checked-dynamic-radio"
           }`}
           type="radio"
-          checked={false}
+          checked={isChecked}
           onChange={(event) => {
-            if (event.currentTarget.checked) {
+            const checked = Boolean(event?.currentTarget?.checked);
+            if (checked) {
               if (singleSelect) onRemove(singleSelect);
               setSingleSelect(asSearchToken);
               onAdd(asSearchToken);
@@ -538,7 +536,7 @@ function SingleSelect({
               onRemove(asSearchToken);
             }
           }}
-          onClick={(event) => {
+          onClick={() => {
             if (isChecked) {
               onRemove(asSearchToken);
             }
@@ -556,142 +554,21 @@ function SingleSelect({
           `}
           onMouseOver={(event) => {
             if (!isChecked) {
-              const target = event.target as HTMLInputElement;
-              target.style.backgroundColor = "#e6e6e6";
+              const target = event?.target as HTMLInputElement;
+              if (target) target.style.backgroundColor = "#e6e6e6";
             }
           }}
           onMouseOut={(event) => {
-            const target = event.target as HTMLInputElement;
-            target.style.backgroundColor = isChecked
-              ? "var(--openk9-embeddable-search--secondary-active-color)"
-              : "#fff";
+            const target = event?.target as HTMLInputElement;
+            if (target)
+              target.style.backgroundColor = isChecked
+                ? "var(--openk9-embeddable-search--secondary-active-color)"
+                : "#fff";
           }}
         />
       </div>
     </React.Fragment>
   );
-}
-
-//da modificare non appena si deciderà di mettere l'opzionalità (end/or) all'interno di una stessa categoria
-export function mergeAndSortObjects(
-  sortedArra: { result: SuggestionResult[]; afterKey: string }[],
-  unsortedArray: SearchToken[],
-  suggestionCategoryId: number,
-): SuggestionResult[] {
-  let sortedArray = sortedArra.flatMap((page) => page.result);
-  let mergedArray = sortedArray.concat();
-  if (mergedArray.length === 0) {
-    mergedArray = [...unsortedArray]
-      .filter(
-        (element) =>
-          element.tokenType === "FILTER" &&
-          "goToSuggestion" in element &&
-          element.suggestionCategoryId === suggestionCategoryId,
-      )
-      .flatMap((element) =>
-        (element.values || []).map((value) => ({
-          tokenType: "FILTER",
-          keywordKey: element.keywordKey,
-          value: value || "",
-          suggestionCategoryId: element.suggestionCategoryId || 0,
-          count: element.count,
-        })),
-      );
-  }
-
-  if (mergedArray.length === 0) {
-    return [];
-  }
-
-  [...unsortedArray].filter(
-    (element) =>
-      element.tokenType === "FILTER" &&
-      "goToSuggestion" in element &&
-      element.suggestionCategoryId === suggestionCategoryId,
-  );
-
-  for (const element of unsortedArray) {
-    const foundElement = mergedArray.find((obj) => {
-      if (
-        obj.tokenType === "FILTER" &&
-        element.tokenType === "FILTER" &&
-        element.values[0] !== obj.value &&
-        element.suggestionCategoryId === suggestionCategoryId
-      ) {
-        return (
-          obj.tokenType === element.tokenType && obj.value === element.values[0]
-        );
-      }
-    });
-
-    if (foundElement && element.tokenType === "FILTER") {
-      element.values.forEach((singlevalue) => {
-        const newElement: SuggestionResult = {
-          tokenType: "FILTER",
-          keywordKey: element.keywordKey,
-          value: singlevalue,
-          suggestionCategoryId: element.suggestionCategoryId || 0,
-          count: element.count,
-        };
-        mergedArray.push(newElement);
-      });
-    }
-  }
-
-  mergedArray.sort((a, b) => {
-    return a.value.localeCompare(b.value);
-  });
-
-  return mergedArray;
-}
-
-export type WhoIsDynamic = "tab" | "filter" | "search" | "date";
-
-export function createSuggestion(
-  searchQueryNotFilter: SearchToken[] | null,
-  whoIsDynamic: WhoIsDynamic[],
-): SearchToken[] | null {
-  const searchQuery: SearchToken[] | null = [];
-  whoIsDynamic.forEach((add) => {
-    switch (add) {
-      case "tab":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("isTab" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      case "filter":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("goToSuggestion" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      case "search":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if ("isSearch" in searchToken) {
-            searchQuery.push(searchToken);
-          }
-        });
-        break;
-      case "date":
-        searchQueryNotFilter?.forEach((searchToken) => {
-          if (searchToken.tokenType === "DATE") {
-            searchQuery.push(searchToken);
-          }
-        });
-      default:
-        return searchQueryNotFilter;
-    }
-  });
-
-  return searchQuery;
-}
-
-export function haveSomeValue(values: string[], value: string[]) {
-  const singleValue = value[0];
-  return values.includes(singleValue);
 }
 
 function CheckBoxSelect({
@@ -700,8 +577,6 @@ function CheckBoxSelect({
   asSearchToken,
   suggestionCategoryId,
   onAdd,
-  multiSelect,
-  tokens,
   onRemove,
 }: {
   isChecked: boolean;
@@ -709,11 +584,16 @@ function CheckBoxSelect({
   asSearchToken: SearchToken;
   suggestionCategoryId: number;
   onAdd: (searchToken: SearchToken) => void;
-  multiSelect: boolean;
-  tokens: SearchToken[];
   onRemove: (searchToken: SearchToken) => void;
 }) {
   const { resetPage } = useRange();
+
+  const idValue =
+    suggestion?.tokenType === "ENTITY"
+      ? `${(suggestion as any)?.entityType ?? ""}-${
+          (suggestion as any)?.entityValue ?? ""
+        }`
+      : (suggestion as any)?.value ?? "val";
 
   return (
     <React.Fragment>
@@ -723,16 +603,17 @@ function CheckBoxSelect({
             ? "checked-checkbox filter-dynamic-check"
             : "not-checked-checkbox filter-dynamic-not-check"
         }`}
-        id={"checkbox-dynamic-" + suggestion.value + "-" + suggestionCategoryId}
+        id={"checkbox-dynamic-" + idValue + "-" + suggestionCategoryId}
         type="checkbox"
         checked={isChecked}
         onChange={(event) => {
-          if (event.currentTarget.checked) {
+          const checked = Boolean(event?.currentTarget?.checked);
+          if (checked) {
             onAdd(asSearchToken);
-            resetPage();
+            resetPage?.();
           } else {
             onRemove(asSearchToken);
-            resetPage();
+            resetPage?.();
           }
         }}
         css={css`
@@ -776,4 +657,151 @@ export function NoFiltersSearch() {
       </div>
     </div>
   );
+}
+
+export function mergeAndSortObjects(
+  pages: { result: SuggestionResult[]; afterKey?: string }[],
+  selectedTokens: SearchToken[],
+  suggestionCategoryId: number,
+): SuggestionResult[] {
+  const fromApi: SuggestionResult[] =
+    pages?.flatMap((p) => p?.result ?? []) ?? [];
+
+  type SelEntry = { keywordKey?: string; value: string; count?: string };
+  const selectedEntries: SelEntry[] = [];
+
+  for (const t of selectedTokens ?? []) {
+    if (
+      ((t as { filter: boolean })?.filter === true &&
+        (t as { goToSuggestion: boolean | undefined })?.goToSuggestion !==
+          undefined) ||
+      t?.isFilter ||
+      t?.isTab ||
+      t?.isSearch
+    ) {
+      if (t?.suggestionCategoryId === suggestionCategoryId && t?.values) {
+        for (const v of t?.values ?? []) {
+          if (v != null)
+            selectedEntries.push({
+              keywordKey: t?.keywordKey,
+              value: v,
+              count: t?.count,
+            });
+        }
+      }
+    }
+  }
+
+  const keyOf = (s: SuggestionResult): string => {
+    if (s?.tokenType === "ENTITY") {
+      return `FILTER__${s?.entityType ?? ""}__${s?.entityValue ?? ""}`;
+    }
+    return `FILTER__${s?.keywordKey ?? ""}__${s?.value ?? ""}`;
+  };
+
+  const labelOf = (s: SuggestionResult): string => {
+    if (s?.tokenType === "ENTITY") {
+      return `${s?.entityType ?? ""}: ${s?.entityValue ?? ""}`;
+    }
+    return s?.value ?? "";
+  };
+
+  const existingKeys = new Set<string>(fromApi?.map((x) => keyOf(x)) ?? []);
+  const merged: SuggestionResult[] = [...fromApi];
+
+  for (const e of selectedEntries) {
+    const key = `FILTER__${e?.keywordKey ?? ""}__${e?.value}`;
+    if (!existingKeys.has(key)) {
+      merged.push({
+        tokenType: "FILTER",
+        keywordKey: e?.keywordKey ?? "",
+        value: e?.value ?? "",
+        suggestionCategoryId,
+        count: e?.count,
+      });
+      existingKeys.add(key);
+    }
+  }
+
+  const selectedKeys = new Set<string>(
+    selectedEntries?.map(
+      (e) => `FILTER__${e?.keywordKey ?? ""}__${e?.value}`,
+    ) ?? [],
+  );
+
+  merged.sort((a, b) => {
+    const aSel = selectedKeys.has(keyOf(a));
+    const bSel = selectedKeys.has(keyOf(b));
+    if (aSel && !bSel) return -1;
+    if (!aSel && bSel) return 1;
+    return labelOf(a).localeCompare(labelOf(b));
+  });
+
+  return merged;
+}
+
+export function createSuggestion(
+  searchQueryNotFilter: SearchToken[] | null,
+  whoIsDynamic: WhoIsDynamic[],
+): SearchToken[] | null {
+  const searchQuery: SearchToken[] = [];
+  whoIsDynamic?.forEach((add) => {
+    switch (add) {
+      case "tab":
+        searchQueryNotFilter?.forEach((st) => {
+          if ((st as any)?.isTab) searchQuery.push(st);
+        });
+        break;
+      case "filter":
+        searchQueryNotFilter?.forEach((st) => {
+          if ((st as any)?.goToSuggestion || (st as any)?.isFilter)
+            searchQuery.push(st);
+        });
+        break;
+      case "search":
+        searchQueryNotFilter?.forEach((st) => {
+          if ((st as any)?.isSearch) searchQuery.push(st);
+        });
+        break;
+      case "date":
+        searchQueryNotFilter?.forEach((st) => {
+          if (st?.tokenType === "DATE") searchQuery.push(st);
+        });
+        break;
+      default:
+        break;
+    }
+  });
+  return searchQuery;
+}
+
+export function haveSomeValue(values: string[], value: string[]) {
+  const singleValue = value?.[0];
+  return (values ?? []).includes(singleValue as string);
+}
+
+function mapSuggestionToSearchToken(
+  s: SuggestionResult,
+  forceGoToSuggestion = true,
+): SearchToken {
+  if (s?.tokenType === "ENTITY") {
+    return {
+      tokenType: "FILTER",
+      keywordKey: s?.entityType,
+      values: [s?.entityValue ?? ""],
+      filter: true,
+      suggestionCategoryId: s?.suggestionCategoryId,
+      count: (s?.count as string) ?? undefined,
+      ...(forceGoToSuggestion ? { goToSuggestion: true } : {}),
+    };
+  }
+  return {
+    tokenType: "FILTER",
+    keywordKey: s?.keywordKey,
+    values: [s?.value ?? ""],
+    filter: true,
+    suggestionCategoryId: s?.suggestionCategoryId,
+    count: (s?.count as string) ?? undefined,
+    ...(forceGoToSuggestion ? { goToSuggestion: true } : {}),
+  };
 }
