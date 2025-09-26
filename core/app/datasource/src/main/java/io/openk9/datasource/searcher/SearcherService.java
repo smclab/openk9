@@ -28,6 +28,7 @@ import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.impl.HybridQueryParser;
@@ -719,7 +720,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				return Uni.createFrom().item(
 					AutocorrectionConfigurationsResponse.newBuilder()
 						.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
-						.setField(autocorrection.getAutocorrectionDocTypeField().getPath())
+						.setField(DocTypeFieldUtils.fieldPath(
+							autocorrection.getAutocorrectionDocTypeField()
+						))
 						.setSort(_sortTypeToGrpcEnum(autocorrection.getSort()))
 						.setSuggestMode(_suggestModeToGrpcEnum(
 							autocorrection.getSuggestMode()))
