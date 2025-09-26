@@ -90,7 +90,6 @@ import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
-import org.opensearch.client.Request;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
@@ -330,7 +329,7 @@ public class SearchResource {
 		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
 			.onFailure()
 			.recoverWithUni(throwable -> {
-				log.error("Retrieve autocorrection configurations failed", throwable);
+				_logMessage("Retrieve autocorrection configurations failed", throwable);
 				return Uni.createFrom().failure(
 					new AutocorrectionException(
 						"Retrieve autocorrection configurations failed", throwable
@@ -395,7 +394,7 @@ public class SearchResource {
 								})
 								.onFailure()
 								.recoverWithUni(throwable -> {
-									log.error("Autocorrection failed", throwable);
+									_logMessage("Autocorrection failed", throwable);
 									return Uni.createFrom().failure(
 										new AutocorrectionException("Autocorrection failed", throwable)
 									);
@@ -456,7 +455,7 @@ public class SearchResource {
 			// fallback to standard search on autocorrection failure
 			.onFailure()
 			.recoverWithUni(failure -> {
-				log.warn("Something went wrong during the autocorrected search.", failure);
+				_logMessage("Something went wrong during the autocorrected search.", failure);
 				return _doSearch(searchRequest);
 			});
 	}
@@ -850,40 +849,6 @@ public class SearchResource {
 			.build();
 	}
 
-	// TODO: _generateAutocorrectionText implementation
-	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
-		return "";
-	}
-
-	/**
-	 * Converts a gRPC {@link io.openk9.searcher.grpc.SortType} enum
-	 * to the corresponding {@link org.opensearch.client.opensearch.core.search.SuggestSort} enum.
-	 *
-	 * @param sort the gRPC SortType to convert
-	 * @return the corresponding SuggestSort value (Score for SCORE/UNRECOGNIZED, Frequency for FREQUENCY)
-	 */
-	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
-		return switch (sort) {
-			case SCORE, UNRECOGNIZED -> SuggestSort.Score;
-			case FREQUENCY -> SuggestSort.Frequency;
-		};
-	}
-
-	/**
-	 * Converts a gRPC {@link io.openk9.searcher.grpc.SuggestMode} enum
-	 * to the corresponding {@link org.opensearch.client.opensearch._types.SuggestMode} enum.
-	 *
-	 * @param suggestMode the gRPC SuggestMode to convert
-	 * @return the corresponding SuggestMode value (Missing for MISSING/UNRECOGNIZED, Popular for POPULAR, Always for ALWAYS)
-	 */
-	private SuggestMode _grpcEnumToSuggestMode(io.openk9.searcher.grpc.SuggestMode suggestMode) {
-		return switch (suggestMode) {
-			case MISSING, UNRECOGNIZED -> SuggestMode.Missing;
-			case POPULAR -> SuggestMode.Popular;
-			case ALWAYS -> SuggestMode.Always;
-		};
-	}
-
 	private Uni<Response> _doSearch(SearchRequest searchRequest) {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
@@ -949,6 +914,57 @@ public class SearchResource {
 			.transform(throwable -> new WebApplicationException(
 				getErrorResponse(throwable))
 			);
+	}
+
+	// TODO: _generateAutocorrectionText implementation
+	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
+		return "";
+	}
+
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.SortType} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch.core.search.SuggestSort} enum.
+	 *
+	 * @param sort the gRPC SortType to convert
+	 * @return the corresponding SuggestSort value (Score for SCORE/UNRECOGNIZED, Frequency for FREQUENCY)
+	 */
+	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
+		return switch (sort) {
+			case SCORE, UNRECOGNIZED -> SuggestSort.Score;
+			case FREQUENCY -> SuggestSort.Frequency;
+		};
+	}
+
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.SuggestMode} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch._types.SuggestMode} enum.
+	 *
+	 * @param suggestMode the gRPC SuggestMode to convert
+	 * @return the corresponding SuggestMode value (Missing for MISSING/UNRECOGNIZED, Popular for POPULAR, Always for ALWAYS)
+	 */
+	private SuggestMode _grpcEnumToSuggestMode(io.openk9.searcher.grpc.SuggestMode suggestMode) {
+		return switch (suggestMode) {
+			case MISSING, UNRECOGNIZED -> SuggestMode.Missing;
+			case POPULAR -> SuggestMode.Popular;
+			case ALWAYS -> SuggestMode.Always;
+		};
+	}
+
+	/**
+	 * Logs a message with optional throwable information based on debug level.
+	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
+	 * Otherwise, logs only the message at WARN level.
+	 *
+	 * @param message the message to log
+	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
+	 */
+	private static void _logMessage(String message, Throwable throwable) {
+		if (log.isDebugEnabled()) {
+			log.debug(message, throwable);
+		}
+		else {
+			log.warn(message);
+		}
 	}
 
 	// TODO: add javadocs
