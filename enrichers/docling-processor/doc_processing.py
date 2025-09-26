@@ -11,19 +11,14 @@ import base64
 app = FastAPI()
 
 @app.post("/start-task/")
-async def start_task():
-
-    url = "http://127.0.0.1:8001/random-string"
-    response = requests.get(url)
-    data = response.json()
-    encoded_str = data["string"]
-    decoded_str = base64.b64decode(encoded_str.encode("utf-8")).decode("utf-8")
-
-    print("Base64:", encoded_str)
-    print("Decodificata:", decoded_str)
-    thread = threading.Thread(target=operation,kwargs={"document":decoded_str})
+async def start_task(input:dict= Body(...)):#payload="pl",enrichItemConfig="Configurazioni",replyTo="fake_token"):
+    b64_str=input['payload']["doc"]
+    enrichItemConfig=input['enrichItemConfig']
+    replyTo=input["replyTo"]
+    print("Document:", b64_str)
+    thread = threading.Thread(target=operation,kwargs={"b64_str":b64_str,"configs":enrichItemConfig,"token":replyTo})
     thread.start()
-    return {"status": "ok", "message": f"Processo avviato con parametro {decoded_str}"}
+    return {"status": "ok", "message": f"Processo avviato con parametro {b64_str}"}
 
 def operation(document):
     print(f"Processo {document} iniziato")
