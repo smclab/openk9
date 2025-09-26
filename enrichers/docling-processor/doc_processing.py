@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
 from docling.document_converter import DocumentConverter
+from docling.datamodel.base_models import DocumentStream
+from io import BytesIO
 
 import asyncio
 import threading
