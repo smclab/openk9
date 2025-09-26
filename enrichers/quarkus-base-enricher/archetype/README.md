@@ -90,9 +90,9 @@ To install the archetype and the custom library, go to the root of the project a
 mvn install
 ```  
 
-## Generate Connector
+## Generate Enricher
 
-To generate the connector, write one of these commands:
+To generate the enricher, write one of these commands:
 
 ### Linux
 
