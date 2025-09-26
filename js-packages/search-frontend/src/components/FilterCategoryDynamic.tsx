@@ -60,7 +60,7 @@ function FilterCategoryDynamic({
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState<string>("");
   const debounced = useDebounce(text, 600);
-
+  const [showSearch, setShowSearch] = React.useState<boolean>(false);
   const tokensWithoutSearch = React.useMemo(
     () => (tokens ?? []).filter((t) => !t?.isSearch),
     [tokens],
@@ -127,7 +127,7 @@ function FilterCategoryDynamic({
     }
   }, [suggestions?.hasNextPage, setHasMoreSuggestionsCategories]);
 
-  const [isOpen, setIsOpen] = React.useState<boolean>(true);
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [singleSelect, setSingleselect] = React.useState<
     SearchToken | undefined
   >(undefined);
@@ -189,6 +189,8 @@ function FilterCategoryDynamic({
           align-items: center;
           justify-content: space-between;
           gap: 8px;
+          padding: 6px 0;
+          border-bottom: 1px solid var(--openk9-embeddable-search--border-color);
         `}
       >
         <legend
@@ -196,39 +198,62 @@ function FilterCategoryDynamic({
           css={css`
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             :first-letter {
               text-transform: uppercase;
             }
           `}
         >
-          <strong className="name-category-filter">
+          <strong
+            className="name-category-filter"
+            css={css`
+              font-size: 14px;
+              letter-spacing: 0.2px;
+              color: var(--openk9-embeddable-search--secondary-text-color);
+            `}
+          >
             {suggestionCategoryName}
           </strong>
         </legend>
         <div
           css={css`
             display: flex;
-            gap: 5px;
             align-items: center;
+            gap: 8px;
           `}
         >
-          {baseSelectedKeys.size > 0 && (
+          {isOpen && (
             <button
-              aria-label={t("clear-category") || "clear category"}
-              className="openk9-clear-category-button"
-              onClick={handleClearCategory}
+              className="openk9-toggle-search-button"
+              aria-label={
+                showSearch
+                  ? t("hide-search") || "Nascondi ricerca"
+                  : t("show-search") || "Mostra ricerca"
+              }
               css={css`
-                border: unset;
                 background: transparent;
-                text-align: center;
-                font-size: 14px;
+                border: 1px solid var(--openk9-embeddable-search--border-color);
+                border-radius: 8px;
+                padding: 6px 8px;
                 cursor: pointer;
-                padding: 0;
+                transition: transform 120ms ease, background-color 120ms ease,
+                  border-color 120ms ease;
+                &:hover {
+                  background: rgba(0, 0, 0, 0.03);
+                }
+                &:active {
+                  transform: translateY(1px);
+                }
+                color: var(--openk9-embeddable-search--secondary-icon-color);
               `}
-              title={t("clear-category") || "clear"}
+              onClick={() => setShowSearch((prev) => !prev)}
+              title={
+                showSearch
+                  ? t("hide-search") || "Nascondi ricerca"
+                  : t("show-search") || "Mostra ricerca"
+              }
             >
-              x
+              <FontAwesomeIcon icon={faSearch} />
             </button>
           )}
           <button
@@ -241,14 +266,28 @@ function FilterCategoryDynamic({
               t("openk9-collapsable-filter") || "openk9 collapsable filter"
             }
             aria-expanded={isOpen ? "true" : "false"}
-            style={{ background: "inherit", border: "none" }}
+            css={css`
+              background: transparent;
+              border: 1px solid var(--openk9-embeddable-search--border-color);
+              border-radius: 8px;
+              padding: 6px 8px;
+              cursor: pointer;
+              transition: transform 120ms ease, background-color 120ms ease,
+                border-color 120ms ease;
+              &:hover {
+                background: rgba(0, 0, 0, 0.03);
+              }
+              &:active {
+                transform: translateY(1px);
+              }
+            `}
             onClick={() => setIsOpen(!isOpen)}
           >
             <FontAwesomeIcon
               className="icon-search icon-search-filters"
               icon={isOpen ? faChevronUp : faChevronDown}
               style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
+                color: "var(--openk9-embeddable-search--secondary-icon-color)",
                 cursor: "pointer",
               }}
             />
@@ -259,86 +298,119 @@ function FilterCategoryDynamic({
         <>
           {!isUniqueLoadMore && haveSearch && (
             <>
-              <label
-                htmlFor={"search-category-" + suggestionCategoryId}
-                className="visually-hidden"
-                css={css`
-                  border: 0;
-                  padding: 0;
-                  margin: 0;
-                  position: absolute !important;
-                  height: 1px;
-                  width: 1px;
-                  overflow: hidden;
-                  clip: rect(1px 1px 1px 1px);
-                  clip: rect(1px, 1px, 1px, 1px);
-                  clip-path: inset(50%);
-                  white-space: nowrap;
-                `}
-              >
-                {t("search-filters")}
-              </label>
-              <div
-                css={css`
-                  position: relative;
-                `}
-              >
-                {iconCustom?.Search ? (
-                  iconCustom?.Search
-                ) : (
-                  <FontAwesomeIcon
-                    icon={faSearch}
-                    width={10}
+              {showSearch && (
+                <>
+                  <label
+                    htmlFor={"search-category-" + suggestionCategoryId}
+                    className="visually-hidden"
                     css={css`
-                      position: absolute;
-                      top: 45%;
-                      left: 10px;
-                      transform: translateY(-50%);
-                      color: silver;
-                      display: inline-block;
-                      width: 0.75em;
-                      height: 0.75em;
-                      stroke-width: 0;
-                      stroke: currentColor;
-                      fill: currentColor;
+                      border: 0;
+                      padding: 0;
+                      margin: 0;
+                      position: absolute !important;
+                      height: 1px;
+                      width: 1px;
+                      overflow: hidden;
+                      clip: rect(1px 1px 1px 1px);
+                      clip: rect(1px, 1px, 1px, 1px);
+                      clip-path: inset(50%);
+                      white-space: nowrap;
                     `}
-                  />
-                )}
-                <input
-                  type="text"
-                  placeholder={placeholder || t("search-filters") || ""}
-                  onChange={(event) =>
-                    setText(event?.currentTarget?.value ?? "")
-                  }
-                  className="openk9-filter-category-search"
-                  id={"search-category-" + suggestionCategoryId}
-                  value={text}
+                  >
+                    {t("search-filters")}
+                  </label>
+                  <div
+                    css={css`
+                      position: relative;
+                    `}
+                  >
+                    {iconCustom?.Search ? (
+                      iconCustom?.Search
+                    ) : (
+                      <FontAwesomeIcon
+                        icon={faSearch}
+                        width={10}
+                        css={css`
+                          position: absolute;
+                          top: 45%;
+                          left: 10px;
+                          transform: translateY(-50%);
+                          color: silver;
+                          display: inline-block;
+                          width: 0.75em;
+                          height: 0.75em;
+                          stroke-width: 0;
+                          stroke: currentColor;
+                          fill: currentColor;
+                        `}
+                      />
+                    )}
+                    <input
+                      type="text"
+                      placeholder={placeholder || t("search-filters") || ""}
+                      onChange={(event) =>
+                        setText(event?.currentTarget?.value ?? "")
+                      }
+                      className="openk9-filter-category-search"
+                      id={"search-category-" + suggestionCategoryId}
+                      value={text}
+                      css={css`
+                        padding-left: calc(1em + 10px + 8px);
+                        height: 2em;
+                        width: -moz-available;
+                        width: -webkit-fill-available;
+                        width: fill-available;
+                        padding: 3px;
+                        flex-grow: 1;
+                        text-indent: 25px;
+                        border-radius: 8px;
+                        border: 1px solid
+                          var(--openk9-embeddable-search--border-color);
+                        background: white;
+                        :focus {
+                          border: 1px solid
+                            var(--openk9-embeddable-search--active-color);
+                          outline: none;
+                        }
+                        ::placeholder {
+                          font-style: normal;
+                          font-weight: 400;
+                          font-size: 15px;
+                        }
+                      `}
+                    />
+                  </div>
+                </>
+              )}
+              {baseSelectedKeys.size > 0 && (
+                <button
+                  aria-label={t("clear-category") || "clear category"}
+                  className="openk9-clear-category-button"
+                  onClick={handleClearCategory}
                   css={css`
-                    padding-left: calc(1em + 10px + 8px);
-                    height: 2em;
-                    width: -moz-available;
-                    width: -webkit-fill-available;
-                    width: fill-available;
-                    padding: 3px;
-                    flex-grow: 1;
-                    text-indent: 25px;
-                    border-radius: 8px;
+                    background: transparent;
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
-                    background: white;
-                    :focus {
-                      border: 1px solid
-                        var(--openk9-embeddable-search--active-color);
-                      outline: none;
+                    border-radius: 8px;
+                    padding: 6px 8px;
+                    cursor: pointer;
+                    transition: transform 120ms ease,
+                      background-color 120ms ease, border-color 120ms ease;
+                    &:hover {
+                      background: rgba(0, 0, 0, 0.03);
                     }
-                    ::placeholder {
-                      font-style: normal;
-                      font-weight: 400;
-                      font-size: 15px;
+                    &:active {
+                      transform: translateY(1px);
                     }
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color
+                    );
                   `}
-                />
-              </div>
+                  title={t("clear-category") || "clear"}
+                >
+                  clear filter
+                </button>
+              )}
             </>
           )}
           <ul
@@ -467,9 +539,11 @@ function FilterCategoryDynamic({
                       css={css`
                         text-overflow: ellipsis;
                         font-style: normal;
-                        font-weight: 600;
+                        font-weight: 400;
                         line-height: 22px;
-                        color: #000000;
+                        color: ${isChecked
+                          ? "var(--openk9-embeddable-search--primary-color)"
+                          : "#000000"};
                       `}
                     >
                       {suggestion?.tokenType === "ENTITY" ? (
@@ -488,7 +562,7 @@ function FilterCategoryDynamic({
                           : {suggestion?.entityValue}
                         </>
                       ) : (
-                        capitalize(suggestion?.value ?? "")
+                        <CapitalizeValue value={suggestion.value} />
                       )}
                     </label>
                   </li>
@@ -730,18 +804,6 @@ function CheckBoxSelect({
           }
         }}
         css={css`
-          width: 14px;
-          appearance: none;
-          min-width: 15px;
-          min-height: 15px;
-          border-radius: 4px;
-          border: 2px solid #ccc;
-          background-color: ${isChecked
-            ? "var(--openk9-embeddable-search--secondary-active-color)"
-            : "#fff"};
-          background-size: 100%;
-          background-position: center;
-          background-repeat: no-repeat;
           cursor: pointer;
         `}
       />
@@ -916,4 +978,26 @@ function mapSuggestionToSearchToken(
     count: (s?.count as string) ?? undefined,
     ...(forceGoToSuggestion ? { goToSuggestion: true } : {}),
   };
+}
+
+function CapitalizeValue({ value }: { value: string | undefined }) {
+  const [isHover, setIsHover] = React.useState(false);
+  if (!value || value.length === 0) return value;
+  return (
+    <span
+      className={`openk9-capitalize-value ${isHover ? "is-hover" : ""}`}
+      css={css`
+        cursor: pointer;
+        :hover {
+          color: var(--openk9-embeddable-search--primary-light-color);
+          font-weight: 600;
+        }
+      `}
+      onMouseOver={() => setIsHover(true)}
+      onMouseOut={() => setIsHover(false)}
+      title={isHover ? value : ""}
+    >
+      {capitalize(value ?? "")}
+    </span>
+  );
 }

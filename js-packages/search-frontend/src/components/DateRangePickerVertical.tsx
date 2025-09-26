@@ -160,6 +160,9 @@ export function DataRangePickerVertical({
         <p
           className="DateRangePickerVertical-date-title"
           css={css`
+            font-size: 14px;
+            letter-spacing: 0.2px;
+            color: var(--openk9-embeddable-search--secondary-text-color);
             font-weight: 700;
           `}
         >
@@ -262,6 +265,9 @@ export function DataRangePickerVertical({
         <p
           className="DateRangePickerVertical-date-title"
           css={css`
+            font-size: 14px;
+            letter-spacing: 0.2px;
+            color: var(--openk9-embeddable-search--secondary-text-color);
             font-weight: 700;
           `}
         >

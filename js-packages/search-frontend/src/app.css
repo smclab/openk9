@@ -2,12 +2,13 @@
 
 :root {
   --openk9-embeddable-search--primary-color: #c22525;
+  --openk9-embeddable-search--primary-light-color: #d04343;
   --openk9-embeddable-search--active-color: #c22525;
   --openk9-embeddable-search--secondary-active-color: #c0272b;
   --openk9-embeddable-search--border-color: #ced4da;
   --openk9-embeddable-search--input-padding: 16px;
   --openk9-embeddable-search--primary-text-color: #000000;
-  --openk9-embeddable-search--secondary-text-color: #62696e;
+  --openk9-embeddable-search--secondary-text-color: #3e4244;
   --openk9-embeddable-search--primary-background-color: #ffffff;
   --openk9-embeddable-search--secondary-background-color: #eeeeee;
   --openk9-embeddable-search--secondary-background-tab-color: white;
@@ -16,6 +17,33 @@
   --openk9-embeddable-active-border-card--primary-color: #a1a1aa;
   --openk9-embeddable-not-active-border-card--primary-color: #e4e4e7;
   --openk9-grey-stone-600: #52525b;
+  --openk9-embeddable-search--secondary-icon-color: #62696e;
+}
+
+input {
+  appearance: none;
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid;
+  line-height: 1;
+  border: 1px solid var(--openk9-embeddable-search--border-color);
+  background: white;
+}
+
+input[type="checkbox"]::before {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  white-space: pre;
+  content: " ";
+  color: white;
+}
+
+input[type="checkbox"]:checked::before {
+  content: "\2713";
+  background: #c22525;
 }
 
 .openk9-embeddable-search--input-container {

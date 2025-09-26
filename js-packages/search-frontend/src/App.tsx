@@ -1,4 +1,8 @@
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faChevronUp,
+  faSearch,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Chatbot } from "@openk9ui/openk9-chatbot";
 import { debounce } from "lodash";
@@ -31,6 +35,7 @@ export const openk9 = new OpenK9({
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
+  queryStringMap: { filters: "filtri" },
 });
 
 export function App() {
@@ -46,6 +51,7 @@ export function App() {
   const [focusedInput, setFocusedInput] = React.useState(null);
   const [isClickReset, setIsClickReset] = React.useState(false);
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
+  const [isOpenCalendar, setIsOpenCalendar] = React.useState(false);
   const [searchText, setSearchText] = React.useState<string | null | undefined>(
     undefined,
   );
@@ -522,14 +528,115 @@ export function App() {
         ></div>
         <div
           css={css`
-            padding: 16px;
+            padding-inline: 16px;
+            padding-top: 16px;
           `}
-          ref={(element) =>
-            openk9.updateConfiguration({
-              dataRangePickerVertical: { element },
-            })
-          }
-        ></div>
+        >
+          <div
+            className="openk9-filter-category-title"
+            css={css`
+              user-select: none;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 8px;
+              padding: 6px 0;
+            `}
+          >
+            <legend
+              className="data-range-filter"
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                :first-letter {
+                  text-transform: uppercase;
+                }
+              `}
+            >
+              <strong
+                className="name-category-filter"
+                css={css`
+                  font-size: 14px;
+                  letter-spacing: 0.2px;
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                `}
+              >
+                Calendar
+              </strong>
+            </legend>
+            <div
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              `}
+            >
+              <button
+                className={`openk9-mobile-collapsable-filters openk9-collapsable-filters ${
+                  isOpenCalendar
+                    ? "openk9-dropdown-filters-open"
+                    : "openk9-dropdown-filters-close"
+                }`}
+                aria-label={
+                  t("openk9-collapsable-filter") || "openk9 collapsable filter"
+                }
+                aria-expanded={isOpenCalendar ? "true" : "false"}
+                css={css`
+                  background: transparent;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                  border-radius: 8px;
+                  padding: 6px 8px;
+                  cursor: pointer;
+                  transition: transform 120ms ease, background-color 120ms ease,
+                    border-color 120ms ease;
+                  &:hover {
+                    background: rgba(0, 0, 0, 0.03);
+                  }
+                  &:active {
+                    transform: translateY(1px);
+                  }
+                `}
+                onClick={() => setIsOpenCalendar(!isOpenCalendar)}
+              >
+                <FontAwesomeIcon
+                  className="icon-search icon-search-filters"
+                  icon={isOpenCalendar ? faChevronUp : faChevronDown}
+                  style={{
+                    color:
+                      "var(--openk9-embeddable-search--secondary-icon-color)",
+                    cursor: "pointer",
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+          <span
+            role="separator"
+            aria-hidden="true"
+            css={css`
+              display: flex;
+              height: 1px;
+              background: var(--openk9-embeddable-search--border-color);
+              margin: 4px 0;
+              list-style: none;
+              width: 100%;
+            `}
+          />
+        </div>
+        {isOpenCalendar && (
+          <div
+            css={css`
+              padding-inline: 16px;
+            `}
+            ref={(element) =>
+              openk9.updateConfiguration({
+                dataRangePickerVertical: { element },
+              })
+            }
+          ></div>
+        )}
         <div
           className="openk9-filters-container openk9-box"
           ref={(element) =>
