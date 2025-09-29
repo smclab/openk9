@@ -10,11 +10,13 @@ import {
   useSuggestionCategoriesQuery,
   useUnboundBucketsBySuggestionCategoryQuery,
 } from "../../graphql-generated";
+import TranslationDialog from "./components/translateModal";
 
 export function SuggestionCategories() {
   const suggestionCategoriesQuery = useSuggestionCategoriesQuery();
   const navigate = useNavigate();
   const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAddTranslation, setIsAddTranslation] = React.useState({ id: null, isVisible: false });
   const [viewDeleteModal, setViewDeleteModal] = React.useState({
     view: false,
     id: undefined,
@@ -85,6 +87,12 @@ export function SuggestionCategories() {
               label: "Add",
               action: (datasources) => {
                 setIsAdd({ id: datasources.id, isVisible: true });
+              },
+            },
+            {
+              label: "Add Translation",
+              action: (datasources) => {
+                setIsAddTranslation({ id: datasources.id, isVisible: true });
               },
             },
             {
@@ -166,6 +174,13 @@ export function SuggestionCategories() {
           callbackClose={() => {
             setIsAdd({ id: null, isVisible: false });
           }}
+        />
+      )}
+      {isAddTranslation.isVisible && (
+        <TranslationDialog
+          isOpen={isAddTranslation.isVisible}
+          onClose={() => setIsAddTranslation({ id: null, isVisible: false })}
+          suggestionCategoryId={String(isAddTranslation.id || "")}
         />
       )}
     </Container>

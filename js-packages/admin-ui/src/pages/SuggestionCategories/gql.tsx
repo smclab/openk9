@@ -105,6 +105,25 @@ gql`
   }
 `;
 
+export const ADD_SUGGESTION_CATEGORY_TRANSLATION = gql`
+  mutation AddSuggestionCategoryTranslation(
+    $suggestionCategoryId: ID!
+    $language: String!
+    $key: String
+    $value: String!
+  ) {
+    addSuggestionCategoryTranslation(
+      suggestionCategoryId: $suggestionCategoryId
+      language: $language
+      key: $key
+      value: $value
+    ) {
+      left
+      right
+    }
+  }
+`;
+
 gql`
   query UnboundDocTypeFieldsBySuggestionCategory($suggestionCategoryId: BigInteger!) {
     unboundDocTypeFieldsBySuggestionCategory(suggestionCategoryId: $suggestionCategoryId) {
