@@ -585,10 +585,3 @@ const SliderWithTooltip = ({
     </Box>
   );
 };
-
-type structureTemplateSearchConfig = [
-  {
-    type: string;
-    form: Template;
-  },
-];

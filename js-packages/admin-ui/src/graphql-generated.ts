@@ -5533,6 +5533,16 @@ export type QueryParserConfigQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type QueryParserConfigQuery = { __typename?: 'Query', queryParserConfigFormConfigurations?: any | null };
 
+export type AddSuggestionCategoryTranslationMutationVariables = Exact<{
+  suggestionCategoryId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddSuggestionCategoryTranslationMutation = { __typename?: 'Mutation', addSuggestionCategoryTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
+
 export type UnboundBucketsBySuggestionCategoryQueryVariables = Exact<{
   id: Scalars['BigInteger'];
 }>;
@@ -10162,6 +10172,48 @@ export function useQueryParserConfigLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type QueryParserConfigQueryHookResult = ReturnType<typeof useQueryParserConfigQuery>;
 export type QueryParserConfigLazyQueryHookResult = ReturnType<typeof useQueryParserConfigLazyQuery>;
 export type QueryParserConfigQueryResult = Apollo.QueryResult<QueryParserConfigQuery, QueryParserConfigQueryVariables>;
+export const AddSuggestionCategoryTranslationDocument = gql`
+    mutation AddSuggestionCategoryTranslation($suggestionCategoryId: ID!, $language: String!, $key: String, $value: String!) {
+  addSuggestionCategoryTranslation(
+    suggestionCategoryId: $suggestionCategoryId
+    language: $language
+    key: $key
+    value: $value
+  ) {
+    left
+    right
+  }
+}
+    `;
+export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
+
+/**
+ * __useAddSuggestionCategoryTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddSuggestionCategoryTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddSuggestionCategoryTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addSuggestionCategoryTranslationMutation, { data, loading, error }] = useAddSuggestionCategoryTranslationMutation({
+ *   variables: {
+ *      suggestionCategoryId: // value for 'suggestionCategoryId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddSuggestionCategoryTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>(AddSuggestionCategoryTranslationDocument, options);
+      }
+export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<typeof useAddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationResult = Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
 export const UnboundBucketsBySuggestionCategoryDocument = gql`
     query UnboundBucketsBySuggestionCategory($id: BigInteger!) {
   unboundBucketsBySuggestionCategory(suggestionCategoryId: $id) {
@@ -14425,4 +14477,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-08-07T13:08:16+02:00
+// Generated on 2025-09-29T12:33:21+02:00

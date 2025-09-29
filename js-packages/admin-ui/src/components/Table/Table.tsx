@@ -1,24 +1,24 @@
-import React from "react";
 import { QueryResult } from "@apollo/client";
-import { TableVirtuoso } from "react-virtuoso";
-import useDebounced from "../common/useDebounced";
-import { Link } from "react-router-dom";
-import { EmptySpace, ModalConfirm } from "../Form";
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  TextField,
-  Table as TableMaterial,
+  Box,
+  Button,
+  Container,
+  InputAdornment,
   TableBody,
   TableCell,
   TableHead,
+  Table as TableMaterial,
   TableRow,
-  Container,
+  TextField,
   Typography,
-  InputAdornment,
   useTheme,
-  Box,
-  Button,
 } from "@mui/material";
+import React from "react";
+import { Link } from "react-router-dom";
+import { TableVirtuoso } from "react-virtuoso";
+import useDebounced from "../common/useDebounced";
+import { EmptySpace, ModalConfirm } from "../Form";
 
 export function formatName(value: { id?: string | null; name?: string | null } | null | undefined) {
   return (
@@ -237,7 +237,14 @@ export function Table<
                   <TableCell key={colIndex}>{column.content(row)}</TableCell>
                 ))}
                 <TableCell>
-                  <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: "10px" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                      alignItems: "center",
+                      gap: "30px",
+                    }}
+                  >
                     {rowActions.map((rowAction, indexMap) => {
                       const row = rowAction.isDisabled === undefined;
                       const isActive =
@@ -249,7 +256,6 @@ export function Table<
                             border: "none",
                             background: "none",
                             padding: "0",
-                            marginLeft: indexMap > 0 ? "20px" : "unset",
                             textDecoration: "none",
                             cursor: !isActive ? "not-allowed" : "pointer",
                             color: !isActive ? "gray" : "unset",
