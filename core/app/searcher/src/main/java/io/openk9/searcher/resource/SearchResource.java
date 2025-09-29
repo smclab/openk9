@@ -30,6 +30,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -37,6 +38,7 @@ import java.util.regex.Pattern;
 
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import io.openk9.searcher.grpc.SortType;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
@@ -325,6 +327,11 @@ public class SearchResource {
 			.setVirtualHost(virtualHost)
 			.build();
 
+		// retrieve the searchToken associated with the text entered by the user in the search input.
+		var searchTokenUserInput = searchRequest.getSearchQuery().stream()
+			.filter(ParserSearchToken::isSearch)
+			.findFirst();
+
 		// retrieve Autocorrection configurations
 		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
 			.onFailure()
@@ -336,128 +343,35 @@ public class SearchResource {
 					)
 				);
 			})
-			.flatMap(autocorrectionConfig -> {
-
-				// retrieve the searchToken associated with the text entered by the user in the search input.
-				var searchTokenUserInput = searchRequest.getSearchQuery().stream()
-					.filter(ParserSearchToken::isSearch)
-					.findFirst();
-
-				if (searchTokenUserInput.isPresent()) {
-					// retrieve the values list for the searchTokenUserInput
-					var searchTokenUserInputValues = searchTokenUserInput
-						.map(ParserSearchToken::getValues)
-						.orElse(List.of());
-
-					if (searchTokenUserInputValues.size() == 1) {
-
-						// retrieve the text entered by the user in the search input.
-						var queryText = searchTokenUserInputValues.getFirst();
-
-						if (queryText != null && !queryText.isEmpty()) {
-							// retrieve autocorrection suggest
-							var autocorrectionRequest =
-								org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
-									.index(autocorrectionConfig.getIndexNameList())
-									// to retrieve only suggestions, not documents
-									.size(0)
-									.suggest(Suggester.of(sug -> sug
-										.text(queryText)
-										.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
-											fsb.term(tsb -> tsb
-												.field(autocorrectionConfig.getField())
-												// max number of suggestions to retrieve for each term
-												.size(1)
-												.sort(
-													_grpcEnumToSuggestSort(
-														autocorrectionConfig.getSort())
-												)
-												.suggestMode(
-													_grpcEnumToSuggestMode(
-														autocorrectionConfig.getSuggestMode()
-													)
-												)
-												.prefixLength(autocorrectionConfig.getPrefixLength())
-												.minWordLength(autocorrectionConfig.getMinWordLength())
-												.maxEdits(autocorrectionConfig.getMaxEdit())
-											)
-										)
-									))
-								);
-
-							return Uni.createFrom().completionStage(() -> {
-									try {
-										return client.search(autocorrectionRequest, Void.class);
-									} catch (IOException | OpenSearchException e) {
-										return CompletableFuture.failedFuture(e);
-									}
-								})
-								.onFailure()
-								.recoverWithUni(throwable -> {
-									_logMessage("Autocorrection failed", throwable);
-									return Uni.createFrom().failure(
-										new AutocorrectionException("Autocorrection failed", throwable)
-									);
-								})
-								.map(voidSearchResponse ->
-									_parseAutocorrectionResponse(
-										queryText,
-										voidSearchResponse,
-										autocorrectionConfig.getEnableSearchWithCorrection()
-									)
-								)
-								.map(autocorrectionMap -> {
-									if (!autocorrectionMap.isEmpty()) {
-										if (autocorrectionConfig.getEnableSearchWithCorrection()) {
-											// replace query text with the correction
-											searchTokenUserInput.get().setValues(List.of(
-												(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
-											);
-										}
-										// do search and add autocorrection to the search response
-										return _doSearch(searchRequest)
-											.invoke(response ->
-												response.setAutocorrection(autocorrectionMap)
-											);
-									}
-									return _doSearch(searchRequest);
-								})
-								.flatMap(responseUni -> responseUni);
-
-						}
-						else {
-							log.warn("Autocorrection was not performed because the user input text is null or empty.");
-							return Uni.createFrom().failure(
-								new AutocorrectionException(
-									"Autocorrection was not performed because the user input text is null or empty."
-								)
-							);
-						}
-					}
-					else {
-						log.warn("Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values.");
-						return Uni.createFrom().failure(
-							new AutocorrectionException(
-								"Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values."
-							)
+			.flatMap(autocorrectionConfig ->
+				searchTokenUserInput.isPresent()
+					? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
+					: Uni.createFrom().failure(
+						new AutocorrectionException("Autocorrection was not performed because no search token with isSearch is present.")
+					)
+			)
+			.onFailure()
+			.recoverWithItem(failure -> {
+				_logMessage("Something went wrong during the autocorrected search.", failure);
+				return new HashMap<>();
+			})
+			.map(autocorrectionMap -> {
+				if (!autocorrectionMap.isEmpty()) {
+					if ((Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
+						// replace query text in the searchRequest with the correction
+						searchTokenUserInput.get().setValues(List.of(
+							(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
 						);
 					}
+					// do search and add autocorrection to the search response
+					return _doSearch(searchRequest)
+						.invoke(response ->
+							response.setAutocorrection(autocorrectionMap)
+						);
 				}
-				else {
-					log.warn("Autocorrection was not performed because no search token with isSearch is present.");
-					return Uni.createFrom().failure(
-						new AutocorrectionException(
-							"Autocorrection was not performed because no search token with isSearch is present."
-						)
-					);
-				}
-			})
-			// fallback to standard search on autocorrection failure
-			.onFailure()
-			.recoverWithUni(failure -> {
-				_logMessage("Something went wrong during the autocorrected search.", failure);
 				return _doSearch(searchRequest);
-			});
+			})
+			.flatMap(responseUni -> responseUni);
 	}
 
 	@Operation(operationId = "query-analysis")
@@ -916,9 +830,108 @@ public class SearchResource {
 			);
 	}
 
-	// TODO: _generateAutocorrectionText implementation
+	// TODO: _generateAutocorrectionText implementation se non è necessario correggere restituisce la query originale
 	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
 		return "";
+	}
+
+	/**
+	 * Retrieves autocorrection suggestions for a single search term using OpenSearch term suggester.
+	 * <p>
+	 * This method validates that the search token contains exactly one value, then performs an
+	 * autocorrection query against OpenSearch using the provided configuration.
+	 * The method configures the term suggester with the autocorrection configuration.
+	 *
+	 * @param autocorrectionConfig the autocorrection configuration containing index names, field, and suggester parameters
+	 * @param searchTokenUserInput the parser search token containing user input values
+	 * @return a Uni emitting a map with autocorrection suggestions and metadata, or fails with AutocorrectionException
+	 *         if the input is invalid or the OpenSearch request fails
+	 * @throws AutocorrectionException if the search token doesn't contain exactly one value, the query text is null/empty,
+	 *         or the OpenSearch autocorrection request fails
+	 */
+	private Uni<Map<String, Object>> _getAutocorrectionSuggest(
+		AutocorrectionConfigurationsResponse autocorrectionConfig,
+		ParserSearchToken searchTokenUserInput) {
+
+		// retrieve the values list for the searchTokenUserInput
+		var searchTokenUserInputValues = searchTokenUserInput.getValues();
+
+		if (searchTokenUserInputValues.size() == 1) {
+
+			// retrieve the text entered by the user in the search input.
+			var queryText = searchTokenUserInputValues.getFirst();
+
+			if (queryText != null && !queryText.isEmpty()) {
+				// retrieve autocorrection suggest
+				var autocorrectionRequest =
+					org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
+						.index(autocorrectionConfig.getIndexNameList())
+						// to retrieve only suggestions, not documents
+						.size(0)
+						.suggest(Suggester.of(sug -> sug
+							.text(queryText)
+							.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
+								fsb.term(tsb -> tsb
+									.field(autocorrectionConfig.getField())
+									// max number of suggestions to retrieve for each term
+									.size(1)
+									.sort(
+										_grpcEnumToSuggestSort(
+											autocorrectionConfig.getSort())
+									)
+									.suggestMode(
+										_grpcEnumToSuggestMode(
+											autocorrectionConfig.getSuggestMode()
+										)
+									)
+									.prefixLength(autocorrectionConfig.getPrefixLength())
+									.minWordLength(autocorrectionConfig.getMinWordLength())
+									.maxEdits(autocorrectionConfig.getMaxEdit())
+								)
+							)
+						))
+					);
+
+				return Uni.createFrom().completionStage(() -> {
+						try {
+							return client.search(autocorrectionRequest, Void.class);
+						} catch (IOException | OpenSearchException e) {
+							return CompletableFuture.failedFuture(e);
+						}
+					})
+					.onFailure()
+					.recoverWithUni(throwable -> {
+						_logMessage("Autocorrection failed", throwable);
+						return Uni.createFrom().failure(
+							new AutocorrectionException("Autocorrection failed", throwable)
+						);
+					})
+					.map(voidSearchResponse ->
+						_parseAutocorrectionResponse(
+							queryText,
+							voidSearchResponse,
+							autocorrectionConfig.getEnableSearchWithCorrection()
+						)
+					);
+
+			}
+			else {
+				log.warn("Autocorrection was not performed because the user input text is null or empty.");
+				return Uni.createFrom().failure(
+					new AutocorrectionException(
+						"Autocorrection was not performed because the user input text is null or empty."
+					)
+				);
+			}
+		}
+		else {
+			log.warn("Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values.");
+			return Uni.createFrom().failure(
+				new AutocorrectionException(
+					"Autocorrection was not performed because the 'isSearch' search token has 0 or more than 1 values."
+				)
+			);
+		}
 	}
 
 	/**
