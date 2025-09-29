@@ -10,7 +10,7 @@ public class FormResourceImpl implements FormResource {
     @Override
     public Form form() {
         Form form = new Form();
-        form.setFormFields(getFormFieldList());
+        form.setFields(getFormFieldList());
         return form;
     }
 
