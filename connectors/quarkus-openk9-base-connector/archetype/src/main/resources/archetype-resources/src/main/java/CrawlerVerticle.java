@@ -48,7 +48,7 @@ public class CrawlerVerticle extends AbstractVerticle {
         ingestionDTO.setContentId(UUID.randomUUID());
         ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-        ingestionDTO.setTenantId(UUID.fromString(invokeRequest.getTenantId()));
+        ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setType(PayloadType.HALT);
         return ingestionDTO;
