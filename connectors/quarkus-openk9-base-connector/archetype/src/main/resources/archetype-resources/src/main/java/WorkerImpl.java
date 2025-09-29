@@ -6,6 +6,7 @@ import io.openk9.connector.api.beans.PayloadType;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageProducer;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class WorkerImpl implements Worker {
@@ -29,10 +30,15 @@ public class WorkerImpl implements Worker {
         ingestionDTO.setContentId(UUID.randomUUID());
         ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-        ingestionDTO.setTenantId(UUID.fromString(invokeRequest.getTenantId()));
+        ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setRawContent("Test-Ingestion-Payload");
         ingestionDTO.setDatasourcePayload(null);
+
+        ResourcesDTO resourcesDTO = new ResourcesDTO();
+        resourcesDTO.setBinaries(new ArrayList<>());
+        ingestionDTO.setResources(resourcesDTO);
+
         ingestionDTO.setType(PayloadType.DOCUMENT);
         ingestionDTO.setLast(false);
         producer.write(ingestionDTO);
