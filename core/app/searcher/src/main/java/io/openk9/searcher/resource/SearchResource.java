@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -829,9 +830,53 @@ public class SearchResource {
 			);
 	}
 
-	// TODO: _generateAutocorrectionText implementation se non è necessario correggere restituisce la query originale
+	/**
+	 * Generates the corrected text by applying autocorrection suggestions to the original text.
+	 * <p>
+	 * This method iterates through the suggestions sorted by offset and replaces each incorrect
+	 * term with its correction, building the final corrected text.
+	 *
+	 * @param autocorrection a map containing ORIGINAL_TEXT and SUGGESTIONS keys with autocorrection data
+	 * @return the corrected text with all suggestions applied, or the original text if no suggestions exist
+	 */
 	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
-		return "";
+		String originalText = (String) autocorrection.get(ORIGINAL_TEXT);
+
+		@SuppressWarnings("unchecked")
+		List<Map<String, Object>> suggestions =
+			(List<Map<String, Object>>) autocorrection.get(SUGGESTIONS);
+
+		if (suggestions == null || suggestions.isEmpty()) {
+			return originalText;
+		}
+
+		// Sort suggestions by offset to process them in order
+		var sortedSuggestions = suggestions.stream()
+			.sorted(Comparator.comparingInt(s -> (Integer) s.get(OFFSET)))
+			.toList();
+
+		StringBuilder correctedText = new StringBuilder();
+		int currentPosition = 0;
+
+		for (Map<String, Object> suggestion : sortedSuggestions) {
+			int offset = (Integer) suggestion.get(OFFSET);
+			int length = (Integer) suggestion.get(LENGTH);
+			String correction = (String) suggestion.get(CORRECTION);
+
+			// Append text before the current suggestion
+			correctedText.append(originalText, currentPosition, offset);
+
+			// Append the correction
+			correctedText.append(correction);
+
+			// Update position to after the corrected word
+			currentPosition = offset + length;
+		}
+
+		// Append remaining text after the last suggestion
+		correctedText.append(originalText.substring(currentPosition));
+
+		return correctedText.toString();
 	}
 
 	/**
@@ -970,7 +1015,7 @@ public class SearchResource {
 	 * @param message the message to log
 	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
 	 */
-	private static void _logMessage(String message, Throwable throwable) {
+	private void _logMessage(String message, Throwable throwable) {
 		if (log.isDebugEnabled()) {
 			log.debug(message, throwable);
 		}
