@@ -84,7 +84,7 @@ components:
     Form:
       type: object
       properties:
-        formFields:
+        fields:
           type: array
           items:
             $ref: "#/components/schemas/FormField"
@@ -176,7 +176,6 @@ components:
             belongs to.
         tenantId:
           type: string
-          format: uuid
           description: Unique string that identifies the tenant the ingested message
             belongs to.
         contentId:
