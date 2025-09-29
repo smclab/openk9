@@ -5,21 +5,37 @@ import {
   SearchToken,
   useOpenK9Client,
 } from "./client";
-import { loadQueryString, saveQueryString } from "./queryString";
+import {
+  loadQueryString,
+  saveQueryString,
+  loadLocalStorage,
+  saveLocalStorage,
+} from "./queryString";
 import { containsAtLeastOne } from "../embeddable/Main";
 import { queryStringMapType, queryStringValues } from "../embeddable/entry";
 
 type Range = [number, number];
 
+function toEnabledSet(values: queryStringValues) {
+  if (Array.isArray(values)) return new Set(values);
+  const s = new Set<string>();
+  Object.entries(values || {}).forEach(([k, v]) => {
+    if (v) s.add(k);
+  });
+  return s;
+}
+
 export function useSelections({
   useKeycloak = true,
-  useQueryString = true,
+  persistInQueryString = false,
+  localStorageKey = "selections",
   defaultString = "",
   queryStringValues,
   queryStringMap,
 }: {
   useKeycloak?: boolean;
-  useQueryString?: boolean;
+  persistInQueryString?: boolean;
+  localStorageKey?: string;
   defaultString?: string;
   queryStringValues: queryStringValues;
   queryStringMap?: queryStringMapType;
@@ -33,26 +49,28 @@ export function useSelections({
     commitId: 0,
   };
 
-  const remappedQueryStringMap: queryStringMapType = {
+  const enabled = toEnabledSet(queryStringValues as any);
+  const buildMap: queryStringMapType = {
     keyObj: queryStringMap?.keyObj,
-    text: queryStringValues?.find((k) => k === "text")
-      ? queryStringMap?.text
-      : undefined,
-    textOnChange: queryStringValues?.find((k) => k === "textOnChange")
-      ? queryStringMap?.textOnChange
-      : undefined,
-    selection: queryStringValues?.find((k) => k === "selection")
-      ? queryStringMap?.selection
-      : undefined,
-    filters: queryStringValues?.find((k) => k === "filters")
-      ? queryStringMap?.filters
-      : undefined,
+    ...(enabled.has("text") ? { text: queryStringMap?.text ?? "text" } : {}),
+    ...(enabled.has("textOnChange")
+      ? { textOnChange: queryStringMap?.textOnChange ?? "textOnChange" }
+      : {}),
+    ...(enabled.has("selection")
+      ? { selection: queryStringMap?.selection ?? "selection" }
+      : {}),
+    ...(enabled.has("filters")
+      ? { filters: queryStringMap?.filters ?? "filters" }
+      : {}),
+    ...(enabled.has("search")
+      ? { search: (queryStringMap as any)?.search ?? "search" }
+      : {}),
   };
-  const [state, dispatch] = React.useReducer(
-    reducer,
-    defaultSearch,
-    (defaultSearch) =>
-      loadQueryString<SelectionsState>(defaultSearch, remappedQueryStringMap),
+
+  const [state, dispatch] = React.useReducer(reducer, defaultSearch, (def) =>
+    persistInQueryString
+      ? loadQueryString<SelectionsState>(def, buildMap)
+      : loadLocalStorage<SelectionsState>(def, localStorageKey, buildMap),
   );
 
   const [canSave, setCanSave] = React.useState(false);
@@ -67,14 +85,14 @@ export function useSelections({
   }, []);
 
   React.useEffect(() => {
-    if (useKeycloak && canSave && useQueryString) {
-      saveQueryString(state, remappedQueryStringMap);
-    } else {
-      if (!useKeycloak && useQueryString) {
-        saveQueryString(state, remappedQueryStringMap);
+    if (canSave) {
+      if (persistInQueryString) {
+        saveQueryString(state, buildMap);
+      } else {
+        saveLocalStorage(state, localStorageKey, buildMap);
       }
     }
-  }, [canSave, state]);
+  }, [canSave, state, persistInQueryString, localStorageKey]);
 
   return [state, dispatch] as const;
 }
