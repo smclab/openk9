@@ -109,7 +109,7 @@ export function Main({
   const [languageSelect, setLanguageSelect] = React.useState("");
   const [selectionsState, selectionsDispatch] = useSelections({
     useKeycloak,
-    useQueryString,
+    persistInQueryString: useQueryString,
     defaultString: configuration.defaultString || "",
     queryStringValues,
     queryStringMap,
@@ -118,7 +118,7 @@ export function Main({
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
     useSelections({
       useKeycloak,
-      useQueryString,
+      persistInQueryString: useQueryString,
       defaultString: configuration.defaultString || "",
       queryStringValues,
       queryStringMap,
