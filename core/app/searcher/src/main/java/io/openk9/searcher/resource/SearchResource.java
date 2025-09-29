@@ -363,13 +363,12 @@ public class SearchResource {
 							(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
 						);
 					}
-					// do search and add autocorrection to the search response
-					return _doSearch(searchRequest)
-						.invoke(response ->
-							response.setAutocorrection(autocorrectionMap)
-						);
 				}
-				return _doSearch(searchRequest);
+				// do search and add autocorrection to the search response
+				return _doSearch(searchRequest)
+					.invoke(response ->
+						response.setAutocorrection(autocorrectionMap)
+					);
 			})
 			.flatMap(responseUni -> responseUni);
 	}

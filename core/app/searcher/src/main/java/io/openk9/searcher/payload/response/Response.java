@@ -17,6 +17,7 @@
 
 package io.openk9.searcher.payload.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,7 @@ public class Response {
 	@Schema(description = "Number of results obtained")
 	long total;
 	@Schema(description = "Autocorrection result")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private Object autocorrection;
 
 	public static final Response EMPTY = new Response(List.of(), 0, null);
