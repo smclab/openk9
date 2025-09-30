@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+from google.protobuf.struct_pb2 import Struct
 
 from app.external_services.grpc.grpc_client import (
     generate_documents_embeddings,
@@ -101,7 +102,14 @@ def documents_embedding(
     vector_size = embedding_model_configuration.get("vector_size")
     json_config = embedding_model_configuration.get("json_config")
 
-    chunk = {"type": 1, "jsonConfig": json_config}
+    chunk_json_config = Struct()
+    chunk_json_config.update(
+        {
+            "size": 2000,
+        }
+    )
+
+    chunk = {"type": 1, "jsonConfig": chunk_json_config}
     provider_model = {"provider": model_type, "model": model}
     embedding_model = {
         "apiKey": api_key,
