@@ -16,7 +16,7 @@
 #
 
 
-import datetime
+import time
 
 import grpc
 from fastapi import HTTPException, status
@@ -711,8 +711,7 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
             documents = []
             chunks = response.chunks
             for chunk in chunks:
-                now = datetime.datetime.now()
-                timestamp = int(now.timestamp() * 1000)
+                timestamp = int(time.time() * 1000)
                 document = {
                     "timestamp": timestamp,
                     "filename": document.get("filename"),
