@@ -3,6 +3,8 @@ import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
+import TranslationDialog from "../SuggestionCategories/components/translateModal";
+import { ADD_TAB_TRANSLATION } from "./gql";
 import {
   useAddTabToBucketMutation,
   useDeleteTabsMutation,
@@ -39,6 +41,7 @@ export function Tabs() {
     id: undefined,
   });
   const [isAdd, setIsAdd] = React.useState({ id: null, isVisible: false });
+  const [isAddTranslation, setIsAddTranslation] = React.useState({ id: null, isVisible: false });
 
   const unboundListEnrichPipeline = useUnboundBucketsByTabQuery({
     variables: { id: Number(isAdd?.id) },
@@ -48,7 +51,6 @@ export function Tabs() {
   const [addMutate] = useAddTabToBucketMutation({
     refetchQueries: [],
   });
-  // const buckets = useBucketsQuery().data?.buckets;
 
   return (
     <Container maxWidth="xl">
@@ -91,6 +93,12 @@ export function Tabs() {
               label: "Add",
               action: (bucket) => {
                 setIsAdd({ id: bucket.id, isVisible: true });
+              },
+            },
+            {
+              label: "Add Translation",
+              action: (datasources) => {
+                setIsAddTranslation({ id: datasources.id, isVisible: true });
               },
             },
             {
@@ -174,6 +182,16 @@ export function Tabs() {
           callbackClose={() => {
             setIsAdd({ id: null, isVisible: false });
           }}
+        />
+      )}
+
+      {isAddTranslation.isVisible && (
+        <TranslationDialog
+          isOpen={isAddTranslation.isVisible}
+          onClose={() => setIsAddTranslation({ id: null, isVisible: false })}
+          entityType="tab"
+          entityId={String(isAddTranslation.id || "")}
+          customMutation={ADD_TAB_TRANSLATION}
         />
       )}
     </Container>

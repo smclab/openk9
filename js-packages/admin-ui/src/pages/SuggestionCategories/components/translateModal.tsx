@@ -1,35 +1,39 @@
-import React, { useMemo, useState } from "react";
+import { gql, useMutation } from "@apollo/client";
+import { useToast } from "@components/Form";
+import CloseIcon from "@mui/icons-material/Close";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  IconButton,
   Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  Grid,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
   Typography,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import CloseIcon from "@mui/icons-material/Close";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { gql, useMutation } from "@apollo/client";
-import { useSuggestionCategoryQuery, useLanguagesOptionsQuery } from "../../../graphql-generated";
-import { ADD_SUGGESTION_CATEGORY_TRANSLATION } from "../gql";
+import React, { useMemo, useState } from "react";
+import { useLanguagesOptionsQuery, useSuggestionCategoryQuery, useTabQuery } from "../../../graphql-generated";
+
+type EntityType = "suggestionCategory" | "tab";
 
 interface TranslationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave?: (translationData: TranslationConfig) => void;
   initialData?: Partial<TranslationConfig>;
-  suggestionCategoryId: string;
+  entityId: string;
+  entityType?: EntityType;
+  customMutation: any;
 }
 
 interface TranslationConfig {
@@ -45,14 +49,22 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
   onClose,
   onSave,
   initialData,
-  suggestionCategoryId,
+  entityId,
+  entityType = "suggestionCategory",
+  customMutation,
 }) => {
   const theme = useTheme();
   const color = theme.palette.primary.main;
+  const toast = useToast();
 
-  const { data, refetch } = useSuggestionCategoryQuery({
-    variables: { id: suggestionCategoryId },
-    skip: !suggestionCategoryId,
+  const scQuery = useSuggestionCategoryQuery({
+    variables: { id: entityId },
+    skip: !entityId || entityType !== "suggestionCategory",
+    fetchPolicy: "network-only",
+  });
+  const tabQuery = useTabQuery({
+    variables: { id: entityId },
+    skip: !entityId || entityType !== "tab",
     fetchPolicy: "network-only",
   });
 
@@ -72,8 +84,16 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
 
   const norm = (s?: string) => (s || "").toLowerCase().replace(/[-_]/g, "");
 
+  const translations =
+    (entityType === "suggestionCategory"
+      ? scQuery.data?.suggestionCategory?.translations
+      : tabQuery.data?.tab?.translations) || [];
+
+  const entityName =
+    entityType === "suggestionCategory" ? scQuery.data?.suggestionCategory?.name : tabQuery.data?.tab?.name;
+
   const translatedNameLanguages = useMemo(() => {
-    const t = data?.suggestionCategory?.translations || [];
+    const t = translations || [];
     const langsWithName = new Set<string>();
     t.forEach((tr) => {
       if (tr?.key === "name" && (tr?.value || "").trim() !== "" && tr?.language) {
@@ -81,7 +101,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
       }
     });
     return availableLanguages.filter((l) => langsWithName.has(norm(l.code))).map((l) => l.code);
-  }, [data, availableLanguages]);
+  }, [translations, availableLanguages]);
 
   const notTranslatedNameLanguages = useMemo(() => {
     const setTranslated = new Set(translatedNameLanguages.map((c) => norm(c)));
@@ -115,7 +135,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
   });
 
   const getTranslatedValue = (k: "name" | "description", langCode: string) => {
-    const list = data?.suggestionCategory?.translations || [];
+    const list = translations || [];
     const match = list.find((tr) => tr?.key === k && norm(tr?.language || undefined) === norm(langCode));
     return (match?.value || "").trim();
   };
@@ -128,19 +148,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
       name: filledName,
       description: filledDescription,
     }));
-  }, [config.language, data]);
-
-  const handleClose = () => {
-    setConfig({
-      language: "it-it",
-      name: "",
-      description: "",
-      translatedLanguages: translatedNameLanguages,
-      notTranslatedLanguages: notTranslatedNameLanguages,
-    });
-    setValidation({ name: "", description: "" });
-    onClose();
-  };
+  }, [config.language, translations]);
 
   const handleInputChange = (field: keyof TranslationConfig, value: string) => {
     setConfig((prev) => ({
@@ -156,8 +164,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
     }
   };
 
-  // Hook mutation
-  const [addTranslation, { loading: saving }] = useMutation(ADD_SUGGESTION_CATEGORY_TRANSLATION);
+  const [addTranslation, { loading: saving }] = useMutation(customMutation);
 
   const toBackendLang = (code: string) => {
     const [a, b] = code.split("-");
@@ -168,29 +175,47 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
   const handleSave = async () => {
     const lang = toBackendLang(config.language);
 
-    // name
+    const baseVars =
+      entityType === "tab" ? { tabId: entityId, language: lang } : { suggestionCategoryId: entityId, language: lang };
+
     await addTranslation({
       variables: {
-        suggestionCategoryId,
-        language: lang,
+        ...baseVars,
         key: "name",
         value: config.name,
       },
-    });
-
-    // description
-    await addTranslation({
-      variables: {
-        suggestionCategoryId,
-        language: lang,
-        key: "description",
-        value: config.description,
+      onCompleted() {
+        toast({
+          displayType: "success",
+          title: "Translation",
+          content: "Translated successfully",
+        });
+      },
+      onError(data) {
+        toast({
+          displayType: "error",
+          title: "Error",
+          content: data.message || "Generic Error",
+        });
       },
     });
 
-    await refetch();
+    if ((config.description || "").trim() !== "") {
+      await addTranslation({
+        variables: {
+          ...baseVars,
+          key: "description",
+          value: config.description,
+        },
+      });
+    }
+
+    if (entityType === "tab") {
+      await tabQuery.refetch();
+    } else {
+      await scQuery.refetch();
+    }
     onSave?.(config);
-    handleClose();
   };
 
   const toggleSection = (section: "translated" | "notTranslated") => {
@@ -212,8 +237,8 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
           key={langCode}
           label={`${langInfo.name} (${langCode})`}
           variant="outlined"
+          onClick={() => handleInputChange("language", langCode)}
           sx={{
-            cursor: "default",
             margin: 0.5,
             "&:hover": { backgroundColor: theme.palette.action.hover },
           }}
@@ -224,7 +249,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
 
   return (
     <Dialog
-      onClose={handleClose}
+      onClose={() => onClose()}
       open={isOpen}
       maxWidth="md"
       fullWidth
@@ -242,10 +267,10 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
           fontSize: "unset",
         }}
       >
-        Add Translation - {data?.suggestionCategory?.name ?? ""}
+        {`Add Translate - ${entityName ?? ""}`}
         <IconButton
           aria-label="close"
-          onClick={handleClose}
+          onClick={() => onClose()}
           sx={{
             position: "absolute",
             right: 8,
@@ -314,7 +339,7 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
               onClick={() => toggleSection("translated")}
             >
               <Typography variant="h6" color="primary">
-                Add Translation - {data?.suggestionCategory?.name ?? ""}
+                Translated
               </Typography>
               {expandedSections.translated ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>

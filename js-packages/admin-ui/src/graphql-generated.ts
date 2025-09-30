@@ -5533,16 +5533,6 @@ export type QueryParserConfigQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type QueryParserConfigQuery = { __typename?: 'Query', queryParserConfigFormConfigurations?: any | null };
 
-export type AddSuggestionCategoryTranslationMutationVariables = Exact<{
-  suggestionCategoryId: Scalars['ID'];
-  language: Scalars['String'];
-  key?: InputMaybe<Scalars['String']>;
-  value: Scalars['String'];
-}>;
-
-
-export type AddSuggestionCategoryTranslationMutation = { __typename?: 'Mutation', addSuggestionCategoryTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
-
 export type UnboundBucketsBySuggestionCategoryQueryVariables = Exact<{
   id: Scalars['BigInteger'];
 }>;
@@ -5589,6 +5579,16 @@ export type SuggestionCategoryQueryVariables = Exact<{
 
 
 export type SuggestionCategoryQuery = { __typename?: 'Query', suggestionCategory?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, multiSelect: boolean, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+
+export type AddSuggestionCategoryTranslationMutationVariables = Exact<{
+  suggestionCategoryId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddSuggestionCategoryTranslationMutation = { __typename?: 'Mutation', addSuggestionCategoryTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
 
 export type UnboundDocTypeFieldsBySuggestionCategoryQueryVariables = Exact<{
   suggestionCategoryId: Scalars['BigInteger'];
@@ -5637,6 +5637,16 @@ export type UnboundBucketsByTabQueryVariables = Exact<{
 
 
 export type UnboundBucketsByTabQuery = { __typename?: 'Query', unboundBucketsByTab?: Array<{ __typename?: 'Bucket', name?: string | null, id?: string | null } | null> | null };
+
+export type AddTabTranslationMutationVariables = Exact<{
+  tabId: Scalars['ID'];
+  language: Scalars['String'];
+  key?: InputMaybe<Scalars['String']>;
+  value: Scalars['String'];
+}>;
+
+
+export type AddTabTranslationMutation = { __typename?: 'Mutation', addTabTranslation?: { __typename?: 'Tuple2_String_String', left?: string | null, right?: string | null } | null };
 
 export type TabQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -10172,48 +10182,6 @@ export function useQueryParserConfigLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type QueryParserConfigQueryHookResult = ReturnType<typeof useQueryParserConfigQuery>;
 export type QueryParserConfigLazyQueryHookResult = ReturnType<typeof useQueryParserConfigLazyQuery>;
 export type QueryParserConfigQueryResult = Apollo.QueryResult<QueryParserConfigQuery, QueryParserConfigQueryVariables>;
-export const AddSuggestionCategoryTranslationDocument = gql`
-    mutation AddSuggestionCategoryTranslation($suggestionCategoryId: ID!, $language: String!, $key: String, $value: String!) {
-  addSuggestionCategoryTranslation(
-    suggestionCategoryId: $suggestionCategoryId
-    language: $language
-    key: $key
-    value: $value
-  ) {
-    left
-    right
-  }
-}
-    `;
-export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
-
-/**
- * __useAddSuggestionCategoryTranslationMutation__
- *
- * To run a mutation, you first call `useAddSuggestionCategoryTranslationMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddSuggestionCategoryTranslationMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addSuggestionCategoryTranslationMutation, { data, loading, error }] = useAddSuggestionCategoryTranslationMutation({
- *   variables: {
- *      suggestionCategoryId: // value for 'suggestionCategoryId'
- *      language: // value for 'language'
- *      key: // value for 'key'
- *      value: // value for 'value'
- *   },
- * });
- */
-export function useAddSuggestionCategoryTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>(AddSuggestionCategoryTranslationDocument, options);
-      }
-export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<typeof useAddSuggestionCategoryTranslationMutation>;
-export type AddSuggestionCategoryTranslationMutationResult = Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
-export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
 export const UnboundBucketsBySuggestionCategoryDocument = gql`
     query UnboundBucketsBySuggestionCategory($id: BigInteger!) {
   unboundBucketsBySuggestionCategory(suggestionCategoryId: $id) {
@@ -10485,6 +10453,48 @@ export function useSuggestionCategoryLazyQuery(baseOptions?: Apollo.LazyQueryHoo
 export type SuggestionCategoryQueryHookResult = ReturnType<typeof useSuggestionCategoryQuery>;
 export type SuggestionCategoryLazyQueryHookResult = ReturnType<typeof useSuggestionCategoryLazyQuery>;
 export type SuggestionCategoryQueryResult = Apollo.QueryResult<SuggestionCategoryQuery, SuggestionCategoryQueryVariables>;
+export const AddSuggestionCategoryTranslationDocument = gql`
+    mutation AddSuggestionCategoryTranslation($suggestionCategoryId: ID!, $language: String!, $key: String, $value: String!) {
+  addSuggestionCategoryTranslation(
+    suggestionCategoryId: $suggestionCategoryId
+    language: $language
+    key: $key
+    value: $value
+  ) {
+    left
+    right
+  }
+}
+    `;
+export type AddSuggestionCategoryTranslationMutationFn = Apollo.MutationFunction<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
+
+/**
+ * __useAddSuggestionCategoryTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddSuggestionCategoryTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddSuggestionCategoryTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addSuggestionCategoryTranslationMutation, { data, loading, error }] = useAddSuggestionCategoryTranslationMutation({
+ *   variables: {
+ *      suggestionCategoryId: // value for 'suggestionCategoryId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddSuggestionCategoryTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>(AddSuggestionCategoryTranslationDocument, options);
+      }
+export type AddSuggestionCategoryTranslationMutationHookResult = ReturnType<typeof useAddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationResult = Apollo.MutationResult<AddSuggestionCategoryTranslationMutation>;
+export type AddSuggestionCategoryTranslationMutationOptions = Apollo.BaseMutationOptions<AddSuggestionCategoryTranslationMutation, AddSuggestionCategoryTranslationMutationVariables>;
 export const UnboundDocTypeFieldsBySuggestionCategoryDocument = gql`
     query UnboundDocTypeFieldsBySuggestionCategory($suggestionCategoryId: BigInteger!) {
   unboundDocTypeFieldsBySuggestionCategory(
@@ -10732,6 +10742,43 @@ export function useUnboundBucketsByTabLazyQuery(baseOptions?: Apollo.LazyQueryHo
 export type UnboundBucketsByTabQueryHookResult = ReturnType<typeof useUnboundBucketsByTabQuery>;
 export type UnboundBucketsByTabLazyQueryHookResult = ReturnType<typeof useUnboundBucketsByTabLazyQuery>;
 export type UnboundBucketsByTabQueryResult = Apollo.QueryResult<UnboundBucketsByTabQuery, UnboundBucketsByTabQueryVariables>;
+export const AddTabTranslationDocument = gql`
+    mutation AddTabTranslation($tabId: ID!, $language: String!, $key: String, $value: String!) {
+  addTabTranslation(tabId: $tabId, language: $language, key: $key, value: $value) {
+    left
+    right
+  }
+}
+    `;
+export type AddTabTranslationMutationFn = Apollo.MutationFunction<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
+
+/**
+ * __useAddTabTranslationMutation__
+ *
+ * To run a mutation, you first call `useAddTabTranslationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddTabTranslationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addTabTranslationMutation, { data, loading, error }] = useAddTabTranslationMutation({
+ *   variables: {
+ *      tabId: // value for 'tabId'
+ *      language: // value for 'language'
+ *      key: // value for 'key'
+ *      value: // value for 'value'
+ *   },
+ * });
+ */
+export function useAddTabTranslationMutation(baseOptions?: Apollo.MutationHookOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddTabTranslationMutation, AddTabTranslationMutationVariables>(AddTabTranslationDocument, options);
+      }
+export type AddTabTranslationMutationHookResult = ReturnType<typeof useAddTabTranslationMutation>;
+export type AddTabTranslationMutationResult = Apollo.MutationResult<AddTabTranslationMutation>;
+export type AddTabTranslationMutationOptions = Apollo.BaseMutationOptions<AddTabTranslationMutation, AddTabTranslationMutationVariables>;
 export const TabDocument = gql`
     query Tab($id: ID!, $unasociated: Boolean) {
   tab(id: $id) {
@@ -14477,4 +14524,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-09-29T12:33:21+02:00
+// Generated on 2025-09-30T14:21:46+02:00

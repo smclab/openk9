@@ -38,6 +38,15 @@ gql`
   }
 `;
 
+export const ADD_TAB_TRANSLATION = gql`
+  mutation AddTabTranslation($tabId: ID!, $language: String!, $key: String, $value: String!) {
+    addTabTranslation(tabId: $tabId, language: $language, key: $key, value: $value) {
+      left
+      right
+    }
+  }
+`;
+
 gql`
   query Tab($id: ID!, $unasociated: Boolean) {
     tab(id: $id) {
@@ -62,6 +71,8 @@ gql`
     }
   }
 `;
+
+// (duplicate removed)
 
 gql`
   mutation CreateOrUpdateTab(
