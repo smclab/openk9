@@ -35,4 +35,4 @@ data:
   UPLOAD_DIR: {{ .Values.uploadDocuments.uploadDir | quote }}
   UPLOAD_FILE_EXTENSIONS: {{ .Values.uploadDocuments.uploadFileExtensions | quote }}
   MAX_UPLOAD_FILE_SIZE: {{ .Values.uploadDocuments.maxUploadFileSize | quote }}
-  MAX_UPLOAD_FILES_NUMBER=: {{ .Values.uploadDocuments.maxUploadFilesNumber | quote }}
+  MAX_UPLOAD_FILES_NUMBER: {{ .Values.uploadDocuments.maxUploadFilesNumber | quote }}
