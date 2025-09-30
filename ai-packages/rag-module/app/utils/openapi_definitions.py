@@ -629,19 +629,38 @@ API_RAG_UPLOAD_FILES_RESPONSES = {
         },
     },
     status.HTTP_400_BAD_REQUEST: {
-        "description": "Invalid document type",
+        "description": "All files failed to process.",
         "content": {
-            "application/json": {"example": {"detail": "Invalid document type"}}
+            "application/json": {
+                "example": {
+                    "failed_files": [
+                        {
+                            "filename": "filename.docx",
+                            "error": "Failed to process file content.",
+                        },
+                        {
+                            "filename": "filename.pdf",
+                            "error": "Failed to process file content.",
+                        },
+                    ]
+                }
+            }
         },
     },
-    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
-        "description": "File too large.",
-        "content": {"application/json": {"example": {"detail": "File too large."}}},
-    },
-    status.HTTP_422_UNPROCESSABLE_ENTITY: {
-        "description": "Failed to load file",
+    status.HTTP_207_MULTI_STATUS: {
+        "description": "Some files were processed successfully, but others failed.",
         "content": {
-            "application/json": {"example": {"detail": "Failed to load file."}}
+            "application/json": {
+                "example": {
+                    "processed_files": ["filename.pdf"],
+                    "failed_files": [
+                        {
+                            "filename": "filename.docx",
+                            "error": "Failed to process file content.",
+                        }
+                    ],
+                }
+            }
         },
     },
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
