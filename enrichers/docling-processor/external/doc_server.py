@@ -14,20 +14,13 @@ app = FastAPI()
 
 @app.get("/payload/")
 def get_random_string():
-    file_path = "external/Requisiti_AI_OpenK9.docx"
-    with open(file_path, "rb") as f:
-        file_bytes = f.read()
-        encoded = base64.b64encode(file_bytes).decode("utf-8")  # stringa base64
-    doc=encoded
-
-
     input ={
         "payload": 
-            {"tenantID":"TEST",
+            {"tenantID":"mrossi",
             "resources":{
                 "binaries":[
                     {
-                        "resourceId":f"{doc}"
+                        "resourceId":"doc_2"
                     }
                 ]
             }},
