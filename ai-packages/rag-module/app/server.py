@@ -1014,25 +1014,39 @@ async def upload_files(
             detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
         )
 
+    processed_files = []
+    failed_files = []
+
     for file in files:
         unique_id = uuid.uuid4()
         filename, file_extension = os.path.splitext(file.filename)
 
         if file_extension not in UPLOAD_FILE_EXTENSIONS:
             logger.error(f"File {filename}, invalid document type")
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, detail="Invalid document type"
+            failed_files.append(
+                {"filename": file.filename, "error": "Invalid document type"}
             )
+            continue
 
         file_size = 0
-        for chunk in file.file:
-            file_size += len(chunk)
-            if file_size > MAX_UPLOAD_FILE_SIZE:
-                logger.error(f"File {filename} too large.")
-                raise HTTPException(
-                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
-                )
+        try:
+            for chunk in file.file:
+                file_size += len(chunk)
+                if file_size > MAX_UPLOAD_FILE_SIZE:
+                    logger.error(f"File {filename} too large.")
+                    failed_files.append(
+                        {
+                            "filename": file.filename,
+                            "error": f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
+                        }
+                    )
+                    continue
+        except Exception as e:
+            logger.error(f"Error reading file {filename}: {str(e)}")
+            failed_files.append(
+                {"filename": file.filename, "error": f"Error reading file: {str(e)}"}
+            )
+            continue
 
         await file.seek(0)
 
@@ -1042,14 +1056,13 @@ async def upload_files(
         try:
             with open(uploaded_file, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
+            os.rename(uploaded_file, renamed_uploaded_file)
         except Exception as e:
-            logger.error(f"Failed to save file: {str(e)}")
-            raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to save file: {str(e)}",
+            logger.error(f"Failed to save file {filename}: {str(e)}")
+            failed_files.append(
+                {"filename": file.filename, "error": f"Failed to save file: {str(e)}"}
             )
-
-        os.rename(uploaded_file, renamed_uploaded_file)
+            continue
 
         converter = None
         chunker = None
@@ -1057,7 +1070,6 @@ async def upload_files(
 
         if file_extension == ".pdf":
             pipeline_options = PdfPipelineOptions(do_ocr=False)
-
             converter = DocumentConverter(
                 format_options={
                     InputFormat.PDF: PdfFormatOption(
@@ -1076,43 +1088,78 @@ async def upload_files(
         try:
             docs = loader.load()
         except Exception as e:
-            os.remove(renamed_uploaded_file)
-            logger.error(f"Failed to load file: {str(e)}")
-            raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Failed to load file: {filename}",
+            if os.path.exists(renamed_uploaded_file):
+                os.remove(renamed_uploaded_file)
+            logger.error(f"Failed to load file {filename}: {str(e)}")
+            failed_files.append(
+                {
+                    "filename": file.filename,
+                    "error": "Failed to process file content.",
+                }
             )
+            continue
 
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=GRPC_DATASOURCE_HOST,
-            virtual_host=virtual_host,
-        )
-
-        vector_size = embedding_model_configuration.get("vector_size")
-
-        for doc in docs:
-            page_content = doc.page_content
-            document = {
-                "filename": filename,
-                "file_extension": file_extension,
-                "user_id": user_id,
-                "chat_id": chat_id,
-                "text": page_content,
-            }
-            embedded_documents = documents_embedding(
-                grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
-                embedding_model_configuration=embedding_model_configuration,
-                document=document,
+        try:
+            embedding_model_configuration = get_embedding_model_configuration(
+                grpc_host=GRPC_DATASOURCE_HOST,
+                virtual_host=virtual_host,
             )
+            vector_size = embedding_model_configuration.get("vector_size")
 
-            save_uploaded_documents(
-                OPENSEARCH_HOST, realm_name, embedded_documents, vector_size
+            for doc in docs:
+                page_content = doc.page_content
+                document = {
+                    "filename": filename,
+                    "file_extension": file_extension,
+                    "user_id": user_id,
+                    "chat_id": chat_id,
+                    "text": page_content,
+                }
+                embedded_documents = documents_embedding(
+                    grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
+                    embedding_model_configuration=embedding_model_configuration,
+                    document=document,
+                )
+                save_uploaded_documents(
+                    OPENSEARCH_HOST, realm_name, embedded_documents, vector_size
+                )
+
+            processed_files.append(file.filename)
+
+        except Exception as e:
+            logger.error(f"Failed to generate embeddings for file {filename}: {str(e)}")
+            failed_files.append(
+                {
+                    "filename": file.filename,
+                    "error": f"Failed to generate embeddings: {str(e)}",
+                }
             )
+        finally:
+            if os.path.exists(renamed_uploaded_file):
+                os.remove(renamed_uploaded_file)
 
-        os.remove(renamed_uploaded_file)
-
-    content = {"message": "Documents uploaded successfully.", "status": "success"}
-    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+    if processed_files and not failed_files:
+        content = {
+            "message": "All documents uploaded successfully.",
+            "status": "success",
+            "processed_files": processed_files,
+        }
+        return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+    elif processed_files and failed_files:
+        content = {
+            "message": "Some files were processed successfully, but others failed.",
+            "status": "partial_success",
+            "processed_files": processed_files,
+            "failed_files": failed_files,
+        }
+        return JSONResponse(status_code=status.HTTP_207_MULTI_STATUS, content=content)
+    else:
+        content = {
+            "message": "All files failed to process.",
+            "status": "error",
+            "failed_files": failed_files,
+        }
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
 
 
 @app.get(
