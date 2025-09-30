@@ -51,6 +51,7 @@ from app.utils.authentication import unauthorized_response, verify_token
 from app.utils.chat_history import save_uploaded_documents
 from app.utils.embedding import documents_embedding
 from app.utils.llm import get_configurations
+from app.utils.logger import logger
 from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
@@ -931,8 +932,8 @@ async def rename_chat(
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-@app.post("/api/rag/uploadfile")
-async def create_upload_file(
+@app.post("/api/rag/upload_files")
+async def upload_files(
     request: Request,
     headers: Annotated[models.CommonHeadersMinimal, Header()],
     files: Annotated[
@@ -956,6 +957,7 @@ async def create_upload_file(
     realm_name = user_info.get("realm_name")
 
     if len(files) > MAX_UPLOAD_FILES_NUMBER:
+        logger.error(f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files")
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
@@ -966,6 +968,7 @@ async def create_upload_file(
         filename, file_extension = os.path.splitext(file.filename)
 
         if file_extension not in UPLOAD_FILE_EXTENSIONS:
+            logger.error(f"File {filename}, invalid document type")
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, detail="Invalid document type"
             )
@@ -974,6 +977,7 @@ async def create_upload_file(
         for chunk in file.file:
             file_size += len(chunk)
             if file_size > MAX_UPLOAD_FILE_SIZE:
+                logger.error(f"File {filename} too large.")
                 raise HTTPException(
                     status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                     detail=f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
@@ -988,6 +992,7 @@ async def create_upload_file(
             with open(uploaded_file, "wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
         except Exception as e:
+            logger.error(f"Failed to save file: {str(e)}")
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to save file: {str(e)}",
@@ -1017,7 +1022,15 @@ async def create_upload_file(
             file_path=renamed_uploaded_file,
         )
 
-        docs = loader.load()
+        try:
+            docs = loader.load()
+        except Exception as e:
+            os.remove(renamed_uploaded_file)
+            logger.error(f"Failed to load file: {str(e)}")
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to load file: {str(e)}",
+            )
 
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=GRPC_DATASOURCE_HOST,
