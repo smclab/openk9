@@ -11,6 +11,7 @@ import {
   useUnboundBucketsBySuggestionCategoryQuery,
 } from "../../graphql-generated";
 import TranslationDialog from "./components/translateModal";
+import { ADD_SUGGESTION_CATEGORY_TRANSLATION } from "./gql";
 
 export function SuggestionCategories() {
   const suggestionCategoriesQuery = useSuggestionCategoriesQuery();
@@ -180,7 +181,8 @@ export function SuggestionCategories() {
         <TranslationDialog
           isOpen={isAddTranslation.isVisible}
           onClose={() => setIsAddTranslation({ id: null, isVisible: false })}
-          suggestionCategoryId={String(isAddTranslation.id || "")}
+          entityId={String(isAddTranslation.id || "")}
+          customMutation={ADD_SUGGESTION_CATEGORY_TRANSLATION}
         />
       )}
     </Container>
