@@ -10,7 +10,6 @@ from dotenv import load_dotenv, dotenv_values
 load_dotenv()
 
 # accessing and printing value
-print(os.getenv("HOST"))
 
 import asyncio
 import threading
@@ -38,7 +37,7 @@ app = FastAPI()
 
 @app.post("/start-task/")
 async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazioni",replyTo="fake_token"):
-    payload=input.payload.resources
+    payload=input.payload
     enrichItemConfig=input.enrichItemConfig.configs
     token=input.replyTo.token
     thread = threading.Thread(target=operation,kwargs={"payload":payload,"configs":enrichItemConfig,"token":token})
@@ -46,12 +45,20 @@ async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazion
     return {"status": "ok", "message": f"Proces started"}
 
 def operation(payload,configs,token):
-    host=os.getenv("HOST")
-    b64_str=payload["binaries"][0]["resourceId"]
-    decoded_bytes = base64.b64decode(b64_str)
+    s_host=os.getenv("S_HOST")
+    fm_host=os.getenv("FM_HOST")
 
+    resourceId=payload.resources["binaries"][0]["resourceId"]
+    tenant=payload.tenantID
+
+    response = requests.get(f"{fm_host}/api/file-manager/v1/download/base64/{resourceId}/{tenant}") #body json
+    print(response)
+
+    decoded_bytes = base64.b64decode(response.text)
     bites_io = BytesIO(decoded_bytes)#file
+
     print(f"Starting process")
+
     source= DocumentStream(name="doc.docx",stream=bites_io)
 
     converter = DocumentConverter()
@@ -59,5 +66,5 @@ def operation(payload,configs,token):
     markdown=result.document.export_to_markdown()
     print(f"Process ended")
     res={"markdown": markdown}
-    response = requests.post(f"{host}/api/datasource/pipeline/callback/{token}", json=res) #body json
+    response = requests.post(f"{s_host}/api/datasource/pipeline/callback/{token}", json=res) #body json
     print("Status:", response.status_code)
