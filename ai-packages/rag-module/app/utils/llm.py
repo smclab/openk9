@@ -39,7 +39,11 @@ from app.external_services.grpc.grpc_client import (
     get_rag_configuration,
 )
 from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
-from app.rag.retriever import OpenSearchRetriever
+from app.rag.retrievers.retriever import OpenSearchRetriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
+from app.utils.authentication import unauthorized_response
 from app.utils.chat_history import (
     get_chat_history,
     get_chat_history_from_frontend,
@@ -175,7 +179,12 @@ def initialize_language_model(configuration):
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     match model_type:
         case ModelType.OPENAI.value:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key, openai_api_base=api_url, stream_usage=True)
+            llm = ChatOpenAI(
+                model=model,
+                openai_api_key=api_key,
+                openai_api_base=api_url,
+                stream_usage=True,
+            )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
             llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
@@ -311,13 +320,17 @@ def stream_rag_conversation(
     sort_after_key: str,
     language: str,
     opensearch_host: str,
-    grpc_host: str,
+    grpc_host_embedding: str,
+    grpc_host_datasource: str,
     chat_id: str,
     user_id: str,
+    realm_name: str,
+    retrieve_from_uploaded_documents: bool,
     chat_history: list,
     timestamp: str,
     chat_sequence_number: int,
     configuration: dict,
+    embedding_model_configuration: dict,
 ):
     """
     Orchestrates a conversational RAG (Retrieval-Augmented Generation) pipeline with memory.
@@ -401,27 +414,41 @@ def stream_rag_conversation(
         hosts=[opensearch_host],
     )
 
-    retriever = OpenSearchRetriever(
-        search_text=search_text,
-        rerank=rerank,
-        reranker_api_url=reranker_api_url,
-        chunk_window=chunk_window,
-        range_values=range_values,
-        after_key=after_key,
-        suggest_keyword=suggest_keyword,
-        suggestion_category_id=suggestion_category_id,
-        virtual_host=virtual_host,
-        jwt=jwt,
-        extra=extra,
-        sort=sort,
-        sort_after_key=sort_after_key,
-        language=language,
-        context_window=context_window,
-        metadata=metadata,
-        retrieve_type=retrieve_type,
-        opensearch_host=opensearch_host,
-        grpc_host=grpc_host,
-    )
+    if retrieve_from_uploaded_documents and user_id and realm_name:
+        retriever = OpenSearchUploadedDocumentsRetriever(
+            opensearch_host=opensearch_host,
+            grpc_host_embedding=grpc_host_embedding,
+            embedding_model_configuration=embedding_model_configuration,
+            uploaded_documents_index=f"{realm_name}-uploaded-documents-index",
+            retrieve_type=retrieve_type,
+            user_id=user_id,
+            chat_id=chat_id,
+            search_text=search_text,
+        )
+    elif retrieve_from_uploaded_documents and (not user_id or not realm_name):
+        unauthorized_response()
+    else:
+        retriever = OpenSearchRetriever(
+            search_text=search_text,
+            rerank=rerank,
+            reranker_api_url=reranker_api_url,
+            chunk_window=chunk_window,
+            range_values=range_values,
+            after_key=after_key,
+            suggest_keyword=suggest_keyword,
+            suggestion_category_id=suggestion_category_id,
+            virtual_host=virtual_host,
+            jwt=jwt,
+            extra=extra,
+            sort=sort,
+            sort_after_key=sort_after_key,
+            language=language,
+            context_window=context_window,
+            metadata=metadata,
+            retrieve_type=retrieve_type,
+            opensearch_host=opensearch_host,
+            grpc_host=grpc_host_datasource,
+        )
 
     llm = initialize_language_model(configuration)
 
@@ -650,6 +677,7 @@ def stream_rag_conversation(
             documents,
             chat_id,
             user_id,
+            realm_name,
             timestamp,
             chat_sequence_number,
         )

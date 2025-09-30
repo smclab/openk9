@@ -16,14 +16,15 @@
 #
 
 SHELL := /bin/bash
-.PHONY: check_commands load_config build start stop
+.PHONY: check_commands load_config build build_pytorch_cpu start stop
 .DEFAULT_GOAL := help
 
 # Define variables
-RAG_MODULE_DOCKER_IMAGE_NAME := openk9-rag-module
+RAG_MODULE_DOCKER_IMAGE_NAME := rag-module
 CONFIG_FILE := python_modules_config.txt
 GIT_REPO_ROOT := $(shell git rev-parse --show-toplevel 2>/dev/null)
 CONFIG_PATH := $(if $(GIT_REPO_ROOT),$(GIT_REPO_ROOT)/$(CONFIG_FILE),)
+PYTORCH_CPU := pip install docling --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Show help message
 help:
@@ -32,17 +33,19 @@ help:
 	@echo "OpenK9 RAG Module Management"
 	@echo ""
 	@echo "Targets:"
-	@echo "  check_commands  Verify required tools (git, docker) and environment"
-	@echo "  load_config     Load and validate configuration from $(CONFIG_FILE)"
-	@echo "  build           Build Docker image with configured base image and version"
-	@echo "  start           Start Docker Compose services in detached mode"
-	@echo "  stop            Stop running Docker Compose services"
-	@echo "  help            Show this help message"
+	@echo "  check_commands              Verify required tools (git, docker) and environment"
+	@echo "  load_config                 Load and validate configuration from $(CONFIG_FILE)"
+	@echo "  build                       Build Docker image with configured base image and version"
+	@echo "  build_pytorch_cpu           Build Docker image with configured base image and version, small image size installing only pytorch-cpu"
+	@echo "  start                       Start Docker Compose services in detached mode"
+	@echo "  stop                        Stop running Docker Compose services"
+	@echo "  help                        Show this help message"
 	@echo ""
 	@echo "Typical workflow:"
-	@echo "  make build      # Build the Docker image"
-	@echo "  make start      # Start the services"
-	@echo "  make stop       # Stop the services"
+	@echo "  make build                  # Build the Docker image"
+	@echo "  make build_pytorch_cpu      # Build the Docker image installing pytorch-cpu"
+	@echo "  make start                  # Start the services"
+	@echo "  make stop                   # Stop the services"
 
 # Check for required commands and environment
 check_commands:
@@ -65,6 +68,15 @@ build: load_config
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
 		.
+
+# Build Docker image
+build_pytorch_cpu: load_config
+	@source "$(CONFIG_PATH)" && \
+	docker buildx build \
+		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--build-arg PYTORCH_CPU="$(PYTORCH_CPU)" \
+		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
+		.		
 
 # Start Docker Compose service
 start: load_config

@@ -3,7 +3,7 @@ from twisted.python.log import logerr
 
 from .util.file.utility import get_path
 from .util.generic.utility import clean_extraction, get_as_base64, get_content, get_favicon, get_title, generate_item, extract_text
-from .util.sitemap.utility import iterloc, regex
+from .util.sitemap.utility import iterloc, regex, is_absolute
 from datetime import datetime
 from generic_crawler.items import BinaryItem, DocumentItem, FileItem, Payload
 from generic_crawler.spiders.util.generic.utility import post_message
@@ -38,7 +38,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
     payload = {}
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, datasource_id, schedule_id,
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow, datasource_id, schedule_id,
                 ingestion_url, timestamp, additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
@@ -57,6 +57,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.replace_rule = ast.literal_eval(replace_rule)
+        self.links_to_follow = ast.literal_eval(links_to_follow)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -224,3 +225,18 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         yield payload
 
         self.logger.info("Crawled web page from url: " + str(url))
+
+        if self.links_to_follow:
+            meta_key = "is_link_to_follow"
+            if meta_key not in response.meta:
+                # Extracts all links from `link_to_follow`
+                extracted_links_to_follow = []
+                for link_to_follow in self.links_to_follow:
+                    extracted_links_to_follow.extend(response.xpath(link_to_follow).getall())
+
+                # Each extracted link will yield a Request passing as meta "is_link_to_follow"
+                for extracted_link_to_follow in extracted_links_to_follow:
+                    # if is relative url convert to absolute
+                    if not is_absolute(extracted_link_to_follow):
+                        extracted_link_to_follow = response.urljoin(extracted_link_to_follow)
+                    yield Request(extracted_link_to_follow, callback=self.parse, meta={meta_key: True})

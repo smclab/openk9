@@ -1,6 +1,6 @@
 # Enricher OpenAPI Server
 
-This project is a Quarkus application that consumes an OpenAPI document conforming to the OpenAPI Specification to generate REST API endpoints and the corresponding model classes.  
+This project is a Quarkus application that consumes an OpenAPI document conforming to the OpenAPI Specification to generate REST API endpoints and the corresponding model classes, it is used as custom library within the [Archetype](../archetype).  
 To learn how classes can be generated from an OpenAPI document in Quarkus, [see this](https://docs.quarkiverse.io/quarkus-openapi-generator/dev/server.html).
 
 ## Generated Classes
@@ -54,7 +54,6 @@ It is used in `Form`.
 - **min**
 - **max**
 - **regex**
-- **datasourceConfig**
 
 ---
 

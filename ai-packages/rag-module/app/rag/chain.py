@@ -23,7 +23,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.tools import tool
 from opensearchpy import OpenSearch
 
-from app.rag.retriever import OpenSearchRetriever
+from app.rag.retrievers.retriever import OpenSearchRetriever
 from app.utils.chat_history import (
     get_chat_history,
     get_chat_history_from_frontend,
@@ -162,14 +162,18 @@ def get_chat_chain(
     search_text,
     chat_id,
     user_id,
+    realm_name,
+    retrieve_from_uploaded_documents,
     chat_history,
     timestamp,
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
+    embedding_model_configuration,
     reranker_api_url,
     opensearch_host,
-    grpc_host,
+    grpc_host_embedding,
+    grpc_host_datasource,
 ):
     try:
         prompt_template = rag_configuration.get("prompt")
@@ -228,13 +232,17 @@ def get_chat_chain(
             sort_after_key,
             language,
             opensearch_host,
-            grpc_host,
+            grpc_host_embedding,
+            grpc_host_datasource,
             chat_id,
             user_id,
+            realm_name,
+            retrieve_from_uploaded_documents,
             chat_history,
             timestamp,
             chat_sequence_number,
             configuration,
+            embedding_model_configuration,
         )
 
     except Exception as e:
@@ -265,14 +273,18 @@ def get_chat_chain_tool(
     search_text,
     chat_id,
     user_id,
+    realm_name,
+    retrieve_from_uploaded_documents,
     chat_history,
     timestamp,
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
+    embedding_model_configuration,
     reranker_api_url,
     opensearch_host,
-    grpc_host,
+    grpc_host_embedding,
+    grpc_host_datasource,
 ):
     try:
         prompt_template = rag_configuration.get("prompt")
@@ -372,13 +384,17 @@ def get_chat_chain_tool(
                 sort_after_key,
                 language,
                 opensearch_host,
-                grpc_host,
+                grpc_host_embedding,
+                grpc_host_datasource,
                 chat_id,
                 user_id,
+                realm_name,
+                retrieve_from_uploaded_documents,
                 chat_history,
                 timestamp,
                 chat_sequence_number,
                 configuration,
+                embedding_model_configuration,
             )
 
         else:
@@ -427,6 +443,7 @@ def get_chat_chain_tool(
                     documents,
                     chat_id,
                     user_id,
+                    realm_name,
                     timestamp,
                     chat_sequence_number,
                 )

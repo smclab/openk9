@@ -16,24 +16,40 @@
 #
 
 import os
+import shutil
+import uuid
 from contextlib import asynccontextmanager
 from enum import Enum
+from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlparse
 
 import uvicorn
+from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.document_converter import (
+    DocumentConverter,
+    InputFormat,
+    PdfFormatOption,
+)
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request, status
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from langchain_docling import DoclingLoader
+from langchain_docling.loader import ExportType
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
+from app.utils.chat_history import save_uploaded_documents
+from app.utils.embedding import documents_embedding
 from app.utils.llm import get_configurations
 from app.utils.scheduler import start_document_deletion_scheduler
 
@@ -44,6 +60,7 @@ ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
+GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
 CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
@@ -56,6 +73,12 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
+UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
+MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
+MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
+
 
 if ARIZE_PHOENIX_ENABLED:
     tracer_provider = register(
@@ -247,6 +270,7 @@ async def rag_chat(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
+            - retrieveFromUploadedDocuments
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -290,6 +314,7 @@ async def rag_chat(
         - Stores conversation history for authenticated users
     """
     chat_id = search_query_chat.chatId
+    retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
@@ -312,19 +337,27 @@ async def rag_chat(
         if headers.authorization
         else None
     )
-    user_id = None
 
     if token:
         user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
         if not user_info:
             unauthorized_response()
-        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+        realm_name = user_info.get("realm_name")
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
+
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
@@ -343,13 +376,17 @@ async def rag_chat(
         search_text,
         chat_id,
         user_id,
+        realm_name,
+        retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
@@ -374,6 +411,7 @@ async def rag_chat_tool(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
+            - retrieveFromUploadedDocuments
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -420,6 +458,7 @@ async def rag_chat_tool(
         - Tools are selected based on query intent analysis
     """
     chat_id = search_query_chat.chatId
+    retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
     range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
@@ -443,18 +482,28 @@ async def rag_chat_tool(
         else None
     )
     user_id = None
+    realm_name = None
 
     if token:
         user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
         if not user_info:
             unauthorized_response()
-        user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+        realm_name = user_info.get("realm_name")
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
+
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
@@ -473,13 +522,17 @@ async def rag_chat_tool(
         search_text,
         chat_id,
         user_id,
+        realm_name,
+        retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         RERANKER_API_URL,
         OPENSEARCH_HOST,
+        GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
     )
     return EventSourceResponse(chain)
@@ -538,7 +591,7 @@ async def get_user_chats(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -622,7 +675,8 @@ async def get_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -714,7 +768,9 @@ async def delete_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
+
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
     )
@@ -725,10 +781,12 @@ async def delete_chat(
             detail="Item not found.",
         )
 
-    delete_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
+    delete_messages_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
 
     try:
-        response = open_search_client.delete_by_query(index=user_id, body=delete_query)
+        response = open_search_client.delete_by_query(
+            index=user_id, body=delete_messages_query
+        )
     except OpenSearch.exceptions.NotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -739,6 +797,23 @@ async def delete_chat(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found.",
+        )
+
+    uploaded_documents_index = f"{realm_name}-uploaded-documents-index"
+
+    if open_search_client.indices.exists(index=uploaded_documents_index):
+        delete_uploaded_documents_query = {
+            "query": {
+                "bool": {
+                    "must": [
+                        {"match": {"user_id.keyword": user_id}},
+                        {"match": {"chat_id.keyword": chat_id}},
+                    ]
+                }
+            }
+        }
+        open_search_client.delete_by_query(
+            index=uploaded_documents_index, body=delete_uploaded_documents_query
         )
 
     content = {"message": "Chat deleted successfully.", "status": "success"}
@@ -798,7 +873,8 @@ async def rename_chat(
     if not user_info:
         unauthorized_response()
 
-    user_id = user_info[KEYCLOAK_USER_INFO_KEY]
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -852,6 +928,126 @@ async def rename_chat(
         )
 
     content = {"message": "Title updated successfully.", "status": "success"}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+
+
+@app.post("/api/rag/uploadfile")
+async def create_upload_file(
+    request: Request,
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
+    files: Annotated[
+        list[UploadFile], File(description="Multiple files as UploadFile")
+    ],
+    chat_id: str,
+):
+    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if not headers.authorization:
+        unauthorized_response()
+
+    token = headers.authorization.replace(TOKEN_PREFIX, "")
+
+    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
+
+    if not user_info:
+        unauthorized_response()
+
+    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
+    realm_name = user_info.get("realm_name")
+
+    if len(files) > MAX_UPLOAD_FILES_NUMBER:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
+        )
+
+    for file in files:
+        unique_id = uuid.uuid4()
+        filename, file_extension = os.path.splitext(file.filename)
+
+        if file_extension not in UPLOAD_FILE_EXTENSIONS:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="Invalid document type"
+            )
+
+        file_size = 0
+        for chunk in file.file:
+            file_size += len(chunk)
+            if file_size > MAX_UPLOAD_FILE_SIZE:
+                raise HTTPException(
+                    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail=f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
+                )
+
+        await file.seek(0)
+
+        uploaded_file = f"{UPLOAD_DIR}/{file.filename}"
+        renamed_uploaded_file = f"{UPLOAD_DIR}/{filename}_{unique_id}{file_extension}"
+
+        try:
+            with open(uploaded_file, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to save file: {str(e)}",
+            )
+
+        os.rename(uploaded_file, renamed_uploaded_file)
+
+        converter = None
+        chunker = None
+        export_type = ExportType.MARKDOWN
+
+        if file_extension == ".pdf":
+            pipeline_options = PdfPipelineOptions(do_ocr=False)
+
+            converter = DocumentConverter(
+                format_options={
+                    InputFormat.PDF: PdfFormatOption(
+                        pipeline_options=pipeline_options,
+                    ),
+                },
+            )
+
+        loader = DoclingLoader(
+            converter=converter,
+            export_type=export_type,
+            chunker=chunker,
+            file_path=renamed_uploaded_file,
+        )
+
+        docs = loader.load()
+
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
+
+        vector_size = embedding_model_configuration.get("vector_size")
+
+        for doc in docs:
+            page_content = doc.page_content
+            document = {
+                "filename": filename,
+                "file_extension": file_extension,
+                "user_id": user_id,
+                "chat_id": chat_id,
+                "text": page_content,
+            }
+            embedded_documents = documents_embedding(
+                grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
+                embedding_model_configuration=embedding_model_configuration,
+                document=document,
+            )
+
+            save_uploaded_documents(
+                OPENSEARCH_HOST, realm_name, embedded_documents, vector_size
+            )
+
+        os.remove(renamed_uploaded_file)
+
+    content = {"message": "Documents uploaded successfully.", "status": "success"}
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 

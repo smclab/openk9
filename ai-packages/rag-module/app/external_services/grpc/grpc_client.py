@@ -20,6 +20,7 @@ from fastapi import HTTPException, status
 from google.protobuf import json_format
 from google.protobuf.json_format import ParseDict
 
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.external_services.grpc.tenant_manager import (
@@ -192,6 +193,46 @@ def get_llm_configuration(grpc_host, virtual_host):
     )
 
 
+def get_embedding_model_configuration(grpc_host, virtual_host):
+    """Get embedding model configuration from grpc."""
+    try:
+        with grpc.insecure_channel(grpc_host) as channel:
+            stub = searcher_pb2_grpc.SearcherStub(channel)
+            response = stub.GetEmbeddingModelConfigurations(
+                searcher_pb2.GetEmbeddingModelConfigurationsRequest(
+                    virtualHost=virtual_host,
+                )
+            )
+
+        api_url = response.apiUrl
+        api_key = response.apiKey
+        model_type = response.providerModel.provider
+        model = response.providerModel.model
+        vector_size = response.vectorSize
+        json_config = json_format.MessageToDict(response.jsonConfig)
+
+        configuration = {
+            "api_url": api_url,
+            "api_key": api_key,
+            "model_type": model_type,
+            "model": model,
+            "vector_size": vector_size,
+            "json_config": json_config,
+        }
+
+        return configuration
+
+    except grpc.RpcError as e:
+        error_message = f"gRPC communication failed: {e.details()}"
+        logger.error(error_message)
+    except Exception as e:
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
+    )
+
+
 def get_tenant_manager_configuration(grpc_host, virtual_host):
     """Get tenant configuration from grpc."""
     try:
@@ -214,6 +255,45 @@ def get_tenant_manager_configuration(grpc_host, virtual_host):
             }
 
             return configuration
+
+    except grpc.RpcError as e:
+        error_message = f"gRPC communication failed: {e.details()}"
+        logger.error(error_message)
+    except Exception as e:
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
+    )
+
+
+def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
+    """Embedd uploaded documents."""
+    try:
+        with grpc.insecure_channel(grpc_host) as channel:
+            stub = embedding_pb2_grpc.EmbeddingStub(channel)
+            response = stub.GetMessages(
+                embedding_pb2.EmbeddingRequest(
+                    chunk=chunk, embeddingModel=embedding_model, text=document["text"]
+                )
+            )
+
+            documents = []
+            chunks = response.chunks
+            for chunk in chunks:
+                document = {
+                    "filename": document.get("filename"),
+                    "file_extension": document.get("file_extension"),
+                    "user_id": document.get("user_id"),
+                    "chat_id": document.get("chat_id"),
+                    "chunk_number": chunk.number,
+                    "total_chunks": chunk.total,
+                    "chunkText": chunk.text,
+                    "vector": list(chunk.vectors),
+                }
+                documents.append(document)
+
+            return documents
 
     except grpc.RpcError as e:
         error_message = f"gRPC communication failed: {e.details()}"
