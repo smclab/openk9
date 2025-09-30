@@ -46,7 +46,6 @@ async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazion
     return {"status": "ok", "message": f"Proces started"}
 
 def operation(payload,configs,token):
-    print("payload",payload)
     host=os.getenv("HOST")
     b64_str=payload["binaries"][0]["resourceId"]
     decoded_bytes = base64.b64decode(b64_str)
