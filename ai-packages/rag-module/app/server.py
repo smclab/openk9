@@ -1080,7 +1080,7 @@ async def upload_files(
             logger.error(f"Failed to load file: {str(e)}")
             raise HTTPException(
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Failed to load file: {str(e)}",
+                detail=f"Failed to load file: {filename}",
             )
 
         embedding_model_configuration = get_embedding_model_configuration(
