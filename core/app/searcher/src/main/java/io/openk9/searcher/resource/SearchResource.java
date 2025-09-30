@@ -31,7 +31,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -156,6 +155,105 @@ public class SearchResource {
 	@Inject
 	@Claim(standard = Claims.raw_token)
 	String rawToken; // it is injected to force authentication.
+
+	@Operation(operationId = "autocorrection-query")
+	@Tag(
+		name = "Autocorrection Query API",
+		description = "Transform Openk9 Search Request in equivalent OpenSearch query configured for autocorrection suggestions"
+	)
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Ingestion successful",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = SearchRequestExamples.AUTOCORRECTION_QUERY_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = SearchRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "search",
+						value = SearchRequestExamples.AUTOCORRECTION_SEARCH_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/autocorrection-query")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<String> autocorrectionQuery(SearchRequest searchRequest) {
+
+		var virtualHost = request.authority().host();
+		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build();
+
+		// retrieve the searchToken associated with the text entered by the user in the search input.
+		var searchTokenUserInput = searchRequest.getSearchQuery().stream()
+			.filter(ParserSearchToken::isSearch)
+			.findFirst();
+
+		// retrieve Autocorrection configurations
+		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Retrieve autocorrection configurations failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocorrectionException(
+						"Retrieve autocorrection configurations failed", throwable
+					)
+				);
+			})
+			.map(autocorrectionConfig -> {
+				if (searchTokenUserInput.isPresent()) {
+					var searchTokenUserInputValues = searchTokenUserInput.get().getValues();
+
+					if (searchTokenUserInputValues.size() == 1) {
+
+						// retrieve the text entered by the user in the search input.
+						var queryText = searchTokenUserInputValues.getFirst();
+
+						if (queryText != null && !queryText.isEmpty()) {
+							// Create the autocorrection request for OpenSearch according to the
+							// autocorrection configurations and return its JSON representation
+							return _createAutocorrectionRequest(autocorrectionConfig, queryText)
+								.toJsonString();
+						}
+						else {
+							throw  new AutocorrectionException(
+								"Autocorrection was not performed because the user input text is null or empty."
+							);
+						}
+					}
+					else {
+						throw new AutocorrectionException(
+							"Autocorrection was not performed because the user input search token has 0 or more than 1 values."
+						);
+					}
+				}
+				else {
+					throw new AutocorrectionException(
+						"Autocorrection was not performed because no search token with isSearch is present."
+					);
+				}
+			});
+	}
 
 	@Operation(operationId = "search-query")
 	@Tag(name = "Search Query API", description = "Transform Openk9 Search Request in equivalent Opensearch query")
@@ -322,7 +420,6 @@ public class SearchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<Response> search(SearchRequest searchRequest) {
 
-
 		var virtualHost = request.authority().host();
 		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
 			.setVirtualHost(virtualHost)
@@ -345,6 +442,7 @@ public class SearchResource {
 				);
 			})
 			.flatMap(autocorrectionConfig ->
+				// retrieve Autocorrection suggestions
 				searchTokenUserInput.isPresent()
 					? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
 					: Uni.createFrom().failure(
@@ -763,6 +861,49 @@ public class SearchResource {
 			.build();
 	}
 
+	/**
+	 * Creates an OpenSearch search request configured for autocorrection suggestions.
+	 * The request uses a term suggester to provide correction suggestions based on the query text,
+	 * returning only suggestions without documents (size=0).
+	 *
+	 * @param autocorrectionConfig the autocorrection configuration containing index names,
+	 *                            field, and suggester parameters
+	 * @param queryText           the query text to be corrected
+	 *
+	 * @return a configured SearchRequest with term suggester for autocorrection
+	 */
+	private org.opensearch.client.opensearch.core.SearchRequest _createAutocorrectionRequest(
+		AutocorrectionConfigurationsResponse autocorrectionConfig, String queryText) {
+
+		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
+			.index(autocorrectionConfig.getIndexNameList())
+			// to retrieve only suggestions, not documents
+			.size(0)
+			.suggest(Suggester.of(sug -> sug
+				.text(queryText)
+				.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
+					fsb.term(tsb -> tsb
+						.field(autocorrectionConfig.getField())
+						// max number of suggestions to retrieve for each term
+						.size(1)
+						.sort(
+							_grpcEnumToSuggestSort(
+								autocorrectionConfig.getSort())
+						)
+						.suggestMode(
+							_grpcEnumToSuggestMode(
+								autocorrectionConfig.getSuggestMode()
+							)
+						)
+						.prefixLength(autocorrectionConfig.getPrefixLength())
+						.minWordLength(autocorrectionConfig.getMinWordLength())
+						.maxEdits(autocorrectionConfig.getMaxEdit())
+					)
+				)
+			))
+		);
+	}
+
 	private Uni<Response> _doSearch(SearchRequest searchRequest) {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
@@ -906,36 +1047,11 @@ public class SearchResource {
 			var queryText = searchTokenUserInputValues.getFirst();
 
 			if (queryText != null && !queryText.isEmpty()) {
-				// retrieve autocorrection suggest
+				// create the autocorrection request for OpenSearch according to the autocorrection configurations
 				var autocorrectionRequest =
-					org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
-						.index(autocorrectionConfig.getIndexNameList())
-						// to retrieve only suggestions, not documents
-						.size(0)
-						.suggest(Suggester.of(sug -> sug
-							.text(queryText)
-							.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
-								fsb.term(tsb -> tsb
-									.field(autocorrectionConfig.getField())
-									// max number of suggestions to retrieve for each term
-									.size(1)
-									.sort(
-										_grpcEnumToSuggestSort(
-											autocorrectionConfig.getSort())
-									)
-									.suggestMode(
-										_grpcEnumToSuggestMode(
-											autocorrectionConfig.getSuggestMode()
-										)
-									)
-									.prefixLength(autocorrectionConfig.getPrefixLength())
-									.minWordLength(autocorrectionConfig.getMinWordLength())
-									.maxEdits(autocorrectionConfig.getMaxEdit())
-								)
-							)
-						))
-					);
+					_createAutocorrectionRequest(autocorrectionConfig, queryText);
 
+				// retrieve autocorrection suggestions
 				return Uni.createFrom().completionStage(() -> {
 						try {
 							return client.search(autocorrectionRequest, Void.class);

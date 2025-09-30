@@ -19,6 +19,26 @@ package io.openk9.searcher.resource;
 
 public class SearchRequestExamples {
 
+    public static final String AUTOCORRECTION_SEARCH_REQUEST =
+            """
+                {
+                \t"range": [
+                \t\t0,
+                \t\t10
+                \t],
+                \t"language": "it_IT",
+                \t"searchQuery": [
+                \t\t{
+                \t\t\t"tokenType": "TEXT",
+                \t\t\t"values": [
+                \t\t\t\t"smc"
+                \t\t\t],
+                \t\t\t"filter": false,
+                \t\t\t"search": true
+                \t\t}
+                \t],
+                \t"sortAfterKey": ""
+                }""";
     public static final String TEXT_SEARCH_REQUEST =
             """
                 {
@@ -34,7 +54,7 @@ public class SearchRequestExamples {
                 \t\t\t\t"smc"
                 \t\t\t],
                 \t\t\t"filter": false,
-                \t\t\t"isSearch": true
+                \t\t\t"search": true
                 \t\t}
                 \t],
                 \t"sortAfterKey": ""
@@ -54,7 +74,7 @@ public class SearchRequestExamples {
                 \t\t\t\t"smc"
                 \t\t\t],
                 \t\t\t"filter": false,
-                \t\t\t"isSearch": true
+                \t\t\t"search": true
                 \t\t}
                 \t],
                 \t"sortAfterKey": ""
@@ -74,7 +94,7 @@ public class SearchRequestExamples {
                 \t\t\t\t"smc"
                 \t\t\t],
                 \t\t\t"filter": false,
-                \t\t\t"isSearch": true
+                \t\t\t"search": true
                 \t\t}
                 \t],
                 \t"sortAfterKey": ""
@@ -184,7 +204,7 @@ public class SearchRequestExamples {
                       "smc"
                     ],
                     "filter": false,
-                    "isSearch": true
+                    "search": true
                   }
                 ],
                 "range": [
@@ -206,7 +226,7 @@ public class SearchRequestExamples {
                       "smc"
                     ],
                     "filter": false,
-                    "isSearch": true
+                    "search": true
                   }
               ],
               "range": [
@@ -281,5 +301,24 @@ public class SearchRequestExamples {
                  ],
                  "afterKey": "eyJuZXdzLnRvcGljLmkxOG4uaXRfSVQua2V5d29yZCI6IiBzdGlsZSBlIGJlbGxlenphIn0="
              }""";
+    public static final String AUTOCORRECTION_QUERY_RESPONSE =
+        """
+            {
+                "size": 0,
+                "suggest": {
+                  "autocorrection_suggestion": {
+                    "term": {
+                      "field": "web.title",
+                      "size": 1,
+                      "max_edits": 1,
+                      "min_word_length": 4,
+                      "prefix_length": 4,
+                      "sort": "score",
+                      "suggest_mode": "popular"
+                    }
+                  },
+                  "text": "storria lifera"
+                }
+              }""";
 }
 
