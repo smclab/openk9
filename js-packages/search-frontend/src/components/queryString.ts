@@ -134,37 +134,54 @@ export function loadLocalStorage<Value extends QueryValueShape>(
   storageKey: string,
   queryStringMap?: queryStringMapType,
 ): Value {
-  const raw = localStorage.getItem(storageKey);
-  const out: Record<string, unknown> = { ...defaultValue };
+  const raw =
+    typeof window !== "undefined" && typeof window.localStorage !== "undefined"
+      ? window.localStorage.getItem(storageKey)
+      : null;
 
-  if (queryStringMap) {
-    const keys = Object.keys(queryStringMap).filter((k) => k !== "keyObj");
-    if (queryStringMap.keyObj && raw) {
-      const obj = safeParse<Record<string, unknown>>(raw);
-      if (obj && typeof obj === "object") {
-        for (const k of keys) {
-          const mappedKey = (queryStringMap as any)[k];
-          if (Object.prototype.hasOwnProperty.call(obj, mappedKey)) {
-            out[k] = (obj as any)[mappedKey];
-          }
-        }
-      }
-    } else if (raw) {
-      const obj = safeParse<Record<string, unknown>>(raw);
-      for (const k of keys) {
-        const mappedKey = (queryStringMap as any)[k];
-        if (obj && Object.prototype.hasOwnProperty.call(obj, mappedKey)) {
-          out[k] = (obj as any)[mappedKey];
-        }
-      }
+  const result: Record<string, unknown> = { ...defaultValue };
+
+  if (!raw) {
+    if (result["textOnChange"] == null && result["text"] != null) {
+      result["textOnChange"] = result["text"];
     }
-  } else if (raw) {
-    const q = safeParse<Partial<Value>>(raw);
-    if (q && typeof q === "object") Object.assign(out, q);
+    return result as Value;
   }
 
-  if (!out["textOnChange"] && out["text"]) out["textOnChange"] = out["text"];
-  return out as Value;
+  const parsedData = safeParse<Record<string, unknown>>(raw);
+
+  if (!parsedData || typeof parsedData !== "object") {
+    if (result["textOnChange"] == null && result["text"] != null) {
+      result["textOnChange"] = result["text"];
+    }
+    return result as Value;
+  }
+
+  if (queryStringMap) {
+    const mappingKeys = Object.keys(queryStringMap).filter(
+      (k) => k !== "keyObj",
+    );
+
+    for (const key of mappingKeys) {
+      const mappedKey = (queryStringMap as Record<string, string | undefined>)[
+        key
+      ];
+      if (
+        mappedKey &&
+        Object.prototype.hasOwnProperty.call(parsedData, mappedKey)
+      ) {
+        result[key] = parsedData[mappedKey];
+      }
+    }
+  } else {
+    Object.assign(result, parsedData);
+  }
+
+  if (result["textOnChange"] == null && result["text"] != null) {
+    result["textOnChange"] = result["text"];
+  }
+
+  return result as Value;
 }
 
 export function saveLocalStorage<Value extends QueryValueShape>(
