@@ -187,14 +187,9 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                     "Advanced Example": {
                         "summary": "An advanced example with all fields",
                         "value": {
-                            "searchText": "What is OpenK9?",
-                            "timestamp": "1731928126578",
-                            "chatSequenceNumber": 1,
-                            "retrieveCitations": True,
-                            "rerank": False,
-                            "chunk_window": False,
-                            "range": [0, 5],
                             "chatId": "chat-456",
+                            "retrieveFromUploadedDocuments": True,
+                            "range": [0, 5],
                             "afterKey": "some-key",
                             "suggestKeyword": "OpenK9",
                             "suggestionCategoryId": 1,
@@ -202,6 +197,18 @@ API_RAG_CHAT_OPENAPI_EXTRA = {
                             "sort": ["field1:asc"],
                             "sortAfterKey": "sort-key",
                             "language": "en",
+                            "searchText": "What is OpenK9?",
+                            "timestamp": "1731928126578",
+                            "chatSequenceNumber": 1,
+                        },
+                    },
+                    "Example for logged users, retrieving from uploaded documents": {
+                        "summary": "Retrieving from uploaded documents",
+                        "value": {
+                            "searchText": "What is OpenK9?",
+                            "retrieveFromUploadedDocuments": True,
+                            "timestamp": "1731928126578",
+                            "chatSequenceNumber": 1,
                         },
                     },
                     "Example for not logged users, first question": {
@@ -331,14 +338,9 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                     "Advanced Example": {
                         "summary": "An advanced example with all fields",
                         "value": {
-                            "searchText": "What is OpenK9?",
-                            "timestamp": "1731928126578",
-                            "chatSequenceNumber": 1,
-                            "retrieveCitations": True,
-                            "rerank": False,
-                            "chunk_window": False,
-                            "range": [0, 5],
                             "chatId": "chat-456",
+                            "retrieveFromUploadedDocuments": False,
+                            "range": [0, 5],
                             "afterKey": "some-key",
                             "suggestKeyword": "OpenK9",
                             "suggestionCategoryId": 1,
@@ -346,6 +348,18 @@ API_RAG_CHAT_TOOL_OPENAPI_EXTRA = {
                             "sort": ["field1:asc"],
                             "sortAfterKey": "sort-key",
                             "language": "en",
+                            "searchText": "What is OpenK9?",
+                            "timestamp": "1731928126578",
+                            "chatSequenceNumber": 1,
+                        },
+                    },
+                    "Example for logged users, retrieving from uploaded documents": {
+                        "summary": "Retrieving from uploaded documents",
+                        "value": {
+                            "searchText": "What is OpenK9?",
+                            "retrieveFromUploadedDocuments": True,
+                            "timestamp": "1731928126578",
+                            "chatSequenceNumber": 1,
                         },
                     },
                     "Example for not logged users, first question": {
@@ -597,6 +611,37 @@ API_RAG_CHAT_PATCH_RESPONSES = {
                     ]
                 }
             }
+        },
+    },
+    status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "description": "Internal Server Error - Unexpected server-side error",
+        "content": {
+            "application/json": {"example": {"detail": "An unexpected error occurred"}}
+        },
+    },
+}
+
+API_RAG_UPLOAD_FILES_RESPONSES = {
+    status.HTTP_401_UNAUTHORIZED: {
+        "description": "Unauthorized - Invalid token.",
+        "content": {
+            "application/json": {"example": {"detail": "Invalid or expired token"}}
+        },
+    },
+    status.HTTP_400_BAD_REQUEST: {
+        "description": "Invalid document type",
+        "content": {
+            "application/json": {"example": {"detail": "Invalid document type"}}
+        },
+    },
+    status.HTTP_413_REQUEST_ENTITY_TOO_LARGE: {
+        "description": "File too large.",
+        "content": {"application/json": {"example": {"detail": "File too large."}}},
+    },
+    status.HTTP_422_UNPROCESSABLE_ENTITY: {
+        "description": "Failed to load file",
+        "content": {
+            "application/json": {"example": {"detail": "Failed to load file."}}
         },
     },
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
