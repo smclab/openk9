@@ -336,68 +336,150 @@ def stream_rag_conversation(
     Orchestrates a conversational RAG (Retrieval-Augmented Generation) pipeline with memory.
 
     This function handles the complete flow from query processing to response generation, including:
-    - Document retrieval from OpenSearch
+    - Document retrieval from OpenSearch (both general and user-uploaded documents)
     - Context-aware response generation using language models
-    - Conversation history management
-    - Real-time streaming of partial results
+    - Conversation history management with different storage backends
+    - Real-time streaming of partial results via Server-Sent Events
     - Citation handling and document metadata processing
+    - Conversation title generation for new chats
 
-    Args:
-        search_text (str): User's query text to process.
-        reranker_api_url (str): Endpoint URL for the reranking service.
-        range_values (list): Range filters for document retrieval.
-        after_key (str): Pagination key for search results.
-        suggest_keyword (str): Suggested keyword for query expansion.
-        suggestion_category_id (int): Category ID for suggestions.
-        virtual_host (str): Virtual host configuration for OpenSearch.
-        jwt (str): Authentication token for secured services.
-        extra (dict): Additional parameters for search customization.
-        sort (list): Sorting criteria for search results.
-        sort_after_key (str): Key for sorted pagination.
-        language (str): Language code for localization.
-        opensearch_host (str): OpenSearch cluster endpoint.
-        grpc_host (str): gRPC service endpoint for embeddings.
-        chat_id (str): Unique identifier for the chat session.
-        user_id (str): Unique identifier for the user.
-        chat_history (list): Chat history for not logged users.
-        timestamp (str): ISO format timestamp of the request.
-        chat_sequence_number (int): Sequence number in conversation history.
-        configuration (dict): Configuration dictionary containing:
-            - api_url (str): URL for the API endpoint
-            - api_key (str): API key for authentication
-            - model_type (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
-            - model (str):  Name of the model to use; defaults to DEFAULT_MODEL if not provided
-            - prompt_template (str): Main prompt template
-            - rephrase_prompt_template (str): Contextualization prompt template
-            - context_window (int): Model context window size
-            - retrieve_citations (bool): Flag to enable citation extraction
-            - rerank (bool): Whether to enable document reranking
-            - chunk_window (int): if 0 disable context window merging, if > 0 and <=2 enable context window merging
-            - metadata (dict): metadata for document fields extraction
-            - retrieve_type (str): Document retrieval strategy
-            - watsonx_project_id (str): Project ID for IBM WatsonX (required if using IBM_WATSONX)
-            - chat_vertex_ai_credentials (dict): Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI)
-            - chat_vertex_ai_model_garden (dict): Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN)
+    :param search_text: User's query text to process
+    :type search_text: str
+    :param reranker_api_url: Endpoint URL for the reranking service
+    :type reranker_api_url: str
+    :param range_values: Range filters for document retrieval
+    :type range_values: list
+    :param after_key: Pagination key for search results
+    :type after_key: str
+    :param suggest_keyword: Suggested keyword for query expansion
+    :type suggest_keyword: str
+    :param suggestion_category_id: Category ID for suggestions
+    :type suggestion_category_id: int
+    :param virtual_host: Virtual host configuration for multi-tenant isolation
+    :type virtual_host: str
+    :param jwt: Authentication token for secured services
+    :type jwt: str
+    :param extra: Additional parameters for search customization
+    :type extra: dict
+    :param sort: Sorting criteria for search results
+    :type sort: list
+    :param sort_after_key: Key for sorted pagination
+    :type sort_after_key: str
+    :param language: Language code for localization
+    :type language: str
+    :param opensearch_host: OpenSearch cluster endpoint
+    :type opensearch_host: str
+    :param grpc_host_embedding: gRPC service endpoint for embeddings
+    :type grpc_host_embedding: str
+    :param grpc_host_datasource: gRPC service endpoint for data source configuration
+    :type grpc_host_datasource: str
+    :param chat_id: Unique identifier for the chat session
+    :type chat_id: str
+    :param user_id: Unique identifier for the user (None for unauthenticated users)
+    :type user_id: str
+    :param realm_name: Keycloak realm name for user isolation
+    :type realm_name: str
+    :param retrieve_from_uploaded_documents: Whether to search in user's uploaded documents
+    :type retrieve_from_uploaded_documents: bool
+    :param chat_history: Previous chat messages for unauthenticated users
+    :type chat_history: list
+    :param timestamp: ISO format timestamp of the request
+    :type timestamp: str
+    :param chat_sequence_number: Sequence number in conversation history
+    :type chat_sequence_number: int
+    :param configuration: RAG and LLM configuration dictionary
+    :type configuration: dict
+    :param embedding_model_configuration: Embedding model settings for vector search
+    :type embedding_model_configuration: dict
 
-    Yields:
-        Iterator[str]: JSON-encoded stream objects with following formats:
-        - {"chunk": "", "type": "START"} - Stream initialization
-        - {"chunk": str, "type": "CHUNK"} - Partial response chunks
-        - {"chunk": str, "type": "TITLE"} - Generated conversation title
-        - {"chunk": dict, "citations": list, "type": "DOCUMENT"} - Processed documents with metadata
-        - {"chunk": "", "type": "END"} - Stream termination
+    :return: Generator that yields JSON-encoded stream objects
+    :rtype: Iterator[str]
 
-    Raises:
-        ConnectionError: If unable to connect to OpenSearch or gRPC services
-        ValueError: For invalid configuration parameters or missing required fields
-        RuntimeError: For failures in the RAG chain execution
+    :raises ConnectionError: If unable to connect to OpenSearch or gRPC services
+    :raises ValueError: For invalid configuration parameters or missing required fields
+    :raises RuntimeError: For failures in the RAG chain execution
+    :raises HTTPException: For unauthorized access attempts to uploaded documents
 
-    Notes:
+    :Example:
+
+    .. code-block:: python
+
+        stream = stream_rag_conversation(
+            search_text="What is machine learning?",
+            reranker_api_url="http://reranker:8000",
+            range_values=[0, 10],
+            after_key=None,
+            suggest_keyword="machine",
+            suggestion_category_id=1,
+            virtual_host="tenant1.example.com",
+            jwt="eyJhbGciOiJIUzI1NiIs...",
+            extra={"category": "technology"},
+            sort=[{"field": "relevance", "order": "desc"}],
+            sort_after_key=None,
+            language="en",
+            opensearch_host="http://localhost:9200",
+            grpc_host_embedding="localhost:50053",
+            grpc_host_datasource="localhost:50051",
+            chat_id="chat_123",
+            user_id="user_456",
+            realm_name="my-realm",
+            retrieve_from_uploaded_documents=True,
+            chat_history=[],
+            timestamp="2023-01-01T00:00:00Z",
+            chat_sequence_number=1,
+            configuration={...},
+            embedding_model_configuration={...}
+        )
+
+        for chunk in stream:
+            data = json.loads(chunk)
+            if data["type"] == "CHUNK":
+                print(data["chunk"])  # Streamed response text
+
+    .. note::
         - Requires running OpenSearch cluster and gRPC embedding service
         - Uses LangChain components for RAG pipeline construction
-        - Maintains conversation history through OpenSearch integrations
+        - Maintains conversation history through OpenSearch for authenticated users
+        - Uses frontend-provided history for unauthenticated users
         - Response streaming implemented using generator pattern
         - Document processing includes deduplication and citation mapping
+        - Automatically generates conversation titles for new chat sessions
+        - Supports multiple LLM providers with different capabilities
+
+    .. warning::
+        - Unauthorized users cannot access uploaded documents
+        - Ensure all gRPC services are running and accessible
+        - OpenSearch cluster must be properly configured with KNN support
+
+    .. seealso::
+        - :class:`OpenSearchRetriever` For general document retrieval
+        - :class:`OpenSearchUploadedDocumentsRetriever` For user-uploaded document retrieval
+        - :func:`initialize_language_model` For LLM initialization
+        - :func:`save_chat_message` For storing conversation history
+
+    Stream Event Types:
+        * **START**: Stream initialization signal
+        * **CHUNK**: Partial response text chunks
+        * **TITLE**: Generated conversation title (only for new chats)
+        * **DOCUMENT**: Retrieved documents with metadata and citations
+        * **END**: Stream termination signal
+
+    Configuration Parameters:
+        The configuration dictionary should contain:
+
+        * **model_type** (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
+        * **model** (str): Name of the model to use (default: DEFAULT_MODEL)
+        * **prompt_template** (str): Main prompt template for response generation
+        * **rephrase_prompt_template** (str): Contextualization prompt template
+        * **context_window** (int): Model context window size in tokens
+        * **retrieve_citations** (bool): Flag to enable citation extraction
+        * **retrieve_type** (str): Document retrieval strategy
+        * **rerank** (bool): Whether to enable document reranking
+        * **chunk_window** (int): Context window merging configuration (0=disabled, >0=enabled)
+        * **metadata** (dict): Metadata for document fields extraction
+        * **watsonx_project_id** (str): Project ID for IBM WatsonX
+        * **chat_vertex_ai_credentials** (dict): Credentials for Google Vertex AI
+        * **chat_vertex_ai_model_garden** (dict): Configurations for Vertex AI Model Garden
     """
     model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
     model = configuration.get("model", DEFAULT_MODEL)

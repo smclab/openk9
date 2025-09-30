@@ -322,24 +322,84 @@ def delete_documents(opensearch_host, interval_in_days=180):
 def save_uploaded_documents(
     opensearch_host: str, realm_name: str, documents: list, vector_size: int
 ):
-    """Save uploaded documents to OpenSearch index.
+    """
+    Save uploaded documents to OpenSearch index.
 
-    Stores uploaded documents in a specific OpenSearch index.
-    Creates the index if it doesn't exist.
+    Stores uploaded documents with vector embeddings in a realm-specific OpenSearch index.
+    Creates the index with proper mappings and search pipeline if it doesn't exist, then
+    performs bulk indexing of all documents.
 
     :param opensearch_host: The host URL of the OpenSearch instance (e.g., "http://localhost:9200")
     :type opensearch_host: str
-    :param realm_name: The name of the keykloak realm of ther user
+    :param realm_name: The name of the Keycloak realm for the user (used for index naming and isolation)
     :type realm_name: str
-    :param documents: List of uploaded documents
-    :type sources: list
+    :param documents: List of document dictionaries containing text, metadata, and vector embeddings
+    :type documents: list
+    :param vector_size: The dimensionality of the vector embeddings for proper index mapping
+    :type vector_size: int
 
     :return: None
 
-    .. note::
-        - Creates index if not exists
-    """
+    :raises Exception: If bulk indexing operation fails
 
+    :Example:
+
+    .. code-block:: python
+
+        save_uploaded_documents(
+            opensearch_host="http://localhost:9200",
+            realm_name="my-realm",
+            documents=[
+                {
+                    "filename": "doc1.pdf",
+                    "file_extension": ".pdf",
+                    "user_id": "user_123",
+                    "chat_id": "chat_456",
+                    "chunk_number": 1,
+                    "total_chunks": 3,
+                    "chunkText": "Document content...",
+                    "vector": [0.1, 0.2, 0.3, ...],
+                    "timestamp": "2023-01-01T00:00:00Z"
+                }
+            ],
+            vector_size=1536
+        )
+
+    .. note::
+        - Creates index with KNN (k-Nearest Neighbors) support if it doesn't exist
+        - Sets up a hybrid search pipeline for combining vector and text search
+        - Uses realm-based index naming for multi-tenant isolation
+        - Performs bulk indexing for better performance with multiple documents
+        - Includes error handling and logging for indexing operations
+        - Automatically adds timestamp to documents during indexing
+
+    .. warning::
+        - Ensure OpenSearch instance is running and accessible at opensearch_host
+        - Vector size must match the actual dimension of embedding vectors
+        - Bulk indexing may fail if documents exceed OpenSearch limits
+        - Index creation requires appropriate OpenSearch permissions
+
+    .. seealso::
+        - :func:`documents_embedding` For generating the document embeddings
+        - :func:`generate_documents_embeddings` For creating vector embeddings
+        - OpenSearch KNN Vector Documentation for vector search capabilities
+
+    Index Configuration:
+        The created index includes:
+
+        * **KNN enabled**: For efficient vector similarity search
+        * **Vector field**: Configured with the specified dimension for embeddings
+        * **Keyword fields**: For efficient filtering on user_id and chat_id
+        * **Timestamp**: For temporal filtering and sorting
+        * **Hybrid search pipeline**: Combines vector and text search results
+
+    Search Pipeline:
+        Configures a normalization processor that:
+
+        * Uses min-max normalization technique
+        * Applies arithmetic mean combination with equal weights (0.5, 0.5)
+        * Enables hybrid search combining multiple relevance scores
+    """
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )

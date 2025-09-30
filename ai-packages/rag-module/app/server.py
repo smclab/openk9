@@ -271,7 +271,7 @@ async def rag_chat(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
-            - retrieveFromUploadedDocuments
+            - retrieveFromUploadedDocuments: Whether to retrieve from uploaded documents
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -412,7 +412,7 @@ async def rag_chat_tool(
     Args:
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
-            - retrieveFromUploadedDocuments
+            - retrieveFromUploadedDocuments: Whether to retrieve from uploaded documents
             - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
@@ -732,7 +732,8 @@ async def delete_chat(
     request: Request,
     headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
-    """Permanently delete all messages belonging to a specific chat conversation.
+    """Permanently delete all messages belonging to a specific chat conversation,
+    also delete any uploaded documents associated with the chat, if any.
 
     Args:
         chat_id (str): Unique identifier of the chat to delete
@@ -758,6 +759,7 @@ async def delete_chat(
         - Requires valid JWT token in Authorization header
         - Performs a hard delete - removed data cannot be recovered
         - Deletes all messages associated with the chat_id
+        - Deletes all uploaded documents associated with the chat_id
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
@@ -932,7 +934,13 @@ async def rename_chat(
     return JSONResponse(status_code=status.HTTP_200_OK, content=content)
 
 
-@app.post("/api/rag/upload_files")
+@app.post(
+    "/api/rag/upload_files",
+    tags=["RAG"],
+    summary="Upload and process multiple files for RAG",
+    description="This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, and stores them in OpenSearch for later retrieval.",
+    responses=openapi.API_RAG_UPLOAD_FILES_RESPONSES,
+)
 async def upload_files(
     request: Request,
     headers: Annotated[models.CommonHeadersMinimal, Header()],
@@ -941,6 +949,49 @@ async def upload_files(
     ],
     chat_id: str,
 ):
+    """Upload and process multiple files for RAG Retrieval-Augmented Generation) system.
+    This endpoint accepts multiple file uploads, validates them, processes the content,
+    generates embeddings, and stores them in OpenSearch for later retrieval.
+
+    :param request: The incoming HTTP request object
+    :type request: Request
+    :param headers: HTTP headers containing authorization and host information
+    :type headers: Annotated[models.CommonHeadersMinimal, Header()]
+    :param files: List of files to be uploaded and processed
+    :type files: Annotated[list[UploadFile], File(description="Multiple files as UploadFile")]
+    :param chat_id: The chat session identifier to associate the uploaded documents with
+    :type chat_id: str
+
+    :return: JSON response indicating the operation status
+    :rtype: JSONResponse
+
+    :raises HTTPException 400: When number of files exceeds maximum allowed limit
+    :raises HTTPException 400: When file type is not supported
+    :raises HTTPException 413: When file size exceeds maximum allowed size
+    :raises HTTPException 500: When file saving fails
+    :raises HTTPException 500: When file loading fails
+
+    :Example:
+
+    .. code-block:: bash
+
+        curl -X POST http://127.0.0.1:5000/api/rag/upload_files?chat_id=222
+            -F "files=@document1.pdf"
+            -F "files=@document2.pdf"
+            -H 'x-forwarded-host: example.com'
+            -H "Authorization: Bearer token"
+
+    .. note::
+        - Supported file extensions: .pdf, .txt, .docx, etc. (as defined in UPLOAD_FILE_EXTENSIONS)
+        - Maximum file size: MAX_UPLOAD_FILE_SIZE
+        - Maximum number of files: MAX_UPLOAD_FILES_NUMBER
+        - Files are temporarily stored, processed, and then deleted
+        - Documents are embedded and stored in OpenSearch for retrieval
+
+    .. warning::
+        - Authentication token is required in Authorization header
+        - Files are validated for type, size, and quantity limits
+    """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
     if not headers.authorization:
@@ -1028,7 +1079,7 @@ async def upload_files(
             os.remove(renamed_uploaded_file)
             logger.error(f"Failed to load file: {str(e)}")
             raise HTTPException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Failed to load file: {str(e)}",
             )
 
