@@ -3,7 +3,7 @@ import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Table } from "../../components/Table/Table";
-import TranslationDialog from "../SuggestionCategories/components/translateModal";
+import TranslationDialog from "../../components/Form/Modals/translateModal";
 import { ADD_TAB_TRANSLATION } from "./gql";
 import {
   useAddTabToBucketMutation,

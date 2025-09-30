@@ -10,7 +10,7 @@ import {
   useSuggestionCategoriesQuery,
   useUnboundBucketsBySuggestionCategoryQuery,
 } from "../../graphql-generated";
-import TranslationDialog from "./components/translateModal";
+import TranslationDialog from "../../components/Form/Modals/translateModal";
 import { ADD_SUGGESTION_CATEGORY_TRANSLATION } from "./gql";
 
 export function SuggestionCategories() {
