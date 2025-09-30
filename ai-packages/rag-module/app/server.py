@@ -938,7 +938,7 @@ async def rename_chat(
     "/api/rag/upload_files",
     tags=["RAG"],
     summary="Upload and process multiple files for RAG",
-    description="This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, and stores them in OpenSearch for later retrieval.",
+    description="This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, and stores them in OpenSearch for later retrieval. Files are processed individually, and failures in one file don't affect processing of other files.",
     responses=openapi.API_RAG_UPLOAD_FILES_RESPONSES,
 )
 async def upload_files(
@@ -949,27 +949,28 @@ async def upload_files(
     ],
     chat_id: str,
 ):
-    """Upload and process multiple files for RAG Retrieval-Augmented Generation) system.
-    This endpoint accepts multiple file uploads, validates them, processes the content,
-    generates embeddings, and stores them in OpenSearch for later retrieval.
+    """Upload and process multiple files for RAG (Retrieval-Augmented Generation) system.
+
+    This endpoint accepts multiple file uploads, validates them individually, processes the content,
+    generates embeddings, and stores them in OpenSearch for later retrieval. The processing is
+    designed to be fault-tolerant - if one file fails validation or processing, the system will
+    continue with the remaining files and provide detailed feedback about successes and failures.
 
     :param request: The incoming HTTP request object
     :type request: Request
     :param headers: HTTP headers containing authorization and host information
     :type headers: Annotated[models.CommonHeadersMinimal, Header()]
-    :param files: List of files to be uploaded and processed
+    :param files: List of files to be uploaded and processed. Each file is processed independently.
     :type files: Annotated[list[UploadFile], File(description="Multiple files as UploadFile")]
     :param chat_id: The chat session identifier to associate the uploaded documents with
     :type chat_id: str
 
-    :return: JSON response indicating the operation status
+    :return: JSON response indicating the operation status with detailed success/failure information
     :rtype: JSONResponse
 
     :raises HTTPException 400: When number of files exceeds maximum allowed limit
-    :raises HTTPException 400: When file type is not supported
-    :raises HTTPException 413: When file size exceeds maximum allowed size
-    :raises HTTPException 500: When file saving fails
-    :raises HTTPException 500: When file loading fails
+    :raises HTTPException 401: When authentication fails or token is invalid
+    :raises HTTPException 413: When individual file size exceeds maximum allowed size (per file)
 
     :Example:
 
@@ -985,8 +986,10 @@ async def upload_files(
         - Supported file extensions: .pdf, .txt, .docx, etc. (as defined in UPLOAD_FILE_EXTENSIONS)
         - Maximum file size: MAX_UPLOAD_FILE_SIZE
         - Maximum number of files: MAX_UPLOAD_FILES_NUMBER
-        - Files are temporarily stored, processed, and then deleted
+        - Files are temporarily stored, processed, and then deleted regardless of success/failure
         - Documents are embedded and stored in OpenSearch for retrieval
+        - Processing continues even if individual files fail validation or processing
+        - Detailed error reporting for each failed file is provided in the response
 
     .. warning::
         - Authentication token is required in Authorization header
