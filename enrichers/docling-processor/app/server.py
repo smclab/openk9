@@ -4,6 +4,7 @@ from fastapi import FastAPI, Body
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 from io import BytesIO
+from app.utils.fm_helper import FileManagerHelper
 
 import os
 from dotenv import load_dotenv, dotenv_values 
@@ -17,6 +18,8 @@ import time
 from pydantic import BaseModel
 import requests
 import base64
+
+FMHelper= FileManagerHelper(os.getenv("FM_HOST"))
 
 class Payload(BaseModel):
     tenantID:str
@@ -46,15 +49,13 @@ async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazion
 
 def operation(payload,configs,token):
     s_host=os.getenv("S_HOST")
-    fm_host=os.getenv("FM_HOST")
 
     resourceId=payload.resources["binaries"][0]["resourceId"]
     tenant=payload.tenantID
 
-    response = requests.get(f"{fm_host}/api/file-manager/v1/download/base64/{resourceId}/{tenant}") #body json
-    print(response)
+    resource=FMHelper.getBase64(tenant,resourceId)
 
-    decoded_bytes = base64.b64decode(response.text)
+    decoded_bytes = base64.b64decode(resource)
     bites_io = BytesIO(decoded_bytes)#file
 
     print(f"Starting process")
