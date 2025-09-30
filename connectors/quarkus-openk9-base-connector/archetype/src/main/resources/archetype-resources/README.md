@@ -23,7 +23,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
     "scheduleId": "008f8ad6-884f-4ccd-8e6a-9772e407d325",
     "tenantId": "465bb95b-d6f0-48cf-8bfe-4d1bf366dbc7",
     "timestamp": 1753866303,
-    "datasourceConfig": {}
+    "jsonConfig": {}
   }
   ```
 
@@ -32,7 +32,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
   It exposes `/form` endpoint that returns the connector configuration.
   ```json
   {
-    "formFields": [
+    "fields": [
       {
         "info": "",
         "label": "Test Form",
@@ -305,7 +305,7 @@ Changes need to be made to the connector to create a concrete implementation(**I
                         ingestionDTO.setContentId(UUID.randomUUID());
                         ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
                         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-                        ingestionDTO.setTenantId(UUID.fromString(invokeRequest.getTenantId()));
+                        ingestionDTO.setTenantId(invokeRequest.getTenantId());
                         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
                         ingestionDTO.setRawContent(singleStrapiData.toString());
                         datasourcePayload.setAdditionalProperty("data", singleStrapiData);

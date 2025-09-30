@@ -101,7 +101,7 @@ It is used in `Form`.
 The application can be compiled using:
 
 ```shell
-mvn compile
+./mvnw compile
 ```
 
 It generates classes under `target/generated-sources/jaxrs` path.

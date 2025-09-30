@@ -41,7 +41,7 @@ These classes implement the REST classes from the library and adapt their behavi
    It exposes `/form` endpoint that returns the connector configuration.
   ```json
   {
-    "formFields": [
+    "fields": [
       {
         "info": "",
         "label": "Test Form",
@@ -178,7 +178,7 @@ They are responsible for crawling data and sending them one by one to OpenK9 asy
 To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
-mvn install
+./mvnw install
 ```  
 
 ## Generate Connector
@@ -374,7 +374,7 @@ After generating it, changes need to be made to the connector to create a concre
                         ingestionDTO.setContentId(UUID.randomUUID());
                         ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
                         ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
-                        ingestionDTO.setTenantId(UUID.fromString(invokeRequest.getTenantId()));
+                        ingestionDTO.setTenantId(invokeRequest.getTenantId());
                         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
                         ingestionDTO.setRawContent(singleStrapiData.toString());
                         datasourcePayload.setAdditionalProperty("data", singleStrapiData);
