@@ -938,7 +938,9 @@ async def rename_chat(
     "/api/rag/upload_files",
     tags=["RAG"],
     summary="Upload and process multiple files for RAG",
-    description="This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, and stores them in OpenSearch for later retrieval. Files are processed individually, and failures in one file don't affect processing of other files.",
+    description="""This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, 
+    and stores them in OpenSearch for later retrieval. Files are processed individually, and failures in one file don't affect 
+    processing of other files.""",
     responses=openapi.API_RAG_UPLOAD_FILES_RESPONSES,
 )
 async def upload_files(
