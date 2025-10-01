@@ -240,8 +240,6 @@ public class AutocorrectionGraphqlTest {
 		assertFalse(clientResponse.hasError());
 		assertTrue(clientResponse.hasData());
 
-		var response = clientResponse.getData().getJsonObject(AUTOCORRECTION);
-
 		Autocorrection autocorrection =
 			EntitiesUtils.getAutocorrection(
 				AUTOCORRECTION_NAME_ONE,

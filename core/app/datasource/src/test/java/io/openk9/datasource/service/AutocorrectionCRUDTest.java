@@ -155,7 +155,7 @@ public class AutocorrectionCRUDTest {
 		log.debug(
 			String.format(
 				"DocTypeField from sample, of type TEXT, with id: %d",
-				sampleTextDocTypeFieldId
+				sampleTextDocTypeFieldId.longValue()
 			)
 		);
 
@@ -236,7 +236,7 @@ public class AutocorrectionCRUDTest {
 		log.debug(
 			String.format(
 				"Patch with DocTypeField from sample, of type TEXT, with id: %d",
-				docTypeFieldId
+				docTypeFieldId.longValue()
 			)
 		);
 
@@ -311,7 +311,7 @@ public class AutocorrectionCRUDTest {
 		log.debug(
 			String.format(
 				"Update with DocTypeField from sample, of type TEXT, with id: %d",
-				docTypeFieldId
+				docTypeFieldId.longValue()
 			)
 		);
 

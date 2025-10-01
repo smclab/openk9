@@ -455,13 +455,13 @@ public class SearchResource {
 				return new HashMap<>();
 			})
 			.map(autocorrectionMap -> {
-				if (!autocorrectionMap.isEmpty()) {
-					if ((Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
-						// replace query text in the searchRequest with the correction
-						searchTokenUserInput.get().setValues(List.of(
-							(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
-						);
-					}
+				if (!autocorrectionMap.isEmpty()
+					&& (Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
+
+					// replace query text in the searchRequest with the correction
+					searchTokenUserInput.get().setValues(List.of(
+						(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
+					);
 				}
 				// do search and add autocorrection to the search response
 				return _doSearch(searchRequest)
@@ -904,6 +904,16 @@ public class SearchResource {
 		);
 	}
 
+	/**
+	 * Executes a search request by parsing the query and performing an asynchronous OpenSearch query.
+	 *
+	 * Converts the search request into a query parser request, retrieves the parsed query and
+	 * target indices, then executes the search asynchronously against OpenSearch.
+	 * Returns an empty response if no indices are found.
+	 *
+	 * @param searchRequest the search request to execute
+	 * @return a Uni emitting the search response, or a WebApplicationException on failure
+	 */
 	private Uni<Response> _doSearch(SearchRequest searchRequest) {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
@@ -930,17 +940,17 @@ public class SearchResource {
 
 				var queryParams = queryParserResponse.getQueryParametersMap();
 
-				org.opensearch.client.Request request =
+				org.opensearch.client.Request openSearchRequest =
 					new org.opensearch.client.Request(
 						"GET", "/" + indexNames + "/_search");
 
-				request.addParameters(queryParams);
+				openSearchRequest.addParameters(queryParams);
 
-				request.setJsonEntity(searchRequestBody);
+				openSearchRequest.setJsonEntity(searchRequestBody);
 
 				return Uni.createFrom().<SearchResponse>emitter((sink) -> restHighLevelClient
 						.getLowLevelClient()
-						.performRequestAsync(request, new ResponseListener() {
+						.performRequestAsync(openSearchRequest, new ResponseListener() {
 							@Override
 							public void onSuccess(
 								org.opensearch.client.Response response) {

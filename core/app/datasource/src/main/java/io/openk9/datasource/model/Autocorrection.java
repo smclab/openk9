@@ -40,37 +40,29 @@ import java.util.Objects;
 @ToString
 public class Autocorrection extends K9Entity {
 
-	@Column(name = "name", nullable = false, unique = true)
-	private String name;
-
-	@Column(name = "description", length = 4096)
-	private String description;
-
 	@JsonIgnore
 	@ToString.Exclude
 	@ManyToOne
 	@JoinColumn(name = "autocorrection_doc_type_field_id", referencedColumnName = "id")
 	private DocTypeField autocorrectionDocTypeField;
-
+	@Column(name = "description", length = 4096)
+	private String description;
+	@Column(name = "enable_search_with_correction")
+	private boolean enableSearchWithCorrection = false;
+	@Column(name = "max_edit")
+	private Integer maxEdit;
+	@Column(name = "min_word_length")
+	private Integer minWordLength;
+	@Column(name = "name", nullable = false, unique = true)
+	private String name;
+	@Column(name = "prefix_length")
+	private Integer prefixLength;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "sort", nullable = false)
 	private SortType sort = SortType.SCORE;
-
 	@Enumerated(EnumType.STRING)
 	@Column(name = "suggest_mode", nullable = false)
 	private SuggestMode suggestMode = SuggestMode.MISSING;
-
-	@Column(name = "prefix_length")
-	private Integer prefixLength;
-
-	@Column(name = "min_word_length")
-	private Integer minWordLength;
-
-	@Column(name = "max_edit")
-	private Integer maxEdit;
-
-	@Column(name = "enable_search_with_correction")
-	private boolean enableSearchWithCorrection = false;
 
 	public void setSort(SortType sort) {
 		this.sort = Objects.requireNonNullElse(sort, SortType.SCORE);

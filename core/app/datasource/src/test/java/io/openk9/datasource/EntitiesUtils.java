@@ -83,9 +83,9 @@ public class EntitiesUtils {
 	// Create methods
 	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
 		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
-		DTO dto,
-		SERVICE service,
-		Mutiny.SessionFactory sessionFactory) {
+			DTO dto,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
 
 		sessionFactory.withTransaction(
 				session -> service.create(dto)
@@ -96,9 +96,9 @@ public class EntitiesUtils {
 
 	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
 		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
-		ENTITY entity,
-		SERVICE service,
-		Mutiny.SessionFactory sessionFactory) {
+			ENTITY entity,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
 
 		sessionFactory.withTransaction(
 				session -> service.create(entity)

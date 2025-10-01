@@ -41,6 +41,29 @@ public class AutocorrectionService extends BaseK9EntityService<Autocorrection, A
 		this.mapper = mapper;
 	}
 
+	@Override
+	public Uni<Autocorrection> create(Autocorrection entity) {
+		return sessionFactory.withTransaction(
+			(session, transaction) -> create(session, entity)
+		);
+	}
+
+	@Override
+	public Uni<Autocorrection> create(AutocorrectionDTO dto) {
+		if (dto.getAutocorrectionDocTypeFieldId() == null || dto.getAutocorrectionDocTypeFieldId() == 0L) {
+			return super.create(dto);
+		}
+		else {
+			return sessionFactory.withTransaction(
+				(session, transaction) ->
+					createTransient(session, dto)
+						.flatMap(autocorrection ->
+							create(session, autocorrection)
+						)
+			);
+		}
+	}
+
 	public Uni<List<Autocorrection>> findUnboundAutocorrectionByBucket(long bucketId) {
 		return sessionFactory.withTransaction(s -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -81,29 +104,6 @@ public class AutocorrectionService extends BaseK9EntityService<Autocorrection, A
 	@Override
 	public Class<Autocorrection> getEntityClass() {
 		return Autocorrection.class;
-	}
-
-	@Override
-	public Uni<Autocorrection> create(Autocorrection entity) {
-		return sessionFactory.withTransaction(
-			(session, transaction) -> create(session, entity)
-		);
-	}
-
-	@Override
-	public Uni<Autocorrection> create(AutocorrectionDTO dto) {
-		if (dto.getAutocorrectionDocTypeFieldId() == null || dto.getAutocorrectionDocTypeFieldId() == 0L) {
-			return super.create(dto);
-		}
-		else {
-			return sessionFactory.withTransaction(
-				(session, transaction) ->
-					createTransient(session, dto)
-						.flatMap(autocorrection ->
-							create(session, autocorrection)
-						)
-			);
-		}
 	}
 
 	public Uni<Autocorrection> patch(long autocorrectionId, AutocorrectionDTO dto) {

@@ -42,7 +42,29 @@ public class AutocorrectionDTO extends K9EntityDTO{
 		must be a valid docTypeFieldId.
 	""")
 	private Long autocorrectionDocTypeFieldId;
-
+	@Nullable
+	@Description("""
+		If enabled, the search query will automatically be replaced with the corrected version from the autocorrection suggester.
+	""")
+	private Boolean enableSearchWithCorrection;
+	@Nullable
+	@Description("""
+		The maximum allowed edit distance for suggestions. Valid values are in the range [1, 2].
+		The default value is 2. Higher edit distances can lead to more suggestions, but also to less relevant ones.
+	""")
+	private Integer maxEdit;
+	@Nullable
+	@Description("""
+		The minimum length of a word for it to be considered for suggestions.
+		Terms shorter than this length will not generate suggestions.
+	""")
+	private Integer minWordLength;
+	@Nullable
+	@Description("""
+		An integer specifying the minimum length the matching prefix must have to start returning suggestions.
+		For example, if 'prefix_length' is 3, an input of "ap" will not generate suggestions, while "app" will.
+	""")
+	private Integer prefixLength;
 	@Nullable
 	@Description("""
 		Specifies how suggestions should be ordered in the response. Valid values are:
@@ -50,7 +72,6 @@ public class AutocorrectionDTO extends K9EntityDTO{
 		- 'frequency': Orders by document frequency, then by similarity score, and finally by the term itself.
 	""")
 	private SortType sort;
-
 	@Nullable
 	@Description("""
 		Controls for which terms suggestions should be included in the response. Valid values are:
@@ -59,31 +80,4 @@ public class AutocorrectionDTO extends K9EntityDTO{
 		- 'always': Always returns matching suggestions for every term in the input text, regardless of its presence or frequency in the index.
 	""")
 	private SuggestMode suggestMode;
-
-	@Nullable
-	@Description("""
-		An integer specifying the minimum length the matching prefix must have to start returning suggestions.
-		For example, if 'prefix_length' is 3, an input of "ap" will not generate suggestions, while "app" will.
-	""")
-	private Integer prefixLength;
-
-	@Nullable
-	@Description("""
-		The minimum length of a word for it to be considered for suggestions.
-		Terms shorter than this length will not generate suggestions.
-	""")
-	private Integer minWordLength;
-
-	@Nullable
-	@Description("""
-		The maximum allowed edit distance for suggestions. Valid values are in the range [1, 2].
-		The default value is 2. Higher edit distances can lead to more suggestions, but also to less relevant ones.
-	""")
-	private Integer maxEdit;
-
-	@Nullable
-	@Description("""
-		If enabled, the search query will automatically be replaced with the corrected version from the autocorrection suggester.
-	""")
-	private Boolean enableSearchWithCorrection;
 }

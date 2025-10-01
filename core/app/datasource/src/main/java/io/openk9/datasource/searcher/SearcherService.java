@@ -214,46 +214,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
-	private SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket tenant, String language) {
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-		searchSourceBuilder.trackTotalHits(true);
-
-		if (request.getRangeCount() == 2) {
-			searchSourceBuilder.from(Math.min(
-				request.getRange(0), maxSearchPageFrom));
-
-			searchSourceBuilder.size(Math.min(
-				request.getRange(1), maxSearchPageSize));
-		}
-
-		List<DocTypeField> docTypeFieldList = Utils
-			.getDocTypeFieldsFrom(tenant)
-			.filter(docTypeField -> !docTypeField.isI18N())
-			.toList();
-
-		applySort(
-			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-			searchSourceBuilder
-		);
-
-		applyHighlightAndIncludeExclude(
-			searchSourceBuilder,
-			docTypeFieldList,
-			language
-		);
-
-		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
-
-		SearchConfig searchConfig = tenant.getSearchConfig();
-
-		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-		return searchSourceBuilder;
-	}
-
 	private static double _toDouble(Object score) {
 		if (score instanceof Double) {
 			return (Double)score;
@@ -522,6 +482,62 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			);
 	}
 
+
+	/**
+	 * Retrieves the current autocorrection configurations for the current enabled bucket.
+	 *
+	 * @param request the request containing the virtual host identifier
+	 * @return a {@link Uni} emitting the autocorrection configuration response
+	 * @throws StatusRuntimeException with {@link Status#NOT_FOUND} if no autocorrection exists
+	 *         for the current enabled bucket
+	 */
+	@Override
+	public Uni<AutocorrectionConfigurationsResponse> getAutocorrectionConfigurations(
+			AutocorrectionConfigurationsRequest request) {
+
+		return Uni.createFrom().deferred(() ->
+			cache.getAsync(
+				new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
+				key -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+			)
+			.flatMap(tenantWithBucket -> {
+
+				if (tenantWithBucket == null) {
+					return Uni.createFrom().item(AutocorrectionConfigurationsResponse
+						.newBuilder()
+						.build()
+					);
+				}
+
+				var bucket = tenantWithBucket.getBucket();
+
+				var autocorrection = bucket.getAutocorrection();
+
+				if (autocorrection == null) {
+					throw new StatusRuntimeException(
+						Status.NOT_FOUND.withDescription(
+							"Missing active autocorrection."));
+				}
+
+				return Uni.createFrom().item(
+					AutocorrectionConfigurationsResponse.newBuilder()
+						.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
+						.setField(DocTypeFieldUtils.fieldPath(
+							autocorrection.getAutocorrectionDocTypeField()
+						))
+						.setSort(_sortTypeToGrpcEnum(autocorrection.getSort()))
+						.setSuggestMode(_suggestModeToGrpcEnum(
+							autocorrection.getSuggestMode()))
+						.setPrefixLength(autocorrection.getPrefixLength())
+						.setMinWordLength(autocorrection.getMinWordLength())
+						.setMaxEdit(autocorrection.getMaxEdit())
+						.setEnableSearchWithCorrection(
+							autocorrection.isEnableSearchWithCorrection())
+						.build()
+				);
+			}));
+	}
+
 	/**
 	 * Retrieves the current embedding model configurations for a tenant identified by virtual host.
 	 *
@@ -687,53 +703,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					.onFailure(StatusRuntimeException.class)
 					.recoverWithUni(error -> Uni.createFrom().failure(error))
 			);
-	}
-
-	@Override
-	public Uni<AutocorrectionConfigurationsResponse> getAutocorrectionConfigurations(
-			AutocorrectionConfigurationsRequest request) {
-
-		return Uni.createFrom().deferred(() ->
-			cache.getAsync(
-				new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
-				key -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
-			)
-			.flatMap(tenantWithBucket -> {
-
-				if (tenantWithBucket == null) {
-					return Uni.createFrom().item(AutocorrectionConfigurationsResponse
-						.newBuilder()
-						.build()
-					);
-				}
-
-				var bucket = tenantWithBucket.getBucket();
-
-				var autocorrection = bucket.getAutocorrection();
-
-				if (autocorrection == null) {
-					throw new StatusRuntimeException(
-						Status.NOT_FOUND.withDescription(
-							"Missing active autocorrection."));
-				}
-
-				return Uni.createFrom().item(
-					AutocorrectionConfigurationsResponse.newBuilder()
-						.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
-						.setField(DocTypeFieldUtils.fieldPath(
-							autocorrection.getAutocorrectionDocTypeField()
-						))
-						.setSort(_sortTypeToGrpcEnum(autocorrection.getSort()))
-						.setSuggestMode(_suggestModeToGrpcEnum(
-							autocorrection.getSuggestMode()))
-						.setPrefixLength(autocorrection.getPrefixLength())
-						.setMinWordLength(autocorrection.getMinWordLength())
-						.setMaxEdit(autocorrection.getMaxEdit())
-						.setEnableSearchWithCorrection(
-							autocorrection.isEnableSearchWithCorrection())
-						.build()
-				);
-			}));
 	}
 
 	@Override
@@ -1351,6 +1320,46 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		return result;
+	}
+
+	private SearchSourceBuilder _getSearchSourceBuilder(
+		QueryParserRequest request, Bucket tenant, String language) {
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.trackTotalHits(true);
+
+		if (request.getRangeCount() == 2) {
+			searchSourceBuilder.from(Math.min(
+				request.getRange(0), maxSearchPageFrom));
+
+			searchSourceBuilder.size(Math.min(
+				request.getRange(1), maxSearchPageSize));
+		}
+
+		List<DocTypeField> docTypeFieldList = Utils
+			.getDocTypeFieldsFrom(tenant)
+			.filter(docTypeField -> !docTypeField.isI18N())
+			.toList();
+
+		applySort(
+			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+			searchSourceBuilder
+		);
+
+		applyHighlightAndIncludeExclude(
+			searchSourceBuilder,
+			docTypeFieldList,
+			language
+		);
+
+		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+
+		return searchSourceBuilder;
 	}
 
 	private Map<String, Object> _queryAnalysisTokenToMap(

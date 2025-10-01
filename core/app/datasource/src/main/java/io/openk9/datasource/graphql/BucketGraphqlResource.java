@@ -63,6 +63,13 @@ import java.util.Set;
 @CircuitBreaker
 public class BucketGraphqlResource {
 
+	@Inject
+	BucketService bucketService;
+	@Inject
+	LanguageService languageService;
+	@Context
+	HttpServerRequest request;
+
 	@Mutation
 	public Uni<Tuple2<Bucket, Datasource>> addDatasourceToBucket(@Id long bucketId, @Id long datasourceId) {
 		return bucketService.addDatasource(bucketId, datasourceId);
@@ -232,8 +239,8 @@ public class BucketGraphqlResource {
 	@Query
 	public Uni<Connection<Bucket>> getBuckets(
 		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
 		@Description("fetching only the last certain number of nodes") Integer last,
 		String searchText, Set<SortBy> sortByList) {
 		return bucketService.findConnection(
@@ -427,14 +434,5 @@ public class BucketGraphqlResource {
 	public Uni<Response<Bucket>> updateBucket(@Id long id, BucketDTO bucketDTO) {
 		return bucketService.getValidator().update(id, bucketDTO);
 	}
-
-	@Inject
-	BucketService bucketService;
-
-	@Inject
-	LanguageService languageService;
-
-	@Context
-	HttpServerRequest request;
 
 }
