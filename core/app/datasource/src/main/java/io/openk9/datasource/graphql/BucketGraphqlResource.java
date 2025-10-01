@@ -101,6 +101,18 @@ public class BucketGraphqlResource {
 		return bucketService.getAutocorrection(bucket.getId());
 	}
 
+	@Description("""
+		Binds an existing Autocorrection to a specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to bind the Autocorrection to.
+		- `autocorrectionId` (ID!): The ID of the Autocorrection to be bound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket with the linked Autocorrection.
+		  - `autocorrection`: The linked Autocorrection.
+		""")
 	@Mutation
 	public Uni<Tuple2<Bucket, Autocorrection>> bindAutocorrectionToBucket(
 		@Id long bucketId, @Id long autocorrectionId) {
@@ -390,6 +402,19 @@ public class BucketGraphqlResource {
 			sortByList, notEqual);
 	}
 
+	@Description("""
+		Unbinds the Autocorrection from a specified Bucket.
+		
+		This mutation removes the link between a Autocorrection and a Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket from which the Autocorrection will be unbound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket after unbinding the Autocorrection.
+		  - `autocorrection`: Always null.
+		""")
 	@Mutation
 	public Uni<Tuple2<Bucket, Autocorrection>> unbindAutocorrectionFromBucket(@Id long bucketId) {
 		return bucketService.unbindAutocorrection(bucketId);

@@ -47,6 +47,22 @@ public class AutocorrectionGraphqlResource {
 	@Inject
 	AutocorrectionService autocorrectionService;
 
+
+	@Description("""
+		Creates or updates an Autocorrection configuration.
+		
+		This mutation handles both creation and updates/patch of Autocorrection configurations based on the provided ID.
+		If no ID is provided, a new Autocorrection is created. If an ID is provided, the existing Autocorrection
+		is either fully updated or partially patched based on the patch parameter.
+		
+		Arguments:
+		- `id` (ID): The ID of the Autocorrection to update. If null, creates a new Autocorrection.
+		- `autocorrectionDTO` (AutocorrectionDTO!): The Autocorrection data to create or update.
+		- `patch` (Boolean): If true, performs a partial update (patch). If false, performs a full update. Defaults to false.
+		
+		Returns:
+		- A Response containing the created or updated Autocorrection configuration.
+		""")
 	@Mutation
 	public Uni<Response<Autocorrection>> autocorrection(
 			@Id Long id, AutocorrectionDTO autocorrectionDTO,
@@ -62,20 +78,64 @@ public class AutocorrectionGraphqlResource {
 		}
 	}
 
+	@Description("""
+		Deletes an Autocorrection configuration by its ID.
+		
+		Arguments:
+		- `id` (ID!): The ID of the Autocorrection to delete.
+		
+		Returns:
+		- The deleted Autocorrection configuration.
+		""")
 	@Mutation
 	public Uni<Autocorrection> deleteAutocorrection(@Id long id) {
 		return autocorrectionService.deleteById(id);
 	}
 
+	@Description("""
+		Retrieves an Autocorrection configuration by its ID.
+		
+		Arguments:
+		- `id` (ID!): The ID of the Autocorrection to retrieve.
+		
+		Returns:
+		- The requested Autocorrection configuration, or null if not found.
+		""")
 	@Query
 	public Uni<Autocorrection> getAutocorrection(@Id long id) {
 		return autocorrectionService.findById(id);
 	}
 
+	@Description("""
+		Retrieves the DocTypeField associated with an Autocorrection configuration.
+		
+		This field resolver fetches the document type field linked to the given Autocorrection.
+		
+		Returns:
+		- The associated DocTypeField, or null if not found.
+		""")
 	public Uni<DocTypeField> getAutocorrectionDocTypeField(@Source Autocorrection autocorrection) {
 		return autocorrectionService.getAutocorrectionDocTypeField(autocorrection.getId());
 	}
 
+	@Description("""
+		Retrieves a paginated connection of Autocorrection configurations with optional filtering and sorting.
+		
+		This query supports cursor-based pagination following the Relay specification, allowing forward
+		and backward traversal through the result set. Results can be filtered by search text and sorted
+		by multiple criteria.
+		
+		Arguments:
+		- `after` (String): Cursor for forward pagination - fetches nodes after this cursor (exclusive).
+		- `before` (String): Cursor for backward pagination - fetches nodes before this cursor (exclusive).
+		- `first` (Integer): Limits the number of nodes returned from the start.
+		- `last` (Integer): Limits the number of nodes returned from the end.
+		- `searchText` (String): Optional text to filter Autocorrection configurations.
+		- `sortByList` (Set<SortBy>): Optional set of sorting criteria.
+		
+		Returns:
+		- A Connection containing the requested Autocorrection configurations with pagination info.
+		""")
 	@Query
 	public Uni<Connection<Autocorrection>> getAutocorrections(
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -87,6 +147,17 @@ public class AutocorrectionGraphqlResource {
 			after, before, first, last, searchText, sortByList);
 	}
 
+	@Description("""
+		Retrieves all Autocorrection configurations that are not bound to a specific Bucket.
+		
+		This query returns Autocorrection configurations that are available to be bound to the specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to check for unbound Autocorrections.
+		
+		Returns:
+		- A list of unbound Autocorrection configurations available for the specified Bucket.
+		""")
 	@Query
 	public Uni<List<Autocorrection>> getUnboundAutocorrectionByBucket(long bucketId) {
 		return autocorrectionService.findUnboundAutocorrectionByBucket(bucketId);
