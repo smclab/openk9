@@ -15,9 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import asyncio
 import os
-import shutil
-import uuid
 from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
@@ -25,18 +24,10 @@ from typing import Annotated
 from urllib.parse import urlparse
 
 import uvicorn
-from docling.datamodel.pipeline_options import PdfPipelineOptions
-from docling.document_converter import (
-    DocumentConverter,
-    InputFormat,
-    PdfFormatOption,
-)
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
-from langchain_docling import DoclingLoader
-from langchain_docling.loader import ExportType
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
@@ -48,8 +39,7 @@ from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import unauthorized_response, verify_token
-from app.utils.chat_history import save_uploaded_documents
-from app.utils.embedding import documents_embedding
+from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
 from app.utils.scheduler import start_document_deletion_scheduler
@@ -951,51 +941,84 @@ async def upload_files(
     ],
     chat_id: str,
 ):
-    """Upload and process multiple files for RAG (Retrieval-Augmented Generation) system.
+    """
+    Upload multiple files for RAG (Retrieval-Augmented Generation) processing.
 
-    This endpoint accepts multiple file uploads, validates them individually, processes the content,
-    generates embeddings, and stores them in OpenSearch for later retrieval. The processing is
-    designed to be fault-tolerant - if one file fails validation or processing, the system will
-    continue with the remaining files and provide detailed feedback about successes and failures.
+    This endpoint allows users to upload multiple files which are then processed through
+    a pipeline that includes validation, content extraction, embedding generation, and
+    storage in OpenSearch for future retrieval in chat conversations.
 
-    :param request: The incoming HTTP request object
+    :param request: The incoming HTTP request
     :type request: Request
-    :param headers: HTTP headers containing authorization and host information
-    :type headers: Annotated[models.CommonHeadersMinimal, Header()]
-    :param files: List of files to be uploaded and processed. Each file is processed independently.
-    :type files: Annotated[list[UploadFile], File(description="Multiple files as UploadFile")]
-    :param chat_id: The chat session identifier to associate the uploaded documents with
+    :param headers: HTTP headers containing authentication and host information
+    :type headers: models.CommonHeadersMinimal
+    :param files: List of files to upload and process
+    :type files: list[UploadFile]
+    :param chat_id: Unique identifier for the chat session where documents will be available
     :type chat_id: str
 
-    :return: JSON response indicating the operation status with detailed success/failure information
+    :return: JSON response indicating processing status for all files
     :rtype: JSONResponse
 
-    :raises HTTPException 400: When number of files exceeds maximum allowed limit
-    :raises HTTPException 401: When authentication fails or token is invalid
-    :raises HTTPException 413: When individual file size exceeds maximum allowed size (per file)
+    :raises HTTPException:
+        - 401 Unauthorized if authentication fails
+        - 400 Bad Request if file limit exceeded or other validation errors
 
-    :Example:
+    **Authentication:**
+        Requires Bearer token in Authorization header for user verification.
 
-    .. code-block:: bash
+    **File Processing Flow:**
+        1. User authentication and authorization validation
+        2. File count validation (max files limit)
+        3. Concurrent processing of all files
+        4. Individual file validation (type, size)
+        5. Content extraction and conversion to markdown
+        6. Embedding generation via gRPC services
+        7. Storage in OpenSearch with metadata
 
-        curl -X POST http://127.0.0.1:5000/api/rag/upload_files?chat_id=222
-            -F "files=@document1.pdf"
-            -F "files=@document2.pdf"
-            -H 'x-forwarded-host: example.com'
-            -H "Authorization: Bearer token"
+    **Response Status Codes:**
 
-    .. note::
-        - Supported file extensions: .pdf, .txt, .docx, etc. (as defined in UPLOAD_FILE_EXTENSIONS)
-        - Maximum file size: MAX_UPLOAD_FILE_SIZE
-        - Maximum number of files: MAX_UPLOAD_FILES_NUMBER
-        - Files are temporarily stored, processed, and then deleted regardless of success/failure
-        - Documents are embedded and stored in OpenSearch for retrieval
-        - Processing continues even if individual files fail validation or processing
-        - Detailed error reporting for each failed file is provided in the response
+    - **200 OK**: All files processed successfully
+    - **207 Multi-Status**: Partial success, some files processed, some failed
+    - **400 Bad Request**: All files failed processing or file limit exceeded
+    - **401 Unauthorized**: Authentication failed or invalid token
 
-    .. warning::
-        - Authentication token is required in Authorization header
-        - Files are validated for type, size, and quantity limits
+    **Example Responses:**
+
+    Success (200):
+
+    .. code-block:: json
+
+        {
+            "message": "All documents uploaded successfully.",
+            "status": "success",
+            "processed_files": ["document1.pdf", "document2.txt"]
+        }
+
+    Partial Success (207):
+
+    .. code-block:: json
+
+        {
+            "message": "Some files were processed successfully, but others failed.",
+            "status": "partial_success",
+            "processed_files": ["document1.pdf"],
+            "failed_files": [
+                {"filename": "document2.pdf", "error": "File too large"}
+            ]
+        }
+
+    Error (400):
+
+    .. code-block:: json
+
+        {
+            "message": "All files failed to process.",
+            "status": "error",
+            "failed_files": [
+                {"filename": "document1.pdf", "error": "Invalid document type"}
+            ]
+        }
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
 
@@ -1003,7 +1026,6 @@ async def upload_files(
         unauthorized_response()
 
     token = headers.authorization.replace(TOKEN_PREFIX, "")
-
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
 
     if not user_info:
@@ -1019,152 +1041,65 @@ async def upload_files(
             detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
         )
 
+    tasks = [
+        process_file(
+            file,
+            user_id,
+            chat_id,
+            realm_name,
+            virtual_host,
+            UPLOAD_FILE_EXTENSIONS,
+            UPLOAD_DIR,
+            MAX_UPLOAD_FILE_SIZE,
+            OPENSEARCH_HOST,
+            GRPC_DATASOURCE_HOST,
+            GRPC_EMBEDDING_MODULE_HOST,
+        )
+        for file in files
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
     processed_files = []
     failed_files = []
 
-    for file in files:
-        unique_id = uuid.uuid4()
-        filename, file_extension = os.path.splitext(file.filename)
-
-        if file_extension not in UPLOAD_FILE_EXTENSIONS:
-            logger.error(f"File {filename}, invalid document type")
+    for result in results:
+        if isinstance(result, dict) and result.get("status") == "success":
+            processed_files.append(result["filename"])
+        elif isinstance(result, dict) and result.get("status") == "error":
             failed_files.append(
-                {"filename": file.filename, "error": "Invalid document type"}
+                {"filename": result["filename"], "error": result["error"]}
             )
-            continue
-
-        file_size = 0
-        try:
-            for chunk in file.file:
-                file_size += len(chunk)
-                if file_size > MAX_UPLOAD_FILE_SIZE:
-                    logger.error(f"File {filename} too large.")
-                    failed_files.append(
-                        {
-                            "filename": file.filename,
-                            "error": f"File too large. Max size is {MAX_UPLOAD_FILE_SIZE / (1024 * 1024):.2f} MB",
-                        }
-                    )
-                    continue
-        except Exception as e:
-            logger.error(f"Error reading file {filename}: {str(e)}")
-            failed_files.append(
-                {"filename": file.filename, "error": f"Error reading file: {str(e)}"}
-            )
-            continue
-
-        await file.seek(0)
-
-        uploaded_file = f"{UPLOAD_DIR}/{file.filename}"
-        renamed_uploaded_file = f"{UPLOAD_DIR}/{filename}_{unique_id}{file_extension}"
-
-        try:
-            with open(uploaded_file, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            os.rename(uploaded_file, renamed_uploaded_file)
-        except Exception as e:
-            logger.error(f"Failed to save file {filename}: {str(e)}")
-            failed_files.append(
-                {"filename": file.filename, "error": f"Failed to save file: {str(e)}"}
-            )
-            continue
-
-        converter = None
-        chunker = None
-        export_type = ExportType.MARKDOWN
-
-        if file_extension == ".pdf":
-            pipeline_options = PdfPipelineOptions(do_ocr=False)
-            converter = DocumentConverter(
-                format_options={
-                    InputFormat.PDF: PdfFormatOption(
-                        pipeline_options=pipeline_options,
-                    ),
-                },
-            )
-
-        loader = DoclingLoader(
-            converter=converter,
-            export_type=export_type,
-            chunker=chunker,
-            file_path=renamed_uploaded_file,
-        )
-
-        try:
-            docs = loader.load()
-        except Exception as e:
-            if os.path.exists(renamed_uploaded_file):
-                os.remove(renamed_uploaded_file)
-            logger.error(f"Failed to load file {filename}: {str(e)}")
-            failed_files.append(
-                {
-                    "filename": file.filename,
-                    "error": "Failed to process file content.",
-                }
-            )
-            continue
-
-        try:
-            embedding_model_configuration = get_embedding_model_configuration(
-                grpc_host=GRPC_DATASOURCE_HOST,
-                virtual_host=virtual_host,
-            )
-            vector_size = embedding_model_configuration.get("vector_size")
-
-            for doc in docs:
-                page_content = doc.page_content
-                document = {
-                    "filename": filename,
-                    "file_extension": file_extension,
-                    "user_id": user_id,
-                    "chat_id": chat_id,
-                    "text": page_content,
-                }
-                embedded_documents = documents_embedding(
-                    grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
-                    embedding_model_configuration=embedding_model_configuration,
-                    document=document,
-                )
-                save_uploaded_documents(
-                    OPENSEARCH_HOST, realm_name, embedded_documents, vector_size
-                )
-
-            processed_files.append(file.filename)
-
-        except Exception as e:
-            logger.error(f"Failed to generate embeddings for file {filename}: {str(e)}")
-            failed_files.append(
-                {
-                    "filename": file.filename,
-                    "error": f"Failed to generate embeddings: {str(e)}",
-                }
-            )
-        finally:
-            if os.path.exists(renamed_uploaded_file):
-                os.remove(renamed_uploaded_file)
+        else:
+            failed_files.append({"filename": "unknown", "error": str(result)})
 
     if processed_files and not failed_files:
-        content = {
-            "message": "All documents uploaded successfully.",
-            "status": "success",
-            "processed_files": processed_files,
-        }
-        return JSONResponse(status_code=status.HTTP_200_OK, content=content)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": "All documents uploaded successfully.",
+                "status": "success",
+                "processed_files": processed_files,
+            },
+        )
     elif processed_files and failed_files:
-        content = {
-            "message": "Some files were processed successfully, but others failed.",
-            "status": "partial_success",
-            "processed_files": processed_files,
-            "failed_files": failed_files,
-        }
-        return JSONResponse(status_code=status.HTTP_207_MULTI_STATUS, content=content)
+        return JSONResponse(
+            status_code=status.HTTP_207_MULTI_STATUS,
+            content={
+                "message": "Some files were processed successfully, but others failed.",
+                "status": "partial_success",
+                "processed_files": processed_files,
+                "failed_files": failed_files,
+            },
+        )
     else:
-        content = {
-            "message": "All files failed to process.",
-            "status": "error",
-            "failed_files": failed_files,
-        }
-        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=content)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": "All files failed to process.",
+                "status": "error",
+                "failed_files": failed_files,
+            },
+        )
 
 
 @app.get(
