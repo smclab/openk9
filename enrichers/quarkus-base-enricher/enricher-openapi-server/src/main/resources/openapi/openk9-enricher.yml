@@ -112,9 +112,12 @@ components:
       properties:
         payload:
           type: object
+          description: Contains a map of data to enrich.
           additionalProperties: { }
         enrichItemConfig:
           type: object
+          description: Defines the configuration needed to use the enricher.
           additionalProperties: { }
         replyTo:
           type: string
+          description: The token needed to callback OpenK9.
