@@ -79,6 +79,14 @@ These classes implement the REST classes from the library and adapt their behavi
      ]
   } 
   ```
+
+### Enricher Base Classes
+
+These base classes are required in all enrichers.
+
+- **CallBackClient.java**  
+Class used to send the enriched data when asynchronous approach is set during the enricher configuration.  
+It must use the token received in `ProcessResourceImpl` to notify OpenK9 which payload the enriched data refers to.
   
 ---
 
@@ -87,7 +95,7 @@ These classes implement the REST classes from the library and adapt their behavi
 To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
-mvn install
+./mvnw install
 ```  
 
 ## Generate Enricher
