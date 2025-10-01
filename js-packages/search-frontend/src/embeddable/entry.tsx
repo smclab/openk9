@@ -370,6 +370,14 @@ export type TemplatesProps = Array<{
   TemplateDetail: React.FC<any>;
 }>;
 
+export type ExtraClassProps = {
+  classSearch?: { input?: string; button?: string } | null | undefined;
+  classResultsListPagination?:
+    | { buttonPagination?: string; activeButtonPagination?: string }
+    | null
+    | undefined;
+};
+
 export type IconsCustom =
   | {
       Search?: React.ReactNode;
@@ -394,6 +402,7 @@ export type Configuration = {
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
   defaultString: string | null | undefined;
+  extraClass?: ExtraClassProps | null | undefined;
   languageSelect: string | null | undefined;
   enabled: boolean;
   callbackClient(): void | null | undefined;
@@ -501,6 +510,7 @@ const defaultConfiguration: Configuration = {
   dataRangePicker: null,
   dataRangePickerVertical: null,
   defaultString: null,
+  extraClass: null,
   languageSelect: null,
   debounceTimeSearch: null,
   defaultTokens: [],

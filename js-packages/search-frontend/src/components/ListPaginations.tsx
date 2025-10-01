@@ -8,11 +8,16 @@ export default function ListPaginations({
   pagesToShow = 3,
   state,
   dispatch,
+  extraClass,
 }: {
   itemsPerPage?: number;
   pagesToShow?: number;
   state: SelectionsState;
   dispatch: React.Dispatch<SelectionsAction>;
+  extraClass?:
+    | { buttonPagination?: string; activeButtonPagination?: string }
+    | null
+    | undefined;
 }) {
   const { numberOfResults, actuallyPage, setActuallyPage } = useRange();
 
@@ -58,6 +63,7 @@ export default function ListPaginations({
   return (
     <PaginationContainer>
       <PaginationsButton
+        className={extraClass?.buttonPagination}
         onClick={handleFirstClick}
         disabled={actuallyPage === 0}
         aria-label="Vai alla prima pagina"
@@ -65,6 +71,7 @@ export default function ListPaginations({
         {"<<"}
       </PaginationsButton>
       <PaginationsButton
+        className={extraClass?.buttonPagination}
         onClick={handlePrevClick}
         disabled={actuallyPage === 0}
         aria-label="Pagina precedente"
@@ -73,6 +80,14 @@ export default function ListPaginations({
       </PaginationsButton>
       {Array.from({ length: end - start }, (_, i) => start + i).map((page) => (
         <PaginationsButton
+          className={
+            extraClass?.buttonPagination +
+            " " +
+            (page === actuallyPage
+              ? extraClass?.activeButtonPagination +
+                " active-btn-k9-paginations"
+              : "")
+          }
           key={page}
           onClick={() => goToPage(page)}
           isActive={actuallyPage === page}
@@ -82,6 +97,7 @@ export default function ListPaginations({
         </PaginationsButton>
       ))}
       <PaginationsButton
+        className={extraClass?.buttonPagination}
         onClick={handleNextClick}
         disabled={actuallyPage === numberOfPage - 1}
         aria-label="Pagina successiva"
@@ -89,6 +105,7 @@ export default function ListPaginations({
         {">"}
       </PaginationsButton>
       <PaginationsButton
+        className={extraClass?.buttonPagination}
         onClick={handleLastClick}
         disabled={actuallyPage === numberOfPage - 1}
         aria-label="Vai all'ultima pagina"

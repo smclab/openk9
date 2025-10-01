@@ -76,6 +76,7 @@ export function Main({
 
   //retrieving information from the configuration.
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
+  const extraClass = configuration.extraClass || null;
   const memoryResults = configuration.memoryResults || false;
   const queryStringMap = configuration.queryStringMap || null;
   const numberOfResults = configuration.numberResult || 10;
@@ -263,6 +264,7 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             viewColor={configuration.showSyntax}
             btnSearch={false}
+            extraClass={extraClass?.classSearch}
           />
         </I18nextProvider>,
         configuration.search,
@@ -277,6 +279,7 @@ export function Main({
             showSyntax={isQueryAnalysisComplete}
             btnSearch={true}
             viewColor={configuration.showSyntax}
+            extraClass={extraClass?.classSearch}
           />
         </I18nextProvider>,
         configuration.searchWithButton,
@@ -285,6 +288,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <Search
             configuration={configuration}
+            extraClass={extraClass?.classSearch}
             spans={spans}
             selectionsState={selectionsState}
             selectionsDispatch={selectionsDispatch}
@@ -708,6 +712,7 @@ export function Main({
                   itemsPerPage={numberOfResults}
                   state={selectionsState}
                   dispatch={selectionsDispatch}
+                  extraClass={extraClass?.classResultsListPagination}
                 />
               )}
             </>

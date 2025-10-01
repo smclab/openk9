@@ -25,6 +25,7 @@ type SearchProps = {
   callbackClickSearch?(): void;
   characterControl?: characterControlType;
   callbackChangeSearch?(text: string): void;
+  extraClass?: { input?: string; button?: string } | null | undefined;
 };
 
 export function Search({
@@ -41,6 +42,7 @@ export function Search({
   actionOnClick,
   callbackClickSearch,
   characterControl,
+  extraClass,
   callbackChangeSearch,
 }: SearchProps) {
   const autoSelect = configuration.searchAutoselect;
@@ -214,7 +216,7 @@ export function Search({
               </label>
             )}
             <input
-              className="openk9--input-search"
+              className={`openk9--input-search ${extraClass?.input || ""}`}
               autoComplete="off"
               ref={inputRef}
               id={htmlKey || "search-openk9"}
@@ -402,7 +404,9 @@ export function Search({
         {btnSearch && (
           <div className="openk9-search-btn-external-container">
             <button
-              className="openk9-search-btn-external"
+              className={`openk9-search-btn-external ${
+                extraClass?.button || ""
+              }`}
               aria-label={t("search-on-website") || "search on website"}
               css={css`
                 min-height: 50px;
