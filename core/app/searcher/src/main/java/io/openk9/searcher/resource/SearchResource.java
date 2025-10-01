@@ -921,7 +921,7 @@ public class SearchResource {
 	 * @return a Uni emitting the search response, or a WebApplicationException on failure
 	 */
 	@WithSpan
-	private Uni<Response> _doSearch(SearchRequest searchRequest) {
+	protected Uni<Response> _doSearch(SearchRequest searchRequest) {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
 
@@ -1052,7 +1052,7 @@ public class SearchResource {
 	 *         or the OpenSearch autocorrection request fails
 	 */
 	@WithSpan
-	private Uni<Map<String, Object>> _getAutocorrectionSuggest(
+	protected Uni<Map<String, Object>> _getAutocorrectionSuggest(
 		AutocorrectionConfigurationsResponse autocorrectionConfig,
 		ParserSearchToken searchTokenUserInput) {
 
