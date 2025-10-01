@@ -50,17 +50,19 @@ async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazion
 def operation(payload,configs,token):
     s_host=os.getenv("S_HOST")
 
-    resourceId=payload.resources["binaries"][0]["resourceId"]
+    resourceIds = [
+        b.get("resourceId")
+        for b in payload.resources.get("binaries", [])
+        if "resourceId" in b
+    ]
     tenant=payload.tenantID
 
-    resource=FMHelper.getBase64(tenant,resourceId)
-
-    decoded_bytes = base64.b64decode(resource)
-    bites_io = BytesIO(decoded_bytes)#file
+    resources= [FMHelper.getBase64(tenant,resourceId) for resourceId in resourceIds]
+    bites= [ BytesIO(base64.b64decode(resource)) for resource in resources]
 
     print(f"Starting process")
 
-    source= DocumentStream(name="doc.docx",stream=bites_io)
+    source= DocumentStream(name="doc.docx",stream=bites[0])
 
     converter = DocumentConverter()
     result = converter.convert(source)
