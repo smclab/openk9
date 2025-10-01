@@ -40,6 +40,10 @@ import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import io.openk9.searcher.grpc.SortType;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -152,6 +156,8 @@ public class SearchResource {
 	List<String> supportedHeadersName;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
+	@Inject
+	Tracer tracer;
 	@Inject
 	@Claim(standard = Claims.raw_token)
 	String rawToken; // it is injected to force authentication.
@@ -914,6 +920,7 @@ public class SearchResource {
 	 * @param searchRequest the search request to execute
 	 * @return a Uni emitting the search response, or a WebApplicationException on failure
 	 */
+	@WithSpan
 	private Uni<Response> _doSearch(SearchRequest searchRequest) {
 		QueryParserRequest queryParserRequest =
 			getQueryParserRequest(searchRequest);
@@ -1044,6 +1051,7 @@ public class SearchResource {
 	 * @throws AutocorrectionException if the search token doesn't contain exactly one value, the query text is null/empty,
 	 *         or the OpenSearch autocorrection request fails
 	 */
+	@WithSpan
 	private Uni<Map<String, Object>> _getAutocorrectionSuggest(
 		AutocorrectionConfigurationsResponse autocorrectionConfig,
 		ParserSearchToken searchTokenUserInput) {
@@ -1063,10 +1071,22 @@ public class SearchResource {
 
 				// retrieve autocorrection suggestions
 				return Uni.createFrom().completionStage(() -> {
+						Span span = tracer.spanBuilder("opensearch-autocorrection-suggestions")
+							.setAttribute("queryText", queryText)
+							.startSpan();
 						try {
-							return client.search(autocorrectionRequest, Void.class);
-						} catch (IOException | OpenSearchException e) {
+							var suggestionsResult =
+								client.search(autocorrectionRequest, Void.class);
+							span.addEvent("suggestions-obtained");
+							return suggestionsResult;
+						}
+						catch (IOException | OpenSearchException e) {
+							span.recordException(e);
+							span.setStatus(StatusCode.ERROR);
 							return CompletableFuture.failedFuture(e);
+						}
+						finally {
+							span.end();
 						}
 					})
 					.onFailure()
