@@ -121,46 +121,153 @@ public class SearchResource {
 
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
 	private static final String AUTOCORRECTION_TEXT = "autocorrectionText";
+	private static final String CORRECTION = "correction";
+	private static final String DETAILS_FIELD = "details";
+	private static final String LENGTH = "length";
+	private static final int NONE_STATUS_CODE = 0;
+	private static final int NOT_FOUND_STATUS_CODE = 404;
+	private static final String OFFSET = "offset";
 	private static final String ORIGINAL_TEXT = "originalText";
 	private static final String SEARCHED_WITH_CORRECTED_TEXT = "searchedWithCorrectedText";
 	private static final String SUGGESTIONS = "suggestions";
 	private static final String TEXT = "text";
-	private static final String OFFSET = "offset";
-	private static final String LENGTH = "length";
-	private static final String CORRECTION = "correction";
-	private static final Logger log = Logger.getLogger(SearchResource.class);
-	private static final Object namedXContentRegistryKey = new Object();
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
-	private static final String DETAILS_FIELD = "details";
-	private static final int NONE_STATUS_CODE = 0;
-	private static final int NOT_FOUND_STATUS_CODE = 404;
+	private static final Logger log = Logger.getLogger(SearchResource.class);
+	private static final Object namedXContentRegistryKey = new Object();
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
 		Collections.synchronizedMap(new IdentityHashMap<>());
 
 	@Inject
 	OpenSearchAsyncClient client;
+	@Context
+	HttpHeaders headers;
+	@Inject
+	InternalSearcherMapper internalSearcherMapper;
+	@Inject
+	@Claim(standard = Claims.raw_token)
+	String rawToken; // it is injected to force authentication.
+	@Context
+	HttpServerRequest request;
+	@Inject
+	RestHighLevelClient restHighLevelClient;
 	@GrpcClient("searcher")
 	Searcher searcherClient;
 	@Inject
 	SearcherMapper searcherMapper;
-	@Inject
-	InternalSearcherMapper internalSearcherMapper;
-	@Inject
-	RestHighLevelClient restHighLevelClient;
-	@Context
-	HttpServerRequest request;
-	@Context
-	HttpHeaders headers;
 	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
 	List<String> supportedHeadersName;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
 	@Inject
 	Tracer tracer;
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken; // it is injected to force authentication.
+
+	private static QueryAnalysisSearchToken.Builder createQastBuilder(
+		QueryAnalysisToken token) {
+		Map<String, Object> tokenMap = token.getToken();
+		QueryAnalysisSearchToken.Builder qastBuilder =
+			QueryAnalysisSearchToken.newBuilder();
+
+		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
+			String key = entry.getKey();
+			Object value = entry.getValue();
+			if (value == null) {
+				continue;
+			}
+			switch (key) {
+				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
+				case "value" -> qastBuilder.setValue((String) value);
+				case "score" -> qastBuilder.setScore(((Number) value).floatValue());
+				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
+				case "keywordName" -> qastBuilder.setKeywordName((String) value);
+				case "entityType" -> qastBuilder.setEntityType((String) value);
+				case "entityName" -> qastBuilder.setEntityName((String) value);
+				case "tenantId" -> qastBuilder.setTenantId((String) value);
+				case "label" -> qastBuilder.setLabel((String) value);
+			}
+		}
+
+		return qastBuilder;
+	}
+
+	private static String getHighlightName(String highlightName) {
+		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
+		if (matcher.find()) {
+			return matcher.replaceFirst("");
+		}
+		else {
+			return highlightName;
+		}
+	}
+
+	protected static String getRawToken(HttpHeaders headers) {
+		String rawToken = "";
+
+		var authorization = headers.getRequestHeader("Authorization");
+
+		if (!authorization.isEmpty()) {
+			var value = authorization.getFirst();
+			if (value != null && !value.isEmpty()) {
+				rawToken = value.trim().substring(7);
+			}
+		}
+
+		return rawToken;
+	}
+
+	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
+
+		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
+			Object value = entry.getValue();
+			if (value instanceof Map) {
+				Map<String, Object> objectMap = (Map<String, Object>) value;
+				if (objectMap.containsKey("i18n")) {
+
+					Map<String, Object> i18nMap =
+						(Map<String, Object>) objectMap.get("i18n");
+					var item = i18nMap.values().iterator().next();
+					if (!i18nMap.isEmpty()) {
+						if (item instanceof String i18nString) {
+							entry.setValue(i18nString);
+						}
+						else if (item instanceof List<?> i18nList) {
+							var i18nListString = i18nList
+								.stream()
+								.map(String::valueOf)
+								.toList();
+
+							entry.setValue(i18nListString);
+						}
+						else {
+							log.warn("The object i18nList is not a String or a List<String>");
+						}
+					}
+
+				}
+				else if (objectMap.containsKey("base")) {
+					entry.setValue(objectMap.get("base"));
+				}
+				else {
+					mapI18nFields((Map<String, Object>) value);
+				}
+			}
+			if (value instanceof Iterable) {
+				for (Object item : (Iterable<?>) value) {
+					if (item instanceof Map) {
+						mapI18nFields((Map<String, Object>) item);
+					}
+				}
+			}
+		}
+
+	}
+
+	private static Iterable<Integer> toList(Integer[] pos) {
+		if (pos == null || pos.length == 0) {
+			return List.of();
+		}
+		return List.of(pos);
+	}
 
 	@Operation(operationId = "autocorrection-query")
 	@Tag(
@@ -259,6 +366,160 @@ public class SearchResource {
 					);
 				}
 			});
+	}
+
+	@Operation(operationId = "query-analysis")
+	@Tag(name = "Query Analysis API", description = "Performs sematic query analysis on search query, as well as provides autocomplete suggestions.")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Ingestion successful",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisResponse.class),
+									example = QueryAnalysisRequestExamples.QUERY_ANALYSIS_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+			content = {
+					@Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisRequest.class),
+							examples = {
+									@ExampleObject(
+											name = "simple query analysis request",
+											value = QueryAnalysisRequestExamples.SIMPLE_QUERY_ANALYSIS_REQUEST
+									),
+									@ExampleObject(
+											name = "query analysis request with tokens",
+											value = QueryAnalysisRequestExamples.QUERY_ANALYSIS_REQUEST_WITH_TOKENS
+									)
+							}
+					)
+			}
+	)
+	@POST
+	@Path("/query-analysis")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> queryAnalysis(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
+
+		QueryAnalysisRequest queryAnalysisRequest =
+			getQueryAnalysisRequest(searchRequest, "query-analysis");
+
+		return searcherClient
+			.queryAnalysis(queryAnalysisRequest)
+			.map(this::toQueryAnalysisResponse);
+
+	}
+
+	@Operation(operationId = "search")
+	@Tag(name = "Search API", description = "Execute search on indexed data. Returns list of matching results ordered by score.")
+	@APIResponses(value = {
+			@APIResponse(responseCode = "200", description = "success"),
+			@APIResponse(responseCode = "404", description = "not found"),
+			@APIResponse(responseCode = "400", description = "invalid"),
+			@APIResponse(
+					responseCode = "200",
+					description = "Ingestion successful",
+					content = {
+							@Content(
+									mediaType = MediaType.APPLICATION_JSON,
+									schema = @Schema(implementation = Response.class),
+									example = SearchRequestExamples.SEARCH_RESPONSE
+							)
+					}
+			),
+			@APIResponse(ref = "#/components/responses/bad-request"),
+			@APIResponse(ref = "#/components/responses/not-found"),
+			@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+			content = {
+					@Content(
+							mediaType = MediaType.APPLICATION_JSON,
+							schema = @Schema(implementation = SearchRequest.class),
+							examples = {
+									@ExampleObject(
+											name = "text search",
+											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "hybrid search",
+											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
+									),
+									@ExampleObject(
+											name = "knn search",
+											value = SearchRequestExamples.KNN_SEARCH_REQUEST
+									)
+							}
+					)
+			}
+	)
+	@POST
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<Response> search(SearchRequest searchRequest) {
+
+		var virtualHost = request.authority().host();
+		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build();
+
+		// retrieve the searchToken associated with the text entered by the user in the search input.
+		var searchTokenUserInput = searchRequest.getSearchQuery().stream()
+			.filter(ParserSearchToken::isSearch)
+			.findFirst();
+
+		// retrieve Autocorrection configurations
+		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Retrieve autocorrection configurations failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocorrectionException(
+						"Retrieve autocorrection configurations failed", throwable
+					)
+				);
+			})
+			.flatMap(autocorrectionConfig ->
+				// retrieve Autocorrection suggestions
+				searchTokenUserInput.isPresent()
+					? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
+					: Uni.createFrom().failure(
+						new AutocorrectionException("Autocorrection was not performed because no search token with isSearch is present.")
+					)
+			)
+			.onFailure()
+			.recoverWithItem(failure -> {
+				_logMessage("Something went wrong during the autocorrected search.", failure);
+				return new HashMap<>();
+			})
+			.map(autocorrectionMap -> {
+				if (!autocorrectionMap.isEmpty()
+					&& (Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
+
+					// replace query text in the searchRequest with the correction
+					searchTokenUserInput.get().setValues(List.of(
+						(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
+					);
+				}
+				// do search and add autocorrection to the search response
+				return _doSearch(searchRequest)
+					.invoke(response ->
+						response.setAutocorrection(autocorrectionMap)
+					);
+			})
+			.flatMap(responseUni -> responseUni);
 	}
 
 	@Operation(operationId = "search-query")
@@ -378,495 +639,6 @@ public class SearchResource {
 
 	}
 
-	@Operation(operationId = "search")
-	@Tag(name = "Search API", description = "Execute search on indexed data. Returns list of matching results ordered by score.")
-	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Ingestion successful",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = SearchRequestExamples.SEARCH_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
-	})
-	@RequestBody(
-			content = {
-					@Content(
-							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = SearchRequest.class),
-							examples = {
-									@ExampleObject(
-											name = "text search",
-											value = SearchRequestExamples.TEXT_SEARCH_REQUEST
-									),
-									@ExampleObject(
-											name = "hybrid search",
-											value = SearchRequestExamples.HYBRID_SEARCH_REQUEST
-									),
-									@ExampleObject(
-											name = "knn search",
-											value = SearchRequestExamples.KNN_SEARCH_REQUEST
-									)
-							}
-					)
-			}
-	)
-	@POST
-	@Path("/search")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<Response> search(SearchRequest searchRequest) {
-
-		var virtualHost = request.authority().host();
-		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
-			.setVirtualHost(virtualHost)
-			.build();
-
-		// retrieve the searchToken associated with the text entered by the user in the search input.
-		var searchTokenUserInput = searchRequest.getSearchQuery().stream()
-			.filter(ParserSearchToken::isSearch)
-			.findFirst();
-
-		// retrieve Autocorrection configurations
-		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
-			.onFailure()
-			.recoverWithUni(throwable -> {
-				_logMessage("Retrieve autocorrection configurations failed", throwable);
-				return Uni.createFrom().failure(
-					new AutocorrectionException(
-						"Retrieve autocorrection configurations failed", throwable
-					)
-				);
-			})
-			.flatMap(autocorrectionConfig ->
-				// retrieve Autocorrection suggestions
-				searchTokenUserInput.isPresent()
-					? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
-					: Uni.createFrom().failure(
-						new AutocorrectionException("Autocorrection was not performed because no search token with isSearch is present.")
-					)
-			)
-			.onFailure()
-			.recoverWithItem(failure -> {
-				_logMessage("Something went wrong during the autocorrected search.", failure);
-				return new HashMap<>();
-			})
-			.map(autocorrectionMap -> {
-				if (!autocorrectionMap.isEmpty()
-					&& (Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
-
-					// replace query text in the searchRequest with the correction
-					searchTokenUserInput.get().setValues(List.of(
-						(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
-					);
-				}
-				// do search and add autocorrection to the search response
-				return _doSearch(searchRequest)
-					.invoke(response ->
-						response.setAutocorrection(autocorrectionMap)
-					);
-			})
-			.flatMap(responseUni -> responseUni);
-	}
-
-	@Operation(operationId = "query-analysis")
-	@Tag(name = "Query Analysis API", description = "Performs sematic query analysis on search query, as well as provides autocomplete suggestions.")
-	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Ingestion successful",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisResponse.class),
-									example = QueryAnalysisRequestExamples.QUERY_ANALYSIS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
-	})
-	@RequestBody(
-			content = {
-					@Content(
-							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = io.openk9.searcher.queryanalysis.QueryAnalysisRequest.class),
-							examples = {
-									@ExampleObject(
-											name = "simple query analysis request",
-											value = QueryAnalysisRequestExamples.SIMPLE_QUERY_ANALYSIS_REQUEST
-									),
-									@ExampleObject(
-											name = "query analysis request with tokens",
-											value = QueryAnalysisRequestExamples.QUERY_ANALYSIS_REQUEST_WITH_TOKENS
-									)
-							}
-					)
-			}
-	)
-	@POST
-	@Path("/query-analysis")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<io.openk9.searcher.queryanalysis.QueryAnalysisResponse> queryAnalysis(
-		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
-
-		QueryAnalysisRequest queryAnalysisRequest =
-			getQueryAnalysisRequest(searchRequest, "query-analysis");
-
-		return searcherClient
-			.queryAnalysis(queryAnalysisRequest)
-			.map(this::toQueryAnalysisResponse);
-
-	}
-
-	protected static void mapI18nFields(Map<String, Object> sourceAsMap) {
-
-		for (Map.Entry<String, Object> entry : sourceAsMap.entrySet()) {
-			Object value = entry.getValue();
-			if (value instanceof Map) {
-				Map<String, Object> objectMap = (Map<String, Object>) value;
-				if (objectMap.containsKey("i18n")) {
-
-					Map<String, Object> i18nMap =
-						(Map<String, Object>) objectMap.get("i18n");
-					var item = i18nMap.values().iterator().next();
-					if (!i18nMap.isEmpty()) {
-						if (item instanceof String i18nString) {
-							entry.setValue(i18nString);
-						}
-						else if (item instanceof List<?> i18nList) {
-							var i18nListString = i18nList
-								.stream()
-								.map(String::valueOf)
-								.toList();
-
-							entry.setValue(i18nListString);
-						}
-						else {
-							log.warn("The object i18nList is not a String or a List<String>");
-						}
-					}
-
-				}
-				else if (objectMap.containsKey("base")) {
-					entry.setValue(objectMap.get("base"));
-				}
-				else {
-					mapI18nFields((Map<String, Object>) value);
-				}
-			}
-			if (value instanceof Iterable) {
-				for (Object item : (Iterable<?>) value) {
-					if (item instanceof Map) {
-						mapI18nFields((Map<String, Object>) item);
-					}
-				}
-			}
-		}
-
-	}
-
-	protected static String getRawToken(HttpHeaders headers) {
-		String rawToken = "";
-
-		var authorization = headers.getRequestHeader("Authorization");
-
-		if (!authorization.isEmpty()) {
-			var value = authorization.getFirst();
-			if (value != null && !value.isEmpty()) {
-				rawToken = value.trim().substring(7);
-			}
-		}
-
-		return rawToken;
-	}
-
-	private static Iterable<Integer> toList(Integer[] pos) {
-		if (pos == null || pos.length == 0) {
-			return List.of();
-		}
-		return List.of(pos);
-	}
-
-	private static QueryAnalysisSearchToken.Builder createQastBuilder(
-		QueryAnalysisToken token) {
-		Map<String, Object> tokenMap = token.getToken();
-		QueryAnalysisSearchToken.Builder qastBuilder =
-			QueryAnalysisSearchToken.newBuilder();
-
-		for (Map.Entry<String, Object> entry : tokenMap.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
-			if (value == null) {
-				continue;
-			}
-			switch (key) {
-				case "tokenType" -> qastBuilder.setTokenType(TokenType.valueOf((String) value));
-				case "value" -> qastBuilder.setValue((String) value);
-				case "score" -> qastBuilder.setScore(((Number) value).floatValue());
-				case "keywordKey" -> qastBuilder.setKeywordKey((String) value);
-				case "keywordName" -> qastBuilder.setKeywordName((String) value);
-				case "entityType" -> qastBuilder.setEntityType((String) value);
-				case "entityName" -> qastBuilder.setEntityName((String) value);
-				case "tenantId" -> qastBuilder.setTenantId((String) value);
-				case "label" -> qastBuilder.setLabel((String) value);
-			}
-		}
-
-		return qastBuilder;
-	}
-
-	private QueryAnalysisRequest getQueryAnalysisRequest(
-		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
-
-		QueryAnalysisRequest.Builder builder =
-			QueryAnalysisRequest.newBuilder();
-
-		var rawToken = getRawToken(headers);
-		builder.setSearchText(searchRequest.getSearchText());
-		builder.setVirtualHost(request.authority().host());
-		builder.setJwt(rawToken);
-		builder.setMode(mode);
-
-		if (searchRequest.getTokens() != null) {
-
-			for (QueryAnalysisToken token : searchRequest.getTokens()) {
-				QueryAnalysisSearchToken.Builder qastBuilder =
-					createQastBuilder(token);
-				builder
-					.addTokens(
-						io.openk9.searcher.grpc.QueryAnalysisToken
-							.newBuilder()
-							.setText(token.getText())
-							.setEnd(token.getEnd())
-							.setStart(token.getStart())
-							.addAllPos(toList(token.getPos()))
-							.setToken(qastBuilder));
-			}
-
-		}
-
-		return builder.build();
-
-	}
-
-	private Iterable<Sort> mapToGrpc(
-		List<Map<String, Map<String, String>>> sort) {
-
-		if (sort == null || sort.isEmpty()) {
-			return List.of();
-		}
-
-		Set<Sort> sortList = new HashSet<>(sort.size());
-
-		for (Map<String, Map<String, String>> map : sort) {
-
-			for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
-
-				String fieldName = entry.getKey();
-
-				Sort.Builder builder =
-					Sort
-						.newBuilder()
-						.setField(fieldName);
-
-				Map<String, String> value = entry.getValue();
-
-				if (value != null && !value.isEmpty()) {
-					builder.putAllExtras(value);
-				}
-
-				sortList.add(builder.build());
-
-			}
-
-		}
-
-		return sortList;
-
-	}
-
-	private static String getHighlightName(String highlightName) {
-		Matcher matcher = i18nHighlithKeyPattern.matcher(highlightName);
-		if (matcher.find()) {
-			return matcher.replaceFirst("");
-		}
-		else {
-			return highlightName;
-		}
-	}
-
-	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse toQueryAnalysisResponse(
-		QueryAnalysisResponse queryAnalysisResponse) {
-
-		io.openk9.searcher.queryanalysis.QueryAnalysisResponse.QueryAnalysisResponseBuilder
-			builder =
-			io.openk9.searcher.queryanalysis.QueryAnalysisResponse.builder();
-
-		builder.searchText(queryAnalysisResponse.getSearchText());
-
-		List<io.openk9.searcher.queryanalysis.QueryAnalysisTokens> queryAnalysisTokensList =
-			new ArrayList<>();
-
-		for (QueryAnalysisTokens queryAnalysisTokensGRPC : queryAnalysisResponse.getAnalysisList()) {
-
-			io.openk9.searcher.queryanalysis.QueryAnalysisTokens queryAnalysisTokens =
-				new io.openk9.searcher.queryanalysis.QueryAnalysisTokens();
-
-			queryAnalysisTokens.setText(queryAnalysisTokensGRPC.getText());
-			queryAnalysisTokens.setStart(queryAnalysisTokensGRPC.getStart());
-			queryAnalysisTokens.setEnd(queryAnalysisTokensGRPC.getEnd());
-			queryAnalysisTokens.setPos(queryAnalysisTokensGRPC.getPosList().toArray(Integer[]::new));
-			List<QueryAnalysisSearchToken> tokensList =
-				queryAnalysisTokensGRPC.getTokensList();
-
-			Collection<Map<String, Object>> tokens = new ArrayList<>(tokensList.size());
-
-			for (QueryAnalysisSearchToken queryAnalysisSearchToken : tokensList) {
-
-				Map<String, Object> token = new HashMap<>();
-
-				token.put("tokenType", queryAnalysisSearchToken.getTokenType());
-				token.put("value", queryAnalysisSearchToken.getValue());
-				token.put("score", queryAnalysisSearchToken.getScore());
-
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordKey())) {
-					token.put("keywordKey", queryAnalysisSearchToken.getKeywordKey());
-				}
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordName())) {
-					token.put("keywordName", queryAnalysisSearchToken.getKeywordName());
-				}
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityType())) {
-					token.put("entityType", queryAnalysisSearchToken.getEntityType());
-				}
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityName())) {
-					token.put("entityName", queryAnalysisSearchToken.getEntityName());
-				}
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getTenantId())) {
-					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
-				}
-
-				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getLabel())) {
-					token.put("label", queryAnalysisSearchToken.getLabel());
-				}
-
-				if (!queryAnalysisSearchToken.getExtraMap().isEmpty()) {
-					token.put("extra", queryAnalysisSearchToken.getExtraMap());
-				}
-
-				tokens.add(token);
-
-			}
-
-			queryAnalysisTokens.setTokens(tokens);
-
-			queryAnalysisTokensList.add(queryAnalysisTokens);
-
-		}
-
-		return builder.analysis(queryAnalysisTokensList).build();
-
-	}
-
-	private NamedXContentRegistry getNamedXContentRegistry() {
-
-		return namedXContentRegistryMap.computeIfAbsent(
-			namedXContentRegistryKey, o -> {
-				try {
-					Field registry =
-						RestHighLevelClient.class.getDeclaredField("registry");
-
-					registry.setAccessible(true);
-
-					return (NamedXContentRegistry) registry.get(restHighLevelClient);
-				}
-				catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			});
-
-	}
-
-	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
-
-		var requestBuilder = searcherMapper
-			.toQueryParserRequest(searchRequest)
-			.toBuilder();
-
-		Map<String, Value> extra = new HashMap<>();
-
-		for (String headerName : supportedHeadersName) {
-			List<String> requestHeader = headers.getRequestHeader(headerName);
-			if (requestHeader != null && !requestHeader.isEmpty()) {
-				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
-			}
-		}
-
-		var rawToken = getRawToken(headers);
-
-		String sortAfterKey = searchRequest.getSortAfterKey();
-		String language = searchRequest.getLanguage();
-
-		return requestBuilder
-			.setVirtualHost(request.authority().host())
-			.setJwt(rawToken)
-			.putAllExtra(extra)
-			.addAllSort(mapToGrpc(searchRequest.getSort()))
-			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
-			.setLanguage(language == null ? "" : language)
-			.build();
-
-	}
-
-	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
-
-		int statusCode = NONE_STATUS_CODE;
-		String reason = "Unable to serve search request";
-
-		if (throwable instanceof ResponseException responseException) {
-			statusCode = responseException.getResponse()
-				.getStatusLine()
-				.getStatusCode();
-		}
-
-		jakarta.ws.rs.core.Response.Status responseStatus = null;
-
-		switch (statusCode) {
-			case NONE_STATUS_CODE, NOT_FOUND_STATUS_CODE -> {
-				responseStatus =
-					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-
-				log.error(reason, throwable);
-			}
-			default -> {
-				reason = "Invalid search request";
-				responseStatus =
-					jakarta.ws.rs.core.Response.Status.fromStatusCode(statusCode);
-
-				log.warn(reason, throwable);
-			}
-		}
-
-		return jakarta.ws.rs.core.Response
-			.status(responseStatus)
-			.entity(JsonObject
-				.of(DETAILS_FIELD, reason))
-			.build();
-	}
-
 	/**
 	 * Creates an OpenSearch search request configured for autocorrection suggestions.
 	 * The request uses a term suggester to provide correction suggestions based on the query text,
@@ -959,6 +731,11 @@ public class SearchResource {
 						.getLowLevelClient()
 						.performRequestAsync(openSearchRequest, new ResponseListener() {
 							@Override
+							public void onFailure(Exception e) {
+								sink.fail(e);
+							}
+
+							@Override
 							public void onSuccess(
 								org.opensearch.client.Response response) {
 								try {
@@ -973,11 +750,6 @@ public class SearchResource {
 								catch (IOException e) {
 									sink.fail(e);
 								}
-							}
-
-							@Override
-							public void onFailure(Exception e) {
-								sink.fail(e);
 							}
 						}))
 					.map(this::toSearchResponse);
@@ -1125,20 +897,6 @@ public class SearchResource {
 	}
 
 	/**
-	 * Converts a gRPC {@link io.openk9.searcher.grpc.SortType} enum
-	 * to the corresponding {@link org.opensearch.client.opensearch.core.search.SuggestSort} enum.
-	 *
-	 * @param sort the gRPC SortType to convert
-	 * @return the corresponding SuggestSort value (Score for SCORE/UNRECOGNIZED, Frequency for FREQUENCY)
-	 */
-	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
-		return switch (sort) {
-			case SCORE, UNRECOGNIZED -> SuggestSort.Score;
-			case FREQUENCY -> SuggestSort.Frequency;
-		};
-	}
-
-	/**
 	 * Converts a gRPC {@link io.openk9.searcher.grpc.SuggestMode} enum
 	 * to the corresponding {@link org.opensearch.client.opensearch._types.SuggestMode} enum.
 	 *
@@ -1150,6 +908,20 @@ public class SearchResource {
 			case MISSING, UNRECOGNIZED -> SuggestMode.Missing;
 			case POPULAR -> SuggestMode.Popular;
 			case ALWAYS -> SuggestMode.Always;
+		};
+	}
+
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.SortType} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch.core.search.SuggestSort} enum.
+	 *
+	 * @param sort the gRPC SortType to convert
+	 * @return the corresponding SuggestSort value (Score for SCORE/UNRECOGNIZED, Frequency for FREQUENCY)
+	 */
+	private SuggestSort _grpcEnumToSuggestSort(SortType sort) {
+		return switch (sort) {
+			case SCORE, UNRECOGNIZED -> SuggestSort.Score;
+			case FREQUENCY -> SuggestSort.Frequency;
 		};
 	}
 
@@ -1227,6 +999,162 @@ public class SearchResource {
 		return autocorrection;
 	}
 
+	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
+
+		int statusCode = NONE_STATUS_CODE;
+		String reason = "Unable to serve search request";
+
+		if (throwable instanceof ResponseException responseException) {
+			statusCode = responseException.getResponse()
+				.getStatusLine()
+				.getStatusCode();
+		}
+
+		jakarta.ws.rs.core.Response.Status responseStatus = null;
+
+		switch (statusCode) {
+			case NONE_STATUS_CODE, NOT_FOUND_STATUS_CODE -> {
+				responseStatus =
+					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+
+				log.error(reason, throwable);
+			}
+			default -> {
+				reason = "Invalid search request";
+				responseStatus =
+					jakarta.ws.rs.core.Response.Status.fromStatusCode(statusCode);
+
+				log.warn(reason, throwable);
+			}
+		}
+
+		return jakarta.ws.rs.core.Response
+			.status(responseStatus)
+			.entity(JsonObject
+				.of(DETAILS_FIELD, reason))
+			.build();
+	}
+
+	private NamedXContentRegistry getNamedXContentRegistry() {
+
+		return namedXContentRegistryMap.computeIfAbsent(
+			namedXContentRegistryKey, o -> {
+				try {
+					Field registry =
+						RestHighLevelClient.class.getDeclaredField("registry");
+
+					registry.setAccessible(true);
+
+					return (NamedXContentRegistry) registry.get(restHighLevelClient);
+				}
+				catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			});
+
+	}
+
+	private QueryAnalysisRequest getQueryAnalysisRequest(
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
+
+		QueryAnalysisRequest.Builder builder =
+			QueryAnalysisRequest.newBuilder();
+
+		var rawToken = getRawToken(headers);
+		builder.setSearchText(searchRequest.getSearchText());
+		builder.setVirtualHost(request.authority().host());
+		builder.setJwt(rawToken);
+		builder.setMode(mode);
+
+		if (searchRequest.getTokens() != null) {
+
+			for (QueryAnalysisToken token : searchRequest.getTokens()) {
+				QueryAnalysisSearchToken.Builder qastBuilder =
+					createQastBuilder(token);
+				builder
+					.addTokens(
+						io.openk9.searcher.grpc.QueryAnalysisToken
+							.newBuilder()
+							.setText(token.getText())
+							.setEnd(token.getEnd())
+							.setStart(token.getStart())
+							.addAllPos(toList(token.getPos()))
+							.setToken(qastBuilder));
+			}
+
+		}
+
+		return builder.build();
+
+	}
+
+	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
+
+		var requestBuilder = searcherMapper
+			.toQueryParserRequest(searchRequest)
+			.toBuilder();
+
+		Map<String, Value> extra = new HashMap<>();
+
+		for (String headerName : supportedHeadersName) {
+			List<String> requestHeader = headers.getRequestHeader(headerName);
+			if (requestHeader != null && !requestHeader.isEmpty()) {
+				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
+			}
+		}
+
+		var rawToken = getRawToken(headers);
+
+		String sortAfterKey = searchRequest.getSortAfterKey();
+		String language = searchRequest.getLanguage();
+
+		return requestBuilder
+			.setVirtualHost(request.authority().host())
+			.setJwt(rawToken)
+			.putAllExtra(extra)
+			.addAllSort(mapToGrpc(searchRequest.getSort()))
+			.setSortAfterKey(sortAfterKey == null ? "" : sortAfterKey)
+			.setLanguage(language == null ? "" : language)
+			.build();
+
+	}
+
+	private Iterable<Sort> mapToGrpc(
+		List<Map<String, Map<String, String>>> sort) {
+
+		if (sort == null || sort.isEmpty()) {
+			return List.of();
+		}
+
+		Set<Sort> sortList = new HashSet<>(sort.size());
+
+		for (Map<String, Map<String, String>> map : sort) {
+
+			for (Map.Entry<String, Map<String, String>> entry : map.entrySet()) {
+
+				String fieldName = entry.getKey();
+
+				Sort.Builder builder =
+					Sort
+						.newBuilder()
+						.setField(fieldName);
+
+				Map<String, String> value = entry.getValue();
+
+				if (value != null && !value.isEmpty()) {
+					builder.putAllExtras(value);
+				}
+
+				sortList.add(builder.build());
+
+			}
+
+		}
+
+		return sortList;
+
+	}
+
 	private <Resp> Resp parseEntity(
 		final HttpEntity entity,
 		final CheckedFunction<XContentParser, Resp, IOException> entityParser)
@@ -1265,6 +1193,86 @@ public class SearchResource {
 
 			return entityParser.apply(parser);
 		}
+	}
+
+	private void printShardFailures(SearchResponse searchResponse) {
+		if (searchResponse.getShardFailures() != null) {
+			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
+				log.warn(failure.reason());
+			}
+		}
+	}
+
+	private io.openk9.searcher.queryanalysis.QueryAnalysisResponse toQueryAnalysisResponse(
+		QueryAnalysisResponse queryAnalysisResponse) {
+
+		io.openk9.searcher.queryanalysis.QueryAnalysisResponse.QueryAnalysisResponseBuilder
+			builder =
+			io.openk9.searcher.queryanalysis.QueryAnalysisResponse.builder();
+
+		builder.searchText(queryAnalysisResponse.getSearchText());
+
+		List<io.openk9.searcher.queryanalysis.QueryAnalysisTokens> queryAnalysisTokensList =
+			new ArrayList<>();
+
+		for (QueryAnalysisTokens queryAnalysisTokensGRPC : queryAnalysisResponse.getAnalysisList()) {
+
+			io.openk9.searcher.queryanalysis.QueryAnalysisTokens queryAnalysisTokens =
+				new io.openk9.searcher.queryanalysis.QueryAnalysisTokens();
+
+			queryAnalysisTokens.setText(queryAnalysisTokensGRPC.getText());
+			queryAnalysisTokens.setStart(queryAnalysisTokensGRPC.getStart());
+			queryAnalysisTokens.setEnd(queryAnalysisTokensGRPC.getEnd());
+			queryAnalysisTokens.setPos(queryAnalysisTokensGRPC.getPosList().toArray(Integer[]::new));
+			List<QueryAnalysisSearchToken> tokensList =
+				queryAnalysisTokensGRPC.getTokensList();
+
+			Collection<Map<String, Object>> tokens = new ArrayList<>(tokensList.size());
+
+			for (QueryAnalysisSearchToken queryAnalysisSearchToken : tokensList) {
+
+				Map<String, Object> token = new HashMap<>();
+
+				token.put("tokenType", queryAnalysisSearchToken.getTokenType());
+				token.put("value", queryAnalysisSearchToken.getValue());
+				token.put("score", queryAnalysisSearchToken.getScore());
+
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordKey())) {
+					token.put("keywordKey", queryAnalysisSearchToken.getKeywordKey());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getKeywordName())) {
+					token.put("keywordName", queryAnalysisSearchToken.getKeywordName());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityType())) {
+					token.put("entityType", queryAnalysisSearchToken.getEntityType());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getEntityName())) {
+					token.put("entityName", queryAnalysisSearchToken.getEntityName());
+				}
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getTenantId())) {
+					token.put("tenantId", queryAnalysisSearchToken.getTenantId());
+				}
+
+				if (StringUtils.isNotBlank(queryAnalysisSearchToken.getLabel())) {
+					token.put("label", queryAnalysisSearchToken.getLabel());
+				}
+
+				if (!queryAnalysisSearchToken.getExtraMap().isEmpty()) {
+					token.put("extra", queryAnalysisSearchToken.getExtraMap());
+				}
+
+				tokens.add(token);
+
+			}
+
+			queryAnalysisTokens.setTokens(tokens);
+
+			queryAnalysisTokensList.add(queryAnalysisTokens);
+
+		}
+
+		return builder.analysis(queryAnalysisTokensList).build();
+
 	}
 
 	private Response toSearchResponse(SearchResponse searchResponse) {
@@ -1330,14 +1338,6 @@ public class SearchResource {
 			: 0;
 
 		return new Response(result, totalResult, null);
-	}
-
-	private void printShardFailures(SearchResponse searchResponse) {
-		if (searchResponse.getShardFailures() != null) {
-			for (ShardSearchFailure failure : searchResponse.getShardFailures()) {
-				log.warn(failure.reason());
-			}
-		}
 	}
 
 }
