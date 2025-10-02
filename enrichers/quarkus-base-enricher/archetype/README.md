@@ -38,7 +38,7 @@ These classes implement the REST classes from the library and adapt their behavi
   It exposes `/form` endpoint that returns the enricher configuration.
   ```json
   {
-    "formFields": [
+    "fields": [
       {
         "info": "",
         "label": "Test Form",

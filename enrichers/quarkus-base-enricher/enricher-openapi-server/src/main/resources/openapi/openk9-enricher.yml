@@ -63,7 +63,7 @@ components:
     Form:
       type: object
       properties:
-        formFields:
+        fields:
           type: array
           items:
             $ref: "#/components/schemas/FormField"
