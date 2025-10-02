@@ -32,11 +32,11 @@ public class CallBackClient {
     @ConfigProperty(name = "io.openk9.enricher.callback.api.path")
     private String path;
 
-    public void callback(OpenK9Input data) {
+    public void callback(EnrichData enrichData, String tokenId) {
         WebClient client = WebClient.create(vertx);
         client
-                .post(port, host, path + data.getReplyTo())
-                .sendJson(data)
+                .post(port, host, path + tokenId)
+                .sendJson(enrichData)
                 .onSuccess(res -> LOGGER.info("Enrich data sent to OpenK9 successfully!"))
                 .onFailure(res -> LOGGER.error("Error sending enrich data: " + res.getMessage()));
     }

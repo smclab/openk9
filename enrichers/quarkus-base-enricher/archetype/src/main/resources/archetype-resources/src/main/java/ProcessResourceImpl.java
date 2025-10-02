@@ -15,8 +15,12 @@ public class ProcessResourceImpl implements ProcessResource {
 
     @Override
     public void process(@NotNull OpenK9Input data) {
-        LOGGER.info("Starting enrichment of data...");
-        // Simulate call back endpoint
-        callBackClient.callback(data);
+        if (!data.getReplyTo().isEmpty() && data.getReplyTo() != null) {
+            LOGGER.info("Starting enrichment of data...");
+            // Simulate call back endpoint
+            EnrichData enrichData = new EnrichData();
+            enrichData.setPayload(data.getPayload());
+            callBackClient.callback(enrichData, data.getReplyTo());
+        }
     }
 }
