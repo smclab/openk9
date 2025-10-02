@@ -178,12 +178,12 @@ They are responsible for crawling data and sending them one by one to OpenK9 asy
 To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
-./mvnw install
+./mvnw -f quarkus-openk9-base-connector/pom.xml install
 ```  
 
 ## Generate Connector
 
-To generate the connector, write one of these commands:
+To generate the connector, move to the path where you want the project to be generated and write one of these commands:
 
 ### Linux
 
@@ -388,4 +388,3 @@ After generating it, changes need to be made to the connector to create a concre
                 });
     }
    ```
-
