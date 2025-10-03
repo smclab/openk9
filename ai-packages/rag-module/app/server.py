@@ -925,7 +925,7 @@ async def rename_chat(
 
 
 @app.post(
-    "/api/rag/upload_files",
+    "/api/rag/upload-files",
     tags=["RAG"],
     summary="Upload and process multiple files for RAG",
     description="""This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, 
