@@ -1,7 +1,8 @@
 ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
-ARG MODE=cpu
 
 FROM python:${PYTHON_BASE_DOCKER_IMAGE}
+
+ARG MODE=cpu
 
 WORKDIR /docling-processor/
 
