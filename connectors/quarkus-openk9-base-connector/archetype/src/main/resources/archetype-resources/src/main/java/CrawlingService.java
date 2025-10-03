@@ -25,10 +25,13 @@ public class CrawlingService {
     @ConfigProperty(name = "io.openk9.connector.path")
     private String path;
 
+    @ConfigProperty(name = "webClientOptions.maxPoolSize")
+    private int maxPoolSize;
+
 
     public void init(@Observes StartupEvent event) {
         vertx.eventBus().registerCodec(new IngestionDTOCodec());
-        vertx.deployVerticle(new HttpPublisherVerticle(port, host, path));
+        vertx.deployVerticle(new HttpPublisherVerticle(maxPoolSize, port, host, path));
     }
 
     public void crawling(InvokeRequest invokeRequest) {

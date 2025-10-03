@@ -26,8 +26,10 @@ public class HttpPublisherVerticle extends AbstractVerticle {
     private int port;
     private String host;
     private String path;
+    private int maxPoolSize;
 
-    public HttpPublisherVerticle(int port, String host, String path) {
+    public HttpPublisherVerticle(int maxPoolSize, int port, String host, String path) {
+        this.maxPoolSize = maxPoolSize;
         this.port = port;
         this.host = host;
         this.path = path;
@@ -64,8 +66,7 @@ public class HttpPublisherVerticle extends AbstractVerticle {
         /*
         To guarantee order of ingestion data, set MaxPoolSize to 1, instead increment
          */
-        int value = 1;
-        webClientOptions.setMaxPoolSize(value);
+        webClientOptions.setMaxPoolSize(maxPoolSize);
         return webClientOptions;
     }
 }
