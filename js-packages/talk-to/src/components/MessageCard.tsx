@@ -127,7 +127,46 @@ export function MessageCard({
 								</div>
 							</>
 						) : (
-							<Markdown>{message.answer}</Markdown>
+							<Markdown
+								components={{
+									pre: (props: any) => {
+										return (
+											<pre
+												style={{
+													margin: 0,
+													position: "relative",
+													display: "block",
+													width: "100%",
+													maxWidth: "100%",
+													overflowX: "auto",
+													whiteSpace: "pre-wrap",
+													borderRadius: 8,
+													padding: 12,
+													backgroundColor: theme === "light" ? "#f5f5f5" : "#1e1e1e",
+												}}
+												{...props}
+											/>
+										);
+									},
+									code: (props: any) => {
+										const { inline, style, children, ...rest } = props || {};
+										return (
+											<code
+												style={{
+													whiteSpace: inline ? "normal" : "inherit",
+													wordBreak: inline ? "break-word" : "inherit",
+													...(style || {}),
+												}}
+												{...rest}
+											>
+												{children}
+											</code>
+										);
+									},
+								}}
+							>
+								{message.answer}
+							</Markdown>
 						)
 					) : (
 						<Box
