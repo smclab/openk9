@@ -13,7 +13,7 @@
 		"attach-popup-title": "Subir un adjunto",
 		"document": "Documento",
 		"attach-file-aria-label": "Adjuntar un archivo",
-		"uploading": "Subiendo...",
+		"uploading": "Subiendo",
 		"upload-completed": "Subida completada",
 		"unsupported-file-type": "Tipo de archivo no compatible",
 		"file-too-large": "Archivo demasiado grande (máx 10MB)"

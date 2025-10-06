@@ -18,6 +18,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import DescriptionIcon from "@mui/icons-material/Description";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import UnicodeSpinner from "./utils/UnicodeSpinner";
 
 export default function Search({
 	handleSearch,
@@ -101,7 +102,11 @@ export default function Search({
 		<Box component="footer" p={2} bgcolor="background.paper" sx={{ borderRadius: "10px" }} zIndex={2} width={"100%"}>
 			{(errors.length > 0 || uploadDone || uploading) && (
 				<Box sx={{ mb: 1 }}>
-					{uploading && <Box sx={{ fontSize: 12 }}>{t("uploading") || "Uploading..."}</Box>}
+					{uploading && (
+						<Box sx={{ fontSize: 12 }}>
+							<UnicodeSpinner text={t("uploading") || "Uploading"} />
+						</Box>
+					)}
 					{uploadDone && (
 						<Box sx={{ display: "flex", alignItems: "center", gap: "6px", color: "green", fontSize: 12 }}>
 							<CheckCircleOutlineIcon fontSize="small" />

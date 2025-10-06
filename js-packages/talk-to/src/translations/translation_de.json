@@ -13,7 +13,7 @@
 		"attach-popup-title": "Anhang hochladen",
 		"document": "Dokument",
 		"attach-file-aria-label": "Datei anhängen",
-		"uploading": "Wird hochgeladen...",
+		"uploading": "Wird hochgeladen",
 		"upload-completed": "Upload abgeschlossen",
 		"unsupported-file-type": "Nicht unterstützter Dateityp",
 		"file-too-large": "Datei zu groß (max. 10MB)"

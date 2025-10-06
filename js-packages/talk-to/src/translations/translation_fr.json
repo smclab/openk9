@@ -13,7 +13,7 @@
 		"attach-popup-title": "Téléverser une pièce jointe",
 		"document": "Document",
 		"attach-file-aria-label": "Joindre un fichier",
-		"uploading": "Téléversement...",
+		"uploading": "Téléversement",
 		"upload-completed": "Téléversement terminé",
 		"unsupported-file-type": "Type de fichier non pris en charge",
 		"file-too-large": "Fichier trop volumineux (max 10Mo)"

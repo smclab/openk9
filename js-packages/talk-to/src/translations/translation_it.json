@@ -13,7 +13,7 @@
 		"attach-popup-title": "Carica un allegato",
 		"document": "Documento",
 		"attach-file-aria-label": "Allega un file",
-		"uploading": "Caricamento...",
+		"uploading": "Caricamento",
 		"upload-completed": "Upload completato",
 		"unsupported-file-type": "Formato non supportato",
 		"file-too-large": "File troppo grande (max 10MB)"
