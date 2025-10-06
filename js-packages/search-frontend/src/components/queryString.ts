@@ -161,9 +161,14 @@ export function saveQueryString<Value extends QueryValueShape>(
     for (const key of ALL_QUERY_KEYS) {
       let valueForKey = (value as any)[key];
       if (key === "filters") {
-        valueForKey = serializeFiltersGrouped(valueForKey);
+        valueForKey =
+          Array.isArray(valueForKey) && valueForKey.length === 0
+            ? undefined
+            : serializeFiltersGrouped(valueForKey);
       }
-      if (searchParams.has(key)) setOrDelete(searchParams, key, valueForKey);
+      if (searchParams.has(key) || valueForKey !== undefined) {
+        setOrDelete(searchParams, key, valueForKey);
+      }
     }
   }
 
@@ -305,13 +310,12 @@ export function deserializeFilters(serializedArray: any[]): SearchToken[] {
 }
 
 export function serializeFiltersGrouped(filters: SearchToken[]): any {
+  if (!filters || filters.length === 0) return undefined;
   return {
-    values: (filters || []).map((token) => token.values?.[0] ?? ""),
-    suggestionCategoryId: (filters || []).map(
-      (token) => token.suggestionCategoryId,
-    ),
-    tokenType: (filters || []).map((token) => token.tokenType),
-    keywordKey: (filters || []).map((token) => token.keywordKey),
+    values: filters.map((token) => token.values?.[0] ?? ""),
+    suggestionCategoryId: filters.map((token) => token.suggestionCategoryId),
+    tokenType: filters.map((token) => token.tokenType),
+    keywordKey: filters.map((token) => token.keywordKey),
   };
 }
 
