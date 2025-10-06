@@ -49,6 +49,6 @@ class PaginationModel(BaseModel):
 class RequestModel(BaseModel):
     requestMethod: Optional[RequestMethod] = RequestMethod.GET
     requestUrl: str
-    requestItemList: Optional[str] = None
-    requestPagination: Optional[PaginationModel] = None
+    requestItemList: Optional[str] = None   # TODO
+    requestPagination: Optional[PaginationModel] = None     # TODO
     requestAuth: Optional[AuthModel] = None

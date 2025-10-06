@@ -19,7 +19,7 @@ if ingestion_url is None:
 
 
 class DataExtraction(threading.Thread):
-	def __init__(self, request_list: list[RequestModel], auth: AuthModel | None, timestamp, datasource_id, schedule_id, tenant_id):
+	def __init__(self, request_list: list[RequestModel | str], auth: AuthModel | None, timestamp, datasource_id, schedule_id, tenant_id):
 
 		super(DataExtraction, self).__init__()
 		self.request_list = request_list
@@ -31,7 +31,7 @@ class DataExtraction(threading.Thread):
 
 		self.status_logger = logging.getLogger("rest_api_logger")
 
-	def manage_data(self, response: requests.Response) -> Union[int, bool]:
+	def manage_data(self, response: requests.Response) -> tuple[int, bool]:
 		count = 0
 		end_timestamp = datetime.utcnow().timestamp() * 1000
 
@@ -47,7 +47,7 @@ class DataExtraction(threading.Thread):
 				#TODO: Check if can do post_message for every item
 				data.datasource_payload.update({'items': data.dict_item})
 			else:
-				data.datasource_payload.update(data.dict_item)
+				data.datasource_payload.update({'items': data.dict_item})
 
 			payload = {
 				"datasourceId": self.datasource_id,
@@ -64,6 +64,7 @@ class DataExtraction(threading.Thread):
 			try:
 				self.status_logger.info(data.datasource_payload)
 				post_message(ingestion_url, payload, 10)
+				count += 1
 			except requests.RequestException:
 				self.status_logger.error("Problems during posting")
 		except Exception as e:
@@ -82,14 +83,18 @@ class DataExtraction(threading.Thread):
 				},
 				"type": "HALT"
 			}
+			self.status_logger.error(e)
 			post_message(ingestion_url, payload, 10)
 			return count, False
 		return count, True
 
-	def extract_recent(self):
-		extraction_count = 0
-		for request in self.request_list:
-			count = 0
+	def on_extract_request(self, request: str | RequestModel) -> tuple[str | None, int, bool]:
+		if isinstance(request, str):
+			auth = self.auth if self.auth else None
+			response = requests.get(url=request, auth=auth)
+			count, is_clean_finish = self.manage_data(response)
+			return response.url, count, is_clean_finish
+		elif isinstance(request, RequestModel):
 			self.status_logger.info('Extracting request: ' + request.requestUrl + ' using method: ' + request.requestMethod)
 			auth = None
 			if request.requestAuth:
@@ -98,7 +103,15 @@ class DataExtraction(threading.Thread):
 				auth = (self.auth.username, self.auth.password)
 			response = requests.request(method=request.requestMethod, url=request.requestUrl, auth=auth)
 			count, is_clean_finish = self.manage_data(response)
-			extraction_count += count
-			self.status_logger.info('Extracted: ' + str(count) + ' elements from request: ' + request.requestUrl + ' extraction ended ' + 'without errors' if is_clean_finish else 'with halting error')
+			return response.url, count, is_clean_finish
+		else:
+			self.status_logger.error(f"Could not extract request: {request} of type: {type(request)}. Acceptable types are str or RequestModel")
+			return None, 0, False
 
+	def extract_recent(self):
+		extraction_count = 0
+		for request in self.request_list:
+			url, count, is_clean_finish = self.on_extract_request(request)
+			extraction_count += count
+			self.status_logger.info("Extracted: " + str(count) + " elements from request: " + url + " extraction ended " + ("without errors" if is_clean_finish else "with halting error"))
 		self.status_logger.info('Extracted: ' + str(extraction_count) + ' elements')
