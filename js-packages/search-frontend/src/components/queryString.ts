@@ -1,4 +1,5 @@
 import { queryStringMapType } from "../embeddable/entry";
+import type { SearchToken } from "./client";
 
 export type QueryKey =
   | "search"
@@ -18,28 +19,31 @@ export type QueryValueShape = Partial<
   }
 >;
 
-function safeParse<T = unknown>(raw: string | null): T | null {
-  if (raw == null) return null;
+function safeParse<T = unknown>(rawValue: string | null): T | null {
+  if (rawValue == null) return null;
   try {
-    return JSON.parse(raw) as T;
+    return JSON.parse(rawValue) as T;
   } catch {
-    return raw as unknown as T;
+    return rawValue as unknown as T;
   }
 }
 
 function setOrDelete(
-  params: URLSearchParams,
-  key: string,
-  value: unknown | undefined,
+  urlParams: URLSearchParams,
+  paramKey: string,
+  paramValue: unknown | undefined,
 ) {
-  if (value === undefined || value === null || value === "") {
-    params.delete(key);
+  if (paramValue === undefined || paramValue === null || paramValue === "") {
+    urlParams.delete(paramKey);
   } else {
-    params.set(key, typeof value === "string" ? value : JSON.stringify(value));
+    urlParams.set(
+      paramKey,
+      typeof paramValue === "string" ? paramValue : JSON.stringify(paramValue),
+    );
   }
 }
 
-const ALL_KEYS: QueryKey[] = [
+const ALL_QUERY_KEYS: QueryKey[] = [
   "search",
   "text",
   "textOnChange",
@@ -51,82 +55,123 @@ export function loadQueryString<Value extends QueryValueShape>(
   defaultValue: Value,
   queryStringMap?: queryStringMapType,
 ): Value {
-  const params = new URLSearchParams(window.location.search);
-  const out: Record<string, unknown> = { ...defaultValue };
+  const searchParams = new URLSearchParams(window.location.search);
+  const mergedValueRecord: Record<string, unknown> = { ...defaultValue };
 
   if (queryStringMap) {
-    const keys = Object.keys(queryStringMap).filter((k) => k !== "keyObj");
-    if (queryStringMap.keyObj && params.has(queryStringMap.keyObj)) {
-      const obj = safeParse<Record<string, unknown>>(
-        params.get(queryStringMap.keyObj),
+    const mappingKeys = Object.keys(queryStringMap).filter(
+      (k) => k !== "keyObj",
+    );
+    if (queryStringMap.keyObj && searchParams.has(queryStringMap.keyObj)) {
+      const mappedObject = safeParse<Record<string, unknown>>(
+        searchParams.get(queryStringMap.keyObj),
       );
-      if (obj && typeof obj === "object") {
-        for (const k of keys) {
-          const mappedKey = (queryStringMap as any)[k];
-          if (Object.prototype.hasOwnProperty.call(obj, mappedKey)) {
-            out[k] = (obj as any)[mappedKey];
+      if (mappedObject && typeof mappedObject === "object") {
+        for (const key of mappingKeys) {
+          const mappedKey = (queryStringMap as any)[key];
+          if (Object.prototype.hasOwnProperty.call(mappedObject, mappedKey)) {
+            mergedValueRecord[key] = (mappedObject as any)[mappedKey];
           }
         }
       }
     } else {
-      for (const k of keys) {
-        const mappedKey = (queryStringMap as any)[k];
-        if (params.has(mappedKey)) {
-          out[k] = safeParse(params.get(mappedKey));
+      for (const key of mappingKeys) {
+        const mappedKey = (queryStringMap as any)[key];
+        if (searchParams.has(mappedKey)) {
+          if (key === "filters") {
+            const parsedValue = safeParse(searchParams.get(mappedKey));
+            mergedValueRecord[key] = deserializeFiltersGrouped(parsedValue);
+          } else {
+            mergedValueRecord[key] = safeParse(searchParams.get(mappedKey));
+          }
         }
       }
     }
   } else {
-    const q = safeParse<Partial<Value>>(params.get("q"));
-    if (q && typeof q === "object") Object.assign(out, q);
-    for (const k of ALL_KEYS) {
-      if (params.has(k)) out[k] = safeParse(params.get(k));
+    const parsedQueryObject = safeParse<Partial<Value>>(searchParams.get("q"));
+    if (parsedQueryObject && typeof parsedQueryObject === "object") {
+      Object.assign(mergedValueRecord, parsedQueryObject);
+    }
+    for (const key of ALL_QUERY_KEYS) {
+      if (searchParams.has(key)) {
+        if (key === "filters") {
+          const parsedValue = safeParse(searchParams.get(key));
+          mergedValueRecord[key] = deserializeFiltersGrouped(parsedValue);
+        } else {
+          mergedValueRecord[key] = safeParse(searchParams.get(key));
+        }
+      }
     }
   }
 
-  if (!out["textOnChange"] && out["text"]) out["textOnChange"] = out["text"];
-  return out as Value;
+  if (!mergedValueRecord["textOnChange"] && mergedValueRecord["text"]) {
+    mergedValueRecord["textOnChange"] = mergedValueRecord["text"];
+  }
+  return mergedValueRecord as Value;
 }
 
 export function saveQueryString<Value extends QueryValueShape>(
   value: Value,
   queryStringMap?: queryStringMapType,
 ) {
-  const params = new URLSearchParams(window.location.search);
+  const searchParams = new URLSearchParams(window.location.search);
 
   if (queryStringMap) {
-    const keys = Object.keys(queryStringMap).filter((k) => k !== "keyObj");
-    const obj: Record<string, unknown> = {};
-    for (const k of keys) {
-      const mappedKey = (queryStringMap as any)[k];
-      const v = (value as any)[k];
-      if (Array.isArray(v) && v.length === 0) continue;
-      if (v !== undefined && v !== null && v !== "") obj[mappedKey] = v;
+    const mappingKeys = Object.keys(queryStringMap).filter(
+      (k) => k !== "keyObj",
+    );
+    const payloadObject: Record<string, unknown> = {};
+    for (const key of mappingKeys) {
+      const mappedKey = (queryStringMap as any)[key];
+      let valueForKey = (value as any)[key];
+      if (key === "filters") {
+        valueForKey = serializeFiltersGrouped(valueForKey);
+      }
+      if (Array.isArray(valueForKey) && valueForKey.length === 0) continue;
+      if (
+        valueForKey !== undefined &&
+        valueForKey !== null &&
+        valueForKey !== ""
+      ) {
+        payloadObject[mappedKey] = valueForKey;
+      }
     }
     if (queryStringMap.keyObj) {
-      if (Object.keys(obj).length > 0) {
-        params.set(queryStringMap.keyObj, JSON.stringify(obj));
+      if (Object.keys(payloadObject).length > 0) {
+        searchParams.set(queryStringMap.keyObj, JSON.stringify(payloadObject));
       } else {
-        params.delete(queryStringMap.keyObj);
+        searchParams.delete(queryStringMap.keyObj);
       }
-      for (const k of keys) params.delete((queryStringMap as any)[k]);
+      for (const key of mappingKeys)
+        searchParams.delete((queryStringMap as any)[key]);
     } else {
-      for (const k of keys) {
-        const v = (value as any)[k];
-        if (Array.isArray(v) && v.length === 0) {
-          setOrDelete(params, (queryStringMap as any)[k], undefined);
+      for (const key of mappingKeys) {
+        let valueForKey = (value as any)[key];
+        if (key === "filters") {
+          valueForKey = serializeFiltersGrouped(valueForKey);
+        }
+        if (Array.isArray(valueForKey) && valueForKey.length === 0) {
+          setOrDelete(searchParams, (queryStringMap as any)[key], undefined);
         } else {
-          setOrDelete(params, (queryStringMap as any)[k], v);
+          setOrDelete(searchParams, (queryStringMap as any)[key], valueForKey);
         }
       }
     }
+  } else {
+    for (const key of ALL_QUERY_KEYS) {
+      let valueForKey = (value as any)[key];
+      if (key === "filters") {
+        valueForKey = serializeFiltersGrouped(valueForKey);
+      }
+      if (searchParams.has(key)) setOrDelete(searchParams, key, valueForKey);
+    }
   }
 
-  const query = params.toString();
-  const url = query
-    ? `${window.location.pathname}?${query}`
+  const queryString = searchParams.toString();
+  const nextUrl = queryString
+    ? `${window.location.pathname}?${queryString}`
     : window.location.pathname;
-  window.history.replaceState(null, "", url);
+  window.history.replaceState(null, "", nextUrl);
 }
 
 export function loadLocalStorage<Value extends QueryValueShape>(
@@ -134,27 +179,33 @@ export function loadLocalStorage<Value extends QueryValueShape>(
   storageKey: string,
   queryStringMap?: queryStringMapType,
 ): Value {
-  const raw =
+  const rawStored =
     typeof window !== "undefined" && typeof window.localStorage !== "undefined"
       ? window.localStorage.getItem(storageKey)
       : null;
 
-  const result: Record<string, unknown> = { ...defaultValue };
+  const mergedValueRecord: Record<string, unknown> = { ...defaultValue };
 
-  if (!raw) {
-    if (result["textOnChange"] == null && result["text"] != null) {
-      result["textOnChange"] = result["text"];
+  if (!rawStored) {
+    if (
+      mergedValueRecord["textOnChange"] == null &&
+      mergedValueRecord["text"] != null
+    ) {
+      mergedValueRecord["textOnChange"] = mergedValueRecord["text"];
     }
-    return result as Value;
+    return mergedValueRecord as Value;
   }
 
-  const parsedData = safeParse<Record<string, unknown>>(raw);
+  const parsedStoredData = safeParse<Record<string, unknown>>(rawStored);
 
-  if (!parsedData || typeof parsedData !== "object") {
-    if (result["textOnChange"] == null && result["text"] != null) {
-      result["textOnChange"] = result["text"];
+  if (!parsedStoredData || typeof parsedStoredData !== "object") {
+    if (
+      mergedValueRecord["textOnChange"] == null &&
+      mergedValueRecord["text"] != null
+    ) {
+      mergedValueRecord["textOnChange"] = mergedValueRecord["text"];
     }
-    return result as Value;
+    return mergedValueRecord as Value;
   }
 
   if (queryStringMap) {
@@ -168,20 +219,23 @@ export function loadLocalStorage<Value extends QueryValueShape>(
       ];
       if (
         mappedKey &&
-        Object.prototype.hasOwnProperty.call(parsedData, mappedKey)
+        Object.prototype.hasOwnProperty.call(parsedStoredData, mappedKey)
       ) {
-        result[key] = parsedData[mappedKey];
+        mergedValueRecord[key] = parsedStoredData[mappedKey];
       }
     }
   } else {
-    Object.assign(result, parsedData);
+    Object.assign(mergedValueRecord, parsedStoredData);
   }
 
-  if (result["textOnChange"] == null && result["text"] != null) {
-    result["textOnChange"] = result["text"];
+  if (
+    mergedValueRecord["textOnChange"] == null &&
+    mergedValueRecord["text"] != null
+  ) {
+    mergedValueRecord["textOnChange"] = mergedValueRecord["text"];
   }
 
-  return result as Value;
+  return mergedValueRecord as Value;
 }
 
 export function saveLocalStorage<Value extends QueryValueShape>(
@@ -189,25 +243,33 @@ export function saveLocalStorage<Value extends QueryValueShape>(
   storageKey: string,
   queryStringMap?: queryStringMapType,
 ) {
-  let obj: Record<string, unknown> = {};
+  let payloadObject: Record<string, unknown> = {};
 
   if (queryStringMap) {
-    const keys = Object.keys(queryStringMap).filter((k) => k !== "keyObj");
-    for (const k of keys) {
-      const mappedKey = (queryStringMap as any)[k];
-      const v = (value as any)[k];
-      if (Array.isArray(v) && v.length === 0) continue;
-      if (v !== undefined && v !== null && v !== "") obj[mappedKey] = v;
+    const mappingKeys = Object.keys(queryStringMap).filter(
+      (k) => k !== "keyObj",
+    );
+    for (const key of mappingKeys) {
+      const mappedKey = (queryStringMap as any)[key];
+      const valueForKey = (value as any)[key];
+      if (Array.isArray(valueForKey) && valueForKey.length === 0) continue;
+      if (
+        valueForKey !== undefined &&
+        valueForKey !== null &&
+        valueForKey !== ""
+      ) {
+        payloadObject[mappedKey] = valueForKey;
+      }
     }
     if (queryStringMap.keyObj) {
-      if (Object.keys(obj).length > 0) {
-        localStorage.setItem(storageKey, JSON.stringify(obj));
+      if (Object.keys(payloadObject).length > 0) {
+        localStorage.setItem(storageKey, JSON.stringify(payloadObject));
       } else {
         localStorage.removeItem(storageKey);
       }
     } else {
-      if (Object.keys(obj).length > 0) {
-        localStorage.setItem(storageKey, JSON.stringify(obj));
+      if (Object.keys(payloadObject).length > 0) {
+        localStorage.setItem(storageKey, JSON.stringify(payloadObject));
       } else {
         localStorage.removeItem(storageKey);
       }
@@ -219,4 +281,48 @@ export function saveLocalStorage<Value extends QueryValueShape>(
       localStorage.removeItem(storageKey);
     }
   }
+}
+
+export function serializeFilters(filters: SearchToken[]): any[] {
+  return (filters || []).map((token) => ({
+    value: token.values?.[0] ?? "",
+    suggestionCategoryId: token.suggestionCategoryId,
+    tokenType: token.tokenType,
+    keywordKey: token.keywordKey,
+  }));
+}
+
+export function deserializeFilters(serializedArray: any[]): SearchToken[] {
+  if (!Array.isArray(serializedArray)) return [];
+  return serializedArray.map((item) => ({
+    values: [item.value],
+    suggestionCategoryId: item.suggestionCategoryId,
+    tokenType: item.tokenType,
+    keywordKey: item.keywordKey,
+    filter: true,
+    isFilter: true,
+  }));
+}
+
+export function serializeFiltersGrouped(filters: SearchToken[]): any {
+  return {
+    values: (filters || []).map((token) => token.values?.[0] ?? ""),
+    suggestionCategoryId: (filters || []).map(
+      (token) => token.suggestionCategoryId,
+    ),
+    tokenType: (filters || []).map((token) => token.tokenType),
+    keywordKey: (filters || []).map((token) => token.keywordKey),
+  };
+}
+
+export function deserializeFiltersGrouped(serialized: any): SearchToken[] {
+  if (!serialized || !Array.isArray(serialized.values)) return [];
+  return serialized.values.map((valueItem: any, index: number) => ({
+    values: [valueItem],
+    suggestionCategoryId: serialized.suggestionCategoryId?.[index],
+    tokenType: serialized.tokenType?.[index],
+    keywordKey: serialized.keywordKey?.[index],
+    filter: true,
+    isFilter: true,
+  }));
 }
