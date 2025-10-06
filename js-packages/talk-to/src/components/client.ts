@@ -112,6 +112,7 @@ export function OpenK9Client() {
 					timestamp: string;
 					chat_sequence_number: number;
 				}>;
+				retrieveFromUploadedDocuments?: boolean;
 			};
 			controller: AbortController;
 		}) {
@@ -156,6 +157,20 @@ export function OpenK9Client() {
 			}
 
 			return response;
+		},
+
+		async uploadFiles(chatId: string, files: File[]): Promise<{ ok: boolean }> {
+			const formData = new FormData();
+			files.forEach((f) => formData.append("files", f));
+			const response = await authFetch(`/api/rag/upload-files?chat_id=${encodeURIComponent(chatId)}`, {
+				method: "POST",
+				body: formData,
+			});
+			if (!response.ok) {
+				const err = await response.text().catch(() => "");
+				throw new Error(err || "Upload error");
+			}
+			return { ok: true };
 		},
 	};
 }

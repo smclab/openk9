@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import SuggestedPrompts from "./SuggestedPrompts";
 
 interface InitialConversationProps {
-	handleSearch: (message: string) => void;
-}
+		handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
+	}
 
 export const InitialConversation: React.FC<InitialConversationProps> = ({ handleSearch }) => {
 	const { t } = useTranslation();

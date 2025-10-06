@@ -36,7 +36,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	}, [initialMessages]);
 
 	const generateResponse = useCallback(
-		async (query: string, chatId: string) => {
+		async (query: string, chatId: string, retrieveFromUploadedDocuments?: boolean) => {
 			const id = uuidv4();
 			setIsLoading({ id, isLoading: true });
 
@@ -86,6 +86,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
 						timestamp,
 						language,
+						retrieveFromUploadedDocuments: !!retrieveFromUploadedDocuments,
 				  }
 				: {
 						searchText: query,
@@ -97,7 +98,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 
 			try {
 				const response = await client.GenerateResponse({ controller, searchQuery: searchQuery, url });
-				if (response.ok) {
+if (response.ok) {
 					const reader = response.body?.getReader();
 					const decoder = new TextDecoder("utf-8");
 					let done = false;

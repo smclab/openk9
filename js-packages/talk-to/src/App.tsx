@@ -36,8 +36,8 @@ function App() {
 
 	const isNewChat = messages.length === 0;
 	const client = OpenK9Client();
-	const handleSearch = (query: string) => {
-		chatId?.id && generateResponse(query, chatId?.id || "");
+	const handleSearch = (query: string, retrieveFromUploadedDocuments?: boolean) => {
+		chatId?.id && generateResponse(query, chatId?.id || "", retrieveFromUploadedDocuments);
 	};
 
 	React.useEffect(() => {
@@ -185,7 +185,16 @@ function App() {
 								boxSizing: "border-box",
 							}}
 						>
-							<Search handleSearch={handleSearch} cancelAllResponses={cancelAllResponses} isChatting={isChatting} />
+							<Search
+								handleSearch={handleSearch}
+								cancelAllResponses={cancelAllResponses}
+								isChatting={isChatting}
+								onUploadFiles={async (files) => {
+									if (!keycloak.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
+									return client.uploadFiles(chatId.id, files);
+								}}
+								isAuthenticated={!!keycloak.authenticated}
+							/>
 						</Box>
 					</Box>
 				</Box>

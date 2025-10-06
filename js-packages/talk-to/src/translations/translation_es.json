@@ -9,6 +9,13 @@
 		"login": "Iniciar sesión",
 		"new-chat": "Nuevo chat",
 		"no-chats": "No hay chats disponibles",
-		"write-a-message": "Escribe un mensaje..."
+		"write-a-message": "Escribe un mensaje...",
+		"attach-popup-title": "Subir un adjunto",
+		"document": "Documento",
+		"attach-file-aria-label": "Adjuntar un archivo",
+		"uploading": "Subiendo...",
+		"upload-completed": "Subida completada",
+		"unsupported-file-type": "Tipo de archivo no compatible",
+		"file-too-large": "Archivo demasiado grande (máx 10MB)"
 	}
 }
