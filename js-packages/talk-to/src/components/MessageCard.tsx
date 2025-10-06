@@ -241,26 +241,30 @@ export function MessageCard({
 												}}
 											/>
 											<Typography variant="caption" fontWeight={500} overflow={"hidden"} textOverflow={"ellipsis"}>
-												{source.title || source.source}
+												{source.title ||
+													source.source ||
+													(source.filename && source?.filename + source?.file_extension)}
 											</Typography>
-											<IconButton
-												size="small"
-												onClick={(e) => {
-													e.stopPropagation();
-													copySource(source);
-												}}
-												sx={{
-													p: 0.25,
-													ml: 0.5,
-													"&:hover": { backgroundColor: "rgba(0,0,0,0.05)" },
-												}}
-											>
-												{copiedSource === source.url ? (
-													<CheckIcon sx={{ fontSize: "0.75rem" }} />
-												) : (
-													<ContentCopyIcon sx={{ fontSize: "0.75rem" }} />
-												)}
-											</IconButton>
+											{!source?.filename && !source?.file_extension && (
+												<IconButton
+													size="small"
+													onClick={(e) => {
+														e.stopPropagation();
+														copySource(source);
+													}}
+													sx={{
+														p: 0.25,
+														ml: 0.5,
+														"&:hover": { backgroundColor: "rgba(0,0,0,0.05)" },
+													}}
+												>
+													{copiedSource === source.url ? (
+														<CheckIcon sx={{ fontSize: "0.75rem" }} />
+													) : (
+														<ContentCopyIcon sx={{ fontSize: "0.75rem" }} />
+													)}
+												</IconButton>
+											)}
 											<IconButton
 												size="small"
 												onClick={(e) => {
@@ -276,12 +280,12 @@ export function MessageCard({
 											</IconButton>
 										</Box>
 									}
-									onClick={() => window.open(source.url, "_blank")}
+									onClick={() => !source?.filename && !source?.file_extension && window.open(source.url, "_blank")}
 									sx={{
 										backgroundColor: typeColors.backgroundColor,
 										color: typeColors.color,
 										border: `1px solid ${typeColors.borderColor}`,
-										cursor: "pointer",
+										cursor: (!source?.filename && !source?.file_extension && "pointer") || "default",
 										"&:hover": {
 											backgroundColor: typeColors.backgroundColor,
 											opacity: 0.8,

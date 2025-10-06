@@ -7,7 +7,7 @@ import { useChatContext } from "../context/HistoryChatContext";
 import { useTranslation } from "react-i18next";
 import { keycloak } from "./keycloak";
 
-type Source = { source?: string; title?: string; url?: string };
+type Source = { source?: string; title?: string; url?: string; filename?: string; file_extension?: string };
 
 export interface Message {
 	id?: string;
@@ -98,7 +98,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 
 			try {
 				const response = await client.GenerateResponse({ controller, searchQuery: searchQuery, url });
-if (response.ok) {
+				if (response.ok) {
 					const reader = response.body?.getReader();
 					const decoder = new TextDecoder("utf-8");
 					let done = false;
