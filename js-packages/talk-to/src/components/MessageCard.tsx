@@ -180,7 +180,17 @@ export function MessageCard({
 		};
 
 		return (
-			<div style={{ position: "relative", width: "100%" }}>
+			<div
+				style={{
+					position: "relative",
+					width: "100%",
+					maxWidth: "100%",
+					whiteSpace: "pre-wrap",
+					borderRadius: "8px",
+					padding: "12px",
+					backgroundColor: theme === "light" ? "#f5f5f5" : "#1e1e1e",
+				}}
+			>
 				<div style={{ position: "absolute" }}>
 					<span
 						style={{
@@ -230,7 +240,7 @@ export function MessageCard({
 						maxWidth: "100%",
 						overflowX: "auto",
 						whiteSpace: "pre-wrap",
-						borderRadius: 8,
+						borderRadius: "10px",
 						padding: 12,
 						backgroundColor: theme === "light" ? "#f5f5f5" : "#1e1e1e",
 					}}
