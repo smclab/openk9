@@ -328,6 +328,8 @@ async def rag_chat(
         if headers.authorization
         else None
     )
+    user_id = None
+    realm_name = None
 
     if token:
         user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
