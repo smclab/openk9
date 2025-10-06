@@ -16,6 +16,8 @@
 		"uploading": "Téléversement",
 		"upload-completed": "Téléversement terminé",
 		"unsupported-file-type": "Type de fichier non pris en charge",
-		"file-too-large": "Fichier trop volumineux (max 10Mo)"
+		"file-too-large": "Fichier trop volumineux (max 10Mo)",
+		"copy-code": "Copier le code",
+		"copied": "Copié"
 	}
 }

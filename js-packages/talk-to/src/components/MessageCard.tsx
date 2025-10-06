@@ -1,13 +1,14 @@
-import { Box, Card, Chip, IconButton, Skeleton, Typography } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ErrorIcon from "@mui/icons-material/Error";
+import OpenInFullIcon from "@mui/icons-material/OpenInFull";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Box, Chip, IconButton, Skeleton, Typography } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import CheckIcon from "@mui/icons-material/Check";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import ErrorIcon from "@mui/icons-material/Error";
 
 type Theme = "light" | "dark";
 
@@ -27,6 +28,7 @@ export function MessageCard({
 	const [showSourcesModal, setShowSourcesModal] = useState(false);
 	const [showAllSources, setShowAllSources] = useState(false);
 	const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
+	const { t } = useTranslation();
 
 	const sources = message.sources || [];
 	const maxVisibleSources = 8;
@@ -90,6 +92,154 @@ export function MessageCard({
 		};
 	};
 
+	const PreBlock = (props: any) => {
+		const [copied, setCopied] = useState(false);
+		const child: any = Array.isArray(props.children) ? props.children?.[0] : props.children;
+		const className: string = child?.props?.className || "";
+		const languageMatch = /language-([a-z0-9+#]+)/i.exec(className);
+		const language = languageMatch?.[1] || "txt";
+		const badgeFor = (lang: string) => {
+			switch ((lang || "").toLowerCase()) {
+				case "ts":
+				case "tsx":
+					return {
+						label: "TS",
+						bg: theme === "light" ? "#e6f0ff" : "#133a66",
+						color: theme === "light" ? "#2f6feb" : "#7aa7ff",
+					};
+				case "js":
+				case "jsx":
+					return {
+						label: "JS",
+						bg: theme === "light" ? "#fff9db" : "#5a4d00",
+						color: theme === "light" ? "#a68b00" : "#ffd866",
+					};
+				case "py":
+				case "python":
+					return {
+						label: "PY",
+						bg: theme === "light" ? "#eaf5ff" : "#0f2d4d",
+						color: theme === "light" ? "#0b78d1" : "#6cb8ff",
+					};
+				case "json":
+					return {
+						label: "JSON",
+						bg: theme === "light" ? "#f0f0f0" : "#343434",
+						color: theme === "light" ? "#555" : "#ccc",
+					};
+				case "html":
+					return {
+						label: "HTML",
+						bg: theme === "light" ? "#ffe8e1" : "#4d2a23",
+						color: theme === "light" ? "#e34c26" : "#ffab91",
+					};
+				case "css":
+					return {
+						label: "CSS",
+						bg: theme === "light" ? "#e7f3ff" : "#203a5a",
+						color: theme === "light" ? "#2965f1" : "#90caf9",
+					};
+				case "sql":
+					return {
+						label: "SQL",
+						bg: theme === "light" ? "#e8f5e9" : "#1b3a2a",
+						color: theme === "light" ? "#2e7d32" : "#a5d6a7",
+					};
+				case "bash":
+				case "sh":
+					return {
+						label: "BASH",
+						bg: theme === "light" ? "#edf7ed" : "#1f2a1f",
+						color: theme === "light" ? "#2e7d32" : "#b2fab4",
+					};
+				case "yaml":
+				case "yml":
+					return {
+						label: "YAML",
+						bg: theme === "light" ? "#fff3e0" : "#4a3722",
+						color: theme === "light" ? "#ef6c00" : "#ffcc80",
+					};
+				default:
+					return {
+						label: (lang || "").toUpperCase(),
+						bg: theme === "light" ? "transparent" : "transparent",
+						color: theme === "light" ? "#666" : "#bbb",
+					};
+			}
+		};
+		const badge = badgeFor(language);
+		const rawChildren = child?.props?.children;
+		const codeText = Array.isArray(rawChildren) ? rawChildren.join("") : String(rawChildren ?? "");
+
+		const copy = async () => {
+			try {
+				await navigator.clipboard.writeText(codeText);
+				setCopied(true);
+				setTimeout(() => setCopied(false), 1500);
+			} catch (e) {}
+		};
+
+		return (
+			<div style={{ position: "relative", width: "100%" }}>
+				<div style={{ position: "absolute" }}>
+					<span
+						style={{
+							display: "inline-block",
+							padding: "2px 8px",
+							borderRadius: 6,
+							background: badge.bg,
+							color: badge.color,
+							fontSize: 11,
+							fontWeight: 600,
+							textTransform: "uppercase",
+						}}
+					>
+						{badge.label || ""}
+					</span>
+				</div>
+				<div style={{ position: "sticky", top: 6, zIndex: 1, display: "flex", justifyContent: "flex-end" }}>
+					<button
+						onClick={copy}
+						style={{
+							display: "inline-flex",
+							alignItems: "center",
+							gap: 6,
+							fontSize: 12,
+							border: "1px solid rgba(0,0,0,0.12)",
+							borderRadius: 6,
+							padding: "4px 8px",
+							background: theme === "light" ? "#fff" : "#2b2b2b",
+							color: theme === "light" ? "#333" : "#ddd",
+							cursor: "pointer",
+							boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+							transition: "background 0.15s ease",
+						}}
+						aria-label={copied ? t("copied") || "Copied" : t("copy-code") || "Copy code"}
+					>
+						{copied ? <CheckIcon style={{ fontSize: 16 }} /> : <ContentCopyIcon style={{ fontSize: 16 }} />}
+						<span>{copied ? t("copied") || "Copied" : t("copy-code") || "Copy code"}</span>
+					</button>
+				</div>
+				<div style={{ margin: "8px 0" }} />
+				<pre
+					style={{
+						margin: 0,
+						position: "relative",
+						display: "block",
+						width: "100%",
+						maxWidth: "100%",
+						overflowX: "auto",
+						whiteSpace: "pre-wrap",
+						borderRadius: 8,
+						padding: 12,
+						backgroundColor: theme === "light" ? "#f5f5f5" : "#1e1e1e",
+					}}
+					{...props}
+				/>
+			</div>
+		);
+	};
+
 	return (
 		<>
 			<Box display="flex" alignItems="center" gap={4}>
@@ -129,25 +279,7 @@ export function MessageCard({
 						) : (
 							<Markdown
 								components={{
-									pre: (props: any) => {
-										return (
-											<pre
-												style={{
-													margin: 0,
-													position: "relative",
-													display: "block",
-													width: "100%",
-													maxWidth: "100%",
-													overflowX: "auto",
-													whiteSpace: "pre-wrap",
-													borderRadius: 8,
-													padding: 12,
-													backgroundColor: theme === "light" ? "#f5f5f5" : "#1e1e1e",
-												}}
-												{...props}
-											/>
-										);
-									},
+									pre: (props: any) => <PreBlock {...props} />,
 									code: (props: any) => {
 										const { inline, style, children, ...rest } = props || {};
 										return (

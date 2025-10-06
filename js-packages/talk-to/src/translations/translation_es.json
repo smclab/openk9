@@ -16,6 +16,8 @@
 		"uploading": "Subiendo",
 		"upload-completed": "Subida completada",
 		"unsupported-file-type": "Tipo de archivo no compatible",
-		"file-too-large": "Archivo demasiado grande (máx 10MB)"
+		"file-too-large": "Archivo demasiado grande (máx 10MB)",
+		"copy-code": "Copiar código",
+		"copied": "Copiado"
 	}
 }
