@@ -1,6 +1,6 @@
 {
   "name": "@openk9ui/search-frontend",
-  "version": "3.1.4-SNAPSHOT",
+  "version": "3.1.5-SNAPSHOT",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/importable.js",
