@@ -435,6 +435,10 @@ export type Configuration = {
   skeletonSuggestionCustom: React.ReactNode | null;
   sort: Array<RestApi.SortField>;
   showSyntax: boolean;
+  styledSkeletonResults:
+    | { background?: string | undefined | null }
+    | null
+    | undefined;
   tenant: string | null;
   token: string | null;
   useQueryAnalysis: boolean;
@@ -563,6 +567,7 @@ const defaultConfiguration: Configuration = {
   skeletonResultsCustom: null,
   skeletonSuggestionCustom: null,
   skeletonTabsCustom: null,
+  styledSkeletonResults: null,
   tabs: null,
   tabsConfigurable: null,
   template: null,

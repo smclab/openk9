@@ -40,6 +40,7 @@ type ResultsProps<E> = {
   initialPage?: number;
   callback?: () => void;
   CustomNoResults?: React.ReactNode | null;
+  backgroundSkeleton?: string | null | undefined;
 };
 
 function ResultsPagination<E>({
@@ -59,6 +60,7 @@ function ResultsPagination<E>({
   initialPage = 0,
   callback,
   CustomNoResults,
+  backgroundSkeleton,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
   if (!renderers) return null;
@@ -74,7 +76,9 @@ function ResultsPagination<E>({
   }, [initialPage, pageSize, dispatch, state.range]);
 
   return (
-    <React.Suspense fallback={<SkeletonResult />}>
+    <React.Suspense
+      fallback={<SkeletonResult background={backgroundSkeleton} />}
+    >
       <InfiniteResults
         state={state}
         setTotalResult={setTotalResult}
@@ -275,7 +279,11 @@ export function useInfiniteResults<E>(
   );
 }
 
-export function SkeletonResult() {
+export function SkeletonResult({
+  background,
+}: {
+  background?: string | null | undefined;
+}) {
   return (
     <>
       {Array.from({ length: 3 }).map((_, index) => (
@@ -290,8 +298,8 @@ export function SkeletonResult() {
               padding: 8px 16px;
             `}
           >
-            <CustomSkeleton width="80px" />
-            <CustomSkeleton width="150px" />
+            <CustomSkeleton width="80px" backgroundColor={background} />
+            <CustomSkeleton width="150px" backgroundColor={background} />
           </div>
           <div
             css={css`
@@ -300,9 +308,13 @@ export function SkeletonResult() {
             `}
           >
             <ResultTitleTwo>
-              <CustomSkeleton />
+              <CustomSkeleton backgroundColor={background} />
             </ResultTitleTwo>
-            <CustomSkeleton counter={3} width="100%" />
+            <CustomSkeleton
+              counter={3}
+              width="100%"
+              backgroundColor={background}
+            />
           </div>
         </div>
       ))}

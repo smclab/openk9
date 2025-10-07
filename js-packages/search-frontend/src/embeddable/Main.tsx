@@ -76,6 +76,7 @@ export function Main({
 
   //retrieving information from the configuration.
   const debounceTimeSearch = configuration.debounceTimeSearch || 600;
+  const styledSkeletonResults = configuration.styledSkeletonResults || null;
   const extraClass = configuration.extraClass || null;
   const memoryResults = configuration.memoryResults || false;
   const queryStringMap = configuration.queryStringMap || null;
@@ -585,7 +586,11 @@ export function Main({
             skeletonCustom.results ? (
               isActiveSkeleton && skeletonCustom.results
             ) : (
-              isActiveSkeleton && <SkeletonResult />
+              isActiveSkeleton && (
+                <SkeletonResult
+                  background={styledSkeletonResults?.background}
+                />
+              )
             )
           ) : (
             <ResultsMemo
@@ -645,7 +650,11 @@ export function Main({
             skeletonCustom.results ? (
               isActiveSkeleton && skeletonCustom.results
             ) : (
-              isActiveSkeleton && <SkeletonResult />
+              isActiveSkeleton && (
+                <SkeletonResult
+                  background={styledSkeletonResults?.background}
+                />
+              )
             )
           ) : (
             <ResultsMemo
@@ -684,7 +693,11 @@ export function Main({
             skeletonCustom.results ? (
               isActiveSkeleton && skeletonCustom.results
             ) : (
-              isActiveSkeleton && <SkeletonResult />
+              isActiveSkeleton && (
+                <SkeletonResult
+                  background={styledSkeletonResults?.background}
+                />
+              )
             )
           ) : (
             <>
@@ -706,6 +719,7 @@ export function Main({
                 CustomNoResults={
                   configuration.resultListPagination?.noResultsCustom
                 }
+                backgroundSkeleton={styledSkeletonResults?.background}
               />
               {numberOfResultsSearch > 0 && (
                 <ListPaginations

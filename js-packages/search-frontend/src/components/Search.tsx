@@ -103,7 +103,6 @@ export function Search({
             max-height: 50px;
             @media (max-width: 480px) {
               width: 100%;
-              max-height: 40px;
             }
           `}
         >
@@ -391,9 +390,6 @@ export function Search({
                 className="openk9--search-delete-span-icon"
                 css={css`
                   cursor: pointer;
-                  @media (max-width: 480px) {
-                    display: none;
-                  }
                 `}
               >
                 <DeleteLogo />

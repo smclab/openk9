@@ -61,9 +61,11 @@ export default function ListPaginations({
   const handleLastClick = () => goToPage(numberOfPage - 1);
 
   return (
-    <PaginationContainer>
+    <PaginationContainer className="openk9-pagination-container">
       <PaginationsButton
-        className={extraClass?.buttonPagination}
+        className={`openk9-pagination-arrow ${
+          extraClass?.buttonPagination ?? ""
+        }`}
         onClick={handleFirstClick}
         disabled={actuallyPage === 0}
         aria-label="Vai alla prima pagina"
@@ -71,7 +73,9 @@ export default function ListPaginations({
         {"<<"}
       </PaginationsButton>
       <PaginationsButton
-        className={extraClass?.buttonPagination}
+        className={`openk9-pagination-arrow ${
+          extraClass?.buttonPagination ?? ""
+        }`}
         onClick={handlePrevClick}
         disabled={actuallyPage === 0}
         aria-label="Pagina precedente"
@@ -80,14 +84,14 @@ export default function ListPaginations({
       </PaginationsButton>
       {Array.from({ length: end - start }, (_, i) => start + i).map((page) => (
         <PaginationsButton
-          className={
-            extraClass?.buttonPagination +
-            " " +
-            (page === actuallyPage
-              ? extraClass?.activeButtonPagination +
+          className={`openk9-pagination-number ${
+            extraClass?.buttonPagination ?? ""
+          } ${
+            page === actuallyPage
+              ? (extraClass?.activeButtonPagination ?? "") +
                 " active-btn-k9-paginations"
-              : "")
-          }
+              : ""
+          }`}
           key={page}
           onClick={() => goToPage(page)}
           isActive={actuallyPage === page}
@@ -97,7 +101,9 @@ export default function ListPaginations({
         </PaginationsButton>
       ))}
       <PaginationsButton
-        className={extraClass?.buttonPagination}
+        className={`openk9-pagination-arrow ${
+          extraClass?.buttonPagination ?? ""
+        }`}
         onClick={handleNextClick}
         disabled={actuallyPage === numberOfPage - 1}
         aria-label="Pagina successiva"
@@ -105,7 +111,9 @@ export default function ListPaginations({
         {">"}
       </PaginationsButton>
       <PaginationsButton
-        className={extraClass?.buttonPagination}
+        className={`openk9-pagination-arrow ${
+          extraClass?.buttonPagination ?? ""
+        }`}
         onClick={handleLastClick}
         disabled={actuallyPage === numberOfPage - 1}
         aria-label="Vai all'ultima pagina"
