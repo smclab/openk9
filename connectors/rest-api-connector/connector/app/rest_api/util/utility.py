@@ -16,7 +16,6 @@ logger = logging.getLogger("rest_api_logger")
 
 
 def post_message(url, payload, timeout=20):
-
     try:
         r = requests.post(url, json=payload, timeout=timeout)
         if r.status_code == 200:
@@ -63,8 +62,9 @@ def format_raw_content(model):
 def hash_string(string: str) -> int:
     return int(hashlib.md5(string.encode('utf-8')).hexdigest(), 16)
 
+
 class HandleResponseContentReturnObject:
-    def __init__(self, raw_content: str, content_id: int, binary: dict | None, datasource_payload: dict, dict_item = dict | list):
+    def __init__(self, raw_content: str, content_id: int, binary: dict | None, datasource_payload: dict, dict_item: dict):
         self.raw_content = raw_content
         self.content_id = content_id
         self.binary = binary
@@ -73,6 +73,12 @@ class HandleResponseContentReturnObject:
 
 
 def handle_response_content(response: requests.Response) -> HandleResponseContentReturnObject:
+    """
+    Handles response based on 'content-type'
+
+    :param response: requests.Response
+    :return: HandleResponseContentReturnObject
+    """
     class ResponseContentTypes:
         JSON = 'json'
         XML = ['application/xml', 'text/xml']
@@ -109,7 +115,7 @@ def handle_response_content(response: requests.Response) -> HandleResponseConten
                     dict_item = yaml.safe_load(response.content)
                 elif ResponseContentTypes.CSV in content_type:
                     csv_reader = csv.reader(response.content.splitlines(), delimiter=',')
-                    dict_item = [row for row in csv_reader]
+                    dict_item = {[row for row in csv_reader]}
                 elif ResponseContentTypes.BINARY in content_type or ResponseContentTypes.PDF in content_type or ResponseContentTypes.IMAGE in content_type:
                     binary = {
                         "id": content_id,

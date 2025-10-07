@@ -40,15 +40,22 @@ class CursorBasedPaginationModel(BaseModel):
 
 
 class PaginationModel(BaseModel):
-    nextInResponse: Optional[list[str]] = None
-    pageBasedPagination: Optional[PageBasedPaginationModel] = None
-    offsetBasedPagination: Optional[OffsetBasedPaginationModel] = None
-    cursorBasedPagination: Optional[CursorBasedPaginationModel] = None
+    nextInResponse: Optional[str] = None
+    pageBasedPagination: Optional[PageBasedPaginationModel] = None          # TODO
+    offsetBasedPagination: Optional[OffsetBasedPaginationModel] = None      # TODO
+    cursorBasedPagination: Optional[CursorBasedPaginationModel] = None      # TODO
 
 
 class RequestModel(BaseModel):
     requestMethod: Optional[RequestMethod] = RequestMethod.GET
     requestUrl: str
-    requestItemList: Optional[str] = None   # TODO
-    requestPagination: Optional[PaginationModel] = None     # TODO
+    requestItemList: Optional[str] = None
+    requestPagination: Optional[PaginationModel] = None
     requestAuth: Optional[AuthModel] = None
+
+
+# Used in data_extraction
+class ExtractedData(BaseModel):
+    url: Optional[str] = None
+    count: int = 0
+    is_clean_finish: bool = False
