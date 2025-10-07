@@ -10,6 +10,7 @@ public class ProcessResourceImpl implements ProcessResource {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessResourceImpl.class);
 
+    #if ($implementationType == "async")
     @Inject
     CallBackClient callBackClient;
 
@@ -23,4 +24,9 @@ public class ProcessResourceImpl implements ProcessResource {
             callBackClient.callback(enrichData, data.getReplyTo());
         }
     }
+
+    #elseif ($implementationType == "sync")
+        System.out.println("Test sincrono");
+    #end
+
 }
