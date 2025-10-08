@@ -4,7 +4,7 @@ import { ToastProvider } from "@components/Form/Form/ToastProvider";
 import { useFilteredMenuItems } from "@components/Navigation/menuItems";
 import { SideNavigationItem } from "@components/Navigation/SideNavigationItem";
 import { SideNavigationContextProvider } from "@components/sideNavigationContext";
-import { Clear, KeyboardArrowUp, Search, RateReview } from "@mui/icons-material";
+import { Clear, KeyboardArrowUp, RateReview, Search } from "@mui/icons-material";
 import {
   AppBar,
   Box,
@@ -19,7 +19,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { red, yellow } from "@mui/material/colors";
+import { red } from "@mui/material/colors";
 import {
   Analyzers,
   Annotators,
@@ -67,7 +67,7 @@ import { SubDocTypes } from "@pages/DocumentTypes/SubDocTypes";
 import { SavePluginnDriverModel } from "@pages/PluginDriver/SavePluginDriver";
 import { RagConfigurations, SaveRagConfiguration } from "@pages/RagConfiguration";
 import { QueryClientProvider } from "@tanstack/react-query";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./app.css";
 import { apolloClient } from "./components/apolloClient";
@@ -75,6 +75,8 @@ import { Logo } from "./components/common/Logo";
 import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
 import ThemeSwitcher from "./utils/ThemeSwitcher";
+import Autocorrections from "@pages/Autocorrections/Autocorrections";
+import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrecion";
 
 export const themeColor = {
   light: {
@@ -404,6 +406,9 @@ const AppRoutes = () => (
     <Route path="/search-configs" element={<SearchConfigs />} />
     <Route path="/search-config/:searchConfigId" element={<SaveSearchConfig />} />
     <Route path="/search-config/:searchConfigId/:view" element={<SaveSearchConfig />} />
+    <Route path="/autocorrections" element={<Autocorrections />} />
+    <Route path="/autocorrection/:autocorrectionId" element={<SaveAutocorrection />} />
+    <Route path="/autocorrection/:autocorrectionId/:view" element={<SaveSearchConfig />} />
     <Route path="/large-languages-model" element={<LargeLanguageModels />} />
     <Route path="/large-language-model/:LargeLanguageModelId" element={<SaveLargeLanguageModel />} />
     <Route path="large-language-model/:LargeLanguageModelId/:view" element={<SaveLargeLanguageModel />} />
