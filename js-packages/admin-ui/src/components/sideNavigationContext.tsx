@@ -8,6 +8,7 @@ export type NamePath =
   | "buckets"
   | "analyzer"
   | "analyzers"
+  | "autocorrections"
   | "data-source"
   | "data-sources"
   | "document-types"
