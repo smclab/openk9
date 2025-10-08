@@ -22,7 +22,7 @@ import base64
 FMHelper= FileManagerHelper(os.getenv("FM_HOST"))
 
 class Payload(BaseModel):
-    tenantID:str
+    tenantId:str
     resources:Dict[str,List[Dict[str,str]]]
 
 class EnrichItemConfig(BaseModel):
@@ -32,17 +32,17 @@ class ReplyTo(BaseModel):
     token:str
 
 class Input(BaseModel):
-    payload:Payload
-    enrichItemConfig:EnrichItemConfig
-    replyTo:ReplyTo
+    payload:dict
+    enrichItemConfig:dict
+    replyTo:str
 
 app = FastAPI()
 
 @app.post("/start-task/")
 async def start_task(input:Input):#payload= "pl",enrichItemConfig="Configurazioni",replyTo="fake_token"):
     payload=input.payload
-    enrichItemConfig=input.enrichItemConfig.configs
-    token=input.replyTo.token
+    enrichItemConfig=input.enrichItemConfig
+    token=input.replyTo
     thread = threading.Thread(target=operation,kwargs={"payload":payload,"configs":enrichItemConfig,"token":token})
     thread.start()
     return {"status": "ok", "message": f"Proces started"}
@@ -52,10 +52,10 @@ def operation(payload,configs,token):
 
     resourceIds = [
         b.get("resourceId")
-        for b in payload.resources.get("binaries", [])
+        for b in payload["resources"].get("binaries", [])
         if "resourceId" in b
     ]
-    tenant=payload.tenantID
+    tenant=payload["tenantId"]
 
     resources= [FMHelper.getBase64(tenant,resourceId) for resourceId in resourceIds]
     bites= [ BytesIO(base64.b64decode(resource)) for resource in resources]
