@@ -16,7 +16,7 @@ app = FastAPI()
 def get_random_string():
     input ={
         "payload": 
-            {"tenantID":"mrossi",
+            {"tenantId":"mrossi",
             "resources":{
                 "binaries":[
                     {
@@ -26,8 +26,7 @@ def get_random_string():
             }},
         "enrichItemConfig": 
             {"configs":"Config passata"},
-        "replyTo":
-            {"token":"fake-token"}
+        "replyTo": "fake-token"
     }
     response = requests.post("http://127.0.0.1:8002/start-task/", json=input)
     print("Status:", response.status_code)
