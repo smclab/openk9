@@ -115,7 +115,7 @@ def handle_response_content(response: requests.Response) -> HandleResponseConten
                     dict_item = yaml.safe_load(response.content)
                 elif ResponseContentTypes.CSV in content_type:
                     csv_reader = csv.reader(response.content.splitlines(), delimiter=',')
-                    dict_item = {[row for row in csv_reader]}
+                    dict_item = [row for row in csv_reader]
                 elif ResponseContentTypes.BINARY in content_type or ResponseContentTypes.PDF in content_type or ResponseContentTypes.IMAGE in content_type:
                     binary = {
                         "id": content_id,

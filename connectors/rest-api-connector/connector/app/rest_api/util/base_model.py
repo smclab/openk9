@@ -19,31 +19,28 @@ class IntParamModel(BaseModel):
     paramValue: int
 
 
-class StrParamModel(BaseModel):
+class IncrementalIntParamModel(BaseModel):
     paramName: str
-    paramValue: str
+    paramValue: int
+    paramIncrementAmount: Optional[int] = None
 
 
 class PageBasedPaginationModel(BaseModel):
-    pageParam: IntParamModel
-    itemsPerPageParam: IntParamModel
+    pageParam: IncrementalIntParamModel = IncrementalIntParamModel(paramName="page", paramValue=1, paramIncrementAmount=1)
+    pageSizeParam: Optional[IntParamModel] = None
+    maxPages: Optional[int] = None     # TODO: Set from request body/header
 
 
 class OffsetBasedPaginationModel(BaseModel):
-    offsetParam: IntParamModel
+    offsetParam: IncrementalIntParamModel = IncrementalIntParamModel(paramName="offset", paramValue=0)
     limitParam: IntParamModel
-
-
-class CursorBasedPaginationModel(BaseModel):
-    cursorParam: StrParamModel
-    limitParam: IntParamModel
+    total: Optional[int] = None     # TODO: Set from request body/header
 
 
 class PaginationModel(BaseModel):
     nextInResponse: Optional[str] = None
-    pageBasedPagination: Optional[PageBasedPaginationModel] = None          # TODO
-    offsetBasedPagination: Optional[OffsetBasedPaginationModel] = None      # TODO
-    cursorBasedPagination: Optional[CursorBasedPaginationModel] = None      # TODO
+    pageBasedPagination: Optional[PageBasedPaginationModel] = None
+    offsetBasedPagination: Optional[OffsetBasedPaginationModel] = None
 
 
 class RequestModel(BaseModel):
