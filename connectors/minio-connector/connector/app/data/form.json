@@ -42,7 +42,7 @@
     {
       "label": "Secret Key",
       "name": "secretKey",
-      "type": "text",
+      "type": "password",
       "size": 4,
       "required": true,
       "values": [],

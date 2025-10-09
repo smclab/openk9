@@ -1,35 +1,17 @@
 import json
-import base64
 import logging
 import hashlib
-import requests
 from minio import Minio
 from datetime import datetime
 from logging.config import dictConfig
 
 from minio.error import MinioException
 from .log_config import LogConfig
+from .utility import get_as_base64, IngestionHandler
 
 dictConfig(LogConfig().dict())
 
-
-def get_as_base64(response):
-    data = base64.b64encode(response).decode('utf-8')
-    return data
-
 logger = logging.getLogger("status-logger")
-
-
-def post_message(url, payload):
-    try:
-        r = requests.post(url, json=payload, timeout=20)
-        if r.status_code == 200:
-            return True
-        else:
-            r.raise_for_status()
-    except Exception as e:
-        logger.error(str(e) + " during request at url: " + str(url))
-        return False
 
 
 class MinioExtractor:
@@ -50,6 +32,7 @@ class MinioExtractor:
         self.timestamp = timestamp
         self.url = str(host) + ":" + str(port)
 
+        self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id)
         self.status_logger = logging.getLogger("status-logger")
 
         try:
@@ -60,24 +43,6 @@ class MinioExtractor:
             return
 
         self.type_mapping = self.config["TYPE_MAPPING"]
-
-    def post_last(self, end_timestamp):
-
-        payload = {
-            "datasourceId": self.datasource_id,
-            "parsingDate": int(end_timestamp),
-            "contentId": None,
-            "rawContent": None,
-            "datasourcePayload": {},
-            "resources": {
-                "binaries": []
-            },
-            "scheduleId": self.schedule_id,
-            "tenantId": self.tenant_id,
-            "last": True
-        }
-
-        post_message(self.ingestion_url, payload)
 
     def extract_data(self):
 
@@ -91,77 +56,79 @@ class MinioExtractor:
 
             self.status_logger.info(objects)
 
-        except MinioException:
-
+        except MinioException as e:
+            self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
             return
 
-        for obj in objects:
-
-            try:
-                metadata = client.stat_object(self.bucket_name, obj.object_name)
+        try:
+            for obj in objects:
 
                 try:
-                    file_type = self.type_mapping[metadata.content_type]
-                except KeyError:
-                    file_type = None
+                    metadata = client.stat_object(self.bucket_name, obj.object_name)
 
-                datasource_payload = {"file": {
-                    "name": metadata.object_name,
-                    "contentType": metadata.content_type,
-                    "size": metadata.size,
-                    "type": file_type
-                }, file_type: {
-                    "name": metadata.object_name
-                },
-                    "document": {
-                       "title": metadata.object_name
+                    try:
+                        file_type = self.type_mapping[metadata.content_type]
+                    except KeyError:
+                        file_type = None
+
+                    datasource_payload = {"file": {
+                        "name": metadata.object_name,
+                        "contentType": metadata.content_type,
+                        "size": metadata.size,
+                        "type": file_type
+                    }, file_type: {
+                        "name": metadata.object_name
                     },
-                }
+                        "document": {
+                           "title": metadata.object_name
+                        },
+                    }
 
-                for key, value in self.additional_metadata.items():
-                    datasource_payload[key] = value
+                    for key, value in self.additional_metadata.items():
+                        datasource_payload[key] = value
 
-                binaries = []
+                    binaries = []
 
-                data = client.get_object(self.bucket_name, obj.object_name)
+                    data = client.get_object(self.bucket_name, obj.object_name)
 
-                name = metadata.object_name
+                    name = metadata.object_name
 
-                content_id = int(hashlib.sha1(name.encode("utf-8")).hexdigest(), 16)
+                    content_id = int(hashlib.sha1(name.encode("utf-8")).hexdigest(), 16)
 
-                binary_item = {
-                    "id": content_id,
-                    "name": metadata.object_name,
-                    "contentType": metadata.content_type,
-                    "data": get_as_base64(data.data)
-                }
+                    binary_item = {
+                        "id": content_id,
+                        "name": metadata.object_name,
+                        "contentType": metadata.content_type,
+                        "data": get_as_base64(data.data)
+                    }
 
-                binaries.append(binary_item)
+                    binaries.append(binary_item)
 
-                payload = {
-                    "datasourceId": self.datasource_id,
-                    "contentId": content_id,
-                    "parsingDate": int(end_timestamp),
-                    "rawContent": "",
-                    "datasourcePayload": datasource_payload,
-                    "resources": {
-                        "binaries": binaries
-                    },
-                    "scheduleId": self.schedule_id,
-                    "tenantId": self.tenant_id
-                }
+                    payload = {
+                        "datasourceId": self.datasource_id,
+                        "contentId": content_id,
+                        "parsingDate": int(end_timestamp),
+                        "rawContent": "",
+                        "datasourcePayload": datasource_payload,
+                        "resources": {
+                            "binaries": binaries
+                        },
+                        "scheduleId": self.schedule_id,
+                        "tenantId": self.tenant_id
+                    }
 
-                post_message(self.ingestion_url, payload)
+                    self.ingestion_handler.post_message(payload=payload)
 
-                self.status_logger.info("posted " + str(metadata.object_name))
+                    self.status_logger.info("posted " + str(metadata.object_name))
 
-                # self.status_logger.info(datasource_payload)
+                    # self.status_logger.info(datasource_payload)
 
-            except Exception as e:
+                except Exception as e:
 
-                self.status_logger.error("Something went wrong")
-                self.status_logger.error(e)
+                    self.status_logger.error("Something went wrong")
+                    self.status_logger.error(e)
+                    self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
+        except Exception as e:
+            self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
 
-                continue
-
-        self.post_last(end_timestamp)
+        self.ingestion_handler.post_last(end_timestamp=end_timestamp)
