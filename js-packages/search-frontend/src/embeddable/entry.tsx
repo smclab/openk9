@@ -397,6 +397,15 @@ export type queryStringMapType =
   | null
   | undefined;
 
+type correctionType = {
+  element: Element | string | null;
+  information: (
+    correctedQuery: string,
+    errorQuery: string,
+    confirm: () => void,
+  ) => React.ReactNode;
+};
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -473,6 +482,7 @@ export type Configuration = {
   // configurable types
   activeFiltersConfigurable: activeFiltersConfigurableProps | null | undefined;
   calendarMobile: CalendarMobileConfiguration | null;
+  correction: correctionType | undefined | null;
   dataRangePicker: DataRangePickerProps | null;
   dataRangePickerVertical: DataRangePickerVerticalProps | null;
   filtersConfigurable: FilterProps | null;
@@ -511,6 +521,7 @@ const defaultConfiguration: Configuration = {
   calendarMobile: null,
   calendarVertical: null,
   changeLanguage: null,
+  correction: null,
   dataRangePicker: null,
   dataRangePickerVertical: null,
   defaultString: null,

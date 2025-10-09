@@ -62,7 +62,7 @@ function FilterCategoryDynamic({
   const debounced = useDebounce(text, 600);
   const [showSearch, setShowSearch] = React.useState<boolean>(false);
   const tokensWithoutSearch = React.useMemo(
-    () => (tokens ?? []).filter((t) => !t?.isSearch),
+    () => (tokens ?? []).filter((t) => !t?.search),
     [tokens],
   );
 
@@ -934,7 +934,7 @@ export function createSuggestion(
         break;
       case "search":
         searchQueryNotFilter?.forEach((st) => {
-          if (st?.isSearch) searchQuery.push(st);
+          if (st?.search) searchQuery.push(st);
         });
         break;
       case "date":

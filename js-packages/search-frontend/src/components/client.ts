@@ -499,7 +499,7 @@ export type SearchToken =
       count?: string;
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
     }
   | {
       tokenType: "DOCTYPE";
@@ -510,7 +510,7 @@ export type SearchToken =
       count?: string;
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
     }
   | {
       tokenType: "TEXT";
@@ -523,7 +523,7 @@ export type SearchToken =
       count?: string;
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
       extra?: {
         boost?: string;
         fuzziness?: string;
@@ -540,7 +540,7 @@ export type SearchToken =
       count?: string;
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
     }
   | {
       tokenType: "DATE";
@@ -554,7 +554,7 @@ export type SearchToken =
       values?: string[];
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
     }
   | {
       tokenType: "FILTER";
@@ -567,7 +567,7 @@ export type SearchToken =
       count?: string;
       isTab?: boolean;
       isFilter?: boolean;
-      isSearch?: boolean;
+      search?: boolean;
     };
 
 export type SortField = {
@@ -597,6 +597,16 @@ export type GenerateRequest = {
 type SearchResult<E> = {
   result: Array<GenericResultItem<E>>;
   total: number;
+  autocorrection: AutocorrectionType;
+};
+
+export type AutocorrectionType = {
+  originalText: string;
+  searchedWithCorrectedText: boolean;
+  autocorrectionText: string;
+  suggestions: [
+    { offset: number; length: number; text: string; correction: string },
+  ];
 };
 
 export type AnalysisToken =

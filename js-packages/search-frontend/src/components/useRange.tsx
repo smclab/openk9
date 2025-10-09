@@ -1,4 +1,5 @@
 import React from "react";
+import { AutocorrectionType } from "./client";
 
 type Range = [number, number];
 
@@ -10,6 +11,8 @@ interface RangeContextType {
   actuallyPage: number;
   setActuallyPage: (p: number) => void;
   resetPage: (pageSize?: number) => void;
+  correction: AutocorrectionType | undefined | null;
+  setCorrection: (c: AutocorrectionType | undefined | null) => void;
 }
 
 const RangeContext = React.createContext<RangeContextType | undefined>(
@@ -23,6 +26,9 @@ export const RangeProvider: React.FC<{
   const [range, setRange] = React.useState<Range>([0, defaultPageSize]);
   const [numberOfResults, setNumberOfResults] = React.useState(0);
   const [actuallyPage, setActuallyPage] = React.useState(0);
+  const [correction, setCorrection] = React.useState<
+    AutocorrectionType | undefined | null
+  >(null);
 
   const resetPage = React.useCallback(
     (pageSize?: number) => {
@@ -43,6 +49,8 @@ export const RangeProvider: React.FC<{
         actuallyPage,
         setActuallyPage,
         resetPage,
+        correction,
+        setCorrection,
       }}
     >
       {children}

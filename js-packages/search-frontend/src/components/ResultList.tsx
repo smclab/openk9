@@ -283,7 +283,7 @@ export function InfiniteResults<E>({
     numberOfResults,
     memoryResults,
   );
-  const { setNumberOfResults } = useRange();
+  const { setNumberOfResults, setCorrection } = useRange();
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
       setTotalResult(results.data.pages[0].total);
@@ -291,7 +291,9 @@ export function InfiniteResults<E>({
     } else {
       setNumberOfResults(0);
     }
-  }, [results.data, setTotalResult, setNumberOfResults]);
+
+    setCorrection(results?.data?.pages[0]?.autocorrection);
+  }, [results.data, setTotalResult, setNumberOfResults, setCorrection]);
   React.useEffect(() => {
     const sak =
       results.data?.pages[results.data.pages.length - 1].result[

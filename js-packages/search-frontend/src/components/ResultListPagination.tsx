@@ -63,10 +63,10 @@ function ResultsPagination<E>({
   backgroundSkeleton,
 }: ResultsProps<E>) {
   const renderers = useRenderers();
+
   if (!renderers) return null;
 
   const bootstrappedRef = React.useRef(false);
-
   React.useEffect(() => {
     if (bootstrappedRef.current) return;
     const size = pageSize ?? state.range[1];
@@ -135,6 +135,7 @@ export function InfiniteResults<E>({
 }: InfiniteResultsProps<E>) {
   const [offset, elementForPage] = state.range;
   const { setNumberOfResults } = useRange();
+  const { setCorrection } = useRange();
 
   const results = useInfiniteResults<E>(
     state,
@@ -150,7 +151,8 @@ export function InfiniteResults<E>({
     const total = results.data?.pages[0]?.total ?? 0;
     setTotalResult(total);
     setNumberOfResults(total);
-  }, [results.data, setTotalResult, setNumberOfResults]);
+    setCorrection(results?.data?.pages[0]?.autocorrection);
+  }, [results.data, setTotalResult, setNumberOfResults, setCorrection]);
 
   return (
     <div style={{ overflowX: "hidden" }} className="scroll">

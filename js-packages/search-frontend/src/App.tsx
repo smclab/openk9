@@ -436,9 +436,7 @@ export function App() {
           </div>
         </div>
       </div>
-
       <div
-        ref={(element) => openk9.updateConfiguration({ tabs: element })}
         className="openk9-container-tabs"
         css={css`
           grid-area: tabs;
@@ -450,7 +448,66 @@ export function App() {
             display: none;
           }
         `}
-      />
+      >
+        <div ref={(element) => openk9.updateConfiguration({ tabs: element })} />
+        <div
+          ref={(element) =>
+            openk9.updateConfiguration({
+              correction: {
+                element,
+                information: (cor, err, call) => {
+                  return (
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          borderRadius: "8px",
+                          fontSize: "15px",
+                          color:
+                            "var(--openk9-embeddable-search--primary-color)",
+                        }}
+                        aria-live="polite"
+                      >
+                        <span>
+                          {t("search-done-with")}
+                          <strong
+                            style={{
+                              color:
+                                "var(--openk9-embeddable-search--primary-color)",
+                            }}
+                          >
+                            {`“${cor}”`}
+                          </strong>
+                          {t("use-instead")}
+                          <button
+                            onClick={call}
+                            style={{
+                              border: "unset",
+                              background:
+                                "var(--openk9-embeddable-search--primary-light-color)",
+                              color: "white",
+                              borderRadius: "8px",
+                              padding: "4px 12px",
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              fontSize: "15px",
+                            }}
+                          >
+                            {`“${err}”`}
+                          </button>
+                          {"."}
+                        </span>
+                      </div>
+                    </>
+                  );
+                },
+              },
+            })
+          }
+        />
+      </div>
 
       <div
         className="openk9-filters-mobile-container openk9-box"

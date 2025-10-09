@@ -61,6 +61,7 @@ import {
 } from "../components/useSelections";
 import "../i18n";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
+import Correction from "../components/Correction";
 
 type MainProps = {
   configuration: Configuration;
@@ -132,6 +133,7 @@ export function Main({
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
+
   const { filterTokens, addFilterToken, removeFilterToken, resetFilter } =
     useFilters({
       configuration,
@@ -141,7 +143,6 @@ export function Main({
       useQueryStringFilters,
     });
   const { i18n } = useTranslation();
-
   const {
     tabs,
     selectedTabIndex,
@@ -341,6 +342,21 @@ export function Main({
         configuration.searchWithSuggestions
           ? configuration.searchWithSuggestions.element
           : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <Correction
+            setSearch={(value) => {
+              selectionsDispatch({
+                text: value,
+                type: "set-text",
+                textOnchange: value,
+              });
+            }}
+            information={configuration.correction?.information || (() => null)}
+          />
+        </I18nextProvider>,
+        configuration.correction ? configuration.correction.element : null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -1227,7 +1243,7 @@ function useSearch({
   const newSearch: SearchToken[] = searchTokens
     .filter((search) => search)
     .map((searchToken) => {
-      return { ...searchToken, isSearch: true };
+      return { ...searchToken, search: true };
     });
 
   const newTokenFilter: SearchToken[] = React.useMemo(
