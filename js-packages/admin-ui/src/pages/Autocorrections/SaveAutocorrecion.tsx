@@ -7,6 +7,7 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
+  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   NumberInput,
   TextInput,
@@ -16,10 +17,12 @@ import {
 import {
   SortType,
   SuggestMode,
+  useAllDocTypeFieldsQuery,
   useAutocorrectionValueQuery,
   useSaveAutocorrectionMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
 
 export function SaveAutocorrection() {
   const { autocorrectionId = "new", view } = useParams();
@@ -27,6 +30,9 @@ export function SaveAutocorrection() {
   const autocorrectionQuery = useAutocorrectionValueQuery({
     variables: { id: autocorrectionId as string },
     skip: !autocorrectionId || autocorrectionId === "new",
+    fetchPolicy: "network-only",
+  });
+  const docTypes = useAllDocTypeFieldsQuery({
     fetchPolicy: "network-only",
   });
   const navigate = useNavigate();
@@ -43,13 +49,9 @@ export function SaveAutocorrection() {
     }
   };
   const toast = useToast();
-  const { AutocorrectionTab } = useTabData({
-    autocorrectionId,
-    AutocorrectionDocTypeQuery: autocorrectionQuery.data,
-    associatedDocTypeQuery: associatedTabQuery.data?.tab?.tokenTabs?.edges,
-  });
+
   const [createOrUpdateTabMutate, createOrUpdateTabMutation] = useSaveAutocorrectionMutation({
-    refetchQueries: ["Autocorrection", "Autocorrections"],
+    refetchQueries: [autocorrectionValue, autocorrectionsConfigOptions],
     onCompleted(data) {
       try {
         const parentId = data.autocorrection?.entity?.id;
@@ -95,10 +97,13 @@ export function SaveAutocorrection() {
         minWordLength: 4,
         maxEdit: 2,
         enableSearchWithCorrection: false,
-        autocorrectionDocTypeFieldId: undefined,
-        tokenTabIds: tokenTab.associated || [],
+        autocorrectionDocTypeFieldId: { id: undefined, name: undefined },
+        docTypeFields: {
+          id: autocorrectionQuery.data?.autocorrection?.autocorrectionDocTypeField?.id,
+          name: autocorrectionQuery.data?.autocorrection?.autocorrectionDocTypeField?.name,
+        },
       }),
-      [],
+      [autocorrectionQuery],
     ),
     originalValues: autocorrectionQuery.data?.autocorrection,
     isLoading: autocorrectionQuery.loading || createOrUpdateTabMutation.loading,
@@ -107,6 +112,7 @@ export function SaveAutocorrection() {
         variables: {
           id: autocorrectionId !== "new" ? autocorrectionId : undefined,
           ...data,
+          autocorrectionDocTypeFieldId: form?.inputProps("docTypeFields")?.value?.id,
         },
       });
     },
@@ -163,6 +169,21 @@ export function SaveAutocorrection() {
                       onChange={(e: SuggestMode) => form.inputProps("suggestMode").onChange(e)}
                     />
                     <BooleanInput label="Max edits" {...form.inputProps("enableSearchWithCorrection")} />
+                    <CustomSelectRelationsOneToOne
+                      options={
+                        docTypes?.data?.docTypeFields?.edges?.map((aut) => ({
+                          value: aut?.node?.id || "",
+                          label: aut?.node?.name || "",
+                        })) || []
+                      }
+                      label="Doc type fields"
+                      onChange={(val) => form.inputProps("docTypeFields").onChange({ id: val.id, name: val.name })}
+                      value={{
+                        id: form?.inputProps("docTypeFields")?.value?.id || "",
+                        name: form?.inputProps("docTypeFields")?.value?.name || "",
+                      }}
+                      disabled={page === 1}
+                    />
                   </div>
                 ),
                 page: 0,

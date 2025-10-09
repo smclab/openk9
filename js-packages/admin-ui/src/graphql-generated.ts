@@ -5260,6 +5260,19 @@ export type SaveAutocorrectionMutation = {
   } | null;
 };
 
+export type AllDocTypeFieldsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type AllDocTypeFieldsQuery = {
+  __typename?: "Query";
+  docTypeFields?: {
+    __typename?: "DefaultConnection_DocTypeField";
+    edges?: Array<{
+      __typename?: "DefaultEdge_DocTypeField";
+      node?: { __typename?: "DocTypeField"; id?: string | null; name?: string | null } | null;
+    } | null> | null;
+  } | null;
+};
+
 export type CharfiltersQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars["String"]>;
   after?: InputMaybe<Scalars["String"]>;
@@ -9583,6 +9596,49 @@ export type SaveAutocorrectionMutationOptions = Apollo.BaseMutationOptions<
   SaveAutocorrectionMutation,
   SaveAutocorrectionMutationVariables
 >;
+export const AllDocTypeFieldsDocument = gql`
+  query AllDocTypeFields {
+    docTypeFields {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * __useAllDocTypeFieldsQuery__
+ *
+ * To run a query within a React component, call `useAllDocTypeFieldsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAllDocTypeFieldsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAllDocTypeFieldsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAllDocTypeFieldsQuery(
+  baseOptions?: Apollo.QueryHookOptions<AllDocTypeFieldsQuery, AllDocTypeFieldsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useQuery<AllDocTypeFieldsQuery, AllDocTypeFieldsQueryVariables>(AllDocTypeFieldsDocument, options);
+}
+export function useAllDocTypeFieldsLazyQuery(
+  baseOptions?: Apollo.LazyQueryHookOptions<AllDocTypeFieldsQuery, AllDocTypeFieldsQueryVariables>,
+) {
+  const options = { ...defaultOptions, ...baseOptions };
+  return Apollo.useLazyQuery<AllDocTypeFieldsQuery, AllDocTypeFieldsQueryVariables>(AllDocTypeFieldsDocument, options);
+}
+export type AllDocTypeFieldsQueryHookResult = ReturnType<typeof useAllDocTypeFieldsQuery>;
+export type AllDocTypeFieldsLazyQueryHookResult = ReturnType<typeof useAllDocTypeFieldsLazyQuery>;
+export type AllDocTypeFieldsQueryResult = Apollo.QueryResult<AllDocTypeFieldsQuery, AllDocTypeFieldsQueryVariables>;
 export const CharfiltersDocument = gql`
   query Charfilters($searchText: String, $after: String) {
     charFilters(searchText: $searchText, first: 20, after: $after) {
@@ -19108,4 +19164,4 @@ export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<
   EnrichPipelineWithItemsMutation,
   EnrichPipelineWithItemsMutationVariables
 >;
-// Generated on 2025-10-08T11:38:02+02:00
+// Generated on 2025-10-09T15:04:41+02:00

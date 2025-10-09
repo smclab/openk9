@@ -122,7 +122,7 @@ export default function Autocorrections() {
           {viewDeleteModal.view && (
             <ModalConfirm
               title="Confirm Deletion"
-              body="Are you sure you want to delete this analyzer? This action is irreversible and all associated data will be lost."
+              body="Are you sure you want to delete this autocorrection? This action is irreversible and all associated data will be lost."
               labelConfirm="Delete"
               actionConfirm={() => {
                 deleteAutocorrection({

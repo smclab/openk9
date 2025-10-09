@@ -87,3 +87,16 @@ export const saveOrUpdateAutocorrection = gql`
     }
   }
 `;
+
+export const allDocTypeFieldsQuery = gql`
+  query AllDocTypeFields {
+    docTypeFields {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+`;
