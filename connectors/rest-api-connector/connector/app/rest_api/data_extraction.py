@@ -58,7 +58,7 @@ class DataExtraction(threading.Thread):
 			"type": "HALT"
 		}
 		self.status_logger.error(exception)
-		#post_message(ingestion_url, payload, 10)
+		post_message(ingestion_url, payload, 10)
 
 	def manage_data_payload(self, extracted_data: ExtractedData, raw_content: str, content_id: int, binary: dict | None, datasource_payload: dict) -> ExtractedData:
 		"""
@@ -89,7 +89,7 @@ class DataExtraction(threading.Thread):
 		}
 		try:
 			self.status_logger.info(datasource_payload)
-			#post_message(ingestion_url, payload, 10)
+			post_message(ingestion_url, payload, 10)
 			extracted_data.count += 1
 			extracted_data.is_clean_finish = True
 		except requests.RequestException as e:
