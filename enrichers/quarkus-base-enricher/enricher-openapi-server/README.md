@@ -15,7 +15,7 @@ Exposes **_/form_** GET endpoint, it is used to know the enricher configuration.
 **HealthResource**  
 Exposes **_/health_** GET endpoint, it is used to know the status of enricher.
 
-**ProcessResource**
+**ProcessResource**  
 Expose **_/process_** POST endpoint, it is used to start the data enrichment process.
 
 ### Model Classes
@@ -26,7 +26,7 @@ It is the class used in `HealthResource`, has an enum with 3 values:
 - **DOWN**
 - **UNKNOWN**
 
-**OpenK9Input**
+**OpenK9Input**  
 It is the class used in `ProcessResource`.
 - **payload**: Contains a map of data to enrich.
 - **enrichItemConfig**: Defines the configuration needed to use the enricher.
