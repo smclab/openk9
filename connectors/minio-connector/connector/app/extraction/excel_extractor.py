@@ -15,38 +15,21 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import json
-import base64
 import logging
-import pandas as pd
-import requests
-from minio import Minio
 from datetime import datetime
 from logging.config import dictConfig
 
+import pandas as pd
+import requests
+from minio import Minio
 from minio.error import MinioException
+
 from .log_config import LogConfig
+from .utility import IngestionHandler
 
 dictConfig(LogConfig().dict())
 
-def get_as_base64(response):
-    data = base64.b64encode(response).decode('utf-8')
-    return data
-
-
 logger = logging.getLogger("status-logger")
-
-
-def post_message(url, payload):
-    try:
-        r = requests.post(url, json=payload, timeout=20)
-        if r.status_code == 200:
-            return True
-        else:
-            r.raise_for_status()
-    except Exception as e:
-        logger.error(str(e) + " during request at url: " + str(url))
-        return False
 
 
 class ExcelMinioExtractor:
@@ -68,6 +51,7 @@ class ExcelMinioExtractor:
         self.timestamp = timestamp
         self.url = str(host) + ":" + str(port)
 
+        self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id)
         self.status_logger = logging.getLogger("status-logger")
 
     def extract_data(self):
@@ -80,8 +64,8 @@ class ExcelMinioExtractor:
 
             objects = client.list_objects(self.bucket_name)
 
-        except MinioException:
-
+        except MinioException as e:
+            self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
             return
 
         for obj in objects:
@@ -127,7 +111,13 @@ class ExcelMinioExtractor:
                     "tenantId": self.tenant_id
                 }
 
-                self.status_logger.info("post")
+                try:
+                    # self.status_logger.info(datasource_payload)
+                    self.ingestion_handler.post_message(payload=payload)
+                    self.status_logger.info("Sent " + str(i + 1) + " element of " + str(len(df_dict)) + " elements")
+                except requests.RequestException as e:
+                    self.status_logger.error("Something went wrong on payload ingestion")
+                    self.status_logger.error(e)
+                    self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
 
-                post_message(self.ingestion_url, payload)
-                self.status_logger.info("Sent " + str(i+1) + " element of " + str(len(df_dict)) + " elements")
+            self.ingestion_handler.post_last(end_timestamp=end_timestamp)
