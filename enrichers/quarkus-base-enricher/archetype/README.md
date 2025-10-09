@@ -87,6 +87,14 @@ These base classes are required in all enrichers.
 - **CallBackClient.java**  
 Class used to send the enriched data when asynchronous approach is set during the enricher configuration.  
 It must use the token received in `ProcessResourceImpl` to notify OpenK9 which payload the enriched data refers to.
+
+- **Base64Client.java**  
+Class used to get the binary payload as base 64 format.  
+It must use a `resourceId` and a `schemaName` to get the correct payload.
+
+- **ByteArrayClient.java**  
+Class used to get the binary payload as byte array format.  
+It must use a `resourceId` and a `schemaName` to get the correct payload.
   
 ---
 
