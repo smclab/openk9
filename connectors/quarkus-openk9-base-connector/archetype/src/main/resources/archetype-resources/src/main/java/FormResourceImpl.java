@@ -25,7 +25,7 @@ public class FormResourceImpl implements FormResource {
         formField1.setLabel("Test Form");
         formField1.setRequired(false);
         formField1.setSize(2.0);
-        formField1.setType(FormField.Type.string);
+        formField1.setType(FormField.Type.text);
         formField1.setValidator(getValidator());
         formField1.setValues(getFiledValueList());
         formFieldList.add(formField1);
