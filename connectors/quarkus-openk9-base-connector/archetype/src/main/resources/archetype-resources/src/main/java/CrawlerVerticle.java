@@ -30,6 +30,7 @@ public class CrawlerVerticle extends AbstractVerticle {
         MessageProducer<IngestionDTO> producer = vertx.eventBus().publisher(ADDRESS, options);
         vertx.executeBlocking(promise -> worker.work(promise, producer), result -> {
             if (result.succeeded()) {
+                producer.write(createLastIngestionDTO(invokeRequest));
                 undeployVerticle();
             } else if (result.failed()) {
                 producer.write(createHaltIngestionDTO(invokeRequest));
@@ -51,6 +52,17 @@ public class CrawlerVerticle extends AbstractVerticle {
         ingestionDTO.setTenantId(invokeRequest.getTenantId());
         ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
         ingestionDTO.setType(PayloadType.HALT);
+        return ingestionDTO;
+    }
+
+    private IngestionDTO createLastIngestionDTO(InvokeRequest invokeRequest) {
+        IngestionDTO ingestionDTO = new IngestionDTO();
+        ingestionDTO.setContentId(UUID.randomUUID());
+        ingestionDTO.setDatasourceId(invokeRequest.getDatasourceId());
+        ingestionDTO.setScheduleId(UUID.fromString(invokeRequest.getScheduleId()));
+        ingestionDTO.setTenantId(invokeRequest.getTenantId());
+        ingestionDTO.setParsingDate(invokeRequest.getTimestamp().toString());
+        ingestionDTO.setType(PayloadType.LAST);
         return ingestionDTO;
     }
 
