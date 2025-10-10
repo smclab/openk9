@@ -19,7 +19,6 @@ public class SampleResourceImpl implements SampleResource {
         ingestionDTO.setScheduleId(UUID.randomUUID());
         ingestionDTO.setTenantId("23698881");
         ingestionDTO.setAcl(null);
-        ingestionDTO.setLast(true);
         return ingestionDTO;
     }
 
