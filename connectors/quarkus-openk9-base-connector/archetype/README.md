@@ -46,7 +46,7 @@ These classes implement the REST classes from the library and adapt their behavi
         "info": "",
         "label": "Test Form",
         "name": "testForm",
-        "type": "string",
+        "type": "text",
         "size": 2,
         "required": false,
         "values": [
@@ -245,7 +245,7 @@ After generating it, changes need to be made to the connector to create a concre
           formField.setLabel("Strapi Data");
           formField.setRequired(false);
           formField.setSize(1.0);
-          formField.setType(FormField.Type.string);
+          formField.setType(FormField.Type.text);
           formField.setValidator(getValidator());
           formField.setValues(getFiledValueList());
           formFieldList.add(formField);
@@ -284,9 +284,8 @@ After generating it, changes need to be made to the connector to create a concre
           ingestionDTO.setDatasourcePayload(datasourcePayload);
           ingestionDTO.setDatasourceId(984573908L);
           ingestionDTO.setScheduleId(UUID.randomUUID());
-          ingestionDTO.setTenantId(UUID.randomUUID());
+          ingestionDTO.setTenantId("23698881");
           ingestionDTO.setAcl(null);
-          ingestionDTO.setLast(true);
           return ingestionDTO;
       }
 
@@ -381,7 +380,6 @@ After generating it, changes need to be made to the connector to create a concre
                         datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
                         ingestionDTO.setDatasourcePayload(datasourcePayload);
                         ingestionDTO.setType(PayloadType.DOCUMENT);
-                        ingestionDTO.setLast(i == strapiData.size() - 1);
                         producer.write(ingestionDTO);
                     }
                     promise.complete();

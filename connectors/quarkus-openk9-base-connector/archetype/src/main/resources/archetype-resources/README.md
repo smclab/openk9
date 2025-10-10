@@ -37,7 +37,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
         "info": "",
         "label": "Test Form",
         "name": "testForm",
-        "type": "string",
+        "type": "text",
         "size": 2,
         "required": false,
         "values": [
@@ -176,7 +176,7 @@ Changes need to be made to the connector to create a concrete implementation(**I
           formField.setLabel("Strapi Data");
           formField.setRequired(false);
           formField.setSize(1.0);
-          formField.setType(FormField.Type.string);
+          formField.setType(FormField.Type.text);
           formField.setValidator(getValidator());
           formField.setValues(getFiledValueList());
           formFieldList.add(formField);
@@ -215,9 +215,8 @@ Changes need to be made to the connector to create a concrete implementation(**I
           ingestionDTO.setDatasourcePayload(datasourcePayload);
           ingestionDTO.setDatasourceId(984573908L);
           ingestionDTO.setScheduleId(UUID.randomUUID());
-          ingestionDTO.setTenantId(UUID.randomUUID());
+          ingestionDTO.setTenantId("23698881");
           ingestionDTO.setAcl(null);
-          ingestionDTO.setLast(true);
           return ingestionDTO;
       }
 
@@ -312,7 +311,6 @@ Changes need to be made to the connector to create a concrete implementation(**I
                         datasourcePayload.setAdditionalProperty("meta", jsonObject.getValue("meta"));
                         ingestionDTO.setDatasourcePayload(datasourcePayload);
                         ingestionDTO.setType(PayloadType.DOCUMENT);
-                        ingestionDTO.setLast(i == strapiData.size() - 1);
                         producer.write(ingestionDTO);
                     }
                     promise.complete();
