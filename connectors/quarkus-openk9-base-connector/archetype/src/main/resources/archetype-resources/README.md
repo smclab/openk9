@@ -1,9 +1,13 @@
-# ${artifactId}
+#set($h1 = '#')
+#set($h2 = '##')
+#set($h3 = '###')
+
+$h1 ${artifactId}
 
 This project is generated from the archetype and it's a base connector for OpenK9, built with Quarkus.  
 The project includes REST classes from the library `io.openk9.connectors` and classes that are required for crawling data and sending to OpenK9 asynchronously:
 
-## REST Classes
+$h2 REST Classes
 
 - **HealthResourceImpl.java**   
   It exposes `/health` endpoint used from OpenK9 to get the status of connector.
@@ -109,7 +113,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
   ```
 
 
-## Connector Base Classes
+$h2 Connector Base Classes
 
 - **HealthResourceTest.java**  
   A test class that verifies if the health endpoint responds correctly with HTTP status 200 and body status set to "UP".
@@ -160,7 +164,7 @@ The project includes REST classes from the library `io.openk9.connectors` and cl
   The class name is used as the virtual address on the event bus to send messages to it.
 
 
-## Modify Connector
+$h2 Modify Connector
 
 Changes need to be made to the connector to create a concrete implementation(**In these examples, snippets of Strapi connector code are used!**):
 
@@ -319,10 +323,10 @@ Changes need to be made to the connector to create a concrete implementation(**I
    ```
    
 ---
-## Docker
+$h2 Docker
 The project includes an executable Dockerfile, you have just to build an image and run it:
 
-### Build Image
+$h3 Build Image
 
 ```shell
 # Create the jar file
@@ -331,7 +335,7 @@ mvn clean package
 docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
 ```
 
-### Run Container
+$h3 Run Container
 
 ```shell
 docker run -p 8080:8080 --name <containerName> <imageName> 
