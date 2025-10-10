@@ -16,108 +16,77 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import logging
-from datetime import datetime
+from io import BytesIO
 from logging.config import dictConfig
 
 import pandas as pd
-import requests
-from minio import Minio
-from minio.error import MinioException
+from xlrd import XLRDError
 
+from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
-from .utility import IngestionHandler
 
 dictConfig(LogConfig().dict())
 
 logger = logging.getLogger("status-logger")
 
 
-class ExcelMinioExtractor:
+class ExcelMinioExtractor(BaseMinioExtractor):
 
     def __init__(self, host, port, access_key, secret_key, bucket_name, columns, prefix, datasource_payload_key, 
                 datasource_id, timestamp, schedule_id, tenant_id, ingestion_url):
 
-        super(ExcelMinioExtractor, self).__init__()
-        self.datasource_id = datasource_id
-        self.ingestion_url = ingestion_url
-        self.schedule_id = schedule_id
-        self.tenant_id = tenant_id
-        self.access_key = access_key
-        self.secret_key = secret_key
-        self.bucket_name = bucket_name
+        super(ExcelMinioExtractor, self).__init__(host, port, access_key, secret_key, bucket_name, prefix,
+                                                  datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
+
         self.columns = columns
-        self.prefix = prefix
         self.datasource_payload_key = datasource_payload_key
-        self.timestamp = timestamp
-        self.url = str(host) + ":" + str(port)
 
-        self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id)
-        self.status_logger = logging.getLogger("status-logger")
+    def manage_data(self, client, obj, end_timestamp):
+        y = client.get_object(self.bucket_name, obj.object_name)
 
-    def extract_data(self):
+        data = y.data
 
         try:
-
-            client = Minio(self.url, self.access_key, self.secret_key, secure=False)
-
-            end_timestamp = datetime.utcnow().timestamp() * 1000
-
-            objects = client.list_objects(self.bucket_name)
-
-        except MinioException as e:
-            self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
+            df = pd.read_excel(BytesIO(data), engine='xlrd')
+        except XLRDError:
+            # Is not file excel
+            self.status_logger.warning(f"Skipped file {obj.object_name}. This is not an Excel File.")
             return
 
-        for obj in objects:
+        df = df.drop(columns=df.select_dtypes(include=['datetime64']).columns.tolist())
+        df = df.drop(columns=df.select_dtypes(include=['float64']).columns.tolist())
 
-            metadata = client.stat_object(self.bucket_name, obj.object_name)
+        df = df.astype(str)
 
-            binaries = []
+        if len(self.columns) > 0:
+            df = df[self.columns]
 
-            y = client.get_object(self.bucket_name, obj.object_name)
+        df_dict = df.to_dict('records')
 
-            data = y.data
+        self.status_logger.info("Sending " + str(len(df_dict)) + " elements")
 
-            df = pd.read_excel(data)
+        for i, element in enumerate(df_dict):
 
-            df = df.drop(columns=df.select_dtypes(include=['datetime64']).columns.tolist())
-            df = df.drop(columns=df.select_dtypes(include=['float64']).columns.tolist())
+            datasource_payload = {
+                self.datasource_payload_key: element
+            }
 
-            df = df.astype(str)
+            payload = {
+                "datasourceId": self.datasource_id,
+                "contentId": i,
+                "parsingDate": int(end_timestamp),
+                "rawContent": str(element).lower(),
+                "datasourcePayload": datasource_payload,
+                "resources": {
+                    "binaries": []
+                },
+                "scheduleId": self.schedule_id,
+                "tenantId": self.tenant_id
+            }
 
-            if len(self.columns) > 0:
-                df = df[self.columns]
-
-            df_dict = df.to_dict('records')
-
-            self.status_logger.info("Sending " + str(len(df_dict)) + "elements")
-
-            for i, element in enumerate(df_dict):
-
-                datasource_payload = {
-                    self.datasource_payload_key: element
-                }
-
-                payload = {
-                    "datasourceId": self.datasource_id,
-                    "contentId": i,
-                    "parsingDate": int(end_timestamp),
-                    "rawContent": str(element).lower(),
-                    "datasourcePayload": datasource_payload,
-                    "resources": {
-                        "binaries": []
-                    },
-                    "scheduleId": self.schedule_id,
-                    "tenantId": self.tenant_id
-                }
-
-                try:
-                    # self.status_logger.info(datasource_payload)
-                    self.ingestion_handler.post_message(payload=payload)
-                    self.status_logger.info("Sent " + str(i + 1) + " element of " + str(len(df_dict)) + " elements")
-                except requests.RequestException as e:
-                    self.status_logger.error("Something went wrong on payload ingestion")
-                    self.status_logger.error(e)
-                    self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
-
-            self.ingestion_handler.post_last(end_timestamp=end_timestamp)
+            try:
+                # self.status_logger.info(datasource_payload)
+                self.ingestion_handler.post_message(payload=payload)
+                self.status_logger.info("Sent " + str(i + 1) + " element of " + str(len(df_dict)) + " elements")
+            except Exception as e:
+                raise e
