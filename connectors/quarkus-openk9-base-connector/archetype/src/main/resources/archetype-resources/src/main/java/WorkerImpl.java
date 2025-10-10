@@ -3,6 +3,7 @@ package ${package};
 import io.openk9.connector.api.beans.IngestionDTO;
 import io.openk9.connector.api.beans.InvokeRequest;
 import io.openk9.connector.api.beans.PayloadType;
+import io.openk9.connector.api.beans.ResourcesDTO;
 import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageProducer;
 
