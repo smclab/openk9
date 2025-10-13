@@ -192,6 +192,8 @@ public class Scheduler extends K9Entity {
 	private OffsetDateTime lastIngestionDate;
 	@Column(name = "error_description")
 	private String errorDescription;
+	@Column(name = "reindex")
+	private boolean reindex;
 
 	public enum SchedulerStatus {
 		RUNNING,

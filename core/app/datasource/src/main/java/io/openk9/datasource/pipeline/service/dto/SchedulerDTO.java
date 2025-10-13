@@ -39,14 +39,7 @@ public class SchedulerDTO {
 	private Scheduler.SchedulerStatus status;
 	private OffsetDateTime lastIngestionDate;
 	private SchedulingType schedulingType;
-
-	public boolean isNewIndex() {
-		return getNewDataIndexId() != null;
-	}
-
-	public boolean isReindex() {
-		return isNewIndex() && getOldDataIndexId() != null;
-	}
+	private boolean reindex;
 
 	public String getIndexName() {
 

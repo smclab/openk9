@@ -59,14 +59,14 @@ public class EvaluateStatus extends AbstractBehavior<AggregateItem.Command> {
 
 		var status = Scheduler.SchedulerStatus.FINISHED;
 
-		if (scheduler.getLastIngestionDate() == null && !scheduler.isNewIndex()) {
+		if (scheduler.getLastIngestionDate() == null && !scheduler.isReindex()) {
 			log.infof(
 				"Nothing was changed during this Scheduling on %s index.",
 				scheduler.getOldIndexName()
 			);
 		}
 
-		if (scheduler.getLastIngestionDate() == null && scheduler.isNewIndex()) {
+		if (scheduler.getLastIngestionDate() == null && scheduler.isReindex()) {
 			log.warnf(
 				"LastIngestionDate was null, " +
 				"means that no content was received in this Scheduling. " +
