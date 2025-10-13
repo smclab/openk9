@@ -89,6 +89,9 @@ This endpoint takes different arguments in JSON raw body:
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified get all body page)
 - **linksToFollow**: list of href xpath to follow during extraction (optional, if not specified is ignored)
+- **usePlaywright**: boolean to set if the crawler should use playwright (optional, default is *False*)
+- **playwrightSelector**: css/xpath selector to be waited for by playwright (optional, required if *usePlaywright* is *True*)
+- **playwrightTimeout**: timeout waited by selector if not found (optional, default is *5000*)
 - **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
 - **pageCount**: count of page limit to crawl
@@ -115,6 +118,9 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "allowedPaths": [],
     "excludedPaths": [".pdf"],
     "linksToFollow": ["//a[@class="class-name"]/@href"],
+    "usePlaywright": true,
+    "playwrightSelector": "div.card.card-simple.border.p-2",
+    "playwrightTimeout": 5000,
     "datasourceId": 1,
     "timestamp": 0,
     "bodyTag": "div#main-content",

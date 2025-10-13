@@ -12,6 +12,7 @@ from requests_futures.sessions import FuturesSession
 from scrapy import signals, Item, Field
 from scrapy.http import Request, XmlResponse
 from scrapy.linkextractors import LinkExtractor
+from scrapy_playwright.page import PageMethod
 from scrapy.spiders import SitemapSpider, Rule
 from scrapy.utils.gz import gunzip, gzip_magic_number
 from scrapy.utils.sitemap import Sitemap, sitemap_urls_from_robots
@@ -38,8 +39,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
     payload = {}
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow, datasource_id, schedule_id,
-                ingestion_url, timestamp, additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow,
+                 use_playwright, playwright_selector, playwright_timeout, datasource_id, schedule_id, ingestion_url, timestamp,
+                 additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
         super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains,
@@ -58,6 +60,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.replace_rule = ast.literal_eval(replace_rule)
         self.links_to_follow = ast.literal_eval(links_to_follow)
+        self.use_playwright = ast.literal_eval(use_playwright)
+        self.playwright_selector = ast.literal_eval(playwright_selector)
+        self.playwright_timeout = ast.literal_eval(playwright_timeout)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -239,4 +244,14 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                     # if is relative url convert to absolute
                     if not is_absolute(extracted_link_to_follow):
                         extracted_link_to_follow = response.urljoin(extracted_link_to_follow)
-                    yield Request(extracted_link_to_follow, callback=self.parse, meta={meta_key: True})
+                    yield Request(extracted_link_to_follow,
+                                  callback=self.parse,
+                                  meta={
+                                      meta_key: True,
+                                      "playwright": self.use_playwright,
+                                      "playwright_page_coroutines": [
+                                          # We'll just wait a short time — if not found, no crash
+                                          PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
+                                      ],
+                                      "errback": self.errback_close_page,  # cleanup
+                                  })

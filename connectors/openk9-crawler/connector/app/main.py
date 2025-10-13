@@ -3,7 +3,7 @@ from abc import ABC
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationInfo, field_validator
 from typing import Optional
 import json
 import logging
@@ -60,7 +60,6 @@ class BaseRequest(ABC, BaseModel):
     doExtractDocs: bool = False
     certVerification: bool = True
     maxSizeBytes: int
-    pageCount: int = 0
     datasourceId: int
     scheduleId: str
     timestamp: int
@@ -71,6 +70,16 @@ class SitemapRequest(BaseRequest):
     sitemapUrls: list
     replaceRule: Optional[list] = ["", ""]
     linksToFollow: Optional[list[str]] = []
+    usePlaywright: Optional[bool] = False
+    playwrightSelector: Optional[str] = None
+    playwrightTimeout: Optional[int] = 5000
+
+    @field_validator("playwrightSelector")
+    @classmethod
+    def validate_playwright_selector_if_use_playwright(cls, playwright_selector: Optional[str], info: ValidationInfo) -> Optional[str]:
+        if info.data.get("usePlaywright") and not playwright_selector:
+            raise ValueError("Field 'playwrightSelector' must be set when 'usePlaywright' is True")
+        return playwright_selector
 
 
 class CrawlRequest(BaseRequest):
@@ -106,6 +115,9 @@ def set_up_sitemap_endpoint(request):
     max_length = request["maxLength"]
     tenant_id = request["tenantId"]
     links_to_follow = request["linksToFollow"]
+    use_playwright = request["usePlaywright"]
+    playwright_selector = request["playwrightSelector"]
+    playwright_timeout = request["playwrightTimeout"]
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
     document_file_extensions = request["documentFileExtensions"]
@@ -134,6 +146,9 @@ def set_up_sitemap_endpoint(request):
         "tenant_id": tenant_id,
         "replace_rule": json.dumps(replace_rule),
         "links_to_follow": json.dumps(links_to_follow),
+        "use_playwright": json.dumps(use_playwright),
+        "playwright_selector": json.dumps(playwright_selector),
+        "playwright_timeout": json.dumps(playwright_timeout),
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),

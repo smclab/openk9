@@ -191,6 +191,48 @@
           "max": 100,
           "regex": "/[[:alnum:]]+/"
         }
+      },
+      {
+        "label": "Use Playwright",
+        "name": "usePlaywright",
+        "type": "checkbox",
+        "size": 4,
+        "required": false,
+        "info": "",
+        "values": [],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Playwright Selector",
+        "name": "playwrightSelector",
+        "type": "text",
+        "size": 4,
+        "required": false,
+        "info": "Formato css/xpath",
+        "values": [],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Playwright Timeout",
+        "name": "playwrightTimeout",
+        "type": "number",
+        "size": 4,
+        "required": false,
+        "info": "",
+        "values": [],
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
       }
     ]
 }

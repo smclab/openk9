@@ -51,9 +51,9 @@ CONCURRENT_REQUESTS = 8
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "generic_crawler.middlewares.GenericCrawlerDownloaderMiddleware": 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy_playwright.PlaywrightDownloaderMiddleware': 700,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -101,3 +101,8 @@ FEED_EXPORT_ENCODING = "utf-8"
 # EXTENSIONS = {
 #     'scrapy_prometheus_exporter.prometheus.WebService': 500,
 # }
+
+# Configure Playwright settings
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 30000  # 30 seconds
+PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # Options: chromium, firefox, webkit
+PLAYWRIGHT_HEADLESS = True  # Run in headless mode (set to False for debugging)
