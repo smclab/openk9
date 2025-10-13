@@ -17,12 +17,19 @@
 
 package io.openk9.tenantmanager.resource;
 
-import com.google.protobuf.Empty;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.ApplyResponse;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
+
+import com.google.protobuf.Empty;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
@@ -34,12 +41,6 @@ import io.restassured.specification.RequestSpecification;
 import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
 
 @QuarkusTest
 @TestHTTPEndpoint(ProvisioningResource.class)
@@ -227,13 +228,13 @@ public class ProvisioningResourceTest {
 	private void applyResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.applyResource(eq(Constants.APP_MANIFEST));
+			.applyResource(eq(Constants.appManifest()));
 	}
 
 	private void deleteResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.deleteResource(eq(Constants.APP_MANIFEST));
+			.deleteResource(eq(Constants.appManifest()));
 	}
 
 

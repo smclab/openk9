@@ -15,22 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.resources;
+package io.openk9.experimental.spring_apigw_sample.security;
 
-import io.quarkus.runtime.Startup;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-
-@ApplicationScoped
-@Startup
-public class PrintLogo {
-
-	@PostConstruct
-	void onStart() {
-		try {
-			Class.forName("io.openk9.resources.Release");
-		}
-		catch (Exception e) {}
+public class ChecksumValidationException extends RuntimeException {
+	public ChecksumValidationException(String message) {
+		super(message);
 	}
-
 }

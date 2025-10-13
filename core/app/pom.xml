@@ -32,90 +32,10 @@
 	<groupId>io.openk9.app</groupId>
 	<artifactId>app</artifactId>
 	<packaging>pom</packaging>
+
 	<modules>
-		<module>datasource</module>
-		<module>tenant-manager</module>
-		<module>searcher</module>
-		<module>entity-manager</module>
-		<module>file-manager</module>
-		<module>ingestion</module>
-		<module>resources-validator</module>
-		<module>tika</module>
-		<module>k8s-client</module>
+		<module>spring-boot-app</module>
+		<module>quarkus-app</module>
 	</modules>
-
-	<dependencies>
-
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-arc</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-container-image-jib</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.openk9.common</groupId>
-			<artifactId>resources-common</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.smallrye.config</groupId>
-			<artifactId>smallrye-config-crypto</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-junit5</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-junit5-mockito</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-test-vertx</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-test-security</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.rest-assured</groupId>
-			<artifactId>rest-assured</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
-
-	<profiles>
-		<profile>
-			<id>exclude-quarkus-test</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<artifactId>maven-surefire-plugin</artifactId>
-							<version>${surefire-plugin.version}</version>
-							<configuration>
-								<excludedGroups>io.quarkus.test.junit.QuarkusTest</excludedGroups>
-								<systemProperties>
-									<java.util.logging.manager>org.jboss.logmanager.LogManager
-									</java.util.logging.manager>
-								</systemProperties>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-	</profiles>
 
 </project>

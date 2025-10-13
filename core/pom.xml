@@ -113,6 +113,11 @@
 		<pekko.management.version>1.1.1</pekko.management.version>
 		<lucene.version>9.12.1</lucene.version>
 		<zstd-jni.version>1.5.6-3</zstd-jni.version>
+
+		<spring-cloud.version>2025.0.0</spring-cloud.version>
+		<spring-boot.version>3.5.3</spring-boot.version>
+
+		<junit-excluded-groups>performance-test</junit-excluded-groups>
 	</properties>
 
 	<dependencyManagement>
@@ -378,6 +383,7 @@
 					<artifactId>maven-surefire-plugin</artifactId>
 					<version>${surefire-plugin.version}</version>
 					<configuration>
+						<excludedGroups>${junit-excluded-groups}</excludedGroups>
 						<systemProperties>
 							<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
 						</systemProperties>
@@ -494,6 +500,13 @@
 					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
+		</profile>
+		<profile>
+			<!-- enable junit performance test -->
+			<id>performance-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
 		</profile>
 	</profiles>
 </project>

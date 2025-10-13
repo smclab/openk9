@@ -1,0 +1,21 @@
+
+            kkk9999999999kkk
+         k9999kkkkkkkkkkk99999k
+      k999kk                kk999k
+    k999k                      k999k
+   k99k      kkkkkkk             k99k
+  999      k999k9999999kk          999
+ k99     k99k   k99  kk9999kkkkk    99k
+ 99k    k99k     99k 9k kkkkk9999   k99
+k99     999      999          k99    99k
+k99      999k    999         k99k    99k
+k99k      999999999k   kkkkk999k     99k
+ 999     k99k kkkk   9999999kk      k99
+  999  kk99k        k99k           k99k
+   999999k           99k          k99k
+    k9k              99k         999k
+                     999      k999k
+                      999kkk9999k
+                       k9999kk
+
+${product.name} (${project.version})

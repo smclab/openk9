@@ -15,30 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.resources;
+package io.openk9.experimental.spring_apigw_sample.security.apikey;
 
-public final class Release {
+public class ApiKeyMalformedException extends RuntimeException {
 
-	public static String getProductName() {
-		return "${product.name}";
+	public ApiKeyMalformedException(String msg) {
+		super(msg);
 	}
 
-	public static String getVersion() {
-		return "${project.version}";
+	public ApiKeyMalformedException(Throwable cause) {
+		super(cause);
 	}
-
-	public static void printRelease() {
-		String output =
-			Logo.getLogo() +
-			Logo.getEmptySpace() +
-			String.format("%s (%s)", getProductName(), getVersion()) +
-			Logo.getEmptySpace();
-
-		System.out.println(output);
+	public ApiKeyMalformedException(String msg, Throwable cause) {
+		super(msg, cause);
 	}
-
-	static {
-		printRelease();
-	}
-	
 }

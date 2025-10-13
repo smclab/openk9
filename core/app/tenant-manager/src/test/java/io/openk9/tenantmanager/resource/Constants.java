@@ -17,39 +17,54 @@
 
 package io.openk9.tenantmanager.resource;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
-import io.openk9.resources.Release;
-import io.vertx.core.json.JsonObject;
 
+import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+@ApplicationScoped
 public class Constants {
-	static final String CREATE_CONNECTOR_PATH = "/connector";
-	private static final String TENANT_NAME = "mew";
+
+	private static String applicationVersion;
+
+	@ConfigProperty(name = "quarkus.application.version")
+	void setApplicationVersion(String value) {
+		applicationVersion = value;
+	}
+
+	public static final String TENANT_NAME = "mew";
+	public static final String CREATE_CONNECTOR_PATH = "/connector";
 	public static final String INVALID_PRESET = "INVALID_VALUE";
-	static final CreatePresetPluginDriverRequest CREATE_PRESET_REQUEST =
+	public static final CreatePresetPluginDriverRequest CREATE_PRESET_REQUEST =
 		CreatePresetPluginDriverRequest.newBuilder()
 			.setSchemaName(TENANT_NAME)
 			.setPreset(Preset.CRAWLER)
 			.build();
-	private static final String PRESET_VALUE = "CRAWLER";
-	private static final String CHART_VERSION = Release.getVersion();
+	public static final String PRESET_VALUE = "CRAWLER";
+	public static final String TENANT_NAME_KEY = "tenantName";
+	public static final String PRESET_KEY = "preset";
 
-	static final AppManifest APP_MANIFEST = AppManifest.newBuilder()
-		.setSchemaName(TENANT_NAME)
-		.setChart(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
-		.setVersion(CHART_VERSION)
-		.build();
-	private static final String TENANT_NAME_KEY = "tenantName";
-	private static final String PRESET_KEY = "preset";
-	static final String VALID_JSON_BODY = JsonObject.of(
+	public static final String VALID_JSON_BODY = JsonObject.of(
 		TENANT_NAME_KEY, TENANT_NAME,
 		PRESET_KEY, PRESET_VALUE
 	).toString();
 
-	static final String INVALID_JSON_BODY = JsonObject.of(
+	public static final String INVALID_JSON_BODY = JsonObject.of(
 		PRESET_KEY, INVALID_PRESET
 	).toString();
+
+	public static AppManifest appManifest() {
+		return AppManifest.newBuilder()
+			.setSchemaName(TENANT_NAME)
+			.setChart(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
+			.setVersion(applicationVersion)
+			.build();
+	}
+
 
 }
