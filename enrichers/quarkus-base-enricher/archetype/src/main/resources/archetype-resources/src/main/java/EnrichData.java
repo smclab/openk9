@@ -25,6 +25,6 @@ public class EnrichData {
     }
 
     public void setEnrichData(String name, Object value) {
-        enrichData.put(name, value);
+        this.enrichData.put(name, value);
     }
 }
