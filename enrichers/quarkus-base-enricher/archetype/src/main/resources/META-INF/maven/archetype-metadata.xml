@@ -6,11 +6,19 @@
         <fileSet filtered="true" packaged="true">
             <directory>src/main/java</directory>
         </fileSet>
+        <fileSet filtered="true">
+            <directory>src/main/resources</directory>
+        </fileSet>
         <fileSet>
             <directory>src/test/java</directory>
         </fileSet>
-        <fileSet>
-            <directory>src/main/resources</directory>
-        </fileSet>
     </fileSets>
+
+    <requiredProperties>
+        <requiredProperty key="implementationType">
+            <defaultValue>async</defaultValue>
+            <validationRegex>^(async|sync)$</validationRegex>
+        </requiredProperty>
+    </requiredProperties>
+
 </archetype-descriptor>
