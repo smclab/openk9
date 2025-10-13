@@ -68,7 +68,7 @@ public class DeletionCompareNotifier extends AbstractBehavior<AggregateItem.Comm
 		String tenantName = shardingKey.tenantId();
 		String scheduleId = shardingKey.scheduleId();
 
-		if (scheduler.isReindex()) {
+		if (scheduler.isReindex() && scheduler.getOldDataIndexId() != null) {
 
 			getContext()
 				.getLog()
