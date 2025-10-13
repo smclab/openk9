@@ -2,7 +2,9 @@ package ${package};
 
 import io.openk9.enricher.api.ProcessResource;
 import io.openk9.enricher.api.beans.OpenK9Input;
+#if ($implementationType == "async")
 import jakarta.inject.Inject;
+#end
 import jakarta.validation.constraints.NotNull;
 import org.jboss.logging.Logger;
 
@@ -10,8 +12,7 @@ public class ProcessResourceImpl implements ProcessResource {
 
     private static final Logger LOGGER = Logger.getLogger(ProcessResourceImpl.class);
 
-    #if ($implementationType == "async")
-    @Inject
+    #if ($implementationType == "async")@Inject
     CallBackClient callBackClient;
 
     @Override
@@ -24,9 +25,10 @@ public class ProcessResourceImpl implements ProcessResource {
             callBackClient.callback(enrichData, data.getReplyTo());
         }
     }
-
-    #elseif ($implementationType == "sync")
-        System.out.println("Test sincrono");
+    #elseif ($implementationType == "sync")@Override
+    public void process(@NotNull OpenK9Input data) {
+        LOGGER.info("sync test success!");
+    }
     #end
 
 }
