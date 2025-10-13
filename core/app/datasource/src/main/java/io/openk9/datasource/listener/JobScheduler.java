@@ -292,6 +292,7 @@ public class JobScheduler {
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+		scheduler.setReindex(false);
 
 		// The scheduler cannot start, so a scheduler in FAILURE state is created
 		if (throwable1 != null) {
@@ -327,6 +328,7 @@ public class JobScheduler {
 			newDataIndex.setName(newDataIndexName);
 			newDataIndex.setDatasource(datasource);
 			scheduler.setNewDataIndex(newDataIndex);
+			scheduler.setReindex(true);
 
 			if (oldDataIndex != null) {
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
