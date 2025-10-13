@@ -43,7 +43,7 @@ These classes implement the REST classes from the library and adapt their behavi
         "info": "",
         "label": "Test Form",
         "name": "testForm",
-        "type": "string",
+        "type": "text",
         "size": 2,
         "required": false,
         "values": [
@@ -111,6 +111,7 @@ mvn archetype:generate                      \
 -DarchetypeVersion=1.0.0-SNAPSHOT           \
 -DgroupId=<my.groupId>                      \
 -DartifactId=<my-artifactId>                \
+-DimplementationType=<async|sync>           \
 -Dversion=<myVersion>                       
 ```
 
@@ -123,9 +124,10 @@ mvn archetype:generate `
 "-DarchetypeVersion=1.0.0-SNAPSHOT" `
 "-DgroupId=<my.groupId>" `
 "-DartifactId=<my-artifactId>" `
+"-DimplementationType=<async|sync>" `
 "-Dversion=<myVersion>"
 ```
 
 In these commands, you need to specify the full information about the archetype you want to use (its `groupId`, its `artifactId`, its `version`)
-and the information about the new project you want to create (`artifactId`, `groupId` and `version`).
+and the information about the new project you want to create (`artifactId`, `groupId`, `implementationType` and `version`).
 
