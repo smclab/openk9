@@ -1,3 +1,4 @@
+#if ($implementationType == "async")
 package ${package};
 
 import io.openk9.enricher.api.beans.OpenK9Input;
@@ -41,3 +42,36 @@ public class CallBackClient {
                 .onFailure(res -> LOGGER.error("Error sending enrich data: " + res.getMessage()));
     }
 }
+#elseif ($implementationType == "sync")
+/*
+
+!!! This class can only be used with an ASYNC implementation !!!
+
+@ApplicationScoped
+public class CallBackClient {
+
+    private static final Logger LOGGER = Logger.getLogger(CallBackClient.class);
+
+    @Inject
+    Vertx vertx;
+
+    @ConfigProperty(name = "io.openk9.enricher.callback.api.host")
+    private String host;
+
+    @ConfigProperty(name = "io.openk9.enricher.callback.api.port")
+    private int port;
+
+    @ConfigProperty(name = "io.openk9.enricher.callback.api.path")
+    private String path;
+
+    public void callback(EnrichData enrichData, String tokenId) {
+        WebClient client = WebClient.create(vertx);
+        client
+                .post(port, host, path + tokenId)
+                .sendJson(enrichData)
+                .onSuccess(res -> LOGGER.info("Enrich data sent to OpenK9 successfully!"))
+                .onFailure(res -> LOGGER.error("Error sending enrich data: " + res.getMessage()));
+    }
+}
+*/
+#end
