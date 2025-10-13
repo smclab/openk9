@@ -78,7 +78,7 @@ components:
           type: string
         type:
           type: string
-          enum: [ 'string', 'number', 'date' ]
+          enum: [ 'text', 'number', 'select', 'multiselect', 'list', 'date', 'email', 'password', 'time', 'url', 'checkbox', 'stringMap' ]
         size:
           type: number
         required:
