@@ -51,9 +51,9 @@ CONCURRENT_REQUESTS = 8
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-    'scrapy_playwright.PlaywrightDownloaderMiddleware': 700,
-}
+#DOWNLOADER_MIDDLEWARES = {
+#    "generic_crawler.middlewares.GenericCrawlerDownloaderMiddleware": 543,
+#}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -102,7 +102,34 @@ FEED_EXPORT_ENCODING = "utf-8"
 #     'scrapy_prometheus_exporter.prometheus.WebService': 500,
 # }
 
-# Configure Playwright settings
-PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 30000  # 30 seconds
-PLAYWRIGHT_BROWSER_TYPE = 'chromium'  # Options: chromium, firefox, webkit
-PLAYWRIGHT_HEADLESS = True  # Run in headless mode (set to False for debugging)
+# Enable Playwright download handlers (required)
+DOWNLOAD_HANDLERS = {
+    'http': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
+    'https': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
+}
+
+# Default navigation timeout (in ms; override per-request if needed)
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 5000  # 5 seconds
+
+PLAYWRIGHT_BROWSER_TYPE = 'webkit'  # Explicitly set WebKit
+
+# Launch options for the browser (e.g., headless mode)
+PLAYWRIGHT_LAUNCH_OPTIONS = {
+    'headless': True,  # Set to False for debugging
+}
+
+# Browser context options (e.g., viewport, locale)
+PLAYWRIGHT_CONTEXT_ARGS = {
+    'viewport': {'width': 1280, 'height': 720},
+    'user_agent': None,  # Use browser's default UA to avoid mismatches
+    'locale': 'en-US',
+}
+
+
+# Optimize resource usage
+def abort_request(req):
+    """Abort requests for specific resource types to optimize resource usage."""
+    return req.resource_type in {'image', 'stylesheet', 'font'}
+
+
+PLAYWRIGHT_ABORT_REQUEST = abort_request

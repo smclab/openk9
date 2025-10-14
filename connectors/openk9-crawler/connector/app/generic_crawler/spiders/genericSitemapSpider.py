@@ -60,9 +60,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.replace_rule = ast.literal_eval(replace_rule)
         self.links_to_follow = ast.literal_eval(links_to_follow)
-        self.use_playwright = ast.literal_eval(use_playwright)
-        self.playwright_selector = ast.literal_eval(playwright_selector)
-        self.playwright_timeout = ast.literal_eval(playwright_timeout)
+        self.use_playwright = bool(use_playwright)
+        self.playwright_selector = str(playwright_selector)
+        self.playwright_timeout = int(playwright_timeout)
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -210,8 +210,6 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
             "custom": dict(custom_item)
         }
 
-        logger.info(datasource_payload)
-
         payload = Payload()
 
         content_id = int(hashlib.sha1(url.encode("utf-8")).hexdigest(), 16) % (10 ** 16)
@@ -253,5 +251,5 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                                           # We'll just wait a short time — if not found, no crash
                                           PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
                                       ],
-                                      "errback": self.errback_close_page,  # cleanup
+                                      "errback": self.close,  # cleanup
                                   })
