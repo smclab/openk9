@@ -52,12 +52,19 @@ public class HttpPublisherVerticle extends AbstractVerticle {
                     .post(port, host, path)
                     .sendJson(ingestionDTO)
                     .onSuccess(res -> {
-                        LOGGER.infof("IngestionDTO [%s, %s, %s] sent successfully\n",
-                                ingestionDTO.getTenantId(),
-                                ingestionDTO.getDatasourceId(),
-                                ingestionDTO.getContentId());
+                        if (res.statusCode() == 406) {
+                            LOGGER.error("HttpPublisherVerticle closed caused by 406 error");
+                            vertx.close();
+                        } else {
+                            LOGGER.infof("IngestionDTO [%s, %s, %s] sent successfully\n",
+                                    ingestionDTO.getTenantId(),
+                                    ingestionDTO.getDatasourceId(),
+                                    ingestionDTO.getContentId());
+                        }
                     })
-                    .onFailure(res -> LOGGER.error("Error sending IngestionDTO object: " + res.getMessage()));
+                    .onFailure(res -> {
+                        LOGGER.error("Error sending IngestionDTO object: " + res.getMessage());
+                    });
         });
     }
 
