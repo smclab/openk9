@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
@@ -36,7 +35,6 @@ import reactor.core.publisher.Mono;
 public class TestConfigurations {
 
 	@Bean
-	@Profile("test")
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver() {
 
 		return exchange -> {

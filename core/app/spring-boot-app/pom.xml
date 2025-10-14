@@ -31,6 +31,20 @@
 	<artifactId>spring-boot-app</artifactId>
 	<packaging>pom</packaging>
 
+	<properties>
+		<junit-excluded-groups>performance-test</junit-excluded-groups>
+	</properties>
+
+	<profiles>
+		<profile>
+			<!-- enable junit performance test -->
+			<id>performance-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
+		</profile>
+	</profiles>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -42,6 +56,13 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.openk9.common</groupId>
+			<artifactId>resources</artifactId>
+		</dependency>
+	</dependencies>
 
 	<build>
 		<plugins>
@@ -55,6 +76,14 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<excludedGroups>${junit-excluded-groups}</excludedGroups>
 				</configuration>
 			</plugin>
 		</plugins>

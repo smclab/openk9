@@ -39,7 +39,7 @@ import reactor.netty.http.server.HttpServer;
  */
 @Slf4j
 @Configuration
-@Profile({"test", "poc", "default"})
+@Profile({"test", "poc"})
 public class Downstreams {
 
 

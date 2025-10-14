@@ -28,14 +28,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
-import io.openk9.api.tenantmanager.TenantManager;
-import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.MessageGateway;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.TenantRegistry;
 import io.openk9.datasource.web.dto.TriggerWithDateResourceDTO;
 
 import io.quarkus.vertx.ConsumeEvent;
@@ -97,9 +96,9 @@ public class SchedulerInitializer {
 	}
 
 	private Uni<List<JobScheduler.ScheduleDatasource>> getScheduleDatasourceCommands(
-		List<TenantManager.Tenant> tenantResponses) {
+		List<String> tenantIds) {
 
-		if (tenantResponses == null || tenantResponses.isEmpty()) {
+		if (tenantIds == null || tenantIds.isEmpty()) {
 			return Uni.createFrom().item(List.of());
 		}
 
@@ -108,8 +107,7 @@ public class SchedulerInitializer {
 		UniJoin.Builder<Set<JobScheduler.ScheduleDatasource>> commandsUni =
 			Uni.join().builder();
 
-		for (TenantManager.Tenant tenant : tenantResponses) {
-			var tenantId = tenant.schemaName();
+		for (String tenantId : tenantIds) {
 
 			var commandsByTenantUni = datasourceService.findAll(tenantId)
 				.map(datasources -> datasources.stream()
@@ -144,8 +142,7 @@ public class SchedulerInitializer {
 	@ActivateRequestContext
 	public Uni<Void> initScheduler(String ignore) {
 
-		return tenantRegistry
-			.getTenantList()
+		return tenantRegistry.getTenantIdList()
 			.flatMap(this::getScheduleDatasourceCommands)
 			.flatMap(schedulerInitializerActor::initJobScheduler);
 
@@ -169,13 +166,14 @@ public class SchedulerInitializer {
 	@ActivateRequestContext
 	public Uni<Void> spawnConsumers(String ignore) {
 
-		return tenantRegistry.getTenantList()
-			.flatMap(tenantList -> {
+		return tenantRegistry.getTenantIdList()
+			.flatMap(tenantIdList -> {
+
 				List<Uni<List<Scheduler>>> registrations = new ArrayList<>();
 
-				for (TenantManager.Tenant tenant : tenantList) {
+				for (String tenantId : tenantIdList) {
 					Uni<List<Scheduler>> registration = sessionFactory.withTransaction(
-							tenant.schemaName(),
+							tenantId,
 							(session, transaction) -> session
 								.createNamedQuery(Scheduler.FETCH_RUNNING, Scheduler.class)
 								.getResultList()
@@ -184,7 +182,7 @@ public class SchedulerInitializer {
 							for (Scheduler scheduler : schedulers) {
 								ShardingKey shardingKey =
 									ShardingKey.fromStrings(
-										tenant.schemaName(),
+										tenantId,
 										scheduler.getScheduleId()
 									);
 

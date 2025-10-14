@@ -15,28 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.auth.tenant;
+package io.openk9.datasource.service;
 
 import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
-import io.openk9.api.tenantmanager.TenantManager;
+import io.openk9.tenantmanager.grpc.TenantListResponse;
+import io.openk9.tenantmanager.grpc.TenantManager;
+import io.openk9.tenantmanager.grpc.TenantRequest;
+import io.openk9.tenantmanager.grpc.TenantResponse;
 
+import com.google.protobuf.Empty;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 
 @ApplicationScoped
-public class TenantRegistry {
+public class TenantRegistryImpl implements TenantRegistry {
 
-	@Inject
+	@GrpcClient
 	TenantManager tenantManager;
 
-	public Uni<TenantManager.Tenant> getTenantByVirtualHost(String virtualHost) {
-		return tenantManager.getTenantByVirtualHost(virtualHost);
+	@Override
+	public Uni<String> getTenantId(String virtualHost) {
+		return tenantManager.findTenant(TenantRequest.newBuilder()
+				.setVirtualHost(virtualHost)
+				.build())
+			.map(TenantResponse::getSchemaName);
 	}
 
-	public Uni<List<TenantManager.Tenant>> getTenantList() {
-		return tenantManager.getTenantList();
+	@Override
+	public Uni<List<String>> getTenantIdList() {
+		return tenantManager.findTenantList(Empty.newBuilder().build())
+			.map(TenantListResponse::getTenantResponseList)
+			.map(tenantResponses -> tenantResponses.stream()
+				.map(TenantResponse::getSchemaName)
+				.toList()
+			);
 	}
-
 }

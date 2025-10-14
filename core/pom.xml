@@ -54,11 +54,9 @@
 
 	<modules>
 		<module>../vendor/hibernate-rx-multitenancy</module>
-		<module>api</module>
 		<module>app</module>
 		<module>client</module>
 		<module>common</module>
-		<module>service</module>
 	</modules>
 
 	<properties>
@@ -117,7 +115,6 @@
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 		<spring-boot.version>3.5.3</spring-boot.version>
 
-		<junit-excluded-groups>performance-test</junit-excluded-groups>
 	</properties>
 
 	<dependencyManagement>
@@ -204,13 +201,13 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>io.openk9.service</groupId>
-				<artifactId>auth-service</artifactId>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>quarkus-common</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>io.openk9.common</groupId>
-				<artifactId>resources-common</artifactId>
+				<artifactId>resources</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -302,13 +299,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
-				</configuration>
-			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -378,16 +368,6 @@
 							</goals>
 						</execution>
 					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>${surefire-plugin.version}</version>
-					<configuration>
-						<excludedGroups>${junit-excluded-groups}</excludedGroups>
-						<systemProperties>
-							<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-						</systemProperties>
-					</configuration>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -500,13 +480,6 @@
 					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
 				</snapshotRepository>
 			</distributionManagement>
-		</profile>
-		<profile>
-			<!-- enable junit performance test -->
-			<id>performance-test</id>
-			<properties>
-				<junit-excluded-groups/>
-			</properties>
 		</profile>
 	</profiles>
 </project>

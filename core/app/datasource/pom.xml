@@ -20,8 +20,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.openk9.app</groupId>
-    <artifactId>app</artifactId>
+    <artifactId>quarkus-app</artifactId>
 	  <version>3.1.0-SNAPSHOT</version>
+	  <relativePath>../quarkus-app/pom.xml</relativePath>
   </parent>
   <artifactId>datasource</artifactId>
   <name>OpenK9 :: App :: Datasource</name>
@@ -31,22 +32,6 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-cache</artifactId>
     </dependency>
-
-    <!-- // authentication -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-oidc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-keycloak-authorization</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.openk9.service</groupId>
-      <artifactId>auth-service</artifactId>
-    </dependency>
-    <!-- authentication // -->
 
     <!-- // Web API -->
 
@@ -206,10 +191,14 @@
 
     <!-- // gRPC consumes -->
 
-    <dependency>
-      <groupId>io.openk9.client.grpc</groupId>
-      <artifactId>text-embedding</artifactId>
-    </dependency>
+	  <dependency>
+		  <groupId>io.openk9.client.grpc</groupId>
+		  <artifactId>text-embedding</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.openk9.client.grpc</groupId>
+		  <artifactId>tenant-manager-client-grpc</artifactId>
+	  </dependency>
 
     <!-- gRPC consumes // -->
 

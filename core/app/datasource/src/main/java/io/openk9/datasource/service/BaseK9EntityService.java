@@ -37,8 +37,6 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
-import io.openk9.api.tenantmanager.TenantManager;
-import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
 import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
@@ -338,10 +336,11 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	protected Uni<TenantManager.Tenant> getCurrentTenant(Mutiny.Session session) {
+	protected Uni<String> getCurrentTenant(Mutiny.Session session) {
 		return session.find(TenantBinding.class, 1L)
 			.map(TenantBinding::getVirtualHost)
-			.flatMap(tenantRegistry::getTenantByVirtualHost);
+			.flatMap(tenantRegistry::getTenantId);
+
 	}
 
 	@Override

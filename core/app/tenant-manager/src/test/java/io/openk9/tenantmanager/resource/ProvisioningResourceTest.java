@@ -39,6 +39,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
@@ -46,6 +47,9 @@ import org.mockito.BDDMockito;
 @TestHTTPEndpoint(ProvisioningResource.class)
 @TestSecurity(user = "k9-admin", roles = {"admin"})
 public class ProvisioningResourceTest {
+
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	@InjectMock
 	@GrpcClient("appmanager")
@@ -228,13 +232,13 @@ public class ProvisioningResourceTest {
 	private void applyResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.applyResource(eq(Constants.appManifest()));
+			.applyResource(eq(Constants.appManifest(applicationVersion)));
 	}
 
 	private void deleteResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.deleteResource(eq(Constants.appManifest()));
+			.deleteResource(eq(Constants.appManifest(applicationVersion)));
 	}
 
 

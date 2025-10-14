@@ -25,17 +25,9 @@ import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 
 import io.vertx.core.json.JsonObject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class Constants {
-
-	private static String applicationVersion;
-
-	@ConfigProperty(name = "quarkus.application.version")
-	void setApplicationVersion(String value) {
-		applicationVersion = value;
-	}
 
 	public static final String TENANT_NAME = "mew";
 	public static final String CREATE_CONNECTOR_PATH = "/connector";
@@ -58,11 +50,11 @@ public class Constants {
 		PRESET_KEY, INVALID_PRESET
 	).toString();
 
-	public static AppManifest appManifest() {
+	public static AppManifest appManifest(String chartVersion) {
 		return AppManifest.newBuilder()
 			.setSchemaName(TENANT_NAME)
 			.setChart(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
-			.setVersion(applicationVersion)
+			.setVersion(chartVersion)
 			.build();
 	}
 

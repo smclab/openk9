@@ -56,8 +56,7 @@ public class KnnQueryParser implements QueryParser {
 
 		var tokenTypeGroup = parserContext.getTokenTypeGroup();
 
-		var tenant = parserContext.getTenantWithBucket().getTenant();
-		var tenantId = tenant.schemaName();
+		var tenantId = parserContext.getTenantWithBucket().getTenantId();
 
 		var knnQueryUnis = new ArrayList<Uni<Query>>();
 

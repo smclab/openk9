@@ -89,8 +89,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
@@ -154,9 +152,6 @@ public class SearchResource {
 	HttpHeaders headers;
 	@Inject
 	InternalSearcherMapper internalSearcherMapper;
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken; // it is injected to force authentication.
 	@Context
 	HttpServerRequest request;
 	@Inject

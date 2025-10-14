@@ -19,24 +19,44 @@ package io.openk9.experimental.spring_apigw_sample;
 
 import java.util.List;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
+@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Disabled
+@Import(TestConfigurations.class)
 class ApiGatewaySecurityTest {
+
+	@Container
+	static RabbitMQContainer rabbit =
+		new RabbitMQContainer(DockerImageName.parse("rabbitmq:4"))
+			.withExposedPorts(5672);
+
+	@DynamicPropertySource
+	public static void properties(DynamicPropertyRegistry registry) {
+		registry.add("spring.rabbitmq.host", rabbit::getHost);
+		registry.add("spring.rabbitmq.username", rabbit::getAdminUsername);
+		registry.add("spring.rabbitmq.password", rabbit::getAdminPassword);
+		registry.add("spring.rabbitmq.port", rabbit::getFirstMappedPort);
+	}
 
 	@Autowired
     private WebTestClient webTestClient;

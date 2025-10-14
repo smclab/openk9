@@ -19,7 +19,6 @@ package io.openk9.datasource.searcher.model;
 
 import java.util.HashSet;
 
-import io.openk9.api.tenantmanager.TenantManager;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -29,16 +28,15 @@ import lombok.Getter;
 @Getter
 public class TenantWithBucket {
 
-	private final TenantManager.Tenant tenant;
+	private final String tenantId;
 	private final Bucket bucket;
 	private final String[] indexNames;
 
-	public TenantWithBucket(TenantManager.Tenant tenant, Bucket bucket) {
+	public TenantWithBucket(String tenantId, Bucket bucket) {
 
-		this.tenant = tenant;
+		this.tenantId = tenantId;
 		this.bucket = bucket;
 
-		var tenantId = this.tenant.schemaName();
 		var datasources = this.bucket.getDatasources();
 
 		var indexNameSet = new HashSet<String>();

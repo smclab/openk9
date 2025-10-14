@@ -15,6 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.web.dto;
+package io.openk9.datasource.service;
 
-public record KeycloakSettings(String url, String realm, String clientId) {}
+import java.util.List;
+
+import io.smallrye.mutiny.Uni;
+
+public interface TenantRegistry {
+
+	Uni<String> getTenantId(String virtualHost);
+
+	Uni<List<String>> getTenantIdList();
+
+}

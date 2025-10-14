@@ -34,7 +34,6 @@
 	<packaging>pom</packaging>
 	<modules>
 		<module>grpc</module>
-		<module>common</module>
 	</modules>
 
 </project>

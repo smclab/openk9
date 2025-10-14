@@ -32,6 +32,20 @@
 	<artifactId>quarkus-app</artifactId>
 	<packaging>pom</packaging>
 
+	<properties>
+		<junit-excluded-groups>io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
+	</properties>
+
+	<profiles>
+		<profile>
+			<!-- enable junit performance test -->
+			<id>quarkus-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
+		</profile>
+	</profiles>
+
 	<modules>
 		<module>../datasource</module>
 		<module>../tenant-manager</module>
@@ -47,7 +61,12 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.openk9.common</groupId>
-			<artifactId>resources-common</artifactId>
+			<artifactId>quarkus-common</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.openk9.common</groupId>
+			<artifactId>resources</artifactId>
 		</dependency>
 
 		<dependency>
@@ -133,30 +152,20 @@
 		</dependency>
 	</dependencies>
 
-	<profiles>
-		<profile>
-			<id>exclude-quarkus-test</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<build>
-				<pluginManagement>
-					<plugins>
-						<plugin>
-							<artifactId>maven-surefire-plugin</artifactId>
-							<version>${surefire-plugin.version}</version>
-							<configuration>
-								<excludedGroups>io.quarkus.test.junit.QuarkusTest</excludedGroups>
-								<systemProperties>
-									<java.util.logging.manager>org.jboss.logmanager.LogManager
-									</java.util.logging.manager>
-								</systemProperties>
-							</configuration>
-						</plugin>
-					</plugins>
-				</pluginManagement>
-			</build>
-		</profile>
-	</profiles>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<excludedGroups>${junit-excluded-groups}</excludedGroups>
+					<systemProperties>
+						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+					</systemProperties>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

@@ -93,11 +93,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	@Override
 	public Uni<Datasource> create(Mutiny.Session s, Datasource entity) {
 		return getCurrentTenant(s)
-			.flatMap(tenant -> super.create(s, entity)
+			.flatMap(tenantId -> super.create(s, entity)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(
-							tenant.schemaName(), datasource)
+							tenantId, datasource)
 					)
 				)
 			);
@@ -106,11 +106,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	@Override
 	public Uni<Datasource> deleteById(Mutiny.Session s, long datasourceId) {
 		return getCurrentTenant(s)
-			.flatMap(tenant -> super.deleteById(s, datasourceId)
+			.flatMap(tenantId -> super.deleteById(s, datasourceId)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.DELETE_SCHEDULER,
 						new SchedulerInitializer.DeleteSchedulerRequest(
-							tenant.schemaName(),
+							tenantId,
 							datasourceId
 						)
 					)
@@ -354,11 +354,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
 
 		return getCurrentTenant(s)
-			.flatMap(tenant -> super.update(s, datasourceId, datasourceDTO)
+			.flatMap(tenantId -> super.update(s, datasourceId, datasourceDTO)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(
-							tenant.schemaName(), datasource)
+							tenantId, datasource)
 					)
 				)
 			);
@@ -373,11 +373,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
 
 		return getCurrentTenant(s)
-			.flatMap(tenant -> super.patch(s, datasourceId, datasourceDTO)
+			.flatMap(tenantId -> super.patch(s, datasourceId, datasourceDTO)
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(
-							tenant.schemaName(), datasource)
+							tenantId, datasource)
 					)
 				)
 			);
@@ -559,7 +559,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		Mutiny.Session s, UpdateDatasourceDTO updateConnectionDTO) {
 
 		return getCurrentTenant(s)
-			.flatMap(tenant -> findByIdWithPluginDriver(
+			.flatMap(tenantId -> findByIdWithPluginDriver(
 				s, updateConnectionDTO.getDatasourceId())
 				.flatMap(datasource -> updateOrCreateEnrichPipeline(s, updateConnectionDTO)
 					.invoke(datasource::setEnrichPipeline)
@@ -574,7 +574,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				.invoke(datasource -> eventBus.send(
 						SchedulerInitializer.UPDATE_SCHEDULER,
 						new SchedulerInitializer.SchedulerRequest(
-							tenant.schemaName(), datasource)
+							tenantId, datasource)
 					)
 				)
 			);

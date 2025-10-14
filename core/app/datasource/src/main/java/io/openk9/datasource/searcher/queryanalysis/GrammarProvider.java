@@ -23,7 +23,6 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
@@ -31,6 +30,7 @@ import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
+import io.openk9.datasource.service.TenantRegistry;
 
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
@@ -48,7 +48,7 @@ public class GrammarProvider {
 			.onItem().ifNotNull().transform(tenantWithBucket -> {
 
 				var bucket = tenantWithBucket.getBucket();
-				var tenantId = tenantWithBucket.getTenant().schemaName();
+				var tenantId = tenantWithBucket.getTenantId();
 
 				QueryAnalysis queryAnalysis = bucket.getQueryAnalysis();
 
@@ -101,15 +101,14 @@ public class GrammarProvider {
 	private Uni<TenantWithBucket> getTenantWithBucket(String virtualHost) {
 		return cache.getAsync(
 			new CompositeCacheKey(virtualHost, "grammarProvider", "getTenantWithBucket"),
-			key -> tenantRegistry
-				.getTenantByVirtualHost(virtualHost)
-				.flatMap(tenant -> sessionFactory
+			key -> tenantRegistry.getTenantId(virtualHost)
+				.flatMap(tenantId -> sessionFactory
 					.withTransaction(
-						tenant.schemaName(), (s, t) -> s
+						tenantId, (s, t) -> s
 							.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
 							.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
 							.getSingleResult()
-							.map(bucket -> new TenantWithBucket(tenant, bucket))
+							.map(bucket -> new TenantWithBucket(tenantId, bucket))
 							.onFailure()
 							.recoverWithNull()
 					)

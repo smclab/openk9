@@ -623,9 +623,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
 		GetEmbeddingModelConfigurationsRequest request) {
 
-		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
-			.flatMap(tenant -> embeddingModelService
-				.fetchCurrent(tenant.schemaName())
+		return tenantRegistry.getTenantId(request.getVirtualHost())
+			.flatMap(tenantId -> embeddingModelService
+				.fetchCurrent(tenantId)
 				.map(embeddingModel -> {
 
 					if (embeddingModel == null) {
@@ -671,9 +671,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
-		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
-			.flatMap(tenantResponse -> largeLanguageModelService
-				.fetchCurrentLLMAndBucket(tenantResponse.schemaName())
+		return tenantRegistry.getTenantId(request.getVirtualHost())
+			.flatMap(tenantId -> largeLanguageModelService
+				.fetchCurrentLLMAndBucket(tenantId)
 				.map(bucketLLM -> {
 
 					var llm = bucketLLM.largeLanguageModel();
@@ -749,9 +749,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
 		GetRAGConfigurationsRequest request) {
 
-		return tenantRegistry.getTenantByVirtualHost(request.getVirtualHost())
-			.flatMap(tenant ->
-				bucketService.getCurrentBucket(tenant.schemaName())
+		return tenantRegistry.getTenantId(request.getVirtualHost())
+			.flatMap(tenantId ->
+				bucketService.getCurrentBucket(tenantId)
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationSimpleGenerate()))
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChatTool()))
