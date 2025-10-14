@@ -25,10 +25,10 @@ public class ByteArrayClient {
     @Inject
     Vertx vertx;
 
-    @ConfigProperty(name = "io.openk9.enricher.byte.array.api.port")
+    @ConfigProperty(name = "io.openk9.enricher.api.port")
     private int port;
 
-    @ConfigProperty(name = "io.openk9.enricher.byte.array.api.host")
+    @ConfigProperty(name = "io.openk9.enricher.api.host")
     private String host;
 
     @ConfigProperty(name = "io.openk9.enricher.byte.array.api.path")

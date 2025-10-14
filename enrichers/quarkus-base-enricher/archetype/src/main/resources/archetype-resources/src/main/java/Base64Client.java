@@ -24,10 +24,10 @@ public class Base64Client {
     @Inject
     Vertx vertx;
 
-    @ConfigProperty(name = "io.openk9.enricher.base64.api.port")
+    @ConfigProperty(name = "io.openk9.enricher.api.port")
     private int port;
 
-    @ConfigProperty(name = "io.openk9.enricher.base64.api.host")
+    @ConfigProperty(name = "io.openk9.enricher.api.host")
     private String host;
 
     @ConfigProperty(name = "io.openk9.enricher.base64.api.path")
