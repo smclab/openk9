@@ -14,7 +14,7 @@ services:
       test: "bash -c ':> /dev/tcp/127.0.0.1/15672' || exit 1"
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
   opensearch:
     image: docker.io/opensearchproject/opensearch:2.19.1
     container_name: opensearch
@@ -33,7 +33,7 @@ services:
       test: "curl -f http://localhost:9200"
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     ulimits:
       memlock:
         soft: -1
@@ -55,7 +55,7 @@ services:
       test: "bash -c ':> /dev/tcp/127.0.0.1/5432' || exit "
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     volumes:
       - ./compose-utilities:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
@@ -93,7 +93,7 @@ services:
       test: "curl -f http://localhost:8081"
       interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
     ports:
       - 8081:8081
     depends_on:
@@ -240,6 +240,7 @@ services:
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_MINIO_ACCESS_KEY: 'minio'
       QUARKUS_MINIO_SECRET_KEY: 'minio123'
+      QUARKUS_MINIO_SECURE: 'false'
       QUARKUS_MINIO_URL: 'http://minio:9000'
       QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'datasource'
   tika:
@@ -262,6 +263,11 @@ services:
     ports:
       - "5001:5000"
       - "6800:6800"
+  minio-connector:
+    image: smclab/openk9-minio-connector:3.1.0-SNAPSHOT
+    container_name: minio-connector
+    ports:
+      - "5002:5000"
   rag-module:
     image: smclab/openk9-rag-module:3.0.0
     container_name: rag-module
