@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+	<changeSet id="1760516822-1" author="openk9">
+		<createTable tableName="tenant">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKeyName="pk_tenant" primaryKey="true"/>
+			</column>
+			<column name="tenant_id" type="VARCHAR(100)">
+				<constraints nullable="false" uniqueConstraintName="uq_tenant_id" unique="true"/>
+			</column>
+			<column name="host_name" type="VARCHAR(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="issuer_uri" type="VARCHAR(200)">
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1760516822-2" author="openk9">
+		<createTable tableName="api_key">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKeyName="pk_api_key" primaryKey="true"/>
+			</column>
+			<column name="tenant_id" type="VARCHAR(100)">
+				<constraints
+					nullable="false"
+					foreignKeyName="fk_api_key_tenant"
+					referencedTableName="tenant"
+					referencedColumnNames="tenant_id"
+				/>
+			</column>
+			<column name="api_key_hash" type="VARCHAR(64)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="checksum" type="VARCHAR(32)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1760516822-3" author="openk9">
+		<createTable tableName="route_security">
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKeyName="pk_route_security" primaryKey="true"/>
+			</column>
+			<column name="tenant_id" type="VARCHAR(100)">
+				<constraints
+					nullable="false"
+					foreignKeyName="fk_route_security_tenant"
+					referencedTableName="tenant"
+					referencedColumnNames="tenant_id"
+				/>
+			</column>
+			<column name="route" type="VARCHAR(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="authorization_scheme" type="VARCHAR(100)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1760516822-4" author="openk9">
+		<createIndex tableName="api_key" indexName="idx_api_key_tenant_id">
+			<column name="tenant_id"/>
+		</createIndex>
+		<createIndex tableName="route_security" indexName="idx_route_security_tenant_id">
+			<column name="tenant_id"/>
+		</createIndex>
+	</changeSet>
+
+</databaseChangeLog>
