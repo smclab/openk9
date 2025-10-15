@@ -24,13 +24,13 @@ public class Base64Client {
     @Inject
     Vertx vertx;
 
-    @ConfigProperty(name = "io.openk9.enricher.api.port")
+    @ConfigProperty(name = "io.openk9.enricher.file.manager.api.port")
     private int port;
 
-    @ConfigProperty(name = "io.openk9.enricher.api.host")
+    @ConfigProperty(name = "io.openk9.enricher.file.manager.api.host")
     private String host;
 
-    @ConfigProperty(name = "io.openk9.enricher.base64.api.path")
+    @ConfigProperty(name = "io.openk9.enricher.file.manager.base64.api.path")
     private String path;
 
     public Future<String> getBase64(String resourceId, String schemaName) {
