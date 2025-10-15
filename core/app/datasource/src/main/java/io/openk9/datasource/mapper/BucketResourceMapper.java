@@ -29,6 +29,8 @@ import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
 import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.TokenTabResponseDTO;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
@@ -37,6 +39,7 @@ import org.mapstruct.ReportingPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Mapper(
 	componentModel = MappingConstants.ComponentModel.CDI,
@@ -59,6 +62,16 @@ public interface BucketResourceMapper {
 	default List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList) {
 		return toTabResponseDtoList(tabList, null, null);
 	}
+
+    static Map<String, String> map(String source) {
+        JsonObject json = (JsonObject) Json.decodeValue(source);
+        return json.stream().collect(
+                Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().toString()
+                )
+        );
+    }
 
 	default List<TabResponseDTO> toTabResponseDtoList(
 		List<Tab> tabList,
