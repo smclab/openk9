@@ -92,7 +92,7 @@ public class BucketResource {
 	HttpServerRequest request;
 
 	@Operation(operationId = "templates")
-	@Tag(name = "Templates API", description = "Return javascript templates configured for the bucket")
+	@Tag(description = "Return javascript templates configured for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -122,7 +122,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "tabs")
-	@Tag(name = "Tabs API", description = "Return configured tabs for the bucket")
+	@Tag(description = "Return configured tabs for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -155,7 +155,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "suggestion-categories")
-	@Tag(name = "Suggestions Categories API", description = "Return configured suggestion categories for the bucket")
+	@Tag(description = "Return configured suggestion categories for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -188,7 +188,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "doc-type-fields-sortable")
-	@Tag(name = "Sortable Doctype Fields API", description = "Return list of sortable doctype fields")
+	@Tag(description = "Return list of sortable doctype fields")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -220,7 +220,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "sortings")
-	@Tag(name = "Sorting Rules API", description = "Return list of sorting rules")
+	@Tag(description = "Return list of sorting rules")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -252,7 +252,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "default-language")
-	@Tag(name = "Default Language API", description = "Return, if configured, default language for the bucket")
+	@Tag(description = "Return, if configured, default language for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -282,7 +282,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "available-languages")
-	@Tag(name = "Available Languages API", description = "Return, if configured, available languages for the bucket")
+	@Tag(description = "Return, if configured, available languages for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -312,7 +312,7 @@ public class BucketResource {
 	}
 
 	@Operation(operationId = "current")
-	@Tag(name = "Current Bucket API", description = "Return general configuration for the bucket")
+	@Tag(description = "Return general configuration for the bucket")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

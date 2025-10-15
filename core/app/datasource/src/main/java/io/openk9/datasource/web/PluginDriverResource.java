@@ -63,7 +63,7 @@ public class PluginDriverResource {
 	}
 
 	@Operation(operationId = "document-types-plugin-driver")
-	@Tag(name = "Get Document Types API", description = "Return document types for a specific plugin driver")
+	@Tag(description = "Return document types for a specific plugin driver")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -92,7 +92,7 @@ public class PluginDriverResource {
 	}
 
 	@Operation(operationId = "form")
-	@Tag(name = "Form API", description = "Return form template for specific plugin driver")
+	@Tag(description = "Return form template for specific plugin driver")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -121,7 +121,7 @@ public class PluginDriverResource {
 	}
 
 	@Operation(operationId = "health")
-	@Tag(name = "Health API", description = "Perform health check for specific plugin driver by id")
+	@Tag(description = "Perform health check for specific plugin driver by id")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -148,7 +148,7 @@ public class PluginDriverResource {
 	}
 
 	@Operation(operationId = "health-dto")
-	@Tag(name = "Health with DTO API", description = "Perform health check for specific plugin driver using DTO")
+	@Tag(description = "Perform health check for specific plugin driver using DTO")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
