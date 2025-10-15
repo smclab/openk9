@@ -373,22 +373,22 @@ public class JobSchedulerService {
 				.setParameter("datasourceId", datasource.getId())
 				.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
 				.getSingleResultOrNull()
-				.flatMap(scheduler -> {
+				.flatMap(runningScheduler -> {
 
-					if (scheduler != null) {
+					if (runningScheduler != null) {
 
-						if (reindex) {
+						if (reindex && !runningScheduler.isReindex()) {
 
 							return Uni.createFrom().item(
 								new TriggerType.TriggerTypeReindex(
-									TriggerType.SimpleTriggerType.REINDEX, scheduler));
+									TriggerType.SimpleTriggerType.REINDEX, runningScheduler));
 						}
 						else {
 							log.warnf(
 								"A Scheduler with id %s for datasource %s is %s",
-								scheduler.getId(),
+								runningScheduler.getId(),
 								datasource.getId(),
-								scheduler.getStatus()
+								runningScheduler.getStatus()
 							);
 
 							return Uni.createFrom().item(TriggerType.SimpleTriggerType.IGNORE);
