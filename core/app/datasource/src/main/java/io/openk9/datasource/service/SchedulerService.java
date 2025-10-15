@@ -61,6 +61,21 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	SchedulerService() {}
 
+	protected static HealthStatus getHealthStatus(Scheduler.SchedulerStatus schedulerStatus) {
+		return switch (schedulerStatus) {
+
+			case RUNNING, STALE -> HealthStatus.RUNNING;
+			case ERROR, FAILURE -> HealthStatus.ERROR;
+			case FINISHED, CANCELLED -> HealthStatus.IDLE;
+			case null -> HealthStatus.IDLE;
+
+		};
+	}
+
+	protected static JobStatus getJobStatus(Scheduler.SchedulerStatus schedulerStatus) {
+		return schedulerStatus == null ? JobStatus.ON_SCHEDULING : JobStatus.ALREADY_RUNNING;
+	}
+
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
 		return findById(tenantId, schedulerId)
 			.chain(scheduler -> switch (scheduler.getStatus()) {
@@ -138,23 +153,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		return Scheduler.class;
 	}
 
-	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
-		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
-			.flatMap(found -> s.fetch(found.getNewDataIndex()))
-		);
-	}
-
-	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
-		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
-			.flatMap(found -> s.fetch(found.getOldDataIndex()))
-		);
-	}
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {Scheduler_.STATUS};
-	}
-
 	/**
 	 * Asynchronously retrieves a status for every datasource in the system.
 	 * <p>
@@ -200,10 +198,46 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * with the status {@link  JobStatus#ALREADY_RUNNING}.
 	 * Otherwise, it defaults to {@link JobStatus#ON_SCHEDULING}.
 	 *
-	 * @param datasourceIds the list of datasource IDs to check
+	 * @param datasourceId the list of datasource IDs to check
 	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
 	 *         to its corresponding job status
 	 */
+	public Uni<DatasourceJobStatusAndType> getJobStatus(Long datasourceId) {
+
+		return sessionFactory.withTransaction((session, transaction) -> session
+			.createQuery(
+				"""
+					SELECT d.id, d.name, s.status, s.reindex
+					FROM Datasource d
+					LEFT JOIN d.schedulers s ON s.status IN :runningStates
+					WHERE d.id = :datasourceId
+					""",
+				Tuple.class
+			)
+			.setParameter("datasourceId", datasourceId)
+			.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
+			.getSingleResult()
+			.map(this::mapToJobStatusAndType)
+		);
+	}
+
+	/**
+	 * Retrieves the job status for a list of datasources.
+	 *
+	 * <p>This method queries the database for active {@code Scheduler} instances associated with
+	 * the provided datasource IDs. If a datasource is found in a running state,
+	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
+	 * with the status {@link  JobStatus#ALREADY_RUNNING}.
+	 * Otherwise, it defaults to {@link JobStatus#ON_SCHEDULING}.
+	 *
+	 * @param datasourceIds the list of datasource IDs to check
+	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
+	 *         to its corresponding job status
+	 * @deprecated Replaced by {@link #getJobStatus(Long)} which uses unique datasource id.
+	 *         Since only one scheduler per datasource can now be in running state,
+	 *         this method is no longer necessary.
+	 */
+	@Deprecated
 	public Uni<List<DatasourceJobStatus>> getJobStatusList(List<Long> datasourceIds) {
 
 		return sessionFactory.withTransaction((session, transaction) -> session
@@ -221,6 +255,23 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.getResultList()
 			.map(this::mapToJobStatusList)
 		);
+	}
+
+	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getNewDataIndex()))
+		);
+	}
+
+	public Uni<DataIndex> getOldDataIndex(Scheduler scheduler) {
+		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
+			.flatMap(found -> s.fetch(found.getOldDataIndex()))
+		);
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {Scheduler_.STATUS};
 	}
 
 	public Uni<Void> rereouteScheduling(String tenantId, long schedulerId) {
@@ -282,16 +333,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.map(this::mapToList);
 	}
 
-	private List<String> mapToList(SearchResponse searchResponse) {
-		return searchResponse
-			.getAggregations()
-			.<Terms>get("contentId_agg")
-			.getBuckets()
-			.stream()
-			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
-			.toList();
-	}
-
 	/**
 	 * Transforms a list of raw JPA query results into a list of DatasourceHealthStatus DTOs.
 	 * <p>
@@ -325,6 +366,31 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
+	 * Transforms a raw JPA query result into a {@link DatasourceJobStatusAndType} DTO.
+	 * <p>
+	 * This method extracts the raw datasource, scheduler data, and type from a
+	 * {@link jakarta.persistence.Tuple} and maps the internal
+	 * {@link Scheduler.SchedulerStatus} to a simplified, client-facing {@link JobStatus}
+	 * by calling the {@code getJobStatus} helper method.
+	 *
+	 * @param tuple The raw tuple from the database query, conforming to the expected structure.
+	 * @return A mapped {@link DatasourceJobStatusAndType} object containing datasource id,
+	 *         name, job status, and type.
+	 */
+	private DatasourceJobStatusAndType mapToJobStatusAndType(Tuple tuple) {
+
+		var schedulerId = tuple.get(2, Scheduler.SchedulerStatus.class);
+		var jobStatus = getJobStatus(schedulerId);
+
+		return new DatasourceJobStatusAndType(
+			tuple.get(0, Long.class),
+			tuple.get(1, String.class),
+			jobStatus,
+			tuple.get(3, Boolean.class)
+		);
+	}
+
+	/**
 	 * Transforms a list of raw JPA query results into a list of {@link DatasourceJobStatus} DTOs.
 	 * <p>
 	 * This method iterates through each {@link jakarta.persistence.Tuple} and extracts the raw
@@ -335,6 +401,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * @param tuples The list of raw tuples from the database query, conforming to the expected structure.
 	 * @return A final, mapped list of {@link DatasourceJobStatus} objects.
 	 */
+	@Deprecated
 	private List<DatasourceJobStatus> mapToJobStatusList(List<Tuple> tuples) {
 
 		List<DatasourceJobStatus> jobStatusList = new ArrayList<>();
@@ -355,29 +422,14 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		return jobStatusList;
 	}
 
-
-	protected static JobStatus getJobStatus(Scheduler.SchedulerStatus schedulerStatus) {
-		return schedulerStatus == null ? JobStatus.ON_SCHEDULING : JobStatus.ALREADY_RUNNING;
-	}
-
-	protected static HealthStatus getHealthStatus(Scheduler.SchedulerStatus schedulerStatus) {
-		return switch (schedulerStatus) {
-
-			case RUNNING, STALE -> HealthStatus.RUNNING;
-			case ERROR, FAILURE -> HealthStatus.ERROR;
-			case FINISHED, CANCELLED -> HealthStatus.IDLE;
-			case null -> HealthStatus.IDLE;
-
-		};
-	}
-
-	public record DatasourceHealthStatus(long id, String name, HealthStatus status) {}
-
-	public record DatasourceJobStatus(long id, String name, JobStatus status) {}
-
-	public enum JobStatus {
-		ALREADY_RUNNING,
-		ON_SCHEDULING
+	private List<String> mapToList(SearchResponse searchResponse) {
+		return searchResponse
+			.getAggregations()
+			.<Terms>get("contentId_agg")
+			.getBuckets()
+			.stream()
+			.map(MultiBucketsAggregation.Bucket::getKeyAsString)
+			.toList();
 	}
 
 	public enum HealthStatus {
@@ -385,5 +437,21 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		ERROR,
 		IDLE
 	}
+
+	public enum JobStatus {
+		ALREADY_RUNNING,
+		ON_SCHEDULING
+	}
+
+	public record DatasourceHealthStatus(long id, String name, HealthStatus status) {}
+
+	public record DatasourceJobStatus(long id, String name, JobStatus status) {}
+
+	public record DatasourceJobStatusAndType(
+		long id,
+		String name,
+		JobStatus status,
+		Boolean reindex
+	) {}
 
 }
