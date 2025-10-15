@@ -50,5 +50,5 @@ public class SchedulerDtoExamples {
               }""";
     public static final String TRIGGER_RESPONSE =
             """
-            {"id":209,"name":"test-mp3","status":"ON_SCHEDULING"}""";
+            {"id":209,"oldSchedulerType":"NO_RUNNING_SCHEDULER","triggerStatus":"STARTED"}""";
 }

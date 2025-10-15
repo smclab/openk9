@@ -20,7 +20,6 @@ package io.openk9.datasource.web;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
 import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.control.ActivateRequestContext;
@@ -54,6 +53,13 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @RolesAllowed("k9-admin")
 public class TriggerWithDateResource {
 
+	@Inject
+	RoutingContext routingContext;
+	@Inject
+	Instance<SchedulerInitializer> schedulerInitializer;
+	@Inject
+	SchedulerService schedulerService;
+
 	/**
 	 * Triggers the scheduling or reindexing for the specified datasource and ingestion parameters.
 	 * <p>
@@ -63,7 +69,8 @@ public class TriggerWithDateResource {
 	 * and triggers the scheduled jobs if necessary.
 	 *
 	 * @param dto The {@link TriggerV2ResourceDTO} object containing the parameters for the job trigger.
-	 * @return A {@link Uni} representing the status of the triggered jobs as a {@link SchedulerService.DatasourceJobStatus}.
+	 * @return A {@link Uni} representing the status of the triggered job and type of running jobs
+	 *         if present as a {@link TriggerResponse}.
 	 */
 	@Operation(operationId = "v2-trigger")
 	@Tag(name = "Trigger Datasource API", description = "Permits to trigger an ingestion schedule for a specific datasource")
@@ -103,7 +110,7 @@ public class TriggerWithDateResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ActivateRequestContext
-	public Uni<SchedulerService.DatasourceJobStatus> trigger(TriggerV2ResourceDTO dto) {
+	public Uni<TriggerResponse> trigger(TriggerV2ResourceDTO dto) {
 
 		TriggerWithDateResourceDTO withDateResourceDTO =
 			TriggerWithDateResourceDTO.builder()
@@ -112,28 +119,71 @@ public class TriggerWithDateResource {
 				.startIngestionDate(dto.getStartIngestionDate())
 				.build();
 
-		List<Long> datasourceIds = withDateResourceDTO.getDatasourceIds();
 		String tenantId = routingContext.get("_tenantId");
 
 		return schedulerService
-			.getJobStatusList(datasourceIds)
-			.onItem()
-			.transform(datasourceJobStatuses ->
-				datasourceJobStatuses.stream().findFirst().orElse(null))
+			.getJobStatus(dto.getDatasourceId())
+			.map(datasourceJobStatusAndType ->
+				mapToTriggerResponse(datasourceJobStatusAndType, dto.isReindex())
+			)
 			.call(() -> schedulerInitializer
 				.get()
 				.triggerJobs(tenantId, withDateResourceDTO)
 			);
 	}
 
-	@Inject
-	Instance<SchedulerInitializer> schedulerInitializer;
+	private TriggerStatus getNewSchedulerActionOutcome(
+			OldSchedulerType oldSchedulerType, boolean reindex) {
 
-	@Inject
-	RoutingContext routingContext;
+		return switch (oldSchedulerType) {
+			case NO_RUNNING_SCHEDULER -> TriggerStatus.STARTED;
+			case TRIGGER -> reindex
+				? TriggerStatus.STARTED
+				: TriggerStatus.NOT_STARTED;
+			case REINDEX -> TriggerStatus.NOT_STARTED;
+		};
+	}
 
-	@Inject
-	SchedulerService schedulerService;
+	private OldSchedulerType getSchedulerType(
+			SchedulerService.DatasourceJobStatusAndType jobStatusAndType) {
+
+		if (jobStatusAndType.status() == SchedulerService.JobStatus.ON_SCHEDULING) {
+			return OldSchedulerType.NO_RUNNING_SCHEDULER;
+		}
+		else {
+			return jobStatusAndType.reindex() ? OldSchedulerType.REINDEX : OldSchedulerType.TRIGGER;
+		}
+	}
+
+	private TriggerResponse mapToTriggerResponse(
+			SchedulerService.DatasourceJobStatusAndType jobStatusAndType, boolean reindex) {
+
+		var oldSchedulerType = getSchedulerType(jobStatusAndType);
+		var newSchedulerActionOutcome = getNewSchedulerActionOutcome(oldSchedulerType, reindex);
+
+		return new TriggerResponse(
+			jobStatusAndType.id(),
+			oldSchedulerType,
+			newSchedulerActionOutcome
+		);
+	}
+
+	public enum TriggerStatus {
+		STARTED,
+		NOT_STARTED
+	}
+
+	public enum OldSchedulerType {
+		TRIGGER,
+		REINDEX,
+		NO_RUNNING_SCHEDULER
+	}
+
+	public record TriggerResponse(
+		long id,
+		OldSchedulerType oldSchedulerType,
+		TriggerStatus triggerStatus
+	) {}
 
 	@Data
 	@NoArgsConstructor
