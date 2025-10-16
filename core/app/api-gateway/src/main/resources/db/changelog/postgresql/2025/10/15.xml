@@ -35,6 +35,10 @@
 			</column>
 			<column name="issuer_uri" type="VARCHAR(200)">
 			</column>
+			<column name="client_id" type="VARCHAR(100)">
+			</column>
+			<column name="client_secret" type="VARCHAR(100)">
+			</column>
 		</createTable>
 	</changeSet>
 

@@ -39,7 +39,12 @@ sealed public interface TenantManagementEvent {
 	 */
 	@Builder
 	record TenantCreated(
-		String tenantId, String hostName, String issuerUri, String schemaName,
+		String tenantId,
+		String hostName,
+		String schemaName,
+		String issuerUri,
+		String clientId,
+		String clientSecret,
 		Map<String, String> routeAuthorizationMap)
 		implements TenantManagementEvent {}
 
@@ -65,7 +70,12 @@ sealed public interface TenantManagementEvent {
 	 */
 	@Builder
 	record TenantUpdated(
-		String tenantId, String hostName, String issuerUri, String schemaName,
+		String tenantId,
+		String hostName,
+		String schemaName,
+		String issuerUri,
+		String clientId,
+		String clientSecret,
 		Map<String, String> routeAuthorizationMap)
 		implements TenantManagementEvent {}
 

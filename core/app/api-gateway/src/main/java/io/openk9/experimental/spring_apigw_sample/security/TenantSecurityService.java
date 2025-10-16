@@ -88,4 +88,15 @@ public interface TenantSecurityService {
 	 *         no tenant matches the given host name.
 	 */
 	Mono<String> getTenantId(String hostName);
+
+	/**
+	 * Resolves a tenant based on a given host name.
+	 * <p>
+	 * Useful in multi-tenant applications where the host name identifies the tenant.
+	 *
+	 * @param hostName the host name of the incoming request (e.g., "alabasta.localhost").
+	 * @return a {@link Mono} emitting the {@link Tenant}, or empty if
+	 *         no tenant matches the given host name.
+	 */
+	Mono<Tenant> getTenantAggregate(String hostName);
 }

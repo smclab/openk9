@@ -60,7 +60,12 @@ public class ReactiveTenantManagementEventDbWriter
 		}
 
 		return writeService
-			.insertTenant(event.tenantId(), event.hostName(), event.issuerUri())
+			.insertTenant(event.tenantId(),
+				event.hostName(),
+				event.issuerUri(),
+				event.clientId(),
+				event.clientSecret()
+			)
 			.then(Mono.when(inserts))
 			.doOnSuccess(v -> log.info("Processed tenant created event: {}", event.tenantId()))
 			.doOnError(throwable -> log.error("Failed tenant creation", throwable));

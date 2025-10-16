@@ -38,6 +38,7 @@ public class Events {
 				.schemaName("drum")
 				.hostName("drum.localhost")
 				.issuerUri("http://drum.localhost:9090/realms/drum")
+				.clientId("openk9")
 				.routeAuthorizationMap(Map.of("DATASOURCE", "OAUTH2", "SEARCHER", "OAUTH2"))
 				.build(),
 
@@ -46,6 +47,7 @@ public class Events {
 				.schemaName("alabasta")
 				.hostName("alabasta.localhost")
 				.issuerUri("http://alabasta.localhost:9090/realms/alabasta")
+				.clientId("openk9")
 				.routeAuthorizationMap(Map.of("DATASOURCE", "OAUTH2", "SEARCHER", "API_KEY"))
 				.build(),
 
@@ -54,6 +56,7 @@ public class Events {
 				.schemaName("sabaody")
 				.hostName("sabaody.localhost")
 				.issuerUri("http://sabaody.localhost:9090/realms/sabaody")
+				.clientId("openk9")
 				.routeAuthorizationMap(Map.of("DATASOURCE", "API_KEY", "SEARCHER", "API_KEY"))
 				.build()
 		);

@@ -32,6 +32,8 @@ public record Tenant(
 	String tenantId,
 	String hostName,
 	String issuerUri,
+	String clientId,
+	String clientSecret,
 	Keychain keychain,
 	RouteAuthorizationMap routeAuthorizationMap) {
 }

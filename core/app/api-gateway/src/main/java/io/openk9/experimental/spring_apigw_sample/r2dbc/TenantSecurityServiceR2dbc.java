@@ -57,7 +57,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 	private final DatabaseClient db;
 	private final Cache cache;
 
-	private Mono<Tenant> getTenantAggregate(String tenantId) {
+	public Mono<Tenant> getTenantAggregate(String tenantId) {
 		var cached = cache.get(tenantId, Tenant.class);
 		if (cached != null) {
 			return Mono.just(cached);
@@ -72,6 +72,8 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 				tuple.getT1().tenantId(),
 				tuple.getT1().hostName(),
 				tuple.getT1().issuerUri(),
+				tuple.getT1().clientId(),
+				tuple.getT1().clientSecret(),
 				tuple.getT2(),
 				tuple.getT3()
 			))
@@ -81,7 +83,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 
 	private Mono<Tenant> getTenant(String tenantId) {
 		return db.sql("""
-                    SELECT tenant_id, host_name, issuer_uri
+                    SELECT tenant_id, host_name, issuer_uri, client_id, client_secret
                     FROM tenant
                     WHERE tenant_id = :tenantId
                     """)
@@ -90,6 +92,8 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 				row.get("tenant_id", String.class),
 				row.get("host_name", String.class),
 				row.get("issuer_uri", String.class),
+				row.get("client_id", String.class),
+				row.get("client_secret", String.class),
 				Keychain.of(),
 				RouteAuthorizationMap.of()
 			))
@@ -173,12 +177,19 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 		String apiKey = apiKeyToken.getApiKey();
 
 		return getTenantAggregate(tenantId)
-			.flatMap(tenant -> {
+			.<List<String>>handle((tenant, sink) -> {
 				var keychain = tenant.keychain();
-				if (keychain != null && keychain.contains(apiKey)) {
-					return Mono.just(List.of("ADMIN"));
+				try {
+					if (keychain != null && keychain.contains(apiKey)) {
+						sink.next(List.of("ADMIN"));
+					}
+					else {
+						sink.complete();
+					}
 				}
-				return Mono.empty();
+				catch (ChecksumValidationException e) {
+					sink.error(e);
+				}
 			})
 			.onErrorMap(
 				ChecksumValidationException.class,

@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TenantWriteServiceR2dbc {
 
-	record Tenant(long id, String tenantId, String hostName, String issuerUri) {}
+	record Tenant(long id, String tenantId, String hostName, String issuerUri, String clientId, String clientSecret) {}
 	// TODO: record Issuer(long id, String tenantId, String issuerUri, String clientId, String clientSecret) {}
 	record ApiKey(long id, String tenantId, String apiKeyHash, String checksum) {}
 	record RouteSecurity(long id, String tenantId, String route, String authorizationScheme) {}
@@ -51,14 +51,23 @@ public class TenantWriteServiceR2dbc {
 	 * @param tenantId the tenant identifier
 	 * @param hostName the hostname for the tenant
 	 * @param issuerUri the issuer URI (can be null)
+	 * @param clientId the clientId registered on the issuer (can be null)
+	 * @param clientSecret the secret related to the clientId (can be null)
 	 * @return Mono that completes when insertion is done
 	 */
 	public Mono<Void> insertTenant(
-		String tenantId, String hostName, String issuerUri) {
+		String tenantId, String hostName, String issuerUri, String clientId, String clientSecret) {
 
 		log.debug("Inserting tenant: tenantId={}, hostName={}", tenantId, hostName);
 
-		return template.insert(new Tenant(idGenerator.nextId(), tenantId, hostName, issuerUri))
+		return template.insert(new Tenant(
+				idGenerator.nextId(),
+				tenantId,
+				hostName,
+				issuerUri,
+				clientId,
+				clientSecret
+			))
 			.then()
 			.doOnSuccess(v -> log.info("Successfully inserted tenant: {}", tenantId))
 			.doOnError(e -> log.error("Failed to insert tenant: {}", tenantId, e));
