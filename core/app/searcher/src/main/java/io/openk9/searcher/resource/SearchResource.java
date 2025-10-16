@@ -36,6 +36,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
@@ -324,6 +326,8 @@ public class SearchResource {
 
 		// retrieve Autocorrection configurations
 		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
+			.onFailure(this::_isNotFound)
+			.recoverWithNull()
 			.onFailure()
 			.recoverWithUni(throwable -> {
 				_logMessage("Retrieve autocorrection configurations failed", throwable);
@@ -482,6 +486,8 @@ public class SearchResource {
 
 		// retrieve Autocorrection configurations
 		return searcherClient.getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
+			.onFailure(this::_isNotFound)
+			.recoverWithNull()
 			.onFailure()
 			.recoverWithUni(throwable -> {
 				_logMessage("Retrieve autocorrection configurations failed", throwable);
@@ -926,6 +932,25 @@ public class SearchResource {
 	}
 
 	/**
+	 * Checks whether the provided exception represents a gRPC NOT_FOUND error.
+	 *
+	 * <p>This method verifies if the {@link Throwable} is an instance of
+	 * {@link StatusRuntimeException} and if the associated status code is
+	 * {@link Status.Code#NOT_FOUND}.</p>
+	 *
+	 * @param failure the exception to check
+	 * @return {@code true} if the exception is a {@code StatusRuntimeException}
+	 *         with NOT_FOUND status code, {@code false} otherwise
+	 *
+	 * @see io.grpc.StatusRuntimeException
+	 * @see io.grpc.Status.Code#NOT_FOUND
+	 */
+	private boolean _isNotFound(Throwable failure) {
+		return failure instanceof StatusRuntimeException &&
+			((StatusRuntimeException) failure).getStatus().getCode() == Status.Code.NOT_FOUND;
+	}
+
+	/**
 	 * Logs a message with optional throwable information based on debug level.
 	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
 	 * Otherwise, logs only the message at WARN level.
@@ -935,7 +960,7 @@ public class SearchResource {
 	 */
 	private void _logMessage(String message, Throwable throwable) {
 		if (log.isDebugEnabled()) {
-			log.debug(message, throwable);
+			log.warn(message, throwable);
 		}
 		else {
 			log.warn(message);
