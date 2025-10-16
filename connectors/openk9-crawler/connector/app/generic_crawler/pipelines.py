@@ -53,7 +53,7 @@ class GenericCrawlerPipeline:
             # logger.info(dict(item))
 
             # logger.info("ContentId " + str(item['contentId']))
-            # post_message(ingestion_url, dict(item))
+            post_message(ingestion_url, dict(item))
 
             spider.crawled_ids.append(item['contentId'])
             spider.count = spider.count + 1
