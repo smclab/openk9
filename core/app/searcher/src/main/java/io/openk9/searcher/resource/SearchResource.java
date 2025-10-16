@@ -338,35 +338,42 @@ public class SearchResource {
 				);
 			})
 			.map(autocorrectionConfig -> {
-				if (searchTokenUserInput.isPresent()) {
-					var searchTokenUserInputValues = searchTokenUserInput.get().getValues();
+				if (autocorrectionConfig != null) {
+					if (searchTokenUserInput.isPresent()) {
+						var searchTokenUserInputValues = searchTokenUserInput.get().getValues();
 
-					if (searchTokenUserInputValues.size() == 1) {
+						if (searchTokenUserInputValues.size() == 1) {
 
-						// retrieve the text entered by the user in the search input.
-						var queryText = searchTokenUserInputValues.getFirst();
+							// retrieve the text entered by the user in the search input.
+							var queryText = searchTokenUserInputValues.getFirst();
 
-						if (queryText != null && !queryText.isEmpty()) {
-							// Create the autocorrection request for OpenSearch according to the
-							// autocorrection configurations and return its JSON representation
-							return _createAutocorrectionRequest(autocorrectionConfig, queryText)
-								.toJsonString();
+							if (queryText != null && !queryText.isEmpty()) {
+								// Create the autocorrection request for OpenSearch according to the
+								// autocorrection configurations and return its JSON representation
+								return _createAutocorrectionRequest(autocorrectionConfig, queryText)
+									.toJsonString();
+							}
+							else {
+								throw new AutocorrectionException(
+									"Autocorrection was not performed because the user input text is null or empty."
+								);
+							}
 						}
 						else {
-							throw  new AutocorrectionException(
-								"Autocorrection was not performed because the user input text is null or empty."
+							throw new AutocorrectionException(
+								"Autocorrection was not performed because the user input search token has 0 or more than 1 values."
 							);
 						}
 					}
 					else {
 						throw new AutocorrectionException(
-							"Autocorrection was not performed because the user input search token has 0 or more than 1 values."
+							"Autocorrection was not performed because no search token with isSearch is present."
 						);
 					}
 				}
 				else {
 					throw new AutocorrectionException(
-						"Autocorrection was not performed because no search token with isSearch is present."
+						"Autocorrection is disabled."
 					);
 				}
 			});
@@ -497,14 +504,19 @@ public class SearchResource {
 					)
 				);
 			})
-			.flatMap(autocorrectionConfig ->
-				// retrieve Autocorrection suggestions
-				searchTokenUserInput.isPresent()
-					? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
-					: Uni.createFrom().failure(
+			.flatMap(autocorrectionConfig -> {
+				if (autocorrectionConfig != null) {
+					// retrieve Autocorrection suggestions
+					return searchTokenUserInput.isPresent()
+						? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
+						: Uni.createFrom().failure(
 						new AutocorrectionException("Autocorrection was not performed because no search token with isSearch is present.")
-					)
-			)
+					);
+				}
+				else {
+					return Uni.createFrom().item(new HashMap<>());
+				}
+			})
 			.onFailure()
 			.recoverWithItem(failure -> {
 				_logMessage("Something went wrong during the autocorrected search.", failure);
