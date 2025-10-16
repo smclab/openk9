@@ -34,7 +34,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     sitemap_follow = ['']
     sitemap_alternate_links = False
     
-    cont = 0
+    count = 0
     content = ''
 
     payload = {}
@@ -131,7 +131,11 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                             {'response': response}, extra={'spider': self})
                 return
 
-            s = Sitemap(body)
+            s = Sitemap('''<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://www.agenziaentrateriscossione.gov.it/it/il-gruppo/lagenzia-comunica/comunicati-stampa/index.html</loc>
+</url>
+</urlset>''')
 
             if s.type == 'sitemapindex':
                 for loc in iterloc(s, self.sitemap_alternate_links):
@@ -247,6 +251,10 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                                   meta={
                                       meta_key: True,
                                       "playwright": self.use_playwright,
+                                            "playwright_page_goto_kwargs": {
+                                            "timeout": self.playwright_timeout,
+                                            "wait_until": "domcontentloaded"
+                                        },
                                       "playwright_page_coroutines": [
                                           # We'll just wait a short time — if not found, no crash
                                           PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)

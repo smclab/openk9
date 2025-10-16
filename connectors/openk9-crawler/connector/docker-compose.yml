@@ -7,4 +7,4 @@ services:
       - "5000:5000"
       - "6800:6800"
     environment:
-      - INPUT_LOG_LEVEL=DEBUG
+      - INPUT_LOG_LEVEL=INFO
