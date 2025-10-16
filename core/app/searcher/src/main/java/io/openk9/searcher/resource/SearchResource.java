@@ -678,6 +678,7 @@ public class SearchResource {
 			.suggest(Suggester.of(sug -> sug
 				.text(queryText)
 				.suggesters(AUTOCORRECTION_SUGGESTION, fsb ->
+					// Term suggest precisely corrects individual misspelled words without altering the entire phrase
 					fsb.term(tsb -> tsb
 						.field(autocorrectionConfig.getField())
 						// max number of suggestions to retrieve for each term
@@ -865,10 +866,11 @@ public class SearchResource {
 							.setAttribute("queryText", queryText)
 							.startSpan();
 						try {
-							var suggestionsResult =
-								client.search(autocorrectionRequest, Void.class);
-							span.addEvent("suggestions-obtained");
-							return suggestionsResult;
+							return client.search(autocorrectionRequest, Void.class)
+								.thenApply(response -> {
+									span.addEvent("suggestions-obtained");
+									return response;
+								});
 						}
 						catch (IOException | OpenSearchException e) {
 							span.recordException(e);
