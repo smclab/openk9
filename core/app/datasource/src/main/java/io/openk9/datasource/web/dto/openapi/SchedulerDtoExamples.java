@@ -50,5 +50,9 @@ public class SchedulerDtoExamples {
               }""";
     public static final String TRIGGER_RESPONSE =
             """
-            {"id":209,"oldSchedulerType":"NO_RUNNING_SCHEDULER","triggerStatus":"STARTED"}""";
+            {
+                "id":209,
+                "oldSchedulerType":"NO_RUNNING_SCHEDULER",
+                "triggerStatus":"STARTED"
+            }""";
 }

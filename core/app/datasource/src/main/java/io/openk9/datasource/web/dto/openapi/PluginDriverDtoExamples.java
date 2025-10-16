@@ -150,4 +150,9 @@ public class PluginDriverDtoExamples {
                 "refreshOnQuery": false,
                 "retrieveType": "HYBRID"
              }""";
+    public static final String HEALTH_STATUS =
+        """
+		{
+			"status":"UP"
+		}""";
 }
