@@ -15,23 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.resource;
+package io.openk9.datasource.searcher;
 
-public class AutocorrectionException extends RuntimeException {
+public class InvalidTenantException extends RuntimeException {
 
-	public AutocorrectionException() {
+	public InvalidTenantException() {
 		super();
 	}
 
-	public AutocorrectionException(String message) {
+	public InvalidTenantException(String message) {
 		super(message);
 	}
 
-	public AutocorrectionException(String message, Throwable cause) {
+	public InvalidTenantException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public AutocorrectionException(Throwable cause) {
+	public InvalidTenantException(Throwable cause) {
 		super(cause);
 	}
 }
