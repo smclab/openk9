@@ -410,8 +410,6 @@ class ApiGatewaySecurityTest {
             webTestClient.get()
 				.uri("/searcher/test")
 				.header(HttpHeaders.HOST, UNKNOWN_HOST)
-				// todo the issuer has to be related to the tenant,
-				//  anyway the request is rejected and unauthorized
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN) // any valid JWT
 				.exchange()
 				.expectStatus()
