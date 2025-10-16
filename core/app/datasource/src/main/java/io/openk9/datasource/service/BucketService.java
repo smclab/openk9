@@ -442,11 +442,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//Autocorrection
-						if (bucketWithListsDTO.getAutocorrection() != null) {
+						if (bucketWithListsDTO.getAutocorrectionId() != null) {
 							var autocorrection =
 								s.getReference(
 									Autocorrection.class,
-									bucketWithListsDTO.getAutocorrection()
+									bucketWithListsDTO.getAutocorrectionId()
 								);
 
 							bucket.setAutocorrection(autocorrection);
@@ -969,11 +969,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						//Autocorrection
-						if (bucketWithListsDTO.getAutocorrection() != null) {
+						if (bucketWithListsDTO.getAutocorrectionId() != null) {
 							var autocorrection =
 								s.getReference(
 									Autocorrection.class,
-									bucketWithListsDTO.getAutocorrection()
+									bucketWithListsDTO.getAutocorrectionId()
 								);
 
 							bucket.setAutocorrection(autocorrection);
@@ -1329,11 +1329,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						//Autocorrection
 						Autocorrection autocorrection = null;
 
-						if (bucketWithListsDTO.getAutocorrection() != null) {
+						if (bucketWithListsDTO.getAutocorrectionId() != null) {
 							autocorrection =
 								s.getReference(
 									Autocorrection.class,
-									bucketWithListsDTO.getAutocorrection()
+									bucketWithListsDTO.getAutocorrectionId()
 								);
 						}
 
