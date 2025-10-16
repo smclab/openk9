@@ -24,6 +24,7 @@ import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
+import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
@@ -159,7 +160,7 @@ public class PluginDriverResource {
 							@Content(
 									mediaType = MediaType.APPLICATION_JSON,
 									schema = @Schema(implementation = Response.class),
-									example = SchedulerDtoExamples.TRIGGER_RESPONSE
+									example = PluginDriverDtoExamples.HEALTH_STATUS
 							)
 					}
 			),
