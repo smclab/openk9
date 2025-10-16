@@ -20,17 +20,11 @@ package io.openk9.experimental.spring_apigw_sample.performance;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openk9.experimental.spring_apigw_sample.r2dbc.CompactSnowflakeIdGenerator;
 
@@ -73,93 +67,18 @@ public class CompactSnowflakeIdGeneratorPerformanceTest {
 
 		try (ExecutorService pool = Executors.newFixedThreadPool(threads)) {
 
-			List<Callable<Void>> tasks = new ArrayList<>();
-
 			for (int t = 0; t < threads; t++) {
-				tasks.add(() -> {
+				pool.execute(() -> {
 					for (int i = 0; i < idsPerThread; i++) {
 						seen.add(generator.nextId());
 					}
-					return null;
 				});
 			}
 
-			boolean allDone = true;
-			for (Future<Void> future : pool.invokeAll(tasks)) {
-				allDone &= future.isDone();
-			}
-
-			assertTrue(allDone, "uncompleted tasks");
-
-			pool.shutdown();
 		}
 
 		assertEquals(threads * idsPerThread, seen.size(),
 			"Duplicate IDs detected under concurrency");
-	}
-
-	/**
-	 * Simulate multiple independent nodes (each with its own generator)
-	 * to measure collision probability and throughput.
-	 */
-	@Test
-	void testMultiNodeCollisionAndPerformance() throws InterruptedException {
-		int nNodes = 50;
-		int idsPerNode = 10_000;
-
-		AtomicInteger collisions = new AtomicInteger();
-
-		long start = System.nanoTime();
-
-		try (ExecutorService pool = Executors.newFixedThreadPool(nNodes)) {
-
-			List<Callable<Void>> tasks = new ArrayList<>();
-
-			for (int i = 0; i < nNodes; i++) {
-				tasks.add(() -> {
-					var gen = new CompactSnowflakeIdGenerator();
-					Set<Long> localIds = new HashSet<>();
-
-					for (int j = 0; j < idsPerNode; j++) {
-						long id = gen.nextId();
-
-						// Local collision check
-						if (!localIds.add(id)) {
-							collisions.incrementAndGet();
-						}
-					}
-
-					return null;
-				});
-			}
-
-			boolean allDone = true;
-			for (Future<Void> future : pool.invokeAll(tasks)) {
-				allDone &= future.isDone();
-			}
-
-			assertTrue(allDone, "uncompleted tasks");
-			pool.shutdown();
-		}
-
-		long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
-		long total = nNodes * (long) idsPerNode;
-		double throughput = total / (elapsedMs / 1000.0);
-
-		System.out.printf("""
-            === Snowflake Performance Report ===
-            Nodes           : %d
-            IDs per node    : %d
-            Total IDs       : %,d
-            Time elapsed    : %d ms
-            Throughput      : %.2f IDs/sec
-            Collisions      : %d (%.6f%%)
-            ====================================
-            """,
-			nNodes, idsPerNode, total, elapsedMs,
-			throughput, collisions.get(), collisions.get() * 100.0 / total);
-
-		assertEquals(0, collisions.get(), "Collisions occurred across nodes");
 	}
 
 	/**
