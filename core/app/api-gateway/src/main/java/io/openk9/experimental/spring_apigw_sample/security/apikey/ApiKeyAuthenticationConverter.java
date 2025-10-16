@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono;
  */
 public class ApiKeyAuthenticationConverter implements ServerAuthenticationConverter {
 
+	// TODO: parser of apikeys
 	private static final Pattern authorizationPattern = Pattern.compile(
 		"^ApiKey (?<apikey>[a-zA-Z0-9-._~+/]+=*)$",
 		Pattern.CASE_INSENSITIVE);
@@ -43,7 +44,7 @@ public class ApiKeyAuthenticationConverter implements ServerAuthenticationConver
 	@Override
 	public Mono<Authentication> convert(ServerWebExchange exchange) {
 
-		return Mono.defer(() -> {
+		return Mono.create(sink -> {
 
 			// get the required objects to evaluate the request
 			ServerHttpRequest request = exchange.getRequest();
@@ -51,7 +52,7 @@ public class ApiKeyAuthenticationConverter implements ServerAuthenticationConver
 			// tenant has to be recognized
 			String tenantId = TenantIdResolverFilter.getTenantId(exchange);
 			if (tenantId == null) {
-				return Mono.empty();
+				sink.success();
 			}
 
 			HttpHeaders headers = request.getHeaders();
@@ -59,17 +60,18 @@ public class ApiKeyAuthenticationConverter implements ServerAuthenticationConver
 
 			// authorization scheme has to be ApiKey
 			if (!StringUtils.startsWithIgnoreCase(authorization, "apikey")) {
-				return Mono.empty();
+				sink.success();
 			}
 
 			Matcher matcher = authorizationPattern.matcher(authorization);
 			if (!matcher.matches()) {
-				throw new ApiKeyMalformedException("ApiKey is malformed");
+				sink.error(new ApiKeyMalformedException("ApiKey is malformed"));
 			}
 
 			var apiKey = matcher.group("apikey");
 
-			return Mono.just(new ApiKeyAuthenticationToken(tenantId, apiKey));
+			sink.success(new ApiKeyAuthenticationToken(tenantId, apiKey));
+
 		});
 	}
 
