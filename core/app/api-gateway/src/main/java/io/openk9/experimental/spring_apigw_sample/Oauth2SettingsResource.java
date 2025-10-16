@@ -17,72 +17,58 @@
 
 package io.openk9.experimental.spring_apigw_sample;
 
-//@Path("/oauth2")
-public interface Oauth2SettingsResource {
+import java.net.URI;
 
-//	@Operation(operationId = "settings")
-//	@Tag(name = "Keycloak Settings API", description = "Return keycloak settings")
-//	@APIResponses(value = {
-//			@APIResponse(responseCode = "200", description = "success"),
-//			@APIResponse(responseCode = "404", description = "not found"),
-//			@APIResponse(responseCode = "400", description = "invalid"),
-//			@APIResponse(
-//					responseCode = "200",
-//					description = "Keycloak Settings returned",
-//					content = {
-//							@Content(
-//									mediaType = MediaType.APPLICATION_JSON,
-//									schema = @Schema(implementation = Response.class)
-//							)
-//					}
-//			),
-//			@APIResponse(ref = "#/components/responses/bad-request"),
-//			@APIResponse(ref = "#/components/responses/not-found"),
-//			@APIResponse(ref = "#/components/responses/internal-server-error"),
-//	})
-//    @GET
-//    @Path("/settings")
-//	Uni<Oauth2Settings> keycloakSettings();
+import io.openk9.experimental.spring_apigw_sample.security.Tenant;
+import io.openk9.experimental.spring_apigw_sample.security.TenantSecurityService;
 
-//	@Operation(operationId = "settings.js")
-//	@Tag(name = "Keycloak Settings JS API", description = "Return keycloak settings as javascript file")
-//	@APIResponses(value = {
-//			@APIResponse(responseCode = "200", description = "success"),
-//			@APIResponse(responseCode = "404", description = "not found"),
-//			@APIResponse(responseCode = "400", description = "invalid"),
-//			@APIResponse(
-//					responseCode = "200",
-//					description = "Keycloak Settings returned",
-//					content = {
-//							@Content(
-//									mediaType = MediaType.APPLICATION_JSON,
-//									schema = @Schema(implementation = Response.class)
-//							)
-//					}
-//			),
-//			@APIResponse(ref = "#/components/responses/bad-request"),
-//			@APIResponse(ref = "#/components/responses/not-found"),
-//			@APIResponse(ref = "#/components/responses/internal-server-error"),
-//	})
-//    @GET
-//    @Path("/settings.js")
-//    @Produces("text/javascript")
-//    Uni<String> settingsJs();
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/oauth2")
+public class Oauth2SettingsResource {
+
+	@Autowired
+	TenantSecurityService tenantSecurityService;
+
+    @GetMapping("/settings")
+	public Mono<Oauth2Settings> settings(ServerHttpRequest request) {
+		URI requestURI = request.getURI();
+		String requestHost = requestURI.getHost();
+
+		return tenantSecurityService.getTenantId(requestHost)
+			.flatMap(tenantId -> tenantSecurityService
+				.getTenantAggregate(tenantId)
+				.map(Oauth2Settings::fromTenant)
+			);
+	}
+
+    @GetMapping(value = "/settings.js", produces = "text/javascript")
+    public Mono<String> settingsJs(ServerHttpRequest request) {
+		return settings(request).map(Oauth2SettingsResource::encodeSettingsJs);
+	}
 
 	private static String encodeSettingsJs(Oauth2Settings oauth2Settings) {
 
 		return String.format(
 			"""
-				window.KEYCLOAK_URL='%s';
-				window.KEYCLOAK_REALM='%s';
-				window.KEYCLOAK_CLIENT_ID='%s';
-				""",
-			oauth2Settings.url(),
-			oauth2Settings.realm(),
+				window.ISSUE_URI ='%s';
+				window.CLIENT_ID ='%s';
+			""",
+			oauth2Settings.issuerUri(),
 			oauth2Settings.clientId()
 		);
 	}
 
-	 record Oauth2Settings(String url, String realm, String clientId) {}
+	 public record Oauth2Settings(String issuerUri, String clientId) {
+		static Oauth2Settings fromTenant(Tenant tenant) {
+			return new Oauth2Settings(tenant.issuerUri(), tenant.clientId());
+		}
+	 }
 
 }

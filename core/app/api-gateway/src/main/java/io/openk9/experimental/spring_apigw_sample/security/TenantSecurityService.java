@@ -94,9 +94,9 @@ public interface TenantSecurityService {
 	 * <p>
 	 * Useful in multi-tenant applications where the host name identifies the tenant.
 	 *
-	 * @param hostName the host name of the incoming request (e.g., "alabasta.localhost").
+	 * @param tenantId the id of the registered tenant (e.g., "alabasta").
 	 * @return a {@link Mono} emitting the {@link Tenant}, or empty if
 	 *         no tenant matches the given host name.
 	 */
-	Mono<Tenant> getTenantAggregate(String hostName);
+	Mono<Tenant> getTenantAggregate(String tenantId);
 }
