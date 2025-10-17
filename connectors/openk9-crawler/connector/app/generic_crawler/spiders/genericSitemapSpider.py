@@ -131,11 +131,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
                             {'response': response}, extra={'spider': self})
                 return
 
-            s = Sitemap('''<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url>
-<loc>https://www.agenziaentrateriscossione.gov.it/it/il-gruppo/lagenzia-comunica/comunicati-stampa/index.html</loc>
-</url>
-</urlset>''')
+            s = Sitemap(body)
 
             if s.type == 'sitemapindex':
                 for loc in iterloc(s, self.sitemap_alternate_links):
