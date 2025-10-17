@@ -527,7 +527,7 @@ public class SearchResource {
 			})
 			.map(autocorrectionResult -> {
 				if (autocorrectionResult != null
-					&& autocorrectionResult.isEnableSearchWithCorrection()) {
+					&& autocorrectionResult.isSearchedWithCorrectedText()) {
 
 					// replace query text in the searchRequest with the correction
 					searchTokenUserInput.get().setValues(List.of(
@@ -1031,7 +1031,7 @@ public class SearchResource {
 
 				autocorrection.setOriginalText(originalText);
 				autocorrection.setAutocorrectionText(autocorrectionText);
-				autocorrection.setEnableSearchWithCorrection(enableSearchWithCorrection);
+				autocorrection.setSearchedWithCorrectedText(enableSearchWithCorrection);
 				autocorrection.setSuggestions(resultSuggestions);
 			}
 		}

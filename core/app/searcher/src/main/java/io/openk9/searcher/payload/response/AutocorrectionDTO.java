@@ -30,7 +30,7 @@ public class AutocorrectionDTO {
 
 	private String originalText;
 	private String autocorrectionText;
-	private boolean enableSearchWithCorrection;
+	private boolean searchedWithCorrectedText;
 	private List<Suggestion> suggestions;
 
 	public record Suggestion(String text, int offset, int length, String correction) {}
