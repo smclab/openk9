@@ -208,6 +208,10 @@ export const BucketQueryBucket = gql`
         id
         name
       }
+      autocorrection {
+        id
+        name
+      }
     }
   }
 `;
@@ -286,6 +290,7 @@ export const CreateUpdateBucketRecap = gql`
     $ragConfigurationChat: BigInteger
     $ragConfigurationChatTool: BigInteger
     $ragConfigurationSimpleGenerate: BigInteger
+    $autocorrection: BigInteger
   ) {
     bucketWithLists(
       id: $id
@@ -306,6 +311,7 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationChat: $ragConfigurationChat
         ragConfigurationChatTool: $ragConfigurationChatTool
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
+        autocorrection: $autocorrection
       }
     ) {
       entity {
@@ -444,6 +450,29 @@ gql`
   }
 `;
 
+gql`
+  mutation AddAutocorrectionToBucket($autocorrectionId: ID!, $parentId: ID!) {
+    bindAutocorrectionToBucket(autocorrectionId: $autocorrectionId, bucketId: $parentId) {
+      left {
+        id
+      }
+    }
+  }
+`;
+
+gql`
+  mutation RemoveAutocorrectionFromBucket($parentId: ID!) {
+    unbindAutocorrectionFromBucket(bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
+    }
+  }
+`;
+
 export const BucketsSuggestionCategories = gql`
   query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
@@ -461,6 +490,14 @@ export const BucketsSuggestionCategories = gql`
           endCursor
         }
       }
+    }
+  }
+`;
+export const BucketsAutocorrection = gql`
+  query unboundAutocorrectionByBucket($parentId: ID!) {
+    bucket(id: $parentId) {
+      id
+      name
     }
   }
 `;

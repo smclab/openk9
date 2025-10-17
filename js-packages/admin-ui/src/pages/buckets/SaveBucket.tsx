@@ -4,6 +4,7 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
+  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   MultiAssociationCustomQuery,
   TextArea,
@@ -21,6 +22,7 @@ import {
   BucketDataSourcesQuery,
   RagType,
   RetrieveType,
+  useAutocorrectionsOptionsQuery,
   useBucketDataSourcesQuery,
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
@@ -33,12 +35,8 @@ import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
-import {
-  useLanguages,
-  useOptionSearchConfig,
-  useQueryAnaylyses,
-  useRagConfigurationChatRag,
-} from "../../../src/utils/RelationOneToOne";
+import { useLanguages, useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
+import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
@@ -93,17 +91,6 @@ export function SaveBucket() {
     fetchPolicy: "network-only",
   });
 
-  const bucketDataSources = useBucketDataSourcesQuery({
-    variables: { parentId: bucketId as string, unassociated: true },
-    skip: !bucketId || bucketId === "new",
-    fetchPolicy: "network-only",
-  });
-
-  const bucketDataSourcesAssociated = useBucketDataSourcesQuery({
-    variables: { parentId: bucketId as string, unassociated: false },
-    skip: !bucketId || bucketId === "new",
-    fetchPolicy: "network-only",
-  });
   const ragConfigurationChatRag = useUnboundRagConfigurationsByBucketQuery({
     variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.ChatRag },
     fetchPolicy: "network-only",
@@ -118,6 +105,38 @@ export function SaveBucket() {
     variables: { bucketId: bucketId === "new" ? "0" : bucketId, ragType: RagType.SimpleGenerate },
     fetchPolicy: "network-only",
   });
+
+  const bucketDataSources = useBucketDataSourcesQuery({
+    variables: { parentId: bucketId as string, unassociated: true },
+    skip: !bucketId || bucketId === "new",
+    fetchPolicy: "network-only",
+  });
+
+  const bucketDataSourcesAssociated = useBucketDataSourcesQuery({
+    variables: { parentId: bucketId as string, unassociated: false },
+    skip: !bucketId || bucketId === "new",
+    fetchPolicy: "network-only",
+  });
+
+  const { OptionQuery: autocorrectionOption } = useOptions({
+    queryKeyPath: "autocorrections.edges",
+    useQuery: useAutocorrectionsOptionsQuery,
+    accessKey: "node",
+  });
+
+  const { OptionQuery: ragChatConfigurationOption } = useOptions({
+    queryKeyPath: "unboundRAGConfigurationByBucket",
+    data: ragConfigurationChatRag,
+  });
+  const { OptionQuery: ragChatSimpleGenerateConfigurationOption } = useOptions({
+    queryKeyPath: "unboundRAGConfigurationByBucket",
+    data: ragConfigurationSimpleGenerate,
+  });
+  const { OptionQuery: ragChatToolConfigurationOption } = useOptions({
+    queryKeyPath: "unboundRAGConfigurationByBucket",
+    data: ragConfigurationChatRagTool,
+  });
+
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
     refetchQueries: ["Buckets", "BucketDataSources"],
@@ -205,6 +224,10 @@ export function SaveBucket() {
               name: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.name,
             }
           : undefined,
+        autocorrectionId: {
+          id: bucketQuery.data?.bucket?.autocorrection?.id || "-1",
+          name: bucketQuery.data?.bucket?.autocorrection?.name || "",
+        },
       }),
       [datasources, suggestionCategories, tabs, bucketQuery],
     ),
@@ -235,6 +258,7 @@ export function SaveBucket() {
           ragConfigurationSimpleGenerate: data?.ragConfigurationSimpleGenerateId?.id
             ? data.ragConfigurationSimpleGenerateId.id
             : undefined,
+          autocorrection: data.autocorrectionId.id !== "-1" ? data.autocorrectionId.id : null,
         },
       });
     },
@@ -480,6 +504,16 @@ export function SaveBucket() {
                             label: unbound?.name || "",
                           })) || []
                         }
+                      />
+                      <CustomSelectRelationsOneToOne
+                        options={autocorrectionOption}
+                        label="Autocorrection"
+                        onChange={(val) => form.inputProps("autocorrectionId").onChange({ id: val.id, name: val.name })}
+                        value={{
+                          id: form.inputProps("autocorrectionId").value.id,
+                          name: form.inputProps("autocorrectionId").value.name || "",
+                        }}
+                        disabled={page === 1}
                       />
                       <AutocompleteDropdownWithOptions
                         label="Simple Generate"
