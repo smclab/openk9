@@ -44,10 +44,8 @@ public class ApiKeyAuthenticationManager
 					tenantId, apiKey, grantedAuthorities)
 				)
 				.cast(Authentication.class)
-				.switchIfEmpty(Mono.fromCallable(() -> {
-					throw new ApiKeyNotFoundException(
-						String.format("No registered tenantId: %s API Key: %s", tenantId, apiKey));
-				}));
+				.switchIfEmpty(Mono.error(() -> new ApiKeyNotFoundException(
+					String.format("No registered tenantId: %s API Key: %s", tenantId, apiKey))));
 		}
 
 		return Mono.empty();
