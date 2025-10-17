@@ -42,6 +42,7 @@ import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import io.openk9.searcher.grpc.SortType;
+import io.openk9.searcher.payload.response.AutocorrectionDTO;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -129,9 +130,9 @@ public class SearchResource {
 	private static final int NONE_STATUS_CODE = 0;
 	private static final int NOT_FOUND_STATUS_CODE = 404;
 	private static final String OFFSET = "offset";
-	private static final String ORIGINAL_TEXT = "originalText";
-	private static final String SEARCHED_WITH_CORRECTED_TEXT = "searchedWithCorrectedText";
-	private static final String SUGGESTIONS = "suggestions";
+	protected static final String ORIGINAL_TEXT = "originalText";
+	protected static final String SEARCHED_WITH_CORRECTED_TEXT = "searchedWithCorrectedText";
+	protected static final String SUGGESTIONS = "suggestions";
 	private static final String TEXT = "text";
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
@@ -510,31 +511,33 @@ public class SearchResource {
 					return searchTokenUserInput.isPresent()
 						? _getAutocorrectionSuggest(autocorrectionConfig, searchTokenUserInput.get())
 						: Uni.createFrom().failure(
-						new AutocorrectionException("Autocorrection was not performed because no search token with isSearch is present.")
-					);
+							new AutocorrectionException(
+								"Autocorrection was not performed because no search token with isSearch is present."
+							)
+						);
 				}
 				else {
-					return Uni.createFrom().item(new HashMap<>());
+					return Uni.createFrom().nullItem();
 				}
 			})
 			.onFailure()
 			.recoverWithItem(failure -> {
 				_logMessage("Something went wrong during the autocorrected search.", failure);
-				return new HashMap<>();
+				return null;
 			})
-			.map(autocorrectionMap -> {
-				if (!autocorrectionMap.isEmpty()
-					&& (Boolean) autocorrectionMap.get(SEARCHED_WITH_CORRECTED_TEXT)) {
+			.map(autocorrectionResult -> {
+				if (autocorrectionResult != null
+					&& autocorrectionResult.isEnableSearchWithCorrection()) {
 
 					// replace query text in the searchRequest with the correction
 					searchTokenUserInput.get().setValues(List.of(
-						(String) autocorrectionMap.get(AUTOCORRECTION_TEXT))
+						autocorrectionResult.getAutocorrectionText())
 					);
 				}
 				// do search and add autocorrection to the search response
 				return _doSearch(searchRequest)
 					.invoke(response ->
-						response.setAutocorrection(autocorrectionMap)
+						response.setAutocorrection(autocorrectionResult)
 					);
 			})
 			.flatMap(responseUni -> responseUni);
@@ -785,15 +788,12 @@ public class SearchResource {
 	 * This method iterates through the suggestions sorted by offset and replaces each incorrect
 	 * term with its correction, building the final corrected text.
 	 *
-	 * @param autocorrection a map containing ORIGINAL_TEXT and SUGGESTIONS keys with autocorrection data
+	 * @param originalText the original text to be corrected
+	 * @param suggestions a list of suggestions produced by OpenSearch
 	 * @return the corrected text with all suggestions applied, or the original text if no suggestions exist
 	 */
-	private String _generateAutocorrectionText(Map<String, Object> autocorrection) {
-		String originalText = (String) autocorrection.get(ORIGINAL_TEXT);
-
-		@SuppressWarnings("unchecked")
-		List<Map<String, Object>> suggestions =
-			(List<Map<String, Object>>) autocorrection.get(SUGGESTIONS);
+	protected static String _generateAutocorrectionText(
+			String originalText, List<AutocorrectionDTO.Suggestion> suggestions) {
 
 		if (suggestions == null || suggestions.isEmpty()) {
 			return originalText;
@@ -801,16 +801,16 @@ public class SearchResource {
 
 		// Sort suggestions by offset to process them in order
 		var sortedSuggestions = suggestions.stream()
-			.sorted(Comparator.comparingInt(s -> (Integer) s.get(OFFSET)))
+			.sorted(Comparator.comparingInt(AutocorrectionDTO.Suggestion::offset))
 			.toList();
 
 		StringBuilder correctedText = new StringBuilder();
 		int currentPosition = 0;
 
-		for (Map<String, Object> suggestion : sortedSuggestions) {
-			int offset = (Integer) suggestion.get(OFFSET);
-			int length = (Integer) suggestion.get(LENGTH);
-			String correction = (String) suggestion.get(CORRECTION);
+		for (AutocorrectionDTO.Suggestion suggestion : sortedSuggestions) {
+			int offset = suggestion.offset();
+			int length = suggestion.length();
+			String correction = suggestion.correction();
 
 			// Append text before the current suggestion
 			correctedText.append(originalText, currentPosition, offset);
@@ -833,17 +833,16 @@ public class SearchResource {
 	 * <p>
 	 * This method validates that the search token contains exactly one value, then performs an
 	 * autocorrection query against OpenSearch using the provided configuration.
-	 * The method configures the term suggester with the autocorrection configuration.
 	 *
 	 * @param autocorrectionConfig the autocorrection configuration containing index names, field, and suggester parameters
 	 * @param searchTokenUserInput the parser search token containing user input values
-	 * @return a Uni emitting a map with autocorrection suggestions and metadata, or fails with AutocorrectionException
-	 *         if the input is invalid or the OpenSearch request fails
+	 * @return a Uni emitting an {@link AutocorrectionDTO} with autocorrection suggestions and metadata,
+	 *         or fails with AutocorrectionException if the input is invalid or the OpenSearch request fails
 	 * @throws AutocorrectionException if the search token doesn't contain exactly one value, the query text is null/empty,
 	 *         or the OpenSearch autocorrection request fails
 	 */
 	@WithSpan
-	protected Uni<Map<String, Object>> _getAutocorrectionSuggest(
+	protected Uni<AutocorrectionDTO> _getAutocorrectionSuggest(
 		AutocorrectionConfigurationsResponse autocorrectionConfig,
 		ParserSearchToken searchTokenUserInput) {
 
@@ -982,59 +981,61 @@ public class SearchResource {
 	}
 
 	/**
-	 * Parses the OpenSearch autocorrection response and builds a structured map of suggestions.
+	 * Parses the OpenSearch autocorrection response an {@link AutocorrectionDTO}.
 	 * <p>
 	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
-	 * and constructs a map containing the original text, correction details, and a generated
-	 * autocorrection text. Each suggestion includes the original term, its position (offset and length),
-	 * and the suggested correction.
+	 * and constructs an {@link AutocorrectionDTO} containing the original text, correction details,
+	 * and a generated autocorrection text. Each suggestion includes the original term,
+	 * its position (offset and length), and the suggested correction.
 	 *
 	 * @param originalText the original query text entered by the user
 	 * @param response the OpenSearch search response containing autocorrection suggestions
-	 * @param enableSearchWithCorrection flag indicating whether the search was executed with the corrected text
-	 * @return a map containing autocorrection data with keys: ORIGINAL_TEXT, SEARCHED_WITH_CORRECTED_TEXT,
-	 *         SUGGESTIONS (list of maps with TEXT, OFFSET, LENGTH, CORRECTION), and AUTOCORRECTION_TEXT.
-	 *         Returns an empty map if no valid suggestions are found
+	 * @param enableSearchWithCorrection flag indicating whether the search was executed with the
+	 *                                   corrected text
+	 * @return an {@link AutocorrectionDTO} containing autocorrection data or {@code null} if no
+	 *         valid suggestions are found
 	 */
-	private Map<String, Object> _parseAutocorrectionResponse(
+	private AutocorrectionDTO _parseAutocorrectionResponse(
 			String originalText,
 			org.opensearch.client.opensearch.core.SearchResponse<Void> response,
 			Boolean enableSearchWithCorrection) {
 
 		var suggestions = response.suggest().get(AUTOCORRECTION_SUGGESTION);
 
-		Map<String, Object> autocorrection = new HashMap<>();
+		AutocorrectionDTO autocorrection = null;
 
 		if (suggestions == null || suggestions.isEmpty()) {
-			return autocorrection;
+			return null;
 		}
 		else {
-			List<Map<String, Object>> resultSuggestions = suggestions.stream()
+			List<AutocorrectionDTO.Suggestion> resultSuggestions = suggestions.stream()
 				.filter(Suggest::isTerm)
 				.map(Suggest::term)
 				.filter(termSuggest -> !termSuggest.options().isEmpty())
-				.map(termSuggest -> {
-					Map<String, Object> resultSuggestion = new HashMap<>();
-					resultSuggestion.put(TEXT, termSuggest.text());
-					resultSuggestion.put(OFFSET, termSuggest.offset());
-					resultSuggestion.put(LENGTH, termSuggest.length());
-					resultSuggestion.put(CORRECTION, termSuggest.options().getFirst().text());
-
-					return resultSuggestion;
-				})
+				.map(termSuggest ->
+					new AutocorrectionDTO.Suggestion(
+						termSuggest.text(),
+						termSuggest.offset(),
+						termSuggest.length(),
+						termSuggest.options().getFirst().text()
+					)
+				)
 				.toList();
 
 			// Populate the map only if a suggestion is present
 			if (!resultSuggestions.isEmpty()) {
-				autocorrection.put(ORIGINAL_TEXT, originalText);
-				autocorrection.put(SEARCHED_WITH_CORRECTED_TEXT, enableSearchWithCorrection);
-				autocorrection.put(SUGGESTIONS, resultSuggestions);
+				autocorrection = new AutocorrectionDTO();
 
-				String autocorrectionText = _generateAutocorrectionText(autocorrection);
+				String autocorrectionText =
+					_generateAutocorrectionText(originalText, resultSuggestions);
 
-				autocorrection.put(AUTOCORRECTION_TEXT, autocorrectionText);
+				autocorrection.setOriginalText(originalText);
+				autocorrection.setAutocorrectionText(autocorrectionText);
+				autocorrection.setEnableSearchWithCorrection(enableSearchWithCorrection);
+				autocorrection.setSuggestions(resultSuggestions);
 			}
 		}
+
 		return autocorrection;
 	}
 
