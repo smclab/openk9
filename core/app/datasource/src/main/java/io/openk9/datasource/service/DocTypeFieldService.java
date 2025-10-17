@@ -24,6 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import io.openk9.datasource.model.Autocorrection;
+import io.openk9.datasource.model.FieldType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -237,6 +240,52 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			getSearchFields(),
 			after, before, first, last, searchText, sortByList
 		);
+	}
+
+	/**
+	 * Retrieves a list of unbound DocTypeField entities that are boundable for autocorrection.
+	 *
+	 * <p>This method finds all DocTypeField that satisfy the following criteria:
+	 * <ul>
+	 *   <li>Are not already bound to the specified autocorrection</li>
+	 *   <li>Have a field type that supports text-based autocorrection (TEXT, KEYWORD, CONSTANT_KEYWORD, or ANNOTATED_TEXT)</li>
+	 * </ul>
+	 *
+	 * @param autocorrectionId the ID of the autocorrection used to filter already-bound fields
+	 * @return a {@link Uni} that emits a list of unbound DocTypeField entities matching the criteria.
+	 *         The list will be empty if no unbound fields are found.
+	 *
+	 * @see DocTypeField
+	 * @see Autocorrection
+	 * @see FieldType
+	 */
+	public Uni<List<DocTypeField>> findUnboundDocTypeFieldByAutocorrection(long autocorrectionId) {
+		return sessionFactory.withTransaction(s -> {
+			var queryString =
+				"""
+					SELECT dtf FROM DocTypeField dtf
+					WHERE NOT EXISTS (
+						SELECT 1
+						FROM Autocorrection a
+						WHERE a.autocorrectionDocTypeField.id = dtf.id
+						AND a.id = (:autocorrectionId)
+					)
+					AND (
+						dtf.fieldType = (:text) OR
+						dtf.fieldType = (:constantKeyword) OR
+						dtf.fieldType = (:annotatedText) OR
+						dtf.fieldType = (:keyword)
+					)
+					""";
+
+			return s.createQuery(queryString, DocTypeField.class)
+				.setParameter("autocorrectionId", autocorrectionId)
+				.setParameter("text", FieldType.TEXT)
+				.setParameter("constantKeyword", FieldType.CONSTANT_KEYWORD)
+				.setParameter("annotatedText", FieldType.ANNOTATED_TEXT)
+				.setParameter("keyword", FieldType.KEYWORD)
+				.getResultList();
+		});
 	}
 
 	@Override

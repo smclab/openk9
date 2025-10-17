@@ -51,50 +51,29 @@ import org.eclipse.microprofile.graphql.Source;
 @CircuitBreaker
 public class DocTypeFieldGraphqlResource {
 
-	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFields(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return docTypeFieldService.findConnection(
-			after, before, first, last, searchText, sortByList);
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+	@Inject
+	TranslationService translationService;
+
+	@Mutation
+	public Uni<Tuple2<String, String>> addDocTypeFieldTranslation(
+		@Id @Name("docTypeFieldId") long docTypeFieldId,
+		String language, String key, String value) {
+
+		return translationService
+			.addTranslation(DocTypeField.class, docTypeFieldId, language, key, value)
+			.map((__) -> Tuple2.of("ok", null));
 	}
-
-	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsByParent(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		long parentId, String searchText, Set<SortBy> sortByList) {
-		return docTypeFieldService.findConnection(
-			parentId, after, before, first, last, searchText, sortByList);
-	}
-
-	public Uni<DocTypeField> parent(
-		@Source DocTypeField docTypeField) {
-		return docTypeFieldService.getParent(docTypeField);
-	}
-
-	public Uni<Connection<DocTypeField>> subFields(
-		@Source DocTypeField docTypeField,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-
-		return docTypeFieldService.getSubDocTypeFields(
-			docTypeField, after, before, first, last, searchText, sortByList,
-			notEqual);
-	}
-
 
 	public Uni<Analyzer> analyzer(@Source DocTypeField docTypeField) {
 		return docTypeFieldService.getAnalyzer(docTypeField.getId());
+	}
+
+	@Mutation
+	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzerToDocTypeField(
+		@Id long docTypeFieldId, @Id long analyzerId) {
+		return docTypeFieldService.bindAnalyzer(docTypeFieldId, analyzerId);
 	}
 
 	@Mutation
@@ -131,32 +110,6 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzerToDocTypeField(
-		@Id long docTypeFieldId, @Id long analyzerId) {
-		return docTypeFieldService.bindAnalyzer(docTypeFieldId, analyzerId);
-	}
-
-	@Mutation
-	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzerFromDocTypeField(
-		@Id long docTypeFieldId) {
-		return docTypeFieldService.unbindAnalyzer(docTypeFieldId);
-	}
-
-	public Uni<Set<TranslationDTO>> getTranslations(@Source DocTypeField docTypeField) {
-		return translationService.getTranslationDTOs(DocTypeField.class, docTypeField.getId());
-	}
-
-	@Mutation
-	public Uni<Tuple2<String, String>> addDocTypeFieldTranslation(
-		@Id @Name("docTypeFieldId") long docTypeFieldId,
-		String language, String key, String value) {
-
-		return translationService
-			.addTranslation(DocTypeField.class, docTypeFieldId, language, key, value)
-			.map((__) -> Tuple2.of("ok", null));
-	}
-
-	@Mutation
 	public Uni<Tuple2<String, String>> deleteDocTypeFieldTranslation(
 		@Id @Name("docTypeFieldId") long docTypeFieldId,
 		String language, String key) {
@@ -166,9 +119,71 @@ public class DocTypeFieldGraphqlResource {
 			.map((__) -> Tuple2.of("ok", null));
 	}
 
-	@Inject
-	DocTypeFieldService docTypeFieldService;
+	@Query
+	public Uni<Connection<DocTypeField>> getDocTypeFields(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return docTypeFieldService.findConnection(
+			after, before, first, last, searchText, sortByList);
+	}
 
-	@Inject
-	TranslationService translationService;
+	@Query
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsByParent(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		long parentId, String searchText, Set<SortBy> sortByList) {
+		return docTypeFieldService.findConnection(
+			parentId, after, before, first, last, searchText, sortByList);
+	}
+
+	public Uni<Set<TranslationDTO>> getTranslations(@Source DocTypeField docTypeField) {
+		return translationService.getTranslationDTOs(DocTypeField.class, docTypeField.getId());
+	}
+
+	@Description("""
+		Retrieves all DocTypeField that are not bound to a specific Autocorrection.
+		
+		This query returns all DocTypeFields of textual type (TEXT, KEYWORD, CONSTANT_KEYWORD, 
+		or ANNOTATED_TEXT) that are available to be bound to the specified Autocorrection.
+		
+		Arguments:
+		- `autocorrectionId` (ID!): The ID of the Autocorrection to check for unbound DocTypeFields.
+		
+		Returns:
+		- A list of unbound DocTypeFields available for the specified Autocorrection.
+		""")
+	@Query
+	public Uni<List<DocTypeField>> getUnboundDocTypeFieldByAutocorrection(long autocorrectionId) {
+		return docTypeFieldService.findUnboundDocTypeFieldByAutocorrection(autocorrectionId);
+	}
+
+	public Uni<DocTypeField> parent(
+		@Source DocTypeField docTypeField) {
+		return docTypeFieldService.getParent(docTypeField);
+	}
+
+	public Uni<Connection<DocTypeField>> subFields(
+		@Source DocTypeField docTypeField,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+
+		return docTypeFieldService.getSubDocTypeFields(
+			docTypeField, after, before, first, last, searchText, sortByList,
+			notEqual);
+	}
+
+	@Mutation
+	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzerFromDocTypeField(
+		@Id long docTypeFieldId) {
+		return docTypeFieldService.unbindAnalyzer(docTypeFieldId);
+	}
 }
