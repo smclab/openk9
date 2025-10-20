@@ -180,6 +180,7 @@ async def process_file(
 
         for doc in docs:
             document = {
+                "document_id": unique_id,
                 "filename": filename,
                 "file_extension": file_extension,
                 "user_id": user_id,

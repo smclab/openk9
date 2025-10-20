@@ -692,6 +692,7 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
 
         * **filename** (str): Original filename of the source document
         * **file_extension** (str): File extension indicating document type
+        * **document_id** (str): Document identifier
         * **user_id** (str): User identifier who uploaded the document
         * **chat_id** (str): Chat session identifier for document association
         * **chunk_number** (int): Sequential position of this chunk in the document
@@ -716,6 +717,7 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
                     "timestamp": timestamp,
                     "filename": document.get("filename"),
                     "file_extension": document.get("file_extension"),
+                    "document_id": document.get("document_id"),
                     "user_id": document.get("user_id"),
                     "chat_id": document.get("chat_id"),
                     "chunk_number": chunk.number,
