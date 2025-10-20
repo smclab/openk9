@@ -179,7 +179,7 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
 
             for row in response["hits"]["hits"]:
                 document_source = row.get("_source")
-                document_id = row.get("_id")
+                document_id = document_source.get("document_id")
                 filename = document_source.get("filename")
                 file_extension = document_source.get("file_extension")
                 score = row.get("_score", 0)
