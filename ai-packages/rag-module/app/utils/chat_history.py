@@ -106,6 +106,7 @@ def save_chat_message(
     realm_name: str,
     timestamp: str,
     chat_sequence_number: int,
+    retrieve_from_uploaded_documents: bool,
 ):
     """Save chat message and related documents to OpenSearch index.
 
@@ -130,6 +131,8 @@ def save_chat_message(
     :type timestamp: str
     :param chat_sequence_number: Sequential position in chat history
     :type chat_sequence_number: int
+    :param retrieve_from_uploaded_documents: Whether to search in user's uploaded documents
+    :type retrieve_from_uploaded_documents: bool
 
     :return: None
 
@@ -160,6 +163,7 @@ def save_chat_message(
         "user_id": user_id,
         "timestamp": timestamp,
         "chat_sequence_number": chat_sequence_number,
+        "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
     }
 
     # open_search_index = f"{realm_name}-{user_id}"

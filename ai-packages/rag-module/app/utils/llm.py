@@ -762,6 +762,7 @@ def stream_rag_conversation(
             realm_name,
             timestamp,
             chat_sequence_number,
+            retrieve_from_uploaded_documents,
         )
 
     yield json.dumps({"chunk": "", "type": "END"})
