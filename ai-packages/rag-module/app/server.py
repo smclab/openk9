@@ -699,6 +699,9 @@ async def get_chat(
                     "timestamp": chat["_source"]["timestamp"],
                     "chat_sequence_number": chat["_source"]["chat_sequence_number"],
                     "sources": chat["_source"]["sources"],
+                    "retrieve_from_uploaded_documents": chat["_source"][
+                        "retrieve_from_uploaded_documents"
+                    ],
                 }
                 for chat in open_search_response["hits"]["hits"]
             ],
