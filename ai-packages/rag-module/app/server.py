@@ -684,26 +684,27 @@ async def get_chat(
         },
     }
 
-    if (
-        open_search_client.indices.exists(index=user_id)
-        and (
-            open_search_response := open_search_client.search(body=query, index=user_id)
-        )["hits"]["hits"]
+    if open_search_client.indices.exists(index=user_id) and (
+        open_search_response := open_search_client.search(body=query, index=user_id)
+        .get("hits", {})
+        .get("hits", [])
     ):
         result = {
             "chat_id": chat_id,
+            "retrieve_from_uploaded_documents": open_search_response[0]
+            .get("_source", {})
+            .get("retrieve_from_uploaded_documents", False),
             "messages": [
                 {
-                    "question": chat["_source"]["question"],
-                    "answer": chat["_source"]["answer"],
-                    "timestamp": chat["_source"]["timestamp"],
-                    "chat_sequence_number": chat["_source"]["chat_sequence_number"],
-                    "sources": chat["_source"]["sources"],
-                    "retrieve_from_uploaded_documents": chat["_source"][
-                        "retrieve_from_uploaded_documents"
-                    ],
+                    "question": chat.get("_source", {}).get("question"),
+                    "answer": chat.get("_source", {}).get("answer"),
+                    "timestamp": chat.get("_source", {}).get("timestamp"),
+                    "chat_sequence_number": chat.get("_source", {}).get(
+                        "chat_sequence_number"
+                    ),
+                    "sources": chat.get("_source", {}).get("sources", []),
                 }
-                for chat in open_search_response["hits"]["hits"]
+                for chat in open_search_response
             ],
         }
 
