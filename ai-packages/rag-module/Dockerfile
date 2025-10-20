@@ -13,7 +13,14 @@ RUN if [ "$PYTORCH_CPU" = false ]; then \
     else \
         ${PYTORCH_CPU} && \
         pip install --no-cache-dir -r requirements.txt; \
-    fi
+    fi && \
+    apt-get -y update && \
+    apt-get install --no-install-recommends -y \
+        libgl1 \
+        libglib2.0-0 && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*    
 
 COPY ./app ./app
 
