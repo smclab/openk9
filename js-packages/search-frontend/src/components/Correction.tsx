@@ -1,3 +1,4 @@
+import React, { JSX } from "react";
 import { useRange } from "./useRange";
 
 type CorrectionFunction = {
@@ -8,17 +9,23 @@ type CorrectionFunction = {
   ) => React.ReactNode;
   setSearch: (newSearch: string) => void;
 };
+
 export default function Correction({
   information,
   setSearch,
-}: CorrectionFunction) {
+}: CorrectionFunction): JSX.Element | null {
   const { correction } = useRange();
+
   if (!correction || !correction.autocorrectionText) return null;
-  return information(
-    correction?.autocorrectionText || "",
-    correction?.originalText || "",
-    () => {
-      setSearch(correction?.autocorrectionText || "");
-    },
+
+  const corrected = correction?.autocorrectionText ?? "";
+  const original = correction?.originalText ?? "";
+
+  return (
+    <>
+      {information(corrected, original, () => {
+        setSearch(corrected);
+      })}
+    </>
   );
 }

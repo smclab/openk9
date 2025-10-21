@@ -1,6 +1,6 @@
 {
   "name": "@openk9ui/search-frontend",
-  "version": "3.1.5-SNAPSHOT",
+  "version": "3.1.6-SNAPSHOT",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/importable.js",
@@ -64,7 +64,6 @@
     "@types/moment": "^2.13.0",
     "@types/react": "^18.0.3",
     "@types/react-date-range": "^1.4.3",
-    "@types/react-dates": "^21.8.3",
     "@types/react-dom": "^18.0.3",
     "@types/react-select": "^5.0.1",
     "@types/sanitize-html": "^2.9.0",
