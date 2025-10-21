@@ -52,10 +52,50 @@ async def start_task(input: Input):
         kwargs={"payload": payload, "configs": enrich_item_config, "token": token},
     )
     thread.start()
-    return {"status": "ok", "message": f"Proces started"}
+    return {"status": "ok", "message": "Proces started"}
 
-def operation(payload,configs,token):
-    s_host=os.getenv("S_HOST")
+
+@app.get(
+    "/health",
+    summary="Check the health status of the Docling Processor",
+    description="Returns the current health status of the Docling Processor.",
+    tags=["Health Checks"],
+)
+def health_check():
+    return {"status": "UP"}
+
+
+@app.get(
+    "/form",
+    summary="Return configuration form definition for the connector",
+    description=(
+        "Returns a JSON schema describing the configuration fields required "
+        "to set up the connector in the Openk9 UI."
+    ),
+    tags=["Connector Configuration"],
+    response_description="Form structure with field definitions",
+)
+def form():
+    response = {
+        "fields": [
+            {
+                "label": "Configurations",
+                "name": "enrichItemConfig",
+                "type": "dict",
+                "size": 4,
+                "required": True,
+                "info": "Configurazioni",
+                "values": [{"value": "", "isDefault": True}],
+                "placeholder": "",
+                "validator": {"min": 1, "max": 200, "regex": "/https?:\\/\\/.+/"},
+            },
+        ]
+    }
+    return response
+
+
+def operation(payload, configs, token):
+    s_host = os.getenv("S_HOST")
 
     resource_ids = [
         b.get("resourceId")
