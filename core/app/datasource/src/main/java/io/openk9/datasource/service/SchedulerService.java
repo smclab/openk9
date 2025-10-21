@@ -190,17 +190,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Retrieves the job status for a list of datasources.
+	 * Retrieves the job status and type for a specific datasource.
 	 *
-	 * <p>This method queries the database for active {@code Scheduler} instances associated with
-	 * the provided datasource IDs. If a datasource is found in a running state,
-	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
-	 * with the status {@link  JobStatus#ALREADY_RUNNING}.
-	 * Otherwise, it defaults to {@link JobStatus#ON_SCHEDULING}.
+	 * <p>This method queries the database for active {@code Scheduler} instances in a running state
+	 * associated with the provided datasource ID.
 	 *
-	 * @param datasourceId the list of datasource IDs to check
-	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
-	 *         to its corresponding job status
+	 * <p>The returned status depends on the scheduler's state. If a scheduler exists in a running
+	 * state (one of {@link Scheduler#RUNNING_STATES_SET}), the status reflects the current execution
+	 * state. If no running scheduler is found, the datasource is considered ready to start a new
+	 * scheduler.
+	 *
+	 * @param datasourceId the datasource ID to check
+	 * @return a {@code Uni<DatasourceJobStatusAndType>} containing the datasource's id, name,
+	 *            job status and reindex flag
 	 */
 	public Uni<DatasourceJobStatusAndType> getJobStatus(Long datasourceId) {
 
