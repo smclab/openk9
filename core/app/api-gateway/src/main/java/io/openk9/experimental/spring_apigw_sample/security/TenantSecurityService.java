@@ -20,6 +20,7 @@ package io.openk9.experimental.spring_apigw_sample.security;
 import java.util.List;
 
 import io.openk9.experimental.spring_apigw_sample.security.apikey.ApiKeyAuthenticationToken;
+import io.openk9.experimental.spring_apigw_sample.security.oauth2.OAuth2Settings;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ServerWebExchange;
@@ -56,15 +57,13 @@ public interface TenantSecurityService {
 	Mono<Boolean> isAuthorized(Mono<Authentication> authentication, ServerWebExchange exchange);
 
 	/**
-	 * Retrieves the issuer URI associated with the tenant of the current request.
-	 * <p>
-	 * Typically used in OAuth2/OpenID Connect flows to obtain the authorization server URI.
+	 * Retrieves the OAuth2 settings associated with the tenant of the current request.
 	 *
 	 * @param exchange the {@link ServerWebExchange} representing the current request.
-	 * @return a {@link Mono} emitting the issuer URI as a {@link String}, or empty if
-	 *         no issuer is configured for the tenant.
+	 * @return a {@link Mono} emitting the oauth2Settings as a {@link OAuth2Settings}, or
+	 * empty if no settings configured for the tenant.
 	 */
-	Mono<String> getIssuerUri(ServerWebExchange exchange);
+	Mono<OAuth2Settings> getOAuth2Settings(ServerWebExchange exchange);
 
 	/**
 	 * Retrieves the permission roles associated with a given API key for a tenant.

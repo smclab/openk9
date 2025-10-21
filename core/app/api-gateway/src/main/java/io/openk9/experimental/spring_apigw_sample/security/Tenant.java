@@ -17,6 +17,8 @@
 
 package io.openk9.experimental.spring_apigw_sample.security;
 
+import io.openk9.experimental.spring_apigw_sample.security.oauth2.OAuth2Settings;
+
 /**
  * A representation of a Tenant configuration, needed by the Api Gateway
  * {@link org.springframework.security.web.server.SecurityWebFilterChain} to
@@ -24,16 +26,14 @@ package io.openk9.experimental.spring_apigw_sample.security;
  *
  * @param tenantId the tenantId shared across the services
  * @param hostName the hostname of the client request
- * @param issuerUri the issuer that eventually validate the OAuth2 JWT tokens
+ * @param oauth2Settings the oauth2 settings for this tenant
  * @param keychain the keychain contains the trusted apiKeys for this tenant
  * @param routeAuthorizationMap a map that defines how a route has to be authorized
  */
 public record Tenant(
 	String tenantId,
 	String hostName,
-	String issuerUri,
-	String clientId,
-	String clientSecret,
+	OAuth2Settings oauth2Settings,
 	Keychain keychain,
 	RouteAuthorizationMap routeAuthorizationMap) {
 }

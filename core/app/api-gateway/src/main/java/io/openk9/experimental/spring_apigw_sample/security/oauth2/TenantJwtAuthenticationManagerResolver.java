@@ -26,6 +26,11 @@ import io.openk9.experimental.spring_apigw_sample.security.TenantSecurityService
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtAudienceValidator;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
 import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
 import org.springframework.web.server.ServerWebExchange;
@@ -43,18 +48,29 @@ public class TenantJwtAuthenticationManagerResolver
 	public Mono<ReactiveAuthenticationManager> resolve(ServerWebExchange exchange) {
 
 		return service
-			.getIssuerUri(exchange)
-			.map(issuerUri -> authenticationManagers
+			.getOAuth2Settings(exchange)
+			.map(oAuth2Settings -> authenticationManagers
 				.computeIfAbsent(
-					issuerUri,
-					TenantJwtAuthenticationManagerResolver::fromIssuerLocation)
+					oAuth2Settings.issuerUri(),
+					issuer -> fromOAuth2Settings(oAuth2Settings))
 			)
 			.defaultIfEmpty(denied());
 	}
 
-	private static ReactiveAuthenticationManager fromIssuerLocation(String issuer) {
-		return new JwtReactiveAuthenticationManager(
-			ReactiveJwtDecoders.fromIssuerLocation(issuer));
+	private static ReactiveAuthenticationManager fromOAuth2Settings(OAuth2Settings settings) {
+		NimbusReactiveJwtDecoder jwtDecoder =
+			ReactiveJwtDecoders.fromIssuerLocation(settings.issuerUri());
+
+		String clientId = settings.clientId();
+
+		JwtAudienceValidator jwtAudienceValidator = new JwtAudienceValidator(clientId);
+
+		OAuth2TokenValidator<Jwt> validator =
+			JwtValidators.createDefaultWithValidators(jwtAudienceValidator);
+
+		jwtDecoder.setJwtValidator(validator);
+
+		return new JwtReactiveAuthenticationManager(jwtDecoder);
 	}
 
 	private static ReactiveAuthenticationManager denied() {

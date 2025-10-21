@@ -33,6 +33,7 @@ import io.openk9.experimental.spring_apigw_sample.security.TenantIdResolverFilte
 import io.openk9.experimental.spring_apigw_sample.security.TenantSecurityService;
 import io.openk9.experimental.spring_apigw_sample.security.apikey.ApiKeyAuthenticationToken;
 import io.openk9.experimental.spring_apigw_sample.security.apikey.ApiKeyMalformedException;
+import io.openk9.experimental.spring_apigw_sample.security.oauth2.OAuth2Settings;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
@@ -71,9 +72,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 			.map(tuple -> new Tenant(
 				tuple.getT1().tenantId(),
 				tuple.getT1().hostName(),
-				tuple.getT1().issuerUri(),
-				tuple.getT1().clientId(),
-				tuple.getT1().clientSecret(),
+				tuple.getT1().oauth2Settings(),
 				tuple.getT2(),
 				tuple.getT3()
 			))
@@ -91,9 +90,11 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 			.map((row, meta) -> new Tenant(
 				row.get("tenant_id", String.class),
 				row.get("host_name", String.class),
-				row.get("issuer_uri", String.class),
-				row.get("client_id", String.class),
-				row.get("client_secret", String.class),
+				OAuth2Settings.fromStrings(
+					row.get("issuer_uri", String.class),
+					row.get("client_id", String.class),
+					row.get("client_secret", String.class)
+				),
 				Keychain.of(),
 				RouteAuthorizationMap.of()
 			))
@@ -157,7 +158,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 	}
 
 	@Override
-	public Mono<String> getIssuerUri(ServerWebExchange exchange) {
+	public Mono<OAuth2Settings> getOAuth2Settings(ServerWebExchange exchange) {
 		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
 
 		if (tenantId == null) {
@@ -165,8 +166,8 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 		}
 
 		return getTenantAggregate(tenantId)
-			.map(Tenant::issuerUri)
-			.filter(uri -> uri != null && !uri.isBlank());
+			.map(Tenant::oauth2Settings)
+			.filter(Objects::nonNull);
 	}
 
 	@Override

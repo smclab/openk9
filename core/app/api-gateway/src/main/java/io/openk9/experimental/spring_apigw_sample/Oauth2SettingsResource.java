@@ -21,6 +21,7 @@ import java.net.URI;
 
 import io.openk9.experimental.spring_apigw_sample.security.Tenant;
 import io.openk9.experimental.spring_apigw_sample.security.TenantSecurityService;
+import io.openk9.experimental.spring_apigw_sample.security.oauth2.OAuth2Settings;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -37,14 +38,14 @@ public class Oauth2SettingsResource {
 	TenantSecurityService tenantSecurityService;
 
     @GetMapping("/settings")
-	public Mono<Oauth2Settings> settings(ServerHttpRequest request) {
+	public Mono<OAuth2Settings> settings(ServerHttpRequest request) {
 		URI requestURI = request.getURI();
 		String requestHost = requestURI.getHost();
 
 		return tenantSecurityService.getTenantId(requestHost)
 			.flatMap(tenantId -> tenantSecurityService
 				.getTenantAggregate(tenantId)
-				.map(Oauth2Settings::fromTenant)
+				.map(Tenant::oauth2Settings)
 			);
 	}
 
@@ -53,7 +54,7 @@ public class Oauth2SettingsResource {
 		return settings(request).map(Oauth2SettingsResource::encodeSettingsJs);
 	}
 
-	private static String encodeSettingsJs(Oauth2Settings oauth2Settings) {
+	private static String encodeSettingsJs(OAuth2Settings oauth2Settings) {
 
 		return String.format(
 			"""
@@ -64,11 +65,5 @@ public class Oauth2SettingsResource {
 			oauth2Settings.clientId()
 		);
 	}
-
-	 public record Oauth2Settings(String issuerUri, String clientId) {
-		static Oauth2Settings fromTenant(Tenant tenant) {
-			return new Oauth2Settings(tenant.issuerUri(), tenant.clientId());
-		}
-	 }
 
 }
