@@ -37,6 +37,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -64,6 +65,10 @@ public interface BucketResourceMapper {
 	}
 
     static Map<String, String> map(String source) {
+        if (source == null || source.isBlank()) {
+            return Collections.emptyMap();
+        }
+
         JsonObject json = (JsonObject) Json.decodeValue(source);
         return json.stream().collect(
                 Collectors.toMap(
