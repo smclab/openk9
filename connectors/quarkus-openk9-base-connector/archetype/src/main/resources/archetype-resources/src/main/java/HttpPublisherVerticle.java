@@ -38,10 +38,10 @@ public class HttpPublisherVerticle extends AbstractVerticle {
     @Override
     public void start() {
         /*
-           Configure and create a WebClient instance with maxPoolSize set to 1,
-           allowing only one active HTTP connection at a time.
-        */
-        WebClientOptions webClientOptions = webClientOptionsConfiguration();
+           Configure and create a WebClient instance. When maxPoolSize is set to 1,
+           only one active HTTP connection is allowed, which ensures that the order of the extracted payloads is preserved.
+         */
+        WebClientOptions webClientOptions = webClientOptionsConfiguration(); //
         WebClient client = WebClient.create(vertx, webClientOptions);
         vertx.eventBus().consumer(ADDRESS, message -> {
             IngestionDTO ingestionDTO = (IngestionDTO) message.body();
@@ -70,9 +70,6 @@ public class HttpPublisherVerticle extends AbstractVerticle {
 
     private WebClientOptions webClientOptionsConfiguration() {
         WebClientOptions webClientOptions = new WebClientOptions();
-        /*
-        To guarantee order of ingestion data, set MaxPoolSize to 1, instead increment
-         */
         webClientOptions.setMaxPoolSize(maxPoolSize);
         return webClientOptions;
     }
