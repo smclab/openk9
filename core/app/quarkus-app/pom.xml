@@ -38,7 +38,7 @@
 
 	<profiles>
 		<profile>
-			<!-- enable junit performance test -->
+			<!-- enable junit quarkus test -->
 			<id>quarkus-test</id>
 			<properties>
 				<junit-excluded-groups/>

@@ -57,6 +57,7 @@
 		<module>app</module>
 		<module>client</module>
 		<module>common</module>
+		<module>events</module>
 	</modules>
 
 	<properties>
@@ -245,6 +246,12 @@
 				<artifactId>datasource-model</artifactId>
 				<version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>events</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<!-- FIXME: fixes CVE-2024-7254, review during quarkus version update after 3.20.2 -->
 			<dependency>
 				<groupId>com.google.protobuf</groupId>

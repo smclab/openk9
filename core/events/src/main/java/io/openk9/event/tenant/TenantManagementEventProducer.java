@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.experimental.spring_apigw_sample.event;
+package io.openk9.event.tenant;
 
 public interface TenantManagementEventProducer {
 

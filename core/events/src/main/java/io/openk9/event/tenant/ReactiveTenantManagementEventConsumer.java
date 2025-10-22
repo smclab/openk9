@@ -15,7 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.experimental.spring_apigw_sample.event;
+package io.openk9.event.tenant;
+
+import org.reactivestreams.Publisher;
 
 /**
  * Defines an event listener interface for handling tenant-related domain events
@@ -26,36 +28,41 @@ package io.openk9.experimental.spring_apigw_sample.event;
  * API key configuration, and route-level security settings.
  * <p>
  * Each event type represents a specific change in the system state, such as
- * tenant creation, update, or deletion.
+ * tenant creation, update, or deletion. The methods return a {@link Publisher}
+ * to support non-blocking, reactive event handling.
  */
-public interface TenantManagementEventConsumer {
+public interface ReactiveTenantManagementEventConsumer {
 
 	/**
 	 * Handles an event indicating that a new tenant has been created.
 	 *
 	 * @param event the {@link TenantManagementEvent.TenantCreated} containing tenant details
+	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	void handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event);
+	Publisher<Void> handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event);
 
 	/**
 	 * Handles an event indicating that a new API key has been created for a tenant route.
 	 *
 	 * @param event the {@link TenantManagementEvent.ApiKeyCreated} containing API key information
+	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	void handleApiKeyCreatedEvent(TenantManagementEvent.ApiKeyCreated event);
+	Publisher<Void> handleApiKeyCreatedEvent(TenantManagementEvent.ApiKeyCreated event);
 
 	/**
 	 * Handles an event indicating that an existing tenant has been updated.
 	 *
 	 * @param event the {@link TenantManagementEvent.TenantUpdated} containing updated tenant details
+	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	void handleTenantUpdatedEvent(TenantManagementEvent.TenantUpdated event);
+	Publisher<Void> handleTenantUpdatedEvent(TenantManagementEvent.TenantUpdated event);
 
 	/**
 	 * Handles an event indicating that a tenant has been deleted.
 	 *
 	 * @param event the {@link TenantManagementEvent.TenantDeleted} identifying the deleted tenant
+	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	void handleTenantDeletedEvent(TenantManagementEvent.TenantDeleted event);
+	Publisher<Void> handleTenantDeletedEvent(TenantManagementEvent.TenantDeleted event);
 
 }
