@@ -51,6 +51,8 @@ import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.opensearch.search.aggregations.bucket.terms.Terms;
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
+import org.quartz.Trigger;
+import org.quartz.impl.jdbcjobstore.TriggerStatus;
 
 @ApplicationScoped
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
@@ -73,7 +75,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	protected static JobStatus getJobStatus(Scheduler.SchedulerStatus schedulerStatus) {
-		return schedulerStatus == null ? JobStatus.ON_SCHEDULING : JobStatus.ALREADY_RUNNING;
+		return schedulerStatus == null ? JobStatus.NOT_RUNNING : JobStatus.TRIGGER_RUNNING;
 	}
 
 	public Uni<Void> cancelScheduling(String tenantId, long schedulerId) {
@@ -94,6 +96,30 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				}
 				default -> Uni.createFrom().voidItem();
 			});
+	}
+
+	/**
+	 * Checks whether a new scheduling operation can start based on the current job status and
+	 * reindex type, and produce the {@link TriggerResponse}.
+	 * <p>
+	 * A new scheduling is permitted if no job is currently running. If a running job exists
+	 * and is of type trigger, a new reindex-type scheduling may proceed; otherwise, the
+	 * scheduling is not permitted.
+	 *
+	 * @param jobStatus the current status of the job, indicating whether no job is running,
+	 *                  a trigger job is running, or a reindex job is running
+	 * @param reindex   {@code true} if the new scheduling is of type reindex, {@code false} otherwise
+	 * @return {@link TriggerResponse} containing information about the status of old jobs and
+	 *          whether the current scheduling operation is allowed or blocked
+	 */
+	public TriggerResponse checkStartScheduling(JobStatus jobStatus, boolean reindex) {
+		var status = switch (jobStatus) {
+			case NOT_RUNNING -> SchedulingStatus.ALLOWED;
+			case TRIGGER_RUNNING -> reindex ? SchedulingStatus.ALLOWED : SchedulingStatus.BLOCKED;
+			case REINDEX_RUNNING -> SchedulingStatus.BLOCKED;
+		};
+
+		return new TriggerResponse(jobStatus, status);
 	}
 
 	public Uni<Void> closeScheduling(String tenantId, long schedulerId) {
@@ -190,21 +216,19 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Retrieves the job status and type for a specific datasource.
+	 * Retrieves the job status for a specific datasource.
 	 *
 	 * <p>This method queries the database for active {@code Scheduler} instances in a running state
 	 * associated with the provided datasource ID.
 	 *
 	 * <p>The returned status depends on the scheduler's state. If a scheduler exists in a running
-	 * state (one of {@link Scheduler#RUNNING_STATES_SET}), the status reflects the current execution
-	 * state. If no running scheduler is found, the datasource is considered ready to start a new
-	 * scheduler.
+	 * state (one of {@link Scheduler#RUNNING_STATES_SET}), the status reflects the scheduler type.
+	 * If no running scheduler is found, the status is {@link JobStatus#NOT_RUNNING}.
 	 *
 	 * @param datasourceId the datasource ID to check
-	 * @return a {@code Uni<DatasourceJobStatusAndType>} containing the datasource's id, name,
-	 *            job status and reindex flag
+	 * @return a {@code Uni<JobStatus>}
 	 */
-	public Uni<DatasourceJobStatusAndType> getJobStatus(Long datasourceId) {
+	public Uni<JobStatus> getJobStatus(Long datasourceId) {
 
 		return sessionFactory.withTransaction((session, transaction) -> session
 			.createQuery(
@@ -219,7 +243,7 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			.setParameter("datasourceId", datasourceId)
 			.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
 			.getSingleResult()
-			.map(this::mapToJobStatusAndType)
+			.map(this::mapToJobStatus)
 		);
 	}
 
@@ -229,8 +253,8 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	 * <p>This method queries the database for active {@code Scheduler} instances associated with
 	 * the provided datasource IDs. If a datasource is found in a running state,
 	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
-	 * with the status {@link  JobStatus#ALREADY_RUNNING}.
-	 * Otherwise, it defaults to {@link JobStatus#ON_SCHEDULING}.
+	 * with the status {@link  JobStatus#TRIGGER_RUNNING}.
+	 * Otherwise, it defaults to {@link JobStatus#NOT_RUNNING}.
 	 *
 	 * @param datasourceIds the list of datasource IDs to check
 	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
@@ -368,28 +392,25 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Transforms a raw JPA query result into a {@link DatasourceJobStatusAndType} DTO.
+	 * Transforms a raw JPA query result into a {@link JobStatus}.
 	 * <p>
 	 * This method extracts the raw datasource, scheduler data, and type from a
-	 * {@link jakarta.persistence.Tuple} and maps the internal
-	 * {@link Scheduler.SchedulerStatus} to a simplified, client-facing {@link JobStatus}
-	 * by calling the {@code getJobStatus} helper method.
+	 * {@link jakarta.persistence.Tuple} and maps it to a {@link JobStatus} value representing the
+	 * running job status.
 	 *
 	 * @param tuple The raw tuple from the database query, conforming to the expected structure.
-	 * @return A mapped {@link DatasourceJobStatusAndType} object containing datasource id,
-	 *         name, job status, and type.
+	 * @return A mapped {@link JobStatus}.
 	 */
-	private DatasourceJobStatusAndType mapToJobStatusAndType(Tuple tuple) {
+	private JobStatus mapToJobStatus(Tuple tuple) {
 
-		var schedulerId = tuple.get(2, Scheduler.SchedulerStatus.class);
-		var jobStatus = getJobStatus(schedulerId);
+		var schedulerStatus = tuple.get(2, Scheduler.SchedulerStatus.class);
+		var reindex = tuple.get(3, Boolean.class);
 
-		return new DatasourceJobStatusAndType(
-			tuple.get(0, Long.class),
-			tuple.get(1, String.class),
-			jobStatus,
-			tuple.get(3, Boolean.class)
-		);
+		if (schedulerStatus == null) {
+			return JobStatus.NOT_RUNNING;
+		}
+
+		return reindex ? JobStatus.REINDEX_RUNNING : JobStatus.TRIGGER_RUNNING;
 	}
 
 	/**
@@ -441,19 +462,23 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public enum JobStatus {
-		ALREADY_RUNNING,
-		ON_SCHEDULING
+		TRIGGER_RUNNING,
+		REINDEX_RUNNING,
+		NOT_RUNNING
+	}
+
+	public enum SchedulingStatus {
+		ALLOWED,
+		BLOCKED
 	}
 
 	public record DatasourceHealthStatus(long id, String name, HealthStatus status) {}
 
 	public record DatasourceJobStatus(long id, String name, JobStatus status) {}
 
-	public record DatasourceJobStatusAndType(
-		long id,
-		String name,
-		JobStatus status,
-		Boolean reindex
+	public record TriggerResponse(
+		JobStatus oldJobStatus,
+		SchedulingStatus status
 	) {}
 
 }
