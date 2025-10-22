@@ -88,7 +88,7 @@ public class StatusByDatasourcesTest {
 		assertEquals(1, statusList.size());
 		statusList.forEach(
 			status ->
-				assertEquals(SchedulerService.JobStatus.ALREADY_RUNNING, status.status())
+				assertEquals(SchedulerService.JobStatus.TRIGGER_RUNNING, status.status())
 		);
 	}
 
@@ -154,6 +154,7 @@ public class StatusByDatasourcesTest {
 		scheduler.setDatasource(datasource);
 		scheduler.setOldDataIndex(datasource.getDataIndex());
 		scheduler.setStatus(io.openk9.datasource.model.Scheduler.SchedulerStatus.RUNNING);
+		scheduler.setReindex(false);
 
 		sessionFactory.withTransaction(
 				(s,transaction) ->

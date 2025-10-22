@@ -48,6 +48,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.quartz.impl.jdbcjobstore.TriggerStatus;
 
 @Path("/v2/trigger")
 @RolesAllowed("k9-admin")
@@ -70,7 +71,7 @@ public class TriggerWithDateResource {
 	 *
 	 * @param dto The {@link TriggerV2ResourceDTO} object containing the parameters for the job trigger.
 	 * @return A {@link Uni} representing the status of the triggered job and type of running jobs
-	 *         if present as a {@link TriggerResponse}.
+	 *         if present as a {@link SchedulerService.TriggerResponse}.
 	 */
 	@Operation(operationId = "v2-trigger")
 	@Tag(name = "Trigger Datasource API", description = "Permits to trigger an ingestion schedule for a specific datasource")
@@ -110,7 +111,7 @@ public class TriggerWithDateResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@ActivateRequestContext
-	public Uni<TriggerResponse> trigger(TriggerV2ResourceDTO dto) {
+	public Uni<SchedulerService.TriggerResponse> trigger(TriggerV2ResourceDTO dto) {
 
 		TriggerWithDateResourceDTO withDateResourceDTO =
 			TriggerWithDateResourceDTO.builder()
@@ -123,67 +124,14 @@ public class TriggerWithDateResource {
 
 		return schedulerService
 			.getJobStatus(dto.getDatasourceId())
-			.map(datasourceJobStatusAndType ->
-				mapToTriggerResponse(datasourceJobStatusAndType, dto.isReindex())
+			.map(jobStatus ->
+				schedulerService.checkStartScheduling(jobStatus, dto.isReindex())
 			)
 			.call(() -> schedulerInitializer
 				.get()
 				.triggerJobs(tenantId, withDateResourceDTO)
 			);
 	}
-
-	private TriggerStatus getNewSchedulerActionOutcome(
-			OldSchedulerType oldSchedulerType, boolean reindex) {
-
-		return switch (oldSchedulerType) {
-			case NO_RUNNING_SCHEDULER -> TriggerStatus.STARTED;
-			case TRIGGER -> reindex
-				? TriggerStatus.STARTED
-				: TriggerStatus.NOT_STARTED;
-			case REINDEX -> TriggerStatus.NOT_STARTED;
-		};
-	}
-
-	private OldSchedulerType getSchedulerType(
-			SchedulerService.DatasourceJobStatusAndType jobStatusAndType) {
-
-		if (jobStatusAndType.status() == SchedulerService.JobStatus.ON_SCHEDULING) {
-			return OldSchedulerType.NO_RUNNING_SCHEDULER;
-		}
-		else {
-			return jobStatusAndType.reindex() ? OldSchedulerType.REINDEX : OldSchedulerType.TRIGGER;
-		}
-	}
-
-	private TriggerResponse mapToTriggerResponse(
-			SchedulerService.DatasourceJobStatusAndType jobStatusAndType, boolean reindex) {
-
-		var oldSchedulerType = getSchedulerType(jobStatusAndType);
-		var newSchedulerActionOutcome = getNewSchedulerActionOutcome(oldSchedulerType, reindex);
-
-		return new TriggerResponse(
-			jobStatusAndType.id(),
-			oldSchedulerType,
-			newSchedulerActionOutcome
-		);
-	}
-
-	public enum TriggerStatus {
-		STARTED,
-		NOT_STARTED
-	}
-
-	public enum OldSchedulerType {
-		TRIGGER,
-		REINDEX,
-		NO_RUNNING_SCHEDULER
-	}
-
-	public record TriggerResponse(
-		long id,
-		OldSchedulerType oldSchedulerType,
-		TriggerStatus triggerStatus
-	) {}
 
 	@Data
 	@NoArgsConstructor
