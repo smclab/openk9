@@ -25,7 +25,7 @@ public class CrawlingService {
     @ConfigProperty(name = "io.openk9.connector.path")
     private String path;
 
-    @ConfigProperty(name = "webClientOptions.maxPoolSize")
+    @ConfigProperty(name = "io.openk9.connector.web-client.max-pool-size")
     private int maxPoolSize;
 
 
