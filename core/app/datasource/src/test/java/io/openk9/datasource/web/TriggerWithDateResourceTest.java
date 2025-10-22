@@ -55,17 +55,19 @@ public class TriggerWithDateResourceTest {
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void should_ingest_date_payload() {
 
-		BDDMockito.given(schedulerService.getJobStatusList(notNull()))
-				.willReturn( Uni.createFrom().item(() -> {
-					var datasourceJobStatuses =
-						new ArrayList<SchedulerService.DatasourceJobStatus>();
+		BDDMockito.given(schedulerService.getJobStatus(notNull()))
+			.willReturn( Uni.createFrom().item(() -> SchedulerService.JobStatus.NOT_RUNNING));
 
-					datasourceJobStatuses.add(
-						new SchedulerService.DatasourceJobStatus(
-							0L, "mockitoDatasource", SchedulerService.JobStatus.ON_SCHEDULING));
-
-					return datasourceJobStatuses;
-				}));
+		BDDMockito.given(schedulerService.checkStartScheduling(
+				SchedulerService.JobStatus.NOT_RUNNING,
+				true)
+			)
+			.willReturn(
+				new SchedulerService.TriggerResponse(
+					SchedulerService.JobStatus.NOT_RUNNING,
+					SchedulerService.SchedulingStatus.ALLOWED
+				)
+			);
 
 		var date = OffsetDateTime.parse(TESTING_DATE);
 
@@ -80,8 +82,8 @@ public class TriggerWithDateResourceTest {
 			.post()
 			.then()
 			.statusCode(200)
-			.body("id", equalTo(0))
-			.body("status", equalTo("ON_SCHEDULING"));
+			.body("oldJobStatus", equalTo("NOT_RUNNING"))
+			.body("status", equalTo("ALLOWED"));
 
 		BDDMockito.then(schedulerInitializer).should()
 			.triggerJobs(nullable(String.class), argThat(dto ->
