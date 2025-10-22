@@ -76,21 +76,7 @@ def health_check():
     response_description="Form structure with field definitions",
 )
 def form():
-    response = {
-        "fields": [
-            {
-                "label": "Configurations",
-                "name": "enrichItemConfig",
-                "type": "dict",
-                "size": 4,
-                "required": True,
-                "info": "Configurazioni",
-                "values": [{"value": "", "isDefault": True}],
-                "placeholder": "",
-                "validator": {"min": 1, "max": 200, "regex": "/https?:\\/\\/.+/"},
-            },
-        ]
-    }
+    response = {"fields": []}
     return response
 
 
