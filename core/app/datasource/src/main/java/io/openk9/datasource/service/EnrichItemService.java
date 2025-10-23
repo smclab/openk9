@@ -17,15 +17,27 @@
 
 package io.openk9.datasource.service;
 
+import io.openk9.datasource.enricher.HttpEnricherClient;
+import io.openk9.datasource.enricher.HttpEnricherInfo;
+import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.web.dto.EnricherInputDTO;
+import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.smallrye.mutiny.Uni;
+import io.vertx.ext.web.client.HttpResponse;
 import jakarta.enterprise.context.ApplicationScoped;
-
 import io.openk9.datasource.mapper.EnrichItemMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
+import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {
+
+    @Inject
+    HttpEnricherClient httpEnricherClient;
+
+
 	EnrichItemService(EnrichItemMapper mapper) {
 		this.mapper = mapper;
 	}
@@ -39,5 +51,17 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	public String[] getSearchFields() {
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
+
+    public Uni<FormTemplate> getForm(HttpEnricherInfo enricherInfo) {
+        return httpEnricherClient.getForm(enricherInfo);
+    }
+
+    public Uni<PluginDriverHealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
+        return httpEnricherClient.getHealth(enricherInfo);
+    }
+
+    public Uni<HttpResponse<?>> process(HttpEnricherInfo enricherInfo, EnricherInputDTO enricherInputDTO) {
+        return httpEnricherClient.process(enricherInfo, enricherInputDTO);
+    }
 
 }
