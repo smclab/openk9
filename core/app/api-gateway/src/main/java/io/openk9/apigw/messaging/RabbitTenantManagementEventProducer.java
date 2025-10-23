@@ -22,6 +22,7 @@ import io.openk9.event.tenant.TenantManagementEventProducer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +40,11 @@ public class RabbitTenantManagementEventProducer implements TenantManagementEven
 		}
 
 		amqp.convertAndSend(TenantManagementEvent.TOPIC, event);
+	}
+
+	@Override
+	public Publisher<Void> send(String eventType, byte[] payload) {
+		return null;
 	}
 
 }

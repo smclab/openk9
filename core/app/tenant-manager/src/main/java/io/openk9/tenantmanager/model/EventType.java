@@ -15,14 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.event.tenant;
+package io.openk9.tenantmanager.model;
 
-import org.reactivestreams.Publisher;
-
-public interface TenantManagementEventProducer {
-
-	void send(TenantManagementEvent event);
-
-	Publisher<Void> send(String eventType, byte payload[]);
-
+public enum EventType {
+	TENANT_CREATED,
+	TENANT_UPDATED,
+	TENANT_DELETED
 }

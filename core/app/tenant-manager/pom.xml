@@ -29,6 +29,21 @@
 
   <dependencies>
 
+	  <!-- tenant events producing -->
+	  <dependency>
+		  <groupId>io.openk9</groupId>
+		  <artifactId>events</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkiverse.rabbitmqclient</groupId>
+		  <artifactId>quarkus-rabbitmq-client</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-messaging-rabbitmq</artifactId>
+	  </dependency>
+	  <!-- tenant events producing -->
+
     <!-- // jpa -->
     <dependency>
       <groupId>io.quarkus</groupId>

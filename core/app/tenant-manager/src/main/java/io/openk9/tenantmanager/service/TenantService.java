@@ -17,25 +17,32 @@
 
 package io.openk9.tenantmanager.service;
 
-import io.openk9.common.graphql.util.service.GraphQLService;
-import io.openk9.common.model.EntityService;
-import io.openk9.common.model.EntityServiceValidatorWrapper;
-import io.openk9.tenantmanager.dto.SchemaTuple;
-import io.openk9.tenantmanager.dto.TenantDTO;
-import io.openk9.tenantmanager.mapper.TenantMapper;
-import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.model.Tenant_;
-import io.smallrye.mutiny.Uni;
+import java.util.List;
+import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.validation.Validator;
-import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
+import io.openk9.common.graphql.util.service.GraphQLService;
+import io.openk9.common.model.EntityService;
+import io.openk9.common.model.EntityServiceValidatorWrapper;
+import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.tenantmanager.dto.SchemaTuple;
+import io.openk9.tenantmanager.dto.TenantDTO;
+import io.openk9.tenantmanager.mapper.TenantMapper;
+import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.model.Tenant_;
+
+import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class TenantService
@@ -48,9 +55,25 @@ public class TenantService
 	}
 
 	public Uni<Tenant> persist(Tenant tenant) {
+		var realmName = tenant.getRealmName();
+		var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
+
 		return sf.withTransaction(
 			session -> session
 				.persist(tenant)
+				.call(() -> outboxEventService.persist(
+					session,
+					TenantManagementEvent.TenantCreated.builder()
+						.tenantId(tenant.getSchemaName())
+						.hostName(tenant.getVirtualHost())
+						.clientId(tenant.getClientId())
+						.issuerUri(issuerUri)
+						.routeAuthorizationMap(Map.of(
+							"DATASOURCE", "OAUTH2",
+							"SEARCHER", "OAUTH2"
+						))
+						.build()
+				))
 				.map(__ -> tenant)
 		);
 	}
@@ -89,7 +112,23 @@ public class TenantService
 			return tenantUni.flatMap(t -> {
 
 				if (t != null) {
-					return s.merge(tenant);
+					var realmName = tenant.getRealmName();
+					var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
+
+					return s.merge(tenant)
+						.call(() -> outboxEventService.persist(
+							s,
+							TenantManagementEvent.TenantUpdated.builder()
+								.tenantId(tenant.getSchemaName())
+								.hostName(tenant.getVirtualHost())
+								.clientId(tenant.getClientId())
+								.issuerUri(issuerUri)
+								.routeAuthorizationMap(Map.of(
+									"DATASOURCE", "OAUTH2",
+									"SEARCHER", "OAUTH2"
+								))
+								.build()
+						));
 				}
 				else {
 					return Uni.createFrom().failure(
@@ -102,10 +141,16 @@ public class TenantService
 
 	public Uni<Void> deleteTenant(long tenantId) {
 
-		return sf.withTransaction(s -> s.createQuery(
-				"delete from Tenant where id = :tenantId")
-			.setParameter("tenantId", tenantId)
-			.executeUpdate()
+		return sf.withTransaction(s -> s
+			.find(Tenant.class, tenantId)
+			.call((tenant) -> s.remove(tenant)
+				.call(() -> outboxEventService.persist(
+					s,
+					TenantManagementEvent.TenantDeleted.builder()
+						.tenantId(tenant.getSchemaName())
+						.build()
+				))
+			)
 			.replaceWithVoid()
 		);
 
@@ -229,9 +274,33 @@ public class TenantService
 	TenantMapper mapper;
 
 	@Inject
+	OutboxEventService outboxEventService;
+
+	@Inject
 	Validator validator;
+
+	@ConfigProperty(name = "quarkus.oidc.auth-server.url")
+	String authServerUrl;
 
 	private EntityServiceValidatorWrapper<Tenant, TenantDTO>
 		entityServiceValidatorWrapper;
+
+	private static final Logger log = Logger.getLogger(TenantService.class);
+
+	public void onStartup(@Observes Startup startup) {
+
+		log.info("insert a tenant");
+
+		var tenant = new Tenant();
+		tenant.setRealmName("alabasta");
+		tenant.setSchemaName("alabasta");
+		tenant.setVirtualHost("http://alabasta.localhost:8080");
+		tenant.setClientId("openk9");
+		tenant.setLiquibaseSchemaName("alabasta_liquibase");
+
+		persist(tenant).subscribe().with(tenant1 -> {});
+
+	}
+
 
 }
