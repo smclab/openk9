@@ -1,13 +1,24 @@
-import { css } from "styled-components/macro";
-import { UseQueryResult } from "react-query";
-import React from "react";
-import { useQuery } from "react-query";
-import { SortField, useOpenK9Client } from "../components/client";
-import { useTranslation } from "react-i18next";
+import React, { useMemo } from "react";
+import Select, {
+  components,
+  SingleValueProps,
+  StylesConfig,
+} from "react-select";
 import { GloboSvg } from "../svgElement/Globo";
-import Select, { components } from "react-select";
-import { i18n } from "i18next";
-import { remappingLanguage } from "../embeddable/Main";
+
+export type LanguageItem = {
+  createDate: any;
+  modifiedDate: any;
+  id: number;
+  name: string;
+  value: string;
+};
+
+type Option = {
+  value: string;
+  name: string;
+  icon: JSX.Element;
+};
 
 export function ChangeLanguage({
   setChangeLanguage,
@@ -16,92 +27,78 @@ export function ChangeLanguage({
   color = "#7e7e7e",
   languages,
   activeLanguage,
-  i18nElement,
 }: {
-  setChangeLanguage: (sortResultNew: string) => void;
+  setChangeLanguage: (lang: string) => void;
   background?: string;
   minHeight?: string;
   color?: string;
   activeLanguage: string;
-  i18nElement: i18n;
-  languages:
-    | {
-        createDate: any;
-        modifiedDate: any;
-        id: number;
-        name: string;
-        value: "value";
-      }[]
-    | undefined;
+  languages?: LanguageItem[];
 }) {
-  const filterLanguages = languages?.find(
-    (language) => language.value === activeLanguage,
+  const options: Option[] = useMemo(
+    () =>
+      (languages ?? []).map((l) => ({
+        value: l.value,
+        name: l.name,
+        icon: <GloboSvg />,
+      })),
+    [languages],
   );
 
-  const startValue = filterLanguages
-    ? {
-        value: filterLanguages.value,
-        name: filterLanguages.name,
-        icon: <GloboSvg />,
-      }
-    : null;
+  const startValue = useMemo<Option | null>(() => {
+    const found = options.find((o) => o.value === activeLanguage);
+    return found
+      ? found
+      : options[0]
+      ? options[0]
+      : { value: "", name: "Select Language", icon: <GloboSvg /> };
+  }, [options, activeLanguage]);
 
-  const handleChange = (e: any) => {
-    i18nElement.changeLanguage(remappingLanguage({ language: e.value }));
-    setChangeLanguage(e.value);
+  const handleChange = (opt: Option | null) => {
+    if (!opt) return;
+    setChangeLanguage(opt.value);
   };
-  const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      borderRadius: "50px",
-      backgroundColor: "white",
+
+  const styles: StylesConfig<Option, false> = {
+    control: (base, state) => ({
+      ...base,
+      minHeight,
+      borderRadius: 50,
+      backgroundColor: background,
       border:
-        !state.isFocused || !state.isHovered
-          ? "1px solid white"
-          : "1px solid var(--openk9-embeddable-search--active-color)",
-      boxShadow: "0 0 0 1px var(--openk9-embeddable-search--active-color)",
+        state.isFocused || state.menuIsOpen
+          ? "1px solid var(--openk9-embeddable-search--active-color)"
+          : "1px solid white",
+      boxShadow:
+        state.isFocused || state.menuIsOpen
+          ? "0 0 0 1px var(--openk9-embeddable-search--active-color)"
+          : "none",
       ":hover": {
         border: "1px solid var(--openk9-embeddable-search--active-color)",
       },
     }),
-    menu: (provided: any, state: any) => ({
-      ...provided,
-      zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
+    valueContainer: (base) => ({ ...base, paddingLeft: 12 }),
+    menu: (base, state) => ({
+      ...base,
+      zIndex: state.selectProps.menuIsOpen ? 1000 : 1,
     }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#your-option-focus-color" : "white",
-      color: "black",
-      ":hover": {
-        backgroundColor: state.isSelected ? "#d54949" : "#e836362e",
-        cursor: "pointer",
-      },
-      ...(state.isSelected && {
-        backgroundColor: "#d54949",
-        color: "white",
-      }),
+    option: (base, state) => ({
+      ...base,
+      backgroundColor: state.isFocused ? "#f4f4f4" : "white",
+      color: state.isSelected ? "white" : "black",
+      cursor: "pointer",
+      ...(state.isSelected && { backgroundColor: "#d54949" }),
+      ":hover": { backgroundColor: state.isSelected ? "#d54949" : "#e836362e" },
     }),
-    indicatorSeparator: () => ({
-      display: "none", // Nasconde la linea separatoria
-    }),
+    indicatorSeparator: () => ({ display: "none" }),
+    singleValue: (base) => ({ ...base, color }),
+    placeholder: (base) => ({ ...base, color }),
   };
 
-  const defaultValue = {
-    value: "",
-    name: "Select Language",
-    icon: <GloboSvg />,
-  };
-  const languageElement = languages?.map((language) => ({
-    value: language.value,
-    name: language.name,
-    icon: <GloboSvg />,
-  }));
-  languageElement?.unshift(defaultValue as any);
-
-  const SingleValue = (props: any) => (
+  const SingleValue = (props: SingleValueProps<Option, false>) => (
     <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        <GloboSvg /> {/* Icona SVG */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <GloboSvg />
         {remappingLanguageToBack({ language: activeLanguage })}
       </div>
     </components.SingleValue>
@@ -109,14 +106,15 @@ export function ChangeLanguage({
 
   return (
     <span>
-      <Select
+      <Select<Option, false>
         value={startValue}
-        options={languageElement}
+        options={options}
         components={{ SingleValue }}
         onChange={handleChange}
-        getOptionLabel={(e) => e.name}
-        getOptionValue={(e) => e.value}
-        styles={customStyles}
+        getOptionLabel={(o) => o.name}
+        getOptionValue={(o) => o.value}
+        styles={styles}
+        isSearchable={false}
       />
     </span>
   );
@@ -126,6 +124,8 @@ function remappingLanguageToBack({ language }: { language: string }) {
   switch (language) {
     case "it_IT":
       return "ITA";
+    case "pt_PT":
+      return "PRT";
     case "es_ES":
       return "ESP";
     case "en_US":

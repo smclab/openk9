@@ -13,7 +13,7 @@ import CustomSkeleton from "./Skeleton";
 import { useInfiniteResults } from "./ResultListPagination";
 import { SelectionsState } from "./useSelections";
 
-type FiltersProps = {
+export type FiltersProps = {
   searchQuery: SearchToken[];
   onAddFilterToken(searchToke: SearchToken): void;
   onRemoveFilterToken(searchToken: SearchToken): void;
@@ -32,6 +32,7 @@ type FiltersProps = {
   iconCustom: IconsCustom;
   haveSearch?: boolean | null | undefined;
   state: SelectionsState;
+  dynamicFilters?: boolean;
 };
 function Filters({
   searchQuery,
@@ -50,6 +51,7 @@ function Filters({
   iconCustom,
   haveSearch = true,
   state,
+  dynamicFilters = true,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
 
@@ -58,7 +60,7 @@ function Filters({
 
   const [offset, elementForPage] = state.range;
 
-  const { isPreviousData } = useInfiniteResults<any>(
+  const infiniteResults = useInfiniteResults<any>(
     state,
     searchQuery,
     sort,
@@ -66,7 +68,10 @@ function Filters({
     sortAfterKey,
     elementForPage,
     offset,
+    dynamicFilters,
   );
+
+  const isPreviousData = infiniteResults?.isPreviousData ?? false;
 
   React.useEffect(() => {
     if (!isPreviousData) {

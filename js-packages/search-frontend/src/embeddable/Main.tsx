@@ -61,6 +61,7 @@ import {
 } from "../components/useSelections";
 import "../i18n";
 import { Configuration, ConfigurationUpdateFunction } from "./entry";
+import AllFilters from "../components/AllFiltersConfigurable";
 import Correction from "../components/Correction";
 
 type MainProps = {
@@ -133,15 +134,19 @@ export function Main({
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
-
-  const { filterTokens, addFilterToken, removeFilterToken, resetFilter } =
-    useFilters({
-      configuration,
-      onConfigurationChange,
-      selectionsState,
-      selectionsDispatch,
-      useQueryStringFilters,
-    });
+  const {
+    filterTokens,
+    addFilterToken,
+    setFilterTokens,
+    removeFilterToken,
+    resetFilter,
+  } = useFilters({
+    configuration,
+    onConfigurationChange,
+    selectionsState,
+    selectionsDispatch,
+    useQueryStringFilters,
+  });
   const { i18n } = useTranslation();
   const {
     tabs,
@@ -847,10 +852,12 @@ export function Main({
       {renderPortal(
         <I18nextProvider i18n={i18next}>
           <ChangeLanguage
-            setChangeLanguage={setLanguageSelect}
+            setChangeLanguage={(val) => {
+              setLanguageSelect(val);
+              i18n.changeLanguage(remappingLanguage({ language: val }));
+            }}
             languages={languages.data}
             activeLanguage={languageSelect}
-            i18nElement={i18n}
           />
         </I18nextProvider>,
         configuration.changeLanguage,
@@ -1086,6 +1093,49 @@ export function Main({
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
+          <AllFilters
+            filtersUse={configuration.allFilters?.typeFilters}
+            defaultLanguage={languageSelect}
+            filterDefault={{
+              state: selectionsState,
+              searchQuery: searchQuery,
+              onAddFilterToken: addFilterToken,
+              onRemoveFilterToken: removeFilterToken,
+              sort: completelySort,
+              sortAfterKey: sortAfterKey,
+              language: languageSelect,
+              numberItems: configuration.filtersConfigurable?.numberItems,
+              numberOfResults: numberOfResults,
+              isDynamicElement: dynamicData,
+              noResultMessage:
+                configuration.filtersConfigurable?.noResultMessage,
+              isActiveSkeleton: isActiveSkeleton?.filters ?? false,
+              skeletonCategoryCustom: skeletonCustom.suggestion,
+              memoryResults: memoryResults,
+              placeholder: configuration.filtersConfigurable?.placeholder,
+              haveSearch: configuration.filtersConfigurable?.haveSearch,
+              iconCustom: iconCustom,
+              setAllFilters: setFilterTokens,
+              setLanguageSelected: setLanguageSelect,
+              setCalendarSelected: setDateRange,
+              setSortSelected: setSort,
+              languages: languages.data,
+              defaultFilter: selectionsState.filters,
+            }}
+            calendar={{
+              calendarDate: dateRange,
+              translationLabel:
+                configuration.dataRangePickerVertical?.internationalLabel,
+              onChange: setDateRange,
+            }}
+          />
+        </I18nextProvider>,
+        configuration?.allFilters?.element
+          ? configuration.allFilters.element
+          : null,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
           <DataRangePickerVertical
             onChange={setDateRange}
             calendarDate={dateRange}
@@ -1250,7 +1300,6 @@ function useSearch({
     () => createFilter(filterTokens),
     [filterTokens],
   );
-
   const sortField = {
     sort: {
       [infoSort?.field || ""]: {
@@ -1498,6 +1547,17 @@ function useFilters({
     ? selectionsState.filters
     : [];
 
+  const setFilterTokens = React.useCallback(
+    (filters: SearchToken[]) => {
+      onConfigurationChange((configuration) => ({
+        ...configuration,
+        selectionsState: { ...filters },
+      }));
+      selectionsDispatch({ type: "set-all-filters", filter: filters });
+    },
+    [onConfigurationChange],
+  );
+
   const addFilterToken = React.useCallback(
     (searchToken: SearchToken) => {
       const newFilters = configuration.filterTokens.map((token) => {
@@ -1555,6 +1615,7 @@ function useFilters({
     addFilterToken,
     removeFilterToken,
     resetFilter,
+    setFilterTokens,
   };
 }
 

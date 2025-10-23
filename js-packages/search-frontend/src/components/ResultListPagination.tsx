@@ -116,6 +116,7 @@ type InfiniteResultsProps<E> = {
   sortAfterKey: string;
   callback?: () => void;
   customNoResults?: React.ReactNode | null;
+  dynamicFilters?: boolean;
 };
 
 export function InfiniteResults<E>({
@@ -132,6 +133,7 @@ export function InfiniteResults<E>({
   setTotalResult,
   callback,
   customNoResults,
+  dynamicFilters = true,
 }: InfiniteResultsProps<E>) {
   const [offset, elementForPage] = state.range;
   const { setNumberOfResults } = useRange();
@@ -145,18 +147,19 @@ export function InfiniteResults<E>({
     sortAfterKey,
     elementForPage,
     offset,
+    dynamicFilters,
   );
 
   React.useEffect(() => {
-    const total = results.data?.pages[0]?.total ?? 0;
+    const total = results?.data?.pages[0]?.total ?? 0;
     setTotalResult(total);
     setNumberOfResults(total);
     setCorrection(results?.data?.pages[0]?.autocorrection);
-  }, [results.data, setTotalResult, setNumberOfResults, setCorrection]);
+  }, [results?.data, setTotalResult, setNumberOfResults, setCorrection]);
 
   return (
     <div style={{ overflowX: "hidden" }} className="scroll">
-      {results.data?.pages[0]?.total ?? 0 > 0 ? (
+      {results?.data?.pages[0]?.total ?? 0 > 0 ? (
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`
@@ -231,13 +234,14 @@ export function useInfiniteResults<E>(
   sortAfterKey: string,
   elementForPage: number,
   offset: number,
+  dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
   const suppressIntermediate = React.useMemo(
     () => state.text.trim().length > 0 && searchQuery.length === 0,
     [state.text, searchQuery],
   );
-
+  if (!dynamicFilters) return undefined;
   return useInfiniteQuery(
     [
       "results",

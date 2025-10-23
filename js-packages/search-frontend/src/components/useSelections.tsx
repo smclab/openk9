@@ -118,6 +118,7 @@ export type SelectionsAction =
     }
   | { type: "remove-filter"; filter: SearchToken }
   | { type: "set-filters"; filter: SearchToken }
+  | { type: "set-all-filters"; filter: SearchToken[] }
   | { type: "reset-filters" }
   | { type: "set-range"; range: Range }
   | { type: "set-page-size"; pageSize: number };
@@ -227,6 +228,14 @@ function reducer(
       return {
         ...state,
         filters: [...state.filters, action.filter],
+        range: [0, state.range[1]],
+        commitId: state.commitId + 1,
+      };
+    }
+    case "set-all-filters": {
+      return {
+        ...state,
+        filters: action.filter,
         range: [0, state.range[1]],
         commitId: state.commitId + 1,
       };

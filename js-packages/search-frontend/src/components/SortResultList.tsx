@@ -1,18 +1,23 @@
 import { css } from "styled-components/macro";
 import { UseQueryResult } from "react-query";
 import React from "react";
+import Select, { AriaOnFocus, components, StylesConfig } from "react-select";
 import { useQuery } from "react-query";
+import { useTranslation } from "react-i18next";
+
 import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
 import { setSortResultsType } from "./SortResults";
+import "./SortResultList.css";
 
-function SortResultList({
-  setSortResult,
-  relevance = "relevance",
-  HtmlString = "",
-  language,
-}: {
+type OptionShape = {
+  value: string | null;
+  name: string;
+  icon: React.ReactNode | null;
+};
+
+interface SortResultListProps {
   setSortResult: setSortResultsType;
   background?: string;
   minHeight?: string;
@@ -20,96 +25,104 @@ function SortResultList({
   relevance?: string;
   HtmlString?: string;
   language?: string;
-}) {
+}
+
+function SortResultList({
+  setSortResult,
+  relevance = "relevance",
+  HtmlString = "",
+  language,
+}: SortResultListProps) {
   const { t } = useTranslation();
-  const startValue = {
-    value: relevance,
-    name: relevance,
-    icon: null,
-  };
-  const [myValue, setMyValue] = React.useState({
-    value: relevance,
-    name: relevance,
-    icon: null,
-  });
   const client = useOpenK9Client();
-  const options = useQuery(["date-label-sort-options", {}], async () => {
-    return await client.getLabelSort();
-  });
+
+  const startValue: OptionShape = React.useMemo(
+    () => ({ value: relevance, name: relevance, icon: null }),
+    [relevance],
+  );
+
+  const [myValue, setMyValue] = React.useState<OptionShape>(startValue);
+
+  const { data: labelSortData } = useQuery(
+    ["date-label-sort-options", {}],
+    async () => await client.getLabelSort(),
+  );
 
   React.useEffect(() => {
     setMyValue({ value: relevance, name: relevance, icon: null });
   }, [relevance]);
-  const sortOptions = [startValue];
 
-  if (options.data?.length) {
-    for (const option of options.data) {
-      sortOptions?.push({
-        value: JSON.stringify({
-          label: option.field,
-          sort: "asc",
-        }),
-        name: option.label + " " + t("asc"),
-        icon: null,
-      });
-      sortOptions?.push({
-        value: JSON.stringify({
-          label: option.field,
-          sort: "desc",
-        }),
-        name: option.label + " " + t("desc"),
-        icon: null,
-      });
+  const sortOptions: OptionShape[] = React.useMemo(() => {
+    const base: OptionShape[] = [startValue];
+
+    if (labelSortData?.length) {
+      for (const option of labelSortData) {
+        base.push({
+          value: JSON.stringify({ label: option.field, sort: "asc" }),
+          name: `${option.label} ${t("asc")}`,
+          icon: null,
+        });
+        base.push({
+          value: JSON.stringify({ label: option.field, sort: "desc" }),
+          name: `${option.label} ${t("desc")}`,
+          icon: null,
+        });
+      }
     }
-  }
+    return base;
+  }, [labelSortData, startValue, t]);
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
         {props.children}
       </div>
     </components.SingleValue>
   );
 
-  const handleChange = (event: any) => {
-    if (event.value === relevance || event.value === relevance) {
-      setSortResult(undefined);
-    } else {
-      setSortResult({ field: event.value.label, type: event.value.sort });
-    }
-    setMyValue(event);
-  };
+  const handleChange = React.useCallback(
+    (event: any) => {
+      if (event.value === relevance) {
+        setSortResult(undefined);
+      } else {
+        setSortResult({ field: event.value.label, type: event.value.sort });
+      }
+      setMyValue(event);
+    },
+    [relevance, setSortResult],
+  );
 
-  const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-    }),
-    menu: (provided: any, state: any) => ({
-      ...provided,
-      zIndex: state.selectProps.menuIsOpen ? "1000" : "1",
-    }),
-    option: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#your-option-focus-color" : "white",
-      color: "black",
-      ":hover": {
-        backgroundColor: state.isSelected ? "#d54949" : "#e836362e",
-        cursor: "pointer",
-      },
-      ...(state.isSelected && {
-        backgroundColor: "#d54949",
-        color: "white",
+  const customStyles: StylesConfig<OptionShape, false> = React.useMemo(
+    () => ({
+      control: (provided) => ({
+        ...provided,
+      }),
+      menu: (provided, state) => ({
+        ...provided,
+        zIndex: state.selectProps.menuIsOpen ? 1000 : 1,
+      }),
+      option: (provided, state) => ({
+        ...provided,
+        backgroundColor: state.isFocused ? "#your-option-focus-color" : "white",
+        color: "black",
+        ":hover": {
+          backgroundColor: state.isSelected ? "#d54949" : "#e836362e",
+          cursor: "pointer",
+        },
+        ...(state.isSelected && {
+          backgroundColor: "#d54949",
+          color: "white",
+        }),
+      }),
+      indicatorSeparator: () => ({
+        display: "none",
       }),
     }),
-    indicatorSeparator: () => ({
-      display: "none", // Nasconde la linea separatoria
-    }),
-  };
+    [],
+  );
 
-  const onFocus: AriaOnFocus<any> = ({ focused }) => {
-    const msg = t("you-are-on") + focused.name;
-    return msg;
-  };
+  const onFocus: AriaOnFocus<OptionShape> = ({ focused }) =>
+    `${t("you-are-on")}${focused.name}`;
 
   return (
     <span className="openk9-container-sort-result-list-component">
@@ -125,22 +138,15 @@ function SortResultList({
             height: 1px;
             width: 1px;
             overflow: hidden;
-            clip: rect(
-              1px 1px 1px 1px
-            ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-            clip: rect(
-              1px,
-              1px,
-              1px,
-              1px
-            ); /*maybe deprecated but we need to support legacy browsers */
+            clip: rect(1px, 1px, 1px, 1px);
             clip-path: inset(50%);
             white-space: nowrap;
           `}
         >
-          {"Ordinamento"}
+          Ordinamento
         </label>
       )}
+
       {relevance && (
         <Select
           tabIndex={0}
@@ -152,9 +158,9 @@ function SortResultList({
           classNamePrefix="openk9-react-select"
           options={sortOptions}
           components={{ SingleValue }}
-          onChange={handleChange}
+          onChange={handleChange as any}
           getOptionLabel={(e) => e.name}
-          getOptionValue={(e) => e.value}
+          getOptionValue={(e) => String(e.value)}
           value={myValue}
           styles={customStyles}
         />
@@ -162,4 +168,5 @@ function SortResultList({
     </span>
   );
 }
+
 export const SortResultListMemo = React.memo(SortResultList);
