@@ -328,93 +328,102 @@ export function CreateDataindex({
                   />
                 </FormControl>
 
-                <Box sx={{ marginBottom: 1 }}>
-                  <CustomSelect
-                    label="Chunk Type"
-                    id="chunk-type-select"
-                    dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
+                {dataindexData?.knnIndex && (
+                  <>
+                    {" "}
+                    <Box sx={{ marginBottom: 1 }}>
+                      <CustomSelect
+                        label="Chunk Type"
+                        id="chunk-type-select"
+                        dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
+                        disabled={isReadOnly || !dataindexData?.knnIndex}
+                        value={(dataindexData?.chunkType as ChunkType) || ChunkType.ChunkTypeCharacterTextSplitter}
+                        onChange={(e: string) =>
+                          setDataindexData((prevData) =>
+                            prevData
+                              ? {
+                                  ...prevData,
+                                  chunkType: e as ChunkType,
+                                }
+                              : null,
+                          )
+                        }
+                        validationMessages={[]}
+                      />
+                    </Box>
+                    <NumberInput
+                      label="Chunk Window Size"
+                      disabled={isReadOnly || !dataindexData?.knnIndex || false}
+                      id="chunk-window-size"
+                      validationMessages={[]}
+                      value={dataindexData?.chunkWindowSize || 0}
+                      onChange={(e) =>
+                        setDataindexData((prevData) =>
+                          prevData
+                            ? {
+                                ...prevData,
+                                chunkWindowSize: Number(e),
+                              }
+                            : null,
+                        )
+                      }
+                    />
+                  </>
+                )}
+              </Box>
+              {dataindexData?.knnIndex && (
+                <>
+                  <CodeInput
+                    id="code-input"
+                    label="Embedding Json Config"
+                    height="200px"
                     disabled={isReadOnly || !dataindexData?.knnIndex}
-                    value={(dataindexData?.chunkType as ChunkType) || ChunkType.ChunkTypeCharacterTextSplitter}
-                    onChange={(e: string) =>
+                    readonly={isReadOnly || !dataindexData?.knnIndex}
+                    language="json"
+                    onChange={(event) => {
                       setDataindexData((prevData) =>
                         prevData
                           ? {
                               ...prevData,
-                              chunkType: e as ChunkType,
+                              embeddingJsonConfig: event,
+                            }
+                          : null,
+                      );
+                    }}
+                    value={dataindexData?.embeddingJsonConfig || "{}"}
+                    validationMessages={[]}
+                  />
+                  <AutocompleteDropdown
+                    label="Doc Type"
+                    onChange={(val) => {
+                      setDataindexData((prevData) =>
+                        prevData
+                          ? {
+                              ...prevData,
+                              embeddingDocTypeFieldId: { id: val.id, name: val.name },
+                            }
+                          : null,
+                      );
+                    }}
+                    value={{
+                      id: dataindexData?.embeddingDocTypeFieldId?.id || "",
+                      name: dataindexData?.embeddingDocTypeFieldId?.name || "",
+                    }}
+                    disabled={isReadOnly}
+                    onClear={() =>
+                      setDataindexData((prevData) =>
+                        prevData
+                          ? {
+                              ...prevData,
+                              embeddingDocTypeFieldId: { id: "", name: "" },
                             }
                           : null,
                       )
                     }
-                    validationMessages={[]}
+                    useOptions={useDocTypeOptions}
                   />
-                </Box>
-                <NumberInput
-                  label="Chunk Window Size"
-                  disabled={isReadOnly || !dataindexData?.knnIndex || false}
-                  id="chunk-window-size"
-                  validationMessages={[]}
-                  value={dataindexData?.chunkWindowSize || 0}
-                  onChange={(e) =>
-                    setDataindexData((prevData) =>
-                      prevData
-                        ? {
-                            ...prevData,
-                            chunkWindowSize: Number(e),
-                          }
-                        : null,
-                    )
-                  }
-                />
-              </Box>
-              <CodeInput
-                id="code-input"
-                label="Embedding Json Config"
-                height="200px"
-                disabled={isReadOnly || !dataindexData?.knnIndex}
-                readonly={isReadOnly || !dataindexData?.knnIndex}
-                language="json"
-                onChange={(event) => {
-                  setDataindexData((prevData) =>
-                    prevData
-                      ? {
-                          ...prevData,
-                          embeddingJsonConfig: event,
-                        }
-                      : null,
-                  );
-                }}
-                value={dataindexData?.embeddingJsonConfig || "{}"}
-                validationMessages={[]}
-              />
-              <AutocompleteDropdown
-                label="Doc Type"
-                onChange={(val) => {
-                  setDataindexData((prevData) =>
-                    prevData
-                      ? {
-                          ...prevData,
-                          embeddingDocTypeFieldId: { id: val.id, name: val.name },
-                        }
-                      : null,
-                  );
-                }}
-                value={{
-                  id: dataindexData?.embeddingDocTypeFieldId?.id || "",
-                  name: dataindexData?.embeddingDocTypeFieldId?.name || "",
-                }}
-                disabled={isReadOnly}
-                onClear={() =>
-                  setDataindexData((prevData) =>
-                    prevData
-                      ? {
-                          ...prevData,
-                          embeddingDocTypeFieldId: { id: "", name: "" },
-                        }
-                      : null,
-                  )
-                }
-                useOptions={useDocTypeOptions}
-              />
+                </>
+              )}
 
               <div
                 style={{

@@ -162,6 +162,7 @@ export function SaveDocumentTypeTemplate() {
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
+                      width: "100%",
                     }}
                   >
                     <TextInput label="Name" {...form.inputProps("name")} />

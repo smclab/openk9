@@ -116,7 +116,7 @@ export function VerifyDataindexData({
           disabled
           readonly
           id="idRecapDataIndex"
-          label="Recap JSON Config"
+          label="Settings"
           language="json"
           value={dataindexData?.settings || "{}"}
         />

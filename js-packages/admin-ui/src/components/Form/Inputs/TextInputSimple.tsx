@@ -27,15 +27,17 @@ export function TextInputSimple({
 
   return (
     <Box key={label + "div"} display={"flex"} flexDirection="column" sx={{ paddingBottom: "20px", ...sx }}>
-      <Box marginBottom={1} display={"flex"} flexDirection="row" alignItems="center" gap="4px">
-        <Typography variant="subtitle1" component="label">
-          {label}
-        </Typography>
-        {isRequired && (
-          <Typography color="error" ml={"3px"}>
-            *
+      <Box marginBottom={1} display={"flex"} flexDirection="row" alignItems="center" justifyContent={"space-between"}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <Typography variant="subtitle1" component="label">
+            {label}
           </Typography>
-        )}
+          {isRequired && (
+            <Typography color="error" ml={"3px"}>
+              *
+            </Typography>
+          )}
+        </div>
         {description && <InformationField description={description} />}
       </Box>
       <TextField
