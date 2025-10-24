@@ -69,6 +69,18 @@ logger.addHandler(console_handler)
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "text-embedding-3-small"
 
+chunk_types = {
+    0: RecursiveChunker,
+    1: SentenceChunker,
+    2: TokenChunker,
+    3: DerivedTextSplitter,
+    4: SemanticChunker,
+    5: RecursiveChunker,
+    6: TableChunker,
+    7: LateChunker,
+    8: NeuralChunker,
+}
+
 
 class ModelType(Enum):
     OPENAI = "openai"
