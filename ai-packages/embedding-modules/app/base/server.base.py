@@ -26,6 +26,15 @@ from logging.handlers import TimedRotatingFileHandler
 import embedding_pb2
 import embedding_pb2_grpc
 import grpc
+from chonkie import (
+    LateChunker,
+    NeuralChunker,
+    RecursiveChunker,
+    SemanticChunker,
+    SentenceChunker,
+    TableChunker,
+    TokenChunker,
+)
 from derived_text_splitter import DerivedTextSplitter
 from dotenv import load_dotenv
 from google.protobuf import json_format
@@ -33,12 +42,10 @@ from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
 from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
-from langchain_experimental.text_splitter import SemanticChunker
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from langchain_text_splitters import CharacterTextSplitter
 from text_cleaner import clean_text
 
 load_dotenv()
