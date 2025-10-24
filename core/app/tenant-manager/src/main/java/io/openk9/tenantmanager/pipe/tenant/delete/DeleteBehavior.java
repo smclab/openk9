@@ -45,8 +45,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	private final EventBus eventBus;
 
-	@GrpcClient("AppManager")
-	AppManager appManagerService;
+	@GrpcClient("appmanager")
+	AppManager appManager;
 
 	@Inject
 	@ConfigProperty(name = "quarkus.application.version")
@@ -136,7 +136,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 						unis.add(deleteTenant);
 
 						Uni<Void> deleteIngress =
-						appManagerService.deleteIngress(
+						appManager.deleteIngress(
 							DeleteIngressRequest.newBuilder()
 								.setSchemaName(tenant.getSchemaName())
 								.setVirtualHost(virtualHost)
@@ -151,7 +151,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 						unis.add(deleteIngress);
 
 						for (String pluginDriver : PresetPluginDrivers.getAllPluginDrivers()) {
-							Uni<Void> deleteResource = appManagerService.deleteResource(
+							Uni<Void> deleteResource = appManager.deleteResource(
 								AppManifest.newBuilder()
 									.setSchemaName(tenant.getSchemaName())
 									.setChart(pluginDriver)
