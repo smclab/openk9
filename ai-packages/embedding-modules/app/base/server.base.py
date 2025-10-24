@@ -27,6 +27,7 @@ from typing import get_type_hints
 import embedding_pb2
 import embedding_pb2_grpc
 import grpc
+from character_text_splitter import CharacterTextChunker
 from chonkie import (
     LateChunker,
     NeuralChunker,
@@ -48,8 +49,7 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from text_cleaner import clean_text
-from text_splitters.character_text_splitter import CharacterTextChunker
-from text_splitters.token_text_splitter import TokenTextChunker
+from token_text_splitter import TokenTextChunker
 
 load_dotenv()
 
