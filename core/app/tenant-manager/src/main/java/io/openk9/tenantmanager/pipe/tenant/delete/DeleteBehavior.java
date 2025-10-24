@@ -45,6 +45,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	private final EventBus eventBus;
 
+	@Inject
 	@GrpcClient("appmanager")
 	AppManager appManager;
 
