@@ -24,7 +24,8 @@ import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.smallrye.mutiny.Uni;
-import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.core.buffer.Buffer;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -120,7 +121,7 @@ public class EnricherResource {
     })
     @POST
     @Path("/process/{serviceName}")
-    public Uni<HttpResponse<?>> process(
+    public Uni<HttpResponse<Buffer>> process(
             @Parameter(description = "ServiceName of enricher")
             @PathParam("serviceName") HttpEnricherInfo enricherInfo, EnricherInputDTO enricherInputDTO){
         return service.process(enricherInfo, enricherInputDTO);
