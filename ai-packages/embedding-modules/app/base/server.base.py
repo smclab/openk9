@@ -247,54 +247,46 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
         logger.info(info)
 
-        if chunk_type == 1:
-            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
-            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
+        def _is_int_like(value):
+            """Checks if an input can be casted to int."""
+            try:
+                int(value)
+                return True
+            except (ValueError, TypeError):
+                return False
 
-            text_splitter = DerivedTextSplitter(
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-            )
-            text_splitted = text_splitter.split_text(text)
+        logger.info(info)
+        signature = {
+            name: hint
+            for name, hint in get_type_hints(chunk_types[chunk_type].__init__).items()
+            if name != "return"
+        }
 
-        elif chunk_type == 2:
-            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
-            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
-            chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
-            chunk_model_name = chunk_json_config.get("model_name", DEFAULT_MODEL_NAME)
-            chunk_encoding = chunk_json_config.get("encoding", DEFAULT_ENCODING_NAME)
-            chunk_is_separator_regex = chunk_json_config.get(
-                "is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX
+        arguments = {
+            hit: chunk_json_config[hit]
+            for hit in chunk_json_config
+            if (hit in signature.keys())
+            and (
+                isinstance(chunk_json_config[hit], signature[hit])
+                or (
+                    isinstance(chunk_json_config[hit], (float, str))
+                    and _is_int_like(chunk_json_config[hit])
+                    and isinstance(int(chunk_json_config[hit]), signature[hit])
+                )
             )
-            text_splitter = CharacterTextSplitter.from_tiktoken_encoder(
-                separator=chunk_separator,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                model_name=chunk_model_name,
-                encoding_name=chunk_encoding,
-                is_separator_regex=chunk_is_separator_regex,
-            )
-            text_splitted = text_splitter.split_text(text)
+        }
 
-        elif chunk_type == 3 or chunk_type == 0:
-            chunk_size = int(chunk_json_config.get("size", DEFAULT_CHUNK_SIZE))
-            chunk_overlap = int(chunk_json_config.get("overlap", DEFAULT_CHUNK_OVERLAP))
-            chunk_separator = chunk_json_config.get("separator", DEFAULT_SEPARATOR)
-            chunk_is_separator_regex = chunk_json_config.get(
-                "is_separator_regex", DEFAULT_IS_SEPARATOR_REGEX
-            )
-            text_splitter = CharacterTextSplitter(
-                separator=chunk_separator,
-                chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap,
-                length_function=len,
-                is_separator_regex=chunk_is_separator_regex,
-            )
-            text_splitted = text_splitter.split_text(text)
+        info = {
+            "using_arguments": arguments,
+            "unused_arguments": {
+                k: v for k, v in chunk_json_config.items() if k not in arguments
+            },
+            "possible_arguments": signature,
+        }
+        logger.info(info)
 
-        elif chunk_type == 4:
-            text_splitter = SemanticChunker(embeddings)
-            text_splitted = text_splitter.split_text(text)
+        text_splitter = chunk_types[chunk_type](**arguments)
+        text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
 
         total_chunks = len(text_splitted)
 
