@@ -21,6 +21,9 @@ import io.openk9.datasource.enricher.HttpEnricherInfo;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
 import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpResponse;
+import jakarta.validation.ValidationException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Produces;
 
@@ -33,5 +36,20 @@ public abstract class HttpDatasourceServiceClient {
     @GET
     @Produces("application/json")
     public abstract Uni<PluginDriverHealthDTO> getHealth(HttpEnricherInfo enricherInfo);
+
+    protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
+        if (response.statusCode() >= 200 && response.statusCode() <= 299) {
+            return Uni.createFrom().item(response);
+        }
+        else {
+            return Uni.createFrom().failure(new ValidationException(
+                    String.format(
+                            "Unexpected Response Status: %d, Message: %s",
+                            response.statusCode(),
+                            response.statusMessage()
+                    ))
+            );
+        }
+    }
 
 }
