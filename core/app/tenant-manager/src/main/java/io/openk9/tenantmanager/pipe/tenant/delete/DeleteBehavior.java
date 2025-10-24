@@ -17,16 +17,24 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
+import io.openk9.app.manager.grpc.AppManager;
+import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.DeleteIngressRequest;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
 import io.openk9.tenantmanager.service.DeleteService;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static io.openk9.tenantmanager.actor.TypedActor.Become;
@@ -36,6 +44,13 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	private final EventBus eventBus;
+
+	@GrpcClient("AppManager")
+	AppManager appManagerService;
+
+	@Inject
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	public DeleteBehavior(
 		EventBus eventBus, TypedActor.Address<DeleteMessage> self) {
@@ -76,6 +91,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 						var tenant = message.body();
 
+						var unis = new ArrayList<Uni<Void>>();
+
 						LOGGER.infof(
 							"Tenant with id %s found for virtualHost %s",
 							tenant.getId(),
@@ -92,6 +109,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 							)
 						).replaceWithVoid();
 
+						unis.add(deleteSchema);
+
 						Uni<Void> deleteRealm = eventBus.request(
 							DeleteService.DELETE_REALM,
 							tenant.getRealmName()
@@ -101,6 +120,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 								virtualHost
 							)
 						).replaceWithVoid();
+
+						unis.add(deleteRealm);
 
 						Uni<Void> deleteTenant = eventBus.request(
 							DeleteService.DELETE_TENANT,
@@ -112,8 +133,42 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 							)
 						).replaceWithVoid();
 
+						unis.add(deleteTenant);
+
+						Uni<Void> deleteIngress =
+						appManagerService.deleteIngress(
+							DeleteIngressRequest.newBuilder()
+								.setSchemaName(tenant.getSchemaName())
+								.setVirtualHost(virtualHost)
+								.build()
+						)
+						.invoke(() -> LOGGER.infof(
+							"Ingress for schemaName %s and virtualHost %s deleted.",
+							tenant.getSchemaName(),
+							virtualHost
+						)).replaceWithVoid();
+
+						unis.add(deleteIngress);
+
+						for (String pluginDriver : PresetPluginDrivers.getAllPluginDrivers()) {
+							Uni<Void> deleteResource = appManagerService.deleteResource(
+								AppManifest.newBuilder()
+									.setSchemaName(tenant.getSchemaName())
+									.setChart(pluginDriver)
+									.setVersion(applicationVersion)
+									.build()
+							)
+							.invoke(() -> LOGGER.infof(
+								"Resource %s for schemaName %s deleted.",
+								pluginDriver,
+								tenant.getSchemaName()
+							)).replaceWithVoid();
+
+							unis.add(deleteResource);
+						}
+
 						return Uni.join()
-							.all(deleteSchema, deleteRealm, deleteTenant)
+							.all(unis)
 							.andCollectFailures()
 							.onItemOrFailure()
 							.invoke((__, t) -> {
