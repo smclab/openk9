@@ -103,7 +103,7 @@ It must use a `resourceId` and a `schemaName` to get the correct payload.
 To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
-./mvnw install
+../mvnw install
 ```  
 
 ## Generate Enricher
@@ -138,4 +138,21 @@ mvn archetype:generate `
 
 In these commands, you need to specify the full information about the archetype you want to use (its `groupId`, its `artifactId`, its `version`)
 and the information about the new project you want to create (`artifactId`, `groupId`, `implementationType` and `version`).
+
+## Docker
+The project includes an executable Dockerfile, you have just to build an image and run it:
+
+### Build Image
+
+```shell
+# Create the jar file
+mvn clean package
+# Build the Docker image
+docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
+```
+
+### Run Container
+```shell
+docker run -p 8080:8080 --name <containerName> <imageName> 
+```
 
