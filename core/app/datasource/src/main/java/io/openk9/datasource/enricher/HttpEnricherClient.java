@@ -20,7 +20,7 @@ package io.openk9.datasource.enricher;
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -46,16 +46,16 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
     }
 
     @Override
-    public Uni<PluginDriverHealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
+    public Uni<HealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
         String uri = enricherInfo.getServiceName();
         return webClient
                 .requestAbs(HttpMethod.GET, uri)
                 .send()
-                .map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
+                .map(res -> res.bodyAsJson(HealthDTO.class))
                 .onFailure()
-                .recoverWithItem(PluginDriverHealthDTO
+                .recoverWithItem(HealthDTO
                         .builder()
-                        .status(PluginDriverHealthDTO.Status.UNKOWN)
+                        .status(HealthDTO.Status.UNKOWN)
                         .build()
                 );
     }

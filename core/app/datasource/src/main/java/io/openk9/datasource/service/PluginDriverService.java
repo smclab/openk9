@@ -46,7 +46,7 @@ import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -353,12 +353,12 @@ public class PluginDriverService
 			);
 	}
 
-	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		return httpPluginDriverClient.getHealth(
 			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
 	}
 
-	public Uni<PluginDriverHealthDTO> getHealth(long id) {
+	public Uni<HealthDTO> getHealth(long id) {
 		return findById(id)
 			.flatMap(pluginDriver ->
 				httpPluginDriverClient.getHealth(

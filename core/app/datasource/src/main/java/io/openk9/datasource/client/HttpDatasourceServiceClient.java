@@ -19,7 +19,7 @@ package io.openk9.datasource.client;
 
 import io.openk9.datasource.enricher.HttpEnricherInfo;
 import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -35,7 +35,7 @@ public abstract class HttpDatasourceServiceClient {
 
     @GET
     @Produces("application/json")
-    public abstract Uni<PluginDriverHealthDTO> getHealth(HttpEnricherInfo enricherInfo);
+    public abstract Uni<HealthDTO> getHealth(HttpEnricherInfo enricherInfo);
 
     protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
         if (response.statusCode() >= 200 && response.statusCode() <= 299) {

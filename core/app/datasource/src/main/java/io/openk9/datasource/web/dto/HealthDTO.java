@@ -21,7 +21,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
-public record PluginDriverHealthDTO(@NotNull Status status) {
+public record HealthDTO(@NotNull Status status) {
 	public enum Status {
 		UP,
 		DOWN,

@@ -22,7 +22,7 @@ import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.PluginDriverService;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
@@ -143,7 +143,7 @@ public class PluginDriverResource {
 	})
 	@GET
 	@Path("/health/{id}")
-	public Uni<PluginDriverHealthDTO> getHealth(@PathParam("id") long id) {
+	public Uni<HealthDTO> getHealth(@PathParam("id") long id) {
 		return service.getHealth(id);
 	}
 
@@ -184,7 +184,7 @@ public class PluginDriverResource {
 	)
 	@POST
 	@Path("/health")
-	public Uni<PluginDriverHealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
+	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		return service.getHealth(pluginDriverDTO);
 	}
 

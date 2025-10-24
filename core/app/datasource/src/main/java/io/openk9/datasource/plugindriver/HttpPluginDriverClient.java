@@ -28,7 +28,7 @@ import jakarta.validation.Validator;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
@@ -68,7 +68,7 @@ public class HttpPluginDriverClient {
 			.flatMap(this::validateDto);
 	}
 
-	public Uni<PluginDriverHealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
+	public Uni<HealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
@@ -79,12 +79,12 @@ public class HttpPluginDriverClient {
 			)
 			.send()
 			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(PluginDriverHealthDTO.class))
+			.map(res -> res.bodyAsJson(HealthDTO.class))
 			.flatMap(this::validateDto)
 			.onFailure(ConstraintViolationException.class)
-			.recoverWithItem(PluginDriverHealthDTO
+			.recoverWithItem(HealthDTO
 				.builder()
-				.status(PluginDriverHealthDTO.Status.UNKOWN)
+				.status(HealthDTO.Status.UNKOWN)
 				.build()
 			);
 	}

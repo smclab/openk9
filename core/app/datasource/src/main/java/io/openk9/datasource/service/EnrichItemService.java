@@ -21,7 +21,7 @@ import io.openk9.datasource.enricher.HttpEnricherClient;
 import io.openk9.datasource.enricher.HttpEnricherInfo;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -57,7 +57,7 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
         return httpEnricherClient.getForm(enricherInfo);
     }
 
-    public Uni<PluginDriverHealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
+    public Uni<HealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
         return httpEnricherClient.getHealth(enricherInfo);
     }
 

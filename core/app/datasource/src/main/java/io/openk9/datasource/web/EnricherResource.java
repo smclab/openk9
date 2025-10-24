@@ -21,7 +21,7 @@ import io.openk9.datasource.enricher.HttpEnricherInfo;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -74,7 +74,7 @@ public class EnricherResource {
     })
     @GET
     @Path("/health/{serviceName}")
-    public Uni<PluginDriverHealthDTO> getHealth(
+    public Uni<HealthDTO> getHealth(
             @Parameter(description = "ServiceName of enricher")
             @PathParam("serviceName") HttpEnricherInfo enricherInfo) {
         return service.getHealth(enricherInfo);

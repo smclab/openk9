@@ -25,7 +25,7 @@ import jakarta.validation.ValidationException;
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.PluginDriverHealthDTO;
+import io.openk9.datasource.web.dto.HealthDTO;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
@@ -98,10 +98,10 @@ class HttpPluginDriverClientTest {
 	@RunOnVertxContext
 	void should_get_health_up(UniAsserter asserter) throws IOException {
 
-		PluginDriverHealthDTO expected;
+		HealthDTO expected;
 
 		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
-			expected = Json.decodeValue(new String(in.readAllBytes()), PluginDriverHealthDTO.class);
+			expected = Json.decodeValue(new String(in.readAllBytes()), HealthDTO.class);
 		}
 
 		asserter.assertThat(
@@ -122,8 +122,8 @@ class HttpPluginDriverClientTest {
 		asserter.assertThat(
 			() -> httpPluginDriverClient.getHealth(pluginDriverInfo),
 			res -> {
-				Assertions.assertEquals(PluginDriverHealthDTO.builder()
-					.status(PluginDriverHealthDTO.Status.UNKOWN)
+				Assertions.assertEquals(HealthDTO.builder()
+					.status(HealthDTO.Status.UNKOWN)
 					.build(), res);
 				wireMockServer.removeStub(invalidBodyStub);
 			}
