@@ -103,7 +103,7 @@ It must use a `resourceId` and a `schemaName` to get the correct payload.
 To install the archetype and the custom library, go to the root of the project and write:
 
 ```shell
-../mvnw install
+./mvnw -f quarkus-base-enricher/pom.xml install
 ```  
 
 ## Generate Enricher

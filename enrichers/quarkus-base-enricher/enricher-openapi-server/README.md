@@ -62,7 +62,7 @@ It is used in `Form`.
 The application can be compiled using:
 
 ```shell
-../mvnw compile
+./mvnw -f quarkus-base-enricher/enricher-openapi-server/pom.xml compile
 ```
 
 It generates classes under `target/generated-sources/jaxrs` path.
