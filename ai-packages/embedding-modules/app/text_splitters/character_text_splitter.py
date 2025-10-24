@@ -1,8 +1,4 @@
-from textwrap import wrap
-from typing import List
-
 from chonkie import TokenChunker
-from chonkie.types import Chunk
 
 
 class CharacterTextChunker(TokenChunker):
