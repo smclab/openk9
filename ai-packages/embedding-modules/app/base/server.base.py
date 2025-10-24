@@ -48,6 +48,8 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from text_cleaner import clean_text
+from text_splitters.character_text_splitter import CharacterTextChunker
+from text_splitters.token_text_splitter import TokenTextChunker
 
 load_dotenv()
 
@@ -71,14 +73,15 @@ DEFAULT_MODEL = "text-embedding-3-small"
 
 chunk_types = {
     0: RecursiveChunker,
-    1: SentenceChunker,
-    2: TokenChunker,
-    3: DerivedTextSplitter,
+    1: DerivedTextSplitter,
+    2: TokenTextChunker,
+    3: CharacterTextChunker,
     4: SemanticChunker,
-    5: RecursiveChunker,
-    6: TableChunker,
-    7: LateChunker,
-    8: NeuralChunker,
+    5: SentenceChunker,
+    6: RecursiveChunker,
+    7: TableChunker,
+    8: LateChunker,
+    9: NeuralChunker,
 }
 
 
