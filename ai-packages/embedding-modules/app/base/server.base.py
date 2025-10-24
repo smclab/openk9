@@ -22,6 +22,7 @@ import time
 from concurrent import futures
 from enum import Enum
 from logging.handlers import TimedRotatingFileHandler
+from typing import get_type_hints
 
 import embedding_pb2
 import embedding_pb2_grpc
@@ -63,14 +64,6 @@ console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
-
-# default text splitters parameters
-DEFAULT_CHUNK_SIZE = 100
-DEFAULT_CHUNK_OVERLAP = 10
-DEFAULT_SEPARATOR = "\n\n"
-DEFAULT_MODEL_NAME = "gpt2"
-DEFAULT_ENCODING_NAME = None
-DEFAULT_IS_SEPARATOR_REGEX = False
 
 # default text embedding parameters
 DEFAULT_MODEL_TYPE = "openai"
