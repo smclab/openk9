@@ -48,6 +48,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: "#/components/schemas/ProcessResponseDTO"
         '404':
           description: Not Found
         '500':
@@ -107,6 +111,11 @@ components:
           format: int64
         regex:
           type: string
+    ProcessResponseDTO:
+      type: object
+      properties:
+        payload:
+          x-java-type: "java.lang.Object"
     OpenK9Input:
       type: object
       properties:
