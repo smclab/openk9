@@ -140,7 +140,7 @@ export const constructTabs = ({
     label: "Data Index",
     value: "dataIndex",
     step: 4,
-    path: `/data-source/${datasourceId}/mode/${mode}/landingTab/data-index`,
+    path: `/data-source/${datasourceId}/mode/${mode}/landingTab/dataIndex`,
     disabled: isDisabledNextStep,
   },
   ...(isRecap

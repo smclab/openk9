@@ -416,7 +416,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                           description: "Associate user fields with document types to manage access control.",
                           addLabel: "Add",
                         }}
-                        isCreateButtonVisible
+                        isCreateButtonVisible={page !== 1 && !view}
                         onAddField={handleAddField}
                         onReset={handleReset}
                         row={fields.map((field) => ({
