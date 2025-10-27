@@ -26,7 +26,11 @@ public sealed interface DeleteMessage {
 		TypedActor.Address<DeleteGroupMessage> deleteGroupActor, String virtualHost)
 		implements DeleteMessage {}
 
-	record Delete(String token, AppManager appManager) implements DeleteMessage {}
+	record Delete(
+		String token,
+		AppManager appManager,
+		String applicationVersion
+	) implements DeleteMessage {}
 
 	record Stop() implements DeleteMessage {}
 

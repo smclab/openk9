@@ -28,8 +28,6 @@ import io.openk9.tenantmanager.service.DeleteService;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import java.util.ArrayList;
@@ -42,10 +40,6 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	private final EventBus eventBus;
-
-	@Inject
-	@ConfigProperty(name = "quarkus.application.version")
-	String applicationVersion;
 
 	public DeleteBehavior(
 		EventBus eventBus, TypedActor.Address<DeleteMessage> self) {
@@ -151,7 +145,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 								AppManifest.newBuilder()
 									.setSchemaName(tenant.getSchemaName())
 									.setChart(pluginDriver)
-									.setVersion(applicationVersion)
+									.setVersion(delete.applicationVersion())
 									.build()
 							)
 							.invoke(() -> LOGGER.infof(

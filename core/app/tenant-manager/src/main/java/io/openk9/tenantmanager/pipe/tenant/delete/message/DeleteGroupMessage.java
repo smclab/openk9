@@ -23,7 +23,12 @@ public sealed interface DeleteGroupMessage {
 
 	record addDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
 
-	record TellDelete(String virtualHost, String token, AppManager appManager) implements DeleteGroupMessage {}
+	record TellDelete(
+		String virtualHost,
+		String token,
+		AppManager appManager,
+		String applicationVersion
+	) implements DeleteGroupMessage {}
 
 	record RemoveDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
 

@@ -27,6 +27,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 @ApplicationScoped
@@ -34,6 +35,10 @@ public class DeleteTenantActorSystem {
 
 	@GrpcClient("appmanager")
 	AppManager appManager;
+
+	@Inject
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	@Inject
 	EventBus eventBus;
@@ -64,7 +69,7 @@ public class DeleteTenantActorSystem {
 	public void runDelete(String virtualHost, String token) {
 
 		deleteGroupActor.tell(
-			new DeleteGroupMessage.TellDelete(virtualHost, token, appManager));
+			new DeleteGroupMessage.TellDelete(virtualHost, token, appManager, applicationVersion));
 
 	}
 
