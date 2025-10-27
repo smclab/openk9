@@ -17,7 +17,6 @@
 
 package io.openk9.tenantmanager.service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,27 +24,23 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.tenantmanager.messaging.Producer;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-import org.reactivestreams.FlowAdapters;
 
 @ApplicationScoped
 public class OutboxEventService {
-
-	private final ObjectMapper mapper = new ObjectMapper();
 
 	public Uni<Void> persist(TenantManagementEvent event) {
 		return sessionFactory.withTransaction((s) -> persist(s, event));
 	}
 
 	public Uni<Void> persist(Mutiny.Session session, TenantManagementEvent event) {
+		log.infof("---------------    transform tme: %s", event);
 		String payload = null;
 		try {
 			payload = mapper.writeValueAsString(event);
@@ -62,6 +57,7 @@ public class OutboxEventService {
 		outboxEvent.setSent(false);
 		outboxEvent.setCreateDate(Instant.now());
 
+
 		return persist(session, outboxEvent);
 	}
 
@@ -70,13 +66,40 @@ public class OutboxEventService {
 	}
 
 	public Uni<Void> persist(Mutiny.Session session, OutboxEvent outboxEvent) {
-		return session.persist(outboxEvent);
+		log.infof("---------------    persist oe: %s", outboxEvent);
+		return session.persist(outboxEvent)
+			.onItem().invoke((nothing) -> {
+				log.infof("---------------    persisted oe with id: %s", outboxEvent.getId());
+			})
+			.onFailure().invoke(failure -> {
+
+				log.error("failed persist: ", failure);
+
+		});
 	}
 
-	public Uni<Void> merge(OutboxEvent outboxEvent) {
-		return sessionFactory.withTransaction(session ->
-				session.merge(outboxEvent)
-			).replaceWithVoid();
+	public Uni<Void> flagAsSent(OutboxEvent outboxEvent) {
+		return sessionFactory.withTransaction(session -> {
+				outboxEvent.setSent(true);
+				return session.merge(outboxEvent);
+			}).replaceWithVoid();
+	}
+
+	public Uni<Void> flagAsSent(List<OutboxEvent> outboxEvents) {
+		return sessionFactory.withTransaction(session -> {
+			List<Uni<Void>> updates = new ArrayList<>();
+
+			for (OutboxEvent outboxEvent : outboxEvents) {
+				outboxEvent.setSent(true);
+				updates.add(session.merge(outboxEvent).chain(session::flush));
+			}
+
+			if (updates.isEmpty()) {
+				return Uni.createFrom().voidItem();
+			}
+
+			return Uni.join().all(updates).andCollectFailures().replaceWithVoid();
+		}).replaceWithVoid();
 	}
 
 	public Uni<List<OutboxEvent>> unsentEvents() {
@@ -84,50 +107,17 @@ public class OutboxEventService {
 	}
 
 	public Uni<List<OutboxEvent>> unsentEvents(Mutiny.Session session) {
-		log.info("polling...");
+
 		return session
 			.createQuery(
 				"from OutboxEvent e where e.sent is null or e.sent = false",
-				OutboxEvent.class
-			).getResultList()
-			.invoke((events) -> log.infof("# events: %d", events.size()));
-	}
-
-	@Scheduled(every = "5s")
-	public Uni<Void> emits() {
-
-		return unsentEvents()
-			.chain(outboxEvents -> {
-				log.infof("sending %d events...", outboxEvents.size());
-				List<Uni<Void>> unis = new ArrayList<>();
-
-				for(OutboxEvent event : outboxEvents) {
-					unis.add(
-						Uni.createFrom().publisher(
-							FlowAdapters.toFlowPublisher(
-								producer.send(
-									event.getEventType(),
-									event.getPayload().getBytes(StandardCharsets.UTF_8)
-								)
-							)
-						).chain(() -> {
-							event.setSent(true);
-							return merge(event);
-						})
-					);
-				}
-
-				return Uni.join().all(unis).andCollectFailures();
-
-			}).replaceWithVoid();
-
+				OutboxEvent.class)
+			.getResultList();
 	}
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	@Inject
-	Producer producer;
-
+	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final Logger log = Logger.getLogger(OutboxEventService.class);
 }

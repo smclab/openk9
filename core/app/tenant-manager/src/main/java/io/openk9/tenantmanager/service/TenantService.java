@@ -19,6 +19,7 @@ package io.openk9.tenantmanager.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -33,20 +34,21 @@ import io.openk9.common.graphql.util.service.GraphQLService;
 import io.openk9.common.model.EntityService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
 import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantManagementEventProducer;
 import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.dto.TenantDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.model.Tenant_;
 
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class TenantService
-	extends GraphQLService<Tenant>
+public class TenantService extends GraphQLService<Tenant>
 	implements EntityService<Tenant, TenantDTO> {
 
 	public Uni<Tenant> findById(Long id) {
@@ -58,24 +60,33 @@ public class TenantService
 		var realmName = tenant.getRealmName();
 		var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
 
-		return sf.withTransaction(
-			session -> session
-				.persist(tenant)
-				.call(() -> outboxEventService.persist(
-					session,
-					TenantManagementEvent.TenantCreated.builder()
-						.tenantId(tenant.getSchemaName())
-						.hostName(tenant.getVirtualHost())
-						.clientId(tenant.getClientId())
-						.issuerUri(issuerUri)
-						.routeAuthorizationMap(Map.of(
-							"DATASOURCE", "OAUTH2",
-							"SEARCHER", "OAUTH2"
-						))
-						.build()
-				))
+		return sf.withTransaction((session, tx) ->
+			VertxContextSupport.executeBlocking(() -> session.persist(tenant)
+				.chain(() -> VertxContextSupport.executeBlocking(() -> {
+					try {
+						producer.send(
+							TenantManagementEvent.TenantCreated.builder()
+								.tenantId(tenant.getSchemaName())
+								.hostName(tenant.getVirtualHost())
+								.clientId(tenant.getClientId())
+								.issuerUri(issuerUri)
+								.routeAuthorizationMap(Map.of(
+									"DATASOURCE", "OAUTH2",
+									"SEARCHER", "NO_OAUTH"
+								))
+								.build()
+						);
+					}
+					catch (Exception e) {
+						log.error(e);
+						tx.markForRollback();
+					}
+
+					return null;
+				}))
 				.map(__ -> tenant)
-		);
+			)
+		).flatMap(Function.identity());
 	}
 
 	@Override
@@ -105,9 +116,9 @@ public class TenantService
 	}
 
 	public Uni<Tenant> update(long id, Tenant tenant) {
-		return sf.withTransaction(s -> {
+		return sf.withTransaction((session, tx) -> {
 
-			Uni<Tenant> tenantUni = s.find(Tenant.class, id);
+			Uni<Tenant> tenantUni = session.find(Tenant.class, id);
 
 			return tenantUni.flatMap(t -> {
 
@@ -115,20 +126,26 @@ public class TenantService
 					var realmName = tenant.getRealmName();
 					var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
 
-					return s.merge(tenant)
-						.call(() -> outboxEventService.persist(
-							s,
-							TenantManagementEvent.TenantUpdated.builder()
-								.tenantId(tenant.getSchemaName())
-								.hostName(tenant.getVirtualHost())
-								.clientId(tenant.getClientId())
-								.issuerUri(issuerUri)
-								.routeAuthorizationMap(Map.of(
-									"DATASOURCE", "OAUTH2",
-									"SEARCHER", "OAUTH2"
-								))
-								.build()
-						));
+					return session.merge(tenant)
+						.invoke(() -> {
+							try {
+								producer.send(
+									TenantManagementEvent.TenantUpdated.builder()
+										.tenantId(tenant.getSchemaName())
+										.hostName(tenant.getVirtualHost())
+										.clientId(tenant.getClientId())
+										.issuerUri(issuerUri)
+										.routeAuthorizationMap(Map.of(
+											"DATASOURCE", "OAUTH2",
+											"SEARCHER", "OAUTH2"
+										))
+										.build()
+								);
+							}
+							catch (Exception e) {
+								tx.markForRollback();
+							}
+						});
 				}
 				else {
 					return Uni.createFrom().failure(
@@ -141,15 +158,21 @@ public class TenantService
 
 	public Uni<Void> deleteTenant(long tenantId) {
 
-		return sf.withTransaction(s -> s
+		return sf.withTransaction((session, tx) -> session
 			.find(Tenant.class, tenantId)
-			.call((tenant) -> s.remove(tenant)
-				.call(() -> outboxEventService.persist(
-					s,
-					TenantManagementEvent.TenantDeleted.builder()
-						.tenantId(tenant.getSchemaName())
-						.build()
-				))
+			.call((tenant) -> session.remove(tenant)
+				.invoke(() -> {
+					try {
+						producer.send(
+							TenantManagementEvent.TenantDeleted.builder()
+								.tenantId(tenant.getSchemaName())
+								.build()
+						);
+					}
+					catch (Exception e) {
+						tx.markForRollback();
+					}
+				})
 			)
 			.replaceWithVoid()
 		);
@@ -269,15 +292,12 @@ public class TenantService
 
 	@Inject
 	Mutiny.SessionFactory sf;
-
 	@Inject
 	TenantMapper mapper;
-
-	@Inject
-	OutboxEventService outboxEventService;
-
 	@Inject
 	Validator validator;
+	@Inject
+	TenantManagementEventProducer producer;
 
 	@ConfigProperty(name = "quarkus.oidc.auth-server.url")
 	String authServerUrl;
