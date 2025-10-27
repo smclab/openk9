@@ -17,6 +17,7 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete.message;
 
+import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.actor.TypedActor;
 
 public sealed interface DeleteMessage {
@@ -25,7 +26,7 @@ public sealed interface DeleteMessage {
 		TypedActor.Address<DeleteGroupMessage> deleteGroupActor, String virtualHost)
 		implements DeleteMessage {}
 
-	record Delete(String token) implements DeleteMessage {}
+	record Delete(String token, AppManager appManager) implements DeleteMessage {}
 
 	record Stop() implements DeleteMessage {}
 

@@ -89,7 +89,7 @@ public class DeleteGroupBehavior implements TypedActor.Behavior<DeleteGroupMessa
 			if (deleteActorMap.containsKey(tellDelete.virtualHost())) {
 				deleteActorMap
 					.get(tellDelete.virtualHost())
-					.tell(new DeleteMessage.Delete(tellDelete.token()));
+					.tell(new DeleteMessage.Delete(tellDelete.token(), tellDelete.appManager()));
 			}
 			else {
 				LOGGER.warn("virtualHost not found: " + tellDelete.virtualHost());

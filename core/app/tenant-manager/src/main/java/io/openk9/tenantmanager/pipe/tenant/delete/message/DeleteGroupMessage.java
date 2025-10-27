@@ -17,11 +17,13 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete.message;
 
+import io.openk9.app.manager.grpc.AppManager;
+
 public sealed interface DeleteGroupMessage {
 
 	record addDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
 
-	record TellDelete(String virtualHost, String token) implements DeleteGroupMessage {}
+	record TellDelete(String virtualHost, String token, AppManager appManager) implements DeleteGroupMessage {}
 
 	record RemoveDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
 

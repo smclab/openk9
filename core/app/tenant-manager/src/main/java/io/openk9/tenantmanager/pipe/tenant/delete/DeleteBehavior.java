@@ -17,7 +17,6 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
-import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
@@ -26,7 +25,6 @@ import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
 import io.openk9.tenantmanager.service.DeleteService;
-import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
@@ -44,10 +42,6 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	private final EventBus eventBus;
-
-	@Inject
-	@GrpcClient("appmanager")
-	AppManager appManager;
 
 	@Inject
 	@ConfigProperty(name = "quarkus.application.version")
@@ -91,6 +85,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 					.flatMap((Message<Tenant> message) -> {
 
 						var tenant = message.body();
+						var appManager = delete.appManager();
 
 						var unis = new ArrayList<Uni<Void>>();
 
