@@ -18,6 +18,8 @@
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
 import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.AppManifestList;
+import io.openk9.app.manager.grpc.DeleteAllResourcesResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.actor.TypedActor;
@@ -39,8 +41,13 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 
 public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
+	private static final Logger LOGGER = Logger.getLogger(
+		DeleteBehavior.class);
 	private final EventBus eventBus;
-
+	private final TypedActor.Address<DeleteMessage> self;
+	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;
+	private String token;
+	private String virtualHost;
 	public DeleteBehavior(
 		EventBus eventBus, TypedActor.Address<DeleteMessage> self) {
 
@@ -48,17 +55,6 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 		this.self = self;
 
 	}
-
-	private void _tellStop() {
-		if (this.deleteGroupActor != null) {
-			this.deleteGroupActor.tell(new DeleteGroupMessage.RemoveDeleteRequest(this.virtualHost));
-		}
-	}
-
-	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;
-	private String virtualHost;
-	private String token;
-	private final TypedActor.Address<DeleteMessage> self;
 
 	@Override
 	public TypedActor.Effect<DeleteMessage> apply(DeleteMessage timeoutMessage) {
@@ -140,22 +136,26 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 						unis.add(deleteIngress);
 
-						for (String pluginDriver : PresetPluginDrivers.getAllPluginDrivers()) {
-							Uni<Void> deleteResource = appManager.deleteResource(
+						var appManifestList = PresetPluginDrivers.getAllPluginDrivers().stream()
+							.map(preset ->
 								AppManifest.newBuilder()
 									.setSchemaName(tenant.getSchemaName())
-									.setChart(pluginDriver)
+									.setChart(preset)
 									.setVersion(delete.applicationVersion())
 									.build()
 							)
-							.invoke(() -> LOGGER.infof(
-								"Resource %s for schemaName %s deleted.",
-								pluginDriver,
-								tenant.getSchemaName()
-							)).replaceWithVoid();
+							.toList();
 
-							unis.add(deleteResource);
-						}
+						var deletedAllResources =
+							appManager.deleteAllResources(
+								AppManifestList.newBuilder()
+									.addAllAppManifests(appManifestList)
+									.build()
+							)
+							.invoke(this::_logDeleteAllResourcesResult)
+							.replaceWithVoid();
+
+						unis.add(deletedAllResources);
 
 						return Uni.join()
 							.all(unis)
@@ -194,7 +194,29 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	}
 
-	private static final Logger LOGGER = Logger.getLogger(
-		DeleteBehavior.class);
+	private void _logDeleteAllResourcesResult(
+			DeleteAllResourcesResponse response) {
+
+		response.getDeleteResourceStatusList()
+			.forEach(deleteResourcesStatus -> {
+				switch (deleteResourcesStatus.getStatus()) {
+					case SUCCESS -> LOGGER.infof(
+						"Resource %s for virtualHost %s deleted.",
+						deleteResourcesStatus.getResourceName(),
+						virtualHost);
+					case ERROR -> LOGGER.warnf(
+						"Failed to delete resource %s for virtualHost %s.",
+						deleteResourcesStatus.getResourceName(),
+						virtualHost
+					);
+				}
+			});
+	}
+
+	private void _tellStop() {
+		if (this.deleteGroupActor != null) {
+			this.deleteGroupActor.tell(new DeleteGroupMessage.RemoveDeleteRequest(this.virtualHost));
+		}
+	}
 	
 }
