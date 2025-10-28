@@ -17,7 +17,7 @@
 
 package io.openk9.tenantmanager.service;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,95 +29,105 @@ import io.openk9.tenantmanager.model.OutboxEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
-import org.hibernate.reactive.mutiny.Mutiny;
+import io.vertx.mutiny.sqlclient.Pool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.Tuple;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class OutboxEventService {
 
 	public Uni<Void> persist(TenantManagementEvent event) {
-		return sessionFactory.withTransaction((s) -> persist(s, event));
+		Tuple tuple = asTuple(event);
+
+		return pool.withTransaction(sqlConnection -> sqlConnection
+			.preparedQuery(INSERT_NEW_EVENT_SQL)
+			.execute(tuple)
+			.replaceWithVoid()
+		);
 	}
 
-	public Uni<Void> persist(Mutiny.Session session, TenantManagementEvent event) {
-		log.infof("---------------    transform tme: %s", event);
-		String payload = null;
-		try {
-			payload = mapper.writeValueAsString(event);
+	public Uni<Void> flagAsSent(long id) {
+		return pool.withTransaction(sqlConnection -> sqlConnection
+			.preparedQuery(UPDATE_SENT_FLAG_SQL)
+			.execute(Tuple.of(id))
+		).replaceWithVoid();
+	}
+
+	public Uni<Void> flagAsSent(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return Uni.createFrom().voidItem();
 		}
-		catch (JsonProcessingException e) {
-			return Uni.createFrom().failure(e);
+
+		List<Tuple> tuples = new ArrayList<>();
+		for (long id : ids) {
+			tuples.add(Tuple.of(id));
 		}
 
-		String eventType = event.getClass().getSimpleName();
-
-		OutboxEvent outboxEvent = new OutboxEvent();
-		outboxEvent.setEventType(eventType);
-		outboxEvent.setPayload(payload);
-		outboxEvent.setSent(false);
-		outboxEvent.setCreateDate(Instant.now());
-
-
-		return persist(session, outboxEvent);
-	}
-
-	public Uni<Void> persist(OutboxEvent outboxEvent) {
-		return sessionFactory.withTransaction((s) -> persist(s, outboxEvent));
-	}
-
-	public Uni<Void> persist(Mutiny.Session session, OutboxEvent outboxEvent) {
-		log.infof("---------------    persist oe: %s", outboxEvent);
-		return session.persist(outboxEvent)
-			.onItem().invoke((nothing) -> {
-				log.infof("---------------    persisted oe with id: %s", outboxEvent.getId());
-			})
-			.onFailure().invoke(failure -> {
-
-				log.error("failed persist: ", failure);
-
-		});
-	}
-
-	public Uni<Void> flagAsSent(OutboxEvent outboxEvent) {
-		return sessionFactory.withTransaction(session -> {
-				outboxEvent.setSent(true);
-				return session.merge(outboxEvent);
-			}).replaceWithVoid();
-	}
-
-	public Uni<Void> flagAsSent(List<OutboxEvent> outboxEvents) {
-		return sessionFactory.withTransaction(session -> {
-			List<Uni<Void>> updates = new ArrayList<>();
-
-			for (OutboxEvent outboxEvent : outboxEvents) {
-				outboxEvent.setSent(true);
-				updates.add(session.merge(outboxEvent).chain(session::flush));
-			}
-
-			if (updates.isEmpty()) {
-				return Uni.createFrom().voidItem();
-			}
-
-			return Uni.join().all(updates).andCollectFailures().replaceWithVoid();
-		}).replaceWithVoid();
+		return pool.withTransaction(sqlConnection -> sqlConnection
+			.preparedQuery(UPDATE_SENT_FLAG_SQL)
+			.executeBatch(tuples)
+		).replaceWithVoid();
 	}
 
 	public Uni<List<OutboxEvent>> unsentEvents() {
-		return sessionFactory.withSession(this::unsentEvents);
+		return pool.preparedQuery(FETCH_UNSENT_SQL)
+			.execute()
+			.map(rows -> {
+				List<OutboxEvent> events = new ArrayList<>();
+				for (Row row : rows) {
+					events.add(OutboxEventService.fromRow(row));
+				}
+				return events;
+			});
 	}
 
-	public Uni<List<OutboxEvent>> unsentEvents(Mutiny.Session session) {
+	private static Tuple asTuple(TenantManagementEvent event) {
+		try {
+			String payload = mapper.writeValueAsString(event);
 
-		return session
-			.createQuery(
-				"from OutboxEvent e where e.sent is null or e.sent = false",
-				OutboxEvent.class)
-			.getResultList();
+			return Tuple.of(
+				idGenerator.nextId(),
+				event.getClass().getSimpleName(),
+				payload,
+				false,
+				OffsetDateTime.now());
+		}
+		catch (JsonProcessingException e) {
+			if (log.isDebugEnabled()) {
+				log.errorf(e, "Error while serializing event %s as json string.", event);
+			}
+
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static OutboxEvent fromRow(Row row) {
+		return OutboxEvent.builder()
+			.id(row.getLong("id"))
+			.eventType(row.getString("event_type"))
+			.payload(row.getString("payload"))
+			.sent(row.getBoolean("sent"))
+			.createDate(row.getLocalDateTime("create_date"))
+			.build();
 	}
 
 	@Inject
-	Mutiny.SessionFactory sessionFactory;
+	Pool pool;
+
+	private static final String INSERT_NEW_EVENT_SQL = """
+		INSERT INTO outbox_event (id, event_type, payload, sent, create_date)
+		VALUES ($1, $2, $3, $4, $5)
+		""";
+	private static final String FETCH_UNSENT_SQL = """
+		SELECT id, event_type, payload, sent, create_date
+		FROM outbox_event
+		WHERE sent = false
+		""";
+	private static final String UPDATE_SENT_FLAG_SQL =
+		"UPDATE outbox_event SET sent = true WHERE id = $1";
 
 	private static final ObjectMapper mapper = new ObjectMapper();
+	private static final CompactSnowflakeIdGenerator idGenerator = new CompactSnowflakeIdGenerator();
 	private static final Logger log = Logger.getLogger(OutboxEventService.class);
 }

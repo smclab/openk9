@@ -17,12 +17,10 @@
 
 package io.openk9.tenantmanager.service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -43,7 +41,10 @@ import io.openk9.tenantmanager.model.Tenant_;
 
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import io.vertx.mutiny.sqlclient.Pool;
+import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.Tuple;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -51,42 +52,99 @@ import org.jboss.logging.Logger;
 public class TenantService extends GraphQLService<Tenant>
 	implements EntityService<Tenant, TenantDTO> {
 
+	private static final CompactSnowflakeIdGenerator idGenerator =
+		new CompactSnowflakeIdGenerator();
+
+	private static Tenant from(Row row) {
+		return Tenant.builder()
+			.id(row.getLong("id"))
+			.createDate(row.getOffsetDateTime("create_date"))
+			.modifiedDate(row.getOffsetDateTime("modified_date"))
+			.schemaName(row.getString("schema_name"))
+			.liquibaseSchemaName(row.getString("liquibase_schema_name"))
+			.virtualHost(row.getString("virtual_host"))
+			.clientId(row.getString("client_id"))
+			.clientSecret(row.getString("client_secret"))
+			.realmName(row.getString("realm_name"))
+			.build();
+	}
+
 	public Uni<Tenant> findById(Long id) {
-		return sf.withStatelessTransaction(
-			(s) -> s.get(Tenant.class, id));
+
+		return pool.preparedQuery("SELECT * FROM tenant WHERE id = $1")
+			.execute(Tuple.of(id))
+			.onItem().transform(RowSet::iterator)
+			.onItem().transform(iterator -> iterator.hasNext() ? from(iterator.next()) : null);
+	}
+
+	public Uni<Tenant> persist(
+		String virtualHost, String schemaName, String liquibaseSchemaName,
+		String realmName, String clientId, String clientSecret,
+		OffsetDateTime createDate, OffsetDateTime modifiedDate) {
+
+		String issuerUri = "http://localhost:9090/realms/" + realmName;
+		var id = idGenerator.nextId();
+
+		return pool.withTransaction(sqlConnection -> sqlConnection.preparedQuery("""
+			INSERT INTO tenant (
+				id, virtual_host,
+				schema_name, liquibase_schema_name,
+				realm_name, client_id, client_secret,
+				create_date, modified_date
+			)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			""")
+			.execute(Tuple.from(new Object[] {
+				id, virtualHost,
+				schemaName, liquibaseSchemaName,
+				realmName, clientId, clientSecret,
+				createDate, modifiedDate
+			}))
+			.flatMap(rowSet -> VertxContextSupport.executeBlocking(() -> {
+				try {
+					producer.send(
+						TenantManagementEvent.TenantCreated.builder()
+							.tenantId(schemaName)
+							.hostName(virtualHost)
+							.clientId(clientId)
+							.issuerUri(issuerUri)
+							.routeAuthorizationMap(Map.of(
+								"DATASOURCE", "OAUTH2",
+								"SEARCHER", "NO_OAUTH"
+							))
+							.build()
+					);
+
+					return Tenant.builder()
+						.id(id)
+						.virtualHost(virtualHost)
+						.schemaName(schemaName)
+						.liquibaseSchemaName(liquibaseSchemaName)
+						.realmName(realmName)
+						.clientId(clientId)
+						.clientSecret(clientSecret)
+						.createDate(createDate)
+						.modifiedDate(modifiedDate)
+						.build();
+				}
+				catch (Throwable e) {
+					throw new RuntimeException(e);
+				}
+			}))
+		);
+
 	}
 
 	public Uni<Tenant> persist(Tenant tenant) {
-		var realmName = tenant.getRealmName();
-		var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
-
-		return sf.withTransaction((session, tx) ->
-			VertxContextSupport.executeBlocking(() -> session.persist(tenant)
-				.chain(() -> VertxContextSupport.executeBlocking(() -> {
-					try {
-						producer.send(
-							TenantManagementEvent.TenantCreated.builder()
-								.tenantId(tenant.getSchemaName())
-								.hostName(tenant.getVirtualHost())
-								.clientId(tenant.getClientId())
-								.issuerUri(issuerUri)
-								.routeAuthorizationMap(Map.of(
-									"DATASOURCE", "OAUTH2",
-									"SEARCHER", "NO_OAUTH"
-								))
-								.build()
-						);
-					}
-					catch (Exception e) {
-						log.error(e);
-						tx.markForRollback();
-					}
-
-					return null;
-				}))
-				.map(__ -> tenant)
-			)
-		).flatMap(Function.identity());
+		return persist(
+			tenant.getVirtualHost(),
+			tenant.getSchemaName(),
+			tenant.getLiquibaseSchemaName(),
+			tenant.getRealmName(),
+			tenant.getClientId(),
+			tenant.getClientSecret(),
+			tenant.getCreateDate(),
+			tenant.getModifiedDate());
 	}
 
 	@Override
@@ -123,29 +181,7 @@ public class TenantService extends GraphQLService<Tenant>
 			return tenantUni.flatMap(t -> {
 
 				if (t != null) {
-					var realmName = tenant.getRealmName();
-					var issuerUri = authServerUrl.replace("/tenant-manager", "/" + realmName);
-
-					return session.merge(tenant)
-						.invoke(() -> {
-							try {
-								producer.send(
-									TenantManagementEvent.TenantUpdated.builder()
-										.tenantId(tenant.getSchemaName())
-										.hostName(tenant.getVirtualHost())
-										.clientId(tenant.getClientId())
-										.issuerUri(issuerUri)
-										.routeAuthorizationMap(Map.of(
-											"DATASOURCE", "OAUTH2",
-											"SEARCHER", "OAUTH2"
-										))
-										.build()
-								);
-							}
-							catch (Exception e) {
-								tx.markForRollback();
-							}
-						});
+					return session.merge(tenant);
 				}
 				else {
 					return Uni.createFrom().failure(
@@ -160,20 +196,7 @@ public class TenantService extends GraphQLService<Tenant>
 
 		return sf.withTransaction((session, tx) -> session
 			.find(Tenant.class, tenantId)
-			.call((tenant) -> session.remove(tenant)
-				.invoke(() -> {
-					try {
-						producer.send(
-							TenantManagementEvent.TenantDeleted.builder()
-								.tenantId(tenant.getSchemaName())
-								.build()
-						);
-					}
-					catch (Exception e) {
-						tx.markForRollback();
-					}
-				})
-			)
+			.call(session::remove)
 			.replaceWithVoid()
 		);
 
@@ -291,6 +314,8 @@ public class TenantService extends GraphQLService<Tenant>
 	}
 
 	@Inject
+	Pool pool;
+	@Inject
 	Mutiny.SessionFactory sf;
 	@Inject
 	TenantMapper mapper;
@@ -299,28 +324,10 @@ public class TenantService extends GraphQLService<Tenant>
 	@Inject
 	TenantManagementEventProducer producer;
 
-	@ConfigProperty(name = "quarkus.oidc.auth-server.url")
-	String authServerUrl;
-
 	private EntityServiceValidatorWrapper<Tenant, TenantDTO>
 		entityServiceValidatorWrapper;
 
 	private static final Logger log = Logger.getLogger(TenantService.class);
-
-	public void onStartup(@Observes Startup startup) {
-
-		log.info("insert a tenant");
-
-		var tenant = new Tenant();
-		tenant.setRealmName("alabasta");
-		tenant.setSchemaName("alabasta");
-		tenant.setVirtualHost("http://alabasta.localhost:8080");
-		tenant.setClientId("openk9");
-		tenant.setLiquibaseSchemaName("alabasta_liquibase");
-
-		persist(tenant).subscribe().with(tenant1 -> {});
-
-	}
 
 
 }

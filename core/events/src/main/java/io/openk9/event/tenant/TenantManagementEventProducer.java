@@ -28,6 +28,6 @@ public interface TenantManagementEventProducer {
 	 *
 	 * @param event the {@link TenantManagementEvent} to send.
 	 */
-	void send(TenantManagementEvent event);
+	void send(TenantManagementEvent event) throws Throwable;
 
 }

@@ -17,16 +17,15 @@
 
 package io.openk9.tenantmanager.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -40,18 +39,12 @@ import org.hibernate.type.SqlTypes;
 @Getter
 @Setter
 @ToString
+@Builder
+@AllArgsConstructor
 @RequiredArgsConstructor
 public class OutboxEvent {
 
 	@Id
-	@GeneratedValue(
-		strategy = GenerationType.SEQUENCE,
-		generator = "hibernate_sequence"
-	)
-	@SequenceGenerator(
-		name = "hibernate_sequence",
-		allocationSize = 1
-	)
 	private Long id;
 	@Column(name = "event_type")
 	private String eventType;
@@ -59,7 +52,7 @@ public class OutboxEvent {
 	private String payload;
 	private Boolean sent = false;
 	@Column(name = "create_date")
-	private Instant createDate = Instant.now();
+	private LocalDateTime createDate;
 
 	@Override
 	public final boolean equals(Object o) {

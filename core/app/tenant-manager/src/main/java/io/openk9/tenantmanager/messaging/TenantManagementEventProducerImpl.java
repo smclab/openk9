@@ -19,7 +19,9 @@ package io.openk9.tenantmanager.messaging;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import jakarta.annotation.PostConstruct;
@@ -37,16 +39,17 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.scheduler.Scheduled;
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class RabbitMQOutboxTenantManagementEventProducer
+public class TenantManagementEventProducerImpl
 	implements TenantManagementEventProducer {
 
 	@Override
-	public void send(TenantManagementEvent event) {
-		outbox.persist(event).await().indefinitely();
+	public void send(TenantManagementEvent event) throws Throwable {
+		VertxContextSupport.subscribeAndAwait(() -> outbox.persist(event));
 	}
 
 	@PostConstruct
@@ -103,6 +106,8 @@ public class RabbitMQOutboxTenantManagementEventProducer
 					log.infof("Sending %d events...", outboxEvents.size());
 				}
 
+				List<Long> ids = new ArrayList<>();
+
 				for(OutboxEvent event : outboxEvents) {
 					if (log.isTraceEnabled()) {
 						log.tracef(
@@ -116,10 +121,11 @@ public class RabbitMQOutboxTenantManagementEventProducer
 						event.getEventType(),
 						event.getPayload().getBytes(StandardCharsets.UTF_8)
 					);
+
+					ids.add(event.getId());
 				}
 
-				return outbox.flagAsSent(outboxEvents);
-
+				return outbox.flagAsSent(ids);
 			}).replaceWithVoid();
 	}
 
@@ -166,5 +172,5 @@ public class RabbitMQOutboxTenantManagementEventProducer
 	private static final String X_QUEUE_TYPE = "x-queue-type";
 
 	private final static Logger log = Logger.getLogger(
-		RabbitMQOutboxTenantManagementEventProducer.class);
+		TenantManagementEventProducerImpl.class);
 }

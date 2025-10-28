@@ -21,16 +21,15 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 import io.openk9.common.graphql.util.relay.GraphqlId;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -45,21 +44,15 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "tenant")
 @Getter
 @Setter
+@Builder
 @ToString
 @RequiredArgsConstructor
 @RegisterForReflection
+@AllArgsConstructor
 public class Tenant implements GraphqlId {
+
 	@Id
-	@GeneratedValue(
-		strategy = GenerationType.SEQUENCE,
-		generator = "hibernate_sequence"
-	)
-	@SequenceGenerator(
-		name = "hibernate_sequence",
-		allocationSize = 1
-	)
 	@Column(name = "id", nullable = false)
-	@Setter(AccessLevel.NONE)
 	private Long id;
 
 	@Setter(AccessLevel.NONE)
