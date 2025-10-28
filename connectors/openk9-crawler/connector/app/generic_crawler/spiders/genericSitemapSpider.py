@@ -1,3 +1,5 @@
+import fnmatch
+
 import scrapy
 from twisted.python.log import logerr
 
@@ -103,22 +105,31 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         attributes, for example, you can filter locs with lastmod greater
         than a given date (see docs).
         """
+        allow_all = len(self.allowed_paths) == 0
+        exclude_nothing = len(self.excluded_paths) == 0
+
         for entry in entries:
-            if len(self.allowed_paths) == 0 or any(allowed_path in entry.get('loc') for allowed_path in self.allowed_paths):
-                if not any(excluded_path in entry.get('loc') for excluded_path in self.excluded_paths):
-                    try:
-                        date_time = datetime.fromisoformat(entry['lastmod'])
-                        lastmod_timestamp = int(datetime.timestamp(date_time) * 1000)
-                        logger.debug("Lastmod timestamp is " + str(lastmod_timestamp) )
-                        if int(lastmod_timestamp) >= int(self.timestamp):
-                            yield entry
-                    except KeyError:
-                        logger.info("No lastmod present, so proceeding with ingestion without data validation")
-                        yield entry
-                else:
-                    logger.info("Excluded entry " + str(entry.get('loc')))
-            else:
-                logger.info("Not allowed entry " + str(entry.get('loc')))
+            loc = entry.get('loc')
+            allow = True if allow_all else any(fnmatch.fnmatch(loc, allowed_path) for allowed_path in self.allowed_paths)
+            if not allow:
+                logger.info("Not allowed entry " + str(loc))
+                continue
+
+            exclude = False if exclude_nothing else any(fnmatch.fnmatch(loc, excluded_path) for excluded_path in self.excluded_paths)
+            if exclude:
+                logger.info("Excluded entry " + str(loc))
+                continue
+
+            # Is allowed and not excluded
+            try:
+                date_time = datetime.fromisoformat(entry['lastmod'])
+                lastmod_timestamp = int(datetime.timestamp(date_time) * 1000)
+                logger.debug("Lastmod timestamp is " + str(lastmod_timestamp))
+                if int(lastmod_timestamp) >= int(self.timestamp):
+                    yield entry
+            except KeyError:
+                logger.info("No lastmod present, so proceeding with ingestion without data validation")
+                yield entry
 
     def _parse_sitemap(self, response):
         if response.url.endswith('/robots.txt'):
