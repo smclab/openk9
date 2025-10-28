@@ -156,3 +156,122 @@ docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
 docker run -p 8080:8080 --name <containerName> <imageName> 
 ```
 
+## Modify Enricher
+
+After generating it, changes need to be made to the enricher to create a concrete implementation:
+
+1. Update `FormResourceImpl` to get configuration from OpenK9 for your enricher;
+   ```java
+      // Setting up a FormField example
+      private List<FormField> getFormFieldList() {
+          List<FormField> formFieldList = new ArrayList<>();
+
+          FormField formField = new FormField();
+          formField.setInfo("Read and reply to datasource messages");
+          formField.setName("readAndReply");
+          formField.setLabel("Read and Reply");
+          formField.setRequired(true);
+          formField.setSize(6.0);
+          formField.setType(FormField.Type.text);
+          formField.setValidator(getValidator());
+          formField.setValues(getFiledValueList());
+          formFieldList.add(formField);
+          return formFieldList;
+      }
+
+      private FormFieldValidator getValidator() {
+          FormFieldValidator formFieldValidator = new FormFieldValidator();
+          formFieldValidator.setMin(0L);
+          formFieldValidator.setMax(100L);
+          formFieldValidator.setRegex("/[[:datasource]]");
+          return formFieldValidator;
+      }
+
+      private List<FieldValue> getFiledValueList() {
+          List<FieldValue> formFieldValueList = new ArrayList<>();
+          FieldValue formFieldValue = new FieldValue();
+          formFieldValue.setIsDefault(false);
+          formFieldValue.setValue("datasource1");
+          formFieldValueList.add(formFieldValue);
+          return formFieldValueList;
+      }
+   ```
+2. Update Openk9 configurations in _application.properties_ to set the correct host and port;
+3. If you use an async implementation, update `ProcessResourceImpl` to set your logic implementation and then call `CallBackClient`;
+   ```java
+    @Inject
+    CallBackClient callBackClient;
+   
+    @Override
+    public ProcessResponseDTO process(@NotNull OpenK9Input data) {
+        if (data.getReplyTo() != null && !data.getReplyTo().isEmpty()) {
+            ProcessResponseDTO responseDTO = new ProcessResponseDTO();
+            LOGGER.info("Starting enrichment of data...");
+            // Simulate call back endpoint
+            EnrichData enrichData = readAndReply(data);
+            callBackClient.callback(enrichData, data.getReplyTo());
+            responseDTO.setPayload("OK");
+            return responseDTO;
+        }
+        else {
+            throw new IllegalArgumentException("replyTo is null or empty");
+        }
+    }
+
+    private EnrichData readAndReply(OpenK9Input data) {
+        EnrichData enrichData = new EnrichData();
+        enrichData.setPayload(data.getPayload());
+        enrichData.setEnrichData("reply", "Hi, I have received your payload. Thanks for using me!");
+        return enrichData;
+    }
+   ```
+4. If you use a sync implementation, update `ProcessResourceImpl` to set your logic implementation;
+   ```java
+    @Override
+    public ProcessResponseDTO process(@NotNull OpenK9Input data) {
+        ProcessResponseDTO responseDTO = new ProcessResponseDTO();
+        // Simulate sync operations
+        EnrichData enrichData = readAndReply(data);
+        responseDTO.setPayload(enrichData);
+        return responseDTO;
+    }
+
+    private EnrichData readAndReply(OpenK9Input data) {
+        EnrichData enrichData = new EnrichData();
+        enrichData.setPayload(data.getPayload());
+        enrichData.setEnrichData("reply", "Hi, I have received your payload. Thanks for using me!");
+        return enrichData;
+    }
+   ```
+5. Update `onSuccess` callback to set a concrete implementation for getting binaries from `Base64Client` and `ByteArrayClient`;
+   ```java
+    public Future<String> getBase64(String resourceId, String schemaName) {
+        WebClient client = WebClient.create(vertx);
+        return client
+                .get(port, host, path + resourceId + "/" + schemaName)
+                .as(BodyCodec.string())
+                .send()
+                .map(HttpResponse::body)
+                .onSuccess(res -> {
+                    LOGGER.info("Result from base64 endpoint: " + res);
+                    // Add here your implementation
+                })
+                .onFailure(res -> LOGGER.error("Error requesting base64 binaries: " + res.getMessage()));
+    }
+   ```
+
+   ```java
+    public Future<Buffer> getByteArray(String resourceId, String schemaName) {
+        WebClient client = WebClient.create(vertx);
+        return client
+                .get(port, host, path + resourceId + "/" + schemaName)
+                .as(BodyCodec.buffer())
+                .send()
+                .map(HttpResponse::body)
+                .onSuccess(res -> {
+                    LOGGER.info("Result from byte array endpoint: " + res.getBytes());
+                    // Add here your implementation
+                })
+                .onFailure(res -> LOGGER.error("Error requesting byte array binaries: " + res.getMessage()));
+    }
+   ```
