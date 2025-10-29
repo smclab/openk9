@@ -270,20 +270,12 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 						WHERE a.autocorrectionDocTypeField.id = dtf.id
 						AND a.id = (:autocorrectionId)
 					)
-					AND (
-						dtf.fieldType = (:text) OR
-						dtf.fieldType = (:constantKeyword) OR
-						dtf.fieldType = (:annotatedText) OR
-						dtf.fieldType = (:keyword)
-					)
+					AND dtf.fieldType IN (:textualFieldTypes)
 					""";
 
 			return s.createQuery(queryString, DocTypeField.class)
 				.setParameter("autocorrectionId", autocorrectionId)
-				.setParameter("text", FieldType.TEXT)
-				.setParameter("constantKeyword", FieldType.CONSTANT_KEYWORD)
-				.setParameter("annotatedText", FieldType.ANNOTATED_TEXT)
-				.setParameter("keyword", FieldType.KEYWORD)
+				.setParameter("textualFieldTypes", DocTypeField.TEXTUAL_FIELD_TYPE)
 				.getResultList();
 		});
 	}

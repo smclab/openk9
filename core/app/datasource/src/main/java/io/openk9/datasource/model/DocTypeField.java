@@ -42,6 +42,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -58,6 +59,10 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 public class DocTypeField extends BaseDocTypeField {
+
+	public static final EnumSet<FieldType> TEXTUAL_FIELD_TYPE = EnumSet.of(
+		FieldType.TEXT, FieldType.CONSTANT_KEYWORD, FieldType.ANNOTATED_TEXT, FieldType.KEYWORD
+	);
 
 	@Column(name = "name", nullable = false)
 	private String name;
