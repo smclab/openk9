@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.security;
+package io.openk9.common.util;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

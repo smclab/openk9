@@ -121,8 +121,8 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 		</dependency>
-
 	</dependencies>
+
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

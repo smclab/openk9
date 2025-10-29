@@ -17,21 +17,22 @@
 
 package io.openk9.tenantmanager.service;
 
-import io.openk9.common.graphql.util.service.GraphQLService;
-import io.openk9.tenantmanager.model.BackgroundProcess;
-import io.openk9.tenantmanager.model.BackgroundProcess_;
-import io.smallrye.mutiny.Uni;
+import java.util.List;
+import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import io.openk9.common.graphql.util.service.GraphQLRelayService;
+import io.openk9.tenantmanager.model.BackgroundProcess;
+import io.openk9.tenantmanager.model.BackgroundProcess_;
+
+import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.List;
-import java.util.UUID;
-
 @ApplicationScoped
-public class BackgroundProcessService extends GraphQLService<BackgroundProcess> {
+public class BackgroundProcessService extends GraphQLRelayService<BackgroundProcess> {
 
 	public Uni<Void> updateBackgroundProcess(
 		long id, BackgroundProcess.Status status, String message, String name) {

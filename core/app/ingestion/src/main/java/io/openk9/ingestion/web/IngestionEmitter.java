@@ -17,10 +17,20 @@
 
 package io.openk9.ingestion.web;
 
-import com.rabbitmq.client.Connection;
-import io.openk9.common.util.ShardingKey;
+import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.common.util.ingestion.IngestionUtils;
-import io.openk9.common.util.ingestion.PayloadType;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.BinaryPayload;
 import io.openk9.ingestion.dto.IngestionDTO;
@@ -29,29 +39,16 @@ import io.openk9.ingestion.dto.IngestionPayloadWrapper;
 import io.openk9.ingestion.dto.ResourcesDTO;
 import io.openk9.ingestion.dto.ResourcesPayload;
 import io.openk9.ingestion.exception.NoSuchQueueException;
+
+import com.rabbitmq.client.Connection;
 import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.smallrye.reactive.messaging.rabbitmq.OutgoingRabbitMQMetadata;
-import io.vertx.core.json.JsonObject;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.eclipse.microprofile.reactive.messaging.Metadata;
 import org.eclipse.microprofile.reactive.messaging.OnOverflow;
 import org.jboss.logging.Logger;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class IngestionEmitter {

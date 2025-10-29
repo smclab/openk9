@@ -33,13 +33,13 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<junit-excluded-groups>io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
+		<junit-excluded-groups>performance-test,io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
 	</properties>
 
 	<profiles>
 		<profile>
-			<!-- enable junit quarkus test -->
-			<id>quarkus-test</id>
+			<!-- enable junit long-running tests -->
+			<id>long-running-test</id>
 			<properties>
 				<junit-excluded-groups/>
 			</properties>

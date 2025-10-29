@@ -15,27 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.common.util.web;
+
+import java.util.List;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@Builder
+@Data
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-@EqualsAndHashCode
-public class SortBy {
-	private String column;
-	@EqualsAndHashCode.Exclude
-	private Direction direction = Direction.ASC;
+public class Response<E> {
+	private E entity;
+	private List<FieldValidator> fieldValidators;
 
-	public enum Direction {
-		ASC, DESC
+	public static <T> Response<T> error(List<FieldValidator> fieldValidators) {
+		return Response.of(null, fieldValidators);
 	}
+
+	public static <T> Response<T> success(T entity) {
+		return Response.of(entity, null);
+	}
+
 }

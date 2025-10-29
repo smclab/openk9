@@ -17,21 +17,22 @@
 
 package io.openk9.tenantmanager.graphql;
 
-import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
-import io.openk9.tenantmanager.model.BackgroundProcess;
-import io.openk9.tenantmanager.service.BackgroundProcessService;
-import io.smallrye.mutiny.Uni;
+import java.util.Set;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import io.openk9.common.graphql.SortBy;
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.tenantmanager.model.BackgroundProcess;
+import io.openk9.tenantmanager.service.BackgroundProcessService;
+
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Query;
-
-import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped

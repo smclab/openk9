@@ -40,25 +40,25 @@ public class SinglePersistenceUnitPackageAnnotationTest {
 
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addPackage(EntityIncludedThroughPackageAnnotation.class.getPackage().getName())
-			.addPackage(ExcludedEntity.class.getPackage().getName()))
-		.withConfigurationResource("application.properties")
-		// Expect a warning on startup
-		.setLogRecordPredicate(
-			record -> record
-				.getMessage()
-				.contains("Could not find a suitable persistence unit for model classes"))
-		.assertLogRecords(records -> assertThat(records)
-			.as("Warnings on startup")
-			.hasSize(1)
-			.element(0).satisfies(record -> {
-				assertThat(record.getLevel()).isEqualTo(Level.WARNING);
-				assertThat(LOG_FORMATTER.formatMessage(record))
-					.contains(
-						io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.excludedpackage.ExcludedEntity.class
-							.getName());
-			}));
+            .withApplicationRoot((jar) -> jar
+                    .addPackage(EntityIncludedThroughPackageAnnotation.class.getPackage().getName())
+                    .addPackage(ExcludedEntity.class.getPackage().getName()))
+            .withConfigurationResource("application.properties")
+            // Expect a warning on startup
+            .setLogRecordPredicate(
+                    record -> record
+                            .getMessage()
+                            .contains("Could not find a suitable persistence unit for model classes"))
+            .assertLogRecords(records -> assertThat(records)
+                    .as("Warnings on startup")
+                    .hasSize(1)
+                    .element(0).satisfies(record -> {
+                        assertThat(record.getLevel()).isEqualTo(Level.WARNING);
+                        assertThat(LOG_FORMATTER.formatMessage(record))
+                                .contains(
+                                        io.quarkus.hibernate.reactive.singlepersistenceunit.entityassignment.excludedpackage.ExcludedEntity.class
+                                                .getName());
+                    }));
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -66,15 +66,13 @@ public class SinglePersistenceUnitPackageAnnotationTest {
     @Test
     @RunOnVertxContext
     public void testIncluded(UniAsserter asserter) {
-		EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
-			"default");
+        EntityIncludedThroughPackageAnnotation entity = new EntityIncludedThroughPackageAnnotation(
+                "default");
         asserter.assertThat(
-			() -> persist(entity).chain(() -> find(
-				EntityIncludedThroughPackageAnnotation.class,
-				entity.id
-			)),
-			retrievedEntity -> assertThat(retrievedEntity.name).isEqualTo(entity.name)
-		);
+                () -> persist(entity).chain(() -> find(
+                        EntityIncludedThroughPackageAnnotation.class,
+                        entity.id)),
+                retrievedEntity -> assertThat(retrievedEntity.name).isEqualTo(entity.name));
     }
 
     @Test

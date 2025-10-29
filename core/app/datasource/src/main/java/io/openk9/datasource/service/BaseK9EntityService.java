@@ -38,10 +38,10 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
 import io.openk9.common.graphql.util.relay.DefaultPageInfo;
-import io.openk9.common.graphql.util.service.GraphQLService;
+import io.openk9.common.graphql.util.service.GraphQLRelayService;
 import io.openk9.common.model.EntityServiceValidatorWrapper;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
+import io.openk9.common.util.web.FieldValidator;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.mapper.K9EntityMapper;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
@@ -62,7 +62,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K9EntityDTO>
-	extends GraphQLService<ENTITY>
+	extends GraphQLRelayService<ENTITY>
 	implements K9EntityService<ENTITY, DTO> {
 
 	public static final DefaultPageInfo DEFAULT_PAGE_INFO =

@@ -17,8 +17,11 @@
 
 package io.openk9.datasource.pipeline.actor.enrichitem;
 
-import io.openk9.common.util.ShardingKey;
+import java.time.LocalDateTime;
+
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.util.CborSerializable;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.RecipientRef;
@@ -28,8 +31,6 @@ import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
-
-import java.time.LocalDateTime;
 
 public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 

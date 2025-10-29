@@ -38,8 +38,8 @@ public class FileNotFoundSqlLoadScriptTestCase {
             .assertException(t -> assertThat(t)
                     .isInstanceOf(ConfigurationException.class)
                     .hasMessageContainingAll("Unable to find file referenced in '"
-											 +
-											 "quarkus.hibernate-orm.sql-load-script=file-that-does-not-exist.sql'. Remove property or add file to your path."));
+                            +
+                            "quarkus.hibernate-orm.sql-load-script=file-that-does-not-exist.sql'. Remove property or add file to your path."));
 
     @Test
     public void testSqlLoadScriptFileAbsentTest() {

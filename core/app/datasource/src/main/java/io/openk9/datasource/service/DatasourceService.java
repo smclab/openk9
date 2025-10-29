@@ -29,10 +29,10 @@ import jakarta.inject.Inject;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.FieldValidator;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.listener.SchedulerInitializer;
 import io.openk9.datasource.mapper.DatasourceMapper;
 import io.openk9.datasource.model.DataIndex;

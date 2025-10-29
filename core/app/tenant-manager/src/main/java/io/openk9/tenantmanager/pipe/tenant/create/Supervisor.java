@@ -19,9 +19,10 @@ package io.openk9.tenantmanager.pipe.tenant.create;
 
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
-import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -43,7 +44,7 @@ public class Supervisor {
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public sealed interface Response {}
-	public record Success(Tenant tenant) implements Response {}
+	public record Success(TenantResponseDTO tenant) implements Response {}
 
 	private static Behavior<Command> initial(ActorContext<Command> context) {
 

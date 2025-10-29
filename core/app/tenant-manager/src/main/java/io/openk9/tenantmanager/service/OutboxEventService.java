@@ -23,6 +23,7 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
@@ -116,16 +117,22 @@ public class OutboxEventService {
 	Pool pool;
 
 	private static final String INSERT_NEW_EVENT_SQL = """
-		INSERT INTO outbox_event (id, event_type, payload, sent, create_date)
+		INSERT
+		INTO outbox_event (id, event_type, payload, sent, create_date)
 		VALUES ($1, $2, $3, $4, $5)
 		""";
+
 	private static final String FETCH_UNSENT_SQL = """
-		SELECT id, event_type, payload, sent, create_date
+		SELECT *
 		FROM outbox_event
 		WHERE sent = false
 		""";
-	private static final String UPDATE_SENT_FLAG_SQL =
-		"UPDATE outbox_event SET sent = true WHERE id = $1";
+
+	private static final String UPDATE_SENT_FLAG_SQL = """
+		UPDATE outbox_event
+		SET sent = true
+		WHERE id = $1
+		""";
 
 	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final CompactSnowflakeIdGenerator idGenerator = new CompactSnowflakeIdGenerator();

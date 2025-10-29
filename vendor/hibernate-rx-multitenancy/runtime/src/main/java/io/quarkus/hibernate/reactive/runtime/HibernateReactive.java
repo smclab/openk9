@@ -30,7 +30,7 @@ public class HibernateReactive {
 
         if (enabled) {
             Logger.getLogger("org.hibernate.quarkus.feature").debug(
-				"Hibernate Reactive Features Enabled");
+                    "Hibernate Reactive Features Enabled");
         }
     }
 

@@ -17,13 +17,15 @@
 
 package io.openk9.tenantmanager.service;
 
-import io.openk9.tenantmanager.model.Tenant;
-import io.quarkus.vertx.ConsumeEvent;
-import io.smallrye.common.annotation.Blocking;
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
+
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
+
+import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.Uni;
 import org.keycloak.admin.client.Keycloak;
 
 @ApplicationScoped
@@ -42,7 +44,7 @@ public class DeleteService {
 	TenantService tenantService;
 
 	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
-	public Uni<Tenant> findTenant(String virtualHost) {
+	public Uni<TenantResponseDTO> findTenant(String virtualHost) {
 		return tenantService.findTenantByVirtualHost(virtualHost);
 	}
 

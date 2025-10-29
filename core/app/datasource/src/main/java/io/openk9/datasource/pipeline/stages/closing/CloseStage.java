@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehavior;
 import io.openk9.datasource.pipeline.actor.common.AggregateBehaviorException;

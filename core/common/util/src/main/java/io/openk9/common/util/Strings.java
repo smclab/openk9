@@ -17,14 +17,14 @@
 
 package io.openk9.common.util;
 
-import lombok.NonNull;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringUtils {
+import lombok.NonNull;
 
-	private StringUtils() {}
+public class Strings {
+
+	private Strings() {}
 
 
 	/**

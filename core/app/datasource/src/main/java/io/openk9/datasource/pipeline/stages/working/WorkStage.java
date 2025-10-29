@@ -20,7 +20,7 @@ package io.openk9.datasource.pipeline.stages.working;
 import java.util.LinkedList;
 import java.util.function.BiFunction;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;

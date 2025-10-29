@@ -34,7 +34,6 @@ import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
@@ -45,7 +44,6 @@ import org.mockito.BDDMockito;
 
 @QuarkusTest
 @TestHTTPEndpoint(ProvisioningResource.class)
-@TestSecurity(user = "k9-admin", roles = {"admin"})
 public class ProvisioningResourceTest {
 
 	@ConfigProperty(name = "quarkus.application.version")
@@ -137,6 +135,7 @@ public class ProvisioningResourceTest {
 
 	private ValidatableResponse doPostAndExpect2xx(RequestSpecification requestSpecification) {
 		return requestSpecification
+			.auth().basic("admin", "admin")
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()

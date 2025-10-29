@@ -39,8 +39,8 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractIdOptimizerDefaultTest {
 
     @Inject
-	SessionFactory ormSessionFactory;
-	// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+    SessionFactory ormSessionFactory;
+    // This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
@@ -51,45 +51,43 @@ public abstract class AbstractIdOptimizerDefaultTest {
         for (long i = 1; i <= 51; i++) {
             long expectedId = i;
             // Apparently, we can rely on assertions being executed in order.
-			asserter.assertThat(
-				() -> sessionFactory.withTransaction(s -> {
-					var entity = new EntityWithSequenceGenerator();
-					return s.persist(entity).replaceWith(() -> entity.id);
-				}),
-				id -> assertThat(id).isEqualTo(expectedId)
-			);
+            asserter.assertThat(
+                    () -> sessionFactory.withTransaction(s -> {
+                        var entity = new EntityWithSequenceGenerator();
+                        return s.persist(entity).replaceWith(() -> entity.id);
+                    }),
+                    id -> assertThat(id).isEqualTo(expectedId));
         }
     }
 
     @Test
     public void defaults() {
         assertThat(List.of(
-			EntityWithDefaultGenerator.class,
-			EntityWithGenericGenerator.class,
-			EntityWithSequenceGenerator.class,
-			EntityWithTableGenerator.class
-		))
-			.allSatisfy(c -> assertOptimizer(c).isInstanceOf(defaultOptimizerType()));
+                EntityWithDefaultGenerator.class,
+                EntityWithGenericGenerator.class,
+                EntityWithSequenceGenerator.class,
+                EntityWithTableGenerator.class))
+                .allSatisfy(c -> assertOptimizer(c).isInstanceOf(defaultOptimizerType()));
     }
 
     @Test
     public void explicitOverrides() {
         assertOptimizer(EntityWithGenericGeneratorAndPooledOptimizer.class)
-			.isInstanceOf(PooledOptimizer.class);
+                .isInstanceOf(PooledOptimizer.class);
         assertOptimizer(EntityWithGenericGeneratorAndPooledLoOptimizer.class)
-			.isInstanceOf(PooledLoOptimizer.class);
+                .isInstanceOf(PooledLoOptimizer.class);
     }
 
-	abstract Class<?> defaultOptimizerType();
+    abstract Class<?> defaultOptimizerType();
 
     AbstractObjectAssert<?, Optimizer> assertOptimizer(Class<?> entityType) {
         return assertThat(SchemaUtil.getGenerator(ormSessionFactory, entityType))
-			.as("Reactive ID generator wrapper for entity type " + entityType.getSimpleName())
-			.asInstanceOf(InstanceOfAssertFactories.type(ReactiveGeneratorWrapper.class))
-			.extracting("generator") // Needs reflection, unfortunately the blocking generator is not exposed...
-			.as("Blocking ID generator for entity type " + entityType.getSimpleName())
-			.asInstanceOf(InstanceOfAssertFactories.type(OptimizableGenerator.class))
-			.extracting(OptimizableGenerator::getOptimizer)
-			.as("ID optimizer for entity type " + entityType.getSimpleName());
+                .as("Reactive ID generator wrapper for entity type " + entityType.getSimpleName())
+                .asInstanceOf(InstanceOfAssertFactories.type(ReactiveGeneratorWrapper.class))
+                .extracting("generator") // Needs reflection, unfortunately the blocking generator is not exposed...
+                .as("Blocking ID generator for entity type " + entityType.getSimpleName())
+                .asInstanceOf(InstanceOfAssertFactories.type(OptimizableGenerator.class))
+                .extracting(OptimizableGenerator::getOptimizer)
+                .as("ID optimizer for entity type " + entityType.getSimpleName());
     }
 }

@@ -17,6 +17,7 @@
 
 package io.openk9.apigw.poc;
 
+import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
 
 import lombok.RequiredArgsConstructor;
@@ -37,8 +38,17 @@ public class DBInitializer implements ApplicationRunner {
 
 		log.info("Sending amqp messages...");
 
-		Events.tenantCreatedEvents().forEach(producer::send);
-		Events.apiKeyCreatedEvents().forEach(producer::send);
+		try {
+			for (TenantManagementEvent.TenantCreated tenantCreated : Events.tenantCreatedEvents()) {
+				producer.send(tenantCreated);
+			}
+			for (TenantManagementEvent.ApiKeyCreated apiKeyCreated : Events.apiKeyCreatedEvents()) {
+				producer.send(apiKeyCreated);
+			}
+		}
+		catch (Throwable e) {
+			log.error("Error occurred while sending events", e);
+		}
 
 	}
 

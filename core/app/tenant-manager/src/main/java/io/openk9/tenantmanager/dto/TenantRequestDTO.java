@@ -15,23 +15,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.tenantmanager.dto;
 
-import java.util.function.Supplier;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import io.smallrye.mutiny.Uni;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-public class UniUtil {
-
-	public static Uni<Void> fromSupplier(Supplier<?> supplier) {
-		return Uni.createFrom().item(supplier).replaceWithVoid();
-	}
-
-	public static Uni<Void> fromRunnable(Runnable runnable) {
-		return Uni.createFrom().item(() -> {
-			runnable.run();
-			return null;
-		}).replaceWithVoid();
-	}
-
+@NoArgsConstructor
+@AllArgsConstructor
+@RegisterForReflection
+@Data
+public class TenantRequestDTO {
+	@NotBlank
+	@NotNull
+	private String schemaName;
+	@NotBlank
+	@NotNull
+	private String liquibaseSchemaName;
+	@NotBlank
+	@NotNull
+	private String virtualHost;
+	@NotBlank
+	@NotNull
+	private String clientId;
+	private String clientSecret;
+	@NotBlank
+	@NotNull
+	private String realmName;
 }

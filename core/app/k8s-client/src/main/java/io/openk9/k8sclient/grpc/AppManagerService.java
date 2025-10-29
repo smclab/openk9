@@ -30,7 +30,7 @@ import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
 import io.openk9.app.manager.grpc.DeleteResourceStatus;
 import io.openk9.app.manager.grpc.Status;
-import io.openk9.common.util.StringUtils;
+import io.openk9.common.util.Strings;
 import io.openk9.k8s.crd.Manifest;
 import io.openk9.k8sclient.service.IngressDef;
 import io.openk9.k8sclient.service.IngressService;
@@ -91,7 +91,7 @@ public class AppManagerService implements AppManager {
 			.tenant(request.getSchemaName())
 			.set(
 				"nameOverride",
-				StringUtils.withSuffix(request.getChart(), request.getSchemaName())
+				Strings.withSuffix(request.getChart(), request.getSchemaName())
 			)
 			.build();
 

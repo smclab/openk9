@@ -50,6 +50,7 @@ public class OutboxEvent {
 	private String eventType;
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String payload;
+	@Builder.Default
 	private Boolean sent = false;
 	@Column(name = "create_date")
 	private LocalDateTime createDate;

@@ -17,6 +17,8 @@
 
 package io.openk9.common.graphql.util.service;
 
+import static java.lang.String.format;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -25,7 +27,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Order;
@@ -35,6 +36,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.exception.InvalidPageSizeException;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.graphql.util.relay.DefaultConnection;
@@ -43,7 +45,6 @@ import io.openk9.common.graphql.util.relay.Edge;
 import io.openk9.common.graphql.util.relay.GraphqlId;
 import io.openk9.common.graphql.util.relay.PageInfo;
 import io.openk9.common.graphql.util.relay.RelayUtil;
-import io.openk9.common.util.SortBy;
 
 import io.smallrye.mutiny.Uni;
 import org.apache.commons.lang3.ClassUtils;
@@ -51,11 +52,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
-import static java.lang.String.format;
+public abstract class GraphQLRelayService<ENTITY extends GraphqlId> {
 
-public abstract class GraphQLService<ENTITY extends GraphqlId> {
-
-	private static final Logger log = Logger.getLogger(GraphQLService.class);
+	private static final Logger log = Logger.getLogger(GraphQLRelayService.class);
 
 	private static final Set<Class<?>> NUMERIC_TYPES = Set.of(
 			Byte.class, Short.class, Integer.class, Long.class,
@@ -445,7 +444,7 @@ public abstract class GraphQLService<ENTITY extends GraphqlId> {
 				log.debug("Error while trying to parse searchText to UUID", e);
 			}
 
-		} else if (GraphQLService.isNumeric(javaType)) {
+		} else if (GraphQLRelayService.isNumeric(javaType)) {
 
 			if (StringUtils.isNumeric(searchText)) {
 				Number number;

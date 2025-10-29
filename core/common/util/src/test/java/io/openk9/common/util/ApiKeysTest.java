@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.security;
+package io.openk9.common.util;
 
-import static io.openk9.apigw.security.ApiKeys.DEFAULT_KEY_PREFIX;
-import static io.openk9.apigw.security.ApiKeys.DEFAULT_RANDOM_BYTES;
-import static io.openk9.apigw.security.ApiKeys.DEFAULT_SALT_BYTES;
-import static io.openk9.apigw.security.ApiKeys.KEY_PART_SEPARATOR;
-import static io.openk9.apigw.security.ApiKeys.SaltDigest;
-import static io.openk9.apigw.security.ApiKeys.generateApiKey;
-import static io.openk9.apigw.security.ApiKeys.generateApiKeyWithChecksum;
-import static io.openk9.apigw.security.ApiKeys.generateSalt;
-import static io.openk9.apigw.security.ApiKeys.sha256;
-import static io.openk9.apigw.security.ApiKeys.sha256WithSalt;
-import static io.openk9.apigw.security.ApiKeys.verifyChecksum;
+import static io.openk9.common.util.ApiKeys.DEFAULT_KEY_PREFIX;
+import static io.openk9.common.util.ApiKeys.DEFAULT_RANDOM_BYTES;
+import static io.openk9.common.util.ApiKeys.DEFAULT_SALT_BYTES;
+import static io.openk9.common.util.ApiKeys.KEY_PART_SEPARATOR;
+import static io.openk9.common.util.ApiKeys.SaltDigest;
+import static io.openk9.common.util.ApiKeys.generateApiKey;
+import static io.openk9.common.util.ApiKeys.generateApiKeyWithChecksum;
+import static io.openk9.common.util.ApiKeys.generateSalt;
+import static io.openk9.common.util.ApiKeys.sha256;
+import static io.openk9.common.util.ApiKeys.sha256WithSalt;
+import static io.openk9.common.util.ApiKeys.verifyChecksum;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;

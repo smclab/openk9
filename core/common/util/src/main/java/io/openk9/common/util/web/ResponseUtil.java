@@ -15,16 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.common.util.web;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import jakarta.validation.ConstraintViolation;
 
-@Data
-@AllArgsConstructor(staticName = "of")
-@NoArgsConstructor
-public class FieldValidator {
-	private String field;
-	private String message;
+public class ResponseUtil {
+
+	public static <T> List<FieldValidator> toFieldValidators(
+		Set<ConstraintViolation<T>> violations) {
+
+		List<FieldValidator> fieldValidators = new ArrayList<>();
+
+		for (ConstraintViolation<T> violation : violations) {
+
+			String field = violation.getPropertyPath().toString();
+			String message = violation.getMessage();
+			FieldValidator apply = FieldValidator.of(field, message);
+			fieldValidators.add(apply);
+		}
+
+		return fieldValidators;
+	}
+
 }

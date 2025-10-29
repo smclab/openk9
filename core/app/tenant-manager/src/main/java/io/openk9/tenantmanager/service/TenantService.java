@@ -18,89 +18,65 @@
 package io.openk9.tenantmanager.service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-import io.openk9.common.graphql.util.service.GraphQLService;
-import io.openk9.common.model.EntityService;
-import io.openk9.common.model.EntityServiceValidatorWrapper;
+import io.openk9.common.util.CompactSnowflakeIdGenerator;
+import io.openk9.common.util.web.Response;
+import io.openk9.common.util.web.ResponseUtil;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
 import io.openk9.tenantmanager.dto.SchemaTuple;
-import io.openk9.tenantmanager.dto.TenantDTO;
+import io.openk9.tenantmanager.dto.TenantRequestDTO;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.model.Tenant_;
 
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.Pool;
-import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
-import org.hibernate.reactive.mutiny.Mutiny;
+import io.vertx.sqlclient.Row;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class TenantService extends GraphQLService<Tenant>
-	implements EntityService<Tenant, TenantDTO> {
+public class TenantService {
 
-	private static final CompactSnowflakeIdGenerator idGenerator =
-		new CompactSnowflakeIdGenerator();
+	public Uni<TenantResponseDTO> findById(Long id) {
 
-	private static Tenant from(Row row) {
-		return Tenant.builder()
-			.id(row.getLong("id"))
-			.createDate(row.getOffsetDateTime("create_date"))
-			.modifiedDate(row.getOffsetDateTime("modified_date"))
-			.schemaName(row.getString("schema_name"))
-			.liquibaseSchemaName(row.getString("liquibase_schema_name"))
-			.virtualHost(row.getString("virtual_host"))
-			.clientId(row.getString("client_id"))
-			.clientSecret(row.getString("client_secret"))
-			.realmName(row.getString("realm_name"))
-			.build();
-	}
-
-	public Uni<Tenant> findById(Long id) {
-
-		return pool.preparedQuery("SELECT * FROM tenant WHERE id = $1")
+		return pool.preparedQuery(FETCH_BY_ID_SQL)
 			.execute(Tuple.of(id))
-			.onItem().transform(RowSet::iterator)
-			.onItem().transform(iterator -> iterator.hasNext() ? from(iterator.next()) : null);
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.onItem().transform(iterator -> iterator.hasNext() ? mapTenantResponseDTO((Row)iterator.next()) : null);
 	}
 
-	public Uni<Tenant> persist(
+	public Uni<TenantResponseDTO> persist(
 		String virtualHost, String schemaName, String liquibaseSchemaName,
 		String realmName, String clientId, String clientSecret,
 		OffsetDateTime createDate, OffsetDateTime modifiedDate) {
 
+		// todo: remove this
 		String issuerUri = "http://localhost:9090/realms/" + realmName;
+
 		var id = idGenerator.nextId();
 
-		return pool.withTransaction(sqlConnection -> sqlConnection.preparedQuery("""
-			INSERT INTO tenant (
-				id, virtual_host,
-				schema_name, liquibase_schema_name,
-				realm_name, client_id, client_secret,
-				create_date, modified_date
-			)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-			""")
+		return pool.withTransaction(sqlConnection -> sqlConnection
+			.preparedQuery(INSERT_SQL)
 			.execute(Tuple.from(new Object[] {
 				id, virtualHost,
 				schemaName, liquibaseSchemaName,
 				realmName, clientId, clientSecret,
 				createDate, modifiedDate
 			}))
-			.flatMap(rowSet -> VertxContextSupport.executeBlocking(() -> {
+			.flatMap(ignored -> VertxContextSupport.executeBlocking(() -> {
 				try {
 					producer.send(
 						TenantManagementEvent.TenantCreated.builder()
@@ -115,16 +91,14 @@ public class TenantService extends GraphQLService<Tenant>
 							.build()
 					);
 
-					return Tenant.builder()
-						.id(id)
+					return TenantResponseDTO.builder()
+						.id(String.valueOf(id))
 						.virtualHost(virtualHost)
 						.schemaName(schemaName)
 						.liquibaseSchemaName(liquibaseSchemaName)
 						.realmName(realmName)
 						.clientId(clientId)
 						.clientSecret(clientSecret)
-						.createDate(createDate)
-						.modifiedDate(modifiedDate)
 						.build();
 				}
 				catch (Throwable e) {
@@ -135,7 +109,7 @@ public class TenantService extends GraphQLService<Tenant>
 
 	}
 
-	public Uni<Tenant> persist(Tenant tenant) {
+	public Uni<TenantResponseDTO> persist(Tenant tenant) {
 		return persist(
 			tenant.getVirtualHost(),
 			tenant.getSchemaName(),
@@ -147,176 +121,94 @@ public class TenantService extends GraphQLService<Tenant>
 			tenant.getModifiedDate());
 	}
 
-	@Override
-	public Uni<Tenant> patch(long id, TenantDTO tenantDTO) {
-		return update(id, mapper.patch(tenantDTO));
-	}
+	public Uni<Response<TenantResponseDTO>> create(TenantRequestDTO tenantRequestDTO) {
+		Set<ConstraintViolation<TenantRequestDTO>> violations = validator.validate(tenantRequestDTO);
 
-	@Override
-	public Uni<Tenant> update(long id, TenantDTO tenantDTO) {
-		return update(id, mapper.map(tenantDTO));
-	}
-
-	@Override
-	public Uni<Tenant> create(TenantDTO tenantDTO) {
-		return persist(mapper.map(tenantDTO));
-	}
-
-	public EntityServiceValidatorWrapper<Tenant, TenantDTO> getValidator() {
-
-		if (entityServiceValidatorWrapper == null) {
-			entityServiceValidatorWrapper =
-				new EntityServiceValidatorWrapper<>(this, validator);
+		if (!violations.isEmpty()) {
+			var fieldValidators = ResponseUtil.toFieldValidators(violations);
+			return Uni.createFrom().item(Response.error(fieldValidators));
 		}
 
-		return entityServiceValidatorWrapper;
-
-	}
-
-	public Uni<Tenant> update(long id, Tenant tenant) {
-		return sf.withTransaction((session, tx) -> {
-
-			Uni<Tenant> tenantUni = session.find(Tenant.class, id);
-
-			return tenantUni.flatMap(t -> {
-
-				if (t != null) {
-					return session.merge(tenant);
-				}
-				else {
-					return Uni.createFrom().failure(
-						new RuntimeException("Tenant not found with id: " + id));
-				}
-			});
-
-		});
+		return persist(mapper.map(tenantRequestDTO))
+			.map(Response::success);
 	}
 
 	public Uni<Void> deleteTenant(long tenantId) {
-
-		return sf.withTransaction((session, tx) -> session
-			.find(Tenant.class, tenantId)
-			.call(session::remove)
+		return pool.withTransaction(sqlConnection -> sqlConnection
+			.preparedQuery(DELETE_SQL)
+			.execute(Tuple.of(tenantId))
 			.replaceWithVoid()
 		);
-
 	}
 
-	public Uni<List<Tenant>> findAllTenant() {
-		return sf.withStatelessSession(
-			s -> {
-
-				CriteriaBuilder cb = sf.getCriteriaBuilder();
-
-				CriteriaQuery<Tenant> query = cb.createQuery(Tenant.class);
-
-				query.from(Tenant.class);
-
-				return s.createQuery(query).getResultList();
-
-			}
-		);
+	public Uni<List<TenantResponseDTO>> findAllTenant() {
+		return pool.preparedQuery(FETCH_ALL_SQL)
+			.execute()
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.map(rows -> {
+				List<TenantResponseDTO> tenants = new ArrayList<>();
+				while (rows.hasNext()) {
+					tenants.add(mapTenantResponseDTO((Row)rows.next()));
+				}
+				return tenants;
+			});
 	}
 
-	public Uni<Tenant> findTenantByVirtualHost(String virtualHost) {
-		return sf.withStatelessSession(
-			s -> {
-
-				CriteriaBuilder cb = sf.getCriteriaBuilder();
-
-				CriteriaQuery<Tenant> query = cb.createQuery(Tenant.class);
-
-				Root<Tenant> root = query.from(Tenant.class);
-
-				query.where(
-					cb.equal(
-						root.get(Tenant_.virtualHost), virtualHost
-					)
-				);
-
-				return s.createQuery(query).getSingleResultOrNull();
-
-			}
-		);
+	public Uni<TenantResponseDTO> findTenantByVirtualHost(String virtualHost) {
+		return pool.preparedQuery(FETCH_BY_VIRTUAL_HOST)
+			.execute(Tuple.of(virtualHost))
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row)it.next()) : null);
 	}
 
 	public Uni<List<String>> findAllSchemaName() {
-		return sf.withStatelessSession(
-			s -> {
-
-				CriteriaBuilder cb = sf.getCriteriaBuilder();
-
-				CriteriaQuery<String> query = cb.createQuery(String.class);
-
-				Root<Tenant> root = query.from(Tenant.class);
-
-				query.select(root.get(Tenant_.schemaName));
-
-				query.distinct(true);
-
-				return s.createQuery(query).getResultList();
-
-			}
-		);
+		return pool.preparedQuery(FETCH_ALL_SCHEMA_NAME_SQL)
+			.execute()
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.map(rows -> {
+				List<String> schemas = new ArrayList<>();
+				while (rows.hasNext()) {
+					Row row = (Row) rows.next();
+					schemas.add(row.getString("schema_name"));
+				}
+				return schemas;
+			});
 	}
 
 	public Uni<List<SchemaTuple>> findAllSchemaNameAndLiquibaseSchemaName() {
-		return sf.withStatelessSession(
-			s -> {
-
-				CriteriaBuilder cb = sf.getCriteriaBuilder();
-
-				CriteriaQuery<SchemaTuple> query = cb.createQuery(SchemaTuple.class);
-
-				Root<Tenant> root = query.from(Tenant.class);
-
-				query.multiselect(
-					root.get(Tenant_.schemaName),
-					root.get(Tenant_.liquibaseSchemaName)
-				);
-
-				query.distinct(true);
-
-				return s.createQuery(query).getResultList();
-
-			}
-		);
+		return pool.preparedQuery(FETCH_ALL_SCHEMA_NAMES_SQL)
+			.execute()
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.map(rows -> {
+				List<SchemaTuple> schemas = new ArrayList<>();
+				while (rows.hasNext()) {
+					Row row = (Row) rows.next();
+					String schemaName = row.getString("schema_name");
+					String liquibaseSchemaName = row.getString("liquibase_schema_name");
+					schemas.add(new SchemaTuple(schemaName, liquibaseSchemaName));
+				}
+				return schemas;
+			});
 	}
 
-	@Override
-	protected Class<Tenant> getEntityClass() {
-		return Tenant.class;
-	}
-
-	@Override
-	protected String[] getSearchFields() {
-		return new String[] {
-			Tenant_.VIRTUAL_HOST,
-			Tenant_.REALM_NAME,
-			Tenant_.CLIENT_ID,
-			Tenant_.SCHEMA_NAME
-		};
-	}
-
-	@Override
-	protected CriteriaBuilder getCriteriaBuilder() {
-		return sf.getCriteriaBuilder();
-	}
-
-	@Override
-	protected Mutiny.SessionFactory getSessionFactory() {
-		return sf;
-	}
-
-	@Override
-	protected final SingularAttribute<Tenant, Long> getIdAttribute() {
-		return Tenant_.id;
+	private static TenantResponseDTO mapTenantResponseDTO(Row row) {
+		return TenantResponseDTO.builder()
+			.id(String.valueOf(row.getLong("id")))
+			.schemaName(row.getString("schema_name"))
+			.liquibaseSchemaName(row.getString("liquibase_schema_name"))
+			.virtualHost(row.getString("virtual_host"))
+			.clientId(row.getString("client_id"))
+			.clientSecret(row.getString("client_secret"))
+			.realmName(row.getString("realm_name"))
+			.build();
 	}
 
 	@Inject
 	Pool pool;
-	@Inject
-	Mutiny.SessionFactory sf;
 	@Inject
 	TenantMapper mapper;
 	@Inject
@@ -324,8 +216,24 @@ public class TenantService extends GraphQLService<Tenant>
 	@Inject
 	TenantManagementEventProducer producer;
 
-	private EntityServiceValidatorWrapper<Tenant, TenantDTO>
-		entityServiceValidatorWrapper;
+	private static final CompactSnowflakeIdGenerator idGenerator =
+		new CompactSnowflakeIdGenerator();
+
+	private static final String INSERT_SQL = """
+		INSERT INTO tenant (
+			id, virtual_host,
+			schema_name, liquibase_schema_name,
+			realm_name, client_id, client_secret,
+			create_date, modified_date
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		""";
+	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
+	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
+	private static final String FETCH_BY_VIRTUAL_HOST = "SELECT * FROM tenant WHERE virtual_host = $1";
+	private static final String FETCH_ALL_SCHEMA_NAME_SQL = "SELECT schema_name FROM tenant";
+	private static final String FETCH_ALL_SCHEMA_NAMES_SQL = "SELECT schema_name, liquibase_schema_name FROM tenant";
+	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";
 
 	private static final Logger log = Logger.getLogger(TenantService.class);
 

@@ -17,8 +17,10 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.common.util.VertxUtil;
+import io.openk9.quarkus.common.VertxUtil;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.TenantService;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -28,7 +30,7 @@ public class Tenant {
 
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}
-	private record TenantCreated(io.openk9.tenantmanager.model.Tenant tenant) implements Command {}
+	private record TenantCreated(TenantResponseDTO tenant) implements Command {}
 
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, TenantService service, ActorRef<Response> replyTo,
@@ -55,8 +57,7 @@ public class Tenant {
 	}
 
 	public sealed interface Response {}
-	public record Success(
-		io.openk9.tenantmanager.model.Tenant tenant) implements Response {}
+	public record Success(TenantResponseDTO tenant) implements Response {}
 	public record Error(String message) implements Response {}
 
 	public static Behavior<Command> create(
@@ -115,9 +116,9 @@ public class Tenant {
 
 	private static Behavior<Command> onTenantCreated(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		io.openk9.tenantmanager.model.Tenant tenant) {
+		TenantResponseDTO tenant) {
 
-		context.getLog().info("tenant created with id: {}", tenant.getId());
+		context.getLog().info("tenant created with id: {}", tenant.id());
 
 		replyTo.tell(new Success(tenant));
 

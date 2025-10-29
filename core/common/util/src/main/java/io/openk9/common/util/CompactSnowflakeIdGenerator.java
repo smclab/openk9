@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.service;
+package io.openk9.common.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

@@ -32,9 +32,9 @@ import jakarta.persistence.criteria.Root;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.model.DataIndexTemplate;

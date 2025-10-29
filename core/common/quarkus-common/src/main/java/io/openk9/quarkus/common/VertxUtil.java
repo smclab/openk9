@@ -15,17 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.quarkus.common;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import jakarta.enterprise.inject.spi.CDI;
 
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.common.vertx.VertxContext;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
 import io.vertx.core.Vertx;
-import jakarta.enterprise.inject.spi.CDI;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class VertxUtil {
 

@@ -18,7 +18,6 @@
 package io.openk9.common.util.ingestion;
 
 public enum PayloadType {
-
 	DOCUMENT,
 	LAST,
 	HALT

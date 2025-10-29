@@ -35,30 +35,27 @@ public class ConfigActiveFalseAndEntityTest {
 
     @RegisterExtension
     static final QuarkusUnitTest config = new QuarkusUnitTest()
-		.withApplicationRoot(jar -> jar.addClass(MyEntity.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.active", "false");
+            .withApplicationRoot(jar -> jar.addClass(MyEntity.class))
+            .withConfigurationResource("application.properties")
+            .overrideConfigKey("quarkus.hibernate-orm.active", "false");
 
     @Test
     public void entityManagerFactory() {
-		EntityManagerFactory entityManagerFactory =
-			Arc.container().instance(EntityManagerFactory.class).get();
+        EntityManagerFactory entityManagerFactory = Arc.container().instance(EntityManagerFactory.class).get();
 
         // The bean is always available to be injected during static init
         // since we don't know whether Hibernate Reactive will be active at runtime.
         // So the bean cannot be null.
         assertThat(entityManagerFactory).isNotNull();
         // However, any attempt to use it at runtime will fail.
-		CreationException e = assertThrows(
-			CreationException.class,
-			() -> entityManagerFactory.getMetamodel()
-		);
+        CreationException e = assertThrows(
+                CreationException.class,
+                () -> entityManagerFactory.getMetamodel());
         assertThat(e.getCause())
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessageContainingAll(
-				"Cannot retrieve the EntityManagerFactory/SessionFactory for persistence unit default-reactive",
-				"Hibernate ORM was deactivated through configuration properties"
-			);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContainingAll(
+                        "Cannot retrieve the EntityManagerFactory/SessionFactory for persistence unit default-reactive",
+                        "Hibernate ORM was deactivated through configuration properties");
     }
 
     @Test
@@ -70,22 +67,19 @@ public class ConfigActiveFalseAndEntityTest {
         // So the bean cannot be null.
         assertThat(sessionFactory).isNotNull();
         // However, any attempt to use it at runtime will fail.
-		CreationException e = assertThrows(
-			CreationException.class,
-			() -> sessionFactory.getMetamodel()
-		);
+        CreationException e = assertThrows(
+                CreationException.class,
+                () -> sessionFactory.getMetamodel());
         assertThat(e.getCause())
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessageContainingAll(
-				"Cannot retrieve the EntityManagerFactory/SessionFactory for persistence unit default-reactive",
-				"Hibernate ORM was deactivated through configuration properties"
-			);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContainingAll(
+                        "Cannot retrieve the EntityManagerFactory/SessionFactory for persistence unit default-reactive",
+                        "Hibernate ORM was deactivated through configuration properties");
     }
 
     @Test
     public void mutinySessionFactory() {
-		Mutiny.SessionFactory sessionFactory =
-			Arc.container().instance(Mutiny.SessionFactory.class).get();
+        Mutiny.SessionFactory sessionFactory = Arc.container().instance(Mutiny.SessionFactory.class).get();
 
         // The bean is always available to be injected during static init
         // since we don't know whether Hibernate Reactive will be active at runtime.
@@ -93,11 +87,10 @@ public class ConfigActiveFalseAndEntityTest {
         assertThat(sessionFactory).isNotNull();
         // However, any attempt to use it at runtime will fail.
         assertThatThrownBy(sessionFactory::getMetamodel)
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessageContainingAll(
-				"Cannot retrieve the Mutiny.SessionFactory for persistence unit default-reactive",
-				"Hibernate Reactive was deactivated through configuration properties"
-			);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContainingAll(
+                        "Cannot retrieve the Mutiny.SessionFactory for persistence unit default-reactive",
+                        "Hibernate Reactive was deactivated through configuration properties");
     }
 
 }

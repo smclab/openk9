@@ -15,9 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
-
-import java.util.List;
+package io.openk9.common.util.web;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,16 +24,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-public class Response<E> {
-	private E entity;
-	private List<FieldValidator> fieldValidators;
-
-	public static <T> Response<T> error(List<FieldValidator> fieldValidators) {
-		return Response.of(null, fieldValidators);
-	}
-
-	public static <T> Response<T> success(T entity) {
-		return Response.of(entity, null);
-	}
-
+public class FieldValidator {
+	private String field;
+	private String message;
 }

@@ -37,6 +37,7 @@ import jakarta.inject.Inject;
 import jakarta.persistence.NoResultException;
 
 import io.openk9.client.grpc.common.StructUtils;
+import io.openk9.common.util.Strings;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
@@ -206,7 +207,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		if (searchConfig != null) {
 
 			var searchConfigName = searchConfig.getName();
-			var pipelineName = io.openk9.common.util.StringUtils.retainsAlnum(searchConfigName);
+			var pipelineName = Strings.retainsAlnum(searchConfigName);
 
 			queryParams.put("search_pipeline", pipelineName);
 

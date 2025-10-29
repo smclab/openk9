@@ -36,10 +36,10 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.FieldValidator;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.mapper.EnrichPipelineMapper;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichItem_;

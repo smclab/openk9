@@ -15,34 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.dto;
+package io.openk9.common.graphql;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
-@AllArgsConstructor
-@RegisterForReflection
-@Data
-public class TenantDTO {
-	@NotBlank
-	@NotNull
-	private String schemaName;
-	@NotBlank
-	@NotNull
-	private String liquibaseSchemaName;
-	@NotBlank
-	@NotNull
-	private String virtualHost;
-	@NotBlank
-	@NotNull
-	private String clientId;
-	private String clientSecret;
-	@NotBlank
-	@NotNull
-	private String realmName;
+@EqualsAndHashCode
+public class SortBy {
+	private String column;
+	@EqualsAndHashCode.Exclude
+	private Direction direction = Direction.ASC;
+
+	public enum Direction {
+		ASC, DESC
+	}
 }

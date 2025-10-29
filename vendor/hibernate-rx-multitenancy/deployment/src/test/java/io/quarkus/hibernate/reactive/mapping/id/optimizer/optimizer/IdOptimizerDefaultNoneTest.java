@@ -29,21 +29,19 @@ public class IdOptimizerDefaultNoneTest extends AbstractIdOptimizerDefaultTest {
 
     @RegisterExtension
     static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(
-				EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
-				EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
-				EntityWithGenericGeneratorAndPooledOptimizer.class,
-				EntityWithGenericGeneratorAndPooledLoOptimizer.class
-			)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.mapping.id.optimizer.default", "none");
+            .withApplicationRoot((jar) -> jar
+                    .addClasses(
+                            EntityWithDefaultGenerator.class, EntityWithGenericGenerator.class,
+                            EntityWithSequenceGenerator.class, EntityWithTableGenerator.class,
+                            EntityWithGenericGeneratorAndPooledOptimizer.class,
+                            EntityWithGenericGeneratorAndPooledLoOptimizer.class)
+                    .addClasses(SchemaUtil.class))
+            .withConfigurationResource("application.properties")
+            .overrideConfigKey("quarkus.hibernate-orm.mapping.id.optimizer.default", "none");
 
     @Override
-	@Test
-	@Disabled(
-		"The 'none' optimizer will produce a different stream of IDs (1 then 51 then 101 then ...)")
+    @Test
+    @Disabled("The 'none' optimizer will produce a different stream of IDs (1 then 51 then 101 then ...)")
     public void ids(UniAsserter asserter) {
         super.ids(asserter);
     }

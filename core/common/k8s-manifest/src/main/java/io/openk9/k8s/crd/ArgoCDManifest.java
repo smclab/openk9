@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import io.openk9.common.util.StringUtils;
+import io.openk9.common.util.Strings;
 
 import io.argoproj.v1alpha1.Application;
 import io.argoproj.v1alpha1.ApplicationSpec;
@@ -47,7 +47,7 @@ public class ArgoCDManifest {
 		var application = new Application();
 
 		var metadata = new ObjectMeta();
-		metadata.setName(StringUtils.withSuffix(manifest.chart(), manifest.tenant()));
+		metadata.setName(Strings.withSuffix(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(manifest.targetNamespace());
 		metadata.setFinalizers(List.of(ARGOCD_FINALIZER));
 

@@ -33,54 +33,49 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 public class AbstractTimezoneDefaultStorageTest {
 
-	private static final LocalDateTime LOCAL_DATE_TIME_TO_TEST = LocalDateTime.of(
-		2017,
-		Month.NOVEMBER,
-		6,
-		19,
-		19,
-		0
-	);
-	public static final ZonedDateTime PERSISTED_ZONED_DATE_TIME = LOCAL_DATE_TIME_TO_TEST.atZone(
-		ZoneId.of("Africa/Cairo"));
-	public static final OffsetDateTime PERSISTED_OFFSET_DATE_TIME =
-		LOCAL_DATE_TIME_TO_TEST.atOffset(ZoneOffset.ofHours(3));
+    private static final LocalDateTime LOCAL_DATE_TIME_TO_TEST = LocalDateTime.of(
+            2017,
+            Month.NOVEMBER,
+            6,
+            19,
+            19,
+            0);
+    public static final ZonedDateTime PERSISTED_ZONED_DATE_TIME = LOCAL_DATE_TIME_TO_TEST.atZone(
+            ZoneId.of("Africa/Cairo"));
+    public static final OffsetDateTime PERSISTED_OFFSET_DATE_TIME = LOCAL_DATE_TIME_TO_TEST.atOffset(ZoneOffset.ofHours(3));
     public static final OffsetTime PERSISTED_OFFSET_TIME = LOCAL_DATE_TIME_TO_TEST.toLocalTime()
-		.atOffset(ZoneOffset.ofHours(3));
+            .atOffset(ZoneOffset.ofHours(3));
 
     @Inject
-	SessionFactory ormSessionFactory;
-	// This is an ORM SessionFactory, but it's backing Hibernate Reactive.
+    SessionFactory ormSessionFactory;
+    // This is an ORM SessionFactory, but it's backing Hibernate Reactive.
 
     @Inject
     Mutiny.SessionFactory sessionFactory;
 
-	protected void assertPersistedThenLoadedValues(
-		UniAsserter asserter, ZonedDateTime expectedZonedDateTime,
-		OffsetDateTime expectedOffsetDateTime, OffsetTime expectedOffsetTime) {
+    protected void assertPersistedThenLoadedValues(
+            UniAsserter asserter, ZonedDateTime expectedZonedDateTime,
+            OffsetDateTime expectedOffsetDateTime, OffsetTime expectedOffsetTime) {
         asserter.assertThat(
-			() -> sessionFactory.withTransaction(session -> {
-					var entity = new EntityWithTimezones(
-						PERSISTED_ZONED_DATE_TIME,
-						PERSISTED_OFFSET_DATE_TIME,
-						PERSISTED_OFFSET_TIME
-					);
+                () -> sessionFactory.withTransaction(session -> {
+                    var entity = new EntityWithTimezones(
+                            PERSISTED_ZONED_DATE_TIME,
+                            PERSISTED_OFFSET_DATE_TIME,
+                            PERSISTED_OFFSET_TIME);
                     return session.persist(entity).replaceWith(() -> entity.id);
                 })
-				.chain(id -> sessionFactory.withTransaction(session -> session.find(
-					EntityWithTimezones.class,
-					id
-				))),
-			entity -> {
-				SoftAssertions.assertSoftly(assertions -> {
-					assertions.assertThat(entity).extracting("zonedDateTime").isEqualTo(
-						expectedZonedDateTime);
-					assertions.assertThat(entity).extracting("offsetDateTime").isEqualTo(
-						expectedOffsetDateTime);
-					assertions.assertThat(entity).extracting("offsetTime").isEqualTo(
-						expectedOffsetTime);
-				});
-			}
-		);
+                        .chain(id -> sessionFactory.withTransaction(session -> session.find(
+                                EntityWithTimezones.class,
+                                id))),
+                entity -> {
+                    SoftAssertions.assertSoftly(assertions -> {
+                        assertions.assertThat(entity).extracting("zonedDateTime").isEqualTo(
+                                expectedZonedDateTime);
+                        assertions.assertThat(entity).extracting("offsetDateTime").isEqualTo(
+                                expectedOffsetDateTime);
+                        assertions.assertThat(entity).extracting("offsetTime").isEqualTo(
+                                expectedOffsetTime);
+                    });
+                });
     }
 }

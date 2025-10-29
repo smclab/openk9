@@ -17,10 +17,11 @@
 
 package io.openk9.tenantmanager.provisioning.plugindriver;
 
-import io.openk9.common.util.VertxUtil;
 import io.openk9.datasource.grpc.CreatePluginDriverResponse;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
 import io.openk9.datasource.grpc.Datasource;
+import io.openk9.quarkus.common.VertxUtil;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;

@@ -18,27 +18,28 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
-import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.SupervisorStrategy;
 import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 public class TenantManagerActorSystem {
@@ -53,7 +54,7 @@ public class TenantManagerActorSystem {
 		);
 	}
 
-	public Uni<Tenant> startCreateTenant(String virtualHost, String realmName) {
+	public Uni<TenantResponseDTO> startCreateTenant(String virtualHost, String realmName) {
 
 		CompletionStage<Supervisor.Response> ask =
 			AskPattern.ask(

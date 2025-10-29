@@ -25,7 +25,7 @@ public class NoEntitiesTest {
 
     @RegisterExtension
     static QuarkusUnitTest runner = new QuarkusUnitTest()
-		.withEmptyApplication();
+            .withEmptyApplication();
 
     @Test
     public void testNoEntities() {

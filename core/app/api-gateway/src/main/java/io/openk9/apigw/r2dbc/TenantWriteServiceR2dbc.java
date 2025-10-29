@@ -19,6 +19,7 @@ package io.openk9.apigw.r2dbc;
 
 import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.RoutePath;
+import io.openk9.common.util.CompactSnowflakeIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

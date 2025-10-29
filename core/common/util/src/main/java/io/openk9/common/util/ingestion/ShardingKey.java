@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.common.util;
+package io.openk9.common.util.ingestion;
 
 import java.util.Arrays;
 import java.util.Objects;
