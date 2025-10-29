@@ -7,22 +7,6 @@ import { Milestone } from "../components/Milestone";
 const milestones = [  
   {
     completed: true,
-    title: "v1.7.1",
-    date: "Jun 20, 2024",
-    imageSrc: "",
-    releaseUrl: "https://github.com/smclab/openk9/releases/tag/v1.7.1",
-    notes: "",
-    description: (
-      <ul>
-        <li>I18n support</li>
-        <li>Support to deploy connectors using ArgoCD</li>
-        <li>Added autocomplete to Query Analysis</li>
-        <li>New components for Search Frontend library</li>
-      </ul>
-    ),
-  },
-  {
-    completed: true,
     title: "v2.0.0",
     date: "Oct 22, 2024",
     imageSrc: "",
@@ -39,11 +23,12 @@ const milestones = [
     ),
   },
   {
-    completed: false,
+    completed: true,
     title: "v3.0.0",
-    date: "will be released approximately at the end of April 2025",
+    date: "Aug 9, 2025",
     imageSrc: "",
-    notes: "Following aspects ",
+    releaseUrl: "https://github.com/smclab/openk9/releases/tag/v3.0.0",
+    notes: "",
     description: (
       <ul>
         <li>New Admin UI</li>
@@ -55,12 +40,40 @@ const milestones = [
   },
   {
     completed: false,
-    title: "v4.0.0",
-    date: "will be released approximately at the end of November 2025",
+    title: "v3.1.0",
+    date: "will be released approximately at the end of December 2025",
     imageSrc: "",
-    notes: "It will be packed with new features as it will contain approximately 6 months of work, whereas our usual previews contain 2 month of work.",
+    notes: "It will be packed with new features as it will contain approximately 3 months of work.",
     description: (
-      <p></p>
+      <ul>
+        <li>Implementation of the Rag part via agent ai</li>
+        <li>Support to monitor and evalutate Rag pipeline</li>
+        <li>New enrich modules to extract, chunk e and embed data</li>
+        <li>Refactoring of autocomplete feature</li>
+        <li>API gateway development and API security with added API key authentication</li>
+        <li>Archetypes for creating connectors and enrichers</li>
+        <li>UX improvement on the admin ui</li>
+        <li>Improvements to search and Rag configuration</li>
+      </ul>
+    ),
+  },
+    {
+    completed: false,
+    title: "v3.2.0",
+    date: "will be released approximately at the end of March 2025",
+    imageSrc: "",
+    notes: "It will be packed with new features as it will contain approximately 3 months of work.",
+    description: (
+      <ul>
+        <li>Introducing Guardrails into the Rag pipeline</li>
+        <li>Query routing and understanding</li>
+        <li>User profile management for contextualized search</li>
+        <li>Analytics for collecting search and indexing metrics</li>
+        <li>API gateway development and API security with added API key authentication</li>
+        <li>Archetypes for creating connectors and enrichers</li>
+        <li>UX improvement on the admin ui</li>
+        <li>Added the ability to index data in push modals from outside</li>
+      </ul>
     ),
   },
 ];
@@ -70,16 +83,16 @@ function Roadmap() {
     <Layout title="OpenK9">
       <header>
         <div className="openK9-wrapper">
-{/*           <h1 className={styles.pageTitle}>Roadmap</h1>
+           <h1 className={styles.pageTitle}>Roadmap</h1>
             Here you can find our product roadmap.
-            We work realising LTS version approximately every 4/6 months. 
-            During period between two LTS versions we release also preview versions (approximately every 2 months).<br></br><br></br>
+            We work realising new versions approximately every 3 months. 
+            {/* During period between two LTS versions we release also preview versions (approximately every 2 months).<br></br><br></br> */}
             <p>To check previous versions view <a href="https://github.com/smclab/openk9/releases">Releases</a> on Github Repository.
             <br></br>
             For every release is possibile to search on Github Wiki for release detailed changelog, migration guide and compatibility matrix.
         <p>End of life information are also provided.</p>
-        </p> */}
-        <h1 className={styles.pageTitle}>
+        </p>
+        {/* <h1 className={styles.pageTitle}>
                       This Page is{" "}
                       <span className={clsx(styles.primary, styles.secondRow)}>
                         Coming Soon
@@ -92,10 +105,10 @@ function Roadmap() {
                     <p className={styles.pageDescription}>
                       In the meantime, you can check out{" "}
                       <a href="https://github.com/smclab/openk9/tree/main/connectors">GitHub repository</a> for universal connectors available.
-                    </p>
+                    </p> */}
         </div>
       </header>
-      {/* <main>
+      <main>
         <div className="openK9-wrapper">
           {milestones &&
             milestones.length > 0 &&
@@ -124,7 +137,7 @@ function Roadmap() {
       </ul>
           </div>
         </div>
-        </footer>*/}
+        </footer>
     </Layout> 
   );
 }
