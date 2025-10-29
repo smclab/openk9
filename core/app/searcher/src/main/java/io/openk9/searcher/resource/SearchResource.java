@@ -31,7 +31,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -638,15 +637,24 @@ public class SearchResource {
 				_validateAutocorrectionConfig(autocorrectionConfig);
 
 				// retrieve the searchToken associated with the text entered by the user in the
-				// search input and extract the query text if present.
-				var queryText = searchRequest.getSearchQuery().stream()
+				// search input.
+				var searchTokenUserInput = searchRequest.getSearchQuery().stream()
 					.filter(ParserSearchToken::isSearch)
-					.findFirst()
+					.findFirst();
+
+				// extract the query text if present.
+				var queryText = searchTokenUserInput
 					.map(this::_extractAndValidateQueryText)
 					.orElseThrow(() -> new AutocorrectionException(
 							"Autocorrection was not performed because no search token with isSearch is present."
 						)
 					);
+
+				// extract, if present, the field that override the searchWithCorrection configuration
+				// otherwise use the Autocorrection configuration value.
+				var doSearchWithCorrection = searchTokenUserInput
+					.map(ParserSearchToken::getOverrideSearchWithCorrection)
+					.orElse(autocorrectionConfig.getEnableSearchWithCorrection());
 
 				// Create the autocorrection request for OpenSearch according to the
 				// autocorrection configurations and return its JSON representation
@@ -654,9 +662,9 @@ public class SearchResource {
 					_createAutocorrectionRequest(autocorrectionConfig, queryText);
 
 				return new AutocorrectionContext(
-					autocorrectionConfig,
 					autocorrectionQuery,
-					queryText
+					queryText,
+					doSearchWithCorrection
 				);
 			});
 	}
@@ -932,7 +940,8 @@ public class SearchResource {
 	 * Retrieves autocorrection suggestions from OpenSearch using the term suggester.
 	 *
 	 * <p>This method executes an autocorrection query against OpenSearch using the provided context,
-	 * which contains the autocorrection configuration, the generated query, and the text to be corrected.
+	 * which contains the generated query, the text to be corrected, and The configuration that
+	 * determines whether the search should use the corrected query.
 	 * The method uses distributed tracing to track the OpenSearch request execution.
 	 *
 	 * @param autocorrectionContext a context object containing the autocorrection configuration,
@@ -950,7 +959,6 @@ public class SearchResource {
 	protected Uni<AutocorrectionDTO> _getAutocorrectionSuggest(
 			AutocorrectionContext autocorrectionContext) {
 
-		var autocorrectionConfig = autocorrectionContext.configurations();
 		var autocorrectionRequest = autocorrectionContext.query();
 		var queryText = autocorrectionContext.textToCorrect();
 
@@ -986,7 +994,7 @@ public class SearchResource {
 				_buildAutocorrectionResponse(
 					queryText,
 					voidSearchResponse,
-					autocorrectionConfig.getEnableSearchWithCorrection()
+					autocorrectionContext.doSearchWithCorrection()
 				)
 			);
 	}
@@ -1451,8 +1459,8 @@ public class SearchResource {
 	}
 
 	protected record AutocorrectionContext(
-		AutocorrectionConfigurationsResponse configurations,
 		org.opensearch.client.opensearch.core.SearchRequest query,
-		String textToCorrect
+		String textToCorrect,
+		boolean doSearchWithCorrection
 	) {}
 }
