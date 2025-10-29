@@ -631,18 +631,22 @@ public class SearchResource {
 			.setVirtualHost(virtualHost)
 			.build();
 
-		// retrieve the searchToken associated with the text entered by the user in the search input.
-		var searchTokenUserInput = searchRequest.getSearchQuery().stream()
-			.filter(ParserSearchToken::isSearch)
-			.findFirst();
-
 		// retrieve Autocorrection configurations
 		return _getAutocorrectionConfigurations(autocorrectionConfigurationsRequest)
 			.map(autocorrectionConfig -> {
 
 				_validateAutocorrectionConfig(autocorrectionConfig);
 
-				var queryText = _extractAndValidateQueryText(searchTokenUserInput);
+				// retrieve the searchToken associated with the text entered by the user in the
+				// search input and extract the query text if present.
+				var queryText = searchRequest.getSearchQuery().stream()
+					.filter(ParserSearchToken::isSearch)
+					.findFirst()
+					.map(this::_extractAndValidateQueryText)
+					.orElseThrow(() -> new AutocorrectionException(
+							"Autocorrection was not performed because no search token with isSearch is present."
+						)
+					);
 
 				// Create the autocorrection request for OpenSearch according to the
 				// autocorrection configurations and return its JSON representation
@@ -658,7 +662,7 @@ public class SearchResource {
 	}
 
 	/**
-	 * Parses the OpenSearch autocorrection response an {@link AutocorrectionDTO}.
+	 * Parses the OpenSearch autocorrection response an an {@link AutocorrectionDTO}.
 	 * <p>
 	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
 	 * and constructs an {@link AutocorrectionDTO} containing the original text, correction details,
@@ -827,28 +831,21 @@ public class SearchResource {
 	 *
 	 * <p>This method performs the following validations:
 	 * <ul>
-	 *   <li>Ensures the search token is present</li>
 	 *   <li>Ensures the search token contains exactly one value</li>
 	 *   <li>Ensures the query text is not null or empty</li>
 	 * </ul>
 	 *
-	 * @param searchTokenUserInput an Optional containing the search token to validate
+	 * @param searchTokenUserInput the search token to validate
 	 * @return the validated query text entered by the user in the search input
-	 * @throws AutocorrectionException if the search token is absent
 	 * @throws AutocorrectionException if the search token contains 0 or more than 1 values
 	 * @throws AutocorrectionException if the query text is null or empty
 	 *
 	 * @see ParserSearchToken
 	 * @see AutocorrectionException
 	 */
-	private String _extractAndValidateQueryText(Optional<ParserSearchToken> searchTokenUserInput) {
-		if (searchTokenUserInput.isEmpty()) {
-			throw new AutocorrectionException(
-				"Autocorrection was not performed because no search token with isSearch is present."
-			);
-		}
+	private String _extractAndValidateQueryText(ParserSearchToken searchTokenUserInput) {
 
-		var searchTokenUserInputValues = searchTokenUserInput.get().getValues();
+		var searchTokenUserInputValues = searchTokenUserInput.getValues();
 
 		if (searchTokenUserInputValues.size() != 1) {
 			throw new AutocorrectionException(
