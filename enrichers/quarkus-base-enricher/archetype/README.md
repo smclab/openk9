@@ -35,7 +35,7 @@ These classes implement the REST classes from the library and adapt their behavi
 
 
 - **FormResourceImpl.java**  
-  It exposes `/form` endpoint that returns the enricher configuration.
+  It exposes `/form` endpoint that returns the form representation of the enricher configuration.
   ```json
   {
     "fields": [

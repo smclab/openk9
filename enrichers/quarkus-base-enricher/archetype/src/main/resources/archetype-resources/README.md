@@ -30,7 +30,7 @@ $h2 REST Classes
 
 
 - **FormResourceImpl.java**  
-  It exposes `/form` endpoint that returns the enricher configuration.
+  It exposes `/form` endpoint that returns the form representation of the enricher configuration.
   ```json
   {
     "fields": [
