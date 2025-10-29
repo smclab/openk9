@@ -99,6 +99,7 @@ def get_sample():
 	return data
 
 
+"""
 @app.get("/form",
         tags=["sitemap-form"],
         summary="Get form structure of Sitemap request",
@@ -113,3 +114,4 @@ def get_sitemap_form():
 	f.close()
 
 	return data
+"""
