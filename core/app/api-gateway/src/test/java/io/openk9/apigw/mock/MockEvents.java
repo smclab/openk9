@@ -15,14 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.poc;
+package io.openk9.apigw.mock;
 
 import java.util.List;
 import java.util.Map;
 
 import io.openk9.event.tenant.TenantManagementEvent;
 
-public class Events {
+public class MockEvents {
 
 	public static List<TenantManagementEvent.TenantCreated> tenantCreatedEvents() {
 		return List.of(

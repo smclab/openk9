@@ -19,6 +19,8 @@ package io.openk9.apigw;
 
 import java.util.List;
 
+import io.openk9.apigw.mock.MockOAuth2Configuration;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -42,7 +44,7 @@ import reactor.util.function.Tuples;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(TestConfigurations.class)
+@Import(MockOAuth2Configuration.class)
 class ApiGatewaySecurityTest {
 
 	@Container

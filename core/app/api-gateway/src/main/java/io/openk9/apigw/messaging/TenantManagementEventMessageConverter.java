@@ -56,7 +56,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			Message message = new Message(body, messageProperties);
 
 			if (log.isDebugEnabled()) {
-				log.debug("serialized message: {}", message);
+				log.debug("Serialized message: {}", message);
 			}
 
 			return message;

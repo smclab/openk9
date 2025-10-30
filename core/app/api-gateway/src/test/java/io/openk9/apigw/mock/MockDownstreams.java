@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.poc;
+package io.openk9.apigw.mock;
 
 import java.text.ParseException;
 
@@ -23,7 +23,6 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
@@ -39,8 +38,7 @@ import reactor.netty.http.server.HttpServer;
  */
 @Slf4j
 @Configuration
-@Profile({"test", "poc"})
-public class Downstreams {
+public class MockDownstreams {
 
 
 	private static final String DATASOURCE_RESPONSE_BODY = """ 

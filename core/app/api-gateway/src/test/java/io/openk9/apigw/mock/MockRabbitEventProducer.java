@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.messaging;
+package io.openk9.apigw.mock;
 
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RabbitTenantManagementEventProducer
+public class MockRabbitEventProducer
 	implements TenantManagementEventProducer {
 
 	private final AmqpTemplate amqp;

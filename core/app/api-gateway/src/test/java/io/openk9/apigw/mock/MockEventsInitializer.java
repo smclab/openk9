@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw.poc;
+package io.openk9.apigw.mock;
 
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DBInitializer implements ApplicationRunner {
+public class MockEventsInitializer implements ApplicationRunner {
 
 	private final TenantManagementEventProducer producer;
 
@@ -39,10 +39,10 @@ public class DBInitializer implements ApplicationRunner {
 		log.info("Sending amqp messages...");
 
 		try {
-			for (TenantManagementEvent.TenantCreated tenantCreated : Events.tenantCreatedEvents()) {
+			for (TenantManagementEvent.TenantCreated tenantCreated : MockEvents.tenantCreatedEvents()) {
 				producer.send(tenantCreated);
 			}
-			for (TenantManagementEvent.ApiKeyCreated apiKeyCreated : Events.apiKeyCreatedEvents()) {
+			for (TenantManagementEvent.ApiKeyCreated apiKeyCreated : MockEvents.apiKeyCreatedEvents()) {
 				producer.send(apiKeyCreated);
 			}
 		}

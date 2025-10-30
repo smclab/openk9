@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.apigw;
+package io.openk9.apigw.mock;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Configuration
-public class TestConfigurations {
+public class MockOAuth2Configuration {
 
 	@Bean
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver() {

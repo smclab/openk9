@@ -53,10 +53,10 @@ public class RabbitAdapterConfiguration {
 		}
 
 		switch (payload) {
-			case TenantManagementEvent.ApiKeyCreated event -> consumer.handleApiKeyCreatedEvent(event);
-			case TenantManagementEvent.TenantCreated event -> consumer.handleTenantCreatedEvent(event);
-			case TenantManagementEvent.TenantDeleted event -> consumer.handleTenantDeletedEvent(event);
-			case TenantManagementEvent.TenantUpdated event -> consumer.handleTenantUpdatedEvent(event);
+			case TenantManagementEvent.ApiKeyCreated e -> consumer.handleApiKeyCreatedEvent(e);
+			case TenantManagementEvent.TenantCreated e -> consumer.handleTenantCreatedEvent(e);
+			case TenantManagementEvent.TenantDeleted e -> consumer.handleTenantDeletedEvent(e);
+			case TenantManagementEvent.TenantUpdated e -> consumer.handleTenantUpdatedEvent(e);
 		}
 	}
 }
