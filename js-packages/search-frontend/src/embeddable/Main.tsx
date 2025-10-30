@@ -132,6 +132,7 @@ export function Main({
   const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
+  const [isCorrectionCallback, setIsCorrectionCallback] = React.useState(false);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const {
@@ -184,6 +185,8 @@ export function Main({
       selectionsState,
       selectionsDispatch,
       retrieveType,
+      isCorrectionCallback,
+      setIsCorrectionCallback,
     });
   const { isQueryAnalysisCompleteSuggestions, spansSuggestions } =
     useQueryAnalysisWithoutSearch({
@@ -359,6 +362,7 @@ export function Main({
               });
             }}
             information={configuration.correction?.information || (() => null)}
+            onCorrectionCallback={() => setIsCorrectionCallback(true)}
           />
         </I18nextProvider>,
         configuration.correction ? configuration.correction.element : null,
@@ -1227,6 +1231,8 @@ function useSearch({
   selectionsState,
   selectionsDispatch,
   retrieveType,
+  isCorrectionCallback,
+  setIsCorrectionCallback,
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
@@ -1248,6 +1254,8 @@ function useSearch({
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   retrieveType?: string;
+  isCorrectionCallback: boolean;
+  setIsCorrectionCallback: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -1290,11 +1298,22 @@ function useSearch({
     }
     return previousSearchTokens;
   }, [selectionsState.text, spans]) as SearchToken[];
-  const newSearch: SearchToken[] = searchTokens
-    .filter((search) => search)
-    .map((searchToken) => {
-      return { ...searchToken, search: true };
-    });
+  const newSearch: SearchToken[] = React.useMemo(() => {
+    return searchTokens
+      .filter((search) => search)
+      .map((searchToken) => {
+        if (isCorrectionCallback) {
+          setIsCorrectionCallback(false);
+          console.log("entrooo");
+          return {
+            ...searchToken,
+            search: true,
+            overrideSearchWithCorrection: false,
+          };
+        }
+        return { ...searchToken, search: true };
+      });
+  }, [searchTokens, isCorrectionCallback]);
 
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),

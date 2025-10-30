@@ -1,5 +1,6 @@
 import React, { JSX } from "react";
 import { useRange } from "./useRange";
+import { set } from "lodash";
 
 type CorrectionFunction = {
   information: (
@@ -8,13 +9,15 @@ type CorrectionFunction = {
     confirm: () => void,
   ) => React.ReactNode;
   setSearch: (newSearch: string) => void;
+  onCorrectionCallback?: () => void; // Add this optional prop
 };
 
 export default function Correction({
   information,
   setSearch,
+  onCorrectionCallback,
 }: CorrectionFunction): JSX.Element | null {
-  const { correction } = useRange();
+  const { correction, setOverrideSearchWithCorrection } = useRange();
 
   if (!correction || !correction.autocorrectionText) return null;
 
@@ -24,7 +27,9 @@ export default function Correction({
   return (
     <>
       {information(corrected, original, () => {
-        setSearch(corrected);
+        setSearch(original);
+        setOverrideSearchWithCorrection(false);
+        onCorrectionCallback?.(); // Call the callback when correction happens
       })}
     </>
   );

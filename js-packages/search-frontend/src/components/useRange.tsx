@@ -13,6 +13,8 @@ interface RangeContextType {
   resetPage: (pageSize?: number) => void;
   correction: AutocorrectionType | undefined | null;
   setCorrection: (c: AutocorrectionType | undefined | null) => void;
+  overrideSearchWithCorrection: boolean;
+  setOverrideSearchWithCorrection: (v: boolean) => void;
 }
 
 const RangeContext = React.createContext<RangeContextType | undefined>(
@@ -29,7 +31,8 @@ export const RangeProvider: React.FC<{
   const [correction, setCorrection] = React.useState<
     AutocorrectionType | undefined | null
   >(null);
-
+  const [overrideSearchWithCorrection, setOverrideSearchWithCorrection] =
+    React.useState(true);
   const resetPage = React.useCallback(
     (pageSize?: number) => {
       const size = pageSize ?? range[1] ?? defaultPageSize;
@@ -51,6 +54,8 @@ export const RangeProvider: React.FC<{
         resetPage,
         correction,
         setCorrection,
+        overrideSearchWithCorrection,
+        setOverrideSearchWithCorrection,
       }}
     >
       {children}
