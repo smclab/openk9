@@ -17,6 +17,8 @@
 
 package io.openk9.apigw.messaging;
 
+import java.util.Collections;
+
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventConsumer;
 
@@ -38,7 +40,11 @@ public class RabbitAdapterConfiguration {
 
 	@Bean
 	public Queue tenantEventQueue() {
-		return new Queue(TenantManagementEvent.TOPIC);
+		return new Queue(
+			TenantManagementEvent.TOPIC,
+			true,
+			false, false,
+			Collections.singletonMap("x-queue-type", "stream"));
 	}
 
 	@Bean
