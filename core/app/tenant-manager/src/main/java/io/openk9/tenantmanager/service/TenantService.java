@@ -86,7 +86,7 @@ public class TenantService {
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
 								"DATASOURCE", "OAUTH2",
-								"SEARCHER", "NO_OAUTH"
+								"SEARCHER", "NO_AUTH"
 							))
 							.build()
 					);
