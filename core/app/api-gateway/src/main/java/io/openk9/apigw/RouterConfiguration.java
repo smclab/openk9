@@ -21,6 +21,7 @@ import io.openk9.apigw.security.RoutePath;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -35,12 +36,21 @@ public class RouterConfiguration {
 	@Autowired(required = false)
 	int searcherPort;
 
+	@Value("${io.openk9.apigw.datasource-url:}")
+	String datasourceUrl;
+	@Value("${io.openk9.apigw.searcher-url:}")
+	String searcherUrl;
+
 	@Bean
 	RouteLocator locatorBuilder(RouteLocatorBuilder builder) {
 
-		log.info(
-			"datasource port: {}, searcher port: {}",
-			datasourcePort, searcherPort);
+		String datasource = datasourcePort > 0
+			? "http://localhost:" + datasourcePort
+			: datasourceUrl;
+
+		String searcher = searcherPort > 0
+			? "http://localhost:" + searcherPort
+			: searcherUrl;
 
 		var routes = builder.routes();
 
@@ -49,12 +59,12 @@ public class RouterConfiguration {
 				case SEARCHER -> routes.route(
 					RoutePath.SEARCHER.name(), r -> r
 					.path(RoutePath.SEARCHER.getAntPattern())
-					.uri("http://localhost:" + searcherPort)
+					.uri(searcher)
 				);
 				case DATASOURCE -> routes.route(
 					RoutePath.DATASOURCE.name(), r -> r
 					.path(RoutePath.DATASOURCE.getAntPattern())
-					.uri("http://localhost:" + datasourcePort)
+					.uri(datasource)
 				);
 				case ANY -> routes.route(
 					RoutePath.ANY.name(), r -> r
