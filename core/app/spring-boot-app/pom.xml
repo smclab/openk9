@@ -76,6 +76,16 @@
 					<excludedGroups>${junit-excluded-groups}</excludedGroups>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>${jib-plugin.version}</version>
+				<configuration>
+					<to>
+						<image>openk9/${project.artifactId}</image>
+					</to>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
