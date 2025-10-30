@@ -1,0 +1,7 @@
+---
+apiVersion: "v2"
+name: "openk9-docling-processor"
+description: "A Helm chart for Kubernetes"
+type: "application"
+version: "3.1.0-SNAPSHOT"
+appVersion: "3.1.0-SNAPSHOT"
