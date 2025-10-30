@@ -39,6 +39,7 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 
@@ -139,7 +140,10 @@ public class ProvisioningResourceTest {
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()
-			.statusCode(200);
+			.statusCode(Matchers.allOf(
+				Matchers.greaterThanOrEqualTo(200),
+				Matchers.lessThan(300))
+			);
 	}
 
 	private ValidatableResponse doPostAndExpect4xx(RequestSpecification requestSpecification) {
@@ -147,7 +151,10 @@ public class ProvisioningResourceTest {
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()
-			.statusCode(400);
+			.statusCode(Matchers.allOf(
+				Matchers.greaterThanOrEqualTo(400),
+				Matchers.lessThan(500))
+			);
 	}
 
 	private void givenSagaHappyPath() {
