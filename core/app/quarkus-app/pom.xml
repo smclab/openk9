@@ -33,7 +33,7 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<junit-excluded-groups>performance-test,io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
+		<junit-excluded-groups>io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
 	</properties>
 
 	<profiles>

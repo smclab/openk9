@@ -29,6 +29,20 @@
 	<artifactId>util</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<junit-excluded-groups>performance-test</junit-excluded-groups>
+	</properties>
+
+	<profiles>
+		<profile>
+			<!-- enable junit long-running tests -->
+			<id>long-running-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -60,6 +74,13 @@
 			<plugin>
 				<groupId>io.smallrye</groupId>
 				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<excludedGroups>${junit-excluded-groups}</excludedGroups>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
