@@ -17,8 +17,6 @@
 
 package io.openk9.apigw.messaging;
 
-import java.util.Collections;
-
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventConsumer;
 
@@ -26,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -34,17 +33,17 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
+// todo using rabbit stream
 public class RabbitAdapterConfiguration {
 
 	private final TenantManagementEventConsumer consumer;
 
 	@Bean
 	public Queue tenantEventQueue() {
-		return new Queue(
-			TenantManagementEvent.TOPIC,
-			true,
-			false, false,
-			Collections.singletonMap("x-queue-type", "stream"));
+		return QueueBuilder
+			.durable(TenantManagementEvent.TOPIC)
+			.stream()
+			.build();
 	}
 
 	@Bean
