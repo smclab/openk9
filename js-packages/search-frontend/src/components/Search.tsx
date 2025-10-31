@@ -385,16 +385,14 @@ export function Search({
               clearSearch();
             }}
           >
-            <div>
-              <span
-                className="openk9--search-delete-span-icon"
-                css={css`
-                  cursor: pointer;
-                `}
-              >
-                <DeleteLogo />
-              </span>
-            </div>
+            <span
+              className="openk9--search-delete-span-icon"
+              css={css`
+                cursor: pointer;
+              `}
+            >
+              <DeleteLogo />
+            </span>
           </button>
         </div>
         {btnSearch && (

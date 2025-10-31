@@ -40,21 +40,21 @@ export function TokenSelect({
 
   const statusStyles: Record<Status, any> = {
     "can-select": css`
-      display: ${isColorSearch ? "default" : "none"};
+      display: ${isColorSearch ? "block" : "none"};
       color: ${isColorSearch
         ? "var(--openk9-embeddable-search--primary-color)"
         : "inerith"};
     `,
     "auto-selected": css`
-      display: ${isColorSearch ? "default" : "none"};
+      display: ${isColorSearch ? "block" : "none"};
       color: lightseagreen;
     `,
     "has-selected": css`
-      display: ${isColorSearch ? "default" : "none"};
+      display: ${isColorSearch ? "block" : "none"};
       color: dodgerblue;
     `,
     "not-interactive": css`
-      display: ${isColorSearch ? "default" : "none"};
+      display: ${isColorSearch ? "block" : "none"};
       color: black;
     `,
   };
