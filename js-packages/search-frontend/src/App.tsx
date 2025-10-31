@@ -24,6 +24,10 @@ import { FilterSvg } from "./svgElement/FiltersSvg";
 import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
 import { User } from "./svgElement/UserSvg";
 import { CloseIcon } from "./svgElement/CloseSvg";
+import "./components/SortResultList.css";
+import "./components/dateRangePickerVertical.css";
+import "./components/dataRangePicker.css";
+import "react-dates/lib/css/_datepicker.css";
 
 const isKeycloakEnabled = true;
 const isChatbotEnabled = true;
@@ -583,7 +587,7 @@ export function App() {
             padding-inline: 16px;
           }`}
         ></div>
-        <div
+        {/* <div
           css={css`
             padding-inline: 16px;
             padding-top: 16px;
@@ -693,7 +697,7 @@ export function App() {
               })
             }
           ></div>
-        )}
+        )} */}
         <div
           className="openk9-filters-container openk9-box"
           ref={(element) =>

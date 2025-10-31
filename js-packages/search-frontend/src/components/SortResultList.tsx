@@ -5,7 +5,6 @@ import { useQuery } from "react-query";
 import { SortField, useOpenK9Client } from "../components/client";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
-import "./SortResultList.css";
 import { setSortResultsType } from "./SortResults";
 
 function SortResultList({

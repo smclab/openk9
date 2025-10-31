@@ -1,10 +1,8 @@
 import React from "react";
 import { SearchDateRange } from "../embeddable/Main";
-import "./dataRangePicker.css";
 import { useTranslation } from "react-i18next";
 import "react-dates/initialize";
 import { DateRangePicker } from "react-dates";
-import "react-dates/lib/css/_datepicker.css";
 import { CreateLabel } from "./Filters";
 import moment from "moment";
 import { DeleteLogo } from "./DeleteLogo";

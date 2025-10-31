@@ -1,7 +1,6 @@
 import React from "react";
 import { SingleDatePicker } from "react-dates";
 import { SearchDateRange } from "../embeddable/Main";
-import "./dateRangePickerVertical.css";
 import moment from "moment";
 import { useTranslation } from "react-i18next";
 import { mappingNameLanguage } from "./CalendarModal";

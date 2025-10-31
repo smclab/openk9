@@ -602,6 +602,7 @@ export function useInfiniteResults<E>(
     },
   );
 }
+
 export function recoverySearchQueryAndSort(searchQuery: SearchToken[]) {
   const searchQueryData = searchQuery.filter(
     (info) => !info.hasOwnProperty("isSort"),

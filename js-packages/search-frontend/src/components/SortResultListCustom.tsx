@@ -1,7 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import Select, { AriaOnFocus, components } from "react-select";
-import "./SortResultList.css";
 import { setSortResultsType } from "./SortResults";
 
 function SortResultList({
