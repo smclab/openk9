@@ -1,35 +1,44 @@
-FROM python:3.11.6
+FROM python:3.11.6-slim
 
-# Install utils
-RUN  apt-get update \
-    && apt-get install -y wget \
-    && apt-get install -y unzip \
-    && apt-get install -y dos2unix \
+# Install system deps (Playwright needs these)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl wget unzip dos2unix \
+    libglib2.0-0 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+    libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+    libgbm1 libasound2 libpangocairo-1.0-0 libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy and install Python requirements
 COPY requirements.txt /requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN pip3 install -r requirements.txt
+# --- PLAYWRIGHT FIX START ---
+# Ensure playwright and browsers are installed properly and persist in final image
+RUN pip install --no-cache-dir playwright
+# Set persistent path for browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN mkdir -p /ms-playwright && chmod -R 777 /ms-playwright
+# Install browser with dependencies
+RUN playwright install --with-deps webkit
+# --- PLAYWRIGHT FIX END ---
 
+# Copy scripts and app
 ADD docker-entrypoint.sh /etc/docker-entrypoint.sh
-
-COPY app /app
-
+COPY install_playwright.sh /etc/install_playwright.sh
 COPY wait_for_scrapyd.sh /app/wait_for_scrapyd.sh
-
 COPY scrapyd.conf /etc/scrapyd/scrapyd.conf
 
-RUN dos2unix /app/wait_for_scrapyd.sh
-RUN dos2unix /etc/docker-entrypoint.sh
+# Convert line endings and set permissions
+RUN dos2unix /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
+    chmod +x /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
+    chmod g+rw /app
 
-RUN chmod a+x /app/wait_for_scrapyd.sh
-RUN chmod a+x /etc/docker-entrypoint.sh
+# Clean up apt cache to reduce image size
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN chmod g+rw /app
-
+# Copy your app
+COPY app /app
 WORKDIR /app
 
-ENTRYPOINT ["/bin/bash"]
-
-CMD ["/etc/docker-entrypoint.sh"]
-
+# Entrypoint
+ENTRYPOINT ["/etc/docker-entrypoint.sh"]
