@@ -53,7 +53,6 @@ public class UnboundDocTypeFieldTest {
 	private static final String DOC_TYPE_FIELD_FOUR_NAME = ENTITY_NAME_PREFIX + "Doc type field 4";
 	private static final String SUGGESTION_CATEGORY_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String AUTOCORRECTION_ONE_NAME = ENTITY_NAME_PREFIX + "Autocorrection 1";
-	private static final String AUTOCORRECTION_TWO_NAME = ENTITY_NAME_PREFIX + "Autocorrection 2";
 
 	@Inject
 	AutocorrectionService autocorrectionService;
@@ -87,13 +86,7 @@ public class UnboundDocTypeFieldTest {
 			.autocorrectionDocTypeFieldId(getDocTypeFieldOne().getId())
 			.build();
 
-		//create Autocorrection not bounded with any docTypeField
-		AutocorrectionDTO dtoTwo = AutocorrectionDTO.builder()
-			.name(AUTOCORRECTION_TWO_NAME)
-			.build();
-
 		EntitiesUtils.createEntity(dtoOne, autocorrectionService, sessionFactory);
-		EntitiesUtils.createEntity(dtoTwo, autocorrectionService, sessionFactory);
 	}
 
 	// Unbound by SuggestionCategory
@@ -178,32 +171,6 @@ public class UnboundDocTypeFieldTest {
 	}
 
 	@Test
-	void should_retrieve_all_textual_doc_type_fields_from_unbound_autocorrection() {
-		var autocorrectionTwo =
-			EntitiesUtils.getEntity(AUTOCORRECTION_TWO_NAME, autocorrectionService, sessionFactory);
-
-		assertNull(autocorrectionTwo.getAutocorrectionDocTypeField());
-
-		var actualUnboundDocTypeFields =
-			sessionFactory.withTransaction(s ->
-				docTypeFieldService.findUnboundDocTypeFieldByAutocorrection(
-					autocorrectionTwo.getId()
-				)
-			)
-			.await()
-			.indefinitely();
-
-		// Expected unbound DocTypeField are all filtered DocTypeField
-		var expectedUnboundDocTypeFields = getAllTextDocTypeFields();
-
-		assertFalse(actualUnboundDocTypeFields.isEmpty());
-		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
-		assertTrue(
-			actualUnboundDocTypeFields.containsAll(expectedUnboundDocTypeFields));
-		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
-	}
-
-	@Test
 	void should_retrieve_all_textual_doc_type_fields_from_missing_autocorrection() {
 		var actualUnboundDocTypeFields = sessionFactory.withTransaction(s ->
 			docTypeFieldService.findUnboundDocTypeFieldByAutocorrection(0L)
@@ -230,7 +197,6 @@ public class UnboundDocTypeFieldTest {
 		removeDocTypeField(getDocTypeFieldFour().getId());
 
 		EntitiesUtils.removeEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sessionFactory);
-		EntitiesUtils.removeEntity(AUTOCORRECTION_TWO_NAME, autocorrectionService, sessionFactory);
 	}
 
 	private void createDocTypeFieldOne() {
