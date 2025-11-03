@@ -20,11 +20,9 @@ package io.openk9.apigw;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 
 @Slf4j
 @SpringBootApplication
-@EnableWebFluxSecurity
 public class GatewayApplication {
 
 	public static void main(String[] args) {
