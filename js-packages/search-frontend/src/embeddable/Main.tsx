@@ -106,7 +106,11 @@ export function Main({
   };
 
   //state
-  const { numberOfResults: numberOfResultsSearch } = useRange();
+  const {
+    numberOfResults: numberOfResultsSearch,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
+  } = useRange();
   const [dynamicData, setDynamicData] = React.useState<Array<WhoIsDynamic>>([]);
   const [isMobile, setIsMobile] = React.useState(false);
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
@@ -132,7 +136,6 @@ export function Main({
   const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
-  const [isCorrectionCallback, setIsCorrectionCallback] = React.useState(false);
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const {
@@ -185,8 +188,6 @@ export function Main({
       selectionsState,
       selectionsDispatch,
       retrieveType,
-      isCorrectionCallback,
-      setIsCorrectionCallback,
     });
   const { isQueryAnalysisCompleteSuggestions, spansSuggestions } =
     useQueryAnalysisWithoutSearch({
@@ -362,7 +363,12 @@ export function Main({
               });
             }}
             information={configuration.correction?.information || (() => null)}
-            onCorrectionCallback={() => setIsCorrectionCallback(true)}
+            onCorrectionCallback={() =>
+              setOverrideSearchWithCorrection((cor) => ({
+                isAutocorrection: false,
+                renderingCorrection: !cor.renderingCorrection,
+              }))
+            }
           />
         </I18nextProvider>,
         configuration.correction ? configuration.correction.element : null,
@@ -682,32 +688,34 @@ export function Main({
               )
             )
           ) : (
-            <ResultsMemo
-              setTotalResult={setTotalResult}
-              displayMode={configuration.resultsDisplayMode}
-              searchQuery={searchQuery}
-              onDetail={setDetail}
-              setDetailMobile={setDetailMobile}
-              sort={completelySort}
-              setSortResult={setSort}
-              isMobile={isMobile}
-              overChangeCard={configuration.resultList?.changeOnOver || false}
-              language={languageSelect}
-              setSortAfterKey={setSortAfterKey}
-              sortAfterKey={sortAfterKey}
-              numberOfResults={numberOfResults}
-              setIdPreview={setIdPreview}
-              setSelectedSort={setSelectedSort}
-              counterIsVisible={
-                configuration.resultList?.counterIsVisible || false
-              }
-              selectOptions={sortList}
-              memoryResults={memoryResults}
-              viewButton={viewButton}
-              setViewButtonDetail={setViewButtonDetail}
-              NoResultsCustom={configuration.resultList?.noResultsCustom}
-              templateCustom={configuration.template}
-            />
+            <>
+              <ResultsMemo
+                setTotalResult={setTotalResult}
+                displayMode={configuration.resultsDisplayMode}
+                searchQuery={searchQuery}
+                onDetail={setDetail}
+                setDetailMobile={setDetailMobile}
+                sort={completelySort}
+                setSortResult={setSort}
+                isMobile={isMobile}
+                overChangeCard={configuration.resultList?.changeOnOver || false}
+                language={languageSelect}
+                setSortAfterKey={setSortAfterKey}
+                sortAfterKey={sortAfterKey}
+                numberOfResults={numberOfResults}
+                setIdPreview={setIdPreview}
+                setSelectedSort={setSelectedSort}
+                counterIsVisible={
+                  configuration.resultList?.counterIsVisible || false
+                }
+                selectOptions={sortList}
+                memoryResults={memoryResults}
+                viewButton={viewButton}
+                setViewButtonDetail={setViewButtonDetail}
+                NoResultsCustom={configuration.resultList?.noResultsCustom}
+                templateCustom={configuration.template}
+              />
+            </>
           )}
         </I18nextProvider>,
         configuration.resultList ? configuration.resultList.element : null,
@@ -1231,8 +1239,6 @@ function useSearch({
   selectionsState,
   selectionsDispatch,
   retrieveType,
-  isCorrectionCallback,
-  setIsCorrectionCallback,
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
@@ -1254,8 +1260,6 @@ function useSearch({
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   retrieveType?: string;
-  isCorrectionCallback: boolean;
-  setIsCorrectionCallback: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -1298,22 +1302,11 @@ function useSearch({
     }
     return previousSearchTokens;
   }, [selectionsState.text, spans]) as SearchToken[];
-  const newSearch: SearchToken[] = React.useMemo(() => {
-    return searchTokens
-      .filter((search) => search)
-      .map((searchToken) => {
-        if (isCorrectionCallback) {
-          setIsCorrectionCallback(false);
-          console.log("entrooo");
-          return {
-            ...searchToken,
-            search: true,
-            overrideSearchWithCorrection: false,
-          };
-        }
-        return { ...searchToken, search: true };
-      });
-  }, [searchTokens, isCorrectionCallback]);
+  const newSearch: SearchToken[] = searchTokens
+    .filter((search) => search)
+    .map((searchToken) => {
+      return { ...searchToken, search: true };
+    });
 
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),

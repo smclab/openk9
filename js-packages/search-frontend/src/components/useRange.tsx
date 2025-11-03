@@ -13,13 +13,23 @@ interface RangeContextType {
   resetPage: (pageSize?: number) => void;
   correction: AutocorrectionType | undefined | null;
   setCorrection: (c: AutocorrectionType | undefined | null) => void;
-  overrideSearchWithCorrection: boolean;
-  setOverrideSearchWithCorrection: (v: boolean) => void;
+  overrideSearchWithCorrection: RangeContextProviderProps;
+  setOverrideSearchWithCorrection: setterConnection;
 }
-
+export type RangeContextProviderProps = {
+  isAutocorrection: boolean | null | undefined;
+  renderingCorrection: boolean;
+};
 const RangeContext = React.createContext<RangeContextType | undefined>(
   undefined,
 );
+
+export type setterConnection = React.Dispatch<
+  React.SetStateAction<{
+    isAutocorrection: boolean | undefined | null;
+    renderingCorrection: boolean;
+  }>
+>;
 
 export const RangeProvider: React.FC<{
   children: React.ReactNode;
@@ -32,7 +42,10 @@ export const RangeProvider: React.FC<{
     AutocorrectionType | undefined | null
   >(null);
   const [overrideSearchWithCorrection, setOverrideSearchWithCorrection] =
-    React.useState(true);
+    React.useState<{
+      isAutocorrection: boolean | undefined | null;
+      renderingCorrection: boolean;
+    }>({ isAutocorrection: null, renderingCorrection: false });
   const resetPage = React.useCallback(
     (pageSize?: number) => {
       const size = pageSize ?? range[1] ?? defaultPageSize;

@@ -15,7 +15,11 @@ import {
 } from "./client";
 import { Renderers, useRenderers } from "./useRenderers";
 import { SelectionsAction, SelectionsState } from "./useSelections";
-import { useRange } from "./useRange";
+import {
+  RangeContextProviderProps,
+  setterConnection,
+  useRange,
+} from "./useRange";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -136,9 +140,13 @@ export function InfiniteResults<E>({
   dynamicFilters = true,
 }: InfiniteResultsProps<E>) {
   const [offset, elementForPage] = state.range;
-  const { setNumberOfResults } = useRange();
-  const { setCorrection } = useRange();
 
+  const {
+    setNumberOfResults,
+    setCorrection,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
+  } = useRange();
   const results = useInfiniteResults<E>(
     state,
     searchQuery,
@@ -147,6 +155,8 @@ export function InfiniteResults<E>({
     sortAfterKey,
     elementForPage,
     offset,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
     dynamicFilters,
   );
 
@@ -234,6 +244,8 @@ export function useInfiniteResults<E>(
   sortAfterKey: string,
   elementForPage: number,
   offset: number,
+  overrideSearchWithCorrection?: RangeContextProviderProps,
+  setOverrideSearchWithCorrection?: setterConnection,
   dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
@@ -242,7 +254,16 @@ export function useInfiniteResults<E>(
     [state.text, searchQuery],
   );
   if (!dynamicFilters) return undefined;
-  return useInfiniteQuery(
+  const remappingSearchQuery =
+    overrideSearchWithCorrection?.isAutocorrection === false
+      ? searchQuery.map((token) =>
+          token.tokenType === "TEXT" && token.search
+            ? { ...token, overrideSearchWithCorrection: false }
+            : token,
+        )
+      : searchQuery;
+
+  const data = useInfiniteQuery(
     [
       "results",
       searchQuery,
@@ -251,6 +272,7 @@ export function useInfiniteResults<E>(
       sortAfterKey,
       offset,
       elementForPage,
+      overrideSearchWithCorrection?.renderingCorrection,
     ] as const,
     async ({ queryKey }) => {
       const [
@@ -271,7 +293,7 @@ export function useInfiniteResults<E>(
       return client.doSearch<E>({
         range,
         language: qLanguage,
-        searchQuery: qSearchQuery,
+        searchQuery: remappingSearchQuery,
         sort: qSort,
         sortAfterKey: qSortAfterKey || "",
       });
@@ -283,6 +305,13 @@ export function useInfiniteResults<E>(
       notifyOnChangeProps: ["isFetching"],
     },
   );
+  if (overrideSearchWithCorrection?.isAutocorrection === false) {
+    setOverrideSearchWithCorrection?.((ov) => ({
+      ...ov,
+      isAutocorrection: true,
+    }));
+  }
+  return data;
 }
 
 export function SkeletonResult({

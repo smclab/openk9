@@ -518,6 +518,7 @@ export type SearchToken =
       values: string[];
       filter: boolean;
       goToSuggestion?: boolean;
+      overrideSearchWithCorrection?: boolean;
       label?: string;
       suggestionCategoryId?: number;
       count?: string;
@@ -583,6 +584,7 @@ type SearchRequest = {
   sort: SortField[];
   language: string;
   sortAfterKey: string;
+  overrideSearchWithCorrection?: boolean;
 };
 
 export type GenerateRequest = {

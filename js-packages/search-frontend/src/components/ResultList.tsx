@@ -14,7 +14,11 @@ import {
   SortField,
   useOpenK9Client,
 } from "./client";
-import { useRange } from "./useRange";
+import {
+  RangeContextProviderProps,
+  setterConnection,
+  useRange,
+} from "./useRange";
 import { Renderers, useRenderers } from "./useRenderers";
 
 export type ResultsDisplayMode =
@@ -275,6 +279,13 @@ export function InfiniteResults<E>({
   templateCustom,
   setViewButtonDetail,
 }: InfiniteResultsProps<E>) {
+  const {
+    setNumberOfResults,
+    setCorrection,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
+  } = useRange();
+
   const results = useInfiniteResults<E>(
     searchQuery,
     sort,
@@ -282,8 +293,10 @@ export function InfiniteResults<E>({
     sortAfterKey,
     numberOfResults,
     memoryResults,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
   );
-  const { setNumberOfResults, setCorrection } = useRange();
+
   React.useEffect(() => {
     if (results.data && results.data.pages[0].total) {
       setTotalResult(results.data.pages[0].total);
@@ -562,6 +575,8 @@ export function useInfiniteResults<E>(
   sortAfterKey: string,
   numberOfResults: number,
   memoryResults: boolean,
+  overrideSearchWithCorrection?: RangeContextProviderProps,
+  setOverrideSearchWithCorrection?: setterConnection,
 ) {
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
@@ -569,21 +584,41 @@ export function useInfiniteResults<E>(
   const { setRange } = useRange();
 
   return useInfiniteQuery(
-    ["results", searchQueryData, sortData, language] as const,
+    [
+      "results",
+      searchQueryData,
+      sortData,
+      language,
+      overrideSearchWithCorrection?.renderingCorrection,
+    ] as const,
     async ({ queryKey: [, searchQuery, sort], pageParam = 0 }) => {
       const RangePage: [number, number] = !(sortData && sortAfterKey)
         ? [pageParam * pageSize, pageSize]
         : [0, pageSize];
 
+      const remappingSearchQuery =
+        overrideSearchWithCorrection?.isAutocorrection === false
+          ? searchQuery.map((token) =>
+              token.tokenType === "TEXT" && token.search
+                ? { ...token, overrideSearchWithCorrection: false }
+                : token,
+            )
+          : searchQuery;
       setRange(RangePage);
-
-      return client.doSearch<E>({
+      const data = client.doSearch<E>({
         range: RangePage,
         language,
-        searchQuery: searchQueryData,
+        searchQuery: remappingSearchQuery,
         sort: sortData && [sortData],
         sortAfterKey: (sortData && pageParam > 0 && sortAfterKey) || "",
       });
+      if (overrideSearchWithCorrection?.isAutocorrection === false) {
+        setOverrideSearchWithCorrection?.((ov) => ({
+          ...ov,
+          isAutocorrection: true,
+        }));
+      }
+      return data;
     },
     {
       keepPreviousData: true,
