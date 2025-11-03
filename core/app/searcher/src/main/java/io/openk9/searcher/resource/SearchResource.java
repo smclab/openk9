@@ -670,7 +670,7 @@ public class SearchResource {
 	}
 
 	/**
-	 * Parses the OpenSearch autocorrection response an an {@link AutocorrectionDTO}.
+	 * Parses the OpenSearch autocorrection response as an {@link AutocorrectionDTO}.
 	 * <p>
 	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
 	 * and constructs an {@link AutocorrectionDTO} containing the original text, correction details,
