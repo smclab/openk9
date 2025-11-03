@@ -23,5 +23,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ResourceUriDTO {
-    private String serviceName;
+    private String baseUri;
+    private String path;
 }
