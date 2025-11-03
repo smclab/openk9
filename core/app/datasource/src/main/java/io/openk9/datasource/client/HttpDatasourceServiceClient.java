@@ -21,21 +21,51 @@ import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
+import io.vertx.mutiny.ext.web.client.WebClient;
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Produces;
+import jakarta.validation.Validator;
 
 public abstract class HttpDatasourceServiceClient {
 
-    @GET
-    @Produces("application/json")
-    public abstract Uni<FormTemplate> getForm(ResourceUriDTO enricherInfo);
+    @Inject
+    WebClient webClient;
+    @Inject
+    Validator validator;
+    
+    public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
+        return webClient
+                .requestAbs(
+                        HttpMethod.GET,
+                        resourceUriDTO.getBaseUri() + resourceUriDTO.getPath()
+                )
+                .send()
+                .flatMap(this::validateResponse)
+                .map(res -> res.bodyAsJson(FormTemplate.class))
+                .flatMap(this::validateDto);
+    }
 
-    @GET
-    @Produces("application/json")
-    public abstract Uni<HealthDTO> getHealth(ResourceUriDTO enricherInfo);
+    public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
+        return webClient
+                .requestAbs(
+                        HttpMethod.GET,
+                        resourceUriDTO.getBaseUri() + resourceUriDTO.getPath()
+                )
+                .send()
+                .flatMap(this::validateResponse)
+                .map(res -> res.bodyAsJson(HealthDTO.class))
+                .flatMap(this::validateDto)
+                .onFailure(ConstraintViolationException.class)
+                .recoverWithItem(HealthDTO
+                        .builder()
+                        .status(HealthDTO.Status.UNKOWN)
+                        .build()
+                );
+    }
 
     protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
         if (response.statusCode() >= 200 && response.statusCode() <= 299) {
@@ -49,6 +79,16 @@ public abstract class HttpDatasourceServiceClient {
                             response.statusMessage()
                     ))
             );
+        }
+    }
+
+    protected  <T> Uni<T> validateDto(T dto) {
+        var violations = validator.validate(dto);
+        if (violations.isEmpty()) {
+            return Uni.createFrom().item(dto);
+        }
+        else {
+            return Uni.createFrom().failure(new ConstraintViolationException(violations));
         }
     }
 
