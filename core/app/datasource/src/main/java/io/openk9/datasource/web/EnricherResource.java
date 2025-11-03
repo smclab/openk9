@@ -76,8 +76,8 @@ public class EnricherResource {
     @Path("/health/{serviceName}")
     public Uni<HealthDTO> getHealth(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO enricherInfo) {
-        return service.getHealth(enricherInfo);
+            @PathParam("serviceName") ResourceUriDTO resourceUriDTO) {
+        return service.getHealth(resourceUriDTO);
     }
 
     @Operation(operationId = "form")
@@ -105,8 +105,8 @@ public class EnricherResource {
     @Path("/form/{serviceName}")
     public Uni<FormTemplate> getForm(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO enricherInfo) {
-        return service.getForm(enricherInfo);
+            @PathParam("serviceName") ResourceUriDTO resourceUriDTO) {
+        return service.getForm(resourceUriDTO);
     }
 
     @Operation(operationId = "process")
@@ -123,7 +123,7 @@ public class EnricherResource {
     @Path("/process/{serviceName}")
     public Uni<HttpResponse<Buffer>> process(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO enricherInfo, EnricherInputDTO enricherInputDTO){
-        return service.process(enricherInfo, enricherInputDTO);
+            @PathParam("serviceName") ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
+        return service.process(resourceUriDTO, enricherInputDTO);
     }
 }
