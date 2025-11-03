@@ -311,7 +311,7 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationChat: $ragConfigurationChat
         ragConfigurationChatTool: $ragConfigurationChatTool
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
-        autocorrection: $autocorrection
+        autocorrectionId: $autocorrection
       }
     ) {
       entity {
