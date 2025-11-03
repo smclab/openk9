@@ -59,11 +59,11 @@ export default function Search({
 		const valid: File[] = [];
 		files.forEach((f) => {
 			if (f.size > maxSize) {
-				errs.push(`${f.name}: ${t("file-too-large") || "File too large (max 10MB)"}`);
+				errs.push(`${f.name}: ${t("file-too-large", { defaultValue: "File too large (max 10MB)" })}`);
 				return;
 			}
 			if (!allowedTypes.includes(f.type)) {
-				errs.push(`${f.name}: ${t("unsupported-file-type") || "Unsupported file type"}`);
+				errs.push(`${f.name}: ${t("unsupported-file-type", { defaultValue: "Unsupported file type" })}`);
 				return;
 			}
 			valid.push(f);
@@ -104,14 +104,14 @@ export default function Search({
 				<Box sx={{ mb: 1 }}>
 					{uploading && (
 						<Box sx={{ fontSize: 12 }}>
-							<UnicodeSpinner text={t("uploading") || "Uploading"} />
+							<UnicodeSpinner text={`${t("uploading", { defaultValue: "Uploading" })}`} />
 						</Box>
 					)}
 					{uploadDone && (
 						<Box sx={{ display: "flex", alignItems: "center", gap: "6px", color: "green", fontSize: 12 }}>
 							<CheckCircleOutlineIcon fontSize="small" />
 							<span>
-								{t("upload-completed") || "Upload completed"}
+								{t("upload-completed", { defaultValue: "Upload completed" })}
 								{lastUploaded.length > 0 ? `: ${lastUploaded.join(", ")}` : ""}
 							</span>
 						</Box>
@@ -142,7 +142,7 @@ export default function Search({
 					variant="outlined"
 					value={search}
 					onChange={(event) => setSearch(event.currentTarget.value)}
-					placeholder={t("write-a-message")!}
+					placeholder={t("write-a-message", { defaultValue: "Write a message" })!}
 					sx={{
 						"& .MuiOutlinedInput-notchedOutline": {
 							borderRadius: "10px",
@@ -167,7 +167,7 @@ export default function Search({
 									}}
 								/>
 								<IconButton
-									aria-label={t("attach-file-aria-label") || "Attach a file"}
+									aria-label={`${t("attach-file-aria-label", { defaultValue: "Attach a file" })}`}
 									onClick={handleOpenAttach}
 									disabled={!isAuthenticated}
 									size="small"
@@ -185,7 +185,7 @@ export default function Search({
 								>
 									<Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
 										<Typography variant="subtitle2" sx={{ textAlign: "center", fontWeight: 600 }}>
-											{t("attach-popup-title") || "Upload an attachment"}
+											{t("attach-popup-title", { defaultValue: "Upload an attachment" })}
 										</Typography>
 									</Box>
 									<Divider />
@@ -197,7 +197,7 @@ export default function Search({
 											}}
 										>
 											<DescriptionIcon sx={{ fontSize: 18, mr: 1 }} />
-											<ListItemText primary={t("document") || "Document"} />
+											<ListItemText primary={t("document", { defaultValue: "Document" })} />
 										</ListItemButton>
 									</List>
 								</Popover>

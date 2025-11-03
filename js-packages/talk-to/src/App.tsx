@@ -141,7 +141,7 @@ function App() {
 											setChatId({ id: newId, isNew: true });
 										}}
 									>
-										{t("new-chat")}
+										{t("new-chat", { defaultValue: "New Chat" })}
 									</Button>
 								)}
 							</Box>

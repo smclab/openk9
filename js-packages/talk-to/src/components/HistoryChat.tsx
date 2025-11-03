@@ -168,7 +168,7 @@ export function HistoryChat({
 				alignItems: "center",
 			}}
 		>
-			<Typography variant="subtitle1">{t("recents-chat") || "Recents chat"}</Typography>
+			<Typography variant="subtitle1">{t("recents-chat", { defaultValue: "Recents chat" })}</Typography>
 			<List
 				sx={{ px: 1 }}
 				style={{
@@ -181,7 +181,7 @@ export function HistoryChat({
 			>
 				{!chatHistory || chatHistory.length === 0 ? (
 					<Typography sx={{ fontSize: "16px", fontWeight: 500, mb: 1, color: "text.secondary" }}>
-						{t("no-chats") || "No chats available"}
+						{t("no-chats", { defaultValue: "No chats available" })}
 					</Typography>
 				) : (
 					chatHistory.map((item) => (

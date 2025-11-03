@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import SuggestedPrompts from "./SuggestedPrompts";
 
 interface InitialConversationProps {
-		handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
-	}
+	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
+}
 
 export const InitialConversation: React.FC<InitialConversationProps> = ({ handleSearch }) => {
 	const { t } = useTranslation();
@@ -27,7 +27,7 @@ export const InitialConversation: React.FC<InitialConversationProps> = ({ handle
 			<Box display="flex" alignItems="center" mt={1}>
 				<Typography variant="h5">
 					<Box component="span" mr={1}>
-						{t("welcome-to")}
+						{t("welcome-to", { defaultValue: "Welcome to" })}
 					</Box>
 					Open
 				</Typography>
@@ -36,7 +36,7 @@ export const InitialConversation: React.FC<InitialConversationProps> = ({ handle
 				</Typography>
 			</Box>
 			<Typography variant="h5" gutterBottom align="center">
-				{t("where-knowledge-has-no-limits")}
+				{t("where-knowledge-has-no-limits", { defaultValue: "Where Knowledge has no limits" })}
 			</Typography>
 			<Box mt={3}>
 				<SuggestedPrompts

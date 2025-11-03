@@ -58,12 +58,12 @@ export function Login({
 			{authenticated ? (
 				<>
 					<LogoutIcon />
-					{t("logout")}
+					{t("logout", { defaultValue: "Logout" })}
 				</>
 			) : (
 				<>
 					<LoginIcon />
-					{t("login")}
+					{t("login", { defaultValue: "Login" })}
 				</>
 			)}
 		</Button>
