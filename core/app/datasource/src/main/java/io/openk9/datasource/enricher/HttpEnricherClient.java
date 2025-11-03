@@ -21,6 +21,7 @@ import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.openk9.datasource.web.dto.HealthDTO;
+import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -37,7 +38,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
 
     @Override
-    public Uni<FormTemplate> getForm(HttpEnricherInfo enricherInfo) {
+    public Uni<FormTemplate> getForm(ResourceUriDTO enricherInfo) {
         String uri = enricherInfo.getServiceName();
         return webClient
                 .requestAbs(HttpMethod.GET, uri)
@@ -46,7 +47,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
     }
 
     @Override
-    public Uni<HealthDTO> getHealth(HttpEnricherInfo enricherInfo) {
+    public Uni<HealthDTO> getHealth(ResourceUriDTO enricherInfo) {
         String uri = enricherInfo.getServiceName();
         return webClient
                 .requestAbs(HttpMethod.GET, uri)
@@ -60,7 +61,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
                 );
     }
 
-    public Uni<HttpResponse<Buffer>> process(HttpEnricherInfo enricherInfo, EnricherInputDTO enricherInputDTO) {
+    public Uni<HttpResponse<Buffer>> process(ResourceUriDTO enricherInfo, EnricherInputDTO enricherInputDTO) {
         String uri = enricherInfo.getServiceName();
         return webClient
                 .requestAbs(HttpMethod.POST, uri)

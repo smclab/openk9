@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.enricher;
+package io.openk9.datasource.web.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class HttpEnricherInfo {
+public class ResourceUriDTO {
     private String serviceName;
 }

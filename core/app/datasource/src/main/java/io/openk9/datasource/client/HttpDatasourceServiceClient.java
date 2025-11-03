@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.client;
 
-import io.openk9.datasource.enricher.HttpEnricherInfo;
+import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
@@ -31,11 +31,11 @@ public abstract class HttpDatasourceServiceClient {
 
     @GET
     @Produces("application/json")
-    public abstract Uni<FormTemplate> getForm(HttpEnricherInfo enricherInfo);
+    public abstract Uni<FormTemplate> getForm(ResourceUriDTO enricherInfo);
 
     @GET
     @Produces("application/json")
-    public abstract Uni<HealthDTO> getHealth(HttpEnricherInfo enricherInfo);
+    public abstract Uni<HealthDTO> getHealth(ResourceUriDTO enricherInfo);
 
     protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
         if (response.statusCode() >= 200 && response.statusCode() <= 299) {
