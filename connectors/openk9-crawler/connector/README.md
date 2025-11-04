@@ -32,6 +32,34 @@ This endpoint takes different arguments in JSON raw body:
 - **certVerification**: SSL/TLS certificate verification while processing documents (optional, if not specified is True)
 - **customMetadata**: map key-value where key is the metadata to extract and value is xpath expression to get element/s to extract from html
 - **documentFileExtensions**: extensions of files to allowed during extraction
+- **doUseDefaultMimetypeMap**: should use default mimetype map (optional, if not specified is True)
+  - *used with `mimetypeMap` updates the default map with mimetypeMap*
+  - <details>
+    <summary>Default mimetype map</summary>
+    
+    ```json
+    {
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/gif":"gif",
+      "application/pdf":"pdf",
+      "text/plain":"txt",
+      "application/msword":"doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":"docx",
+      "application/vnd.ms-excel":"xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"xlsx",
+      "application/zip":"zip",
+      "application/json":"json",
+      "application/vnd.ms-powerpoint":"ppt",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":"pptx",
+      "application/epub+zip":"epub",
+      "application/xml":"xml",
+      "application/pkcs7-mime":"p7m",
+      "audio/mpeg":"mp3"
+    }
+    ```
+    </details>
+- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified must use doUseDefaultMimetypeMap)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -70,7 +98,13 @@ curl -X 'POST' \
   "certVerification": False,
   "excluded_paths": [],
   "document_file_extensions": [],
-  "specific_tags": [],
+  "doUseDefaultMimetypeMap": False,
+    "mimetypeMap": {
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/gif":"gif",
+      "application/pdf":"pdf"
+    },
   "close_spider_page_count": 0
 }'
 ```
@@ -98,6 +132,34 @@ This endpoint takes different arguments in JSON raw body:
 - **customMetadata**: map key-value where key is the metadata added to Openk9 payload and value is xpath expression to get element/s to extract from html and ling to metadata
 - **doExtractDocs**: if follows links when connector link from sitemap
 - **documentFileExtensions**: extensions of files to allowed during extraction
+- **doUseDefaultMimetypeMap**: should use default mimetype map (optional, if not specified is True)
+  - *used with `mimetypeMap` updates the default map with mimetypeMap*
+  - <details>
+    <summary>Default mimetype map</summary>
+    
+    ```json
+    {
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/gif":"gif",
+      "application/pdf":"pdf",
+      "text/plain":"txt",
+      "application/msword":"doc",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":"docx",
+      "application/vnd.ms-excel":"xls",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":"xlsx",
+      "application/zip":"zip",
+      "application/json":"json",
+      "application/vnd.ms-powerpoint":"ppt",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation":"pptx",
+      "application/epub+zip":"epub",
+      "application/xml":"xml",
+      "application/pkcs7-mime":"p7m",
+      "audio/mpeg":"mp3"
+    }
+    ```
+    </details>
+- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified must use doUseDefaultMimetypeMap)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -127,6 +189,13 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "certVerification": False,
     "doExtractDocs": true,
     "documentFileExtensions": [".pdf"],
+    "doUseDefaultMimetypeMap": False,
+    "mimetypeMap": {
+      "image/jpeg":"jpg",
+      "image/png":"png",
+      "image/gif":"gif",
+      "application/pdf":"pdf"
+    },
     "customMetadata": {
       "metadataName1": "//span/text",
       "metadataName2": "//div[@id="images"]/a/text()"
