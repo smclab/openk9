@@ -43,6 +43,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.max_length = int(max_length)
 		self.max_size_bytes = int(max_size_bytes)
 		self.document_file_extensions = ast.literal_eval(document_file_extensions)
+		self.do_use_default_mimetype_map = str_to_bool(do_use_default_mimetype_map)
+		self.mimetype_map = ast.literal_eval(mimetype_map)
 		self.custom_metadata = ast.literal_eval(custom_metadata)
 		self.additional_metadata = ast.literal_eval(additional_metadata)
 
@@ -131,7 +133,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 				response = requests.get(document_url, verify=self.cert_verification, headers=headers, allow_redirects=False, timeout=60)
 		else:
 			logger.error("Warning: Content-Length header not provided; proceeding with caution.")
-			return 
+			return
 
 		# response = requests.get(document_url, headers=headers, allow_redirects=True, timeout=60)
 
@@ -160,7 +162,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		document_item['mimeType'] = document_mime_type
 
 		try:
-			document_item['extension'] = extension_from_mimetype(document_mime_type)
+			document_item['extension'] = extension_from_mimetype(document_mime_type, self.do_use_default_mimetype_map, self.mimetype_map)
 		except Exception as e:
 			document_item['extension'] = None
 
