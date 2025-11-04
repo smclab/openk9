@@ -52,16 +52,28 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
 
-    public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
+    public Uni<FormTemplate> getForm(String serviceName) {
+        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
         return httpEnricherClient.getForm(resourceUriDTO);
     }
 
-    public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
+    public Uni<HealthDTO> getHealth(String serviceName) {
+        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
         return httpEnricherClient.getHealth(resourceUriDTO);
     }
 
-    public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
+    public Uni<HttpResponse<Buffer>> process(String serviceName, EnricherInputDTO enricherInputDTO) {
+        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
         return httpEnricherClient.process(resourceUriDTO, enricherInputDTO);
+    }
+
+    private ResourceUriDTO extractUriAndPath(String serviceName) {
+        String regex = "/";
+        /*
+        da implementare
+        */
+        String[] uri = serviceName.split(regex);
+        return new ResourceUriDTO(uri[0], uri[1]);
     }
 
 }
