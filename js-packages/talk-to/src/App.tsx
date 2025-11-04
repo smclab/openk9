@@ -19,6 +19,9 @@ import { Logo } from "./Svg/Logo";
 function App() {
 	const [chatId, setChatId] = React.useState<chatId>({ id: null, isNew: true });
 	const [userId, setUserId] = React.useState<string | undefined | null>();
+	const [retrieveFromUploadedDocuments, setRetrieveFromUploadedDocuments] = React.useState<boolean | undefined>(
+		undefined,
+	);
 	const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 	const { initialMessages } = useChatData(userId || "", chatId);
 	const isLoadingChat = !chatId?.isNew && initialMessages.isLoadingChat;
@@ -36,8 +39,9 @@ function App() {
 
 	const isNewChat = messages.length === 0;
 	const client = OpenK9Client();
-	const handleSearch = (query: string, retrieveFromUploadedDocuments?: boolean) => {
-		chatId?.id && generateResponse(query, chatId?.id || "", retrieveFromUploadedDocuments);
+	const handleSearch = (query: string, retrieveFromUploadedDocumentsParam?: boolean) => {
+		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
+		chatId?.id && generateResponse(query, chatId?.id || "", flag);
 	};
 
 	React.useEffect(() => {
@@ -45,6 +49,16 @@ function App() {
 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 		}
 	}, [messages]);
+
+	React.useEffect(() => {
+		setRetrieveFromUploadedDocuments(undefined);
+	}, [chatId?.id]);
+
+	React.useEffect(() => {
+		if (!chatId?.isNew && initialMessages?.retrieveFromUploadedDocuments !== undefined) {
+			setRetrieveFromUploadedDocuments(initialMessages.retrieveFromUploadedDocuments);
+		}
+	}, [chatId?.isNew, initialMessages?.retrieveFromUploadedDocuments]);
 
 	React.useEffect(() => {
 		async function fetchUserProfile() {
@@ -194,6 +208,8 @@ function App() {
 									return client.uploadFiles(chatId.id, files);
 								}}
 								isAuthenticated={!!keycloak.authenticated}
+								retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
+								onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
 							/>
 						</Box>
 					</Box>
@@ -220,9 +236,9 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 		["initial-message", chatId?.id as string],
 		async () => {
 			if (chatId?.isNew) {
-				return [];
+				return { messages: [], retrieve_from_uploaded_documents: undefined };
 			}
-			return (await client.getInitialMessages(chatId?.id || "")).messages;
+			return await client.getInitialMessages(chatId?.id || "");
 		},
 		{
 			enabled: !!chatId?.id,
@@ -231,8 +247,9 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 
 	return {
 		initialMessages: {
-			recoveryChat: initialMessagesQuery.data,
+			recoveryChat: initialMessagesQuery.data?.messages,
 			isLoadingChat: initialMessagesQuery.isLoading || false,
+			retrieveFromUploadedDocuments: initialMessagesQuery.data?.retrieve_from_uploaded_documents,
 		},
 		initialMessagesError: initialMessagesQuery.error,
 		initialMessagesLoading: initialMessagesQuery.isLoading,

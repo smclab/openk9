@@ -86,7 +86,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
 						timestamp,
 						language,
-						retrieveFromUploadedDocuments: !!retrieveFromUploadedDocuments,
+						retrieveFromUploadedDocuments: retrieveFromUploadedDocuments,
 				  }
 				: {
 						searchText: query,

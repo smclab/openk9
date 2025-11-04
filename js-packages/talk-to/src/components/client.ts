@@ -49,9 +49,13 @@ export function OpenK9Client() {
 				throw error;
 			}
 		},
-		async getInitialMessages(
-			chatId: string,
-		): Promise<{ chat_id: string; messages: [{ question: string; answer: string; chat_sequence_number: string }] }> {
+        async getInitialMessages(
+            chatId: string,
+        ): Promise<{
+            chat_id: string;
+            messages: [{ question: string; answer: string; chat_sequence_number: string }];
+            retrieve_from_uploaded_documents?: boolean;
+        }> {
 			const response = await authFetch(`/api/rag/chat/${chatId}`);
 			if (!response.ok) throw new Error("Network response was not ok");
 			const data = await response.json();

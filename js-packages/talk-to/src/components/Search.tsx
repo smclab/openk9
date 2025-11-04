@@ -26,12 +26,16 @@ export default function Search({
 	isChatting,
 	onUploadFiles,
 	isAuthenticated,
+	retrieveFromUploadedDocuments,
+	onSetRetrieveFromUploadedDocuments,
 }: {
 	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
 	cancelAllResponses(): void;
 	isChatting: boolean;
 	onUploadFiles?: (files: File[]) => Promise<{ ok: boolean }>;
 	isAuthenticated?: boolean;
+	retrieveFromUploadedDocuments?: boolean;
+	onSetRetrieveFromUploadedDocuments?: (value: boolean) => void;
 }) {
 	const [search, setSearch] = React.useState("");
 	const { t } = useTranslation();
@@ -82,6 +86,7 @@ export default function Search({
 				setUploading(true);
 				await onUploadFiles(valid);
 				setUploadDone(true);
+				onSetRetrieveFromUploadedDocuments?.(true);
 				setLastUploaded(valid.map((f) => f.name));
 			} catch (e: any) {
 				setErrors([(e?.message as string) || "Upload error"]);
@@ -130,7 +135,8 @@ export default function Search({
 					if (isChatting) {
 						cancelAllResponses();
 					} else {
-						handleSearch(search, uploadDone);
+						const flag = retrieveFromUploadedDocuments === true || uploadDone;
+						handleSearch(search, flag);
 						setSearch("");
 					}
 				}}
