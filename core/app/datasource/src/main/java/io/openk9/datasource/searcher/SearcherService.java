@@ -168,7 +168,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	)
 	Integer maxSearchPageSize;
 
-	private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
+    @ConfigProperty(
+            name = "openk9.datasource.query-analysis.search-text-length",
+            defaultValue = "30"
+    )
+    Integer maxSearchTextLength;
+
+
+    private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
 		String requestLanguage = request.getLanguage();
 		if (requestLanguage != null && !requestLanguage.isBlank()) {
 			for (Language available : tenant.getAvailableLanguages()) {
@@ -710,20 +717,26 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		String searchText = request.getSearchText();
 
-		String mode = request.getMode();
+        if (maxSearchTextLength > 0 && searchText.length() > maxSearchTextLength) {
+            searchText = searchText.substring(0, maxSearchTextLength);
+        }
+
+        String mode = request.getMode();
 
 		Uni<Grammar> grammarUni =
 			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
 
-		return grammarUni.map(grammar -> {
+        String finalSearchText = searchText;
+
+        return grammarUni.map(grammar -> {
 
 				Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
-					Utils.toTokenIndexMap(searchText);
+					Utils.toTokenIndexMap(finalSearchText);
 
 				Map<Tuple<Integer>, Map<String, Object>> chart =
 					_getRequestTokensMap(tokenIndexMap, request.getTokensList());
 
-				List<Parse> parses = grammar.parseInput(request.getSearchText());
+				List<Parse> parses = grammar.parseInput(finalSearchText);
 
 				parses = parses
 					.stream()
@@ -839,7 +852,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						result.add(
 							QueryAnalysisTokens.newBuilder()
 								.setText(
-									searchText.substring(
+									finalSearchText.substring(
 										startTokenIndex.getStartIndex(),
 										endTokenIndex.getEndIndex()))
 								.setStart(startTokenIndex.getStartIndex())
@@ -855,7 +868,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						result.add(
 							QueryAnalysisTokens.newBuilder()
 								.setText(
-									searchText.substring(
+									finalSearchText.substring(
 										startTokenIndex.getStartIndex(),
 										startTokenIndex.getEndIndex()))
 								.setStart(startTokenIndex.getStartIndex())
@@ -869,7 +882,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				}
 
 				return QueryAnalysisResponse.newBuilder()
-					.setSearchText(searchText)
+					.setSearchText(finalSearchText)
 					.addAllAnalysis(result)
 					.build();
 
