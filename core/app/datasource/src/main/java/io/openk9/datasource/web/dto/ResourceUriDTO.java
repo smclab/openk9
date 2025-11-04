@@ -17,11 +17,15 @@
 
 package io.openk9.datasource.web.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ResourceUriDTO {
     private String baseUri;
     private String path;
