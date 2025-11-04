@@ -3,8 +3,8 @@ from abc import ABC
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from typing import Optional, Self
 import json
 import logging
 import os
@@ -60,11 +60,22 @@ class BaseRequest(ABC, BaseModel):
     doExtractDocs: bool = False
     certVerification: bool = True
     maxSizeBytes: int
-    pageCount: int = 0
     datasourceId: int
     scheduleId: str
     timestamp: int
     tenantId: str = ""
+    doUseDefaultMimetypeMap: Optional[bool] = True
+    mimetypeMap: Optional[dict] = None
+
+    @model_validator(mode='after')
+    def log_failed_validation(self) -> Self:
+        try:
+            assert self.doUseDefaultMimetypeMap or self.mimetypeMap, \
+                f"If `doUseDefaultMimetypeMap` is set to False `mimetypeMap` must be provided"
+            return self
+        except AssertionError as e:
+            logger.error(e)
+            raise
 
 
 class SitemapRequest(BaseRequest):
