@@ -75,11 +75,6 @@
       <artifactId>quarkus-cache</artifactId>
     </dependency>
 
-	  <dependency>
-		  <groupId>io.quarkus</groupId>
-		  <artifactId>quarkus-elytron-security-properties-file</artifactId>
-	  </dependency>
-
     <!-- realm management -->
     <dependency>
       <groupId>io.quarkus</groupId>
