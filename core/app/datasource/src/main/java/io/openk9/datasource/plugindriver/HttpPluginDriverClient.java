@@ -19,17 +19,11 @@ package io.openk9.datasource.plugindriver;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
-
-import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
-import io.openk9.datasource.web.dto.HealthDTO;
-
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.buffer.Buffer;
@@ -38,7 +32,7 @@ import io.vertx.mutiny.ext.web.client.WebClient;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class HttpPluginDriverClient {
+public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 
 	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
@@ -49,45 +43,7 @@ public class HttpPluginDriverClient {
 	@Inject
 	Logger logger;
 	@Inject
-	Validator validator;
-	@Inject
 	WebClient webClient;
-
-	public Uni<FormTemplate> getForm(HttpPluginDriverInfo pluginDriverInfo) {
-		return webClient
-			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					FORM_PATH)
-			)
-			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(FormTemplate.class))
-			.flatMap(this::validateDto);
-	}
-
-	public Uni<HealthDTO> getHealth(HttpPluginDriverInfo pluginDriverInfo) {
-		return webClient
-			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					HEALTH_PATH)
-			)
-			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(HealthDTO.class))
-			.flatMap(this::validateDto)
-			.onFailure(ConstraintViolationException.class)
-			.recoverWithItem(HealthDTO
-				.builder()
-				.status(HealthDTO.Status.UNKOWN)
-				.build()
-			);
-	}
 
 	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
 		return webClient
@@ -181,30 +137,4 @@ public class HttpPluginDriverClient {
 
 		return string;
 	}
-
-	private <T> Uni<T> validateDto(T dto) {
-		var violations = validator.validate(dto);
-		if (violations.isEmpty()) {
-			return Uni.createFrom().item(dto);
-		}
-		else {
-			return Uni.createFrom().failure(new ConstraintViolationException(violations));
-		}
-	}
-
-	private Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
-		if (response.statusCode() >= 200 && response.statusCode() <= 299) {
-			return Uni.createFrom().item(response);
-		}
-		else {
-			return Uni.createFrom().failure(new ValidationException(
-				String.format(
-					"Unexpected Response Status: %d, Message: %s",
-					response.statusCode(),
-					response.statusMessage()
-				))
-			);
-		}
-	}
-
 }
