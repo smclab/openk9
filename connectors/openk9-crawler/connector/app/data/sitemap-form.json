@@ -170,6 +170,29 @@
         }
       },
       {
+        "label": "Do Use Default Mimetype Map",
+        "name": "doUseDefaultMimetypeMap",
+        "type": "boolean",
+        "size": 4,
+        "required": false,
+        "info": "Should use the default mimetype map. If used with mimetypeMap updates the default map with the custom one.",
+        "values": [
+          {
+            "value": true,
+            "isDefault": true
+          }
+        ]
+      },
+      {
+        "label": "Mimetype Map",
+        "name": "mimetypeMap",
+        "type": "stringMap",
+        "size": 4,
+        "required": false,
+        "info": "Custom mimetype map. If not set doUseDefaultMimetypeMap must be True",
+        "values": []
+      },
+      {
         "label": "Custom Metadata",
         "name": "customMetadata",
         "type": "stringMap",
