@@ -1,8 +1,24 @@
-import { i18n } from "i18next";
-import React from "react";
-import Select, { components } from "react-select";
-import { remappingLanguage } from "../embeddable/Main";
+import React, { useMemo } from "react";
+import Select, {
+  components,
+  SingleValueProps,
+  StylesConfig,
+} from "react-select";
 import { GloboSvg } from "../svgElement/Globo";
+
+export type LanguageItem = {
+  createDate: any;
+  modifiedDate: any;
+  id: number;
+  name: string;
+  value: string;
+};
+
+type Option = {
+  value: string;
+  name: string;
+  icon: JSX.Element;
+};
 
 export function ChangeLanguage({
   setChangeLanguage,
