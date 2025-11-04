@@ -33,6 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.RabbitMQContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -55,8 +56,10 @@ class ApiGatewaySecurityTest {
 
 	@Container
 	@ServiceConnection
-	static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:17")
-			.withDatabaseName("apigw");
+	static PostgreSQLContainer postgres = (PostgreSQLContainer)
+		new PostgreSQLContainer("postgres:17")
+			.withDatabaseName("apigw")
+			.waitingFor(Wait.forListeningPort());
 
 	@Autowired
     private WebTestClient webTestClient;
