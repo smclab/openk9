@@ -41,12 +41,14 @@ import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.HealthDTO;
+import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -346,24 +348,36 @@ public class PluginDriverService
 
 	public Uni<FormTemplate> getForm(long id) {
 		return findById(id)
-			.flatMap(pluginDriver ->
-				httpPluginDriverClient.getForm(
-					pluginDriver.getHttpPluginDriverInfo()
-				)
+			.flatMap(pluginDriver -> {
+                        HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
+                        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+                                .baseUri(httpPluginDriverInfo.getBaseUri())
+                                .path(httpPluginDriverInfo.getPath())
+                                .build();
+                        return httpPluginDriverClient.getForm(resourceUriDTO);
+                    }
 			);
 	}
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-		return httpPluginDriverClient.getHealth(
-			PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig()));
+        HttpPluginDriverInfo httpPluginDriverInfo = PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig());
+        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+                .baseUri(httpPluginDriverInfo.getBaseUri())
+                .path(httpPluginDriverInfo.getPath())
+                .build();
+		return httpPluginDriverClient.getHealth(resourceUriDTO);
 	}
 
 	public Uni<HealthDTO> getHealth(long id) {
 		return findById(id)
-			.flatMap(pluginDriver ->
-				httpPluginDriverClient.getHealth(
-					pluginDriver.getHttpPluginDriverInfo()
-				)
+			.flatMap(pluginDriver -> {
+                HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
+                ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+                        .baseUri(httpPluginDriverInfo.getBaseUri())
+                        .path(httpPluginDriverInfo.getPath())
+                        .build();
+                return httpPluginDriverClient.getHealth(resourceUriDTO);
+                    }
 			);
 	}
 
