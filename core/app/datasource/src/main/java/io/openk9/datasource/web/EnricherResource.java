@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
@@ -76,8 +75,8 @@ public class EnricherResource {
     @Path("/health/{serviceName}")
     public Uni<HealthDTO> getHealth(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO resourceUriDTO) {
-        return service.getHealth(resourceUriDTO);
+            @PathParam("serviceName") String serviceName) {
+        return service.getHealth(serviceName);
     }
 
     @Operation(operationId = "form")
@@ -105,8 +104,8 @@ public class EnricherResource {
     @Path("/form/{serviceName}")
     public Uni<FormTemplate> getForm(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO resourceUriDTO) {
-        return service.getForm(resourceUriDTO);
+            @PathParam("serviceName") String serviceName) {
+        return service.getForm(serviceName);
     }
 
     @Operation(operationId = "process")
@@ -123,7 +122,7 @@ public class EnricherResource {
     @Path("/process/{serviceName}")
     public Uni<HttpResponse<Buffer>> process(
             @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
-        return service.process(resourceUriDTO, enricherInputDTO);
+            @PathParam("serviceName") String serviceName, EnricherInputDTO enricherInputDTO) {
+        return service.process(serviceName, enricherInputDTO);
     }
 }
