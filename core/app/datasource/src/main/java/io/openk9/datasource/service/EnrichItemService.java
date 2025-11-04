@@ -38,7 +38,6 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
     @Inject
     HttpEnricherClient httpEnricherClient;
 
-
 	EnrichItemService(EnrichItemMapper mapper) {
 		this.mapper = mapper;
 	}
@@ -53,16 +52,16 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
 
-    public Uni<FormTemplate> getForm(ResourceUriDTO enricherInfo) {
-        return httpEnricherClient.getForm(enricherInfo);
+    public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
+        return httpEnricherClient.getForm(resourceUriDTO);
     }
 
-    public Uni<HealthDTO> getHealth(ResourceUriDTO enricherInfo) {
-        return httpEnricherClient.getHealth(enricherInfo);
+    public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
+        return httpEnricherClient.getHealth(resourceUriDTO);
     }
 
-    public Uni<HttpResponse<Buffer>> process(ResourceUriDTO enricherInfo, EnricherInputDTO enricherInputDTO) {
-        return httpEnricherClient.process(enricherInfo, enricherInputDTO);
+    public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
+        return httpEnricherClient.process(resourceUriDTO, enricherInputDTO);
     }
 
 }
