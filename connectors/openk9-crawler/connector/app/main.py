@@ -88,8 +88,6 @@ class CrawlRequest(BaseRequest):
     startUrls: list
     depth: Optional[int] = 0
     follow: Optional[bool] = True
-    area: Optional[str] = None
-    tags: Optional[list] = []
 
 
 @app.exception_handler(RequestValidationError)
@@ -100,41 +98,35 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(content=content, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
-def set_up_sitemap_endpoint(request):
-    request = request.dict()
-
-    logging.info("======= RECEIVED SITEMAP REQUEST =======")
-    logger.info(request)
-
-    sitemap_urls = request['sitemapUrls']
+def get_base_request_payload(request):
     body_tag = request["bodyTag"]
-    excluded_bodyTags = request["excludedBodyTags"]
+    excluded_body_tags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
-    datasource_id = request['datasourceId']
-    schedule_id = request['scheduleId']
-    timestamp = request["timestamp"]
     allowed_domains = request["allowedDomains"]
     max_length = request["maxLength"]
     tenant_id = request["tenantId"]
     links_to_follow = request["linksToFollow"]
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
+    max_length = request["maxLength"]
     document_file_extensions = request["documentFileExtensions"]
     custom_metadata = request["customMetadata"]
     page_count = request["pageCount"]
-    replace_rule = request["replaceRule"]
     additional_metadata = request["additionalMetadata"]
     do_extract_docs = request["doExtractDocs"]
     cert_verification = request["certVerification"]
     max_size_bytes = request["maxSizeBytes"]
+    datasource_id = request['datasourceId']
+    schedule_id = request['scheduleId']
+    timestamp = request["timestamp"]
+    tenant_id = request["tenantId"]
+    do_use_default_mimetype_map = request["doUseDefaultMimetypeMap"]
+    mimetype_map = request["mimetypeMap"]
 
     payload = {
-        "project": "generic_crawler",
-        "spider": "genericSitemapSpider",
-        "sitemap_urls": json.dumps(sitemap_urls),
         "allowed_domains": json.dumps(allowed_domains),
         "body_tag": body_tag,
-        "excluded_bodyTags": json.dumps(excluded_bodyTags),
+        "excluded_bodyTags": json.dumps(excluded_body_tags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,
@@ -148,12 +140,46 @@ def set_up_sitemap_endpoint(request):
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),
+        "do_use_default_mimetype_map": json.dumps(do_use_default_mimetype_map),
+        "mimetype_map": json.dumps(mimetype_map),
         "custom_metadata": json.dumps(custom_metadata),
         "do_extract_docs": json.dumps(do_extract_docs),
         "cert_verification": json.dumps(cert_verification),
         "additional_metadata": json.dumps(additional_metadata),
+    }
+
+    return payload
+
+
+def set_up_sitemap_endpoint(request):
+    request = request.dict()
+
+    logging.info("======= RECEIVED SITEMAP REQUEST =======")
+    logger.info(request)
+
+    sitemap_urls = request['sitemapUrls']
+    links_to_follow = request["linksToFollow"]
+    use_playwright = request["usePlaywright"]
+    playwright_selector = request["playwrightSelector"]
+    playwright_timeout = request["playwrightTimeout"]
+    page_count = request["pageCount"]
+    replace_rule = request["replaceRule"]
+
+    payload = {
+        "project": "generic_crawler",
+        "spider": "genericSitemapSpider",
+        "sitemap_urls": json.dumps(sitemap_urls),
+        "ingestion_url": ingestion_url,
+        "replace_rule": json.dumps(replace_rule),
+        "links_to_follow": json.dumps(links_to_follow),
+        "use_playwright": use_playwright,
+        "playwright_selector": playwright_selector,
+        "playwright_timeout": playwright_timeout,
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
     }
+
+    base_request_payload = get_base_request_payload(request)
+    payload.update(base_request_payload)
 
     logging.info("======= GENERATED SITEMAP PAYLOAD =======")
     logging.info(payload)
@@ -168,52 +194,21 @@ def set_up_crawl_endpoint(request):
     logging.info(request)
 
     start_urls = request['startUrls']
-    body_tag = request["bodyTag"]
-    excluded_bodyTags = request["excludedBodyTags"]
-    title_tag = request["titleTag"]
-    datasource_id = request['datasourceId']
-    schedule_id = request['scheduleId']
-    timestamp = request["timestamp"]
-    allowed_domains = request["allowedDomains"]
-    allowed_paths = request["allowedPaths"]
     depth = request["depth"]
     follow = request["follow"]
-    max_length = request["maxLength"]
-    max_size_bytes = request["maxSizeBytes"]
-    tenant_id = request["tenantId"]
-    excluded_paths = request["excludedPaths"]
-    document_file_extensions = request["documentFileExtensions"]
-    custom_metadata = request["customMetadata"]
     close_spider_page_count = request["pageCount"]
-    additional_metadata = request["additionalMetadata"]
-    do_extract_docs = request["doExtractDocs"]
-    cert_verification = request["certVerification"]
 
     payload = {
         "project": "generic_crawler",
         "spider": "genericCrawlSpider",
         "start_urls": json.dumps(start_urls),
-        "allowed_domains": json.dumps(allowed_domains),
-        "allowed_paths": json.dumps(allowed_paths),
-        "excluded_paths": json.dumps(excluded_paths),
-        "body_tag": body_tag,
-        "excluded_bodyTags": json.dumps(excluded_bodyTags),
-        "title_tag": title_tag,
-        "datasource_id": datasource_id,
-        "schedule_id": schedule_id,
         "ingestion_url": ingestion_url,
-        "timestamp": timestamp,
         "follow": follow,
-        "max_length": max_length,
-        "max_size_bytes": max_size_bytes,
-        "tenant_id": tenant_id,
-        "document_file_extensions": json.dumps(document_file_extensions),
-        "custom_metadata": json.dumps(custom_metadata),
-        "do_extract_docs": json.dumps(do_extract_docs),
-        "cert_verification": json.dumps(cert_verification),
-        "additional_metadata": json.dumps(additional_metadata),
         "setting": ["CLOSESPIDER_PAGECOUNT=%s" % close_spider_page_count, "DEPTH_LIMIT=%s" % depth, "LOG_LEVEL=%s" % log_level],
     }
+
+    base_request_payload = get_base_request_payload(request)
+    payload.update(base_request_payload)
 
     logging.info("======= GENERATED CRAWL PAYLOAD =======")
     logging.info(payload)
