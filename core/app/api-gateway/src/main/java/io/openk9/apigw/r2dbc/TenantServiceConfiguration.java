@@ -29,7 +29,6 @@ import org.springframework.cache.support.SimpleCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 
 @Configuration
@@ -37,8 +36,6 @@ public class TenantServiceConfiguration {
 
 	@Autowired
 	DatabaseClient databaseClient;
-	@Autowired
-	R2dbcEntityTemplate entityTemplate;
 
 	@Bean
 	@Profile("!poc")
@@ -63,7 +60,7 @@ public class TenantServiceConfiguration {
 
 	@Bean
 	TenantWriteServiceR2dbc tenantWriteService() {
-		return new TenantWriteServiceR2dbc(databaseClient, entityTemplate);
+		return new TenantWriteServiceR2dbc(databaseClient);
 	}
 
 }

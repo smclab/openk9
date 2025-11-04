@@ -17,13 +17,15 @@
 
 package io.openk9.apigw.r2dbc;
 
+import java.util.Objects;
+
 import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.RoutePath;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
+import io.openk9.event.tenant.Authorization;
+import io.openk9.event.tenant.Route;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Mono;
 
@@ -33,18 +35,49 @@ import reactor.core.publisher.Mono;
  * data from message events.
  */
 @Slf4j
-@RequiredArgsConstructor
 public class TenantWriteServiceR2dbc {
 
-	record Tenant(long id, String tenantId, String hostName, String issuerUri, String clientId, String clientSecret) {}
-	// TODO: record Issuer(long id, String tenantId, String issuerUri, String clientId, String clientSecret) {}
-	record ApiKey(long id, String tenantId, String apiKeyHash, String checksum) {}
-	record RouteSecurity(long id, String tenantId, String route, String authorizationScheme) {}
+	private static final String DELETE_TENANT_SQL = """
+		DELETE FROM tenant
+		WHERE tenant_id = :tenantId
+		""";
+	private static final String DELETE_API_KEY_SQL = """
+		DELETE FROM api_key
+		WHERE id = :id
+		""";
+	private static final String DELETE_ROUTE_SECURITY_SQL = """
+		DELETE FROM route_security
+		WHERE id = :id
+		""";
+	private static final String INSERT_TENANT_SQL = """
+		INSERT INTO tenant (id, tenant_id, host_name, issuer_uri, client_id, client_secret)
+		VALUES (:id, :tenantId, :hostName, :issuerUri, :clientId, :clientSecret)
+		""";
+	private static final String INSERT_API_KEY_SQL = """
+		INSERT INTO api_key (id, tenant_id, api_key_hash, checksum)
+		VALUES (:id, :tenantId, :apiKeyHash, :checksum)
+		""";
+	private static final String UPDATE_TENANT_SQL = """
+		UPDATE tenant
+		SET host_name = :hostName,
+		 issuer_uri = :issuerUri,
+		 client_id = :clientId,
+		 client_secret = :clientSecret
+		WHERE tenant_id = :tenantId
+		""";
+	private static final CompactSnowflakeIdGenerator idGenerator =
+		new CompactSnowflakeIdGenerator();
 
-	private final static CompactSnowflakeIdGenerator idGenerator = new CompactSnowflakeIdGenerator();
+	private final DatabaseClient dbClient;
 
-	private final DatabaseClient db;
-	private final R2dbcEntityTemplate template;
+	/**
+	 * Create a new {@link TenantWriteServiceR2dbc} given {@link DatabaseClient}.
+	 *
+	 * @param dbClient must not be {@literal null}.
+	 */
+	public TenantWriteServiceR2dbc(DatabaseClient dbClient) {
+		this.dbClient = dbClient;
+	}
 
 	/**
 	 * Insert a new tenant into the database.
@@ -59,19 +92,41 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> insertTenant(
 		String tenantId, String hostName, String issuerUri, String clientId, String clientSecret) {
 
+		Objects.requireNonNull(tenantId);
+		Objects.requireNonNull(hostName);
+
 		log.debug("Inserting tenant: tenantId={}, hostName={}", tenantId, hostName);
 
-		return template.insert(new Tenant(
-				idGenerator.nextId(),
-				tenantId,
-				hostName,
-				issuerUri,
-				clientId,
-				clientSecret
-			))
-			.then()
-			.doOnSuccess(v -> log.info("Successfully inserted tenant: {}", tenantId))
-			.doOnError(e -> log.error("Failed to insert tenant: {}", tenantId, e));
+		long id = idGenerator.nextId();
+
+		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(INSERT_TENANT_SQL)
+			.bind("id", id)
+			.bind("tenantId", tenantId)
+			.bind("hostName", hostName)
+			.bindNull("issuerUri", String.class)
+			.bindNull("clientId", String.class)
+			.bindNull("clientSecret", String.class);
+
+		if (issuerUri != null) {
+			stmt = stmt.bind("issuerUri", issuerUri);
+		}
+
+		if (clientId != null) {
+			stmt = stmt.bind("clientId", clientId);
+		}
+
+		if (clientSecret != null) {
+			stmt = stmt.bind("clientSecret", clientSecret);
+		}
+
+		return stmt.then()
+			.doOnSuccess(v -> log.info(
+				"Successfully inserted tenant { id: {}, tenantId: {}, hostName: {} }",
+				id, tenantId, hostName)
+			)
+			.doOnError(e -> log.error(
+				"Failed to insert tenant { id: {}, tenantId: {}, hostName: {} }",
+				id, tenantId, hostName, e));
 	}
 
 	/**
@@ -85,12 +140,25 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> insertApiKey(
 		String tenantId, String apiKeyHash, String checksum) {
 
-		log.debug("Inserting API key: tenantId={}, ", tenantId);
+		Objects.requireNonNull(tenantId);
+		Objects.requireNonNull(apiKeyHash);
+		Objects.requireNonNull(checksum);
 
-		return template.insert(new ApiKey(idGenerator.nextId(), tenantId, apiKeyHash, checksum))
-			.then()
-			.doOnSuccess(v -> log.info("Successfully inserted API key for tenant: {}", tenantId))
-			.doOnError(e -> log.error("Failed to insert API key for tenant: {}", tenantId, e));
+		log.debug("Inserting an API key for tenantId: {}, ", tenantId);
+
+		long id = idGenerator.nextId();
+
+		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(INSERT_API_KEY_SQL)
+			.bind("id", id)
+			.bind("tenantId", tenantId)
+			.bind("apiKeyHash", apiKeyHash)
+			.bind("checksum", checksum);
+
+		return stmt.then()
+			.doOnSuccess(v -> log.info(
+				"Successfully inserted API key for tenantId: {}", tenantId))
+			.doOnError(e -> log.error(
+				"Failed to insert API key for tenantId: {}", tenantId, e));
 	}
 
 	/**
@@ -102,33 +170,32 @@ public class TenantWriteServiceR2dbc {
 	 * @return Mono that completes when insertion is done
 	 */
 	public Mono<Void> insertRouteSecurity(
-		String tenantId, String route, String authorizationScheme) {
+		String tenantId, Route route, Authorization authorizationScheme) {
 
-		String uRoute = route.toUpperCase();
-		String uAuthorizationScheme = authorizationScheme.toUpperCase();
+		Objects.requireNonNull(tenantId);
+		String routePath = mapRoute(route);
+		String authScheme = mapAuthorization(authorizationScheme);
 
-		log.debug("Inserting route security: tenantId={}, route={}, scheme={}",
-			tenantId, uRoute, uAuthorizationScheme);
+		log.debug(
+			"Inserting route security {route: {}, scheme: {}} for tenantId: {}",
+			routePath, authScheme, tenantId);
 
-		try {
-			RoutePath.valueOf(uRoute);
-			AuthorizationSchemeToken.valueOf(uAuthorizationScheme);
-		}
-		catch (IllegalArgumentException e) {
-			log.warn("Invalid values: tenantId={}, route={}, scheme={}",
-				tenantId, route, authorizationScheme);
-			return Mono.error(new InvalidRouteSecurity(tenantId, route, authorizationScheme));
-		}
+		long id = idGenerator.nextId();
 
-		return template.insert(new RouteSecurity(
-				idGenerator.nextId(),
-				tenantId,
-				uRoute,
-				uAuthorizationScheme)
-			)
-			.then()
-			.doOnSuccess(v -> log.info("Successfully inserted route security for tenant: {}", tenantId))
-			.doOnError(e -> log.error("Failed to insert route security for tenant: {}", tenantId, e));
+		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql("""
+				INSERT INTO route_security (id, tenant_id, route, authorization_scheme)
+				VALUES (:id, :tenantId, :route, :authorizationScheme)
+				""")
+			.bind("id", id)
+			.bind("tenantId", tenantId)
+			.bind("route", routePath)
+			.bind("authorizationScheme", authScheme);
+
+		return stmt.then()
+			.doOnSuccess(v -> log.info(
+				"Successfully inserted route security for tenantId: {}", tenantId))
+			.doOnError(e -> log.error(
+				"Failed to insert route security for tenantId: {}", tenantId, e));
 	}
 
 	/**
@@ -139,18 +206,31 @@ public class TenantWriteServiceR2dbc {
 	 * @param issuerUri the new issuer URI
 	 * @return Mono that completes when update is done
 	 */
-	public Mono<Void> updateTenant(String tenantId, String hostName, String issuerUri) {
+	public Mono<Void> updateTenant(
+		String tenantId, String hostName, String issuerUri, String clientId, String clientSecret) {
+
 		log.debug("Updating tenant: tenantId={}", tenantId);
 
-		return db.sql("""
-                UPDATE tenant
-                SET host_name = :hostName, issuer_uri = :issuerUri
-                WHERE tenant_id = :tenantId
-                """)
-			.bind("tenantId", tenantId)
-			.bind("hostName", hostName)
-			.bind("issuerUri", issuerUri)
-			.then()
+		 DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(UPDATE_TENANT_SQL)
+			 .bind("tenantId", tenantId)
+			 .bind("hostName", hostName)
+			 .bindNull("issuerUri", String.class)
+			 .bindNull("clientId", String.class)
+			 .bindNull("clientSecret", String.class);
+
+		if (issuerUri != null) {
+			stmt = stmt.bind("issuerUri", issuerUri);
+		}
+
+		if (clientId != null) {
+			stmt = stmt.bind("clientId", clientId);
+		}
+
+		if (clientSecret != null) {
+			stmt = stmt.bind("clientSecret", clientSecret);
+		}
+
+		return stmt.then()
 			.doOnSuccess(v -> log.info("Successfully updated tenant: {}", tenantId))
 			.doOnError(e -> log.error("Failed to update tenant: {}", tenantId, e));
 	}
@@ -164,10 +244,7 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> deleteTenant(String tenantId) {
 		log.debug("Deleting tenant: tenantId={}", tenantId);
 
-		return db.sql("""
-                DELETE FROM tenant
-                WHERE tenant_id = :tenantId
-                """)
+		return dbClient.sql(DELETE_TENANT_SQL)
 			.bind("tenantId", tenantId)
 			.then()
 			.doOnSuccess(v -> log.info("Successfully deleted tenant: {}", tenantId))
@@ -183,10 +260,7 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> deleteApiKey(Long id) {
 		log.debug("Deleting API key: id={}", id);
 
-		return db.sql("""
-                DELETE FROM api_key
-                WHERE id = :id
-                """)
+		return dbClient.sql(DELETE_API_KEY_SQL)
 			.bind("id", id)
 			.then()
 			.doOnSuccess(v -> log.info("Successfully deleted API key: {}", id))
@@ -202,13 +276,27 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> deleteRouteSecurity(Long id) {
 		log.debug("Deleting route security: id={}", id);
 
-		return db.sql("""
-                DELETE FROM route_security
-                WHERE id = :id
-                """)
+		return dbClient.sql(DELETE_ROUTE_SECURITY_SQL)
 			.bind("id", id)
 			.then()
 			.doOnSuccess(v -> log.info("Successfully deleted route security: {}", id))
 			.doOnError(e -> log.error("Failed to delete route security: {}", id, e));
 	}
+
+	private static String mapRoute(Route route) {
+		return (switch (route) {
+			case DATASOURCE -> RoutePath.DATASOURCE;
+			case SEARCHER -> RoutePath.SEARCHER;
+			case ANY -> RoutePath.ANY;
+		}).name();
+	}
+
+	private static String mapAuthorization(Authorization authorization) {
+		return (switch (authorization) {
+			case OAUTH2 -> AuthorizationSchemeToken.OAUTH2;
+			case API_KEY -> AuthorizationSchemeToken.API_KEY;
+			case NO_AUTH -> AuthorizationSchemeToken.NO_AUTH;
+		}).name();
+	}
+
 }

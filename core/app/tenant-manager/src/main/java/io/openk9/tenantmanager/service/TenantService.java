@@ -30,6 +30,8 @@ import jakarta.validation.Validator;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.common.util.web.Response;
 import io.openk9.common.util.web.ResponseUtil;
+import io.openk9.event.tenant.Authorization;
+import io.openk9.event.tenant.Route;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
 import io.openk9.tenantmanager.dto.SchemaTuple;
@@ -85,8 +87,8 @@ public class TenantService {
 							.clientId(clientId)
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
-								"DATASOURCE", "OAUTH2",
-								"SEARCHER", "NO_AUTH"
+								Route.DATASOURCE, Authorization.OAUTH2,
+								Route.SEARCHER, Authorization.NO_AUTH
 							))
 							.build()
 					);
@@ -228,6 +230,7 @@ public class TenantService {
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		""";
+
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
 	private static final String FETCH_BY_VIRTUAL_HOST = "SELECT * FROM tenant WHERE virtual_host = $1";

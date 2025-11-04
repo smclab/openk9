@@ -19,16 +19,14 @@ package io.openk9.apigw;
 
 import java.util.List;
 
-import io.openk9.apigw.mock.MockOAuth2Configuration;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -44,8 +42,10 @@ import reactor.util.function.Tuples;
 @Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@Import(MockOAuth2Configuration.class)
 class ApiGatewaySecurityTest {
+
+	@TestConfiguration
+	static class TestConfig {}
 
 	@Container
 	@ServiceConnection

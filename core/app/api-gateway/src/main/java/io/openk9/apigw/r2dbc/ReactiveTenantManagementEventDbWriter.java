@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import io.openk9.event.tenant.Authorization;
 import io.openk9.event.tenant.ReactiveTenantManagementEventConsumer;
+import io.openk9.event.tenant.Route;
 import io.openk9.event.tenant.TenantManagementEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -53,11 +55,12 @@ public class ReactiveTenantManagementEventDbWriter
 	public Publisher<Void> handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event) {
 		log.info("Received tenant created event: {}", event.tenantId());
 
-		Map<String, String> routeAuthorizationMap = event.routeAuthorizationMap();
+		Map<Route, Authorization> routeAuthorizationMap = event.routeAuthorizationMap();
 
 		List<Mono<Void>> inserts = new ArrayList<>();
-		for (Map.Entry<String, String> entry : routeAuthorizationMap.entrySet()) {
-			inserts.add(writeService.insertRouteSecurity(event.tenantId(), entry.getKey(), entry.getValue()));
+		for (Map.Entry<Route, Authorization> entry : routeAuthorizationMap.entrySet()) {
+			inserts.add(writeService.insertRouteSecurity(
+				event.tenantId(), entry.getKey(), entry.getValue()));
 		}
 
 		return writeService
@@ -92,7 +95,13 @@ public class ReactiveTenantManagementEventDbWriter
 		log.info("Received tenant updated event: {}", event.tenantId());
 
 		return writeService
-			.updateTenant(event.tenantId(), event.hostName(), event.issuerUri())
+			.updateTenant(
+				event.tenantId(),
+				event.hostName(),
+				event.issuerUri(),
+				event.clientId(),
+				event.clientSecret()
+			)
 			.doOnSuccess(v -> log.info("Processed tenant updated event: {}", event.tenantId()));
 	}
 
