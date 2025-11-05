@@ -17,7 +17,7 @@
 
 package io.openk9.tenantmanager.resource;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import java.util.Base64;
 
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
@@ -26,7 +26,6 @@ import io.openk9.datasource.grpc.PresetPluginDrivers;
 
 import io.vertx.core.json.JsonObject;
 
-@ApplicationScoped
 public class Constants {
 
 	public static final String TENANT_NAME = "mew";
@@ -57,6 +56,10 @@ public class Constants {
 			.setVersion(chartVersion)
 			.build();
 	}
+
+	public static String AUTHORIZATION_HEADER = "Authorization";
+	public static String BASIC_CREDENTIALS = "Basic " + Base64.getEncoder()
+		.encodeToString("admin:test-admin-password".getBytes());
 
 
 }

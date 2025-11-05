@@ -17,10 +17,7 @@
 
 package io.openk9.tenantmanager.resource;
 
-import io.openk9.tenantmanager.model.BackgroundProcess;
-import io.openk9.tenantmanager.service.BackgroundProcessService;
-import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.RolesAllowed;
+import java.util.List;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -28,10 +25,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 
-import java.util.List;
+import io.openk9.tenantmanager.model.BackgroundProcess;
+import io.openk9.tenantmanager.service.BackgroundProcessService;
+
+import io.smallrye.mutiny.Uni;
 
 @Path("/tenant-manager/background-process")
-@RolesAllowed("admin")
 public class BackgroundProcessResource {
 
 	@GET

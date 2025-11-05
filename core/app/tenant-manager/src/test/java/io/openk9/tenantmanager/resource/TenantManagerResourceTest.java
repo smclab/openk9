@@ -17,18 +17,16 @@
 
 package io.openk9.tenantmanager.resource;
 
+import static io.restassured.RestAssured.given;
+
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
-
 @QuarkusTest
 @TestHTTPEndpoint(TenantManagerResource.class)
-@TestSecurity(user = "k9admin", roles = {"admin"})
 class TenantManagerResourceTest {
 
 
@@ -37,12 +35,12 @@ class TenantManagerResourceTest {
 
 		given()
 			.contentType(ContentType.JSON)
+			.header(Constants.AUTHORIZATION_HEADER, Constants.BASIC_CREDENTIALS)
 			.body(JsonObject.of("virtualHost", "my.openk9.local").toString())
-			.when()
+			.log().everything()
 			.post()
 			.then()
 			.statusCode(200);
-
 	}
 
 }

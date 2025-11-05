@@ -136,7 +136,7 @@ public class ProvisioningResourceTest {
 
 	private ValidatableResponse doPostAndExpect2xx(RequestSpecification requestSpecification) {
 		return requestSpecification
-			.auth().basic("admin", "test-admin-password")
+			.header(Constants.AUTHORIZATION_HEADER, Constants.BASIC_CREDENTIALS)
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()

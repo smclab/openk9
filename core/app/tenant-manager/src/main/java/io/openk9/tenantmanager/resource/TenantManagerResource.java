@@ -18,7 +18,6 @@
 package io.openk9.tenantmanager.resource;
 
 import java.util.UUID;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
@@ -39,7 +38,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 
 @Path("/tenant-manager/tenant")
-@RolesAllowed("admin")
 public class TenantManagerResource {
 
 	@POST

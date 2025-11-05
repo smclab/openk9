@@ -17,21 +17,22 @@
 
 package io.openk9.tenantmanager.init;
 
+import java.util.LinkedList;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.Startup;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+
 import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSystem;
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
+
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.event.Startup;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-import java.util.LinkedList;
 
 @Singleton
 public class TenantManagerInitializer {
@@ -55,6 +56,8 @@ public class TenantManagerInitializer {
 	EventBus eventBus;
 
 	public void onStart(@Observes Startup startup) {
+
+		logger.info("Check for schema upgrades...");
 
 		tenantService.findAllSchemaNameAndLiquibaseSchemaName()
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())

@@ -18,7 +18,6 @@
 package io.openk9.tenantmanager.graphql;
 
 import java.util.Set;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -42,7 +41,6 @@ import org.eclipse.microprofile.graphql.Query;
 @GraphQLApi
 @ApplicationScoped
 @CircuitBreaker
-@RolesAllowed("admin")
 public class TenantGraphqlResource {
 
 	@Query
