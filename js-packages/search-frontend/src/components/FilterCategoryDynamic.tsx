@@ -982,7 +982,7 @@ function mapSuggestionToSearchToken(
 
 function CapitalizeValue({ value }: { value: string | undefined }) {
   const [isHover, setIsHover] = React.useState(false);
-  if (!value || value.length === 0) return value;
+  if (!value || value.length === 0) return <></>;
   return (
     <span
       className={`openk9-capitalize-value ${isHover ? "is-hover" : ""}`}

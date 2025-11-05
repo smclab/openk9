@@ -12,6 +12,7 @@ import { Logo } from "./Logo";
 import CustomSkeleton from "./Skeleton";
 import { useInfiniteResults } from "./ResultListPagination";
 import { SelectionsState } from "./useSelections";
+import { RangeContextProviderProps, setterConnection } from "./useRange";
 
 export type FiltersProps = {
   searchQuery: SearchToken[];
@@ -33,6 +34,8 @@ export type FiltersProps = {
   haveSearch?: boolean | null | undefined;
   state: SelectionsState;
   dynamicFilters?: boolean;
+  overrideSearchWithCorrection?: RangeContextProviderProps;
+  setOverrideSearchWithCorrection: setterConnection;
 };
 function Filters({
   searchQuery,
@@ -52,6 +55,8 @@ function Filters({
   haveSearch = true,
   state,
   dynamicFilters = true,
+  overrideSearchWithCorrection,
+  setOverrideSearchWithCorrection,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
 
@@ -68,6 +73,8 @@ function Filters({
     sortAfterKey,
     elementForPage,
     offset,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
     dynamicFilters,
   );
 

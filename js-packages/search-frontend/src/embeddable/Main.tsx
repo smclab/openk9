@@ -506,6 +506,8 @@ export function Main({
               skeletonCategoryCustom={skeletonCustom.suggestion}
               memoryResults={memoryResults}
               iconCustom={iconCustom}
+              setOverrideSearchWithCorrection={setOverrideSearchWithCorrection}
+              overrideSearchWithCorrection={overrideSearchWithCorrection}
             />
           )}
         </I18nextProvider>,
@@ -540,6 +542,8 @@ export function Main({
               placeholder={configuration.filtersConfigurable?.placeholder}
               haveSearch={configuration.filtersConfigurable?.haveSearch}
               iconCustom={iconCustom}
+              setOverrideSearchWithCorrection={setOverrideSearchWithCorrection}
+              overrideSearchWithCorrection={overrideSearchWithCorrection}
             />
           )}
         </I18nextProvider>,
@@ -1133,6 +1137,8 @@ export function Main({
               setSortSelected: setSort,
               languages: languages.data,
               defaultFilter: selectionsState.filters,
+              setOverrideSearchWithCorrection: setOverrideSearchWithCorrection,
+              overrideSearchWithCorrection: overrideSearchWithCorrection,
             }}
             calendar={{
               calendarDate: dateRange,
