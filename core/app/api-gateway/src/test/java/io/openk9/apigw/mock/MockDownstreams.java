@@ -18,7 +18,10 @@
 package io.openk9.apigw.mock;
 
 import java.text.ParseException;
+import java.util.Map;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -40,18 +43,21 @@ import reactor.netty.http.server.HttpServer;
 @Configuration
 public class MockDownstreams {
 
+	private static final ObjectMapper objMapper = new ObjectMapper();
 
-	private static final String DATASOURCE_RESPONSE_BODY = """ 
-		{
-			"data": "hello world from datasource"
-		}
-		""";
+	private static String json(String serviceName, String tenantId) {
+		Map<String, String> mapJson = Map.of(
+			"data", "hello from %s".formatted(serviceName),
+			"tenantId", tenantId != null ? tenantId : "unknown"
+		);
 
-	private static final String SEARCHER_RESPONSE_BODY = """
-		{
-			"data": "hello world from searcher"
+		try {
+			return objMapper.writeValueAsString(mapJson);
 		}
-		""";
+		catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	@Bean(destroyMethod = "dispose")
 	DisposableServer datasourceServer() {
@@ -79,9 +85,11 @@ public class MockDownstreams {
 					}
 				}
 
+				var tenantId = headers.get("X-TENANT-ID");
+
 				return res
 					.header("Content-Type", "application/json")
-					.sendString(Mono.just(DATASOURCE_RESPONSE_BODY));
+					.sendString(Mono.just(json("datasource", tenantId)));
 				}
 			)
 			.bind()
@@ -97,9 +105,14 @@ public class MockDownstreams {
 	DisposableServer searcherServer() {
 
 		return HttpServer.create()
-			.handle((req, res) -> res
-				.header("Content-Type", "application/json")
-				.sendString(Mono.just(SEARCHER_RESPONSE_BODY))
+			.handle((req, res) -> {
+				var headers = req.requestHeaders();
+				var tenantId = headers.get("X-TENANT-ID");
+
+				return res
+					.header("Content-Type", "application/json")
+					.sendString(Mono.just(json("service", tenantId)));
+				}
 			)
 			.bind()
 			.block();

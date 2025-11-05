@@ -205,7 +205,10 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
 				.exchange()
-				.expectStatus().isOk();
+				.expectAll(
+					res -> res.expectStatus().isOk(),
+					res -> res.expectBody().jsonPath("$.tenantId").isEqualTo("sabaody")
+				);
         }
 
         @Test
@@ -237,7 +240,10 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
 				.exchange()
-				.expectStatus().isOk();
+				.expectAll(
+					res -> res.expectStatus().isOk(),
+					res -> res.expectBody().jsonPath("$.tenantId").isEqualTo("sabaody")
+				);
         }
 
         @Test
