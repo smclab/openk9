@@ -5,43 +5,55 @@ import styled, { keyframes } from "styled-components";
 import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
 import { recoverySearchQueryAndSort } from "./ResultList";
-import useGenerateResponse from "./useGenerateResponse";
+import useGenerateResponse, { Message } from "./useGenerateResponse";
 import { useRange } from "./useRange";
+
+type Props = {
+  question: string;
+  searchQuery: any[];
+  language: string;
+  sortAfterKey: string;
+};
 
 export default function GenerateResponse({
   question,
   searchQuery,
   language,
   sortAfterKey,
-}: {
-  question: string;
-  searchQuery: any[];
-  language: string;
-  sortAfterKey: string;
-}) {
+}: Props) {
   const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
   const { range } = useRange();
-  //da rimuovere quando passiamo alla search con il pulsante
-  const [loadingSearch, setLoadingSearch] = React.useState(false);
+  const [loadingSearch, setLoadingSearch] = React.useState<boolean>(false);
 
   const { generateResponse, message, isChatting, cancelAllResponses } =
     useGenerateResponse({
-      initialMessages: [],
+      initialMessages: [] as Message[],
       setIsRequestLoading: setLoadingSearch,
     });
 
   const [prevSearchQuery, setPrevSearchQuery] =
     React.useState<any[]>(searchQueryData);
-  const [prevRange, setPrevRange] = React.useState<[number, number]>(range);
+  const [prevRange, setPrevRange] = React.useState<[number, number]>(
+    range as [number, number],
+  );
 
   React.useEffect(() => {
     if (!isEqual(searchQuery, prevSearchQuery) || !isEqual(range, prevRange)) {
       setLoadingSearch(true);
       setPrevSearchQuery(searchQuery);
-      setPrevRange(range);
+      setPrevRange(range as [number, number]);
+
       const clearSearchQuery = searchQuery.map(
-        ({ search, isTab, filter, goToSuggestion, count, ...rest }) => rest,
+        ({
+          search: _s,
+          isTab: _t,
+          filter: _f,
+          goToSuggestion: _g,
+          count: _c,
+          ...rest
+        }: any) => rest,
       );
+
       cancelAllResponses();
       generateResponse(
         question,
@@ -49,18 +61,20 @@ export default function GenerateResponse({
         language,
         sortAfterKey,
         sortData,
-        prevRange,
+        range as [number, number],
       );
     }
   }, [
     searchQuery,
-    prevSearchQuery,
+    range,
     generateResponse,
     question,
     language,
     sortAfterKey,
     sortData,
+    prevSearchQuery,
     prevRange,
+    cancelAllResponses,
   ]);
 
   return (
@@ -69,9 +83,8 @@ export default function GenerateResponse({
         <Container>
           <ContainerBox>
             <Question>Generate answer</Question>
-            {isChatting || loadingSearch ? (
-              <SmallLoader />
-            ) : message?.status === "ERROR" ? (
+
+            {message?.status === "ERROR" ? (
               <div
                 css={css`
                   display: flex;
@@ -107,23 +120,25 @@ export default function GenerateResponse({
                     display: flex;
                     align-items: center;
                     font-size: 0.95rem;
-                    color: #333;
-                    border-top-right-radius: 10px;
-                    border-bottom-right-radius: 10px;
-                    background-color: #ffffff;
                     color: var(--openk9-embeddable-search--primary-color);
                     font-weight: 700;
+                    background-color: #ffffff;
+                    border-top-right-radius: 10px;
+                    border-bottom-right-radius: 10px;
                   `}
                 >
                   {message.answer}
                 </div>
               </div>
             ) : (
-              message?.answer && (
-                <Answer>
-                  <Markdown>{message.answer}</Markdown>
-                </Answer>
-              )
+              <>
+                {(isChatting || loadingSearch) && <SmallLoader />}
+                {(message?.answer || isChatting) && (
+                  <Answer>
+                    <Markdown>{message?.answer ?? ""}</Markdown>
+                  </Answer>
+                )}
+              </>
             )}
           </ContainerBox>
         </Container>
@@ -131,6 +146,7 @@ export default function GenerateResponse({
     </>
   );
 }
+
 const Container = styled.div`
   background: white;
   border-bottom-right-radius: 10px;
@@ -152,26 +168,22 @@ const Question = styled.div`
 const Answer = styled.div`
   font-size: 1rem;
   color: #555;
+  margin-top: 8px;
+  white-space: pre-wrap;
 `;
 
 const spVortex = keyframes`
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(359deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(359deg); }
 `;
 
 const SmallLoader = styled.div`
   width: 1rem;
   height: 1rem;
-  clear: both;
-  margin: 1rem left;
   border: 2px black solid;
   border-radius: 100%;
-  overflow: hidden;
   position: relative;
+  margin-bottom: 8px;
 
   &:before,
   &:after {
