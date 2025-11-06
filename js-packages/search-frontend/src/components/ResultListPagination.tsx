@@ -168,7 +168,12 @@ export function InfiniteResults<E>({
   }, [results?.data, setTotalResult, setNumberOfResults, setCorrection]);
 
   return (
-    <div style={{ overflowX: "hidden" }} className="scroll">
+    <div
+      css={css`
+        overflow-x: hidden;
+      `}
+      className="scroll"
+    >
       {results?.data?.pages[0]?.total ?? 0 > 0 ? (
         <div
           className="openk9-infinite-results-container-wrapper"

@@ -214,7 +214,11 @@ export function FiniteResults<E>({
   return (
     <div
       className="openk9-finite-result-container"
-      style={{ height: "100%", overflowY: "auto", overflowX: "hidden" }}
+      css={css`
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+      `}
     >
       {results.data?.pages[0].total && results.data.pages[0].total > 0 ? (
         <div
@@ -494,7 +498,9 @@ export function VirtualResults<E>({
     >
       <Virtuoso
         hidden={!thereAreResults}
-        style={{ flexGrow: 1 }}
+        css={css`
+          flex-grow: 1;
+        `}
         totalCount={resultsFlat?.length ?? 0}
         itemContent={(index) => {
           const result = resultsFlat?.[index];

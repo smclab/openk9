@@ -110,12 +110,13 @@ function FiltersMobile<E>({
             align-items: center;
             gap: 9px;
             margin-right: 21px;
+            background-color: white;
+            border: none;
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
             filtersMobileBasicCallback && filtersMobileBasicCallback();
           }}
-          style={{ backgroundColor: "white", border: "none" }}
         >
           Chiudi <DeleteLogo heightParam={8} widthParam={8} />
         </button>

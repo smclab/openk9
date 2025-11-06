@@ -9,6 +9,7 @@ import {
   ResultTextContent,
 } from "../../../renderer-components";
 import { FileIcon } from "../../../renderer-components/FileIcon";
+import { css } from "styled-components/macro";
 
 type DocumentResultProps = { result: GenericResultItem<DocumentResultItem> };
 export function DocumentResult({ result }: DocumentResultProps) {
@@ -22,31 +23,31 @@ export function DocumentResult({ result }: DocumentResultProps) {
       </ResultLink>
       {"document.content" in result.highlight ? (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+          `}
         >
           <HighlightableText result={result} path="document.content" />
         </div>
       ) : (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+          `}
         >
           <ResultTextContent result={result} path="document.summary" />
         </div>

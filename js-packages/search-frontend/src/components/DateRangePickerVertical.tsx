@@ -147,13 +147,13 @@ export function DataRangePickerVertical({
   return (
     <div
       className={`DateRangePickerVertical-container openk9-class-tab-${classTab}`}
-      style={{
-        display: "flex",
-        height: "100%",
-        justifyContent: "center",
-        flexDirection: "column",
-        gap: "10px",
-      }}
+      css={css`
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        flex-direction: column;
+        gap: 10px;
+      `}
     >
       <div className="DateRangePickerVertical-startDate-container">
         <p
@@ -256,7 +256,13 @@ export function DataRangePickerVertical({
         </div>
       </div>
       {validationStart !== "" && (
-        <p id="error-message" role="alert" style={{ color: "red" }}>
+        <p
+          id="error-message"
+          role="alert"
+          css={css`
+            color: red;
+          `}
+        >
           {validationStart}
         </p>
       )}
@@ -364,7 +370,13 @@ export function DataRangePickerVertical({
           </div>
         </div>
         {validationEnd !== "" && (
-          <p id="error-message" role="alert" style={{ color: "red" }}>
+          <p
+            id="error-message"
+            role="alert"
+            css={css`
+              color: red;
+            `}
+          >
             {validationEnd}
           </p>
         )}

@@ -286,10 +286,10 @@ function FilterCategoryDynamic({
             <FontAwesomeIcon
               className="icon-search icon-search-filters"
               icon={isOpen ? faChevronUp : faChevronDown}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-icon-color)",
-                cursor: "pointer",
-              }}
+              css={css`
+                color: var(--openk9-embeddable-search--secondary-text-color);
+                cursor: pointer;
+              `}
             />
           </button>
         </div>

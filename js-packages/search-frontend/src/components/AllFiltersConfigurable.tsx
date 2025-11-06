@@ -101,10 +101,10 @@ function CollapsableFilterCategoryLocal({
         >
           <FontAwesomeIcon
             icon={isOpen ? faChevronUp : faChevronDown}
-            style={{
-              color: "var(--openk9-embeddable-search--secondary-icon-color)",
-              cursor: "pointer",
-            }}
+            css={css`
+              color: var(--openk9-embeddable-search--secondary-icon-color);
+              cursor: pointer;
+            `}
           />
         </button>
       </div>

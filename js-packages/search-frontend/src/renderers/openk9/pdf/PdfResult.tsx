@@ -16,6 +16,7 @@ import { ResultContainerTwo } from "../../../renderer-components/ResultContainer
 import { ResultLinkTwo } from "../../../renderer-components/ResultLinkTwo";
 import { MoreDetailCard } from "../../../renderer-components/MoreDetailCard";
 import { ResultTextContentTwo } from "../../../renderer-components/ResultTextContentTwo";
+import { css } from "styled-components/macro";
 
 type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {
@@ -29,37 +30,37 @@ export function PdfResult({ result }: PdfResultProps) {
       </ResultTitleTwo>
       {"document.content" in result.highlight ? (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-            fontWeight: "400",
-            fontSize: "15px",
-            color: "#71717A",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+            font-weight: 400;
+            font-size: 15px;
+            color: #71717a;
+          `}
         >
           <HighlightableText result={result} path="document.content" />
         </div>
       ) : (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-            fontWeight: "400",
-            fontSize: "15px",
-            color: "#71717A",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+            font-weight: 400;
+            font-size: 15px;
+            color: #71717a;
+          `}
         >
           <ResultTextContentTwo result={result} path="document.summary" />
         </div>

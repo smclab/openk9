@@ -11,6 +11,7 @@ import {
   DetailTitle,
   HighlightableText,
 } from "../../../renderer-components";
+import { css } from "styled-components/macro";
 
 type DocumentDetailProps = {
   result: GenericResultItem<DocumentResultItem>;
@@ -29,31 +30,31 @@ export function DocumentDetail({ result }: DocumentDetailProps) {
       </DetailLink>
       {"document.content" in result.highlight ? (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+          `}
         >
           <HighlightableText result={result} path="document.content" />
         </div>
       ) : (
         <div
-          style={{
-            marginTop: "8px",
-            maxWidth: "100%",
-            lineHeight: "1em",
-            maxHeight: "6em",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            wordWrap: "break-word",
-            wordBreak: "break-word",
-          }}
+          css={css`
+            margin-top: 8px;
+            max-width: 100%;
+            line-height: 1em;
+            max-height: 6em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-word;
+          `}
         >
           <DetailTextContent result={result} path="document.summary" />
         </div>

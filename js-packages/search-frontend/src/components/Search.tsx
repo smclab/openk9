@@ -109,11 +109,11 @@ export function Search({
           <FontAwesomeIcon
             className="openk9--search-icon"
             icon={faSearch}
-            style={{
-              paddingLeft: "16px",
-              opacity: 0.5,
-              color: "var(--openk9-embeddable-search--secondary-text-color)",
-            }}
+            css={css`
+              padding-left: 16px;
+              opacity: 0.5;
+              color: var(--openk9-embeddable-search--secondary-text-color);
+            `}
           />
           <div
             className="openk9--search-container-show-syntax"
@@ -370,17 +370,17 @@ export function Search({
             className="openk9--search-delete-container-icon"
             title={t("remove-text") || ""}
             aria-label={t("remove-text") || ""}
-            style={{
-              paddingRight: "16px",
-              display: "flex",
-              flexDirection: "row",
-              padding: "4px 8px",
-              gap: "4px",
-              alignItems: "center",
-              marginRight: "21px",
-              background: "inherit",
-              border: "none",
-            }}
+            css={css`
+              padding-right: 16px;
+              display: flex;
+              flex-direction: row;
+              padding: 4px 8px;
+              gap: 4px;
+              align-items: center;
+              margin-right: 21px;
+              background: inherit;
+              border: none;
+            `}
             onClick={() => {
               clearSearch();
             }}

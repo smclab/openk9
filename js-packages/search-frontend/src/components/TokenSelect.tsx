@@ -169,7 +169,9 @@ export function TokenSelect({
                 {t("uncheck")}
               </div>
               <div
-                style={{ cursor: "pointer" }}
+                css={css`
+                  cursor: pointer;
+                `}
                 onClick={() => {
                   setOpenedDropdown(null);
                 }}
@@ -298,19 +300,19 @@ function FactoryTokenType({
           </div>
           <div
             className="openk9-token-select-factory-container-option-label"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: "4px 8px",
-              gap: "4px",
-              height: "15px",
-              background: "#FFFFFF",
-              border:
-                "1px solid var(--openk9-embeddable-search--secondary-active-color)",
-              borderRadius: "20px",
-              marginLeft: "10px",
-            }}
+            css={css`
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              padding: 4px 8px;
+              gap: 4px;
+              height: 15px;
+              background: #ffffff;
+              border: 1px solid
+                var(--openk9-embeddable-search--secondary-active-color);
+              border-radius: 20px;
+              margin-left: 10px;
+            `}
           >
             <div
               className="openk9-token-select-factory-option-label"

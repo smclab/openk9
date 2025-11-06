@@ -5,6 +5,7 @@ import Select, {
   StylesConfig,
 } from "react-select";
 import { GloboSvg } from "../svgElement/Globo";
+import { css } from "styled-components/macro";
 
 export type LanguageItem = {
   createDate: any;
@@ -97,7 +98,13 @@ export function ChangeLanguage({
 
   const SingleValue = (props: SingleValueProps<Option, false>) => (
     <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div
+        css={css`
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        `}
+      >
         <GloboSvg />
         {remappingLanguageToBack({ language: activeLanguage })}
       </div>
