@@ -20,11 +20,8 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.enricher.HttpEnricherClient;
 import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.ext.web.client.HttpResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import io.openk9.datasource.mapper.EnrichItemMapper;
 import io.openk9.datasource.model.EnrichItem;
@@ -53,27 +50,17 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	}
 
     public Uni<FormTemplate> getForm(String serviceName) {
-        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
+        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+			.baseUri(serviceName)
+			.build();
         return httpEnricherClient.getForm(resourceUriDTO);
     }
 
     public Uni<HealthDTO> getHealth(String serviceName) {
-        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
+        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+			.baseUri(serviceName)
+			.build();
         return httpEnricherClient.getHealth(resourceUriDTO);
-    }
-
-    public Uni<HttpResponse<Buffer>> process(String serviceName, EnricherInputDTO enricherInputDTO) {
-        ResourceUriDTO resourceUriDTO = extractUriAndPath(serviceName);
-        return httpEnricherClient.process(resourceUriDTO, enricherInputDTO);
-    }
-
-    private ResourceUriDTO extractUriAndPath(String serviceName) {
-        String regex = "/";
-        /*
-        da implementare
-        */
-        String[] uri = serviceName.split(regex);
-        return new ResourceUriDTO(uri[0], uri[1]);
     }
 
 }

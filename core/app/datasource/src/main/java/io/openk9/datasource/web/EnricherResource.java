@@ -19,17 +19,13 @@ package io.openk9.datasource.web;
 
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
-import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.smallrye.mutiny.Uni;
-import io.vertx.mutiny.ext.web.client.HttpResponse;
-import io.vertx.mutiny.core.buffer.Buffer;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
@@ -108,21 +104,4 @@ public class EnricherResource {
         return service.getForm(serviceName);
     }
 
-    @Operation(operationId = "process")
-    @Tag(name = "Process API", description = "Start enrichment data process for specific enricher")
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "success"),
-            @APIResponse(responseCode = "404", description = "not found"),
-            @APIResponse(responseCode = "400", description = "invalid"),
-            @APIResponse(ref = "#/components/responses/bad-request"),
-            @APIResponse(ref = "#/components/responses/not-found"),
-            @APIResponse(ref = "#/components/responses/internal-server-error"),
-    })
-    @POST
-    @Path("/process/{serviceName}")
-    public Uni<HttpResponse<Buffer>> process(
-            @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") String serviceName, EnricherInputDTO enricherInputDTO) {
-        return service.process(serviceName, enricherInputDTO);
-    }
 }
