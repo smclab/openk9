@@ -350,10 +350,7 @@ public class PluginDriverService
 		return findById(id)
 			.flatMap(pluginDriver -> {
                         HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-                        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-                                .baseUri(httpPluginDriverInfo.getBaseUri())
-                                .path(httpPluginDriverInfo.getPath())
-                                .build();
+                        ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
                         return httpPluginDriverClient.getForm(resourceUriDTO);
                     }
 			);
@@ -361,10 +358,7 @@ public class PluginDriverService
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
         HttpPluginDriverInfo httpPluginDriverInfo = PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig());
-        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-                .baseUri(httpPluginDriverInfo.getBaseUri())
-                .path(httpPluginDriverInfo.getPath())
-                .build();
+        ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
 		return httpPluginDriverClient.getHealth(resourceUriDTO);
 	}
 
@@ -372,10 +366,7 @@ public class PluginDriverService
 		return findById(id)
 			.flatMap(pluginDriver -> {
                 HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-                ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-                        .baseUri(httpPluginDriverInfo.getBaseUri())
-                        .path(httpPluginDriverInfo.getPath())
-                        .build();
+				ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
                 return httpPluginDriverClient.getHealth(resourceUriDTO);
                     }
 			);
@@ -655,6 +646,22 @@ public class PluginDriverService
 						});
 				};
 			});
+	}
+
+	private ResourceUriDTO convertToResourceUriDTO(HttpPluginDriverInfo httpPluginDriverInfo) {
+		ResourceUriDTO resourceUriDTO = new ResourceUriDTO();
+		String baseUri = httpPluginDriverInfo.getBaseUri();
+		boolean isSecure = httpPluginDriverInfo.isSecure();
+
+		if (isSecure) {
+			String uri = HttpPluginDriverClient.HTTPS + baseUri;
+			resourceUriDTO.setBaseUri(uri);
+		}
+		else {
+			String uri = HttpPluginDriverClient.HTTP + baseUri;
+			resourceUriDTO.setBaseUri(uri);
+		}
+		return resourceUriDTO;
 	}
 
 }
