@@ -155,4 +155,184 @@ public class PluginDriverDtoExamples {
 		{
 			"status":"UP"
 		}""";
+	public static final String FORM_RESPONSE =
+		"""
+		{
+			"fields": [
+			   {
+			     "info": "Sitemap Urls to read to extract pages",
+			     "label": "Sitemap Urls",
+			     "name": "sitemapUrls",
+			     "type": "list",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": "sitemapUrl1",
+			          "isDefault": false
+			        },
+			        {
+			          "value": "sitemapUrl2",
+			          "isDefault": false
+			        }
+			      ],
+			     "validator": {
+			       "min": 0,
+			       "max": 100,
+			       "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Allowed domain for crawling",
+			     "label": "Allowed Domains",
+			     "name": "allowedDomains",
+			     "type": "list",
+			     "size": 4,
+			     "required": false,
+			     "values": [],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Allowed paths for crawling",
+			     "label": "Allowed Paths",
+			     "name": "allowedPaths",
+			     "type": "list",
+			     "size": 4,
+			     "required": false,
+			     "values": [],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Excluded paths for crawling",
+			     "label": "Excluded Paths",
+			     "name": "excludedPaths",
+			     "type": "list",
+			     "size": 4,
+			     "required": false,
+			     "values": [],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Tag to use to extract main web content",
+			     "label": "Body Tag",
+			     "name": "bodyTag",
+			     "type": "text",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": "body",
+			          "isDefault": true
+			        }
+			      ],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Tag to use to extract title",
+			     "label": "Title tag",
+			     "name": "titleTag",
+			     "type": "text",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": "title::text",
+			          "isDefault": true
+			        }
+			      ],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Max length for main content. If negative all text is extracted",
+			     "label": "Max Length",
+			     "name": "maxLength",
+			     "type": "number",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": -1,
+			          "isDefault": true
+			        }
+			      ],
+			     "validator": {
+			        "min": 0,
+			        "max": 10000,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "Number of pages extracted. If 0 all pages founded in sitemap are scraped",
+			     "label": "Page Count",
+			     "name": "pageCount",
+			     "type": "number",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": 0,
+			          "isDefault": true
+			        }
+			      ],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "If extract documents pippo",
+			     "label": "Extract Docs",
+			     "name": "doExtractDocs",
+			     "type": "checkbox",
+			     "size": 4,
+			     "required": true,
+			     "values": [
+			        {
+			          "value": false,
+			          "isDefault": true
+			        }
+			      ],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   },
+			   {
+			     "info": "File extensions allowed",
+			     "label": "Document File Extensions",
+			     "name": "documentFileExtensions",
+			     "type": "list",
+			     "size": 4,
+			     "required": true,
+			     "values": [],
+			     "validator": {
+			        "min": 0,
+			        "max": 100,
+			        "regex": "/[[:alnum:]]+/"
+			     }
+			   }
+			 ]
+		}""";
 }

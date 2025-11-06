@@ -89,7 +89,7 @@ public class EnricherResource {
                             @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = Response.class),
-                                    example = BucketDtoExamples.TEMPLATES_RESPONSE
+                                    example = PluginDriverDtoExamples.FORM_RESPONSE
                             )
                     }
             ),
