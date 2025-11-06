@@ -45,193 +45,193 @@ import org.junit.jupiter.api.Test;
 @QuarkusTestResource(WireMockPluginDriver.class)
 class HttpPluginDriverClientTest {
 
-    private static final Logger log = Logger.getLogger(HttpPluginDriverClientTest.class);
+	private static final Logger log = Logger.getLogger(HttpPluginDriverClientTest.class);
 
-    private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
-            .baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-            .build();
+	private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
+		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+		.build();
 
-    private static final ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-            .baseUri(pluginDriverInfo.getBaseUri())
-            .build();
+	private static final ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+		.baseUri(pluginDriverInfo.getBaseUri())
+		.build();
 
-    @Inject
-    HttpPluginDriverClient httpPluginDriverClient;
+	@Inject
+	HttpPluginDriverClient httpPluginDriverClient;
 
-    @InjectWireMock
-    WireMockServer wireMockServer;
+	@InjectWireMock
+	WireMockServer wireMockServer;
 
-    @Test
-    @RunOnVertxContext
-    void should_invoke_success(UniAsserter asserter) {
+	@Test
+	@RunOnVertxContext
+	void should_invoke_success(UniAsserter asserter) {
 
-        asserter.assertThat(
-                () -> httpPluginDriverClient.invoke(
-                        pluginDriverInfo,
-                        HttpPluginDriverContext.builder().build()
-                ),
-                res -> Assertions.assertEquals(200, res.statusCode())
-        );
+		asserter.assertThat(
+			() -> httpPluginDriverClient.invoke(
+				pluginDriverInfo,
+				HttpPluginDriverContext.builder().build()
+			),
+			res -> Assertions.assertEquals(200, res.statusCode())
+		);
 
-    }
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_post_invoke_fail_when_status_code_is_not_200(UniAsserter asserter) {
+	@Test
+	@RunOnVertxContext
+	void should_post_invoke_fail_when_status_code_is_not_200(UniAsserter asserter) {
 
-        var invalidInvokeRequest = wireMockServer.stubFor(WireMock
-                .post(HttpPluginDriverClient.INVOKE_PATH)
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(400)
-                        .withStatusMessage("Invalid Request")
-                )
-        );
+		var invalidInvokeRequest = wireMockServer.stubFor(WireMock
+			.post(HttpPluginDriverClient.INVOKE_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(400)
+				.withStatusMessage("Invalid Request")
+			)
+		);
 
-        asserter.assertFailedWith(
-                () -> httpPluginDriverClient.invoke(
-                        pluginDriverInfo,
-                        HttpPluginDriverContext.builder().build()
-                ),
-                err -> {
-                    Assertions.assertInstanceOf(ValidationException.class, err);
-                    wireMockServer.removeStub(invalidInvokeRequest);
-                }
-        );
-    }
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.invoke(
+				pluginDriverInfo,
+				HttpPluginDriverContext.builder().build()
+			),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				wireMockServer.removeStub(invalidInvokeRequest);
+			}
+		);
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_get_health_up(UniAsserter asserter) throws IOException {
+	@Test
+	@RunOnVertxContext
+	void should_get_health_up(UniAsserter asserter) throws IOException {
 
-        HealthDTO expected;
+		HealthDTO expected;
 
-        try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
-            expected = Json.decodeValue(new String(in.readAllBytes()), HealthDTO.class);
-        }
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.HEALTH_JSON_FILE)) {
+			expected = Json.decodeValue(new String(in.readAllBytes()), HealthDTO.class);
+		}
 
-        asserter.assertThat(
-                () -> httpPluginDriverClient.getHealth(resourceUriDTO),
-                res -> Assertions.assertEquals(expected, res)
-        );
+		asserter.assertThat(
+			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			res -> Assertions.assertEquals(expected, res)
+		);
 
-    }
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_get_health_unknown_when_response_body_is_invalid(UniAsserter asserter) {
+	@Test
+	@RunOnVertxContext
+	void should_get_health_unknown_when_response_body_is_invalid(UniAsserter asserter) {
 
-        var invalidBodyStub = wireMockServer.stubFor(WireMock
-                .get(HttpPluginDriverClient.HEALTH_PATH)
-                .willReturn(ResponseDefinitionBuilder.okForEmptyJson()));
+		var invalidBodyStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.HEALTH_PATH)
+			.willReturn(ResponseDefinitionBuilder.okForEmptyJson()));
 
-        asserter.assertThat(
-                () -> httpPluginDriverClient.getHealth(resourceUriDTO),
-                res -> {
-                    Assertions.assertEquals(HealthDTO.builder()
-                            .status(HealthDTO.Status.UNKOWN)
-                            .build(), res);
-                    wireMockServer.removeStub(invalidBodyStub);
-                }
-        );
+		asserter.assertThat(
+			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			res -> {
+				Assertions.assertEquals(HealthDTO.builder()
+					.status(HealthDTO.Status.UNKOWN)
+					.build(), res);
+				wireMockServer.removeStub(invalidBodyStub);
+			}
+		);
 
-    }
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_get_health_fail_when_response_status_is_not_200(UniAsserter asserter) {
+	@Test
+	@RunOnVertxContext
+	void should_get_health_fail_when_response_status_is_not_200(UniAsserter asserter) {
 
-        var invalidStatusStub = wireMockServer.stubFor(WireMock
-                .get(HttpPluginDriverClient.HEALTH_PATH)
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(500)
-                        .withStatusMessage("PluginDriver internal error")
-                )
-        );
+		var invalidStatusStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.HEALTH_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(500)
+				.withStatusMessage("PluginDriver internal error")
+			)
+		);
 
-        asserter.assertFailedWith(
-                () -> httpPluginDriverClient.getHealth(resourceUriDTO),
-                err -> {
-                    Assertions.assertInstanceOf(ValidationException.class, err);
-                    Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
-                    wireMockServer.removeStub(invalidStatusStub);
-                }
-        );
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
+				wireMockServer.removeStub(invalidStatusStub);
+			}
+		);
 
-    }
+	}
 
 
-    @Test
-    @RunOnVertxContext
-    void should_get_sample(UniAsserter asserter) throws IOException {
+	@Test
+	@RunOnVertxContext
+	void should_get_sample(UniAsserter asserter) throws IOException {
 
-        IngestionPayload expected;
+		IngestionPayload expected;
 
-        try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
-            expected = Json.decodeValue(new String(in.readAllBytes()), IngestionPayload.class);
-        }
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.SAMPLE_JSON_FILE)) {
+			expected = Json.decodeValue(new String(in.readAllBytes()), IngestionPayload.class);
+		}
 
-        asserter.assertThat(
-                () -> httpPluginDriverClient.getSample(pluginDriverInfo),
-                res -> {
-                    Assertions.assertEquals(expected, res);
-                    Assertions.assertTrue(res.getDatasourcePayload().containsKey("sample"));
-                }
-        );
+		asserter.assertThat(
+			() -> httpPluginDriverClient.getSample(pluginDriverInfo),
+			res -> {
+				Assertions.assertEquals(expected, res);
+				Assertions.assertTrue(res.getDatasourcePayload().containsKey("sample"));
+			}
+		);
 
-    }
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_get_form(UniAsserter asserter) throws IOException {
+	@Test
+	@RunOnVertxContext
+	void should_get_form(UniAsserter asserter) throws IOException {
 
-        FormTemplate expectedFormTemplate;
+		FormTemplate expectedFormTemplate;
 
-        try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
-            expectedFormTemplate = Json.decodeValue(
-                    new String(in.readAllBytes()),
-                    FormTemplate.class
-            );
-        }
+		try (InputStream in = TestUtils.getResourceAsStream(WireMockPluginDriver.FORM_JSON_FILE)) {
+			expectedFormTemplate = Json.decodeValue(
+				new String(in.readAllBytes()),
+				FormTemplate.class
+			);
+		}
 
-        asserter.assertThat(
-                () -> httpPluginDriverClient.getForm(resourceUriDTO),
-                res -> {
+		asserter.assertThat(
+			() -> httpPluginDriverClient.getForm(resourceUriDTO),
+			res -> {
 
-                    if (log.isDebugEnabled()) {
-                        log.debugf(
-                                "GET /form response: \n%s", Json.encodePrettily(res));
-                    }
+				if (log.isDebugEnabled()) {
+					log.debugf(
+						"GET /form response: \n%s", Json.encodePrettily(res));
+				}
 
-                    Assertions.assertEquals(expectedFormTemplate, res);
-                }
-        );
+				Assertions.assertEquals(expectedFormTemplate, res);
+			}
+		);
 
-    }
+	}
 
-    @Test
-    @RunOnVertxContext
-    void should_get_form_fail_when_response_status_is_not_200(UniAsserter asserter) {
+	@Test
+	@RunOnVertxContext
+	void should_get_form_fail_when_response_status_is_not_200(UniAsserter asserter) {
 
-        var invalidStatusStub = wireMockServer.stubFor(WireMock
-                .get(HttpPluginDriverClient.FORM_PATH)
-                .willReturn(ResponseDefinitionBuilder
-                        .responseDefinition()
-                        .withStatus(500)
-                        .withStatusMessage("PluginDriver internal error")
-                )
-        );
+		var invalidStatusStub = wireMockServer.stubFor(WireMock
+			.get(HttpPluginDriverClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(500)
+				.withStatusMessage("PluginDriver internal error")
+			)
+		);
 
-        asserter.assertFailedWith(
-                () -> httpPluginDriverClient.getForm(resourceUriDTO),
-                err -> {
-                    Assertions.assertInstanceOf(ValidationException.class, err);
-                    Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
-                    wireMockServer.removeStub(invalidStatusStub);
-                }
-        );
+		asserter.assertFailedWith(
+			() -> httpPluginDriverClient.getForm(resourceUriDTO),
+			err -> {
+				Assertions.assertInstanceOf(ValidationException.class, err);
+				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
+				wireMockServer.removeStub(invalidStatusStub);
+			}
+		);
 
-    }
+	}
 
 }
