@@ -36,12 +36,15 @@ public abstract class HttpDatasourceServiceClient {
     WebClient webClient;
     @Inject
     Validator validator;
+
+    public static final String FORM_PATH = "/form";
+    public static final String HEALTH_PATH = "/health";
     
     public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
         return webClient
                 .requestAbs(
                         HttpMethod.GET,
-                        resourceUriDTO.getBaseUri() + resourceUriDTO.getPath()
+                        resourceUriDTO.getBaseUri() + FORM_PATH
                 )
                 .send()
                 .flatMap(this::validateResponse)
@@ -53,7 +56,7 @@ public abstract class HttpDatasourceServiceClient {
         return webClient
                 .requestAbs(
                         HttpMethod.GET,
-                        resourceUriDTO.getBaseUri() + resourceUriDTO.getPath()
+                        resourceUriDTO.getBaseUri() + HEALTH_PATH
                 )
                 .send()
                 .flatMap(this::validateResponse)

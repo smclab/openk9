@@ -34,8 +34,6 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 
-	public static final String FORM_PATH = "/form";
-	public static final String HEALTH_PATH = "/health";
 	public static final String HTTP = "http://";
 	public static final String HTTPS = "https://";
 	public static final String INVOKE_PATH = "/invoke";
