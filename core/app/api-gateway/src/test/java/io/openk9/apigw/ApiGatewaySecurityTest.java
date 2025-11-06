@@ -86,11 +86,21 @@ class ApiGatewaySecurityTest {
     @DisplayName("Alabasta Tenant Security Tests")
     class AlabastaTenantTests {
 
-        @Test
+		@Test
+		@DisplayName("DatasourcePublic route without authorization header should succeed")
+		void testDatasourcePublicValid() {
+			webTestClient.get()
+				.uri("/api/datasource/buckets/current")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.exchange()
+				.expectStatus().isOk();
+		}
+
+		@Test
         @DisplayName("Datasource route with valid OAuth2 token should succeed")
         void testDatasourceWithValidOAuth2() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.exchange()
@@ -101,7 +111,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with invalid OAuth2 token should fail")
         void testDatasourceWithInvalidOAuth2() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_JWT_TOKEN)
 				.exchange()
@@ -112,7 +122,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route without OAuth2 token should fail")
         void testDatasourceWithoutOAuth2() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
 				.expectStatus().isUnauthorized();
@@ -122,7 +132,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with API key instead of OAuth2 should fail")
         void testDatasourceWithApiKeyInsteadOfOAuth2() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY)
 				.exchange()
@@ -133,7 +143,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route with valid API key should succeed")
         void testSearcherWithValidApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY)
 				.exchange()
@@ -144,7 +154,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route with invalid API key should fail")
         void testSearcherWithInvalidApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
 				.exchange()
@@ -155,7 +165,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route without API key should fail")
         void testSearcherWithoutApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
 				.expectStatus().isUnauthorized();
@@ -165,7 +175,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route with OAuth2 token instead of API key should fail")
         void testSearcherWithOAuth2InsteadOfApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.exchange()
@@ -201,7 +211,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with valid API key should succeed")
         void testDatasourceWithValidApiKey() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
 				.exchange()
@@ -215,7 +225,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with invalid API key should fail")
         void testDatasourceWithInvalidApiKey() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
 				.exchange()
@@ -226,7 +236,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route without API key should fail")
         void testDatasourceWithoutApiKey() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.exchange()
 				.expectStatus().isUnauthorized();
@@ -236,7 +246,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route with valid API key should succeed")
         void testSearcherWithValidApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
 				.exchange()
@@ -250,7 +260,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route with invalid API key should fail")
         void testSearcherWithInvalidApiKey() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
 				.exchange()
@@ -276,7 +286,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with valid API key should succeed")
         void testDatasourceWithValidApiKey() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, LOGUETOWN_HOST)
 				.header(HttpHeaders.AUTHORIZATION, LOGUETOWN_VALID_API_KEY)
 				.exchange()
@@ -287,7 +297,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource route with invalid API key should fail")
         void testDatasourceWithInvalidApiKey() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, LOGUETOWN_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
 				.exchange()
@@ -298,7 +308,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher route should allow no-auth access (not configured)")
         void testSearcherNoAuth() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, LOGUETOWN_HOST)
 				.exchange()
 				.expectStatus().isOk();
@@ -323,7 +333,7 @@ class ApiGatewaySecurityTest {
 		void testAuthorizationSchemeValidation() {
 			// Test JWT where API key is expected
 			webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN) // Bearer scheme
 				.exchange()
@@ -331,7 +341,7 @@ class ApiGatewaySecurityTest {
 
 			// Test API key where JWT is expected
 			webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY) // ApiKey scheme
 				.exchange()
@@ -342,7 +352,7 @@ class ApiGatewaySecurityTest {
 		@DisplayName("Invalid authorization scheme should be rejected")
 		void testInvalidAuthorizationScheme() {
 			webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "Custom some-token")
 				.exchange()
@@ -353,7 +363,7 @@ class ApiGatewaySecurityTest {
 		@DisplayName("Malformed authorization header should be rejected")
 		void testMalformedAuthorizationHeader() {
 			webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "InvalidFormat")
 				.exchange()
@@ -364,7 +374,7 @@ class ApiGatewaySecurityTest {
 		@DisplayName("Empty authorization scheme should be rejected")
 		void testEmptyAuthorizationScheme() {
 			webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "ApiKey ")
 				.exchange()
@@ -375,7 +385,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Alabasta datasource with multiple authorization header should be rejected")
         void testAlabastaDatasourceWithBothHeaders() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY)
@@ -387,7 +397,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Alabasta searcher with multiple authorization header should be rejected")
         void testAlabastaSearcherWithBothHeaders() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY)
@@ -405,7 +415,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Unknown tenant should reject all requests")
         void testUnknownTenantDatasource() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, UNKNOWN_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY) // any valid API key
 				.exchange()
@@ -417,7 +427,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Unknown tenant searcher should reject requests")
         void testUnknownTenantSearcher() {
             webTestClient.get()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, UNKNOWN_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN) // any valid JWT
 				.exchange()
@@ -435,7 +445,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("POST request to Alabasta datasource with OAuth2")
         void testPostRequestAlabastaDatasource() {
             webTestClient.post()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -448,7 +458,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("PUT request to Sabaody searcher with API key")
         void testPutRequestSabaodySearcher() {
             webTestClient.put()
-				.uri("/searcher/test")
+				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
 				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -461,7 +471,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("DELETE request to Loguetown datasource with API key")
         void testDeleteRequestLoguetownDatasource() {
             webTestClient.delete()
-				.uri("/datasource/test/123")
+				.uri("/api/datasource/test/123")
 				.header(HttpHeaders.HOST, LOGUETOWN_HOST)
 				.header(HttpHeaders.AUTHORIZATION, LOGUETOWN_VALID_API_KEY)
 				.exchange()
@@ -477,7 +487,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Datasource nested path should use datasource security")
         void testDatasourceNestedPath() {
             webTestClient.get()
-				.uri("/datasource/nested/deep/path")
+				.uri("/api/datasource/nested/deep/path")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 				.exchange()
@@ -488,7 +498,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Searcher nested path should use searcher security")
         void testSearcherNestedPath() {
             webTestClient.get()
-				.uri("/searcher/nested/deep/path")
+				.uri("/api/searcher/nested/deep/path")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_API_KEY)
 				.exchange()
@@ -499,7 +509,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Path that starts with datasource but longer should use catch-all")
         void testDatasourceLikePath() {
             webTestClient.get()
-				.uri("/datasources/test") // Note the 's' at the end
+				.uri("/api/datasources/test") // Note the 's' at the end
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
 				.expectStatus().isOk(); // Should use no-auth catch-all
@@ -524,7 +534,7 @@ class ApiGatewaySecurityTest {
         @DisplayName("Empty API key header should fail")
         void testEmptyApiKeyHeader() {
             webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "")
 				.exchange()
@@ -535,7 +545,7 @@ class ApiGatewaySecurityTest {
 		@DisplayName("Invalid checksum API key header should fail")
 		void testInvalidChecksumApiKeyHeader() {
 			webTestClient.get()
-				.uri("/datasource/test")
+				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "ApiKey sk_9a6efxxxxxxxxx404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667")
 				.exchange()
@@ -554,7 +564,7 @@ class ApiGatewaySecurityTest {
             // This test would benefit from parallel execution
             for (int i = 0; i < 10; i++) {
                 webTestClient.get()
-					.uri("/datasource/test" + i)
+					.uri("/api/datasource/test" + i)
 					.header(HttpHeaders.HOST, ALABASTA_HOST)
 					.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
 					.exchange()
@@ -573,7 +583,7 @@ class ApiGatewaySecurityTest {
             
             for (Tuple2<String, String> conf : confs) {
                 webTestClient.get()
-					.uri("/datasource/test")
+					.uri("/api/datasource/test")
 					.header(HttpHeaders.HOST, conf.getT1())
 					.header(HttpHeaders.AUTHORIZATION, conf.getT2())
 					.exchange()

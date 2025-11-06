@@ -55,16 +55,26 @@ public class RouterConfiguration {
 		var routes = builder.routes();
 
 		for (RoutePath routePath : RoutePath.values()) {
-			switch (routePath) {
-				case SEARCHER -> routes.route(
-					RoutePath.SEARCHER.name(), r -> r
-					.path(RoutePath.SEARCHER.getAntPattern())
-					.uri(searcher)
+			Object ignore = switch (routePath) {
+				case DATASOURCE_OAUTH2_SETTINGS -> routes.route(
+					RoutePath.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
+						.path(RoutePath.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
+						.uri("forward:/oauth2/settings.js")
+				);
+				case DATASOURCE_PUBLIC_CONFIGS -> routes.route(
+					RoutePath.DATASOURCE_PUBLIC_CONFIGS.name(), r -> r
+						.path(RoutePath.DATASOURCE_PUBLIC_CONFIGS.getAntPattern())
+						.uri(datasource)
 				);
 				case DATASOURCE -> routes.route(
 					RoutePath.DATASOURCE.name(), r -> r
-					.path(RoutePath.DATASOURCE.getAntPattern())
-					.uri(datasource)
+						.path(RoutePath.DATASOURCE.getAntPattern())
+						.uri(datasource)
+				);
+				case SEARCHER -> routes.route(
+					RoutePath.SEARCHER.name(), r -> r
+						.path(RoutePath.SEARCHER.getAntPattern())
+						.uri(searcher)
 				);
 				case ANY -> routes.route(
 					RoutePath.ANY.name(), r -> r
@@ -75,7 +85,7 @@ public class RouterConfiguration {
 					.uri("noop://noop")
 				);
 				// no default case to prevent accidental omissions at compile-time.
-			}
+			};
 		}
 
 		return routes.build();

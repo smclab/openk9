@@ -79,7 +79,6 @@
 			<plugin>
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
-				<version>${jib-plugin.version}</version>
 				<configuration>
 					<to>
 						<image>openk9/${project.artifactId}</image>

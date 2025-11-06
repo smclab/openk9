@@ -50,16 +50,28 @@ import org.springframework.util.PathMatcher;
 public enum RoutePath {
 
 	/**
-	 * Route for the searcher service.
-	 * Matches requests under {@code /searcher/**}.
+	 * Route for the datasource service, that doesn't need to be protected.
+	 * Matches requests under {@code /api/datasource/oauth2/settings.js}
 	 */
-	SEARCHER("/searcher/**"),
+	DATASOURCE_OAUTH2_SETTINGS("/api/datasource/oauth2/settings.js"),
+
+	/**
+	 * Route for the datasource service, that doesn't need to be protected.
+	 * Matches requests under {@code /api/datasource/buckets/**}
+	 */
+	DATASOURCE_PUBLIC_CONFIGS("/api/datasource/buckets/current/**"),
 
 	/**
 	 * Route for the datasource service.
-	 * Matches requests under {@code /datasource/**}.
+	 * Matches requests under {@code /api/datasource/**}.
 	 */
-	DATASOURCE("/datasource/**"),
+	DATASOURCE("/api/datasource/**"),
+
+	/**
+	 * Route for the searcher service.
+	 * Matches requests under {@code /api/searcher/**}.
+	 */
+	SEARCHER("/api/searcher/**"),
 
 	/**
 	 * Catch-all route that matches any request.

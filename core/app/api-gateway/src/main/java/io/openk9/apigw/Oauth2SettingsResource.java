@@ -51,10 +51,31 @@ public class Oauth2SettingsResource {
 
     @GetMapping(value = "/settings.js", produces = "text/javascript")
     public Mono<String> settingsJs(ServerHttpRequest request) {
-		return settings(request).map(Oauth2SettingsResource::encodeSettingsJs);
+		URI requestURI = request.getURI();
+		String requestHost = requestURI.getHost();
+
+		return tenantSecurityService.getTenantId(requestHost)
+			.flatMap(tenantId -> tenantSecurityService
+				.getTenantAggregate(tenantId)
+				.map(Oauth2SettingsResource::encodeOldSettingsJs)
+			);
 	}
 
-	private static String encodeSettingsJs(OAuth2Settings oauth2Settings) {
+	private static String encodeOldSettingsJs(Tenant tenant) {
+
+		return String.format(
+			"""
+				window.KEYCLOAK_URL ='%s';
+				window.KEYCLOAK_REALM ='%s';
+				window.KEYCLOAK_CLIENT_ID ='%s';
+			""",
+			tenant.oauth2Settings().issuerUri(),
+			tenant.tenantId(),
+			tenant.oauth2Settings().clientId()
+		);
+	}
+
+	private static String encodeNewSettingsJs(OAuth2Settings oauth2Settings) {
 
 		return String.format(
 			"""

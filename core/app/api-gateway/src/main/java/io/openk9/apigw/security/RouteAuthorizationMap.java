@@ -30,10 +30,13 @@ public final class RouteAuthorizationMap {
 
 	static {
 		for (RoutePath r : RoutePath.values()) {
-			switch (r) {
-				case ANY, SEARCHER -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
+			Object ignored = switch (r) {
+				case ANY,
+					 DATASOURCE_OAUTH2_SETTINGS,
+					 DATASOURCE_PUBLIC_CONFIGS,
+					 SEARCHER -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
 				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
-			}
+			};
 		}
 	}
 
