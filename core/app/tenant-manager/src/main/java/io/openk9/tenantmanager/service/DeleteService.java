@@ -68,9 +68,9 @@ public class DeleteService {
 	}
 
 	@ConsumeEvent(DELETE_TENANT)
-	public Uni<Void> deleteTenant(long tenantId) {
+	public Uni<Void> deleteTenant(String tenantId) {
 
-		return tenantService.deleteTenant(tenantId);
+		return tenantService.deleteTenant(Long.parseLong(tenantId));
 
 	}
 
