@@ -21,6 +21,7 @@ import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
+import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -59,7 +60,7 @@ public class EnricherResource {
                             @Content(
                                     mediaType = MediaType.APPLICATION_JSON,
                                     schema = @Schema(implementation = Response.class),
-                                    example = BucketDtoExamples.TEMPLATES_RESPONSE
+                                    example = PluginDriverDtoExamples.HEALTH_STATUS
                             )
                     }
             ),
