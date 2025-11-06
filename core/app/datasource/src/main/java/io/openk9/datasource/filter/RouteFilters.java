@@ -25,7 +25,7 @@ import org.jboss.logging.Logger;
 
 public class RouteFilters {
 
-	@RouteFilter(100)
+	@RouteFilter(Integer.MAX_VALUE - 100)
 	void tenantIdRouteFilter(RoutingContext rc) {
 		HttpServerRequest request = rc.request();
 		MultiMap headers = request.headers();
@@ -43,6 +43,8 @@ public class RouteFilters {
 				log.warn("No 'X-TENANT-ID' identified in request headers.");
 			}
 		}
+
+		rc.next();
 
 	}
 
