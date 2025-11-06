@@ -20,7 +20,6 @@ package io.openk9.datasource.web;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.web.dto.HealthDTO;
-import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.smallrye.mutiny.Uni;
 import jakarta.annotation.security.RolesAllowed;
