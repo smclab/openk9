@@ -71,7 +71,13 @@ function SortResultList({
 
   const SingleValue = (props: any) => (
     <components.SingleValue {...props}>
-      <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+      <div
+        css={css`
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        `}
+      >
         {props.children}
       </div>
     </components.SingleValue>

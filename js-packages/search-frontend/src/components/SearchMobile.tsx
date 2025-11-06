@@ -332,11 +332,11 @@ export function SearchMobile({
                 className="openk9--search-delete-container-icon"
                 title="remove text"
                 aria-label="remove-text"
-                style={{
-                  alignItems: "center",
-                  background: "inherit",
-                  border: "none",
-                }}
+                css={css`
+                  align-items: center;
+                  background: inherit;
+                  border: none;
+                `}
                 onClick={() => {
                   clearSearch();
                 }}
@@ -359,17 +359,17 @@ export function SearchMobile({
                 className="openk9--search-delete-container-icon"
                 title="search"
                 aria-label="search"
-                style={{
-                  paddingRight: "16px",
-                  display: "flex",
-                  flexDirection: "row",
-                  padding: "4px 8px",
-                  gap: "4px",
-                  alignItems: "center",
-                  marginRight: "8px",
-                  background: "inherit",
-                  border: "none",
-                }}
+                css={css`
+                  padding-right: 16px;
+                  display: flex;
+                  flex-direction: row;
+                  padding: 4px 8px;
+                  gap: 4px;
+                  align-items: center;
+                  margin-right: 8px;
+                  background: inherit;
+                  border: none;
+                `}
               >
                 <div>
                   <span
@@ -717,19 +717,19 @@ function FactoryTokenType({
           </div>
           <div
             className="openk9-token-select-factory-container-option-label"
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              padding: "4px 8px",
-              gap: "4px",
-              height: "15px",
-              background: "#FFFFFF",
-              border:
-                "1px solid var(--openk9-embeddable-search--secondary-active-color)",
-              borderRadius: "20px",
-              marginLeft: "10px",
-            }}
+            css={css`
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              padding: 4px 8px;
+              gap: 4px;
+              height: 15px;
+              background: #ffffff;
+              border: 1px solid
+                var(--openk9-embeddable-search--secondary-active-color);
+              border-radius: 20px;
+              margin-left: 10px;
+            `}
           >
             <div
               className="openk9-token-select-factory-option-label"

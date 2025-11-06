@@ -154,23 +154,24 @@ function FiltersMobileLiveChange<E>({
             align-items: center;
             gap: 9px;
             margin-right: 21px;
+            background-color: white;
+            border: none;
           `}
           onClick={() => {
             if (setIsVisibleFilters) setIsVisibleFilters(false);
             if (callbackClose) callbackClose();
           }}
-          style={{ backgroundColor: "white", border: "none" }}
         >
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
       </div>
       <div
         className="openk9-filter-overlay-scrollbars"
-        style={{
-          overflowY: "auto",
-          height: "calc(100vh - 210px)",
-          borderRadius: "8px",
-        }}
+        css={css`
+          overflow-y: auto;
+          height: calc(100vh - 210px);
+          border-radius: 8px;
+        `}
       >
         <FiltersMemo
           state={state}
@@ -386,17 +387,17 @@ function ViewAllTabs({
             aria-label={
               t("openk9-collapsable-filter") || "openk9 collapsable filter"
             }
-            style={{
-              background: "inherit",
-              border: "none",
-            }}
+            css={css`
+              background: inherit;
+              border: none;
+            `}
           >
             <FontAwesomeIcon
               icon={isOpen ? faChevronDown : faChevronUp}
-              style={{
-                color: "var(--openk9-embeddable-search--secondary-text-color)",
-                fontSize: "15px",
-              }}
+              css={css`
+                color: var(--openk9-embeddable-search--secondary-text-color);
+                font-size: 15px;
+              `}
             />
           </button>
         )}

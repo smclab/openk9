@@ -129,16 +129,18 @@ function FilterCategory({
                 t("category-collapsable-toggle") ||
                 "category collapsable toggle"
               }
-              style={{ background: "inherit", border: "none" }}
+              css={css`
+                background: inherit;
+                border: none;
+              `}
             >
               {}
               <FontAwesomeIcon
                 icon={isOpen ? faChevronDown : faChevronUp}
-                style={{
-                  color:
-                    "var(--openk9-embeddable-search--secondary-text-color)",
-                  marginRight: "8px",
-                }}
+                css={css`
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                  margin-right: 8px;
+                `}
               />
             </button>
           )}
@@ -160,15 +162,14 @@ function FilterCategory({
             >
               <FontAwesomeIcon
                 icon={faSearch}
-                style={{
-                  color:
-                    "var(--openk9-embeddable-search--secondary-text-color)",
-                  marginLeft: "25px",
-                  opacity: "0.3",
-                  zIndex: "3",
-                  marginTop: "16px",
-                  height: "15px",
-                }}
+                css={css`
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                  margin-left: 25px;
+                  opacity: 0.3;
+                  z-index: 3;
+                  margin-top: 16px;
+                  height: 15px;
+                `}
               />
               <label
                 htmlFor={"search-category-" + suggestionCategoryId}
@@ -720,15 +721,18 @@ export function NoFilter({
             t("openk9-collapsable-filter") || "openk9 collapsable filter"
           }
           aria-expanded={isOpen ? "true" : "false"}
-          style={{ background: "inherit", border: "none" }}
+          css={css`
+            background: inherit;
+            border: none;
+          `}
           onClick={() => setIsOpen(!isOpen)}
         >
           <FontAwesomeIcon
             icon={faChevronUp}
-            style={{
-              color: "var(--openk9-embeddable-search--secondary-text-color)",
-              cursor: "pointer",
-            }}
+            css={css`
+              color: var(--openk9-embeddable-search--secondary-text-color);
+              cursor: pointer;
+            `}
           />
         </button>
       </div>

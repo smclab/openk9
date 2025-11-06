@@ -80,10 +80,6 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
             background: ${"var(--openk9-embeddable-search--secondary-active-color)"};
             cursor: pointer;
           `}
-          style={{
-            background:
-              "var(--openk9-embeddable-search--secondary-active-color)",
-          }}
           onClick={() => {
             setIsOpen(!isOpen);
           }}
