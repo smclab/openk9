@@ -69,9 +69,7 @@ const milestones = [
         <li>Query routing and understanding</li>
         <li>User profile management for contextualized search</li>
         <li>Analytics for collecting search and indexing metrics</li>
-        <li>API gateway development and API security with added API key authentication</li>
-        <li>Archetypes for creating connectors and enrichers</li>
-        <li>UX improvement on the admin ui</li>
+        <li>Import/Export configurations from the Administration Console</li>
         <li>Added the ability to index data in push modals from outside</li>
       </ul>
     ),
