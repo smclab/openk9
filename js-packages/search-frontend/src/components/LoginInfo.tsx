@@ -139,7 +139,7 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
                   color: #2e2f39;
                 `}
               >
-                {userProfileQuery.data?.preferred_username}
+                {userProfileQuery?.data?.preferred_username}
               </span>
             </div>
             <div
