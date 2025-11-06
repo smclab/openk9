@@ -34,9 +34,16 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
     @Inject
     WebClient webClient;
 
+    public static final String PROCESS_PATH = "/process";
+
     public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
+        String path = resourceUriDTO.getPath();
+        if (path == null) {
+            path = PROCESS_PATH;
+        }
+
         return webClient
-                .requestAbs(HttpMethod.POST, resourceUriDTO.getBaseUri() + resourceUriDTO.getPath())
+                .requestAbs(HttpMethod.POST, resourceUriDTO.getBaseUri() + path)
                 .sendJson(enricherInputDTO)
                 .flatMap(this::validateResponse);
     }
