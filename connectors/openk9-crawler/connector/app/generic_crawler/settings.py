@@ -6,6 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import os
 
 BOT_NAME = "generic_crawler"
 
@@ -127,10 +128,15 @@ PLAYWRIGHT_CONTEXT_ARGS = {
 
 # Configure maximum contexts used by Playwright (default: None)
 # By default playwright creates only one context if not specified in settings or created at runtime.
-PLAYWRIGHT_MAX_CONTEXTS = 1
+PLAYWRIGHT_MAX_CONTEXTS = os.environ.get("PLAYWRIGHT_MAX_CONTEXTS")
+if PLAYWRIGHT_MAX_CONTEXTS is None:
+    PLAYWRIGHT_MAX_CONTEXTS = 1
+
 
 # Configure maximum pages opened by Playwright (default: CONCURRENT_REQUESTS)
-PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = 4
+PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = os.environ.get("PLAYWRIGHT_MAX_PAGES_PER_CONTEXT")
+if PLAYWRIGHT_MAX_PAGES_PER_CONTEXT is None:
+    PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = 4
 
 
 # Optimize resource usage
