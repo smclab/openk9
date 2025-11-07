@@ -1,3 +1,5 @@
+import fnmatch
+
 import scrapy
 from twisted.python.log import logerr
 
@@ -12,6 +14,7 @@ from requests_futures.sessions import FuturesSession
 from scrapy import signals, Item, Field
 from scrapy.http import Request, XmlResponse
 from scrapy.linkextractors import LinkExtractor
+from scrapy_playwright.page import PageMethod
 from scrapy.spiders import SitemapSpider, Rule
 from scrapy.utils.gz import gunzip, gzip_magic_number
 from scrapy.utils.sitemap import Sitemap, sitemap_urls_from_robots
@@ -33,13 +36,14 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
     sitemap_follow = ['']
     sitemap_alternate_links = False
     
-    cont = 0
+    count = 0
     content = ''
 
     payload = {}
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow, datasource_id, schedule_id,
-                ingestion_url, timestamp, additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow,
+                 use_playwright, playwright_selector, playwright_timeout, datasource_id, schedule_id, ingestion_url, timestamp,
+                 additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
                  document_file_extensions, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
         super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains,
@@ -57,7 +61,13 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
         self.sitemap_urls = ast.literal_eval(sitemap_urls)
         self.replace_rule = ast.literal_eval(replace_rule)
+        self.use_playwright = bool(use_playwright)
+        self.playwright_selector = str(playwright_selector)
+        self.playwright_timeout = int(playwright_timeout)
+
         self.links_to_follow = ast.literal_eval(links_to_follow)
+        self.parsed_links = set()  # url cache
+        self.extracted_links_to_follow = set()  # extracted links cache
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -84,6 +94,9 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         payload["last"] = True
 
         post_message(self.ingestion_url, dict(payload))
+        # Empty cache
+        self.parsed_links = set()
+        self.extracted_links_to_follow = set()
 
     def start_requests(self):
         for url in self.sitemap_urls:
@@ -98,22 +111,31 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         attributes, for example, you can filter locs with lastmod greater
         than a given date (see docs).
         """
+        allow_all = len(self.allowed_paths) == 0
+        exclude_nothing = len(self.excluded_paths) == 0
+
         for entry in entries:
-            if len(self.allowed_paths) == 0 or any(allowed_path in entry.get('loc') for allowed_path in self.allowed_paths):
-                if not any(excluded_path in entry.get('loc') for excluded_path in self.excluded_paths):
-                    try:
-                        date_time = datetime.fromisoformat(entry['lastmod'])
-                        lastmod_timestamp = int(datetime.timestamp(date_time) * 1000)
-                        logger.debug("Lastmod timestamp is " + str(lastmod_timestamp) )
-                        if int(lastmod_timestamp) >= int(self.timestamp):
-                            yield entry
-                    except KeyError:
-                        logger.info("No lastmod present, so proceeding with ingestion without data validation")
-                        yield entry
-                else:
-                    logger.info("Excluded entry " + str(entry.get('loc')))
-            else:
-                logger.info("Not allowed entry " + str(entry.get('loc')))
+            loc = entry.get('loc')
+            allow = True if allow_all else any(fnmatch.fnmatch(loc, allowed_path) for allowed_path in self.allowed_paths)
+            if not allow:
+                logger.info("Not allowed entry " + str(loc))
+                continue
+
+            exclude = False if exclude_nothing else any(fnmatch.fnmatch(loc, excluded_path) for excluded_path in self.excluded_paths)
+            if exclude:
+                logger.info("Excluded entry " + str(loc))
+                continue
+
+            # Is allowed and not excluded
+            try:
+                date_time = datetime.fromisoformat(entry['lastmod'])
+                lastmod_timestamp = int(datetime.timestamp(date_time) * 1000)
+                logger.debug("Lastmod timestamp is " + str(lastmod_timestamp))
+                if int(lastmod_timestamp) >= int(self.timestamp):
+                    yield entry
+            except KeyError:
+                logger.info("No lastmod present, so proceeding with ingestion without data validation")
+                yield entry
 
     def _parse_sitemap(self, response):
         if response.url.endswith('/robots.txt'):
@@ -159,6 +181,10 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
             return response.body
 
     def parse(self, response, **kwargs):
+        # Checks if link has already been parsed
+        if response.url in self.parsed_links:
+            return
+        self.parsed_links.add(response.url)  # caches url
 
         url = response.url
         title = get_title(response, self.title_tag)
@@ -205,8 +231,6 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
             "custom": dict(custom_item)
         }
 
-        logger.info(datasource_payload)
-
         payload = Payload()
 
         content_id = int(hashlib.sha1(url.encode("utf-8")).hexdigest(), 16) % (10 ** 16)
@@ -227,16 +251,39 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
         self.logger.info("Crawled web page from url: " + str(url))
 
         if self.links_to_follow:
-            meta_key = "is_link_to_follow"
-            if meta_key not in response.meta:
-                # Extracts all links from `link_to_follow`
-                extracted_links_to_follow = []
-                for link_to_follow in self.links_to_follow:
-                    extracted_links_to_follow.extend(response.xpath(link_to_follow).getall())
+            for request in self.try_follow_link(response):
+                yield request
 
-                # Each extracted link will yield a Request passing as meta "is_link_to_follow"
-                for extracted_link_to_follow in extracted_links_to_follow:
-                    # if is relative url convert to absolute
-                    if not is_absolute(extracted_link_to_follow):
-                        extracted_link_to_follow = response.urljoin(extracted_link_to_follow)
-                    yield Request(extracted_link_to_follow, callback=self.parse, meta={meta_key: True})
+    def try_follow_link(self, response):
+        links = [
+            link if is_absolute(link) else response.urljoin(link)   # adds link as absolute url
+
+            for link_to_follow in self.links_to_follow              # gets xpath in links to follow
+            for link in response.xpath(link_to_follow).getall()     # get links using xpath
+
+            if link not in self.parsed_links                      # checks if already parsed
+            and link not in self.extracted_links_to_follow        # checks is already been extracted
+        ]
+        self.extracted_links_to_follow.update(links)  # caches extracted links
+
+        for link in links:
+            yield Request(
+                url=link,
+                callback=self.parse,
+                errback=self.playwright_raise_error,
+                meta={
+                    "playwright": self.use_playwright,
+                    "playwright_page_goto_kwargs": {
+                        "timeout": self.playwright_timeout,
+                        "wait_until": "domcontentloaded"
+                    },
+                    "playwright_page_coroutines": [
+                        # We'll just wait a short time — if not found, no crash
+                        PageMethod("wait_for_selector", self.playwright_selector, timeout=self.playwright_timeout)
+                    ]
+                }
+            )
+
+    def playwright_raise_error(self, failure):
+        # TODO: could send HALT message
+        pass
