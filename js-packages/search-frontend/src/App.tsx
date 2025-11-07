@@ -538,7 +538,6 @@ export function App() {
           gap: 3px;
           box-sizing: border-box;
           border-radius: 8px;
-          height: calc(100vh - 193.6px);
           @media (max-width: 768px) {
             display: none;
           }
@@ -808,7 +807,6 @@ export function App() {
           display: flex;
           flex-direction: column;
           gap: 10px;
-          height: calc(100vh - 193.6px);
 
           @media (max-width: 480px) {
             padding-inline: 16px;
@@ -907,7 +905,6 @@ export function App() {
           background-color: var(
             --openk9-embeddable-search--primary-background-color
           );
-          height: calc(100vh - 193.6px);
           border-radius: 8px;
           margin-top: ${searchText !== undefined ? "20px" : "unset"};
 
