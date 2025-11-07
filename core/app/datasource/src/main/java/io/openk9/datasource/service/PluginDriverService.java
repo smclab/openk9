@@ -116,8 +116,7 @@ public class PluginDriverService
 									ep,
 									docTypeField
 								));
-							}
-							else {
+							} else {
 								return Uni.createFrom().nullItem();
 							}
 
@@ -157,7 +156,7 @@ public class PluginDriverService
 
 				return createWithDocType(session, dto)
 					.flatMap(pluginDriver ->
-						Uni.createFrom().item(Response.of(pluginDriver,null)));
+						Uni.createFrom().item(Response.of(pluginDriver, null)));
 			}
 		);
 	}
@@ -171,7 +170,7 @@ public class PluginDriverService
 				var aclMappings = new LinkedHashSet<AclMapping>();
 
 				for (PluginWithDocTypeDTO.DocTypeUserDTO docTypeUser
-						: dto.getDocTypeUserDTOSet()) {
+					: dto.getDocTypeUserDTOSet()) {
 
 					var docTypeField =
 						s.getReference(DocTypeField.class, docTypeUser.getDocTypeId());
@@ -349,26 +348,26 @@ public class PluginDriverService
 	public Uni<FormTemplate> getForm(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
-                        HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-                        ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
-                        return httpPluginDriverClient.getForm(resourceUriDTO);
-                    }
+					HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
+					ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
+					return httpPluginDriverClient.getForm(resourceUriDTO);
+				}
 			);
 	}
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-        HttpPluginDriverInfo httpPluginDriverInfo = PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig());
-        ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
+		HttpPluginDriverInfo httpPluginDriverInfo = PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig());
+		ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
 		return httpPluginDriverClient.getHealth(resourceUriDTO);
 	}
 
 	public Uni<HealthDTO> getHealth(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
-                HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-				ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
-                return httpPluginDriverClient.getHealth(resourceUriDTO);
-                    }
+					HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
+					ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
+					return httpPluginDriverClient.getHealth(resourceUriDTO);
+				}
 			);
 	}
 
@@ -383,12 +382,11 @@ public class PluginDriverService
 		Long pluginId, PluginWithDocTypeDTO dto, boolean patch) {
 
 
-
 		return sessionFactory.withTransaction(
 			(session, transaction) -> {
 				var constraintViolations = validator.validate(dto);
 
-				if ( !constraintViolations.isEmpty() ) {
+				if (!constraintViolations.isEmpty()) {
 					var fieldValidators = constraintViolations.stream()
 						.map(constraintViolation -> FieldValidator.of(
 							constraintViolation.getPropertyPath().toString(),
@@ -424,19 +422,17 @@ public class PluginDriverService
 				var docTypeIdPath =
 					deleteFrom.get(AclMapping_.docTypeField).get(DocTypeField_.id);
 
-				if ( docTypeUserDTOSet == null || docTypeUserDTOSet.isEmpty() ) {
-					if ( patch ) {
+				if (docTypeUserDTOSet == null || docTypeUserDTOSet.isEmpty()) {
+					if (patch) {
 						return Uni.createFrom().item(plugin);
-					}
-					else {
+					} else {
 						deleteAclMapping.where(pluginIdPath.in(pluginId));
 
 						//removes aclMapping old list
 						return s.createQuery(deleteAclMapping).executeUpdate()
 							.map(v -> plugin);
 					}
-				}
-				else {
+				} else {
 					//retrieves docType ids to keep
 					var docTypeIdsToKeep = docTypeUserDTOSet.stream()
 						.map(PluginWithDocTypeDTO.DocTypeUserDTO::getDocTypeId)
@@ -460,16 +456,15 @@ public class PluginDriverService
 				PluginDriver newStatePluginDriver;
 				var newHashSet = new HashSet<AclMapping>();
 
-				if ( patch ) {
+				if (patch) {
 					newStatePluginDriver = mapper.patch(plugin, dto);
-				}
-				else {
+				} else {
 					newStatePluginDriver = mapper.patch(plugin, dto);
 					newStatePluginDriver.setAclMappings(newHashSet);
 				}
 
 				//set new aclMapping Set
-				if ( docTypeUserDTOSet != null ) {
+				if (docTypeUserDTOSet != null) {
 					newStatePluginDriver.setAclMappings(newHashSet);
 
 					docTypeUserDTOSet.forEach(docTypeUserDTO -> {
@@ -515,8 +510,7 @@ public class PluginDriverService
 						.invoke(throwable -> {
 							if (log.isDebugEnabled()) {
 								log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
-							}
-							else {
+							} else {
 								log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
 							}
 						});
@@ -554,7 +548,7 @@ public class PluginDriverService
 
 							boolean removed = aclMappings.removeIf(
 								epi -> epi.getKey().getDocTypeFieldId() == docTypeFieldId
-									   && epi.getKey().getPluginDriverId() == pluginDriverId);
+									&& epi.getKey().getPluginDriverId() == pluginDriverId);
 
 							if (removed) {
 								return s.find(
@@ -563,8 +557,7 @@ public class PluginDriverService
 									)
 									.call(s::remove)
 									.map(ep -> Tuple2.of(pluginDriver, docTypeField));
-							}
-							else {
+							} else {
 								return Uni.createFrom().nullItem();
 							}
 
@@ -626,8 +619,7 @@ public class PluginDriverService
 						.invoke(throwable -> {
 							if (log.isDebugEnabled()) {
 								log.debug("Error creating/updating DocumentTypes associated with pluginDriver", throwable);
-							}
-							else {
+							} else {
 								log.warn("Error creating/updating DocumentTypes associated with pluginDriver");
 							}
 						});
@@ -650,17 +642,11 @@ public class PluginDriverService
 
 	private ResourceUriDTO convertToResourceUriDTO(HttpPluginDriverInfo httpPluginDriverInfo) {
 		ResourceUriDTO resourceUriDTO = new ResourceUriDTO();
-		String baseUri = httpPluginDriverInfo.getBaseUri();
-		boolean isSecure = httpPluginDriverInfo.isSecure();
+		var uri = httpPluginDriverInfo.isSecure()
+			? HttpPluginDriverClient.HTTPS + httpPluginDriverInfo.getBaseUri()
+			: HttpPluginDriverClient.HTTP + httpPluginDriverInfo.getBaseUri();
 
-		if (isSecure) {
-			String uri = HttpPluginDriverClient.HTTPS + baseUri;
-			resourceUriDTO.setBaseUri(uri);
-		}
-		else {
-			String uri = HttpPluginDriverClient.HTTP + baseUri;
-			resourceUriDTO.setBaseUri(uri);
-		}
+		resourceUriDTO.setBaseUri(uri);
 		return resourceUriDTO;
 	}
 
