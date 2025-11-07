@@ -46,13 +46,14 @@ import org.junit.jupiter.api.Test;
 class HttpPluginDriverClientTest {
 
 	private static final Logger log = Logger.getLogger(HttpPluginDriverClientTest.class);
+	private static final String HTTP = "http://";
 
 	private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
 		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
 		.build();
 
 	private static final ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-		.baseUri(pluginDriverInfo.getBaseUri())
+		.baseUri(HTTP +  pluginDriverInfo.getBaseUri())
 		.build();
 
 	@Inject
