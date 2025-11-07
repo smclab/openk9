@@ -101,3 +101,42 @@ FEED_EXPORT_ENCODING = "utf-8"
 # EXTENSIONS = {
 #     'scrapy_prometheus_exporter.prometheus.WebService': 500,
 # }
+
+# Enable Playwright download handlers (required)
+DOWNLOAD_HANDLERS = {
+    'http': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
+    'https': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
+}
+
+# Default navigation timeout (in ms; override per-request if needed)
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 5000  # 5 seconds
+
+PLAYWRIGHT_BROWSER_TYPE = 'webkit'  # Explicitly set WebKit
+
+# Launch options for the browser (e.g., headless mode)
+PLAYWRIGHT_LAUNCH_OPTIONS = {
+    'headless': True,  # Set to False for debugging
+}
+
+# Browser context options (e.g., viewport, locale)
+PLAYWRIGHT_CONTEXT_ARGS = {
+    'viewport': {'width': 1280, 'height': 720},
+    'user_agent': None,  # Use browser's default UA to avoid mismatches
+    'locale': 'en-US',
+}
+
+# Configure maximum contexts used by Playwright (default: None)
+# By default playwright creates only one context if not specified in settings or created at runtime.
+PLAYWRIGHT_MAX_CONTEXTS = 1
+
+# Configure maximum pages opened by Playwright (default: CONCURRENT_REQUESTS)
+PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = 4
+
+
+# Optimize resource usage
+def abort_request(req):
+    """Abort requests for specific resource types to optimize resource usage."""
+    return req.resource_type in {'image', 'stylesheet', 'font'}
+
+
+PLAYWRIGHT_ABORT_REQUEST = abort_request
