@@ -2,12 +2,22 @@ ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
 
 FROM python:${PYTHON_BASE_DOCKER_IMAGE}
 
+ARG MODE=cpu
+
 RUN mkdir -p /embedding_module  && \
 mkdir -p /var/log/openk9
 WORKDIR /embedding_module/
 
 COPY app/base/requirements.base.txt ./requirements.txt
+COPY app/base/requirements_cpu.base.txt ./requirements_cpu.txt
 COPY app/external_services/grpc/embedding/embedding.proto ./
+
+RUN echo "$MODE" \
+    if [ "$MODE" = "gpu" ]; then \
+        pip install --no-cache-dir -r requirements.txt; \
+    else \
+        pip install --no-cache-dir -r requirements_cpu.txt; \
+    fi
 
 RUN pip install --no-cache-dir -r requirements.txt  && \
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
