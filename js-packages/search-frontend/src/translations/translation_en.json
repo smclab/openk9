@@ -19,6 +19,7 @@
     "from": "From",
     "gg/mm/aaaa": "mm/gg/aaaa",
     "insert-text-to-set-the-value-or-use-up-and-down-arrow-keys-to-navigate-the-suggestion-box": "insert text to set the value or use up and down arrow keys to navigate the suggestion box",
+    "your-search-did-you-mean": "maybe you were looking for:",
     "load-more": "Load more",
     "load-more-filter": "Load more filters",
     "loading-more-results": "Loading more results...",

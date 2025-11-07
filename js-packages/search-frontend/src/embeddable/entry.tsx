@@ -404,6 +404,8 @@ type correctionType = {
     correctedQuery: string,
     errorQuery: string,
     confirm: () => void,
+    hasAutocorretion?: boolean,
+    confirmedErrorQuery?: () => void,
   ) => React.ReactNode;
 };
 

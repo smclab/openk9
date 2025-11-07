@@ -459,7 +459,13 @@ export function App() {
             openk9.updateConfiguration({
               correction: {
                 element,
-                information: (cor, err, call) => {
+                information: (
+                  cor,
+                  err,
+                  call,
+                  hasCorrectedSearch,
+                  callbackCorrected,
+                ) => {
                   return (
                     <>
                       <div
@@ -473,37 +479,61 @@ export function App() {
                         `}
                         aria-live="polite"
                       >
-                        <span>
-                          {t("search-done-with")}
-                          <strong
-                            css={css`
-                              color: var(
-                                --openk9-embeddable-search--primary-color
-                              );
-                            `}
-                          >
-                            {`“${cor}”`}
-                          </strong>
-                          {t("use-instead")}
-                          <button
-                            onClick={call}
-                            css={css`
-                              border: unset;
-                              background: var(
-                                --openk9-embeddable-search--primary-light-color
-                              );
-                              color: white;
-                              border-radius: 8px;
-                              padding: 4px 12px;
-                              font-weight: 600;
-                              cursor: pointer;
-                              font-size: 15px;
-                            `}
-                          >
-                            {`“${err}”`}
-                          </button>
-                          {"."}
-                        </span>
+                        {hasCorrectedSearch ? (
+                          <span>
+                            {t("search-done-with")}
+                            <strong
+                              css={css`
+                                color: var(
+                                  --openk9-embeddable-search--primary-color
+                                );
+                              `}
+                            >
+                              {`“${cor}”`}
+                            </strong>
+                            {t("use-instead")}
+                            <button
+                              onClick={call}
+                              css={css`
+                                border: unset;
+                                background: var(
+                                  --openk9-embeddable-search--primary-light-color
+                                );
+                                color: white;
+                                border-radius: 8px;
+                                padding: 4px 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 15px;
+                              `}
+                            >
+                              {`“${err}”`}
+                            </button>
+                            {"."}
+                          </span>
+                        ) : (
+                          <span>
+                            {t("your-search-did-you-mean")}{" "}
+                            <button
+                              onClick={callbackCorrected}
+                              css={css`
+                                border: unset;
+                                background: var(
+                                  --openk9-embeddable-search--primary-light-color
+                                );
+                                color: white;
+                                border-radius: 8px;
+                                padding: 4px 12px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                font-size: 15px;
+                              `}
+                            >
+                              {`“${cor}”`}
+                            </button>
+                            {"."}
+                          </span>
+                        )}
                       </div>
                     </>
                   );
