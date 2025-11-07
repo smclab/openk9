@@ -125,6 +125,13 @@ PLAYWRIGHT_CONTEXT_ARGS = {
     'locale': 'en-US',
 }
 
+# Configure maximum contexts used by Playwright (default: None)
+# By default playwright creates only one context if not specified in settings or created at runtime.
+PLAYWRIGHT_MAX_CONTEXTS = 1
+
+# Configure maximum pages opened by Playwright (default: CONCURRENT_REQUESTS)
+PLAYWRIGHT_MAX_PAGES_PER_CONTEXT = 4
+
 
 # Optimize resource usage
 def abort_request(req):
