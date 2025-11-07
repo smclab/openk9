@@ -43,65 +43,65 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @RolesAllowed("k9-admin")
 public class EnricherResource {
 
-    @Inject
-    EnrichItemService service;
+	@Inject
+	EnrichItemService service;
 
-    @Operation(operationId = "health")
-    @Tag(name = "Health API", description = "Perform health check for enricher")
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "success"),
-            @APIResponse(responseCode = "404", description = "not found"),
-            @APIResponse(responseCode = "400", description = "invalid"),
-            @APIResponse(
-                    responseCode = "200",
-                    description = "Health Check Ok",
-                    content = {
-                            @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = Response.class),
-                                    example = PluginDriverDtoExamples.HEALTH_STATUS
-                            )
-                    }
-            ),
-            @APIResponse(ref = "#/components/responses/bad-request"),
-            @APIResponse(ref = "#/components/responses/not-found"),
-            @APIResponse(ref = "#/components/responses/internal-server-error"),
-    })
-    @GET
-    @Path("/health/{serviceName}")
-    public Uni<HealthDTO> getHealth(
-            @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") String serviceName) {
-        return service.getHealth(serviceName);
-    }
+	@Operation(operationId = "health")
+	@Tag(name = "Health API", description = "Perform health check for enricher")
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Health Check Ok",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = PluginDriverDtoExamples.HEALTH_STATUS
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@GET
+	@Path("/health/{serviceName}")
+	public Uni<HealthDTO> getHealth(
+		@Parameter(description = "ServiceName of enricher")
+		@PathParam("serviceName") String serviceName) {
+		return service.getHealth(serviceName);
+	}
 
-    @Operation(operationId = "form")
-    @Tag(name = "Form API", description = "Return form template for specific enricher")
-    @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "success"),
-            @APIResponse(responseCode = "404", description = "not found"),
-            @APIResponse(responseCode = "400", description = "invalid"),
-            @APIResponse(
-                    responseCode = "200",
-                    description = "Form returned",
-                    content = {
-                            @Content(
-                                    mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(implementation = Response.class),
-                                    example = PluginDriverDtoExamples.FORM_RESPONSE
-                            )
-                    }
-            ),
-            @APIResponse(ref = "#/components/responses/bad-request"),
-            @APIResponse(ref = "#/components/responses/not-found"),
-            @APIResponse(ref = "#/components/responses/internal-server-error"),
-    })
-    @GET
-    @Path("/form/{serviceName}")
-    public Uni<FormTemplate> getForm(
-            @Parameter(description = "ServiceName of enricher")
-            @PathParam("serviceName") String serviceName) {
-        return service.getForm(serviceName);
-    }
+	@Operation(operationId = "form")
+	@Tag(name = "Form API", description = "Return form template for specific enricher")
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Form returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = PluginDriverDtoExamples.FORM_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@GET
+	@Path("/form/{serviceName}")
+	public Uni<FormTemplate> getForm(
+		@Parameter(description = "ServiceName of enricher")
+		@PathParam("serviceName") String serviceName) {
+		return service.getForm(serviceName);
+	}
 
 }

@@ -31,20 +31,20 @@ import io.vertx.mutiny.core.buffer.Buffer;
 @ApplicationScoped
 public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
-    @Inject
-    WebClient webClient;
+	@Inject
+	WebClient webClient;
 
-    public static final String PROCESS_PATH = "/process";
+	public static final String PROCESS_PATH = "/process";
 
-    public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
-        String path = resourceUriDTO.getPath();
-        if (path == null) {
-            path = PROCESS_PATH;
-        }
+	public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
+		String path = resourceUriDTO.getPath();
+		if (path == null) {
+			path = PROCESS_PATH;
+		}
 
-        return webClient
-                .requestAbs(HttpMethod.POST, resourceUriDTO.getBaseUri() + path)
-                .sendJson(enricherInputDTO)
-                .flatMap(this::validateResponse);
-    }
+		return webClient
+			.requestAbs(HttpMethod.POST, resourceUriDTO.getBaseUri() + path)
+			.sendJson(enricherInputDTO)
+			.flatMap(this::validateResponse);
+	}
 }

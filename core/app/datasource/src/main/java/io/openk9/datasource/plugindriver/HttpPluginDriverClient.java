@@ -19,6 +19,7 @@ package io.openk9.datasource.plugindriver;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -100,10 +101,9 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 					if (response.statusCode() != 200) {
 						logger.warn(
 							"response.statusCode() != 200 (" + response.statusCode() + ")" +
-							" response.bodyAsString() = " + response.bodyAsString() + " " +
-							"response.statusMessage() = " + response.statusMessage());
-					}
-					else {
+								" response.bodyAsString() = " + response.bodyAsString() + " " +
+								"response.statusMessage() = " + response.statusMessage());
+					} else {
 						logger.info("invoke success " + httpPluginDriverInfo);
 					}
 				},
@@ -115,8 +115,7 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 		var scheme = isSecure ? HTTPS : HTTP;
 		try {
 			return new URI(scheme + normalize(baseUri) + "/" + normalize(path)).toString();
-		}
-		catch (URISyntaxException e) {
+		} catch (URISyntaxException e) {
 			throw new InvalidUriException(e);
 		}
 	}

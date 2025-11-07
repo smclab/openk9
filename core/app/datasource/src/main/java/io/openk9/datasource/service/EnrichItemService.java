@@ -32,8 +32,8 @@ import jakarta.inject.Inject;
 @ApplicationScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {
 
-    @Inject
-    HttpEnricherClient httpEnricherClient;
+	@Inject
+	HttpEnricherClient httpEnricherClient;
 
 	EnrichItemService(EnrichItemMapper mapper) {
 		this.mapper = mapper;
@@ -49,18 +49,18 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
 	}
 
-    public Uni<FormTemplate> getForm(String serviceName) {
-        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+	public Uni<FormTemplate> getForm(String serviceName) {
+		ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
 			.baseUri(serviceName)
 			.build();
-        return httpEnricherClient.getForm(resourceUriDTO);
-    }
+		return httpEnricherClient.getForm(resourceUriDTO);
+	}
 
-    public Uni<HealthDTO> getHealth(String serviceName) {
-        ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+	public Uni<HealthDTO> getHealth(String serviceName) {
+		ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
 			.baseUri(serviceName)
 			.build();
-        return httpEnricherClient.getHealth(resourceUriDTO);
-    }
+		return httpEnricherClient.getHealth(resourceUriDTO);
+	}
 
 }

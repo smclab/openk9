@@ -32,67 +32,65 @@ import jakarta.validation.Validator;
 
 public abstract class HttpDatasourceServiceClient {
 
-    @Inject
-    WebClient webClient;
-    @Inject
-    Validator validator;
+	@Inject
+	WebClient webClient;
+	@Inject
+	Validator validator;
 
-    public static final String FORM_PATH = "/form";
-    public static final String HEALTH_PATH = "/health";
-    
-    public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
-        return webClient
-                .requestAbs(
-                        HttpMethod.GET,
-                        resourceUriDTO.getBaseUri() + FORM_PATH
-                )
-                .send()
-                .flatMap(this::validateResponse)
-                .map(res -> res.bodyAsJson(FormTemplate.class))
-                .flatMap(this::validateDto);
-    }
+	public static final String FORM_PATH = "/form";
+	public static final String HEALTH_PATH = "/health";
 
-    public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
-        return webClient
-                .requestAbs(
-                        HttpMethod.GET,
-                        resourceUriDTO.getBaseUri() + HEALTH_PATH
-                )
-                .send()
-                .flatMap(this::validateResponse)
-                .map(res -> res.bodyAsJson(HealthDTO.class))
-                .flatMap(this::validateDto)
-                .onFailure(ConstraintViolationException.class)
-                .recoverWithItem(HealthDTO
-                        .builder()
-                        .status(HealthDTO.Status.UNKOWN)
-                        .build()
-                );
-    }
+	public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
+		return webClient
+			.requestAbs(
+				HttpMethod.GET,
+				resourceUriDTO.getBaseUri() + FORM_PATH
+			)
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(FormTemplate.class))
+			.flatMap(this::validateDto);
+	}
 
-    protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
-        if (response.statusCode() >= 200 && response.statusCode() <= 299) {
-            return Uni.createFrom().item(response);
-        }
-        else {
-            return Uni.createFrom().failure(new ValidationException(
-                    String.format(
-                            "Unexpected Response Status: %d, Message: %s",
-                            response.statusCode(),
-                            response.statusMessage()
-                    ))
-            );
-        }
-    }
+	public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
+		return webClient
+			.requestAbs(
+				HttpMethod.GET,
+				resourceUriDTO.getBaseUri() + HEALTH_PATH
+			)
+			.send()
+			.flatMap(this::validateResponse)
+			.map(res -> res.bodyAsJson(HealthDTO.class))
+			.flatMap(this::validateDto)
+			.onFailure(ConstraintViolationException.class)
+			.recoverWithItem(HealthDTO
+				.builder()
+				.status(HealthDTO.Status.UNKOWN)
+				.build()
+			);
+	}
 
-    protected  <T> Uni<T> validateDto(T dto) {
-        var violations = validator.validate(dto);
-        if (violations.isEmpty()) {
-            return Uni.createFrom().item(dto);
-        }
-        else {
-            return Uni.createFrom().failure(new ConstraintViolationException(violations));
-        }
-    }
+	protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
+		if (response.statusCode() >= 200 && response.statusCode() <= 299) {
+			return Uni.createFrom().item(response);
+		} else {
+			return Uni.createFrom().failure(new ValidationException(
+				String.format(
+					"Unexpected Response Status: %d, Message: %s",
+					response.statusCode(),
+					response.statusMessage()
+				))
+			);
+		}
+	}
+
+	protected <T> Uni<T> validateDto(T dto) {
+		var violations = validator.validate(dto);
+		if (violations.isEmpty()) {
+			return Uni.createFrom().item(dto);
+		} else {
+			return Uni.createFrom().failure(new ConstraintViolationException(violations));
+		}
+	}
 
 }
