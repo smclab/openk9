@@ -180,10 +180,12 @@ const spVortex = keyframes`
 const SmallLoader = styled.div`
   width: 1rem;
   height: 1rem;
+  clear: both;
+  margin: 1rem left;
   border: 2px black solid;
   border-radius: 100%;
+  overflow: hidden;
   position: relative;
-  margin-bottom: 8px;
 
   &:before,
   &:after {
