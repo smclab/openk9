@@ -15,9 +15,9 @@ import os
 # Setting SCRAPYDWEB_BIND to '0.0.0.0' or IP-OF-THE-CURRENT-HOST would make
 # ScrapydWeb server visible externally; Otherwise, set it to '127.0.0.1'.
 # The default is '0.0.0.0'.
-SCRAPYDWEB_BIND = '0.0.0.0'
+SCRAPYDWEB_BIND = os.environ.get('SCRAPYDWEB_BIND', '0.0.0.0')
 # Accept connections on the specified port, the default is 5000.
-SCRAPYDWEB_PORT = 5001
+SCRAPYDWEB_PORT = os.environ.get('SCRAPYDWEB_PORT', 5000)
 
 # The default is False, set it to True to enable basic auth for the web UI.
 ENABLE_AUTH = os.environ.get('ENABLE_AUTH', False)
@@ -45,11 +45,14 @@ PASSWORD = os.environ.get('PASSWORD', '')
 #   - or if ScrapydWeb fails to parse the string format passed in,
 #   - it's recommended to pass in a tuple of 5 elements.
 #   - e.g. ('', '', '127.0.0.1', '6800', '') or ('username', 'password', 'localhost', '6801', 'group')
-SCRAPYD_SERVERS = [
-    '127.0.0.1:6800',
-    # 'username:password@localhost:6801#group',
-    # ('username', 'password', 'localhost', '6801', 'group'),
-]
+SCRAPYD_SERVERS = os.environ.get("SCRAPYD_SERVERS", ['127.0.0.1:6800']),
+if isinstance(SCRAPYD_SERVERS, str):
+    SCRAPYD_SERVERS = [SCRAPYD_SERVERS]
+# SCRAPYD_SERVERS = [
+#       '127.0.0.1:6800',
+#     # 'username:password@localhost:6801#group',
+#     # ('username', 'password', 'localhost', '6801', 'group'),
+# ]
 
 # The default is True, set it to False to skip checking connectivity of scrapyd at startup.
 CHECK_SCRAPYD_SERVERS = True
