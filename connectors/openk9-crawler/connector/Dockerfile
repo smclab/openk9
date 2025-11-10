@@ -12,6 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt /requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# --- SCRAPYDWEB START ---
+# Can't be installed in requirements.txt since package "idna" gives version conflict error
+RUN pip3 install --no-cache-dir scrapydweb --ignore-installed idna
+# --- SCRAPYDWEB END ---
+
 # --- PLAYWRIGHT FIX START ---
 # Set persistent path for browsers
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
