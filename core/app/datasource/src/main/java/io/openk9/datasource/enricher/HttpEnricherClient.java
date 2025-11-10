@@ -38,7 +38,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
 	public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
 		String path = resourceUriDTO.getPath();
-		if (path == null) {
+		if (path == null || path.isEmpty()) {
 			path = PROCESS_PATH;
 		}
 
