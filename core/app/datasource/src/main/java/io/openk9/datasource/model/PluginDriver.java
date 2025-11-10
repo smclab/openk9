@@ -20,13 +20,8 @@ package io.openk9.datasource.model;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+
+import jakarta.persistence.*;
 
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
@@ -63,6 +58,9 @@ public class PluginDriver extends K9Entity {
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
+
+	@Embedded
+	private ResourceUri resourceUri;
 
 	@OneToMany(mappedBy = "pluginDriver", cascade = CascadeType.ALL)
 	@ToString.Exclude

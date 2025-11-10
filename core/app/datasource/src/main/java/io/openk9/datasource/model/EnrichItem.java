@@ -18,11 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -52,6 +48,9 @@ public class EnrichItem extends K9Entity {
 
 	@Column(name = "service_name", nullable = false)
 	private String serviceName;
+
+	@Embedded
+	private ResourceUri resourceUri;
 
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "script")
