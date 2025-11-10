@@ -12,23 +12,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt /requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# --- PLAYWRIGHT FIX START ---
+# --- PLAYWRIGHT START ---
 # Set persistent path for browsers
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN mkdir -p /ms-playwright && chmod -R 777 /ms-playwright
 # Install browser with dependencies
 RUN playwright install --with-deps webkit
-# --- PLAYWRIGHT FIX END ---
+# --- PLAYWRIGHT END ---
 
 # Copy scripts and configs
 COPY docker-entrypoint.sh /etc/docker-entrypoint.sh
-COPY install_playwright.sh /etc/install_playwright.sh
 COPY wait_for_scrapyd.sh /app/wait_for_scrapyd.sh
 COPY scrapyd.conf /etc/scrapyd/scrapyd.conf
 
 # Convert line endings and set permissions
-RUN dos2unix /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
-    chmod +x /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
+RUN dos2unix /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
+    chmod +x /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
     chmod g+rw /app
 
 # Clean up apt cache to reduce image size
