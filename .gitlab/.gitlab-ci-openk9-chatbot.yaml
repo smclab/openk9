@@ -54,8 +54,8 @@ Build Verifier:
     artifacts: true
   script:
   - cd js-packages/openk9-chatbot
-  - yarn install
-  - yarn build
+  - npm install
+  - npm run build
   rules:
   # Run on merge requests and main branch only
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
