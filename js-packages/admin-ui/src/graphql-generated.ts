@@ -330,7 +330,7 @@ export type BucketDtoInput = {
 };
 
 export type BucketWithListsDtoInput = {
-  autocorrection?: InputMaybe<Scalars['BigInteger']>;
+  autocorrectionId?: InputMaybe<Scalars['BigInteger']>;
   datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
   description?: InputMaybe<Scalars['String']>;
@@ -386,7 +386,12 @@ export type CharFilterDtoInput = {
 export enum ChunkType {
   ChunkTypeCharacterTextSplitter = 'CHUNK_TYPE_CHARACTER_TEXT_SPLITTER',
   ChunkTypeDefault = 'CHUNK_TYPE_DEFAULT',
+  ChunkTypeLateChunker = 'CHUNK_TYPE_LATE_CHUNKER',
+  ChunkTypeNeuralChunker = 'CHUNK_TYPE_NEURAL_CHUNKER',
+  ChunkTypeRecursiveSplitter = 'CHUNK_TYPE_RECURSIVE_SPLITTER',
   ChunkTypeSemanticSplitter = 'CHUNK_TYPE_SEMANTIC_SPLITTER',
+  ChunkTypeSentenceSplitter = 'CHUNK_TYPE_SENTENCE_SPLITTER',
+  ChunkTypeTableChunker = 'CHUNK_TYPE_TABLE_CHUNKER',
   ChunkTypeTextSplitter = 'CHUNK_TYPE_TEXT_SPLITTER',
   ChunkTypeTokenTextSplitter = 'CHUNK_TYPE_TOKEN_TEXT_SPLITTER',
   Unrecognized = 'UNRECOGNIZED'
@@ -3401,6 +3406,20 @@ export type Query = {
   unboundBucketsByDatasource?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsBySuggestionCategory?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsByTab?: Maybe<Array<Maybe<Bucket>>>;
+  /**
+   * Retrieves all DocTypeField that are not bound to a specific Autocorrection.
+   *
+   * This query returns all DocTypeFields of textual type (TEXT, KEYWORD, CONSTANT_KEYWORD,
+   * or ANNOTATED_TEXT) that are available to be bound to the specified Autocorrection.
+   *
+   * Arguments:
+   * - `autocorrectionId` (ID!): The ID of the Autocorrection to check for unbound DocTypeFields.
+   *
+   * Returns:
+   * - A list of unbound DocTypeFields available for the specified Autocorrection.
+   *
+   */
+  unboundDocTypeFieldByAutocorrection?: Maybe<Array<Maybe<DocTypeField>>>;
   /** Fetches DocTypeFields unbound to the provided SuggestionCategory ID with FieldType KEYWORD or I18N. */
   unboundDocTypeFieldsBySuggestionCategory?: Maybe<Array<Maybe<DocTypeField>>>;
   unboundEnrichPipelines?: Maybe<Array<Maybe<EnrichPipeline>>>;
@@ -4082,6 +4101,12 @@ export type QueryUnboundBucketsByTabArgs = {
 
 
 /** Query root */
+export type QueryUnboundDocTypeFieldByAutocorrectionArgs = {
+  autocorrectionId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
 export type QueryUnboundDocTypeFieldsBySuggestionCategoryArgs = {
   suggestionCategoryId: Scalars['BigInteger'];
 };
@@ -4453,6 +4478,7 @@ export type Scheduler = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   newDataIndex?: Maybe<DataIndex>;
   oldDataIndex?: Maybe<DataIndex>;
+  reindex: Scalars['Boolean'];
   scheduleId?: Maybe<Scalars['String']>;
   status?: Maybe<SchedulerStatus>;
 };
@@ -13326,7 +13352,7 @@ export const CreateOrUpdateBucketDocument = gql`
     mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $autocorrection: BigInteger) {
   bucketWithLists(
     id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrection: $autocorrection}
+    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrectionId: $autocorrection}
   ) {
     entity {
       id
@@ -15255,4 +15281,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-10-23T11:31:37+02:00
+// Generated on 2025-11-03T15:54:23+01:00

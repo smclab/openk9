@@ -28,6 +28,7 @@ package grpc;
 
 service AppManager {
   rpc ApplyResource(AppManifest) returns (ApplyResponse) {}
+  rpc DeleteAllResources(AppManifestList) returns (DeleteAllResourcesResponse) {}
   rpc DeleteResource(AppManifest) returns (google.protobuf.Empty) {}
   rpc CreateIngress(CreateIngressRequest) returns (CreateIngressResponse) {}
   rpc DeleteIngress(DeleteIngressRequest) returns (DeleteIngressResponse) {}
@@ -39,6 +40,10 @@ message AppManifest {
   string version = 3;
   optional string appName = 4;
   optional google.protobuf.Struct values = 5;
+}
+
+message AppManifestList {
+  repeated AppManifest appManifests = 1;
 }
 
 message ApplyResponse {
@@ -55,6 +60,10 @@ message CreateIngressResponse {
   string resourceName = 2;
 }
 
+message DeleteAllResourcesResponse {
+  repeated DeleteResourceStatus deleteResourceStatus = 1;
+}
+
 message DeleteIngressRequest {
   string schemaName = 1;
   string virtualHost = 2;
@@ -63,4 +72,14 @@ message DeleteIngressRequest {
 message DeleteIngressResponse {
   string status = 1;
   string resourceName = 2;
+}
+
+message DeleteResourceStatus {
+  Status status = 1;
+  string resourceName = 2;
+}
+
+enum Status {
+  ERROR = 0;
+  SUCCESS = 1;
 }

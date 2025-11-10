@@ -19,6 +19,7 @@ package io.openk9.datasource.grpc;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Set;
 
 public class PresetPluginDrivers {
 
@@ -37,6 +38,11 @@ public class PresetPluginDrivers {
 	public static String getPluginDriver(Preset preset) {
 		return CONNECTOR_MAP.get(preset);
 	}
+
+	public static Set<String> getAllPluginDrivers() {
+		return Set.copyOf(CONNECTOR_MAP.values());
+	}
+
 	private PresetPluginDrivers() {}
 
 }

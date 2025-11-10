@@ -5,6 +5,7 @@ import { DetailMemo } from "./Detail";
 import { ModalDetail } from "./ModalDetail";
 import { useTranslation } from "react-i18next";
 import { TemplatesProps } from "../embeddable/entry";
+import { css } from "styled-components/macro";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;
@@ -70,7 +71,9 @@ function DetailMobile<E>(props: DetailMobileProps<E>) {
   const componet = (
     <div
       ref={modalRef}
-      style={{ height: "100%" }}
+      css={css`
+        height: 100%;
+      `}
       id="dialog-modal-detail"
       aria-labelledby={t("detail-modal") || "detail modal"}
       role="dialog"

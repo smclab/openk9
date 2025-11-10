@@ -22,15 +22,15 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
     >
       <div
         className="openk9-embeddable-image-viewer--detail"
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          position: "absolute",
-          width: "100%",
-          padding: "8px",
-          boxSizing: "border-box",
-        }}
+        css={css`
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          position: absolute;
+          width: 100%;
+          padding: 8px;
+          box-sizing: border-box;
+        `}
       >
         <a
           className="openk9-embeddable-image-viewer--a"
@@ -104,22 +104,25 @@ export function ImagesViewer({ images, showPagination }: ImagesViewerProps) {
       </div>
       <div
         className="openk9-embeddable-image-viewer--show-pagination-border"
-        style={{
-          width: "100%",
-          paddingTop: "40px",
-          borderRadius: "4px",
-          border: "1px solid var(--openk9-embeddable-search--border-color)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        css={css`
+          width: 100%;
+          padding-top: 40px;
+          border-radius: 4px;
+          border: 1px solid var(--openk9-embeddable-search--border-color);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        `}
       >
         {images[selectedIndex] && (
           <img
             className="openk9-embeddable-image-viewer--show-pagination-border-img"
             src={images[selectedIndex]}
             alt="preview"
-            style={{ maxWidth: "100%", maxHeight: "100%" }}
+            css={css`
+              max-width: 100%;
+              max-height: 100%;
+            `}
           />
         )}
       </div>

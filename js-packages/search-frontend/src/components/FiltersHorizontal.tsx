@@ -114,11 +114,11 @@ function FiltersHorizontal({
     <React.Fragment>
       <OverlayScrollbarsComponent
         className="openk9-filter-overlay-scrollbars"
-        style={{
-          overflowY: "auto",
-          position: "relative",
-          borderRadius: "8px",
-        }}
+        css={css`
+          overflow-y: auto;
+          position: relative;
+          border-radius: 8px;
+        `}
       >
         {suggestionCategories?.data?.map((suggestion, index) => {
           const suggestions = useInfiniteSuggestions(
@@ -370,11 +370,12 @@ function FiltersHorizontal({
                 >
                   <FontAwesomeIcon
                     icon={isOpen ? faChevronDown : faChevronUp}
-                    style={{
-                      color:
-                        "var(--openk9-embeddable-search--secondary-text-color)",
-                      marginRight: "6px",
-                    }}
+                    css={css`
+                      color: var(
+                        --openk9-embeddable-search--secondary-text-color
+                      );
+                      margin-right: 6px;
+                    `}
                   />
                 </button>
               </div>

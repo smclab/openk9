@@ -15,23 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.searcher.resource;
+package io.openk9.searcher.payload.response;
 
-public class AutocorrectionException extends RuntimeException {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-	public AutocorrectionException() {
-		super();
-	}
+import java.util.List;
 
-	public AutocorrectionException(String message) {
-		super(message);
-	}
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AutocorrectionDTO {
 
-	public AutocorrectionException(String message, Throwable cause) {
-		super(message, cause);
-	}
+	private String originalText;
+	private String autocorrectionText;
+	private boolean searchedWithCorrectedText;
+	private List<Suggestion> suggestions;
 
-	public AutocorrectionException(Throwable cause) {
-		super(cause);
-	}
+	public record Suggestion(String text, int offset, int length, String correction) {}
 }

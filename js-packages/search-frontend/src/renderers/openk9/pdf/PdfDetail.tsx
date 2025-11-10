@@ -69,12 +69,21 @@ export function PdfDetail({ result }: PdfDetailProps) {
         icon={<FontAwesomeIcon icon={faFilePdf} />}
         date={lastEdit}
       />
-      <div style={{ marginTop: "10px", marginLeft: "5px" }}>
+      <div
+        css={css`
+          margin-top: 10px;
+          margin-left: 5px;
+        `}
+      >
         <ResultLinkTwo href={result.source.document.url} title="Link Documento">
           <HighlightableText result={result} path="document.url" />
         </ResultLinkTwo>
       </div>
-      <div style={{ marginTop: "15px" }}>
+      <div
+        css={css`
+          margin-top: 15px;
+        `}
+      >
         {result.source.resources?.binaries.map((binary) => {
           const url = `/api/file-manager/v1/download/byte/${binary.resourceId}/${result.source.tenantId}`;
           return (
@@ -82,14 +91,14 @@ export function PdfDetail({ result }: PdfDetailProps) {
               <iframe
                 title={binary.id}
                 src={url}
-                style={{
-                  width: "100%",
-                  height: "50vh",
-                  backgroundColor: "white",
-                  borderRadius: "4px",
-                  border:
-                    "1px solid var(--openk9-embeddable-search--border-color)",
-                }}
+                css={css`
+                  width: 100%;
+                  height: 50vh;
+                  background-color: white;
+                  border-radius: 4px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                `}
               />
             </ViewIfUrlOk>
           );

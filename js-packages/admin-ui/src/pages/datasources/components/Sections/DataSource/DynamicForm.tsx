@@ -3,6 +3,7 @@ import Autocomplete from "@components/Form/Form/AutoComplete";
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
 import { StringMapInput } from "./StringMap/StringMap";
+import { InformationField } from "@components/Form/utils/informationField";
 
 export default function DynamicForm({
   template,
@@ -340,6 +341,7 @@ export function GenerateDynamicForm({
               isRequired={field.required}
               description={field.info}
               disabled={disabled}
+              setStyles={{ paddingBottom: 0 }}
               onChange={(e) => {
                 changeValueKey(field.name, Number(e.currentTarget.value));
               }}
@@ -437,10 +439,15 @@ export function GenerateDynamicForm({
         case "list":
           return (
             <>
-              <Typography variant="subtitle1" component="label">
-                {field.label}
-              </Typography>
-              {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <Typography variant="subtitle1" component="label">
+                    {field.label}
+                  </Typography>
+                  {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
+                </div>
+                {field.info && <InformationField description={field.info} />}
+              </div>
               <Autocomplete
                 disabled={disabled}
                 defaultChip={Array.isArray(value) ? value : []}
@@ -546,7 +553,7 @@ export function GenerateDynamicForm({
 
   return (
     <Box>
-      <Grid container spacing={2} alignItems="center">
+      <Grid container spacing={5} alignItems="center">
         {renderedFields.map(({ field, jsx }, index) => (
           <Grid item key={field.name} xs={12} sm={field.size} md={field.size} lg={field.size} xl={field.size}>
             {jsx}

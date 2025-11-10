@@ -40,6 +40,10 @@ import java.util.Objects;
 @ToString
 public class Autocorrection extends K9Entity {
 
+	private static final Integer DEFAULT_MAX_EDIT = 2;
+	private static final Integer DEFAULT_MIN_WORD_LENGTH = 3;
+	private static final Integer DEFAULT_PREFIX_LENGTH = 3;
+
 	@JsonIgnore
 	@ToString.Exclude
 	@ManyToOne
@@ -63,6 +67,18 @@ public class Autocorrection extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "suggest_mode", nullable = false)
 	private SuggestMode suggestMode = SuggestMode.MISSING;
+
+	public void setMaxEdit(Integer maxEdit) {
+		this.maxEdit = Objects.requireNonNullElse(maxEdit, DEFAULT_MAX_EDIT);
+	}
+
+	public void setMinWordLength(Integer minWordLength) {
+		this.minWordLength = Objects.requireNonNullElse(minWordLength, DEFAULT_MIN_WORD_LENGTH);
+	}
+
+	public void setPrefixLength(Integer prefixLength) {
+		this.prefixLength = Objects.requireNonNullElse(prefixLength, DEFAULT_PREFIX_LENGTH);
+	}
 
 	public void setSort(SortType sort) {
 		this.sort = Objects.requireNonNullElse(sort, SortType.SCORE);

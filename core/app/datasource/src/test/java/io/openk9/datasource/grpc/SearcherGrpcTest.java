@@ -60,7 +60,6 @@ import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.stream.Collectors;
@@ -187,7 +186,9 @@ public class SearcherGrpcTest {
 			sessionFactory
 		);
 		enableBucket(bucketOne);
-		bucketService.addDatasource(bucketOne.getId(), defaultDatasource.getId());
+		bucketService.addDatasource(bucketOne.getId(), defaultDatasource.getId())
+			.await()
+			.indefinitely();
 
 		// LargeLanguageModel
 		createLargeLanguageModelOne();
@@ -407,7 +408,6 @@ public class SearcherGrpcTest {
 		);
 	}
 
-	@Disabled
 	@Test
 	@RunOnVertxContext
 	void should_get_autocorrection_configurations(UniAsserter asserter) {

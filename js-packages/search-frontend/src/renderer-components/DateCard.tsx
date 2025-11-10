@@ -19,7 +19,11 @@ export function DateCard<E>({
   return (
     <div
       className="openk9-embeddable-more-detail-card-container"
-      style={{ display: "flex", flexDirection: "row", gap: "5px" }}
+      css={css`
+        display: flex;
+        flex-direction: row;
+        gap: 5px;
+      `}
     >
       <div
         className="openk9-embeddable-more-detail-card-container-last-edit"

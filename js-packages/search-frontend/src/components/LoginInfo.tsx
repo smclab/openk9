@@ -15,15 +15,25 @@ import { useTranslation } from "react-i18next";
 type LoginInfoProps = {
   isMobile?: boolean;
 };
+
+interface UserProfile {
+  preferred_username: string;
+  email: string;
+}
+
 function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
   const client = useOpenK9Client();
   const [authenticated, setAuthenticated] = React.useState(false);
   React.useEffect(() => {
     if (client.authInit) client.authInit.then(setAuthenticated);
   }, []);
-  const userProfileQuery = useQuery(["user-profile"], async () => {
-    return await client.getUserProfile();
-  });
+  const userProfileQuery = useQuery<UserProfile, unknown>(
+    ["user-profile"],
+    async () => {
+      const data = await client.getUserProfile();
+      return data as UserProfile;
+    },
+  );
   const [isOpen, setIsOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
@@ -80,10 +90,6 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
             background: ${"var(--openk9-embeddable-search--secondary-active-color)"};
             cursor: pointer;
           `}
-          style={{
-            background:
-              "var(--openk9-embeddable-search--secondary-active-color)",
-          }}
           onClick={() => {
             setIsOpen(!isOpen);
           }}
@@ -133,7 +139,7 @@ function LoginInfoComponent({ isMobile = false }: LoginInfoProps) {
                   color: #2e2f39;
                 `}
               >
-                {userProfileQuery.data?.preferred_username}
+                {userProfileQuery?.data?.preferred_username}
               </span>
             </div>
             <div

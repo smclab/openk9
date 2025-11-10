@@ -161,6 +161,8 @@ export function CalendarMobile({
             gap: 9px;
             margin-right: 21px;
             align-items: baseline;
+            background-color: white;
+            border: none;
           `}
           onClick={() => {
             if (setIsVisibleCalendar) setIsVisibleCalendar(false);
@@ -172,7 +174,6 @@ export function CalendarMobile({
             setStartDate(null);
             setEndDate(null);
           }}
-          style={{ backgroundColor: "white", border: "none" }}
         >
           {t("close")} <DeleteLogo heightParam={8} widthParam={8} />
         </button>
@@ -263,7 +264,12 @@ export function CalendarMobile({
           {t("this-year")}
         </button>
       </div>
-      <div style={{ width: "100%", marginTop: "360px" }}>
+      <div
+        css={css`
+          width: 100%;
+          margin-top: 360px;
+        `}
+      >
         <DateRangePicker
           startDate={startDate}
           endDate={endDate}

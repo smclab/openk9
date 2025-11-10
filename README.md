@@ -24,7 +24,7 @@ docker compose up -d
 
 After all components have been started, openk9 is runinng with initial configuration at address *demo.openk9.localhost*.
 
-To accesso to admin panel go to [http://demo.openk9.localhost/admin](http://demo.openk9.localhost/admin). Access with username *k9admin* and password *openk9*.
+To access to admin panel go to [http://demo.openk9.localhost/admin](http://demo.openk9.localhost/admin). Access with username *k9admin* and password *openk9*.
 
 Search frontend is available here:
 

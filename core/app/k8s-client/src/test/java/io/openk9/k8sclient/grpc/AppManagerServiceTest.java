@@ -21,8 +21,10 @@ import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.grpc.StatusRuntimeException;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.AppManifestList;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
+import io.openk9.app.manager.grpc.Status;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
@@ -30,10 +32,13 @@ import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @WithKubernetesTestServer
 @QuarkusTest
@@ -47,18 +52,40 @@ class AppManagerServiceTest {
 
 	private static final String NAMESPACE = "k9-unit-test";
 
-	private static final AppManifest goodRequest = AppManifest
+	private static final AppManifest goodRequestOne = AppManifest
 		.newBuilder()
 		.setSchemaName("mew")
-		.setChart("openk9-foo-enrich")
+		.setChart("openk9-one-enrich")
+		.setVersion("1.0.0")
+		.build();
+	private static final AppManifest goodRequestTwo = AppManifest
+		.newBuilder()
+		.setSchemaName("mew")
+		.setChart("openk9-two-enrich")
+		.setVersion("1.0.0")
+		.build();
+	private static final AppManifest goodRequestThree = AppManifest
+		.newBuilder()
+		.setSchemaName("mew")
+		.setChart("openk9-three-enrich")
 		.setVersion("1.0.0")
 		.build();
 	private static final AppManifest badRequest = AppManifest
 		.newBuilder()
 		.setChart("openk9-foo-enrich")
 		.build();
+	private static final AppManifestList goodRequestList = AppManifestList.newBuilder()
+		.addAppManifests(goodRequestOne)
+		.addAppManifests(goodRequestTwo)
+		.addAppManifests(goodRequestThree)
+		.build();
+	private static final AppManifestList badRequestList = AppManifestList.newBuilder()
+		.addAppManifests(goodRequestOne)
+		.addAppManifests(badRequest)
+		.addAppManifests(goodRequestThree)
+		.build();
 	private static final String APPLICATION_INSTANCE_PATH =
-		"/apis/argoproj.io/v1alpha1/namespaces/k9-unit-test/applications/openk9-foo-enrich-mew";
+		"/apis/argoproj.io/v1alpha1/namespaces/k9-unit-test/applications/openk9-one-enrich-mew";
 	private static final String APPLICATIONS_PATH =
 		"/apis/argoproj.io/v1alpha1/namespaces/k9-unit-test/applications";
 	private static final int INTERNAL_SERVER_ERROR = 500;
@@ -74,8 +101,8 @@ class AppManagerServiceTest {
 	void deploySuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> appManager.applyResource(goodRequest),
-			response -> Assertions.assertEquals(response.getStatus(), "openk9-foo-enrich-mew")
+			() -> appManager.applyResource(goodRequestOne),
+			response -> Assertions.assertEquals(response.getStatus(), "openk9-one-enrich-mew")
 		);
 
 	}
@@ -91,7 +118,7 @@ class AppManagerServiceTest {
 			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
-			() -> appManager.applyResource(goodRequest),
+			() -> appManager.applyResource(goodRequestOne),
 			StatusRuntimeException.class
 		);
 
@@ -114,8 +141,8 @@ class AppManagerServiceTest {
 
 		asserter.assertThat(
 			() -> appManager
-				.applyResource(goodRequest)
-				.call(() -> appManager.deleteResource(goodRequest)),
+				.applyResource(goodRequestOne)
+				.call(() -> appManager.deleteResource(goodRequestOne)),
 			empty -> {}
 		);
 
@@ -126,7 +153,7 @@ class AppManagerServiceTest {
 	void deleteWithoutResourceSuccess(UniAsserter asserter) {
 
 		asserter.assertThat(
-			() -> appManager.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequestOne),
 			empty -> {}
 		);
 
@@ -143,7 +170,7 @@ class AppManagerServiceTest {
 			.times(maxRetry + 1);
 
 		asserter.assertFailedWith(
-			() -> appManager.deleteResource(goodRequest),
+			() -> appManager.deleteResource(goodRequestOne),
 			StatusRuntimeException.class
 		);
 
@@ -158,6 +185,28 @@ class AppManagerServiceTest {
 			StatusRuntimeException.class
 		);
 
+	}
+
+	@Test
+	@RunOnVertxContext
+	void deleteAllResourceSuccess(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> appManager
+				.deleteAllResources(goodRequestList),
+			response -> {
+				assertEquals(3, response.getDeleteResourceStatusList().size());
+				assertEquals(
+					3,
+					response.getDeleteResourceStatusList().stream()
+						.filter(resourceStatus ->
+							Status.SUCCESS.equals(resourceStatus.getStatus())
+						)
+						.toList()
+						.size()
+				);
+			}
+		);
 	}
 
 	@Test

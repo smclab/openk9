@@ -1,6 +1,6 @@
 {
   "name": "@openk9ui/search-frontend",
-  "version": "3.1.8-SNAPSHOT",
+  "version": "3.1.10-SNAPSHOT",
   "author": "SMC",
   "description": "OpenK9 search UI customizable widget",
   "main": "dist/importable.js",
@@ -44,7 +44,9 @@
   },
   "peerDepenedecnies": {
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "@types/react-date-range": "^1.4.10",
+    "@types/react-dates": "^21.8.7"
   },
   "devDependencies": {
     "@babel/core": "^7.15.8",
@@ -63,7 +65,6 @@
     "@types/luxon": "^2.3.2",
     "@types/moment": "^2.13.0",
     "@types/react": "^18.0.3",
-    "@types/react-date-range": "^1.4.3",
     "@types/react-dom": "^18.0.3",
     "@types/react-select": "^5.0.1",
     "@types/sanitize-html": "^2.9.0",
@@ -110,7 +111,7 @@
     "typescript": "^4.6.4",
     "webpack": "^5.57.0",
     "webpack-bundle-analyzer": "^4.5.0",
-    "webpack-cli": "^4.8.0",
+    "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^4.3.1"
   },
   "publishConfig": {

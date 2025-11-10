@@ -463,41 +463,42 @@ export function App() {
                   return (
                     <>
                       <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                          borderRadius: "8px",
-                          fontSize: "15px",
-                          color:
-                            "var(--openk9-embeddable-search--primary-color)",
-                        }}
+                        css={css`
+                          display: flex;
+                          align-items: center;
+                          gap: 12px;
+                          border-radius: 8px;
+                          font-size: 15px;
+                          color: var(--openk9-embeddable-search--primary-color);
+                        `}
                         aria-live="polite"
                       >
                         <span>
                           {t("search-done-with")}
                           <strong
-                            style={{
-                              color:
-                                "var(--openk9-embeddable-search--primary-color)",
-                            }}
+                            css={css`
+                              color: var(
+                                --openk9-embeddable-search--primary-color
+                              );
+                            `}
                           >
                             {`“${cor}”`}
                           </strong>
                           {t("use-instead")}
                           <button
                             onClick={call}
-                            style={{
-                              border: "unset",
-                              background:
-                                "var(--openk9-embeddable-search--primary-light-color)",
-                              color: "white",
-                              borderRadius: "8px",
-                              padding: "4px 12px",
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              fontSize: "15px",
-                            }}
+                            css={css`
+                              border: unset;
+                              background: var(
+                                --openk9-embeddable-search--primary-light-color
+                              );
+                              color: white;
+                              border-radius: 8px;
+                              padding: 4px 12px;
+                              font-weight: 600;
+                              cursor: pointer;
+                              font-size: 15px;
+                            `}
                           >
                             {`“${err}”`}
                           </button>
@@ -928,7 +929,13 @@ export function App() {
         ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
       />
       {isChatbotEnabled && (
-        <div style={{ position: "absolute", bottom: "20px", right: "20px" }}>
+        <div
+          css={css`
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+          `}
+        >
           <Chatbot
             icon={{
               buttonIcon: <Logo size={35} color="white" />,
@@ -939,11 +946,12 @@ export function App() {
                 <FontAwesomeIcon
                   className="openk9--search-icon"
                   icon={faSearch}
-                  style={{
-                    opacity: 0.5,
-                    color:
-                      "var(--openk9-embeddable-search--secondary-text-color)",
-                  }}
+                  css={css`
+                    opacity: 0.5;
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color
+                    );
+                  `}
                 />
               ),
               logoIcon: <Logo size={35} color="#c22525" />,

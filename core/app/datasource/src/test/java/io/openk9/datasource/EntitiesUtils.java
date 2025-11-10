@@ -20,6 +20,7 @@ package io.openk9.datasource;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
@@ -35,6 +36,7 @@ import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
 import io.smallrye.mutiny.Uni;
@@ -132,11 +134,13 @@ public class EntitiesUtils {
 	 */
 	public static void createDefaultAutocorrection(
 			String name,
+			Long docTypeFieldId,
 			AutocorrectionService service,
 			Mutiny.SessionFactory sessionFactory) {
 
 		AutocorrectionDTO dto = AutocorrectionDTO.builder()
 			.name(name)
+			.autocorrectionDocTypeFieldId(docTypeFieldId)
 			.build();
 
 		createEntity(dto, service, sessionFactory);
@@ -246,6 +250,20 @@ public class EntitiesUtils {
 			)
 			.await()
 			.indefinitely();
+	}
+
+	public static Long getSampleTextDocTypeFieldId(
+			DocTypeFieldService docTypeFieldService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		var docTypeFields = getAllEntities(docTypeFieldService, sessionFactory);
+
+		return docTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.map(K9Entity::getId)
+			.findFirst()
+			.orElse(0L);
 	}
 
 	public static SearchConfig getSearchConfig(

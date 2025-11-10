@@ -363,17 +363,17 @@ export function SearchWithSuggestions({
             className="openk9--search-search-container-icon"
             title={"avvia ricerca"}
             aria-label={labelIcon}
-            style={{
-              paddingRight: "16px",
-              display: "flex",
-              flexDirection: "row",
-              padding: "4px 8px",
-              gap: "4px",
-              alignItems: "center",
-              marginRight: "21px",
-              background: "inherit",
-              border: "none",
-            }}
+            css={css`
+              padding-right: 16px;
+              display: flex;
+              flex-direction: row;
+              padding: 4px 8px;
+              gap: 4px;
+              align-items: center;
+              margin-right: 21px;
+              background: inherit;
+              border: none;
+            `}
             onClick={() => {
               if (callbackSearch) callbackSearch();
             }}

@@ -13,6 +13,7 @@ import { ResultsDisplayMode } from "../components/ResultList";
 import { Tab } from "../components/Tabs";
 import { Options } from "../components/Select";
 import { RangeProvider } from "../components/useRange";
+import { TypeAllFilters } from "../components/AllFiltersConfigurable";
 
 export const rendererComponents = RendererComponents;
 
@@ -406,6 +407,11 @@ type correctionType = {
   ) => React.ReactNode;
 };
 
+type allFiltersConfigurableProps = {
+  element: Element | string | null;
+  typeFilters: TypeAllFilters;
+};
+
 export type Configuration = {
   // simple types
   debounceTimeSearch: number | null | undefined;
@@ -481,6 +487,7 @@ export type Configuration = {
   removeFilters: Element | string | null;
   // configurable types
   activeFiltersConfigurable: activeFiltersConfigurableProps | null | undefined;
+  allFilters: allFiltersConfigurableProps | undefined | null;
   calendarMobile: CalendarMobileConfiguration | null;
   correction: correctionType | undefined | null;
   dataRangePicker: DataRangePickerProps | null;
@@ -516,6 +523,7 @@ export type Configuration = {
 const defaultConfiguration: Configuration = {
   activeFilters: null,
   activeFiltersConfigurable: null,
+  allFilters: null,
   callbackClient: () => null,
   calendar: null,
   calendarMobile: null,

@@ -1,5 +1,5 @@
 import React, { JSX } from "react";
-import { useRange } from "./useRange";
+import { setterConnection, useRange } from "./useRange";
 
 type CorrectionFunction = {
   information: (
@@ -8,11 +8,13 @@ type CorrectionFunction = {
     confirm: () => void,
   ) => React.ReactNode;
   setSearch: (newSearch: string) => void;
+  onCorrectionCallback?: () => void;
 };
 
 export default function Correction({
   information,
   setSearch,
+  onCorrectionCallback,
 }: CorrectionFunction): JSX.Element | null {
   const { correction } = useRange();
 
@@ -24,7 +26,8 @@ export default function Correction({
   return (
     <>
       {information(corrected, original, () => {
-        setSearch(corrected);
+        setSearch(original);
+        onCorrectionCallback && onCorrectionCallback();
       })}
     </>
   );

@@ -17,6 +17,11 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
+import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.AppManifestList;
+import io.openk9.app.manager.grpc.DeleteAllResourcesResponse;
+import io.openk9.app.manager.grpc.DeleteIngressRequest;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
@@ -27,6 +32,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 import io.vertx.mutiny.core.eventbus.Message;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static io.openk9.tenantmanager.actor.TypedActor.Become;
@@ -35,8 +41,13 @@ import static io.openk9.tenantmanager.actor.TypedActor.Stay;
 
 public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
+	private static final Logger LOGGER = Logger.getLogger(
+		DeleteBehavior.class);
 	private final EventBus eventBus;
-
+	private final TypedActor.Address<DeleteMessage> self;
+	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;
+	private String token;
+	private String virtualHost;
 	public DeleteBehavior(
 		EventBus eventBus, TypedActor.Address<DeleteMessage> self) {
 
@@ -44,17 +55,6 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 		this.self = self;
 
 	}
-
-	private void _tellStop() {
-		if (this.deleteGroupActor != null) {
-			this.deleteGroupActor.tell(new DeleteGroupMessage.RemoveDeleteRequest(this.virtualHost));
-		}
-	}
-
-	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;
-	private String virtualHost;
-	private String token;
-	private final TypedActor.Address<DeleteMessage> self;
 
 	@Override
 	public TypedActor.Effect<DeleteMessage> apply(DeleteMessage timeoutMessage) {
@@ -75,6 +75,9 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 					.flatMap((Message<Tenant> message) -> {
 
 						var tenant = message.body();
+						var appManager = delete.appManager();
+
+						var unis = new ArrayList<Uni<Void>>();
 
 						LOGGER.infof(
 							"Tenant with id %s found for virtualHost %s",
@@ -92,6 +95,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 							)
 						).replaceWithVoid();
 
+						unis.add(deleteSchema);
+
 						Uni<Void> deleteRealm = eventBus.request(
 							DeleteService.DELETE_REALM,
 							tenant.getRealmName()
@@ -101,6 +106,8 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 								virtualHost
 							)
 						).replaceWithVoid();
+
+						unis.add(deleteRealm);
 
 						Uni<Void> deleteTenant = eventBus.request(
 							DeleteService.DELETE_TENANT,
@@ -112,8 +119,46 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 							)
 						).replaceWithVoid();
 
+						unis.add(deleteTenant);
+
+						Uni<Void> deleteIngress =
+						appManager.deleteIngress(
+							DeleteIngressRequest.newBuilder()
+								.setSchemaName(tenant.getSchemaName())
+								.setVirtualHost(virtualHost)
+								.build()
+						)
+						.invoke(() -> LOGGER.infof(
+							"Ingress for schemaName %s and virtualHost %s deleted.",
+							tenant.getSchemaName(),
+							virtualHost
+						)).replaceWithVoid();
+
+						unis.add(deleteIngress);
+
+						var appManifestList = PresetPluginDrivers.getAllPluginDrivers().stream()
+							.map(preset ->
+								AppManifest.newBuilder()
+									.setSchemaName(tenant.getSchemaName())
+									.setChart(preset)
+									.setVersion(delete.applicationVersion())
+									.build()
+							)
+							.toList();
+
+						var deletedAllResources =
+							appManager.deleteAllResources(
+								AppManifestList.newBuilder()
+									.addAllAppManifests(appManifestList)
+									.build()
+							)
+							.invoke(this::_logDeleteAllResourcesResult)
+							.replaceWithVoid();
+
+						unis.add(deletedAllResources);
+
 						return Uni.join()
-							.all(deleteSchema, deleteRealm, deleteTenant)
+							.all(unis)
 							.andCollectFailures()
 							.onItemOrFailure()
 							.invoke((__, t) -> {
@@ -149,7 +194,29 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 	}
 
-	private static final Logger LOGGER = Logger.getLogger(
-		DeleteBehavior.class);
+	private void _logDeleteAllResourcesResult(
+			DeleteAllResourcesResponse response) {
+
+		response.getDeleteResourceStatusList()
+			.forEach(deleteResourcesStatus -> {
+				switch (deleteResourcesStatus.getStatus()) {
+					case SUCCESS -> LOGGER.infof(
+						"Resource %s for virtualHost %s deleted.",
+						deleteResourcesStatus.getResourceName(),
+						virtualHost);
+					case ERROR -> LOGGER.warnf(
+						"Failed to delete resource %s for virtualHost %s.",
+						deleteResourcesStatus.getResourceName(),
+						virtualHost
+					);
+				}
+			});
+	}
+
+	private void _tellStop() {
+		if (this.deleteGroupActor != null) {
+			this.deleteGroupActor.tell(new DeleteGroupMessage.RemoveDeleteRequest(this.virtualHost));
+		}
+	}
 	
 }

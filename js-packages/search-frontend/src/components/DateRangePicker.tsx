@@ -50,12 +50,12 @@ export function DataRangePicker({
   const renderCalendarInfo = () => (
     <div
       className="custom-calendar-info"
-      style={{
-        display: "flex",
-        gap: "5px",
-        padding: "15px 20px",
-        overflow: "auto",
-      }}
+      css={css`
+        display: flex;
+        gap: 5px;
+        padding: 15px 20px;
+        overflow: auto;
+      `}
     >
       <CreateLabel
         padding="10px 6px"
@@ -94,12 +94,12 @@ export function DataRangePicker({
       />
       <div
         className="custom-calendar-info"
-        style={{
-          marginLeft: "auto",
-          width: "fit-content",
-          display: "flex",
-          gap: "10px",
-        }}
+        css={css`
+          margin-left: auto;
+          width: fit-content;
+          display: flex;
+          gap: 10px;
+        `}
       >
         <CreateLabel
           padding="10px 6px"
@@ -154,13 +154,13 @@ export function DataRangePicker({
         `}
       >
         <div
-          style={{
-            display: "flex",
-            height: "100%",
-            background: "none",
-            justifyContent: "center",
-            flexDirection: "column",
-          }}
+          css={css`
+            display: flex;
+            height: 100%;
+            background: none;
+            justify-content: center;
+            flex-direction: column;
+          `}
         >
           <CalendarLogo size={"20px"} />
         </div>
@@ -190,18 +190,18 @@ export function DataRangePicker({
         <button
           aria-label={t("remove-calendar-filters") || "remove calendar filters"}
           id={"reset-filter-data-picker"}
-          style={{
-            zIndex: "2",
-            backgroundColor: "inherit",
-            cursor: "pointer",
-            border: "none",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            color: "black",
-            height: "100%",
-            background: "none",
-          }}
+          css={css`
+            z-index: 2;
+            background-color: inherit;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: black;
+            height: 100%;
+            background: none;
+          `}
           onClick={() => {
             setFocusedInput(null);
             const inputElement = document.getElementById("endDate");

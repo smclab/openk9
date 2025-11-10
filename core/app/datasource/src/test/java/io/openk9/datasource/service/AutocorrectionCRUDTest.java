@@ -23,7 +23,6 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SortType;
 import io.openk9.datasource.model.SuggestMode;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -37,13 +36,16 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class AutocorrectionCRUDTest {
 
 	private static final Logger log = Logger.getLogger(AutocorrectionCRUDTest.class);
+
+	private static final Integer DEFAULT_MAX_EDIT = 2;
+	private static final Integer DEFAULT_MIN_WORD_LENGTH = 3;
+	private static final Integer DEFAULT_PREFIX_LENGTH = 3;
 	private static final int MAX_EDIT = 2;
 	private static final int MAX_EDIT_UPDATED = 1;
 	private static final int MIN_WORD_LENGTH = 3;
@@ -65,14 +67,8 @@ public class AutocorrectionCRUDTest {
 
 	@BeforeEach
 	void setup() {
-		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
-
-		var docTypeFieldId = docTypeFields.stream()
-			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
-			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
-			.map(K9Entity::getId)
-			.findFirst()
-			.orElse(0L);
+		var docTypeFieldId =
+			EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sessionFactory);
 
 		AutocorrectionDTO autocorrectionDTOTwo = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_TWO)
@@ -92,8 +88,12 @@ public class AutocorrectionCRUDTest {
 
 	@Test
 	void should_create_empty_autocorrection_one() {
+		var sampleTextDocTypeFieldId =
+			EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sessionFactory);
+
 		AutocorrectionDTO dto = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_ONE)
+			.autocorrectionDocTypeFieldId(sampleTextDocTypeFieldId)
 			.build();
 
 		EntitiesUtils.createEntity(dto, autocorrectionService, sessionFactory);
@@ -107,13 +107,13 @@ public class AutocorrectionCRUDTest {
 
 		log.debug(String.format("Autocorrection: %s", autocorrection.toString()));
 
-		assertNull(autocorrection.getAutocorrectionDocTypeField());
+		assertNotNull(autocorrection.getAutocorrectionDocTypeField());
 		assertEquals(AUTOCORRECTION_NAME_ONE, autocorrection.getName());
 		assertEquals(SortType.SCORE, autocorrection.getSort());
 		assertEquals(SuggestMode.MISSING, autocorrection.getSuggestMode());
-		assertNull(autocorrection.getPrefixLength());
-		assertNull(autocorrection.getMinWordLength());
-		assertNull(autocorrection.getMaxEdit());
+		assertEquals(DEFAULT_PREFIX_LENGTH, autocorrection.getPrefixLength());
+		assertEquals(DEFAULT_MIN_WORD_LENGTH, autocorrection.getMinWordLength());
+		assertEquals(DEFAULT_MAX_EDIT, autocorrection.getMaxEdit());
 
 		EntitiesUtils.removeEntity(
 			AUTOCORRECTION_NAME_ONE,
@@ -124,25 +124,8 @@ public class AutocorrectionCRUDTest {
 
 	@Test
 	void should_create_autocorrection_one_with_docTypeField() {
-		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
-
-		docTypeFields.forEach(docTypeField ->
-			log.debug(
-				String.format(
-					"Field name: %s, type: %s.",
-					docTypeField.getName(),
-					docTypeField.getFieldType().name()
-				)
-			)
-		);
-
-		var sampleTextDocTypeField = docTypeFields.stream()
-			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
-			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
-			.findFirst();
-
-		assertTrue(sampleTextDocTypeField.isPresent());
-		var sampleTextDocTypeFieldId = sampleTextDocTypeField.get().getId();
+		var sampleTextDocTypeFieldId =
+			EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sessionFactory);
 
 		var dto = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_ONE)

@@ -36,7 +36,6 @@ import org.eclipse.microprofile.graphql.Description;
 @EqualsAndHashCode(callSuper = true)
 public class AutocorrectionDTO extends K9EntityDTO{
 
-	@Nullable
 	@Description("""
 		The field used in the autocorrection query,
 		must be a valid docTypeFieldId.

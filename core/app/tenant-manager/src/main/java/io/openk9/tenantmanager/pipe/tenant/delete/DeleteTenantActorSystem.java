@@ -17,18 +17,28 @@
 
 package io.openk9.tenantmanager.pipe.tenant.delete;
 
+import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
+import io.quarkus.grpc.GrpcClient;
 import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.context.api.NamedInstance;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
 @ApplicationScoped
 public class DeleteTenantActorSystem {
+
+	@GrpcClient("appmanager")
+	AppManager appManager;
+
+	@Inject
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	@Inject
 	EventBus eventBus;
@@ -59,7 +69,7 @@ public class DeleteTenantActorSystem {
 	public void runDelete(String virtualHost, String token) {
 
 		deleteGroupActor.tell(
-			new DeleteGroupMessage.TellDelete(virtualHost, token));
+			new DeleteGroupMessage.TellDelete(virtualHost, token, appManager, applicationVersion));
 
 	}
 

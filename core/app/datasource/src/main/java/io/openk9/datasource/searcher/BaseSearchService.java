@@ -66,6 +66,7 @@ import com.google.protobuf.ByteString;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.common.xcontent.XContentType;
@@ -348,6 +349,18 @@ public abstract class BaseSearchService {
 						.createQuery(criteriaQuery)
 						.getSingleResultOrNull();
 					}
+				)
+				.onFailure(SQLGrammarException.class)
+				.recoverWithUni(throwable ->
+					Uni.createFrom().failure(
+						new InvalidTenantException(
+							String.format(
+								"Impossible to identify a valid tenant from the virtualHost: \"%s\".",
+								virtualHost
+							),
+							throwable
+						)
+					)
 				)
 				.map(bucket -> {
 					if (bucket == null) {

@@ -54,6 +54,9 @@ public class UnboundAutocorrectionTest {
 	BucketService bucketService;
 
 	@Inject
+	DocTypeFieldService docTypeFieldService;
+
+	@Inject
 	Mutiny.SessionFactory sf;
 
 	@BeforeEach
@@ -62,10 +65,29 @@ public class UnboundAutocorrectionTest {
 		EntitiesUtils.createBucket(BUCKET_ONE, bucketService, sf);
 		EntitiesUtils.createBucket(BUCKET_TWO, bucketService, sf);
 
+		// Retrieve sample doc type field of TEXT type
+		var docTypeFieldId =
+			EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
+
 		// Create Autocorrection one, two and three
-		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_ONE, autocorrectionService, sf);
-		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_TWO, autocorrectionService, sf);
-		EntitiesUtils.createDefaultAutocorrection(AUTOCORRECTION_THREE, autocorrectionService, sf);
+		EntitiesUtils.createDefaultAutocorrection(
+			AUTOCORRECTION_ONE,
+			docTypeFieldId,
+			autocorrectionService,
+			sf
+		);
+		EntitiesUtils.createDefaultAutocorrection(
+			AUTOCORRECTION_TWO,
+			docTypeFieldId,
+			autocorrectionService,
+			sf
+		);
+		EntitiesUtils.createDefaultAutocorrection(
+			AUTOCORRECTION_THREE,
+			docTypeFieldId,
+			autocorrectionService,
+			sf
+		);
 
 		allAutocorrectionCount = 3;
 	}

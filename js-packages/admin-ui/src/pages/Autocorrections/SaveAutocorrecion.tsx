@@ -147,7 +147,7 @@ export function SaveAutocorrection() {
                 content: (
                   <div>
                     <TextInput label="Name" {...form.inputProps("name")} />
-                    <NumberInput label="Prefix" {...form.inputProps("prefixLength")} />
+                    <NumberInput label="Prefix Lenght" {...form.inputProps("prefixLength")} />
                     <NumberInput label="Min Word Length" {...form.inputProps("minWordLength")} />
                     <NumberInput label="Max edits" {...form.inputProps("maxEdit")} />
                     <CustomSelect
@@ -160,7 +160,7 @@ export function SaveAutocorrection() {
                       onChange={(e: SortType) => form.inputProps("sort").onChange(e)}
                     />
                     <CustomSelect
-                      label={"SuggestMode"}
+                      label={"Suggest Mode"}
                       value={form.inputProps("suggestMode").value}
                       disabled={false}
                       validationMessages={[]}
@@ -168,7 +168,7 @@ export function SaveAutocorrection() {
                       id={"HybridSearch"}
                       onChange={(e: SuggestMode) => form.inputProps("suggestMode").onChange(e)}
                     />
-                    <BooleanInput label="Max edits" {...form.inputProps("enableSearchWithCorrection")} />
+                    <BooleanInput label="Search with correction" {...form.inputProps("enableSearchWithCorrection")} />
                     <CustomSelectRelationsOneToOne
                       options={
                         docTypes?.data?.docTypeFields?.edges?.map((aut) => ({

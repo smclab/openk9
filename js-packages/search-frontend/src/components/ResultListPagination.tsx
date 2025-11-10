@@ -15,7 +15,11 @@ import {
 } from "./client";
 import { Renderers, useRenderers } from "./useRenderers";
 import { SelectionsAction, SelectionsState } from "./useSelections";
-import { useRange } from "./useRange";
+import {
+  RangeContextProviderProps,
+  setterConnection,
+  useRange,
+} from "./useRange";
 
 export type ResultsDisplayMode =
   | { type: "finite" }
@@ -116,6 +120,7 @@ type InfiniteResultsProps<E> = {
   sortAfterKey: string;
   callback?: () => void;
   customNoResults?: React.ReactNode | null;
+  dynamicFilters?: boolean;
 };
 
 export function InfiniteResults<E>({
@@ -132,11 +137,16 @@ export function InfiniteResults<E>({
   setTotalResult,
   callback,
   customNoResults,
+  dynamicFilters = true,
 }: InfiniteResultsProps<E>) {
   const [offset, elementForPage] = state.range;
-  const { setNumberOfResults } = useRange();
-  const { setCorrection } = useRange();
 
+  const {
+    setNumberOfResults,
+    setCorrection,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
+  } = useRange();
   const results = useInfiniteResults<E>(
     state,
     searchQuery,
@@ -145,18 +155,26 @@ export function InfiniteResults<E>({
     sortAfterKey,
     elementForPage,
     offset,
+    overrideSearchWithCorrection,
+    setOverrideSearchWithCorrection,
+    dynamicFilters,
   );
 
   React.useEffect(() => {
-    const total = results.data?.pages[0]?.total ?? 0;
+    const total = results?.data?.pages[0]?.total ?? 0;
     setTotalResult(total);
     setNumberOfResults(total);
     setCorrection(results?.data?.pages[0]?.autocorrection);
-  }, [results.data, setTotalResult, setNumberOfResults, setCorrection]);
+  }, [results?.data, setTotalResult, setNumberOfResults, setCorrection]);
 
   return (
-    <div style={{ overflowX: "hidden" }} className="scroll">
-      {results.data?.pages[0]?.total ?? 0 > 0 ? (
+    <div
+      css={css`
+        overflow-x: hidden;
+      `}
+      className="scroll"
+    >
+      {results?.data?.pages[0]?.total ?? 0 > 0 ? (
         <div
           className="openk9-infinite-results-container-wrapper"
           css={css`
@@ -231,14 +249,26 @@ export function useInfiniteResults<E>(
   sortAfterKey: string,
   elementForPage: number,
   offset: number,
+  overrideSearchWithCorrection?: RangeContextProviderProps,
+  setOverrideSearchWithCorrection?: setterConnection,
+  dynamicFilters: boolean = true,
 ) {
   const client = useOpenK9Client();
   const suppressIntermediate = React.useMemo(
     () => state.text.trim().length > 0 && searchQuery.length === 0,
     [state.text, searchQuery],
   );
+  if (!dynamicFilters) return undefined;
+  const remappingSearchQuery =
+    overrideSearchWithCorrection?.isAutocorrection === false
+      ? searchQuery.map((token) =>
+          token.tokenType === "TEXT" && token.search
+            ? { ...token, overrideSearchWithCorrection: false }
+            : token,
+        )
+      : searchQuery;
 
-  return useInfiniteQuery(
+  const data = useInfiniteQuery(
     [
       "results",
       searchQuery,
@@ -247,6 +277,7 @@ export function useInfiniteResults<E>(
       sortAfterKey,
       offset,
       elementForPage,
+      overrideSearchWithCorrection?.renderingCorrection,
     ] as const,
     async ({ queryKey }) => {
       const [
@@ -267,7 +298,7 @@ export function useInfiniteResults<E>(
       return client.doSearch<E>({
         range,
         language: qLanguage,
-        searchQuery: qSearchQuery,
+        searchQuery: remappingSearchQuery,
         sort: qSort,
         sortAfterKey: qSortAfterKey || "",
       });
@@ -279,6 +310,13 @@ export function useInfiniteResults<E>(
       notifyOnChangeProps: ["isFetching"],
     },
   );
+  if (overrideSearchWithCorrection?.isAutocorrection === false) {
+    setOverrideSearchWithCorrection?.((ov) => ({
+      ...ov,
+      isAutocorrection: true,
+    }));
+  }
+  return data;
 }
 
 export function SkeletonResult({

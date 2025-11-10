@@ -35,7 +35,7 @@ public class Response {
 	long total;
 	@Schema(description = "Autocorrection result")
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private Object autocorrection;
+	private AutocorrectionDTO autocorrection;
 
 	public static final Response EMPTY = new Response(List.of(), 0, null);
 
