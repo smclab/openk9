@@ -182,20 +182,20 @@ Trigger K8S-Client:
 Trigger File-Manager:
   stage: trigger
   rules:
-  # Caso 1: push su main
+  # Case 1: push on main
   - if: '$CI_COMMIT_BRANCH == "main"'
 
-  # Caso 2: merge request approvata
+  # Case 2: approved merge request
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
 
-  # Caso 3: creazione tag
+  # Case 3: tag creation
   - if: "$CI_COMMIT_TAG"
 
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/file-manager/**/*
@@ -210,20 +210,20 @@ Trigger File-Manager:
 Trigger Tenant-Manager:
   stage: trigger
   rules:
-  # Caso 1: push su main
+  # Case 1: push on main
   - if: '$CI_COMMIT_BRANCH == "main"'
 
-  # Caso 2: merge request approvata
+  # Case 2: approved merge request
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
 
-  # Caso 3: creazione tag
+  # Case 3: tag creation
   - if: "$CI_COMMIT_TAG"
 
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tenant-manager/**/*
@@ -266,6 +266,61 @@ Trigger Tika:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
 
 ################################################################################
+#                            TRIGGER ENTITY-MANAGER                            #
+################################################################################
+Trigger Entity-Manager:
+  stage: trigger
+  rules:
+  # Case 1: push on main
+  - if: '$CI_COMMIT_BRANCH == "main"'
+
+  # Case 2: approved merge request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
+
+  # Case 3: tag creation
+  - if: "$CI_COMMIT_TAG"
+
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+    changes:
+    - core/app/entity-manager/**/*
+    - core/common/resources-common/**/*
+    - core/common/util/**/*
+  trigger:
+    include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
+
+################################################################################
+#                         TRIGGER RESOURCES-VALIDATOR                          #
+################################################################################
+Trigger Resources-Validator:
+  stage: trigger
+  rules:
+  # Case 1: push on main
+  - if: '$CI_COMMIT_BRANCH == "main"'
+
+  # Case 2: approved merge request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
+
+  # Case 3: tag creation
+  - if: "$CI_COMMIT_TAG"
+
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+    changes:
+    - core/app/resources-validator/**/*
+    - core/common/resources-common/**/*
+  trigger:
+    include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
+
+################################################################################
 #                         PIPELINE FRONT-END TRIGGERS                          #
 ################################################################################
 
@@ -279,11 +334,11 @@ Trigger Search Frontend:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/search-frontend/**/*
-  # Caso per branch feature (rimosso controllo autore)
+  # Case for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/search-frontend/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
@@ -300,11 +355,11 @@ Trigger Admin Frontend:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/admin-ui/**/*
-  # Caso per branch feature (rimosso controllo autore)
+  # Case for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/admin-ui/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
@@ -321,11 +376,11 @@ Trigger Tenant Frontend:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/tenant-ui/**/*
-  # Caso per branch feature (rimosso controllo autore)
+  # Case for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/tenant-ui/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
@@ -342,11 +397,11 @@ Trigger Talk-To Frontend:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/talk-to/**/*
-  # Caso per branch feature (rimosso controllo autore)
+  # Case for feature branch
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/talk-to/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
@@ -357,7 +412,7 @@ Trigger Talk-To Frontend:
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
-  # Feature branch: non parte nessuna pipeline
+  # Feature branch: no pipeline triggered
   # Merge request: fetch version -> build verifier
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
@@ -366,7 +421,7 @@ Trigger OpenK9-Chatbot:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/openk9-chatbot/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
@@ -451,7 +506,7 @@ SonarQube Check:
 # Build RAG MODULE
 Trigger Rag Module:
   stage: trigger
-  # Non blocca la pipeline se fallisce
+  # Does not block the pipeline if it fails
   allow_failure: true
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -460,17 +515,17 @@ Trigger Rag Module:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - ai-packages/rag-module/**/*
-  # Caso specifico per Luca Callocchia
+  # Case for Luca Callocchia
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
     changes:
     - ai-packages/rag-module/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-rag-module.yaml"
 
-# Procedere a fare la build di Ebedding anche se RAG fallisce
+# Build Embedding even if RAG fails
 Trigger Embedding Module:
   stage: trigger
   rules:
@@ -480,11 +535,11 @@ Trigger Embedding Module:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - ai-packages/embedding-modules/**/*
-  # feature + luca
+  # Case for Luca Callocchia
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && $GITLAB_USER_LOGIN == 'luca.callocchia'"
     changes:
     - ai-packages/embedding-modules/**/*
-  # Blocco della prima esecuzione quando branch appena creato
+  # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
   trigger:

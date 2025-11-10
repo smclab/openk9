@@ -44,7 +44,7 @@ Build Talk-To:
     artifacts: true
   script:
   # Docker credentials configuration
-  - export NODE_OPTIONS="--max-old-space-size=4096"
+  - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
@@ -68,7 +68,8 @@ Build Talk-To:
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG"
+      --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG" \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -83,6 +84,11 @@ Build Talk-To:
 Build Verifier:
   stage: build-verifier
   image: node:20.9.0
+  cache:
+    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - js-packages/talk-to/node_modules
+    policy: pull-push
   script:
   - cd js-packages/talk-to
   - yarn install

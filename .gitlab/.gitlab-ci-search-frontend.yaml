@@ -44,7 +44,7 @@ Build Search Frontend:
     artifacts: true
   script:
   # Docker credentials configuration
-  - export NODE_OPTIONS="--max-old-space-size=4096"
+  - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
@@ -68,7 +68,8 @@ Build Search Frontend:
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG"
+      --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG" \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
   # Rule for main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -83,6 +84,11 @@ Build Search Frontend:
 Build Verifier:
   stage: build-verifier
   image: node:20.9.0
+  cache:
+    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - js-packages/search-frontend/node_modules
+    policy: pull-push
   script:
   - cd js-packages/search-frontend
   - yarn install

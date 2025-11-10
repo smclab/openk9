@@ -44,13 +44,18 @@ Fetch version:
 Build Verifier:
   stage: build-verifier
   image: node:20.9.0
+  cache:
+    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - js-packages/openk9-chatbot/node_modules
+    policy: pull-push
   needs:
   - job: Fetch version
     artifacts: true
   script:
   - cd js-packages/openk9-chatbot
-  - npm install
-  - npm build
+  - yarn install
+  - yarn build
   rules:
   # Run on merge requests and main branch only
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -73,7 +78,7 @@ Build OpenK9-Chatbot:
     artifacts: true
   script:
   # Docker credentials configuration
-  - export NODE_OPTIONS="--max-old-space-size=4096"
+  - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
@@ -88,7 +93,8 @@ Build OpenK9-Chatbot:
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/openk9-chatbot/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION" \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
   # Only run on main branch
   - if: '$CI_COMMIT_BRANCH == "main"'
