@@ -17,10 +17,8 @@ RUN echo "$MODE" \
         pip install --no-cache-dir -r requirements.txt; \
     else \
         pip install --no-cache-dir -r requirements_cpu.txt; \
-    fi
-
-RUN pip install --no-cache-dir -r requirements.txt  && \
-python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
+    fi\
+    python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
 
 COPY app/text_splitters/derived_text_splitter.py ./
 COPY app/text_splitters/character_text_splitter.py ./
