@@ -41,7 +41,9 @@ import io.quarkiverse.rabbitmqclient.RabbitMQClient;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.converters.uni.UniReactorConverters;
 import org.jboss.logging.Logger;
+import org.reactivestreams.Publisher;
 
 @ApplicationScoped
 public class TenantManagementEventProducerImpl
@@ -50,6 +52,14 @@ public class TenantManagementEventProducerImpl
 	@Override
 	public void send(TenantManagementEvent event) throws Throwable {
 		VertxContextSupport.subscribeAndAwait(() -> outbox.persist(event));
+	}
+
+	@Override
+	public Publisher<Void> sendAsync(TenantManagementEvent event) {
+
+		return outbox.persist(event)
+			.convert()
+			.with(UniReactorConverters.toMono());
 	}
 
 	@PostConstruct

@@ -17,6 +17,7 @@
 
 package io.openk9.event.tenant;
 
+import org.reactivestreams.Publisher;
 
 /**
  * A producer of {@link TenantManagementEvent}.
@@ -29,5 +30,7 @@ public interface TenantManagementEventProducer {
 	 * @param event the {@link TenantManagementEvent} to send.
 	 */
 	void send(TenantManagementEvent event) throws Throwable;
+
+	Publisher<Void> sendAsync(TenantManagementEvent event);
 
 }

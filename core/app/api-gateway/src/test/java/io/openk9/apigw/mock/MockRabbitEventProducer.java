@@ -22,6 +22,7 @@ import io.openk9.event.tenant.TenantManagementEventProducer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,11 @@ public class MockRabbitEventProducer
 		}
 
 		amqp.convertAndSend(TenantManagementEvent.TOPIC, event);
+	}
+
+	@Override
+	public Publisher<Void> sendAsync(TenantManagementEvent event) {
+		throw new UnsupportedOperationException();
 	}
 
 }

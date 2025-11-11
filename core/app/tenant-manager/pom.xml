@@ -37,6 +37,10 @@
 		  <artifactId>events</artifactId>
 	  </dependency>
 	  <dependency>
+		  <groupId>io.smallrye.reactive</groupId>
+		  <artifactId>mutiny-reactor</artifactId>
+	  </dependency>
+	  <dependency>
 		  <groupId>io.quarkiverse.rabbitmqclient</groupId>
 		  <artifactId>quarkus-rabbitmq-client</artifactId>
 	  </dependency>

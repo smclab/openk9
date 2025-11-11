@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.Pool;
 import io.vertx.mutiny.sqlclient.Row;
+import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.Tuple;
 import org.jboss.logging.Logger;
 
@@ -83,6 +84,30 @@ public class OutboxEventService {
 			});
 	}
 
+	public Uni<List<OutboxEvent>> window(OffsetDateTime from, OffsetDateTime to) {
+		return pool.preparedQuery(FETCH_WINDOW_SQL)
+			.execute(Tuple.of(from, to))
+			.map(rows -> {
+				List<OutboxEvent> events = new ArrayList<>();
+				for (Row row : rows) {
+					events.add(OutboxEventService.fromRow(row));
+				}
+				return events;
+			});
+	}
+
+	public Uni<List<OutboxEvent>> window(OffsetDateTime from) {
+		return window(from, OffsetDateTime.now());
+	}
+
+	public Uni<Integer> deleteAll() {
+		return pool.withTransaction(conn -> conn
+			.preparedQuery(DELETE_FROM_TABLE_SQL)
+			.execute()
+			.map(RowSet::rowCount)
+		);
+	}
+
 	private static Tuple asTuple(TenantManagementEvent event) {
 		try {
 			String payload = mapper.writeValueAsString(event);
@@ -127,6 +152,15 @@ public class OutboxEventService {
 		FROM outbox_event
 		WHERE sent = false
 		""";
+
+	private static final String FETCH_WINDOW_SQL = """
+		SELECT *
+		FROM outbox_event
+		WHERE create_date >= $1 and create_date <= $2
+		""";
+
+	private static final String DELETE_FROM_TABLE_SQL =
+		"DELETE FROM outbox_event";
 
 	private static final String UPDATE_SENT_FLAG_SQL = """
 		UPDATE outbox_event

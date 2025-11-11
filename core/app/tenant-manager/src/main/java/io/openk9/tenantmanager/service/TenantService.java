@@ -40,12 +40,13 @@ import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.model.Tenant;
 
-import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.sqlclient.Pool;
 import io.vertx.mutiny.sqlclient.RowSet;
+import io.vertx.mutiny.sqlclient.SqlResult;
 import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.sqlclient.Row;
+import mutiny.zero.flow.adapters.AdaptersToFlow;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -70,17 +71,17 @@ public class TenantService {
 
 		var id = idGenerator.nextId();
 
-		return pool.withTransaction(sqlConnection -> sqlConnection
-			.preparedQuery(INSERT_SQL)
-			.execute(Tuple.from(new Object[] {
-				id, virtualHost,
-				schemaName, liquibaseSchemaName,
-				realmName, clientId, clientSecret,
-				createDate, modifiedDate
-			}))
-			.flatMap(ignored -> VertxContextSupport.executeBlocking(() -> {
-				try {
-					producer.send(
+		return pool.withTransaction(conn -> conn
+				.preparedQuery(INSERT_SQL)
+				.execute(Tuple.from(new Object[] {
+					id, virtualHost,
+					schemaName, liquibaseSchemaName,
+					realmName, clientId, clientSecret,
+					createDate, modifiedDate
+				}))
+				.map(SqlResult::rowCount)
+				.flatMap(rowCount -> sendEvent(
+						rowCount,
 						TenantManagementEvent.TenantCreated.builder()
 							.tenantId(schemaName)
 							.hostName(virtualHost)
@@ -91,23 +92,22 @@ public class TenantService {
 								Route.SEARCHER, Authorization.NO_AUTH
 							))
 							.build()
-					);
-
-					return TenantResponseDTO.builder()
-						.id(String.valueOf(id))
-						.virtualHost(virtualHost)
-						.schemaName(schemaName)
-						.liquibaseSchemaName(liquibaseSchemaName)
-						.realmName(realmName)
-						.clientId(clientId)
-						.clientSecret(clientSecret)
-						.build();
-				}
-				catch (Throwable e) {
-					throw new RuntimeException(e);
-				}
-			}))
-		);
+					)
+				)
+			)
+			.map(done -> TenantResponseDTO.builder()
+				.id(String.valueOf(id))
+				.virtualHost(virtualHost)
+				.schemaName(schemaName)
+				.liquibaseSchemaName(liquibaseSchemaName)
+				.realmName(realmName)
+				.clientId(clientId)
+				.clientSecret(clientSecret)
+				.build()
+			)
+			.onFailure()
+			.invoke((e) -> log.error("An error occurred, tx is rolled back", e))
+			.onFailure().recoverWithNull();
 
 	}
 
@@ -135,12 +135,27 @@ public class TenantService {
 			.map(Response::success);
 	}
 
-	public Uni<Void> deleteTenant(long tenantId) {
-		return pool.withTransaction(sqlConnection -> sqlConnection
-			.preparedQuery(DELETE_SQL)
-			.execute(Tuple.of(tenantId))
-			.replaceWithVoid()
-		);
+	public Uni<Void> deleteTenant(long id) {
+
+		return findById(id)
+			.flatMap(tenant -> pool
+				.withTransaction(conn -> conn
+					.preparedQuery(DELETE_SQL)
+					.execute(Tuple.of(id))
+					.map(SqlResult::rowCount)
+					.flatMap(rowCount -> sendEvent(
+							rowCount,
+							TenantManagementEvent.TenantDeleted
+								.builder()
+								.tenantId(tenant.realmName())
+								.build()
+						)
+					)
+				)
+			)
+			.onFailure()
+			.invoke((e) -> log.error("An error occurred, tx is rolled back", e))
+			.onFailure().recoverWithNull();
 	}
 
 	public Uni<List<TenantResponseDTO>> findAllTenant() {
@@ -195,6 +210,23 @@ public class TenantService {
 				}
 				return schemas;
 			});
+	}
+
+	private Uni<Void> sendEvent(int rowCount, TenantManagementEvent event) {
+
+		log.debugf("Rows updated: %d", rowCount);
+
+		if (rowCount == 0) {
+			if (log.isDebugEnabled()) {
+				log.debugf("No rows was updated. The event %s wont be sent.", event);
+			}
+
+			return Uni.createFrom().voidItem();
+		}
+
+		return Uni.createFrom().publisher(
+			AdaptersToFlow.publisher(producer.sendAsync(event))
+		);
 	}
 
 	private static TenantResponseDTO mapTenantResponseDTO(Row row) {
