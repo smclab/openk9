@@ -17,11 +17,24 @@
 
 package io.openk9.datasource.searcher;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
+
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
@@ -66,6 +79,11 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -76,8 +94,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -105,22 +121,6 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -1252,18 +1252,15 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return searchSourceBuilder;
 	}
 
-	private Map<String, String> _parseJsonStringToMap(String string) {
-		ObjectMapper mapper = new ObjectMapper();
-		Map<String, String> map = new HashMap<>();
-
+	private Map<String, String> _parseJsonStringToMap(String jsonString) {
 		try {
-			map = mapper.readValue(string, new TypeReference<Map<String, String>>(){});
+			ObjectMapper mapper = new ObjectMapper();
+			return mapper.readValue(jsonString, new TypeReference<Map<String, String>>(){});
 		}
-		catch (JsonProcessingException e) {
-			log.warnf(e, "Failed to parse the string \"%s\" to a map.", string);
+		catch (Exception e) {
+			log.warnf(e, "Failed to parse the string \"%s\" to a map.", jsonString);
+			return new HashMap<>();
 		}
-
-		return map;
 	}
 
 	private Map<String, Object> _queryAnalysisTokenToMap(
