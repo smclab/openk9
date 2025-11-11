@@ -17,24 +17,11 @@
 
 package io.openk9.datasource.searcher;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import jakarta.enterprise.context.control.ActivateRequestContext;
-import jakarta.inject.Inject;
-
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
@@ -79,9 +66,6 @@ import io.openk9.searcher.grpc.Suggestions;
 import io.openk9.searcher.grpc.SuggestionsResponse;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
-
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
@@ -92,6 +76,8 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.control.ActivateRequestContext;
+import jakarta.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -119,6 +105,22 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -207,46 +209,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		return -Double.compare(scoreO1, scoreO2);
 
-	}
-
-	private SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket tenant, String language) {
-
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-
-		searchSourceBuilder.trackTotalHits(true);
-
-		if (request.getRangeCount() == 2) {
-			searchSourceBuilder.from(Math.min(
-				request.getRange(0), maxSearchPageFrom));
-
-			searchSourceBuilder.size(Math.min(
-				request.getRange(1), maxSearchPageSize));
-		}
-
-		List<DocTypeField> docTypeFieldList = Utils
-			.getDocTypeFieldsFrom(tenant)
-			.filter(docTypeField -> !docTypeField.isI18N())
-			.toList();
-
-		applySort(
-			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
-			searchSourceBuilder
-		);
-
-		applyHighlightAndIncludeExclude(
-			searchSourceBuilder,
-			docTypeFieldList,
-			language
-		);
-
-		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
-
-		SearchConfig searchConfig = tenant.getSearchConfig();
-
-		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
-
-		return searchSourceBuilder;
 	}
 
 	private static double _toDouble(Object score) {
@@ -1250,6 +1212,60 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return result;
 	}
 
+	private SearchSourceBuilder _getSearchSourceBuilder(
+		QueryParserRequest request, Bucket tenant, String language) {
+
+		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+
+		searchSourceBuilder.trackTotalHits(true);
+
+		if (request.getRangeCount() == 2) {
+			searchSourceBuilder.from(Math.min(
+				request.getRange(0), maxSearchPageFrom));
+
+			searchSourceBuilder.size(Math.min(
+				request.getRange(1), maxSearchPageSize));
+		}
+
+		List<DocTypeField> docTypeFieldList = Utils
+			.getDocTypeFieldsFrom(tenant)
+			.filter(docTypeField -> !docTypeField.isI18N())
+			.toList();
+
+		applySort(
+			docTypeFieldList, request.getSortList(), request.getSortAfterKey(),
+			searchSourceBuilder
+		);
+
+		applyHighlightAndIncludeExclude(
+			searchSourceBuilder,
+			docTypeFieldList,
+			language
+		);
+
+		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
+
+		SearchConfig searchConfig = tenant.getSearchConfig();
+
+		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
+
+		return searchSourceBuilder;
+	}
+
+	private Map<String, String> _parseJsonStringToMap(String string) {
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, String> map = new HashMap<>();
+
+		try {
+			map = mapper.readValue(string, new TypeReference<Map<String, String>>(){});
+		}
+		catch (JsonProcessingException e) {
+			log.warnf(e, "Failed to parse the string \"%s\" to a map.", string);
+		}
+
+		return map;
+	}
+
 	private Map<String, Object> _queryAnalysisTokenToMap(
 		QueryAnalysisSearchToken token) {
 		Map<String, Object> map = new HashMap<>();
@@ -1317,7 +1333,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 			if (map.containsKey("extra")) {
-				builder.putAllExtra((Map<String, String>) map.get("extra"));
+				builder.putAllExtra(_parseJsonStringToMap((String) map.get("extra")));
 			}
 
 			result.add(builder.build());
