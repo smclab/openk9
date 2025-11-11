@@ -17,6 +17,9 @@
 
 package io.openk9.datasource.searcher;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.openk9.client.grpc.common.StructUtils;
@@ -1375,6 +1378,20 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		return searchSourceBuilder;
 	}
 
+	private Map<String, String> _parseJsonStringToMap(String string) {
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, String> map = new HashMap<>();
+
+		try {
+			map = mapper.readValue(string, new TypeReference<Map<String, String>>(){});
+		}
+		catch (JsonProcessingException e) {
+			log.warnf(e, "Failed to parse the string \"%s\" to a map.", string);
+		}
+
+		return map;
+	}
+
 	private Map<String, Object> _queryAnalysisTokenToMap(
 		QueryAnalysisSearchToken token) {
 		Map<String, Object> map = new HashMap<>();
@@ -1450,7 +1467,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 			if (map.containsKey("extra")) {
-				builder.putAllExtra((Map<String, String>) map.get("extra"));
+				builder.putAllExtra(_parseJsonStringToMap((String) map.get("extra")));
 			}
 
 			result.add(builder.build());
