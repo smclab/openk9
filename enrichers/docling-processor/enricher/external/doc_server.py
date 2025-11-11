@@ -20,7 +20,12 @@ def get_random_string():
     input = {
         "payload": {
             "tenantId": "mrossi",
-            "resources": {"binaries": [{"resourceId": "doc_2"}]},
+            "resources": {
+                "binaries": [
+                    {"resourceId": "doc_2", "metadata_vari": "metadato_2"},
+                    {"resourceId": "doc_1", "metadata_vari": "metadato_1"},
+                ]
+            },
         },
         "enrichItemConfig": {"configs": "Config passata"},
         "replyTo": "fake-token",

@@ -58,8 +58,8 @@ def get_api_file_manager_v1_download_base64_resource_id_schema_name(
     """
     Download As Base 64
     """
-    # print(USER_DOCS)
     b64 = USER_DOCS[schema_name][resource_id]["file_b64"]
+    print(b64)
     return b64
 
 
