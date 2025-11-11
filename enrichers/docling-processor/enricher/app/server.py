@@ -21,7 +21,7 @@ import time
 import requests
 from pydantic import BaseModel
 
-FMHelper = FileManagerHelper(os.getenv("FM_HOST"))
+FMHelper = FileManagerHelper(os.getenv("FM_HOST", default="http://localhost:8001"))
 
 
 class Input(BaseModel):
@@ -81,30 +81,29 @@ def form():
 
 
 def operation(payload, configs, token):
-    s_host = os.getenv("S_HOST")
+    s_host = os.getenv("S_HOST", default="http://localhost:8000")
 
-    resource_ids = [
-        b.get("resourceId")
-        for b in payload["resources"].get("binaries", [])
-        if "resourceId" in b
+    binaries = [
+        b for b in payload["resources"].get("binaries", []) if "resourceId" in b
     ]
     tenant = payload["tenantId"]
 
-    resources = [
-        FMHelper.getBase64(tenant, resource_id) for resource_id in resource_ids
-    ]
-    bites = [BytesIO(base64.b64decode(resource)) for resource in resources]
-
+    print(binaries)
     print("Starting process")
+    for bin in binaries:
+        resource_id = bin.get("resourceId")
+        resource = FMHelper.get_base64(tenant, resource_id)
+        # bites = BytesIO(base64.b64decode(resource))
+        # source = DocumentStream(name="doc.docx", stream=bites)
+        # converter = DocumentConverter()
+        # result = converter.convert(source)
+        # markdown = result.document.export_to_markdown()
+        bin["markdown"] = "test"  # markdown
 
-    source = DocumentStream(name="doc.docx", stream=bites[0])
-
-    converter = DocumentConverter()
-    result = converter.convert(source)
-    markdown = result.document.export_to_markdown()
     print("Process ended")
-    res = {"markdown": markdown}
+    print(binaries)
+    response = {"resources": {binaries}}
     response = requests.post(
-        f"{s_host}/api/datasource/pipeline/callback/{token}", json=res
+        f"{s_host}/api/datasource/pipeline/callback/{token}", json=response
     )  # body json
     print("Status:", response.status_code)
