@@ -213,10 +213,6 @@ public class TenantServiceTest {
 	private static class StubOnceMatcher
 		implements ArgumentMatcher<TenantManagementEvent> {
 
-		enum EventType {
-			CREATED, DELETED
-		}
-
 		private static final StubOnceMatcher TENANT_DELETED_INSTANCE =
 			new StubOnceMatcher(TenantManagementEvent.TenantDeleted.class);
 		private static final StubOnceMatcher TENANT_CREATED_INSTANCE =
