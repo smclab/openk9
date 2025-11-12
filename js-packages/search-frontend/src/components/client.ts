@@ -364,6 +364,7 @@ export function OpenK9Client({
       const mock = false;
       const isActiveQueryAnalysis = true;
       if (!isActiveQueryAnalysis) return null;
+      if (request.searchText === "") return null;
       if (mock)
         return {
           searchText: "Questo è un esempio di testo per l'analisi",
