@@ -2,14 +2,15 @@ import asyncio
 import base64
 import random
 from io import BytesIO
+from typing import Any, Dict
 
 import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 
-class MarkdownR(BaseModel):
-    markdown: str
+class Response(BaseModel):
+    resources: Dict[str, Any]
 
 
 app = FastAPI()
@@ -36,5 +37,5 @@ def get_random_string():
 
 
 @app.post("/api/datasource/pipeline/callback/{token}")
-def cose(markdown_response: MarkdownR):
-    print("Result: \n", markdown_response.markdown[:200])
+def cose(response: Response):
+    print("Response: \n", response)
