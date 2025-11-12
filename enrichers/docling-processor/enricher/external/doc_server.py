@@ -23,6 +23,7 @@ def get_random_string():
             "tenantId": "mrossi",
             "resources": {
                 "binaries": [
+                    {"resourceId": "doc_error", "metadata_vari": "metadato_error"},
                     {"resourceId": "doc_2", "metadata_vari": "metadato_2"},
                     {"resourceId": "doc_1", "metadata_vari": "metadato_1"},
                 ]
