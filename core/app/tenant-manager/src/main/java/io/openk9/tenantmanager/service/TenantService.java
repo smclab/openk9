@@ -47,6 +47,7 @@ import io.vertx.mutiny.sqlclient.SqlResult;
 import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.sqlclient.Row;
 import mutiny.zero.flow.adapters.AdaptersToFlow;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -66,8 +67,7 @@ public class TenantService {
 		String realmName, String clientId, String clientSecret,
 		OffsetDateTime createDate, OffsetDateTime modifiedDate) {
 
-		// todo: remove this
-		String issuerUri = "http://localhost:9090/realms/" + realmName;
+		String issuerUri = baseIssuerUri + realmName;
 
 		var id = idGenerator.nextId();
 
@@ -249,6 +249,8 @@ public class TenantService {
 	Validator validator;
 	@Inject
 	TenantManagementEventProducer producer;
+	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
+	String baseIssuerUri;
 
 	private static final CompactSnowflakeIdGenerator idGenerator =
 		new CompactSnowflakeIdGenerator();
