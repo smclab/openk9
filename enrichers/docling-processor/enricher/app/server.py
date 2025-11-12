@@ -21,7 +21,7 @@ import time
 import requests
 from pydantic import BaseModel
 
-FMHelper = FileManagerHelper(os.getenv("FM_HOST", default="http://localhost:8001"))
+FMHelper = FileManagerHelper(os.getenv("FM_HOST", default="http://localhost:8000"))
 
 
 class Input(BaseModel):
@@ -81,28 +81,26 @@ def form():
 
 
 def operation(payload, configs, token):
-    s_host = os.getenv("S_HOST", default="http://localhost:8000")
+    s_host = os.getenv("S_HOST", default="http://localhost:8001")
 
     binaries = [
         b for b in payload["resources"].get("binaries", []) if "resourceId" in b
     ]
     tenant = payload["tenantId"]
 
-    print(binaries)
     print("Starting process")
     for bin in binaries:
         resource_id = bin.get("resourceId")
         resource = FMHelper.get_base64(tenant, resource_id)
-        # bites = BytesIO(base64.b64decode(resource))
-        # source = DocumentStream(name="doc.docx", stream=bites)
-        # converter = DocumentConverter()
-        # result = converter.convert(source)
-        # markdown = result.document.export_to_markdown()
-        bin["markdown"] = "test"  # markdown
+        bites = BytesIO(base64.b64decode(resource))
+        source = DocumentStream(name="doc.docx", stream=bites)
+        converter = DocumentConverter()
+        result = converter.convert(source)
+        markdown = result.document.export_to_markdown()
+        bin["markdown"] = markdown
 
     print("Process ended")
-    print(binaries)
-    response = {"resources": {binaries}}
+    response = {"resources": {"binaries": binaries}}
     response = requests.post(
         f"{s_host}/api/datasource/pipeline/callback/{token}", json=response
     )  # body json
