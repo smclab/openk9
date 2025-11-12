@@ -17,10 +17,28 @@
 
 package io.openk9.datasource.service;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.FieldValidator;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
@@ -46,30 +64,13 @@ import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
-import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.HealthDTO;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.ResourceUriDTO;
+
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
-
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class PluginDriverService
@@ -515,13 +516,13 @@ public class PluginDriverService
 							}
 						});
 					case SYSTEM -> getCurrentTenant(session)
-						.flatMap(tenant -> {
+						.flatMap(tenantId -> {
 							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
 								.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-										tenant.schemaName(),
+										tenantId,
 										pluginDriver.getHttpPluginDriverInfo()
 									)
 								);
@@ -624,13 +625,13 @@ public class PluginDriverService
 							}
 						});
 					case SYSTEM -> getCurrentTenant(s)
-						.flatMap(tenant -> {
+						.flatMap(tenantId -> {
 							// fire and forget using the eventBus message
 							EventBusInstanceHolder.getEventBus()
 								.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
-										tenant.schemaName(),
+										tenantId,
 										pluginDriver.getHttpPluginDriverInfo()
 									)
 								);
