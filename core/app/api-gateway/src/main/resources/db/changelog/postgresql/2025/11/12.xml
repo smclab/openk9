@@ -1,0 +1,65 @@
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="2025/11/12.xml">
+
+	<changeSet id="1762966257-1" author="openk9">
+
+		<!-- 1. Drop the existing foreign key constraint -->
+		<dropForeignKeyConstraint
+			baseTableName="route_security"
+			constraintName="fk_route_security_tenant"/>
+
+		<!-- 2. Add the new foreign key constraint, including onDelete="CASCADE" -->
+		<addForeignKeyConstraint
+			baseTableName="route_security"
+			baseColumnNames="tenant_id"
+			constraintName="fk_route_security_tenant"
+
+			referencedTableName="tenant"
+			referencedColumnNames="tenant_id"
+			onDelete="CASCADE"
+		/>
+
+	</changeSet>
+
+	<changeSet id="1762966257-2" author="openk9">
+
+		<!-- 1. Drop the existing foreign key constraint -->
+		<dropForeignKeyConstraint
+			baseTableName="api_key"
+			constraintName="fk_api_key_tenant"/>
+
+		<!-- 2. Add the new foreign key constraint, including onDelete="CASCADE" -->
+		<addForeignKeyConstraint
+			baseTableName="api_key"
+			baseColumnNames="tenant_id"
+			constraintName="fk_api_key_tenant"
+
+			referencedTableName="tenant"
+			referencedColumnNames="tenant_id"
+			onDelete="CASCADE"
+		/>
+
+	</changeSet>
+
+</databaseChangeLog>

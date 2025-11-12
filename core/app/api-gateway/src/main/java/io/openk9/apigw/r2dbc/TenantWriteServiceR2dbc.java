@@ -236,7 +236,8 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	/**
-	 * Delete a tenant and all associated data (cascading delete should be handled by DB constraints).
+	 * Delete a tenant and all associated data
+	 * (cascading delete should be handled by DB constraints).
 	 *
 	 * @param tenantId the tenant identifier to delete
 	 * @return Mono that completes when deletion is done

@@ -131,4 +131,35 @@ public class TenantWriteServiceR2dbcTest {
 		).verifyComplete();
 	}
 
+	@Test
+	@DisplayName("Delete Tenant Cascade")
+	void deleteTenantCascade_ok() {
+		var tenantId = "tenant6";
+
+		StepVerifier.create(
+			service.insertTenant(tenantId, "old.com", "old-uri", null, null)
+				.then(service.insertRouteSecurity(
+					tenantId,
+					Route.DATASOURCE,
+					Authorization.NO_AUTH
+				))
+				.then(service.insertApiKey(tenantId, "hash123", "chk"))
+				.then(service.deleteTenant(tenantId))
+		).verifyComplete();
+
+		StepVerifier.create(
+			dbClient.sql("SELECT COUNT(*) FROM api_key where tenant_id=$1")
+				.bind(1, tenantId)
+				.map((row, rowMetadata) -> (int) row.get(0))
+				.first()
+		).expectNextMatches(count -> count == 0);
+
+		StepVerifier.create(
+			dbClient.sql("SELECT COUNT(*) FROM route_security where tenant_id=$1")
+				.bind(1, tenantId)
+				.map((row, rowMetadata) -> (int) row.get(0))
+				.first()
+		).expectNextMatches(count -> count == 0);
+	}
+
 }
