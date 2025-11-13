@@ -63,13 +63,17 @@ public class Oauth2SettingsResource {
 
 	private static String encodeOldSettingsJs(Tenant tenant) {
 
+		String issuerUri = tenant.oauth2Settings().issuerUri();
+		var keycloakUrl = issuerUri.substring(0, issuerUri.indexOf('/', 8));
+
+
 		return String.format(
 			"""
 				window.KEYCLOAK_URL ='%s';
 				window.KEYCLOAK_REALM ='%s';
 				window.KEYCLOAK_CLIENT_ID ='%s';
 			""",
-			tenant.oauth2Settings().issuerUri(),
+			keycloakUrl,
 			tenant.tenantId(),
 			tenant.oauth2Settings().clientId()
 		);
@@ -85,6 +89,7 @@ public class Oauth2SettingsResource {
 			oauth2Settings.issuerUri(),
 			oauth2Settings.clientId()
 		);
+
 	}
 
 }
