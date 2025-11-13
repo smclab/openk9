@@ -17,6 +17,7 @@
 
 package io.openk9.datasource;
 
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -32,6 +33,7 @@ import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
@@ -222,6 +224,20 @@ public class EntitiesUtils {
 	}
 
 	// Custom retrieval methods for entities needing eager fetching
+	public static Autocomplete getAutocomplete(
+			String name,
+			AutocompleteService autocompleteService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> autocompleteService.findByName(session, name)
+					.call(autocorrection ->
+						Mutiny.fetch(autocorrection.getFields())
+					)
+			)
+			.await()
+			.indefinitely();
+	}
 	public static Autocorrection getAutocorrection(
 			String name,
 			AutocorrectionService autocorrectionService,
