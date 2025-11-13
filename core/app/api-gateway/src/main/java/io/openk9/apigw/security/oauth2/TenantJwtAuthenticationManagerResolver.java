@@ -29,6 +29,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtAudienceValidator;
+import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
@@ -63,10 +64,13 @@ public class TenantJwtAuthenticationManagerResolver
 
 		String clientId = settings.clientId();
 
-		JwtAudienceValidator jwtAudienceValidator = new JwtAudienceValidator(clientId);
+		JwtClaimValidator<String> jwtAzpValidator = new JwtClaimValidator<>(
+			"azp",
+			(claimValue) -> claimValue != null && claimValue.equals(clientId)
+		);
 
 		OAuth2TokenValidator<Jwt> validator =
-			JwtValidators.createDefaultWithValidators(jwtAudienceValidator);
+			JwtValidators.createDefaultWithValidators(jwtAzpValidator);
 
 		jwtDecoder.setJwtValidator(validator);
 
