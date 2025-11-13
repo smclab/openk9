@@ -58,6 +58,8 @@ public final class RouteAuthorizationMap {
 
 	public boolean allows(RoutePath routePath, Authentication authentication) {
 		AuthorizationSchemeToken required = schemeFor(routePath);
-		return required == null || required.match(authentication.getClass());
+		return required == null
+			   || required == AuthorizationSchemeToken.NO_AUTH
+			   || required.match(authentication.getClass());
 	}
 }
