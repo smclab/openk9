@@ -32,7 +32,7 @@ import io.smallrye.mutiny.Uni;
 @ApplicationScoped
 public class TenantRegistryImpl implements TenantRegistry {
 
-	@GrpcClient
+	@GrpcClient("tenantmanager")
 	TenantManager tenantManager;
 
 	@Override
