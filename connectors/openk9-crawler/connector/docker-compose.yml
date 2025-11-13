@@ -2,30 +2,14 @@ version: "3.9"
 
 services:
   web-connector:
+    build:
+      context: .
+      dockerfile: /Dockerfile
+      args:
+        WITH_SCRAPYDWEB: 1
     image: web-connector:latest
     ports:
       - "5000:5000"
       - "6800:6800"
     environment:
       - INPUT_LOG_LEVEL=INFO
-    networks:
-      - scrapyd-network
-
-  scrapydweb:
-    image: scrapyd-web:latest
-    environment:
-      - SCRAPYDWEB_PORT=5001
-      - SCRAPYD_SERVERS=web-connector:6800
-    ports:
-      # TODO: Check why this does not work
-      #- "${SCRAPYDWEB_PORT}:${SCRAPYDWEB_PORT}"
-      - 5001:5001  # Same as SCRAPYDWEB_PORT
-    depends_on:
-      - web-connector
-    networks:
-      - scrapyd-network
-
-
-networks:
-  scrapyd-network:
-    driver: bridge

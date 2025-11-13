@@ -1,5 +1,8 @@
 FROM python:3.11.6-slim
 
+ARG WITH_SCRAPYDWEB=0
+ENV WITH_SCRAPYDWEB=$WITH_SCRAPYDWEB
+
 # Install system deps (Playwright needs these)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl wget unzip dos2unix \
@@ -19,6 +22,14 @@ RUN mkdir -p /ms-playwright && chmod -R 777 /ms-playwright
 # Install browser with dependencies
 RUN playwright install --with-deps webkit
 # --- PLAYWRIGHT END ---
+
+RUN if [ "$WITH_SCRAPYDWEB" = 1 ]; then \
+        # Install scrapydweb and copy settings file
+        echo "Installing Scrapydweb..."; \
+        pip3 install scrapydweb; \
+        #COPY ./scrapydweb_settings_v11.py /app/scrapydweb_settings_v11.py; \
+    fi
+COPY ./scrapydweb_settings_v11.py /app/scrapydweb_settings_v11.py
 
 # Copy scripts and configs
 COPY docker-entrypoint.sh /etc/docker-entrypoint.sh
