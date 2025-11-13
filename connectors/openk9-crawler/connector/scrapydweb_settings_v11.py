@@ -17,7 +17,7 @@ import os
 # The default is '0.0.0.0'.
 SCRAPYDWEB_BIND = os.environ.get('SCRAPYDWEB_BIND', '0.0.0.0')
 # Accept connections on the specified port, the default is 5000.
-SCRAPYDWEB_PORT = os.environ.get('SCRAPYDWEB_PORT', 5000)
+SCRAPYDWEB_PORT = os.environ.get('SCRAPYDWEB_PORT', 5001)
 
 # The default is False, set it to True to enable basic auth for the web UI.
 ENABLE_AUTH = os.environ.get('ENABLE_AUTH', False)
@@ -45,7 +45,7 @@ PASSWORD = os.environ.get('PASSWORD', '')
 #   - or if ScrapydWeb fails to parse the string format passed in,
 #   - it's recommended to pass in a tuple of 5 elements.
 #   - e.g. ('', '', '127.0.0.1', '6800', '') or ('username', 'password', 'localhost', '6801', 'group')
-SCRAPYD_SERVERS = os.environ.get("SCRAPYD_SERVERS", ['127.0.0.1:6800']),
+SCRAPYD_SERVERS = os.environ.get("SCRAPYD_SERVERS", '127.0.0.1:6800'),
 if isinstance(SCRAPYD_SERVERS, str):
     SCRAPYD_SERVERS = [SCRAPYD_SERVERS]
 # SCRAPYD_SERVERS = [
@@ -66,7 +66,7 @@ CHECK_SCRAPYD_SERVERS = True
 # ScrapydWeb would try to directly read Scrapy logfiles from disk, instead of making a request
 # to the Scrapyd server.
 # e.g. '127.0.0.1:6800' or 'localhost:6801', do not forget the port number.
-LOCAL_SCRAPYD_SERVER = ''
+LOCAL_SCRAPYD_SERVER = os.environ.get("LOCAL_SCRAPYD_SERVER", '127.0.0.1:6800')
 
 # Enter the directory when you run Scrapyd, run the command below
 # to find out where the Scrapy logs are stored:

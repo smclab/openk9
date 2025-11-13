@@ -266,32 +266,99 @@ curl --location --request POST 'http://localhost:500/sample'
 
 ## Docker
 
-### Using Dockerfile
+### Using Dockerfile (Single container)
 
-Using the command line go in the gitlab-datasource folder\
-From this folder:
-```
-cd ..
-```
+Use the following commands from this folder (**openk9-crawler/connector/**)
 
 Build the Docker file:
 ```
-docker build -t web-connector .
+docker build --build-arg WITH_SCRAPYDWEB=1 -t web-connector .
 ```
 
-**Command parameters:
+**Command parameters**:
 - **-t**: Set built image name
-- **-f**: Specify the path to the Dockerfile**
+- **-f**: Specify the path to the **Dockerfile**
+- **--build-arg**: Docker build arguments
+  - **WITH_SCRAPYDWEB**: _[1==Ture]_: Should scrapydweb be installed in this container (optional, default False)
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name web-connector-app web-connector 
+docker run -p 5000:5000 -p 6800:6800 -p 5001:5001 --name web-connector-app web-connector 
 ```
 
-Command parameters:
+**Command parameters**:
 - **-p**: Exposed port to make api calls
+  - **Port 5000**: exposes api server (required)
+  - **Port 6800**: exposes scrapyd server (optional)
+  - **Port 5001**: exposes scrapydweb web ui (optional, use when --build-arg WITH_SCRAPYDWEB=1)
 - **-name**: Set docker container name
 
+
+### Using Dockerfile (Dedicated scrapydweb container)
+
+Use the following commands from this folder (**openk9-crawler/connector/**)
+
+Build the Docker files:\
+- **Connector**:
+```
+docker build -t web-connector .
+```
+- **Scrapydweb**: 
+```
+docker build -t scrapyd-web -f ./scrapydweb.Dockerfile .
+```
+
+**Command parameters**:
+- **-t**: Set built image name
+- **-f**: Specify the path to the **Dockerfile**
+- **--build-arg**: Docker build arguments
+  - **WITH_SCRAPYDWEB**: Omitted since Scrapydweb will have its own container
+    
+\
+Create the network (Handle communication between container):
+```
+docker network create -d bridge scrapyd-network
+```
+
+**Command parameters**:
+- **-d**: Set the driver to manage the Network (default: bridge)
+
+\
+Run the built Docker images:
+- **Connector**:
+```
+docker run -p 5000:5000 -p 6800:6800 --name web-connector-app --network scrapyd-network web-connector
+```
+- **Scrapydweb**: 
+```
+docker run -p 5001:5001 -e SCRAPYDWEB_PORT=5001 -e SCRAPYD_SERVERS=web-connector-app:6800 --name scrapyd-web-app scrapyd-web
+```
+
+**Command parameters**:
+- **-p**: Exposed port to make api calls
+  - **Port 5000**: exposes api server (required)
+  - **Port 6800**: exposes scrapyd server (required)
+- **-name**: Set docker container name
+- **--network**: Set the communication network (required, set as previously created)
+  - **-e**: Environment variable
+    - **Scrapydweb**:
+      - **SCRAPYDWEB_BIND**: ScrapydWeb server visible externally (optional, default 127.0.0.1)
+      - **SCRAPYDWEB_PORT**: Accept connections on the specified port (optional, default 5001)
+      - **ENABLE_AUTH**: Enables basic auth for the web UI (optional, default False)
+        - _In order to enable basic auth, both USERNAME and PASSWORD should be non-empty strings_
+        - **USERNAME**: Authentication username (required with ENABLE_AUTH)
+        - **PASSWORD**: Authentication password (required with ENABLE_AUTH)
+      - **SCRAPYD_SERVERS**: Scrapyd server host (required, use {connector-container-name}:6800)
+        - the string format: username:password@ip:port#group
+          - The default port would be 6800 if not provided,
+          - Both basic auth and group are optional.
+          - e.g. '127.0.0.1:6800' or 'username:password@localhost:6801#group'
+        - the tuple format: (username, password, ip, port, group)
+          - When the username, password, or group is too complicated (e.g. contains ':@#'),
+          - or if ScrapydWeb fails to parse the string format passed in,
+          - it's recommended to pass in a tuple of 5 elements.
+          - e.g. ('', '', '127.0.0.1', '6800', '') or ('username', 'password', 'localhost', '6801', 'group')
+      
 ## Kubernetes/Openshift
 
 To run Web Connector in Kubernetes/Openshift Helm Chart is available under [chart folder](../chart).
