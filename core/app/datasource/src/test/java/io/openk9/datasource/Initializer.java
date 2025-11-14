@@ -20,6 +20,7 @@ package io.openk9.datasource;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -217,7 +218,11 @@ public class Initializer {
 		var enrich1 = enrichItemService.create(EnrichItemDTO.builder()
 			.name("Http Async Enrich 1")
 			.type(EnrichItem.EnrichItemType.HTTP_ASYNC)
-			.serviceName("http-service-1")
+			.resourceUri(ResourceUri.builder()
+				.baseUri("http://enricher1")
+				.path("/test")
+				.build()
+			)
 			.jsonPath("$")
 			.jsonConfig("{}")
 			.requestTimeout(60000L)
@@ -229,7 +234,11 @@ public class Initializer {
 		var enrich2 = enrichItemService.create(EnrichItemDTO.builder()
 			.name("Http Sync Enrich 2")
 			.type(EnrichItem.EnrichItemType.HTTP_SYNC)
-			.serviceName("http-service-2")
+			.resourceUri(ResourceUri.builder()
+				.baseUri("http://enricher2")
+				.path("/test")
+				.build()
+			)
 			.jsonPath("$")
 			.jsonConfig("{}")
 			.requestTimeout(60000L)
@@ -241,7 +250,11 @@ public class Initializer {
 		var enrich3 = enrichItemService.create(EnrichItemDTO.builder()
 			.name("Groovy Enrich 1")
 			.type(EnrichItem.EnrichItemType.GROOVY_SCRIPT)
-			.serviceName("ignore")
+			.resourceUri(ResourceUri.builder()
+				.baseUri("http://ignore")
+				.path("/test")
+				.build()
+			)
 			.jsonPath("$")
 			.jsonConfig("{}")
 			.requestTimeout(60000L)
