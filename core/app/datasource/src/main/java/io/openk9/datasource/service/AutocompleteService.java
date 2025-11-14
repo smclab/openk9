@@ -19,10 +19,15 @@ package io.openk9.datasource.service;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
+import io.openk9.common.graphql.util.relay.Connection;
+import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.AutocompleteMapper;
 import io.openk9.datasource.model.Autocomplete;
+import io.openk9.datasource.model.Autocomplete_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 
@@ -32,6 +37,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class AutocompleteService extends BaseK9EntityService<Autocomplete, AutocompleteDTO>{
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
 
 	AutocompleteService(AutocompleteMapper mapper) {
 		this.mapper = mapper;
@@ -58,6 +66,21 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 						)
 			);
 		}
+	}
+
+	public Uni<Connection<DocTypeField>> getDocTypeFieldConnection(
+			Long autocompleteId, String after, String before, Integer first, Integer last,
+			String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			autocompleteId, Autocomplete_.FIELDS, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	@Override
+	public Class<Autocomplete> getEntityClass() {
+		return Autocomplete.class;
 	}
 
 	public Uni<Autocomplete> patch(long autocompleteId, AutocompleteDTO dto) {
@@ -122,11 +145,6 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 					return Uni.createFrom().item(newStateAutocomplete);
 				})
 		);
-	}
-
-	@Override
-	public Class<Autocomplete> getEntityClass() {
-		return Autocomplete.class;
 	}
 
 	private Uni<Autocomplete> createTransient(Mutiny.Session session, AutocompleteDTO dto) {

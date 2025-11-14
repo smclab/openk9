@@ -38,7 +38,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.opensearch.client.opensearch._types.query_dsl.Operator;
 
 @Entity
 @Table(name = "autocomplete")
@@ -50,7 +49,7 @@ public class Autocomplete extends K9Entity {
 	public static final int DEFAULT_FALLBACK_RESULT_SIZE = 10;
 	public static final String DEFAULT_FUZZINESS = "AUTO";
 	public static final String DEFAULT_MINIMUM_SHOULD_MATCH = "75%";
-	public static final Operator DEFAULT_OPERATOR = Operator.Or;
+	public static final BooleanOperator DEFAULT_OPERATOR = BooleanOperator.OR;
 
 	@Column(name = "description", length = 4096)
 	private String description;
@@ -80,7 +79,7 @@ public class Autocomplete extends K9Entity {
 	private String name;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "operator")
-	private Operator operator = DEFAULT_OPERATOR;
+	private BooleanOperator operator = DEFAULT_OPERATOR;
 
 	public void setFuzziness(String fuzziness) {
 		this.fuzziness = Objects.requireNonNullElse(fuzziness, DEFAULT_FUZZINESS);
@@ -96,7 +95,7 @@ public class Autocomplete extends K9Entity {
 			Objects.requireNonNullElse(minimumShouldMatch, DEFAULT_MINIMUM_SHOULD_MATCH);
 	}
 
-	public void setOperator(Operator operator) {
+	public void setOperator(BooleanOperator operator) {
 		this.operator = Objects.requireNonNullElse(operator, DEFAULT_OPERATOR);
 	}
 }

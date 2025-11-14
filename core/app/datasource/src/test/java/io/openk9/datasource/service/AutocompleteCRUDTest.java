@@ -31,7 +31,6 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
-import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.validation.ValidAutocompleteFields;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -79,7 +78,10 @@ public class AutocompleteCRUDTest {
 		EntitiesUtils.createEntity(fieldDtoOne, docTypeFieldService, sf);
 		EntitiesUtils.createEntity(fieldDtoTwo, docTypeFieldService, sf);
 
-		var fieldIds = getAllSearchAsYouTypeDocTypeFieldIds();
+		var fieldIds =
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
 
 		AutocompleteDTO autocompleteDTOTwo = AutocompleteDTO.builder()
 			.name(AUTOCOMPLETE_NAME_TWO)
@@ -91,7 +93,10 @@ public class AutocompleteCRUDTest {
 
 	@Test
 	void should_create_empty_autocomplete() {
-		var fieldIds = getAllSearchAsYouTypeDocTypeFieldIds();
+		var fieldIds =
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
 
 		AutocompleteDTO dto = AutocompleteDTO.builder()
 			.name(AUTOCOMPLETE_NAME_ONE)
@@ -148,15 +153,5 @@ public class AutocompleteCRUDTest {
 
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_TWO, docTypeFieldService, sf);
-	}
-
-	private Set<Long> getAllSearchAsYouTypeDocTypeFieldIds() {
-
-		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sf);
-
-		return docTypeFields.stream()
-			.filter(field -> FieldType.SEARCH_AS_YOU_TYPE.equals(field.getFieldType()))
-			.map(K9Entity::getId)
-			.collect(Collectors.toSet());
 	}
 }

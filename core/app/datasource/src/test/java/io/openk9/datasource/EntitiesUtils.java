@@ -21,6 +21,7 @@ import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
@@ -46,6 +47,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EntitiesUtils {
 
@@ -224,6 +227,17 @@ public class EntitiesUtils {
 	}
 
 	// Custom retrieval methods for entities needing eager fetching
+	public static Set<DocTypeField> getAllSearchAsYouTypeDocTypeField(
+			DocTypeFieldService docTypeFieldService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		var docTypeFields = getAllEntities(docTypeFieldService, sessionFactory);
+
+		return docTypeFields.stream()
+			.filter(field -> FieldType.SEARCH_AS_YOU_TYPE.equals(field.getFieldType()))
+			.collect(Collectors.toSet());
+	}
+
 	public static Autocomplete getAutocomplete(
 			String name,
 			AutocompleteService autocompleteService,

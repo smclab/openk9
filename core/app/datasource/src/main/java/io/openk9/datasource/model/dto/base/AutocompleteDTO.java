@@ -19,6 +19,8 @@ package io.openk9.datasource.model.dto.base;
 
 import java.util.Set;
 
+import io.openk9.datasource.model.BooleanOperator;
+
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +29,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.eclipse.microprofile.graphql.Description;
-import org.opensearch.client.opensearch._types.query_dsl.Operator;
 
 @Getter
 @Setter
@@ -61,6 +62,6 @@ public class AutocompleteDTO extends K9EntityDTO{
 	@Description("""
 		Boolean operator to combine query terms (AND or OR)
 	""")
-	private Operator operator;
+	private BooleanOperator operator;
 
 }
