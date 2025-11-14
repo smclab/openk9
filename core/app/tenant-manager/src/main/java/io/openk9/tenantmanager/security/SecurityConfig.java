@@ -38,7 +38,7 @@ public class SecurityConfig {
 	private static final int PREFIX_LENGTH = BASIC_PREFIX.length();
 	private static final Logger log = Logger.getLogger(SecurityConfig.class);
 
-	@ConfigProperty(name = "io.openk9.tenantmanager.security.admin.password")
+	@ConfigProperty(name = "openk9.tenant-manager.security.admin.password")
 	String adminPasswordString;
 	private byte[] adminPassword;
 
