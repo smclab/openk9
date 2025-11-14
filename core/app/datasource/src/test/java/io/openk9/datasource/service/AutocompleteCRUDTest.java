@@ -31,6 +31,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
 import io.openk9.datasource.validation.ValidAutocompleteFields;
 
 import io.quarkus.test.junit.QuarkusTest;
@@ -147,11 +148,81 @@ public class AutocompleteCRUDTest {
 		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
 	}
 
+	@Test
+	void should_fail_patching_autocomplete_with_no_searchAsYouType_field() throws NoSuchMethodException {
+		var textFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
+
+		var updateFieldIds =
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
+
+		updateFieldIds.add(textFieldId);
+
+		AutocompleteDTO dto = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_TWO)
+			.fieldIds(updateFieldIds)
+			.build();
+
+		var autocompleteToUpdate = EntitiesUtils.getEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
+
+		var exception = assertThrows(
+			InvalidDocTypeFieldSetException.class,
+			() -> updateAutocomplete(autocompleteToUpdate.getId(), dto)
+		);
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_updating_autocomplete_with_no_searchAsYouType_field() throws NoSuchMethodException {
+		var textFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
+
+		var updateFieldIds =
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
+
+		updateFieldIds.add(textFieldId);
+
+		AutocompleteDTO dto = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_TWO)
+			.fieldIds(updateFieldIds)
+			.build();
+
+		var autocompleteToUpdate = EntitiesUtils.getEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
+
+		var exception = assertThrows(
+			InvalidDocTypeFieldSetException.class,
+			() -> patchAutocomplete(autocompleteToUpdate.getId(), dto)
+		);
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
 	@AfterEach
 	void tearDown() {
 		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
 
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_TWO, docTypeFieldService, sf);
+	}
+
+	private void patchAutocomplete(Long id, AutocompleteDTO dto) {
+
+		sf.withTransaction(
+				session -> service.patch(id, dto)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void updateAutocomplete(Long id, AutocompleteDTO dto) {
+
+		sf.withTransaction(
+				session -> service.update(id, dto)
+			)
+			.await()
+			.indefinitely();
 	}
 }

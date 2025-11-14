@@ -30,6 +30,7 @@ import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocomplete_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
+import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -92,10 +93,8 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 					var fieldIds = dto.getFieldIds();
 
 					if (fieldIds != null) {
-						// Ripulisci tutti i field esistenti
 						newStateAutocomplete.getFields().clear();
 
-						// Se ci sono nuovi field da aggiungere
 						if (!fieldIds.isEmpty()) {
 							return Multi.createFrom().iterable(fieldIds)
 								.onItem().transformToUniAndConcatenate(
@@ -103,6 +102,19 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 								)
 								.select().where(Objects::nonNull)
 								.collect().asList()
+								.invoke(fields -> {
+									if (fields.size() != fieldIds.size()) {
+										throw new InvalidDocTypeFieldSetException(
+											"Some field IDs do not exist"
+										);
+									}
+
+									if (!fields.stream().allMatch(DocTypeField::isAutocomplete)) {
+										throw new InvalidDocTypeFieldSetException(
+											"All fields must be of type autocomplete (search_as_you_type)"
+										);
+									}
+								})
 								.map(fields -> {
 									newStateAutocomplete.setFields(new HashSet<>(fields));
 									return newStateAutocomplete;
@@ -123,11 +135,9 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 					var newStateAutocomplete = mapper.update(autocomplete, dto);
 					var fieldIds = dto.getFieldIds();
 
-					// Ripulisci tutti i field esistenti
 					newStateAutocomplete.getFields().clear();
 
 					if (fieldIds != null) {
-						// Se ci sono nuovi field da aggiungere
 						if (!fieldIds.isEmpty()) {
 							return Multi.createFrom().iterable(fieldIds)
 								.onItem().transformToUniAndConcatenate(
@@ -135,6 +145,19 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 								)
 								.select().where(Objects::nonNull)
 								.collect().asList()
+								.invoke(fields -> {
+									if (fields.size() != fieldIds.size()) {
+										throw new InvalidDocTypeFieldSetException(
+											"Some field IDs do not exist"
+										);
+									}
+
+									if (!fields.stream().allMatch(DocTypeField::isAutocomplete)) {
+										throw new InvalidDocTypeFieldSetException(
+											"All fields must be of type autocomplete (search_as_you_type)"
+										);
+									}
+								})
 								.map(fields -> {
 									newStateAutocomplete.setFields(new HashSet<>(fields));
 									return newStateAutocomplete;
