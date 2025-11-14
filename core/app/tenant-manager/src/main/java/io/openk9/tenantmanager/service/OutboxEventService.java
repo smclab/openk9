@@ -27,9 +27,9 @@ import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.EncodeException;
+import io.vertx.core.json.Json;
 import io.vertx.mutiny.sqlclient.Pool;
 import io.vertx.mutiny.sqlclient.Row;
 import io.vertx.mutiny.sqlclient.RowSet;
@@ -110,16 +110,17 @@ public class OutboxEventService {
 
 	private static Tuple asTuple(TenantManagementEvent event) {
 		try {
-			String payload = mapper.writeValueAsString(event);
+			String payload = Json.encode(event);
 
 			return Tuple.of(
 				idGenerator.nextId(),
 				event.getClass().getSimpleName(),
 				payload,
 				false,
-				OffsetDateTime.now());
+				OffsetDateTime.now()
+			);
 		}
-		catch (JsonProcessingException e) {
+		catch (EncodeException e) {
 			if (log.isDebugEnabled()) {
 				log.errorf(e, "Error while serializing event %s as json string.", event);
 			}
@@ -168,7 +169,6 @@ public class OutboxEventService {
 		WHERE id = $1
 		""";
 
-	private static final ObjectMapper mapper = new ObjectMapper();
 	private static final CompactSnowflakeIdGenerator idGenerator = new CompactSnowflakeIdGenerator();
 	private static final Logger log = Logger.getLogger(OutboxEventService.class);
 }
