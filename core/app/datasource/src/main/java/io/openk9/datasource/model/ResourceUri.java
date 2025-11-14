@@ -30,7 +30,7 @@ import lombok.*;
 @AllArgsConstructor
 public class ResourceUri {
 
-	@Column(name = "baseUri", columnDefinition = "text", nullable = false)
+	@Column(name = "base_uri", columnDefinition = "text", nullable = false)
 	private String baseUri;
 
 	@Column(name = "path", columnDefinition = "text", nullable = false)
