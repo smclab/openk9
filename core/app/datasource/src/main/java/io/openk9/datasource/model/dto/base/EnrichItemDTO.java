@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -42,8 +43,7 @@ public class EnrichItemDTO extends K9EntityDTO {
 	@NotNull
 	private EnrichItem.EnrichItemType type;
 	@NotNull
-	@NotEmpty
-	private String serviceName;
+	private ResourceUri resourceUri;
 	private String script;
 	@Json
 	private String jsonConfig;

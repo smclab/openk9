@@ -46,9 +46,6 @@ public class EnrichItem extends K9Entity {
 	@Column(name = "type", nullable = false)
 	private EnrichItemType type;
 
-	@Column(name = "service_name", nullable = false)
-	private String serviceName;
-
 	@Embedded
 	private ResourceUri resourceUri;
 

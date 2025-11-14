@@ -46,7 +46,7 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 
 	@Override
 	public String[] getSearchFields() {
-		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.SERVICE_NAME};
+		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.RESOURCE_URI};
 	}
 
 	public Uni<FormTemplate> getForm(String serviceName) {
