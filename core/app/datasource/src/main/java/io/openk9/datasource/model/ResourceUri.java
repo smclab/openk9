@@ -20,6 +20,8 @@ package io.openk9.datasource.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Embeddable
 @Getter
@@ -30,9 +32,11 @@ import lombok.*;
 @AllArgsConstructor
 public class ResourceUri {
 
-	@Column(name = "base_uri", columnDefinition = "text", nullable = false)
+	@Column(name = "base_uri", nullable = false)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String baseUri;
 
-	@Column(name = "path", columnDefinition = "text", nullable = false)
+	@Column(name = "path", nullable = false)
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String path;
 }
