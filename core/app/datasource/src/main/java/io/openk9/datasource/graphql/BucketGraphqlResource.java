@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.response.CatResponse;
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -95,6 +96,10 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(
 		@Id long id, @Id long tabId) {
 		return bucketService.addTabToBucket(id, tabId);
+	}
+
+	public Uni<Autocomplete> autocomplete(@Source Bucket bucket) {
+		return bucketService.getAutocomplete(bucket.getId());
 	}
 
 	public Uni<Autocorrection> autocorrection(@Source Bucket bucket) {

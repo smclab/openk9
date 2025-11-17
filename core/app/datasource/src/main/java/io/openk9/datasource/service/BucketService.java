@@ -22,6 +22,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -452,6 +453,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setAutocorrection(autocorrection);
 						}
 
+						//Autocomplete
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							var autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+
+							bucket.setAutocomplete(autocomplete);
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -597,6 +609,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 			return s.createQuery(criteriaQuery).getResultList();
 		});
+	}
+
+	public Uni<Autocomplete> getAutocomplete(Long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getAutocomplete())));
 	}
 
 	public Uni<Autocorrection> getAutocorrection(Long bucketId) {
@@ -980,6 +997,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//Autocomplete
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							var autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+
+							bucket.setAutocomplete(autocomplete);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1338,6 +1367,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						bucket.setAutocorrection(autocorrection);
+
+						//Autocomplete
+						Autocomplete autocomplete = null;
+
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+						}
+
+						bucket.setAutocomplete(autocomplete);
 
 						builder.add(s.persist(bucket));
 

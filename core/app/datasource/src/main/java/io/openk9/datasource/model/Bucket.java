@@ -216,6 +216,11 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private Autocorrection autocorrection;
 
+	@ManyToOne
+	@JoinColumn(name = "autocomplete_id")
+	@JsonIgnore
+	private Autocomplete autocomplete;
+
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
 
