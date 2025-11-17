@@ -32,6 +32,7 @@ import io.openk9.tenantmanager.model.OutboxEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
@@ -49,9 +50,17 @@ public class TenantServiceTest {
 	@InjectSpy(delegate = true)
 	OutboxEventService outboxService;
 
+	@BeforeEach
+	void init() {
+		outboxService.deleteAll()
+			.await()
+			.indefinitely();
+	}
+
 	@Test
 	@DisplayName("Tenant should be persisted.")
 	void should_persist_tenant_and_event() {
+
 		// create tenant will be committed
 		TenantResponseDTO tenantCreated = tenantService.persist(
 				VIRTUAL_HOST,
@@ -97,6 +106,7 @@ public class TenantServiceTest {
 
 		Assertions.assertNull(deleted);
 		Assertions.assertEquals(2, rowCount);
+
 	}
 
 	@Test
