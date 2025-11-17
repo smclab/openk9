@@ -107,6 +107,24 @@ public class BucketGraphqlResource {
 	}
 
 	@Description("""
+		Binds an existing Autocomplete to a specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to bind the Autocomplete to.
+		- `autocompleteId` (ID!): The ID of the Autocomplete to be bound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket with the linked Autocomplete.
+		  - `autocomplete`: The linked Autocomplete.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Autocomplete>> bindAutocompleteToBucket(
+		@Id long bucketId, @Id long autocompleteId) {
+		return bucketService.bindAutocomplete(bucketId, autocompleteId);
+	}
+
+	@Description("""
 		Binds an existing Autocorrection to a specified Bucket.
 		
 		Arguments:
@@ -405,6 +423,24 @@ public class BucketGraphqlResource {
 		return bucketService.getTabs(
 			bucket.getId(), after, before, first, last, searchText,
 			sortByList, notEqual);
+	}
+
+	@Description("""
+		Unbinds the Autocomplete from a specified Bucket.
+		
+		This mutation removes the link between a Autocomplete and a Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket from which the Autocomplete will be unbound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket after unbinding the Autocomplete.
+		  - `autocomplete`: Always null.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Autocomplete>> unbindAutocompleteFromBucket(@Id long bucketId) {
+		return bucketService.unbindAutocomplete(bucketId);
 	}
 
 	@Description("""

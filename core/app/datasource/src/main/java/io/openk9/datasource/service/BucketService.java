@@ -221,6 +221,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			));
 	}
 
+	public Uni<Tuple2<Bucket, Autocomplete>> bindAutocomplete(long bucketId, long autocompleteId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> autocompleteService.findById(s, autocompleteId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(autocomplete -> {
+					bucket.setAutocomplete(autocomplete);
+					return persist(s, bucket).map(t -> Tuple2.of(t, autocomplete));
+				})
+			)
+		);
+	}
+
 	public Uni<Tuple2<Bucket, Autocorrection>> bindAutocorrection(long bucketId, long autocorrectionId) {
 		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
@@ -1120,6 +1135,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
+	public Uni<Tuple2<Bucket, Autocomplete>> unbindAutocomplete(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setAutocomplete(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			})
+		);
+	}
+
 	public Uni<Tuple2<Bucket, Autocorrection>> unbindAutocorrection(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.onItem()
@@ -1427,6 +1453,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 		return s.createQuery(criteriaQuery).getResultList();
 	}
+
+	@Inject
+	AutocompleteService autocompleteService;
 
 	@Inject
 	AutocorrectionService autocorrectionService;
