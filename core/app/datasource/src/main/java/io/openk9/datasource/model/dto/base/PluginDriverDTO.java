@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.validation.constraints.NotNull;
 
 import io.openk9.datasource.model.PluginDriver;
@@ -39,4 +40,5 @@ public class PluginDriverDTO extends K9EntityDTO {
 	private PluginDriver.Provisioning provisioning;
 	@Json
 	private String jsonConfig;
+	private ResourceUri resourceUri;
 }
