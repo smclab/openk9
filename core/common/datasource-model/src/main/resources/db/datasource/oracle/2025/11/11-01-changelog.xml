@@ -27,10 +27,10 @@
 
 	<changeSet id="1762856949-1" author="openk9">
 		<addColumn tableName="enrich_item">
-			<column name="base_uri" type="TEXT">
+			<column name="base_uri" type="CLOB">
 				<constraints nullable="false"/>
 			</column>
-			<column name="path" type="TEXT">
+			<column name="path" type="CLOB">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
@@ -38,10 +38,10 @@
 
 	<changeSet id="1762856949-2" author="openk9">
 		<addColumn tableName="plugin_driver">
-			<column name="base_uri" type="TEXT">
+			<column name="base_uri" type="CLOB">
 				<constraints nullable="false"/>
 			</column>
-			<column name="path" type="TEXT">
+			<column name="path" type="CLOB">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
