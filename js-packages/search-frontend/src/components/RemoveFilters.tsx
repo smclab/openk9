@@ -6,7 +6,7 @@ import {
   ConfigurationUpdateFunction,
   resetFiltersType,
 } from "../embeddable/entry";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { CircleDelete } from "../svgElement/CircleDelete";
 import { SelectionsAction } from "./useSelections";
 

@@ -9,7 +9,7 @@ import { FiltersMemo, FiltersProps } from "./Filters";
 import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { DataRangePickerVertical } from "./DateRangePickerVertical";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type TypeFilter = "filters" | "sort" | "language" | "calendar";
 export type TypeAllFilters =

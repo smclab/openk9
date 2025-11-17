@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
 import { DeleteLogo } from "./DeleteLogo";
 import { TokenIcon } from "./TokenIcon";

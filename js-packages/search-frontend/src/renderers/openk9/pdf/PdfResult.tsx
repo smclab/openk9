@@ -16,7 +16,7 @@ import { ResultContainerTwo } from "../../../renderer-components/ResultContainer
 import { ResultLinkTwo } from "../../../renderer-components/ResultLinkTwo";
 import { MoreDetailCard } from "../../../renderer-components/MoreDetailCard";
 import { ResultTextContentTwo } from "../../../renderer-components/ResultTextContentTwo";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type PdfResultProps = { result: GenericResultItem<PdfResultItem> };
 export function PdfResult({ result }: PdfResultProps) {

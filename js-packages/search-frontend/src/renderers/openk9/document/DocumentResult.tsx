@@ -9,7 +9,7 @@ import {
   ResultTextContent,
 } from "../../../renderer-components";
 import { FileIcon } from "../../../renderer-components/FileIcon";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type DocumentResultProps = { result: GenericResultItem<DocumentResultItem> };
 export function DocumentResult({ result }: DocumentResultProps) {

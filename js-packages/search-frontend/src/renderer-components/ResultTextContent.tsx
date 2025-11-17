@@ -1,7 +1,7 @@
 import React from "react";
 import { HighlightedText } from "./HighlightedText";
 import get from "lodash/get";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 import { HighlightableTextProps } from "./HighlightableText";
 
@@ -13,7 +13,7 @@ export function ResultTextContent<E>({
   const hihglithTextLines = result.highlight[path];
   const text = get(result.source, path);
   return (
-    <p
+    <div
       className="openk9--result-text-content"
       css={css`
         ${hihglithTextLines ? truncatedLineStyle : ""};
@@ -43,6 +43,6 @@ export function ResultTextContent<E>({
           {text}
         </div>
       )}
-    </p>
+    </div>
   );
 }

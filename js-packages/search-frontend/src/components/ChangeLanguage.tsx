@@ -4,8 +4,8 @@ import Select, {
   SingleValueProps,
   StylesConfig,
 } from "react-select";
+import { css } from "styled-components";
 import { GloboSvg } from "../svgElement/Globo";
-import { css } from "styled-components/macro";
 
 export type LanguageItem = {
   createDate: any;

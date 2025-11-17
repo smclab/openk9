@@ -2,7 +2,7 @@ import { CreateLabel } from "./Filters";
 import React from "react";
 import { SearchToken } from "./client";
 import { DeleteLogo } from "./DeleteLogo";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { ConfigurationUpdateFunction } from "../embeddable/entry";
 import { capitalize } from "lodash";

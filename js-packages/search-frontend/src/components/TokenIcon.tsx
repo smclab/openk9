@@ -6,7 +6,7 @@ import { faTag } from "@fortawesome/free-solid-svg-icons/faTag";
 import { faUser } from "@fortawesome/free-solid-svg-icons/faUser";
 import { faSitemap } from "@fortawesome/free-solid-svg-icons/faSitemap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { AnalysisToken } from "./client";
 
 type TokenIconProps = { token: AnalysisToken };

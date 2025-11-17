@@ -7,7 +7,7 @@ import { CreateLabel } from "./Filters";
 import moment from "moment";
 import { DeleteLogo } from "./DeleteLogo";
 import { CalendarLogo } from "./CalendarLogo";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import "moment/locale/de";
 import "moment/locale/it";
 import "moment/locale/es";

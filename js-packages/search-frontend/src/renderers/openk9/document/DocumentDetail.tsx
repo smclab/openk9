@@ -11,7 +11,7 @@ import {
   DetailTitle,
   HighlightableText,
 } from "../../../renderer-components";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type DocumentDetailProps = {
   result: GenericResultItem<DocumentResultItem>;

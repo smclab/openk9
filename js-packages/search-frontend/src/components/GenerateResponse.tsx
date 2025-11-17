@@ -2,7 +2,7 @@ import isEqual from "lodash/isEqual";
 import React from "react";
 import Markdown from "react-markdown";
 import styled, { keyframes } from "styled-components";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
 import { recoverySearchQueryAndSort } from "./ResultList";
 import useGenerateResponse from "./useGenerateResponse";

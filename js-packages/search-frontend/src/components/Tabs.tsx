@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "react-query";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { SearchToken } from "./client";
 import { useOpenK9Client } from "./client";
 import _ from "lodash";

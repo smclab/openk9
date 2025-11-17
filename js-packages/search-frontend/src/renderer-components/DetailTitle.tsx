@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type DetailTitleProps = {
   children: React.ReactNode;

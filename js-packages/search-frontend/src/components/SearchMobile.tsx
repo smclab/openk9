@@ -15,7 +15,7 @@ import {
 import { useClickAway } from "./useClickAway";
 import { SelectionsAction, SelectionsState } from "./useSelections";
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { ArrowLeftSvg } from "../svgElement/ArrowLeftSvg";
 import { SearchSvg } from "../svgElement/SearchSvg";
 import { DeleteLogo } from "./DeleteLogo";

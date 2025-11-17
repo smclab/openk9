@@ -2,7 +2,7 @@ import React, { Children } from "react";
 import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { DetailTitle } from "./DetailTitle";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type DetailTitleExternalLinkProps = { href: string; children: React.ReactNode };
 export function DetailTitleExternalLink({

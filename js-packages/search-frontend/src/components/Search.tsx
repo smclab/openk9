@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
 import { TokenSelect } from "../components/TokenSelect";

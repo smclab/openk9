@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { WebResult } from "../renderers/openk9/web/WebResult";
 import { GenericResultItem, ResultRendererProps } from "./client";
 import { DocumentResult } from "../renderers/openk9/document/DocumentResult";

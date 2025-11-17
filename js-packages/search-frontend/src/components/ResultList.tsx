@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
 import { Virtuoso } from "react-virtuoso";
-import { css } from "styled-components/macro";
+import styled, { css } from "styled-components";
 import { TemplatesProps } from "../embeddable/entry";
 import { CustomVirtualScrollbar } from "./CustomScrollbar";
 import { Logo } from "./Logo";
@@ -380,7 +380,7 @@ export function InfiniteResults<E>({
                           background: white;
                           border: 2px solid transparent;
                           border-radius: 8px;
-                          :hover {
+                          &:hover {
                             border: 2px solid gray;
                           }
                         `}
@@ -487,6 +487,11 @@ export function VirtualResults<E>({
     results.data?.pages[0].total && results.data.pages[0].total > 0,
   );
   setTotalResult(results.data?.pages[0].total ?? null);
+
+  const StyledVirtuoso = styled(Virtuoso)`
+    flex-grow: 1;
+  `;
+
   return (
     <div
       className="openk9-virtual-results-container"
@@ -496,11 +501,8 @@ export function VirtualResults<E>({
         height: 100%;
       `}
     >
-      <Virtuoso
+      <StyledVirtuoso
         hidden={!thereAreResults}
-        css={css`
-          flex-grow: 1;
-        `}
         totalCount={resultsFlat?.length ?? 0}
         itemContent={(index) => {
           const result = resultsFlat?.[index];

@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { SearchToken, SortField } from "./client";
 import "overlayscrollbars/css/OverlayScrollbars.css";
 import { ModalDetail } from "./ModalDetail";

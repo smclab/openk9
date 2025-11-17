@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
@@ -988,7 +988,7 @@ function CapitalizeValue({ value }: { value: string | undefined }) {
       className={`openk9-capitalize-value ${isHover ? "is-hover" : ""}`}
       css={css`
         cursor: pointer;
-        :hover {
+        &:hover {
           color: var(--openk9-embeddable-search--primary-light-color);
           font-weight: 600;
         }

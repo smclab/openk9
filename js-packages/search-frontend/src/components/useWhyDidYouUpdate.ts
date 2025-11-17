@@ -4,7 +4,7 @@ export function useWhyDidYouUpdate<Props extends Record<string, any>>(
   label: string,
   props: Props,
 ) {
-  const previousProps = React.useRef<Props>();
+  const previousProps = React.useRef<Props | null>(null);
   React.useEffect(() => {
     if (previousProps.current) {
       const allKeys = Object.keys({

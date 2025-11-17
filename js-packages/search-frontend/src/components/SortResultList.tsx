@@ -1,4 +1,4 @@
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { UseQueryResult } from "react-query";
 import React from "react";
 import Select, { AriaOnFocus, components, StylesConfig } from "react-select";

@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { WebDetail } from "../renderers/openk9/web/WebDetail";
 import { GenericResultItem, DetailRendererProps } from "./client";
 import { DocumentDetail } from "../renderers/openk9/document/DocumentDetail";

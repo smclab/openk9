@@ -9,7 +9,7 @@ import { debounce } from "lodash";
 import moment from "moment";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import "./app.css";
 import "./components/dataRangePicker.css";
 import { DeleteLogo } from "./components/DeleteLogo";
@@ -29,8 +29,8 @@ import "./components/dateRangePickerVertical.css";
 import "./components/dataRangePicker.css";
 import "react-dates/lib/css/_datepicker.css";
 
-const isKeycloakEnabled = true;
-const isChatbotEnabled = true;
+const isKeycloakEnabled = import.meta.env.VITE_KEYCLOAK_ENABLED === "true";
+const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
 
 export const openk9 = new OpenK9({
   enabled: true,

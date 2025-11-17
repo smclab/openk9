@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircle } from "@fortawesome/free-solid-svg-icons/faCircle";
 import { faChevronCircleLeft } from "@fortawesome/free-solid-svg-icons/faChevronCircleLeft";
 import { faChevronCircleRight } from "@fortawesome/free-solid-svg-icons/faChevronCircleRight";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 // TODO refactor styles
 

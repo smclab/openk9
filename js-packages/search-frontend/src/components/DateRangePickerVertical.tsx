@@ -9,7 +9,7 @@ import "moment/locale/it";
 import "moment/locale/es";
 import "moment/locale/fr";
 import { DateRangePickerPhrases } from "react-dates/lib/defaultPhrases";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 export function DataRangePickerVertical({
   onChange,
   calendarDate,

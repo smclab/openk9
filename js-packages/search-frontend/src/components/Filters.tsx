@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "react-query";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { IconsCustom } from "../embeddable/entry";
 import { SearchToken, SortField, useOpenK9Client } from "./client";
 import {

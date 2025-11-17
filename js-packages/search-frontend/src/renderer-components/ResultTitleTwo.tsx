@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 
 type ResultTitleProps = { children: React.ReactNode; isTruncate?: boolean };

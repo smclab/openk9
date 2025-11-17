@@ -1,27 +1,27 @@
-import React from "react";
-import { css } from "styled-components/macro";
-import { SearchToken, SortField } from "./client";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { capitalize } from "lodash";
 import "overlayscrollbars/css/OverlayScrollbars.css";
-import { ModalDetail } from "./ModalDetail";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { css } from "styled-components";
 import {
   Configuration,
   ConfigurationUpdateFunction,
 } from "../embeddable/entry";
-import { FilterSvg } from "../svgElement/FiltersSvg";
-import { DeleteLogo } from "./DeleteLogo";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
-import { FiltersMemo } from "./Filters";
-import { TrashSvg } from "../svgElement/TrashSvg";
 import { AddFiltersSvg } from "../svgElement/AddFiltersSvg";
-import { useTranslation } from "react-i18next";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
-import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
-import { Tab, translationTab } from "./Tabs";
-import { capitalize } from "lodash";
+import { FilterSvg } from "../svgElement/FiltersSvg";
+import { TrashSvg } from "../svgElement/TrashSvg";
+import { SearchToken, SortField } from "./client";
+import { DeleteLogo } from "./DeleteLogo";
 import { WhoIsDynamic } from "./FilterCategoryDynamic";
-import { SelectionsAction, SelectionsState } from "./useSelections";
+import { FiltersMemo } from "./Filters";
+import { ModalDetail } from "./ModalDetail";
+import { Tab, translationTab } from "./Tabs";
 import { useFocusTrap } from "./useFocusTrap";
+import { SelectionsAction, SelectionsState } from "./useSelections";
+import { useRange } from "./useRange";
 
 export type FiltersMobileProps<E> = {
   searchQuery: SearchToken[];
@@ -88,6 +88,8 @@ function FiltersMobileLiveChange<E>({
 }: FiltersMobileProps<E>) {
   const { t } = useTranslation();
   const [trapFocus] = useFocusTrap(true);
+  const { overrideSearchWithCorrection, setOverrideSearchWithCorrection } =
+    useRange();
   const componet = (
     <React.Fragment>
       <div
@@ -199,6 +201,8 @@ function FiltersMobileLiveChange<E>({
               />
             ) : null
           }
+          overrideSearchWithCorrection={overrideSearchWithCorrection}
+          setOverrideSearchWithCorrection={setOverrideSearchWithCorrection}
         />
       </div>
 

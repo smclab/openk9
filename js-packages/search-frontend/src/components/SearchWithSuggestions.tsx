@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { TokenSelect } from "../components/TokenSelect";
 import { Configuration } from "../embeddable/entry";
 import { SearchSvg } from "../svgElement/SearchSvg";

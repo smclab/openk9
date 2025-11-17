@@ -1,5 +1,5 @@
 import React from "react";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { SearchToken, SortField, SuggestionResult } from "./client";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react";
 import { useOpenK9Client } from "./client";

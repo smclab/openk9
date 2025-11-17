@@ -5,7 +5,7 @@ import {
 } from "../components/client";
 import get from "lodash/get";
 import { HighlightedText } from "./HighlightedText";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type DetailTextContentProps<E> = {
   result: GenericResultItem<E>;

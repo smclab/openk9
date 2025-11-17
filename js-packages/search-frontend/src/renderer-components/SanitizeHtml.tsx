@@ -1,7 +1,7 @@
 import { get } from "lodash";
 import { HighlightableTextProps } from "./HighlightableText";
 import sanitizeHtml from "sanitize-html";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { truncatedLineStyle } from "./truncatedLineStyle";
 import React from "react";
 

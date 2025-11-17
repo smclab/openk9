@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { useInfiniteQuery } from "react-query";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 import { ResultTitleTwo } from "../renderer-components";
 import { Logo } from "./Logo";
 import { ResultMemo } from "./Result";

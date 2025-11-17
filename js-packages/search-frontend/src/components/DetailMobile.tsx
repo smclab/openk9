@@ -5,7 +5,7 @@ import { DetailMemo } from "./Detail";
 import { ModalDetail } from "./ModalDetail";
 import { useTranslation } from "react-i18next";
 import { TemplatesProps } from "../embeddable/entry";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 export type DetailMobileProps<E> = {
   result: GenericResultItem<E> | null;

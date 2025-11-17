@@ -16,7 +16,7 @@ import {
   ResultLinkTwo,
 } from "../../../renderer-components";
 import { GenericResultItem } from "../../../components/client";
-import { css } from "styled-components/macro";
+import { css } from "styled-components";
 
 type PdfDetailProps = {
   result: GenericResultItem<PdfResultItem>;

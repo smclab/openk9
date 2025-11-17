@@ -1,5 +1,5 @@
 import React from "react";
-import { css, keyframes } from "styled-components/macro";
+import { css, keyframes } from "styled-components";
 
 const pulse = keyframes`
   0% {
