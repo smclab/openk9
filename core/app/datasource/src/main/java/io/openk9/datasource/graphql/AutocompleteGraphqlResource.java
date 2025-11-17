@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.graphql;
 
+import java.util.List;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -155,6 +156,22 @@ public class AutocompleteGraphqlResource {
 
 		return autocompleteService.findConnection(
 			after, before, first, last, searchText, sortByList);
+	}
+
+	@Description("""
+		Retrieves all Autocomplete configurations that are not bound to a specific Bucket.
+		
+		This query returns Autocomplete configurations that are available to be bound to the specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to check for unbound Autocompletes.
+		
+		Returns:
+		- A list of unbound Autocomplete configurations available for the specified Bucket.
+		""")
+	@Query
+	public Uni<List<Autocomplete>> getUnboundAutocompleteByBucket(long bucketId) {
+		return autocompleteService.findUnboundAutocompleteByBucket(bucketId);
 	}
 
 	private Uni<Response<Autocomplete>> createAutocomplete(

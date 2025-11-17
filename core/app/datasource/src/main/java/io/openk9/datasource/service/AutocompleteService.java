@@ -18,16 +18,23 @@
 package io.openk9.datasource.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.AutocompleteMapper;
 import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocomplete_;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
@@ -67,6 +74,34 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 						)
 			);
 		}
+	}
+
+	public Uni<List<Autocomplete>> findUnboundAutocompleteByBucket(long bucketId) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Autocomplete> query = cb.createQuery(Autocomplete.class);
+			Root<Autocomplete> rootAutocomplete = query.from(Autocomplete.class);
+
+			Subquery<Long> subquery = query.subquery(Long.class);
+			Root<Bucket> subRootBucket = subquery.from(Bucket.class);
+
+			var associatedAutocompletePath = subRootBucket.get(Bucket_.autocomplete);
+
+			subquery.select(associatedAutocompletePath.get(Autocomplete_.id));
+
+			subquery.where(
+				cb.and(
+					cb.equal(subRootBucket.get(Bucket_.id), bucketId),
+					cb.isNotNull(associatedAutocompletePath)
+				)
+			);
+
+			query.select(rootAutocomplete);
+			query.where(cb.not(rootAutocomplete.get(Autocomplete_.id).in(subquery)));
+
+			return s.createQuery(query).getResultList();
+		});
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldConnection(
