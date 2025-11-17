@@ -20,6 +20,7 @@ package io.openk9.tenantmanager.service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -40,11 +41,25 @@ import org.jboss.logging.Logger;
 public class OutboxEventService {
 
 	public Uni<Void> persist(TenantManagementEvent event) {
-		Tuple tuple = asTuple(event);
+		Objects.requireNonNull(event);
+
+		long eventId = idGenerator.nextId();
+		String eventType = event.getClass().getSimpleName();
+		String payload = Json.encode(event);
+
+		return persist(eventId, eventType, payload, false, OffsetDateTime.now());
+	}
+
+	public Uni<Void> persist(
+		long id,
+		String eventType,
+		String payload,
+		boolean sent,
+		OffsetDateTime createDate) {
 
 		return pool.withTransaction(sqlConnection -> sqlConnection
 			.preparedQuery(INSERT_NEW_EVENT_SQL)
-			.execute(tuple)
+			.execute(Tuple.of(id, eventType, payload, sent, createDate))
 			.replaceWithVoid()
 		);
 	}
@@ -98,6 +113,18 @@ public class OutboxEventService {
 
 	public Uni<List<OutboxEvent>> window(OffsetDateTime from) {
 		return window(from, OffsetDateTime.now());
+	}
+
+	public Uni<List<OutboxEvent>> last(int size) {
+		return pool.preparedQuery(FETCH_LAST_SQL)
+			.execute(Tuple.of(size))
+			.map(rows -> {
+				List<OutboxEvent> events = new ArrayList<>();
+				for (Row row : rows) {
+					events.add(OutboxEventService.fromRow(row));
+				}
+				return events;
+			});
 	}
 
 	public Uni<Integer> deleteAll() {
@@ -158,6 +185,13 @@ public class OutboxEventService {
 		SELECT *
 		FROM outbox_event
 		WHERE create_date >= $1 and create_date <= $2
+		""";
+
+	private static final String FETCH_LAST_SQL = """
+		SELECT *
+		FROM outbox_event
+		ORDER BY create_date DESC
+		LIMIT $1
 		""";
 
 	private static final String DELETE_FROM_TABLE_SQL =

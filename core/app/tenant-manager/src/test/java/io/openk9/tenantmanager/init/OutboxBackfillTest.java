@@ -15,34 +15,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.grpc;
+package io.openk9.tenantmanager.init;
 
-import com.google.protobuf.Empty;
-import io.quarkus.grpc.GrpcClient;
+import java.util.List;
+import jakarta.inject.Inject;
+
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.OutboxEvent;
+import io.openk9.tenantmanager.service.OutboxEventService;
+import io.openk9.tenantmanager.service.TenantService;
+
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class TenantManagerGrpcServiceTest {
+public class OutboxBackfillTest {
 
-	@GrpcClient
-	TenantManager client;
+	@Inject
+	TenantService tenantService;
+	@Inject
+	OutboxEventService outboxEventService;
 
 	@Test
-	@RunOnVertxContext
-	void findTenantList(UniAsserter asserter) {
+	void should_populate_outbox_table() {
 
-		asserter.assertThat(
-			() -> client.findTenantList(Empty.newBuilder().build()),
-			// it must contain at least the two legacy tenant,
-			// from changelog 2025/11/17.sql
-			response -> Assertions.assertFalse(
-				response.getTenantResponseList().isEmpty()
-			)
-		);
+		// fetch pre-existing tenants
+		TenantResponseDTO charmender = tenantService.findById(1L).await().indefinitely();
+		TenantResponseDTO pikachu = tenantService.findById(2L).await().indefinitely();
+
+		List<OutboxEvent> outboxUnsent = outboxEventService.unsentEvents().await().indefinitely();
+
+
+		Assertions.assertNotNull(charmender);
+		Assertions.assertNotNull(pikachu);
+		Assertions.assertEquals(2, outboxUnsent.size());
 
 	}
 

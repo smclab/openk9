@@ -29,7 +29,7 @@ import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
 import io.openk9.tenantmanager.service.TenantService;
 
-import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.quarkus.vertx.VertxContextSupport;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -59,29 +59,29 @@ public class TenantManagerInitializer {
 
 		logger.info("Check for schema upgrades...");
 
-		tenantService.findAllSchemaNameAndLiquibaseSchemaName()
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-			.emitOn(Infrastructure.getDefaultWorkerPool())
-			.flatMap((schemas) -> {
-					LinkedList<Params> schemaParamList = new LinkedList<>();
+		VertxContextSupport.executeBlocking(() -> tenantService
+				.findAllSchemaNameAndLiquibaseSchemaName()
+				.flatMap((schemas) -> {
+						LinkedList<Params> schemaParamList = new LinkedList<>();
 
-					for (SchemaTuple schema : schemas) {
-						schemaParamList.add(
-							new Params(
-								schema.schemaName(),
-								schema.liquibaseSchemaName(),
-								liquibaseService.getChangeLogLocation(),
-								liquibaseService.getChangeLogLockTableName(),
-								liquibaseService.getChangeLogTableName(),
-								liquibaseService.getDatasourceJdbcUrl(),
-								datasourceUsername,
-								datasourcePassword
-							)
-						);
+						for (SchemaTuple schema : schemas) {
+							schemaParamList.add(
+								new Params(
+									schema.schemaName(),
+									schema.liquibaseSchemaName(),
+									liquibaseService.getChangeLogLocation(),
+									liquibaseService.getChangeLogLockTableName(),
+									liquibaseService.getChangeLogTableName(),
+									liquibaseService.getDatasourceJdbcUrl(),
+									datasourceUsername,
+									datasourcePassword
+								)
+							);
+						}
+
+						return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
 					}
-
-				return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
-				}
+				)
 			)
 			.subscribe()
 			.with(

@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Inject;
 
@@ -32,7 +31,6 @@ import io.openk9.tenantmanager.model.OutboxEvent;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
@@ -40,33 +38,24 @@ import org.mockito.ArgumentMatcher;
 @QuarkusTest
 public class TenantServiceTest {
 
-	private static final String TENANT_IDENTIFIER = "pikachu";
-	private static final String VIRTUAL_HOST = "pikachu.localhost";
-	private static final String LIQUIBASE_SCHEMA_NAME = "pikachu-liquibase";
-	private static final String CLIENT_ID = "openk9";
-
 	@Inject
 	TenantService tenantService;
 	@InjectSpy(delegate = true)
 	OutboxEventService outboxService;
 
-	@BeforeEach
-	void init() {
-		outboxService.deleteAll()
-			.await()
-			.indefinitely();
-	}
-
 	@Test
-	@DisplayName("Tenant should be persisted.")
-	void should_persist_tenant_and_event() {
+	@DisplayName("Tenant should be persisted and then deleted, with events persisted too.")
+	void should_persist_and_then_delete_tenant_persisting_events() {
+
+		TenantParameters parameters =
+			generateTenantParameters("shiny-bulbasaur");
 
 		// create tenant will be committed
 		TenantResponseDTO tenantCreated = tenantService.persist(
-				VIRTUAL_HOST,
-				TENANT_IDENTIFIER,
-				LIQUIBASE_SCHEMA_NAME,
-				TENANT_IDENTIFIER,
+				parameters.virtualHost(),
+				parameters.schemaName(),
+				parameters.liquibaseSchemaName(),
+				parameters.realmName(),
 				CLIENT_ID,
 				null,
 				OffsetDateTime.now(),
@@ -75,18 +64,19 @@ public class TenantServiceTest {
 			.await()
 			.indefinitely();
 
-		// gets all events persisted within this minute
-		List<OutboxEvent> events = outboxService
-			.window(OffsetDateTime.now().minusMinutes(1))
-			.await()
-			.indefinitely();
-
 		// verify that creation is committed
+
 		Assertions.assertNotNull(tenantCreated);
-		Assertions.assertEquals(1, events.size());
 
+		// get the last event persisted
+		var createEvent = outboxService.last(1).await().indefinitely().getFirst();
 
-		// clean-up tenant
+		// verify that the last event is of the right type
+		var createEventType = createEvent.getEventType();
+		Assertions.assertEquals("TenantCreated", createEventType);
+
+		// delete tenant
+
 		long tenantId = Long.parseLong(tenantCreated.id());
 
 		tenantService.deleteTenant(tenantId)
@@ -98,14 +88,14 @@ public class TenantServiceTest {
 			.indefinitely();
 
 		// verify that deletions is committed
-		// clean-up outbox-events
-
-		int rowCount = outboxService.deleteAll()
-			.await()
-			.indefinitely();
 
 		Assertions.assertNull(deleted);
-		Assertions.assertEquals(2, rowCount);
+
+		// verify that the last event is of the right type
+		OutboxEvent deleteEvent = outboxService.last(1).await().indefinitely().getFirst();
+		String deleteEventType = deleteEvent.getEventType();
+
+		Assertions.assertEquals("TenantDeleted", deleteEventType);
 
 	}
 
@@ -117,12 +107,17 @@ public class TenantServiceTest {
 			.when(outboxService)
 			.persist(argThat(StubOnceMatcher.TENANT_CREATED_INSTANCE));
 
+		int outboxUnsentSizeFirst
+			= outboxService.unsentEvents().await().indefinitely().size();
+
+		TenantParameters parameters = generateTenantParameters("shiny-squirtle");
+
 		// create tenant will be rolled back
 		TenantResponseDTO tenantCreated = tenantService.persist(
-				VIRTUAL_HOST,
-				TENANT_IDENTIFIER,
-				LIQUIBASE_SCHEMA_NAME,
-				TENANT_IDENTIFIER,
+				parameters.virtualHost,
+				parameters.schemaName(),
+				parameters.liquibaseSchemaName(),
+				parameters.realmName(),
 				CLIENT_ID,
 				null,
 				OffsetDateTime.now(),
@@ -131,26 +126,25 @@ public class TenantServiceTest {
 			.await()
 			.indefinitely();
 
-		// gets all events persisted within this minute
-		List<OutboxEvent> events = outboxService
-			.window(OffsetDateTime.now().minusMinutes(1))
-			.await()
-			.indefinitely();
+		int outboxUnsentSizeAfter
+			= outboxService.unsentEvents().await().indefinitely().size();
 
 		// verify that creation is rolled back
 		Assertions.assertNull(tenantCreated);
-		Assertions.assertTrue(events.isEmpty());
+		Assertions.assertEquals(outboxUnsentSizeFirst, outboxUnsentSizeAfter);
 	}
 
 	@Test
 	@DisplayName("Delete have to rollback if outboxService throws an error.")
 	void should_rollback_delete_tx_on_outboxService_error() {
+		TenantParameters parameters = generateTenantParameters("shiny-eevee");
+
 		// create a tenant
 		TenantResponseDTO tenant = tenantService.persist(
-				VIRTUAL_HOST,
-				TENANT_IDENTIFIER,
-				LIQUIBASE_SCHEMA_NAME,
-				TENANT_IDENTIFIER,
+				parameters.virtualHost(),
+				parameters.schemaName(),
+				parameters.liquibaseSchemaName(),
+				parameters.realmName(),
 				CLIENT_ID,
 				null,
 				OffsetDateTime.now(),
@@ -160,6 +154,9 @@ public class TenantServiceTest {
 			.indefinitely();
 
 		long tenantId = Long.parseLong(tenant.id());
+
+		int outboxUnsentSizeBefore =
+			outboxService.unsentEvents().await().indefinitely().size();
 
 		// makes outboxService throw an error on persist
 		doThrow(new RuntimeException())
@@ -171,11 +168,8 @@ public class TenantServiceTest {
 			.await()
 			.indefinitely();
 
-		// gets all events persisted within this minute
-		List<OutboxEvent> events = outboxService
-			.window(OffsetDateTime.now().minusMinutes(1))
-			.await()
-			.indefinitely();
+		int outboxUnsentSizeAfter =
+			outboxService.unsentEvents().await().indefinitely().size();
 
 		TenantResponseDTO stillThere = tenantService
 			.findById(tenantId)
@@ -184,7 +178,7 @@ public class TenantServiceTest {
 
 		// verify that deletion is rolled back
 		Assertions.assertNotNull(stillThere);
-		Assertions.assertEquals(1, events.size());
+		Assertions.assertEquals(outboxUnsentSizeBefore, outboxUnsentSizeAfter);
 
 		// clean-up tenant
 
@@ -192,28 +186,35 @@ public class TenantServiceTest {
 			.await()
 			.indefinitely();
 
-		TenantResponseDTO deleted = tenantService.findById(tenantId)
+		OutboxEvent deleteEvent = outboxService.last(1)
 			.await()
-			.indefinitely();
+			.indefinitely()
+			.getFirst();
 
-		events = outboxService
-			.window(OffsetDateTime.now().minusMinutes(1))
-			.await()
-			.indefinitely();
+		String eventType = deleteEvent.getEventType();
+		Assertions.assertEquals("TenantDeleted", eventType);
 
-		// verify that deletions is committed
-
-		Assertions.assertNull(deleted);
-		Assertions.assertEquals(2, events.size());
-
-		// clean-up outbox-events
-
-		int rowCount = outboxService.deleteAll()
-			.await()
-			.indefinitely();
-
-		Assertions.assertEquals(2, rowCount);
 	}
+
+	private static final String CLIENT_ID = "openk9";
+
+	private static TenantParameters generateTenantParameters(String identifier) {
+
+		return new TenantParameters(
+			identifier + ".local",
+			identifier,
+			identifier + "-liquibase",
+			identifier
+		);
+
+	}
+
+	private record TenantParameters(
+		String virtualHost,
+		String schemaName,
+		String liquibaseSchemaName,
+		String realmName) {}
+
 
 	/**
 	 * In order to stub the call to {@link OutboxEventService#persist(TenantManagementEvent)}

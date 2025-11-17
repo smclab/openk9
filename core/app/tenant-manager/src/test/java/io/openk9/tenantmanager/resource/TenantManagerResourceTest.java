@@ -29,7 +29,6 @@ import org.junit.jupiter.api.Test;
 @TestHTTPEndpoint(TenantManagerResource.class)
 class TenantManagerResourceTest {
 
-
 	@Test
 	void createTenant() {
 
