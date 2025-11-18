@@ -18,22 +18,16 @@
 package io.openk9.datasource.model;
 
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
-
 import jakarta.persistence.*;
 
 import io.openk9.datasource.model.util.K9Entity;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.vertx.core.json.Json;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity(name = PluginDriver.ENTITY_NAME)
 @Table(name = PluginDriver.TABLE_NAME)
@@ -54,10 +48,6 @@ public class PluginDriver extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
 	private PluginDriverType type;
-
-	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-	@Column(name = "json_config")
-	private String jsonConfig;
 
 	@Embedded
 	private ResourceUri resourceUri;
@@ -81,16 +71,5 @@ public class PluginDriver extends K9Entity {
 		USER
 	}
 
-	public static HttpPluginDriverInfo parseHttpInfo(String jsonConfig) {
-		return Json.decodeValue(jsonConfig, HttpPluginDriverInfo.class);
-	}
-
-	@JsonIgnore
-	public HttpPluginDriverInfo getHttpPluginDriverInfo() {
-		if (Objects.requireNonNull(type) == PluginDriverType.HTTP) {
-			return parseHttpInfo(jsonConfig);
-		}
-		throw new InvalidPluginDriverType();
-	}
 
 }
