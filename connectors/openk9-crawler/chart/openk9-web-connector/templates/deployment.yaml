@@ -37,3 +37,9 @@ spec:
           env:
             - name: INGESTION_URL
               value: "{{ include "helper.ingestionURL" . }}/api/ingestion/v1/ingestion/"
+            - name: INPUT_LOG_LEVEL
+              value: {{ .Values.log.level }}
+            - name: PLAYWRIGHT_MAX_CONTEXTS
+              value: {{ .Values.playwright.maxContexts }}
+            - name: PLAYWRIGHT_MAX_PAGES_PER_CONTEXT
+              value: {{ .Values.playwright.maxPagesPerContext }}
