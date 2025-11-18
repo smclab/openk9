@@ -18,7 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.enricher.HttpEnricherClient;
-import io.openk9.datasource.web.dto.ResourceUriDTO;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
@@ -50,17 +50,17 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	}
 
 	public Uni<FormTemplate> getForm(String serviceName) {
-		ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+		ResourceUri resourceUri = ResourceUri.builder()
 			.baseUri(serviceName)
 			.build();
-		return httpEnricherClient.getForm(resourceUriDTO);
+		return httpEnricherClient.getForm(resourceUri);
 	}
 
 	public Uni<HealthDTO> getHealth(String serviceName) {
-		ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
+		ResourceUri resourceUri = ResourceUri.builder()
 			.baseUri(serviceName)
 			.build();
-		return httpEnricherClient.getHealth(resourceUriDTO);
+		return httpEnricherClient.getHealth(resourceUri);
 	}
 
 }

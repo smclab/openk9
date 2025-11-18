@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.client;
 
-import io.openk9.datasource.web.dto.ResourceUriDTO;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.smallrye.mutiny.Uni;
@@ -40,11 +40,11 @@ public abstract class HttpDatasourceServiceClient {
 	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
 
-	public Uni<FormTemplate> getForm(ResourceUriDTO resourceUriDTO) {
+	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
-				resourceUriDTO.getBaseUri() + FORM_PATH
+				resourceUri.getBaseUri() + FORM_PATH
 			)
 			.send()
 			.flatMap(this::validateResponse)
@@ -52,11 +52,11 @@ public abstract class HttpDatasourceServiceClient {
 			.flatMap(this::validateDto);
 	}
 
-	public Uni<HealthDTO> getHealth(ResourceUriDTO resourceUriDTO) {
+	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
 				HttpMethod.GET,
-				resourceUriDTO.getBaseUri() + HEALTH_PATH
+				resourceUri.getBaseUri() + HEALTH_PATH
 			)
 			.send()
 			.flatMap(this::validateResponse)

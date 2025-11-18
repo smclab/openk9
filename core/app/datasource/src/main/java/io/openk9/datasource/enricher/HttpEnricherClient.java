@@ -18,8 +18,8 @@
 package io.openk9.datasource.enricher;
 
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
-import io.openk9.datasource.web.dto.ResourceUriDTO;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
@@ -36,14 +36,14 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
 	public static final String PROCESS_PATH = "/process";
 
-	public Uni<HttpResponse<Buffer>> process(ResourceUriDTO resourceUriDTO, EnricherInputDTO enricherInputDTO) {
-		String path = resourceUriDTO.getPath();
+	public Uni<HttpResponse<Buffer>> process(ResourceUri resourceUri, EnricherInputDTO enricherInputDTO) {
+		String path = resourceUri.getPath();
 		if (path == null || path.isEmpty()) {
 			path = PROCESS_PATH;
 		}
 
 		return webClient
-			.requestAbs(HttpMethod.POST, resourceUriDTO.getBaseUri() + path)
+			.requestAbs(HttpMethod.POST, resourceUri.getBaseUri() + path)
 			.sendJson(enricherInputDTO)
 			.flatMap(this::validateResponse);
 	}
