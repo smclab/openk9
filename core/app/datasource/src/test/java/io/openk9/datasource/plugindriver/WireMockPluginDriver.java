@@ -39,7 +39,7 @@ public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager
 	public static final String SAMPLE_JSON_FILE = "/plugindriver/sample.json";
 	public static final String FORM_JSON_FILE = "/plugindriver/form.json";
 	public static final int PORT = 7777;
-	public static final String HOST = "localhost";
+	public static final String HOST = "http://localhost";
 
 	private WireMockServer wireMockServer;
 

@@ -26,13 +26,13 @@ public class PresetPluginDrivers {
 	private static final Map<Preset, String> CONNECTOR_MAP = new EnumMap<>(Preset.class);
 
 	static {
-		CONNECTOR_MAP.put(Preset.YOUTUBE, "openk9-youtube-connector");
-		CONNECTOR_MAP.put(Preset.CRAWLER, "openk9-web-connector");
-		CONNECTOR_MAP.put(Preset.EMAIL, "openk9-email-connector");
-		CONNECTOR_MAP.put(Preset.GITLAB, "openk9-gitlab-connector");
-		CONNECTOR_MAP.put(Preset.SITEMAP, "openk9-web-connector");
-		CONNECTOR_MAP.put(Preset.DATABASE, "openk9-database-connector");
-		CONNECTOR_MAP.put(Preset.MINIO, "openk9-minio-connector");
+		CONNECTOR_MAP.put(Preset.YOUTUBE, "http://openk9-youtube-connector");
+		CONNECTOR_MAP.put(Preset.CRAWLER, "http://openk9-web-connector");
+		CONNECTOR_MAP.put(Preset.EMAIL, "http://openk9-email-connector");
+		CONNECTOR_MAP.put(Preset.GITLAB, "http://openk9-gitlab-connector");
+		CONNECTOR_MAP.put(Preset.SITEMAP, "http://openk9-web-connector");
+		CONNECTOR_MAP.put(Preset.DATABASE, "http://openk9-database-connector");
+		CONNECTOR_MAP.put(Preset.MINIO, "http://openk9-minio-connector");
 	}
 
 	public static String getPluginDriver(Preset preset) {
