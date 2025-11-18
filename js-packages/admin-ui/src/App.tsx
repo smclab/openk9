@@ -444,8 +444,6 @@ export const scrollToTop = () => {
 };
 
 export default function App() {
-  const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
-  const [isNotification, setIsNotification] = React.useState(false);
   const savedTheme = localStorage.getItem("isDarkMode");
   const [isDarkMode, setIsDarkMode] = React.useState(savedTheme === "true");
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);

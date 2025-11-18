@@ -1,4 +1,6 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
+import { Box, Button } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -14,10 +16,9 @@ import {
   useForm,
 } from "../../components/Form";
 import { TabQuery, useCreateOrUpdateTabMutation, useTabQuery, useTabTokensQuery } from "../../graphql-generated";
-import { ReturnUserTabData } from "./gql";
 import { formatQueryToBE, formatQueryToFE } from "../../utils";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { ReturnUserTabData } from "./gql";
 
 export function SaveTab() {
   const { tabId = "new", view } = useParams();
@@ -118,7 +119,13 @@ export function SaveTab() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTabMutation.data?.tabWithTokenTabs?.fieldValidators),
   });
-
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      { keys: ["name", "description", "priority", "tokenTabIds"], label: "Tab Information" },
+      { keys: ["name", "description", "priority", "tokenTabIds"], label: "Tab Information 2" },
+    ],
+  });
   return (
     <ContainerFluid>
       <>
@@ -192,6 +199,7 @@ export function SaveTab() {
             fieldsControll={["name"]}
           />
         </form>
+        <Recap recapData={recapSections} />
       </>
       <ConfirmModal />
     </ContainerFluid>
