@@ -69,15 +69,20 @@ public class TenantService {
 
 		String issuerUri = baseIssuerUri + realmName;
 
-		var id = idGenerator.nextId();
+		long id = idGenerator.nextId();
 
 		return pool.withTransaction(conn -> conn
 				.preparedQuery(INSERT_SQL)
 				.execute(Tuple.from(new Object[] {
-					id, virtualHost,
-					schemaName, liquibaseSchemaName,
-					realmName, clientId, clientSecret,
-					createDate, modifiedDate
+					id,
+					virtualHost,
+					schemaName,
+					liquibaseSchemaName,
+					realmName,
+					clientId,
+					clientSecret,
+					createDate != null ? createDate : OffsetDateTime.now(),
+					modifiedDate != null ? modifiedDate : OffsetDateTime.now()
 				}))
 				.map(SqlResult::rowCount)
 				.flatMap(rowCount -> sendEvent(

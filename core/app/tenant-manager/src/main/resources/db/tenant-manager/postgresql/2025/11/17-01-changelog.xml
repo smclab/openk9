@@ -25,7 +25,7 @@
 
 
 	<changeSet id="1763387973-1" author="openk9">
-		<customChange class="io.openk9.tenantmanager.init.OutboxBackfill"/>
+		<customChange class="io.openk9.tenantmanager.init.BackfillTenantCreatedEventsTask"/>
 	</changeSet>
 
 </databaseChangeLog>
