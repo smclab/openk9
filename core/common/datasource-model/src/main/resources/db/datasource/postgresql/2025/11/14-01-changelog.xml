@@ -36,4 +36,8 @@
 		<dropColumn tableName="enrich_item" columnName="service_name"/>
 	</changeSet>
 
+	<changeSet id="1763119031-3" author="openk9">
+		<dropColumn tableName="plugin_driver" columnName="json_config"/>
+	</changeSet>
+
 </databaseChangeLog>
