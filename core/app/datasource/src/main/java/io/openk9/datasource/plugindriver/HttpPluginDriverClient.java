@@ -17,13 +17,10 @@
 
 package io.openk9.datasource.plugindriver;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import io.openk9.datasource.client.HttpDatasourceServiceClient;
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import io.openk9.datasource.plugindriver.exception.InvalidUriException;
 import io.openk9.datasource.processor.payload.IngestionPayload;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
@@ -44,14 +41,10 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 	@Inject
 	WebClient webClient;
 
-	public Uni<IngestionPayload> getSample(HttpPluginDriverInfo pluginDriverInfo) {
+	public Uni<IngestionPayload> getSample(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
-				HttpMethod.GET,
-				createAbsUri(
-					pluginDriverInfo.isSecure(),
-					pluginDriverInfo.getBaseUri(),
-					SAMPLE_PATH)
+				HttpMethod.GET, resourceUri.getBaseUri() + SAMPLE_PATH
 			)
 			.timeout(10000)
 			.send()
@@ -61,40 +54,33 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 	}
 
 	public Uni<HttpResponse<Buffer>> invoke(
-		HttpPluginDriverInfo httpPluginDriverInfo,
+		ResourceUri resourceUri,
 		HttpPluginDriverContext httpPluginDriverContext) {
 
-		String path = httpPluginDriverInfo.getPath();
+		String path = resourceUri.getPath();
 
 		if (path == null) {
 			path = INVOKE_PATH;
 		}
 
-		HttpPluginDriverInfo.Method httpMethod = httpPluginDriverInfo.getMethod();
-
-		if (httpMethod == null) {
-			httpMethod = HttpPluginDriverInfo.Method.POST;
-		}
-
-		String baseUri = httpPluginDriverInfo.getBaseUri();
+		String baseUri = resourceUri.getBaseUri();
 
 		if (baseUri == null) {
-			baseUri = "localhost:8080";
+			baseUri = HTTP + "localhost:8080";
 		}
 
 		return webClient.requestAbs(
-				httpMethod.getHttpMethod(),
-				createAbsUri(httpPluginDriverInfo.isSecure(), baseUri, path)
+				HttpMethod.POST, baseUri + path
 			)
 			.sendJson(httpPluginDriverContext)
 			.flatMap(this::validateResponse);
 	}
 
 	public void invokeAndForget(
-		HttpPluginDriverInfo httpPluginDriverInfo,
+		ResourceUri resourceUri,
 		HttpPluginDriverContext httpPluginDriverContext) {
 
-		invoke(httpPluginDriverInfo, httpPluginDriverContext)
+		invoke(resourceUri, httpPluginDriverContext)
 			.subscribe()
 			.with(
 				response -> {
@@ -104,20 +90,11 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 								" response.bodyAsString() = " + response.bodyAsString() + " " +
 								"response.statusMessage() = " + response.statusMessage());
 					} else {
-						logger.info("invoke success " + httpPluginDriverInfo);
+						logger.info("invoke success " + resourceUri);
 					}
 				},
 				t -> logger.error("HttpPluginDriverClient.invokeAndForget", t)
 			);
-	}
-
-	private String createAbsUri(boolean isSecure, String baseUri, String path) {
-		var scheme = isSecure ? HTTPS : HTTP;
-		try {
-			return new URI(scheme + normalize(baseUri) + "/" + normalize(path)).toString();
-		} catch (URISyntaxException e) {
-			throw new InvalidUriException(e);
-		}
 	}
 
 	private String normalize(String string) {

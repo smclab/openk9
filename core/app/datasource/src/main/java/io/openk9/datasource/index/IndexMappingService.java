@@ -29,9 +29,9 @@ import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
@@ -607,10 +607,10 @@ public class IndexMappingService {
 			GenerateDocTypeFromPluginSampleMessage message) {
 
 		var tenantId = message.tenantId();
-		var httpPluginDriverInfo = message.httpPluginDriverInfo();
+		var resourceUri = message.resourceUri();
 
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
-				generateDocTypeUni(httpPluginDriverInfo, s)
+				generateDocTypeUni(resourceUri, s)
 					.onFailure()
 					.invoke(failure ->
 						log.debug(String.format("Attempting retry for generateDocTypeUni due to: %s", failure.getMessage()))
@@ -644,13 +644,13 @@ public class IndexMappingService {
 	 * This operation reuses an <strong>existing Mutiny session</strong> provided as a parameter.
 	 *
 	 * @param session The active Hibernate Mutiny session to be used for the operation.
-	 * @param httpPluginDriverInfo The information about the HTTP plugin driver.
+	 * @param resourceUri The information about the HTTP plugin driver.
 	 * @return A {@link Uni} containing a Set of generated or updated DocType objects.
 	 */
 	public Uni<Set<DocType>> generateDocTypeFieldsFromPluginDriverSampleSync(
-			Mutiny.Session session, HttpPluginDriverInfo httpPluginDriverInfo) {
+			Mutiny.Session session, ResourceUri resourceUri) {
 
-		return generateDocTypeUni(httpPluginDriverInfo, session)
+		return generateDocTypeUni(resourceUri, session)
 			.flatMap(docTypes -> {
 				log.debug("DocType size=" + docTypes.size());
 				return Uni.createFrom().item(docTypes);
@@ -699,10 +699,8 @@ public class IndexMappingService {
 			);
 	}
 
-	private Uni<Set<DocType>> generateDocTypeUni(
-			HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
-
-		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+	private Uni<Set<DocType>> generateDocTypeUni(ResourceUri resourceUri, Mutiny.Session session) {
+		return httpPluginDriverClient.getSample(resourceUri)
 			.onFailure()
 			.transform(failure -> new SampleEndpointException(failure.getMessage()))
 			.flatMap(ingestionPayload -> {
@@ -726,7 +724,7 @@ public class IndexMappingService {
 
 	public record GenerateDocTypeFromPluginSampleMessage(
 		String tenantId,
-		HttpPluginDriverInfo httpPluginDriverInfo
+		ResourceUri resourceUri
 	) {}
 
 }

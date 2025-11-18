@@ -195,10 +195,10 @@ public class JobSchedulerService {
 		var datasource = scheduler.getDatasource();
 		var pluginDriver = datasource.getPluginDriver();
 
-		var httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
+		var resourceUri = pluginDriver.getResourceUri();
 
 		return httpPluginDriverClient.invoke(
-			httpPluginDriverInfo,
+			resourceUri,
 			HttpPluginDriverContext
 				.builder()
 				.timestamp(lastIngestionDate)

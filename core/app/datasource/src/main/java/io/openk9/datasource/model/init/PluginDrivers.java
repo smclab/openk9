@@ -23,10 +23,9 @@ import java.util.Map;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 
-import io.vertx.core.json.Json;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,11 +43,12 @@ public class PluginDrivers {
 				.name("Youtube")
 				.description("Plugin Driver for Youtube Channel")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.YOUTUBE))
-				.secure(false)
-				.path("/execute")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.YOUTUBE))
+					.path("/execute")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -57,11 +57,12 @@ public class PluginDrivers {
 				.name("Crawler")
 				.description("Plugin Driver for Generic Crawling")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
-				.secure(false)
-				.path("/startUrlsCrawling")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
+					.path("/startUrlsCrawling")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -70,11 +71,12 @@ public class PluginDrivers {
 				.name("Email")
 				.description("Plugin Driver for Imap Server")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
-				.secure(false)
-				.path("/execute")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.EMAIL))
+					.path("/execute")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -83,11 +85,12 @@ public class PluginDrivers {
 				.name("Gitlab")
 				.description("Plugin Driver for Gitlab Server")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
-				.secure(false)
-				.path("/execute")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.GITLAB))
+					.path("/execute")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -96,11 +99,12 @@ public class PluginDrivers {
 				.name("Sitemap")
 				.description("Plugin Driver for Sitemap Server")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
-				.secure(false)
-				.path("/startSitemapCrawling")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
+					.path("/startSitemapCrawling")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -109,11 +113,12 @@ public class PluginDrivers {
 				.name("Database")
 				.description("Plugin Driver for Database. Supporting PostgreSql, Mysql, MariaDB.")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
-				.secure(false)
-				.path("/execute")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.DATABASE))
+					.path("/execute")
+					.build()
+				)
 				.build()
 		);
 		CONFIGURATION_MAP.put(
@@ -122,11 +127,12 @@ public class PluginDrivers {
 				.name("Minio")
 				.description("Plugin Driver for Minio.")
 				.type(PluginDriver.PluginDriverType.HTTP)
-				.method(HttpPluginDriverInfo.Method.POST)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
-				.baseUri(PresetPluginDrivers.getPluginDriver(Preset.MINIO))
-				.secure(false)
-				.path("/execute")
+				.resourceUri(ResourceUri.builder()
+					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.MINIO))
+					.path("/execute")
+					.build()
+				)
 				.build()
 		);
 	}
@@ -139,36 +145,17 @@ public class PluginDrivers {
 		return createPluginDriverDTO(schemaName, preset);
 	}
 
-	private static HttpPluginDriverInfo buildJsonConfig(PresetConfiguration presetConfiguration, String schemaName) {
-		StringBuilder sb = new StringBuilder(presetConfiguration.getBaseUri());
-
-		if (schemaName != null) {
-			sb.append("-");
-			sb.append(schemaName);
-		}
-
-		sb.append(":");
-		sb.append(PORT);
-
-		return HttpPluginDriverInfo.builder()
-			.baseUri(sb.toString())
-			.secure(presetConfiguration.isSecure())
-			.path(presetConfiguration.getPath())
-			.method(presetConfiguration.getMethod())
-			.build();
-	}
-
 	private static PluginDriverDTO createPluginDriverDTO(String schemaName, Preset preset) {
 		PresetConfiguration presetConfiguration = CONFIGURATION_MAP.get(preset);
 
-		var jsonConfig = buildJsonConfig(presetConfiguration, schemaName);
+		var resourceUri = presetConfiguration.getResourceUri();
 
 		return PluginDriverDTO.builder()
 			.name(presetConfiguration.getName())
 			.description(presetConfiguration.getDescription())
 			.type(presetConfiguration.getType())
 			.provisioning(presetConfiguration.getProvisioning())
-			.jsonConfig(Json.encode(jsonConfig))
+			.resourceUri(resourceUri)
 			.build();
 	}
 
@@ -177,13 +164,10 @@ public class PluginDrivers {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	private static class PresetConfiguration {
-		private String baseUri;
 		private String description;
-		private HttpPluginDriverInfo.Method method;
 		private String name;
-		private String path;
+		private ResourceUri resourceUri;
 		private PluginDriver.Provisioning provisioning;
-		private boolean secure;
 		private PluginDriver.PluginDriverType type;
 	}
 

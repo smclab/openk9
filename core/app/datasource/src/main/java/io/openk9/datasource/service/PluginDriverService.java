@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -59,14 +61,12 @@ import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.ResourceUriDTO;
 
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -132,7 +132,7 @@ public class PluginDriverService
 			.flatMap(pluginDriver ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 					session,
-					pluginDriver.getHttpPluginDriverInfo()
+					pluginDriver.getResourceUri()
 				)
 			)
 		);
@@ -321,7 +321,7 @@ public class PluginDriverService
 	public Uni<PluginDriverDocTypesDTO> getDocTypes(long id) {
 		return sessionFactory.withSession(session -> findById(id)
 			.flatMap(pluginDriver ->
-				httpPluginDriverClient.getSample(pluginDriver.getHttpPluginDriverInfo()))
+				httpPluginDriverClient.getSample(pluginDriver.getResourceUri()))
 
 			.map(IngestionPayloadMapper::getDocumentTypes)
 			.flatMap(docTypeNames -> {
@@ -349,25 +349,22 @@ public class PluginDriverService
 	public Uni<FormTemplate> getForm(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
-					HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-					ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
-					return httpPluginDriverClient.getForm(resourceUriDTO);
+					ResourceUri resourceUri = pluginDriver.getResourceUri();
+					return httpPluginDriverClient.getForm(resourceUri);
 				}
 			);
 	}
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-		HttpPluginDriverInfo httpPluginDriverInfo = PluginDriver.parseHttpInfo(pluginDriverDTO.getJsonConfig());
-		ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
-		return httpPluginDriverClient.getHealth(resourceUriDTO);
+		ResourceUri resourceUri = pluginDriverDTO.getResourceUri();
+		return httpPluginDriverClient.getHealth(resourceUri);
 	}
 
 	public Uni<HealthDTO> getHealth(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
-					HttpPluginDriverInfo httpPluginDriverInfo = pluginDriver.getHttpPluginDriverInfo();
-					ResourceUriDTO resourceUriDTO = convertToResourceUriDTO(httpPluginDriverInfo);
-					return httpPluginDriverClient.getHealth(resourceUriDTO);
+				ResourceUri resourceUri = pluginDriver.getResourceUri();
+				return httpPluginDriverClient.getHealth(resourceUri);
 				}
 			);
 	}
@@ -503,7 +500,7 @@ public class PluginDriverService
 				return switch (pluginDriver.getProvisioning()) {
 					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 							session,
-							pluginDriver.getHttpPluginDriverInfo()
+							pluginDriver.getResourceUri()
 						)
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver created."))
@@ -523,7 +520,7 @@ public class PluginDriverService
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenantId,
-										pluginDriver.getHttpPluginDriverInfo()
+										pluginDriver.getResourceUri()
 									)
 								);
 							return Uni.createFrom().item(entity);
@@ -612,7 +609,7 @@ public class PluginDriverService
 				return switch (pluginDriver.getProvisioning()) {
 					case USER -> indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 							s,
-							pluginDriver.getHttpPluginDriverInfo()
+							pluginDriver.getResourceUri()
 						)
 						.onItem()
 						.invoke(() -> log.info("DocumentTypes associated with pluginDriver updated."))
@@ -632,23 +629,13 @@ public class PluginDriverService
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenantId,
-										pluginDriver.getHttpPluginDriverInfo()
+										pluginDriver.getResourceUri()
 									)
 								);
 							return Uni.createFrom().item(entity);
 						});
 				};
 			});
-	}
-
-	private ResourceUriDTO convertToResourceUriDTO(HttpPluginDriverInfo httpPluginDriverInfo) {
-		ResourceUriDTO resourceUriDTO = new ResourceUriDTO();
-		var uri = httpPluginDriverInfo.isSecure()
-			? HttpPluginDriverClient.HTTPS + httpPluginDriverInfo.getBaseUri()
-			: HttpPluginDriverClient.HTTP + httpPluginDriverInfo.getBaseUri();
-
-		resourceUriDTO.setBaseUri(uri);
-		return resourceUriDTO;
 	}
 
 }

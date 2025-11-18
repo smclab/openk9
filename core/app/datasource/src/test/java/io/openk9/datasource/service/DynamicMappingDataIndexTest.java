@@ -20,8 +20,8 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
-import io.openk9.datasource.plugindriver.HttpPluginDriverInfo;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -31,7 +31,6 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.mutiny.core.eventbus.Message;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -70,9 +69,8 @@ class DynamicMappingDataIndexTest {
 			() -> sessionFactory.withTransaction((s, t) ->
 				indexMappingService.generateDocTypeFieldsFromPluginDriverSampleSync(
 					s,
-					HttpPluginDriverInfo.builder()
+					ResourceUri.builder()
 						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-						.secure(false)
 						.build()
 				)
 			),
@@ -102,9 +100,8 @@ class DynamicMappingDataIndexTest {
 				IndexMappingService.GENERATE_DOC_TYPE,
 				new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 					TENANT_ID,
-					HttpPluginDriverInfo.builder()
+					ResourceUri.builder()
 						.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-						.secure(false)
 						.build()
 				)
 			)

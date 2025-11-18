@@ -20,7 +20,7 @@ package io.openk9.datasource.plugindriver;
 import java.io.IOException;
 import java.io.InputStream;
 
-import io.openk9.datasource.web.dto.ResourceUriDTO;
+import io.openk9.datasource.model.ResourceUri;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
@@ -46,14 +46,9 @@ import org.junit.jupiter.api.Test;
 class HttpPluginDriverClientTest {
 
 	private static final Logger log = Logger.getLogger(HttpPluginDriverClientTest.class);
-	private static final String HTTP = "http://";
 
-	private static final HttpPluginDriverInfo pluginDriverInfo = HttpPluginDriverInfo.builder()
+	private static final ResourceUri resourceUri = ResourceUri.builder()
 		.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
-		.build();
-
-	private static final ResourceUriDTO resourceUriDTO = ResourceUriDTO.builder()
-		.baseUri(HTTP +  pluginDriverInfo.getBaseUri())
 		.build();
 
 	@Inject
@@ -68,7 +63,7 @@ class HttpPluginDriverClientTest {
 
 		asserter.assertThat(
 			() -> httpPluginDriverClient.invoke(
-				pluginDriverInfo,
+				resourceUri,
 				HttpPluginDriverContext.builder().build()
 			),
 			res -> Assertions.assertEquals(200, res.statusCode())
@@ -91,7 +86,7 @@ class HttpPluginDriverClientTest {
 
 		asserter.assertFailedWith(
 			() -> httpPluginDriverClient.invoke(
-				pluginDriverInfo,
+				resourceUri,
 				HttpPluginDriverContext.builder().build()
 			),
 			err -> {
@@ -112,7 +107,7 @@ class HttpPluginDriverClientTest {
 		}
 
 		asserter.assertThat(
-			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			() -> httpPluginDriverClient.getHealth(resourceUri),
 			res -> Assertions.assertEquals(expected, res)
 		);
 
@@ -127,7 +122,7 @@ class HttpPluginDriverClientTest {
 			.willReturn(ResponseDefinitionBuilder.okForEmptyJson()));
 
 		asserter.assertThat(
-			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			() -> httpPluginDriverClient.getHealth(resourceUri),
 			res -> {
 				Assertions.assertEquals(HealthDTO.builder()
 					.status(HealthDTO.Status.UNKOWN)
@@ -152,7 +147,7 @@ class HttpPluginDriverClientTest {
 		);
 
 		asserter.assertFailedWith(
-			() -> httpPluginDriverClient.getHealth(resourceUriDTO),
+			() -> httpPluginDriverClient.getHealth(resourceUri),
 			err -> {
 				Assertions.assertInstanceOf(ValidationException.class, err);
 				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
@@ -174,7 +169,7 @@ class HttpPluginDriverClientTest {
 		}
 
 		asserter.assertThat(
-			() -> httpPluginDriverClient.getSample(pluginDriverInfo),
+			() -> httpPluginDriverClient.getSample(resourceUri),
 			res -> {
 				Assertions.assertEquals(expected, res);
 				Assertions.assertTrue(res.getDatasourcePayload().containsKey("sample"));
@@ -197,7 +192,7 @@ class HttpPluginDriverClientTest {
 		}
 
 		asserter.assertThat(
-			() -> httpPluginDriverClient.getForm(resourceUriDTO),
+			() -> httpPluginDriverClient.getForm(resourceUri),
 			res -> {
 
 				if (log.isDebugEnabled()) {
@@ -225,7 +220,7 @@ class HttpPluginDriverClientTest {
 		);
 
 		asserter.assertFailedWith(
-			() -> httpPluginDriverClient.getForm(resourceUriDTO),
+			() -> httpPluginDriverClient.getForm(resourceUri),
 			err -> {
 				Assertions.assertInstanceOf(ValidationException.class, err);
 				Assertions.assertTrue(err.getMessage().contains("Unexpected Response"));
