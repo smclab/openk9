@@ -47,7 +47,6 @@ public class KeycloakSettingsResource {
 	RoutingContext routingContext;
 
 	@Operation(operationId = "settings")
-	@Tag(description = "Return keycloak settings")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -76,7 +75,6 @@ public class KeycloakSettingsResource {
     }
 
 	@Operation(operationId = "settings.js")
-	@Tag(description = "Return keycloak settings as javascript file")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

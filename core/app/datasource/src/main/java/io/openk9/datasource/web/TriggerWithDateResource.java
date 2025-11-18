@@ -66,7 +66,6 @@ public class TriggerWithDateResource {
 	 * @return A {@link Uni} representing the status of the triggered jobs as a {@link SchedulerService.DatasourceJobStatus}.
 	 */
 	@Operation(operationId = "v2-trigger")
-	@Tag(description = "Permits to trigger an ingestion schedule for a specific datasource")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
