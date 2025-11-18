@@ -24,22 +24,27 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import io.openk9.datasource.model.Autocorrection;
-import io.openk9.datasource.model.FieldType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.Autocomplete;
+import io.openk9.datasource.model.Autocomplete_;
+import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
 import io.openk9.datasource.service.util.Tuple2;
@@ -240,6 +245,59 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			getSearchFields(),
 			after, before, first, last, searchText, sortByList
 		);
+	}
+
+	/**
+	 * Retrieves a list of unbound DocTypeField entities that are boundable for autocomplete.
+	 *
+	 * <p>This method finds all DocTypeField that satisfy the following criteria:
+	 * <ul>
+	 *   <li>Are not already bound to the specified autocorrection</li>
+	 *   <li>Have a field type that supports autocomplete (SEARCH_AS_YOU_TYPE)</li>
+	 * </ul>
+	 *
+	 * @param autocompleteId the ID of the autocomplete used to filter already-bound fields
+	 * @return a {@link Uni} that emits a list of unbound DocTypeField entities matching the criteria.
+	 *         The list will be empty if no unbound fields are found.
+	 *
+	 * @see DocTypeField
+	 * @see Autocomplete
+	 * @see FieldType
+	 */
+	public Uni<List<DocTypeField>> findUnboundDocTypeFieldByAutocomplete(long autocompleteId) {
+
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> criteriaQuery = cb.createQuery(DocTypeField.class);
+			Root<DocTypeField> rootDocTypeField = criteriaQuery.from(DocTypeField.class);
+
+			criteriaQuery.select(rootDocTypeField);
+
+			// subquery to find IDs of DocTypeField already associated with the Autocomplete
+			Subquery<Long> idsToExcludeQuery = criteriaQuery.subquery(Long.class);
+			Root<Autocomplete> rootAutocomplete = idsToExcludeQuery.from(Autocomplete.class);
+
+			Join<Autocomplete, DocTypeField> docTypeFieldJoinToExclude =
+				rootAutocomplete.join(Autocomplete_.fields, JoinType.INNER);
+
+			idsToExcludeQuery
+				.select(docTypeFieldJoinToExclude.get(DocTypeField_.id))
+				.where(cb.equal(rootAutocomplete.get(Autocomplete_.id), autocompleteId));
+
+			// exclude already associated DocTypeFields AND filter by fieldType = SEARCH_AS_YOU_TYPE
+			criteriaQuery.where(
+				cb.and(
+					cb.not(rootDocTypeField.get(DocTypeField_.id).in(idsToExcludeQuery)),
+					cb.equal(
+						rootDocTypeField.get(DocTypeField_.fieldType),
+						FieldType.SEARCH_AS_YOU_TYPE
+					)
+				)
+			);
+
+			return s.createQuery(criteriaQuery).getResultList();
+		});
 	}
 
 	/**
