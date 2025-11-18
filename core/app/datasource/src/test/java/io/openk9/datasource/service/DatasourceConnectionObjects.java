@@ -18,13 +18,12 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.grpc.Preset;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO.PluginDriverDTOBuilder;
 import io.openk9.datasource.model.dto.request.CreateDatasourceDTO;
 import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
-
-import io.vertx.core.json.JsonObject;
 
 public class DatasourceConnectionObjects {
 
@@ -59,10 +58,10 @@ public class DatasourceConnectionObjects {
 	public static PluginDriverDTOBuilder<?, ?> PLUGIN_DRIVER_DTO_BUILDER() {
 		return PluginDrivers.getPluginDriverDTO(Preset.CRAWLER)
 			.toBuilder()
-			.jsonConfig(JsonObject.of(
-				"baseUri", WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT,
-				"secure", false
-			).encode());
+			.resourceUri(ResourceUri.builder()
+				.baseUri(WireMockPluginDriver.HOST + ":" + WireMockPluginDriver.PORT)
+				.path("/test")
+				.build());
 	}
 
 
