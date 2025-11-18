@@ -121,6 +121,7 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
           minWidth: 160,
           maxWidth: 260,
           overflow: "hidden",
+          with: "fit-content",
         }}
       >
         <Box
@@ -132,6 +133,7 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
             justifyContent: "center",
             width: 32,
             height: 32,
+            with: "fit-content",
           }}
         >
           <SummarizeRoundedIcon sx={{ fontSize: 20, color: "primary.contrastText" }} />
