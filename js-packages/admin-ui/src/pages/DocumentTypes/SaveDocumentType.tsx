@@ -14,6 +14,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateDocTypeWithTemplateMutation, useDocumentTypeQuery } from "../../graphql-generated";
 import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentType() {
   const { documentTypeId = "new", view } = useParams();
@@ -52,7 +53,7 @@ export function SaveDocumentType() {
       () => ({
         name: "",
         description: "",
-        docTypeTemplateId: isValidId(documentTypeQuery?.data?.docType?.docTypeTemplate),
+        docTypeTemplateId: isValidId(documentTypeQuery?.data?.docType?.docTypeTemplate, "doc Type Template"),
       }),
       [documentTypeQuery],
     ),
@@ -70,6 +71,10 @@ export function SaveDocumentType() {
         },
       });
     },
+  });
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [{ keys: ["name", "description", "docTypeTemplateId"], label: "Recap Document Type" }],
   });
 
   return (
@@ -104,7 +109,11 @@ export function SaveDocumentType() {
                     <TextArea label="Description" {...form.inputProps("description")} />
                     <AutocompleteDropdown
                       label="Document type template"
-                      onChange={(val) => form.inputProps("docTypeTemplateId").onChange({ id: val.id, name: val.name })}
+                      onChange={(val) =>
+                        form
+                          .inputProps("docTypeTemplateId")
+                          .onChange({ title: "doc Type Template", id: val.id, name: val.name })
+                      }
                       value={
                         !form?.inputProps("docTypeTemplateId")?.value?.id
                           ? undefined
@@ -129,6 +138,7 @@ export function SaveDocumentType() {
             fieldsControll={["name"]}
           />
         </form>
+        <Recap recapData={recapSections} />
       </>
       <ConfirmModal />
     </ContainerFluid>

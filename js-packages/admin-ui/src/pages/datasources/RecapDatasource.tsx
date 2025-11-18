@@ -96,16 +96,28 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
                             justifyContent={"space-between"}
                             alignItems="center"
                           >
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700 }}
-                            >
-                              {key}:
-                            </Typography>
-                            <Typography variant="body1" fontWeight={400} noWrap>
-                              {displayValue}
-                            </Typography>
+                            {key === "title" ? (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700 }}
+                              >
+                                {displayValue}:
+                              </Typography>
+                            ) : (
+                              <>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700 }}
+                                >
+                                  {key}:
+                                </Typography>
+                                <Typography variant="body1" fontWeight={400} noWrap>
+                                  {displayValue}
+                                </Typography>
+                              </>
+                            )}
                           </Box>
                         );
                       });
