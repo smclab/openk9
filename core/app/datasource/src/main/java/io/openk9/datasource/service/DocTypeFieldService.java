@@ -54,8 +54,24 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTypeFieldDTO> {
+	@Inject
+	AnalyzerService _analyzerService;
+
 	 DocTypeFieldService(DocTypeFieldMapper mapper) {
 		 this.mapper = mapper;
+	}
+
+	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> _analyzerService.findById(s, analyzerId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(analyzer -> {
+					docTypeField.setAnalyzer(analyzer);
+					return persist(s, docTypeField).map(t -> Tuple2.of(t, analyzer));
+				})));
 	}
 
 	@Override
@@ -69,6 +85,29 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		var entity = createTransient(s, dto);
 
 		return super.create(s, entity);
+	}
+
+	public Uni<DocTypeField> createSubField(
+		long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
+
+		return sessionFactory.withTransaction((s, tr) -> findById(s, parentDocTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(parentDocTypeField -> s
+				.fetch(parentDocTypeField.getSubDocTypeFields())
+				.onItem()
+				.ifNotNull()
+				.transformToUni(subList -> {
+
+					DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
+					docTypeField.setParentDocTypeField(parentDocTypeField);
+					docTypeField.setDocType(parentDocTypeField.getDocType());
+					subList.add(docTypeField);
+					return persist(s, docTypeField);
+				})
+			)
+		);
+
 	}
 
 	/**
@@ -104,98 +143,6 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		}
 
 		return docTypeField;
-	}
-
-	@Override
-	public Class<DocTypeField> getEntityClass() {
-		return DocTypeField.class;
-	}
-
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
-	}
-
-	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(docTypeField.getAnalyzer()));
-	}
-
-	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
-		return getSessionFactory().withTransaction(s -> findById(s, docTypeFieldId)
-			.flatMap(d -> s.fetch(d.getAnalyzer())));
-	}
-
-	public Uni<Tuple2<DocTypeField, Analyzer>> bindAnalyzer(long docTypeFieldId, long analyzerId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(docTypeField -> _analyzerService.findById(s, analyzerId)
-				.onItem()
-				.ifNotNull()
-				.transformToUni(analyzer -> {
-					docTypeField.setAnalyzer(analyzer);
-					return persist(s, docTypeField).map(t -> Tuple2.of(t, analyzer));
-				})));
-	}
-
-	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(docTypeField -> {
-				docTypeField.setAnalyzer(null);
-				return persist(s, docTypeField).map(t -> Tuple2.of(t, null));
-			}));
-	}
-
-	public Uni<Connection<Analyzer>> getAnalyzersConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-		return findJoinConnection(
-			id, DocTypeField_.ANALYZER, Analyzer.class,
-			_analyzerService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
-
-	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
-		return sessionFactory.withTransaction(s -> s
-			.merge(docTypeField)
-			.flatMap(merged -> s.fetch(merged.getParentDocTypeField()))
-		);
-	}
-
-	public Uni<Connection<DocTypeField>> getSubDocTypeFields(
-		DocTypeField docTypeField, String after, String before, Integer first,
-		Integer last, String searchText, Set<SortBy> sortByList,
-		boolean notEqual) {
-		return findJoinConnection(
-			docTypeField.getId(), DocTypeField_.SUB_DOC_TYPE_FIELDS,
-			DocTypeField.class, getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
-	}
-
-	public Uni<DocTypeField> createSubField(
-		long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
-
-		return sessionFactory.withTransaction((s, tr) -> findById(s, parentDocTypeFieldId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(parentDocTypeField -> s
-				.fetch(parentDocTypeField.getSubDocTypeFields())
-				.onItem()
-				.ifNotNull()
-				.transformToUni(subList -> {
-
-					DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
-					docTypeField.setParentDocTypeField(parentDocTypeField);
-					docTypeField.setDocType(parentDocTypeField.getDocType());
-					subList.add(docTypeField);
-					return persist(s, docTypeField);
-				})
-			)
-		);
-
 	}
 
 	public Uni<Collection<DocType>> expandDocTypes(
@@ -338,18 +285,66 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		});
 	}
 
+	public Uni<Analyzer> getAnalyzer(DocTypeField docTypeField) {
+		return sessionFactory.withTransaction(
+			s -> s.fetch(docTypeField.getAnalyzer()));
+	}
+
+	public Uni<Analyzer> getAnalyzer(long docTypeFieldId) {
+		return getSessionFactory().withTransaction(s -> findById(s, docTypeFieldId)
+			.flatMap(d -> s.fetch(d.getAnalyzer())));
+	}
+
+	public Uni<Connection<Analyzer>> getAnalyzersConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, DocTypeField_.ANALYZER, Analyzer.class,
+			_analyzerService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
+	@Override
+	public Class<DocTypeField> getEntityClass() {
+		return DocTypeField.class;
+	}
+
+	public Uni<DocTypeField> getParent(DocTypeField docTypeField) {
+		return sessionFactory.withTransaction(s -> s
+			.merge(docTypeField)
+			.flatMap(merged -> s.fetch(merged.getParentDocTypeField()))
+		);
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {DocTypeField_.NAME, DocTypeField_.FIELD_TYPE};
+	}
+
+	public Uni<Connection<DocTypeField>> getSubDocTypeFields(
+		DocTypeField docTypeField, String after, String before, Integer first,
+		Integer last, String searchText, Set<SortBy> sortByList,
+		boolean notEqual) {
+		return findJoinConnection(
+			docTypeField.getId(), DocTypeField_.SUB_DOC_TYPE_FIELDS,
+			DocTypeField.class, getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
+
 	@Override
 	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto) {
 		return sessionFactory.withTransaction((session, transaction) ->
 			patch(session, id, dto));
 	}
 
-	@Override
-	protected Uni<DocTypeField> patch(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
-		return findThenMapAndPersist(
-			s, id, dto, (docTypeField, docTypeFieldDTO) ->
-				patchMapper(s, docTypeField, docTypeFieldDTO)
-		);
+	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> {
+				docTypeField.setAnalyzer(null);
+				return persist(s, docTypeField).map(t -> Tuple2.of(t, null));
+			}));
 	}
 
 	@Override
@@ -363,6 +358,31 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		return findThenMapAndPersist(
 			s, id, dto, (docTypeField, docTypeFieldDTO) ->
 			updateMapper(s, docTypeField, docTypeFieldDTO));
+	}
+
+	private Uni<Set<DocTypeField>> expandDocTypeFields(
+		Mutiny.Session s, Collection<DocTypeField> docTypeFields) {
+
+		if (docTypeFields == null || docTypeFields.isEmpty()) {
+			return Uni.createFrom().item(Set.of());
+		}
+
+		List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
+
+		for (DocTypeField docTypeField : docTypeFields) {
+
+			subDocTypeFieldUnis.add(
+				s.fetch(docTypeField.getSubDocTypeFields()));
+
+		}
+
+		return Uni.combine()
+			.all()
+			.unis(subDocTypeFieldUnis)
+			.usingConcurrencyOf(1)
+			.collectFailures()
+			.with(e -> (List<Set<DocTypeField>>) e)
+			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));
 	}
 
 	private Uni<? extends Set<DocTypeField>> loadAndExpandDocTypeFields(Mutiny.Session s, List<Set<DocTypeField>> list) {
@@ -403,31 +423,6 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 	}
 
-	private Uni<Set<DocTypeField>> expandDocTypeFields(
-		Mutiny.Session s, Collection<DocTypeField> docTypeFields) {
-
-		if (docTypeFields == null || docTypeFields.isEmpty()) {
-			return Uni.createFrom().item(Set.of());
-		}
-
-		List<Uni<Set<DocTypeField>>> subDocTypeFieldUnis = new LinkedList<>();
-
-		for (DocTypeField docTypeField : docTypeFields) {
-
-			subDocTypeFieldUnis.add(
-				s.fetch(docTypeField.getSubDocTypeFields()));
-
-		}
-
-		return Uni.combine()
-			.all()
-			.unis(subDocTypeFieldUnis)
-			.usingConcurrencyOf(1)
-			.collectFailures()
-			.with(e -> (List<Set<DocTypeField>>) e)
-			.flatMap(sets -> loadAndExpandDocTypeFields(s, sets));
-	}
-
 	private Uni<Void> loadDocTypeField(Mutiny.Session s, Set<DocTypeField> typeFields) {
 
 		List<Uni<?>> unis = new ArrayList<>();
@@ -457,6 +452,13 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			.discardItems();
 	}
 
+	@Override
+	protected Uni<DocTypeField> patch(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
+		return findThenMapAndPersist(
+			s, id, dto, (docTypeField, docTypeFieldDTO) ->
+				patchMapper(s, docTypeField, docTypeFieldDTO)
+		);
+	}
 
 	private DocTypeField patchMapper(
 		Mutiny.Session session,
@@ -499,8 +501,5 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 
 		return docTypeField;
 	}
-
-	@Inject
-	AnalyzerService _analyzerService;
 
 }

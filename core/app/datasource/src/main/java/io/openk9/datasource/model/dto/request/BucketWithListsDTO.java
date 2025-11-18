@@ -33,8 +33,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class BucketWithListsDTO extends BucketDTO {
-	private Long autocorrectionId;
 	private Long autocompleteId;
+	private Long autocorrectionId;
 	private Set<Long> datasourceIds;
 	private Long defaultLanguageId;
 	private Long queryAnalysisId;

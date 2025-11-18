@@ -81,13 +81,13 @@ public class Autocomplete extends K9Entity {
 	@Column(name = "operator")
 	private BooleanOperator operator = DEFAULT_OPERATOR;
 
-	public void setFuzziness(String fuzziness) {
-		this.fuzziness = Objects.requireNonNullElse(fuzziness, DEFAULT_FUZZINESS);
-	}
-
 	public void setFallbackResultSize(Integer fallbackResultSize) {
 		this.fallbackResultSize =
 			Objects.requireNonNullElse(fallbackResultSize, DEFAULT_FALLBACK_RESULT_SIZE);
+	}
+
+	public void setFuzziness(String fuzziness) {
+		this.fuzziness = Objects.requireNonNullElse(fuzziness, DEFAULT_FUZZINESS);
 	}
 
 	public void setMinimumShouldMatch(String minimumShouldMatch) {

@@ -252,6 +252,7 @@ public class EntitiesUtils {
 			.await()
 			.indefinitely();
 	}
+
 	public static Autocorrection getAutocorrection(
 			String name,
 			AutocorrectionService autocorrectionService,
