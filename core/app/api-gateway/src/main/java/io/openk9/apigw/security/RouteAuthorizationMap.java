@@ -61,12 +61,12 @@ public final class RouteAuthorizationMap {
 	public boolean allows(RoutePath routePath, Authentication authentication) {
 		AuthorizationSchemeToken authSchemeToken = schemeFor(routePath);
 
-//		// allows access when authScheme not defined or explicitly not required
-//		if (authSchemeToken == null
-//			|| authSchemeToken == AuthorizationSchemeToken.NO_AUTH) {
-//
-//			return true;
-//		}
+		// allows access when authScheme not defined or explicitly not required
+		if (authSchemeToken == null
+			|| authSchemeToken == AuthorizationSchemeToken.NO_AUTH) {
+
+			return true;
+		}
 
 		// disallows when required authentication doesn't match
 		if (!authSchemeToken.match(authentication.getClass())) {
