@@ -1,27 +1,25 @@
+import asyncio
+import base64
 import os
+import threading
+import time
 from io import BytesIO
 from typing import Dict, List
 
+import requests
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 from dotenv import dotenv_values, load_dotenv
 from fastapi import Body, FastAPI
+from pydantic import BaseModel
 
 from app.utils.fm_helper import FileManagerHelper
 
 load_dotenv()
 
-# accessing and printing value
-
-import asyncio
-import base64
-import threading
-import time
-
-import requests
-from pydantic import BaseModel
-
-FMHelper = FileManagerHelper(os.getenv("FM_HOST", default="http://localhost:8000"))
+FM_HOST = os.getenv("FM_HOST", default="http://localhost:8000")
+S_HOST = os.getenv("S_HOST", default="http://localhost:8001")
+FMHelper = FileManagerHelper(FM_HOST)
 
 
 class Input(BaseModel):
@@ -81,8 +79,6 @@ def form():
 
 
 def operation(payload, configs, token):
-    s_host = os.getenv("S_HOST", default="http://localhost:8001")
-
     binaries = [
         b for b in payload["resources"].get("binaries", []) if "resourceId" in b
     ]
@@ -109,6 +105,6 @@ def operation(payload, configs, token):
     print("Process ended")
     response = {"resources": {"binaries": binaries}}
     response = requests.post(
-        f"{s_host}/api/datasource/pipeline/callback/{token}", json=response
-    )  # body json
+        f"{S_HOST}/api/datasource/pipeline/callback/{token}", json=response
+    )
     print("Status:", response.status_code)
