@@ -24,12 +24,10 @@
 
 	<changeSet id="1762966257-1" author="openk9">
 
-		<!-- 1. Drop the existing foreign key constraint -->
 		<dropForeignKeyConstraint
 			baseTableName="route_security"
 			constraintName="fk_route_security_tenant"/>
 
-		<!-- 2. Add the new foreign key constraint, including onDelete="CASCADE" -->
 		<addForeignKeyConstraint
 			baseTableName="route_security"
 			baseColumnNames="tenant_id"
@@ -44,12 +42,10 @@
 
 	<changeSet id="1762966257-2" author="openk9">
 
-		<!-- 1. Drop the existing foreign key constraint -->
 		<dropForeignKeyConstraint
 			baseTableName="api_key"
 			constraintName="fk_api_key_tenant"/>
 
-		<!-- 2. Add the new foreign key constraint, including onDelete="CASCADE" -->
 		<addForeignKeyConstraint
 			baseTableName="api_key"
 			baseColumnNames="tenant_id"

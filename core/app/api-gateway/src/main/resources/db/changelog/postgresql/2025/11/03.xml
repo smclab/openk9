@@ -23,14 +23,17 @@
 	logicalFilePath="2025/11/03.xml">
 
 	<changeSet id="1762192617-1" author="openk9">
+
 		<createIndex tableName="api_key" indexName="idx_api_key_tenant_id_api_key_hash">
 			<column name="tenant_id"/>
 			<column name="api_key_hash"/>
 		</createIndex>
+
 		<createIndex tableName="route_security" indexName="idx_route_security_tenant_id_route">
 			<column name="tenant_id"/>
 			<column name="route"/>
 		</createIndex>
+
 	</changeSet>
 
 </databaseChangeLog>

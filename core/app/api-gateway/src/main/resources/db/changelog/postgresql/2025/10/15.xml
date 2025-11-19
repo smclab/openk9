@@ -23,6 +23,7 @@
 	logicalFilePath="2025/10/15.xml">
 
 	<changeSet id="1760516822-1" author="openk9">
+
 		<createTable tableName="tenant">
 			<column name="id" type="BIGINT">
 				<constraints nullable="false" primaryKeyName="pk_tenant" primaryKey="true"/>
@@ -40,9 +41,11 @@
 			<column name="client_secret" type="VARCHAR(100)">
 			</column>
 		</createTable>
+
 	</changeSet>
 
 	<changeSet id="1760516822-2" author="openk9">
+
 		<createTable tableName="api_key">
 			<column name="id" type="BIGINT">
 				<constraints nullable="false" primaryKeyName="pk_api_key" primaryKey="true"/>
@@ -62,9 +65,11 @@
 				<constraints nullable="false"/>
 			</column>
 		</createTable>
+
 	</changeSet>
 
 	<changeSet id="1760516822-3" author="openk9">
+
 		<createTable tableName="route_security">
 			<column name="id" type="BIGINT">
 				<constraints nullable="false" primaryKeyName="pk_route_security" primaryKey="true"/>
@@ -84,15 +89,18 @@
 				<constraints nullable="false"/>
 			</column>
 		</createTable>
+
 	</changeSet>
 
 	<changeSet id="1760516822-4" author="openk9">
+
 		<createIndex tableName="api_key" indexName="idx_api_key_tenant_id">
 			<column name="tenant_id"/>
 		</createIndex>
 		<createIndex tableName="route_security" indexName="idx_route_security_tenant_id">
 			<column name="tenant_id"/>
 		</createIndex>
+
 	</changeSet>
 
 </databaseChangeLog>
