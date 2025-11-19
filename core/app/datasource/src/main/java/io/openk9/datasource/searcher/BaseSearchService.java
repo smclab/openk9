@@ -35,6 +35,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import io.openk9.auth.tenant.TenantRegistry;
+import io.openk9.datasource.model.Autocomplete_;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex;
@@ -271,6 +272,8 @@ public abstract class BaseSearchService {
 		tenantRoot.fetch(Bucket_.availableLanguages, JoinType.LEFT);
 
 		tenantRoot.fetch(Bucket_.autocorrection, JoinType.LEFT);
+		var autocompleteFetch = tenantRoot.fetch(Bucket_.autocomplete, JoinType.LEFT);
+		autocompleteFetch.fetch(Autocomplete_.fields, JoinType.LEFT);
 
 		Predicate conjunction = criteriaBuilder.conjunction();
 

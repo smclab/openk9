@@ -40,4 +40,11 @@ public class DocTypeFieldUtils {
 
 		return parent != null ? fieldPath(parent) + "." + fieldName : rootPath + fieldName;
 	}
+
+	public static String generateLabel(DocTypeField field) {
+
+		return field.getParentDocTypeField() == null
+			? field.getName()
+			: field.getParentDocTypeField().getName();
+	}
 }
