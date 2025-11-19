@@ -21,6 +21,7 @@ import io.openk9.apigw.security.AuthorizationHeaderFilter;
 import io.openk9.apigw.security.RoutePath;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
@@ -46,6 +47,13 @@ public class WebFilterChainConfiguration {
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver;
 	@Autowired
 	ReactiveAuthorizationManager<AuthorizationContext> authzManager;
+
+	@Bean
+	SecurityWebFilterChain actuatorSecurityFilterChain(ServerHttpSecurity http) {
+		return http.securityMatcher(EndpointRequest.toAnyEndpoint())
+			.authorizeExchange(auth -> auth.anyExchange().permitAll())
+			.build();
+	}
 
 	@Bean
 	SecurityWebFilterChain securityWebFilterChainBrowser(
