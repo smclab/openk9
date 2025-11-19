@@ -17,6 +17,18 @@
 
 package io.openk9.datasource.web.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.Map;
 
-public record EnricherInputDTO(Map<String, Object> payload, Map<String, Object> enrichItemConfig, String replyTo) {}
+@Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class EnricherInputDTO {
+	private Map<String, Object> payload;
+	private Map<String, Object> enrichItemConfig;
+	private String replyTo;
+}
