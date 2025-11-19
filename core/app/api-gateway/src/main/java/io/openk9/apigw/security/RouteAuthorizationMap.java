@@ -17,10 +17,12 @@
 
 package io.openk9.apigw.security;
 
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 public final class RouteAuthorizationMap {
 
@@ -57,9 +59,58 @@ public final class RouteAuthorizationMap {
 	}
 
 	public boolean allows(RoutePath routePath, Authentication authentication) {
-		AuthorizationSchemeToken required = schemeFor(routePath);
-		return required == null
-			   || required == AuthorizationSchemeToken.NO_AUTH
-			   || required.match(authentication.getClass());
+		AuthorizationSchemeToken authSchemeToken = schemeFor(routePath);
+
+//		// allows access when authScheme not defined or explicitly not required
+//		if (authSchemeToken == null
+//			|| authSchemeToken == AuthorizationSchemeToken.NO_AUTH) {
+//
+//			return true;
+//		}
+
+		// disallows when required authentication doesn't match
+		if (!authSchemeToken.match(authentication.getClass())) {
+			return false;
+		}
+
+		// verify that the provided JwtAuthenticationToken contains
+		// the k9-admin role.
+		// TODO: this kind of verification can be improved a lot.
+		// 		Maybe could be delegated directly to datasource.
+		//  	Right now this is a workaround to get the claims from
+		//		a keycloak jwt token, that put user roles in the
+		// 		claim realm_access.roles.
+		if (routePath == RoutePath.DATASOURCE
+			&& authSchemeToken == AuthorizationSchemeToken.OAUTH2) {
+
+			JwtAuthenticationToken jwtAuthToken = (JwtAuthenticationToken)authentication;
+			Map<String, Object> claims = jwtAuthToken.getTokenAttributes();
+
+			// if realmAccess.roles list can't be obtained,
+			// authorization is negated.
+
+			Map<String, Object> realmAccess = null;
+			Object realmAccessObj = claims.get("realm_access");
+			if (realmAccessObj instanceof Map map) {
+				realmAccess = (Map<String, Object>) map;
+			}
+			else {
+				return false;
+			}
+
+			Collection<String> roles = null;
+			Object rolesObj = realmAccess.get("roles");
+			if (rolesObj instanceof Collection collection) {
+				roles = (Collection<String>)rolesObj;
+			}
+			else {
+				return false;
+			}
+
+			return roles.contains("k9-admin");
+
+		}
+
+		return true;
 	}
 }

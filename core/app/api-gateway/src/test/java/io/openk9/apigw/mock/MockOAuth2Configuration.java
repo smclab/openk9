@@ -18,6 +18,7 @@
 package io.openk9.apigw.mock;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -69,7 +70,12 @@ public class MockOAuth2Configuration {
 					return Mono.just(Jwt.withTokenValue(token)
 						.issuer("noop://" + tenantId + ".issuer/")
 						.subject("cobra")
-						.claim("scope", "admin user reader")
+						.claim("scope", "user reader")
+						.claim("realm_access",
+							Map.of(
+								"roles", List.of("k9-admin", "k9-reader")
+							)
+						)
 						.header("typ", "JWT")
 						.header("alg", "HS256")
 						.build());
