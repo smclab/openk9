@@ -16,25 +16,25 @@ Il componente dovrà, in diversi step implementativi:
     - [x] tabella mapping (virtualHost, tenantId)
     - [x] filtro per mapping
     - [ ] gestione tenant di default (h2 single-tenant)
-    - [ ] pub/sub tenant-manager -> api-gateway per aggiornare il mapping
+    - [x] pub/sub tenant-manager -> api-gateway per aggiornare il mapping
 
 3. configurazione security event-driven
 
-    - [ ] il tenant-manager, oltre a mandare un evento della creazione di un nuovo tenant,
+    - [x] il tenant-manager, oltre a mandare un evento della creazione di un nuovo tenant,
       invia anche la configurazione del tenant, che include le configurazioni della security:
         - admin datasource: basic/oauth2
         - searcher/current-bucket: apikey/oauth2
         - rag/current-bucket: apikey/oauth2
-    - [ ] il gateway riceve questi eventi e configura il suo database e i suoi tenant di conseguenza.
+    - [x] il gateway riceve questi eventi e configura il suo database e i suoi tenant di conseguenza.
 
 4. security OAuth2
 
-    - [ ] esporre un endpoint per inviare le configurazioni del client OAuth2
+    - [x] esporre un endpoint per inviare le configurazioni del client OAuth2
     - [x] verificare il JWT token come resource server OAuth2
     - [ ] rimappare i claims del JWT in un oggetto o headers con le informazione dell'utente:
       username, email, roles
     - [x] proteggere le rotte di datasource, searcher, rag-module
-    - [ ] rimuovere il legame con keycloak e sicurezza da servizi
+    - [x] rimuovere il legame con keycloak e sicurezza da servizi
 
 5. security via apiKey
 
