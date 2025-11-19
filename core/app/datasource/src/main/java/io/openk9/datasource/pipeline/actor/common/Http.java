@@ -18,9 +18,11 @@
 package io.openk9.datasource.pipeline.actor.common;
 
 import io.openk9.datasource.actor.PekkoUtils;
+import io.openk9.datasource.enricher.HttpEnricherClient;
+import io.openk9.datasource.model.ResourceUri;
+import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.quarkus.arc.Arc;
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -38,7 +40,7 @@ public class Http {
 	public sealed interface Command {}
 	public record GET(ActorRef<Response> replyTo, String url)
 		implements Command {}
-	public record POST(ActorRef<Response> replyTo, String url, byte[] body)
+	public record POST(ActorRef<Response> replyTo, ResourceUri resourceUri, EnricherInputDTO enricherInputDTO)
 		implements Command {}
 	public sealed interface Response { byte[] body();}
 	public record OK(byte[] body) implements Response {}
@@ -46,14 +48,14 @@ public class Http {
 
 	public static Behavior<Command> create() {
 		return Behaviors.setup(
-			ctx -> initial(Arc.container().select(WebClient.class).get(), ctx));
+			ctx -> initial(Arc.container().select(WebClient.class).get(), Arc.container().select(HttpEnricherClient.class).get(), ctx));
 	}
 
 	public static Behavior<Command> create(WebClient webClient) {
-		return Behaviors.setup(ctx -> initial(webClient, ctx));
+		return Behaviors.setup(ctx -> initial(webClient, Arc.container().select(HttpEnricherClient.class).get(), ctx));
 	}
 
-	private static Behavior<Command> initial(WebClient webClient, ActorContext<Command> ctx) {
+	private static Behavior<Command> initial(WebClient webClient, HttpEnricherClient httpEnricherClient, ActorContext<Command> ctx) {
 
 		Duration httpRequestTimeout = PekkoUtils.getDuration(
 			ctx.getSystem().settings().config(),
@@ -66,20 +68,17 @@ public class Http {
 		return Behaviors
 			.receive(Command.class)
 			.onMessage(GET.class, get -> onGet(webClient, timeout, get, ctx))
-			.onMessage(POST.class, post -> onPost(webClient, timeout, post, ctx))
+			.onMessage(POST.class, post -> onPost(httpEnricherClient, timeout, post, ctx))
 			.build();
 	}
 
 	private static Behavior<Command> onPost(
-		WebClient webClient, long timeout, POST post, 
+		HttpEnricherClient httpEnricherClient, long timeout, POST post,
 		ActorContext<Command> ctx) {
 
 		_handleResponse(
 			ctx, post.replyTo(),
-			webClient
-				.postAbs(post.url())
-				.timeout(timeout)
-				.sendJson(new JsonObject(new String(post.body())))
+			httpEnricherClient.process(post.resourceUri, post.enricherInputDTO)
 		);
 
 		return Behaviors.same();
@@ -89,7 +88,7 @@ public class Http {
 		WebClient webClient, long timeout, GET get, ActorContext<Command> ctx) {
 
 		_handleResponse(
-			ctx, get.replyTo(), 
+			ctx, get.replyTo(),
 			webClient
 				.getAbs(get.url())
 				.timeout(timeout)

@@ -21,19 +21,21 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import groovy.lang.Script;
 import io.openk9.datasource.util.CborSerializable;
+import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.vertx.core.json.JsonObject;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class GroovyActor {
 	public sealed interface Command extends CborSerializable {}
 	public record Execute(
-		JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
-	public record Validate(JsonObject jsonObject, String groovyScript, ActorRef<Response> replyTo) implements Command {}
+		EnricherInputDTO enricherInputDTO, String groovyScript, ActorRef<Response> replyTo) implements Command {}
+	public record Validate(EnricherInputDTO enricherInputDTO, String groovyScript, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response extends CborSerializable {}
 	public record GroovyResponse(byte[] response) implements Response {}
 	public record GroovyError(String error) implements Response {}
@@ -62,11 +64,14 @@ public class GroovyActor {
 
 		String groovyScript = validate.groovyScript;
 
-		JsonObject dataPayload = validate.jsonObject;
+		EnricherInputDTO enricherInputDTO = validate.enricherInputDTO;
 
 		Script parse = groovyShell.parse(groovyScript);
 
-		parse.setBinding(new Binding(Map.copyOf(dataPayload.getMap())));
+		Map<String, Object> data = new HashMap<>();
+		data.put("dataPayload", enricherInputDTO.getPayload());
+		data.put("enrichItemConfig", enricherInputDTO.getEnrichItemConfig());
+		parse.setBinding(new Binding(data));
 
 		try {
 
@@ -93,12 +98,15 @@ public class GroovyActor {
 		GroovyShell groovyShell, Execute execute, ActorContext<Command> ctx) {
 
 		String groovyScript = execute.groovyScript;
-		JsonObject dataPayload = execute.jsonObject;
+		EnricherInputDTO enricherInputDTO = execute.enricherInputDTO;
 		ActorRef<Response> replyTo = execute.replyTo;
 
 		Script parse = groovyShell.parse(groovyScript);
 
-		parse.setBinding(new Binding(Map.copyOf(dataPayload.getMap())));
+		Map<String, Object> data = new HashMap<>();
+		data.put("dataPayload", enricherInputDTO.getPayload());
+		data.put("enrichItemConfig", enricherInputDTO.getEnrichItemConfig());
+		parse.setBinding(new Binding(data));
 
 		try {
 

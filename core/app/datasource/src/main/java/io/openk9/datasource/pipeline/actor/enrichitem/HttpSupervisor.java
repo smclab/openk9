@@ -18,10 +18,10 @@
 package io.openk9.datasource.pipeline.actor.enrichitem;
 
 import java.time.LocalDateTime;
-
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.util.CborSerializable;
-
+import io.openk9.datasource.web.dto.EnricherInputDTO;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.RecipientRef;
@@ -85,8 +85,8 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 				response -> new ResponseWrapper(response, call.replyTo));
 
 		httpProcessor.tell(new HttpProcessor.Start(
-			call.url,
-			call.jsonObject,
+			call.resourceUri,
+			call.enricherInputDTO,
 			call.expiredDate,
 			httpProcessorAdapter
 		));
@@ -99,7 +99,7 @@ public class HttpSupervisor extends AbstractBehavior<HttpSupervisor.Command> {
 
 	public sealed interface Command extends CborSerializable {}
 	public record Call(
-		boolean async, String url, byte[] jsonObject,
+		boolean async, ResourceUri resourceUri, EnricherInputDTO enricherInputDTO,
 		LocalDateTime expiredDate, ActorRef<Response> replyTo) implements Command {}
 	private record ResponseWrapper(HttpProcessor.Response response, ActorRef<Response> replyTo) implements Command {}
 	public sealed interface Response extends CborSerializable {}

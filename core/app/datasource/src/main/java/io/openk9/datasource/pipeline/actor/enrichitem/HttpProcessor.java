@@ -17,9 +17,10 @@
 
 package io.openk9.datasource.pipeline.actor.enrichitem;
 
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.pipeline.actor.common.Http;
 import io.openk9.datasource.util.CborSerializable;
-import io.vertx.core.json.JsonObject;
+import io.openk9.datasource.web.dto.EnricherInputDTO;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.RecipientRef;
@@ -31,7 +32,6 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
@@ -118,7 +118,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	}
 
 	private Behavior<Command> started(
-		String url, byte[] body, ActorRef<Response> replyTo) {
+		ResourceUri resourceUri, EnricherInputDTO enricherInputDTO, ActorRef<Response> replyTo) {
 
 		ActorRef<Http.Response> responseActorRef =
 			getContext().messageAdapter(
@@ -129,7 +129,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 		ActorRef<Http.Command> commandActorRef =
 			getContext().spawnAnonymous(Http.create());
 
-		commandActorRef.tell(new Http.POST(responseActorRef, url, body));
+		commandActorRef.tell(new Http.POST(responseActorRef, resourceUri, enricherInputDTO));
 
 		return newReceiveBuilder()
 			.onMessage(ResponseWrapper.class, this::onResponseWrapper)
@@ -138,31 +138,35 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	private Behavior<Command> onStart(Start start) {
 
-		String url = start.url;
+		ResourceUri resourceUri = start.resourceUri;
 		ActorRef<Response> replyTo = start.replyTo;
 
-		if (!isValidUrl(url)) {
-			replyTo.tell(new Error("Invalid URL: " + url));
+		if (!isValidUrl(resourceUri)) {
+			replyTo.tell(new Error("Invalid URL: " + resourceUri));
 			return Behaviors.stopped();
 		}
 
-		byte[] body = start.body;
+		EnricherInputDTO enricherInputDTO = start.enricherInputDTO;
 
 		if (async) {
 
 			tokenActorRef.tell(new Token.Generate(start.expiredDate, tokenResponseAdapter));
 
-			return waitGenerateToken(url, body, replyTo);
+			return waitGenerateToken(resourceUri, enricherInputDTO, replyTo);
 
 		}
 
-		return started(url, body, replyTo);
+		return started(resourceUri, enricherInputDTO, replyTo);
 
 	}
 
-	private boolean isValidUrl(String url) {
+	private boolean isValidUrl(ResourceUri resourceUri) {
+		var uri = resourceUri.getPath() != null
+			? resourceUri.getBaseUri() + resourceUri.getPath()
+			: resourceUri.getBaseUri();
+
 		try {
-			new URL(url);
+			new URL(uri);
 			return true;
 		}
 		catch (MalformedURLException e) {
@@ -171,7 +175,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 	}
 
 	private Behavior<Command> waitGenerateToken(
-		String url, byte[] bytes, ActorRef<Response> replyTo) {
+		ResourceUri resourceUri, EnricherInputDTO enricherInputDTO, ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(
@@ -183,17 +187,9 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 					if (response instanceof Token.TokenGenerated) {
 						Token.TokenGenerated tokenGenerated =
 							(Token.TokenGenerated) response;
-						JsonObject newJson = new JsonObject();
+						enricherInputDTO.setReplyTo(tokenGenerated.token());
 
-						JsonObject jsonObject = new JsonObject(new String(bytes));
-
-						for (Map.Entry<String, Object> entry : jsonObject) {
-							newJson.put(entry.getKey(), entry.getValue());
-						}
-
-						newJson.put("replyTo", tokenGenerated.token());
-
-						return started(url, newJson.toBuffer().getBytes(), replyTo);
+						return started(resourceUri, enricherInputDTO, replyTo);
 					}
 					else {
 						return Behaviors.same();
@@ -213,7 +209,7 @@ public class HttpProcessor extends AbstractBehavior<HttpProcessor.Command> {
 
 	public sealed interface Command extends CborSerializable {}
 	public record Start(
-		String url, byte[] body, LocalDateTime expiredDate,
+		ResourceUri resourceUri, EnricherInputDTO enricherInputDTO, LocalDateTime expiredDate,
 		ActorRef<Response> replyTo) implements Command {}
 	private record TokenResponseWrapper(Token.Response response) implements Command {}
 	private record ResponseWrapper(Http.Response response, ActorRef<Response> replyTo) implements Command {}
