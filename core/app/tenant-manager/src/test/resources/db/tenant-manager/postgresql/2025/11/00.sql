@@ -15,7 +15,8 @@
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 --
 
--- an initialization sql script, used to verify the execution of the CustomChange ...
+-- an initialization sql script,
+-- used for verifying the execution of the CustomChange BackfillTenantCreatedEventsTask
 
 --liquibase formatted sql
 

@@ -20,12 +20,15 @@ package io.openk9.tenantmanager.init;
 import java.util.List;
 import jakarta.inject.Inject;
 
+import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.service.OutboxEventService;
 import io.openk9.tenantmanager.service.TenantService;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.vertx.core.json.Json;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -36,20 +39,35 @@ public class OutboxBackfillTest {
 	TenantService tenantService;
 	@Inject
 	OutboxEventService outboxEventService;
+	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
+	String baseIssuerUri;
 
 	@Test
-	void should_populate_outbox_table() {
+	void should_backfill_outbox_table() {
 
 		// fetch pre-existing tenants
 		TenantResponseDTO charmender = tenantService.findById(1L).await().indefinitely();
 		TenantResponseDTO pikachu = tenantService.findById(2L).await().indefinitely();
 
-		List<OutboxEvent> outboxUnsent = outboxEventService.unsentEvents().await().indefinitely();
-
-
 		Assertions.assertNotNull(charmender);
 		Assertions.assertNotNull(pikachu);
-		Assertions.assertEquals(2, outboxUnsent.size());
+
+		List<OutboxEvent> backfilledEvents = outboxEventService.lastEvents(2).await().indefinitely();
+
+		Assertions.assertEquals(2, backfilledEvents.size());
+
+		// verify that issuer uris are correct
+		for (OutboxEvent event : backfilledEvents) {
+			var tenantCreatedEvent = Json.decodeValue(
+				event.getPayload(),
+				TenantManagementEvent.TenantCreated.class
+			);
+
+			String tenantId  = tenantCreatedEvent.tenantId();
+			String issuerUri = tenantCreatedEvent.issuerUri();
+
+			Assertions.assertEquals(baseIssuerUri + tenantId, issuerUri);
+		}
 
 	}
 

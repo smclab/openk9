@@ -29,7 +29,6 @@ import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.EncodeException;
 import io.vertx.core.json.Json;
 import io.vertx.mutiny.sqlclient.Pool;
 import io.vertx.mutiny.sqlclient.Row;
@@ -90,70 +89,31 @@ public class OutboxEventService {
 	public Uni<List<OutboxEvent>> unsentEvents() {
 		return pool.preparedQuery(FETCH_UNSENT_SQL)
 			.execute()
-			.map(rows -> {
-				List<OutboxEvent> events = new ArrayList<>();
-				for (Row row : rows) {
-					events.add(OutboxEventService.fromRow(row));
-				}
-				return events;
-			});
+			.map(OutboxEventService::fromRowSet);
 	}
 
 	public Uni<List<OutboxEvent>> window(OffsetDateTime from, OffsetDateTime to) {
 		return pool.preparedQuery(FETCH_WINDOW_SQL)
 			.execute(Tuple.of(from, to))
-			.map(rows -> {
-				List<OutboxEvent> events = new ArrayList<>();
-				for (Row row : rows) {
-					events.add(OutboxEventService.fromRow(row));
-				}
-				return events;
-			});
+			.map(OutboxEventService::fromRowSet);
 	}
 
 	public Uni<List<OutboxEvent>> window(OffsetDateTime from) {
 		return window(from, OffsetDateTime.now());
 	}
 
-	public Uni<List<OutboxEvent>> last(int size) {
+	public Uni<List<OutboxEvent>> lastEvents(int n) {
 		return pool.preparedQuery(FETCH_LAST_SQL)
-			.execute(Tuple.of(size))
-			.map(rows -> {
-				List<OutboxEvent> events = new ArrayList<>();
-				for (Row row : rows) {
-					events.add(OutboxEventService.fromRow(row));
-				}
-				return events;
-			});
+			.execute(Tuple.of(n))
+			.map(OutboxEventService::fromRowSet);
 	}
 
-	public Uni<Integer> deleteAll() {
-		return pool.withTransaction(conn -> conn
-			.preparedQuery(DELETE_FROM_TABLE_SQL)
-			.execute()
-			.map(RowSet::rowCount)
-		);
-	}
-
-	private static Tuple asTuple(TenantManagementEvent event) {
-		try {
-			String payload = Json.encode(event);
-
-			return Tuple.of(
-				idGenerator.nextId(),
-				event.getClass().getSimpleName(),
-				payload,
-				false,
-				OffsetDateTime.now()
-			);
+	private static List<OutboxEvent> fromRowSet(RowSet<Row> rows) {
+		List<OutboxEvent> events = new ArrayList<>();
+		for (Row row : rows) {
+			events.add(OutboxEventService.fromRow(row));
 		}
-		catch (EncodeException e) {
-			if (log.isDebugEnabled()) {
-				log.errorf(e, "Error while serializing event %s as json string.", event);
-			}
-
-			throw new RuntimeException(e);
-		}
+		return events;
 	}
 
 	private static OutboxEvent fromRow(Row row) {

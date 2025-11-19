@@ -69,7 +69,7 @@ public class TenantServiceTest {
 		Assertions.assertNotNull(tenantCreated);
 
 		// get the last event persisted
-		var createEvent = outboxService.last(1).await().indefinitely().getFirst();
+		var createEvent = outboxService.lastEvents(1).await().indefinitely().getFirst();
 
 		// verify that the last event is of the right type
 		var createEventType = createEvent.getEventType();
@@ -92,7 +92,7 @@ public class TenantServiceTest {
 		Assertions.assertNull(deleted);
 
 		// verify that the last event is of the right type
-		OutboxEvent deleteEvent = outboxService.last(1).await().indefinitely().getFirst();
+		OutboxEvent deleteEvent = outboxService.lastEvents(1).await().indefinitely().getFirst();
 		String deleteEventType = deleteEvent.getEventType();
 
 		Assertions.assertEquals("TenantDeleted", deleteEventType);
@@ -186,7 +186,7 @@ public class TenantServiceTest {
 			.await()
 			.indefinitely();
 
-		OutboxEvent deleteEvent = outboxService.last(1)
+		OutboxEvent deleteEvent = outboxService.lastEvents(1)
 			.await()
 			.indefinitely()
 			.getFirst();
