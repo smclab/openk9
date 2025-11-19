@@ -21,11 +21,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
+import io.openk9.event.tenant.Authorization;
+import io.openk9.event.tenant.Route;
 import io.openk9.event.tenant.TenantManagementEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,14 +61,14 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 
 		try {
-			List<OutboxRow> outboxRows = prepareTenantCreatedEvents(connection);
+			List<BackfillEvent> backfillEvents = prepareBackfillEvents(connection);
 
-			if (outboxRows.isEmpty()) {
+			if (backfillEvents.isEmpty()) {
 				// no pre-existing tenants found
 				return;
 			}
 
-			int eventsCreated = outboxBackfill(connection, outboxRows);
+			int eventsCreated = insertBackfillEvents(connection, backfillEvents);
 
 			this.confirmationMessage =
 				String.format("Successfully backfilled %d TenantCreated events.", eventsCreated);
@@ -77,12 +80,41 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 
 	}
 
-	private List<OutboxRow> prepareTenantCreatedEvents(JdbcConnection connection)
+	private List<BackfillEvent> prepareBackfillEvents(JdbcConnection connection)
 		throws DatabaseException, SQLException {
 
-		List<OutboxRow> events = new ArrayList<>();
+		// Get the timestamp until we can search for pre-existent tenants.
+		// The fallback value is current timestamp, it will be updated with
+		// the oldest TenantCreated event creation date.
 
-		String sql = """
+		Timestamp cutOffTimestamp = Timestamp.from(Instant.now());
+
+		String minCreateDateSql = """
+			SELECT MIN(create_date)
+			FROM outbox_event
+			WHERE event_type = ?
+			""";
+
+		try (PreparedStatement stmt = connection.prepareStatement(minCreateDateSql)) {
+			stmt.setString(1, EVENT_TYPE);
+
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next()) {
+					 var oldestEventTimestamp = rs.getTimestamp(1);
+					 if (oldestEventTimestamp != null) {
+						 cutOffTimestamp = oldestEventTimestamp;
+					 }
+				}
+			}
+
+		}
+
+		// Collect all the pre-existent tenants and prepare a list of
+		// object needed to build the backfilled outbox events.
+
+		List<BackfillEvent> events = new ArrayList<>();
+
+		String selectTenantsSql = """
 			SELECT
 				create_date,
 				schema_name,
@@ -91,9 +123,11 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 				client_secret,
 				realm_name
 			FROM tenant
+			WHERE create_date < ?
 			""";
 
-		try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement stmt = connection.prepareStatement(selectTenantsSql)) {
+			stmt.setTimestamp(1, cutOffTimestamp);
 
 			try (ResultSet rs = stmt.executeQuery()) {
 				while (rs.next()) {
@@ -105,19 +139,33 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 					var clientSecret = rs.getString(5);
 					var realmName = rs.getString(6);
 
-					ObjectNode objectNode = OBJECT_MAPPER.createObjectNode();
+					ObjectNode objectNode = OBJ_MAPPER.createObjectNode();
+
 					objectNode.put("tenantId", schemaName);
 					objectNode.put("hostName", virtualHost);
 					objectNode.put("schemaName", schemaName);
-					objectNode.put("issuerUri", baseIssuerUri + realmName);
 					objectNode.put("clientId", clientId);
 					objectNode.put("clientSecret", clientSecret);
 
+					// Assuming the previous behavior,
+					// we can create an issuer uri from a baseIssuerUri,
+					// this would be a keycloak instance holding all
+					// the realms created during tenant provisioning.
+					objectNode.put("issuerUri", baseIssuerUri + realmName);
+
+					// Regarding the authorization check:
+					//  - Datasource APIs were authorized for user with admin roles;
+					//  - Searcher APIs were allowed to everyone.
+					objectNode.set("routeAuthorizationMap", OBJ_MAPPER.createObjectNode()
+						.put(Route.DATASOURCE.name(), Authorization.OAUTH2.name())
+						.put(Route.SEARCHER.name(), Authorization.NO_AUTH.name())
+					);
+
 					var payload = objectNode.toString();
 
-					OutboxRow outboxRow = new OutboxRow(payload, createDate);
+					BackfillEvent backfillEvent = new BackfillEvent(payload, createDate);
 
-					events.add(outboxRow);
+					events.add(backfillEvent);
 				}
 			}
 		}
@@ -126,36 +174,39 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 
 	}
 
-	private int outboxBackfill(JdbcConnection connection, List<OutboxRow> outboxRows)
+	private int insertBackfillEvents(JdbcConnection connection, List<BackfillEvent> backfillEvents)
 		throws DatabaseException, SQLException {
 
 		String insertSql = """
 			INSERT
-			INTO outbox_event (id, event_type, payload, sent, create_date)
+			INTO outbox_event (id, event_type, sent, payload, create_date)
 			VALUES (?, ?, ?, ?, ?)
 			""";
 
 		int batchCount = 0;
 
-		try (PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
+		try (PreparedStatement stmt = connection.prepareStatement(insertSql)) {
 
-			for (OutboxRow outboxRow : outboxRows) {
+			for (BackfillEvent backfillEvent : backfillEvents) {
 
-				var id = ID_GENERATOR.nextId();
+				long id = ID_GENERATOR.nextId();
 
-				insertStmt.setLong(1, id);
-				insertStmt.setString(2, EVENT_TYPE);
-				insertStmt.setString(3, outboxRow.payload());
-				insertStmt.setBoolean(4, false);
-				insertStmt.setTimestamp(5, outboxRow.createDate());
 
-				insertStmt.addBatch();
+				stmt.setLong(1, id);
+				stmt.setString(2, EVENT_TYPE);
+				stmt.setBoolean(3, false);
+
+				// parameters relative to pre-existing tenant
+				stmt.setString(4, backfillEvent.payload());
+				stmt.setTimestamp(5, backfillEvent.createDate());
+
+				stmt.addBatch();
 
 				batchCount++;
 			}
 
 			if (batchCount > 0) {
-				insertStmt.executeBatch();
+				stmt.executeBatch();
 			}
 
 		}
@@ -175,7 +226,8 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 			.getConfigValue("openk9.tenant-manager.keycloak-base-issuer-uri")
 			.getValue();
 
-		Objects.requireNonNull(baseIssuerUri);
+		Objects.requireNonNull(
+			baseIssuerUri, "a baseIssuerUri needs to be specified");
 
 		this.baseIssuerUri = baseIssuerUri;
 	}
@@ -198,8 +250,8 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 		new CompactSnowflakeIdGenerator();
 	private static final String EVENT_TYPE =
 		TenantManagementEvent.TenantCreated.class.getSimpleName();
-	private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+	private static final ObjectMapper OBJ_MAPPER = new ObjectMapper();
 
-	private record OutboxRow(String payload, Timestamp createDate) {}
+	private record BackfillEvent(String payload, Timestamp createDate) {}
 
 }
