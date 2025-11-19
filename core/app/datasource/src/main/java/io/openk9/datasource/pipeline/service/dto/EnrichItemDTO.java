@@ -18,13 +18,14 @@
 package io.openk9.datasource.pipeline.service.dto;
 
 import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.ResourceUri;
 import lombok.Data;
 
 @Data
 public class EnrichItemDTO {
 	private Long id;
 	private String name;
-	private String serviceName;
+	private ResourceUri resourceUri;
 	private String script;
 	private EnrichItem.EnrichItemType type;
 	private String jsonConfig;
