@@ -89,6 +89,7 @@ public class TenantService {
 						rowCount,
 						TenantManagementEvent.TenantCreated.builder()
 							.tenantId(schemaName)
+							.schemaName(schemaName)
 							.hostName(virtualHost)
 							.clientId(clientId)
 							.issuerUri(issuerUri)
