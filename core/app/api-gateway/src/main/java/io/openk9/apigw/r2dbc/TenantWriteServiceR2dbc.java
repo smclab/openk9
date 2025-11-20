@@ -26,6 +26,7 @@ import io.openk9.event.tenant.Authorization;
 import io.openk9.event.tenant.Route;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Mono;
 
@@ -52,6 +53,10 @@ public class TenantWriteServiceR2dbc {
 	private static final String INSERT_TENANT_SQL = """
 		INSERT INTO tenant (id, tenant_id, host_name, issuer_uri, client_id, client_secret)
 		VALUES (:id, :tenantId, :hostName, :issuerUri, :clientId, :clientSecret)
+		""";
+	private static final String INSERT_ROUTE_SECURITY = """
+		INSERT INTO route_security (id, tenant_id, route, authorization_scheme)
+		VALUES (:id, :tenantId, :route, :authorizationScheme)
 		""";
 	private static final String INSERT_API_KEY_SQL = """
 		INSERT INTO api_key (id, tenant_id, api_key_hash, checksum)
@@ -124,6 +129,9 @@ public class TenantWriteServiceR2dbc {
 				"Successfully inserted tenant { id: {}, tenantId: {}, hostName: {} }",
 				id, tenantId, hostName)
 			)
+			.doOnError(DuplicateKeyException.class, e -> log.warn(
+				"Insert discarded because a Tenant with tenantId: {} is already created", tenantId))
+			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
 				"Failed to insert tenant { id: {}, tenantId: {}, hostName: {} }",
 				id, tenantId, hostName, e));
@@ -157,6 +165,10 @@ public class TenantWriteServiceR2dbc {
 		return stmt.then()
 			.doOnSuccess(v -> log.info(
 				"Successfully inserted API key for tenantId: {}", tenantId))
+			.doOnError(DuplicateKeyException.class, e -> log.warn(
+				"Insert discarded because an ApiKey with tenantId: {} and apiKeyHash: {} is already created",
+				tenantId, apiKeyHash))
+			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
 				"Failed to insert API key for tenantId: {}", tenantId, e));
 	}
@@ -182,10 +194,7 @@ public class TenantWriteServiceR2dbc {
 
 		long id = idGenerator.nextId();
 
-		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql("""
-				INSERT INTO route_security (id, tenant_id, route, authorization_scheme)
-				VALUES (:id, :tenantId, :route, :authorizationScheme)
-				""")
+		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(INSERT_ROUTE_SECURITY)
 			.bind("id", id)
 			.bind("tenantId", tenantId)
 			.bind("route", routePath)
@@ -194,6 +203,10 @@ public class TenantWriteServiceR2dbc {
 		return stmt.then()
 			.doOnSuccess(v -> log.info(
 				"Successfully inserted route security for tenantId: {}", tenantId))
+			.doOnError(DuplicateKeyException.class, e -> log.warn(
+				"Insert discarded because RouteSecurity with tenantId: {} and route: {} is already created",
+				tenantId, route))
+			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
 				"Failed to insert route security for tenantId: {}", tenantId, e));
 	}

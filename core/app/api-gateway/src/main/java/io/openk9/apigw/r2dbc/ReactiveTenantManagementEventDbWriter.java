@@ -57,10 +57,12 @@ public class ReactiveTenantManagementEventDbWriter
 
 		Map<Route, Authorization> routeAuthorizationMap = event.routeAuthorizationMap();
 
-		List<Mono<Void>> inserts = new ArrayList<>();
-		for (Map.Entry<Route, Authorization> entry : routeAuthorizationMap.entrySet()) {
-			inserts.add(writeService.insertRouteSecurity(
-				event.tenantId(), entry.getKey(), entry.getValue()));
+		List<Mono<Void>> routeSecurityInserts = new ArrayList<>();
+		if (routeAuthorizationMap != null) {
+			for (Map.Entry<Route, Authorization> entry : routeAuthorizationMap.entrySet()) {
+				routeSecurityInserts.add(writeService.insertRouteSecurity(
+					event.tenantId(), entry.getKey(), entry.getValue()));
+			}
 		}
 
 		return writeService
@@ -70,7 +72,7 @@ public class ReactiveTenantManagementEventDbWriter
 				event.clientId(),
 				event.clientSecret()
 			)
-			.then(Mono.when(inserts))
+			.then(Mono.when(routeSecurityInserts))
 			.doOnSuccess(v -> log.info("Processed tenant created event: {}", event.tenantId()))
 			.doOnError(throwable -> log.error("Failed tenant creation", throwable));
 	}

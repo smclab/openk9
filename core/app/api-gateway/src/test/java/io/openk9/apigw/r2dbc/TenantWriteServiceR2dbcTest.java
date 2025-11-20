@@ -162,4 +162,70 @@ public class TenantWriteServiceR2dbcTest {
 		).expectNextMatches(count -> count == 0);
 	}
 
+	@Test
+	@DisplayName("Insert Tenant should be idempotent")
+	void should_ignore_insert_tenant_with_same_tenantId() {
+		var tenantId = "tenant7";
+
+		StepVerifier.create(
+			service.insertTenant(tenantId, "tenant7.local", "issuer.tenant7.local", null, null)
+				.then(service.insertTenant(tenantId, "tenant7.local", "issuer.tenant7.local", null, null))
+		).verifyComplete();
+
+
+		StepVerifier.create(
+			dbClient.sql("SELECT COUNT(*) FROM tenant where tenant_id=$1")
+				.bind(1, tenantId)
+				.map((row, rowMetadata) -> (int) row.get(0))
+				.first()
+		).expectNextMatches(count -> count == 1);
+
+	}
+
+	@Test
+	@DisplayName("Insert ApiKey should be idempotent")
+	void should_ignore_insert_apiKey_with_same_tenantId_and_hash() {
+		var tenantId = "tenant7";
+		var hash = "hash123";
+		var checksum = "chk";
+
+		StepVerifier.create(
+			service.insertApiKey(tenantId, hash, checksum)
+				.then(service.insertApiKey(tenantId, hash, checksum))
+		).verifyComplete();
+
+
+		StepVerifier.create(
+			dbClient.sql("SELECT COUNT(*) FROM api_key where tenant_id=$1 and api_key_hash=$2")
+				.bind(1, tenantId)
+				.bind(2, hash)
+				.map((row, rowMetadata) -> (int) row.get(0))
+				.first()
+		).expectNextMatches(count -> count == 1);
+
+	}
+
+	@Test
+	@DisplayName("Insert RouteSecurity should be idempotent")
+	void should_ignore_insert_routeSecurity_with_same_tenantId_and_route() {
+		var tenantId = "tenant7";
+		var route = Route.DATASOURCE;
+
+		StepVerifier.create(
+			service.insertRouteSecurity(
+					tenantId, route, Authorization.NO_AUTH)
+				.then(service.insertRouteSecurity(
+					tenantId, route, Authorization.NO_AUTH))
+		).verifyComplete();
+
+
+		StepVerifier.create(
+			dbClient.sql("SELECT COUNT(*) FROM route_security where tenant_id=$1 and route=$2")
+				.bind(1, tenantId)
+				.bind(2, route)
+				.map((row, rowMetadata) -> (int) row.get(0))
+				.first()
+		).expectNextMatches(count -> count == 1);
+
+	}
 }
