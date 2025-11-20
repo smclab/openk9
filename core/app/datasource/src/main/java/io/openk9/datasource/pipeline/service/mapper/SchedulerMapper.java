@@ -55,7 +55,7 @@ public interface SchedulerMapper {
 
 		boolean isEnrich = datasource.getEnrichPipeline() != null;
 		var dataIndex = datasource.getDataIndex();
-		boolean isEmbedding = dataIndex != null && dataIndex.getKnnIndex();
+		boolean isEmbedding = dataIndex != null && dataIndex.getKnnIndex() != null && dataIndex.getKnnIndex();
 
 		if (isEnrich && isEmbedding) {
 			return SchedulingType.ENRICH_EMBEDDING;
