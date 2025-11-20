@@ -44,8 +44,6 @@ import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.SortType;
-import io.openk9.datasource.model.SuggestMode;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.model.util.JWT;
@@ -593,9 +591,16 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						.setField(DocTypeFieldUtils.fieldPath(
 							autocorrection.getAutocorrectionDocTypeField()
 						))
-						.setSort(_sortTypeToGrpcEnum(autocorrection.getSort()))
-						.setSuggestMode(_suggestModeToGrpcEnum(
-							autocorrection.getSuggestMode()))
+						.setSort(
+							_enumToGrpcEnum(
+								autocorrection.getSort(),
+								io.openk9.searcher.grpc.SortType.class)
+						)
+						.setSuggestMode(
+							_enumToGrpcEnum(
+								autocorrection.getSuggestMode(),
+								io.openk9.searcher.grpc.SuggestMode.class)
+						)
 						.setPrefixLength(autocorrection.getPrefixLength())
 						.setMinWordLength(autocorrection.getMinWordLength())
 						.setMaxEdit(autocorrection.getMaxEdit())
@@ -1495,14 +1500,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			.emitter(sink -> client.searchAsync(
 				searchRequest, RequestOptions.DEFAULT,
 				UniActionListener.of(sink)));
-	}
-
-	private io.openk9.searcher.grpc.SortType _sortTypeToGrpcEnum(SortType sort) {
-		return io.openk9.searcher.grpc.SortType.valueOf(sort.name());
-	}
-
-	private io.openk9.searcher.grpc.SuggestMode _suggestModeToGrpcEnum(SuggestMode suggestMode) {
-		return io.openk9.searcher.grpc.SuggestMode.valueOf(suggestMode.name());
 	}
 
 	private List<QueryAnalysisSearchToken> _toAnalysisTokens(
