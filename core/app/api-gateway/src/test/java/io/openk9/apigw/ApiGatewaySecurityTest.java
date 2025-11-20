@@ -574,13 +574,13 @@ class ApiGatewaySecurityTest {
 
         @Test
         @DisplayName("Switching between different tenants quickly")
-        void testTenantSwitching() throws InterruptedException {
+        void testTenantSwitching() {
             List<Tuple2<String, String>> confs = List.of(
 				Tuples.of(ALABASTA_HOST, ALABASTA_VALID_JWT_TOKEN),
 				Tuples.of(SABAODY_HOST, SABAODY_VALID_API_KEY),
 				Tuples.of(LOGUETOWN_HOST, LOGUETOWN_VALID_API_KEY)
 			);
-            
+
             for (Tuple2<String, String> conf : confs) {
                 webTestClient.get()
 					.uri("/api/datasource/test")

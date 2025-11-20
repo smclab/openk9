@@ -28,6 +28,7 @@ public class MockEvents {
 
 	public static List<TenantManagementEvent.TenantCreated> tenantCreatedEvents() {
 		return List.of(
+
 			TenantManagementEvent.TenantCreated.builder()
 				.tenantId("loguetown")
 				.schemaName("loguetown")
@@ -68,7 +69,25 @@ public class MockEvents {
 				.routeAuthorizationMap(Map.of(
 					Route.DATASOURCE, Authorization.API_KEY,
 					Route.SEARCHER, Authorization.API_KEY))
+				.build(),
+
+			TenantManagementEvent.TenantCreated.builder()
+				.tenantId("skypea")
+				.schemaName("skypea")
+				.hostName("skypea.localhost")
+				.issuerUri("http://skypea.localhost:9090/realms/skypea")
+				.clientId("openk9")
+				.routeAuthorizationMap(Map.of())
+				.build(),
+
+			TenantManagementEvent.TenantCreated.builder()
+				.tenantId("waterseven")
+				.schemaName("waterseven")
+				.hostName("waterseven.localhost")
+				.issuerUri("http://waterseven.localhost:9090/realms/waterseven")
+				.clientId("openk9")
 				.build()
+
 		);
 	}
 
