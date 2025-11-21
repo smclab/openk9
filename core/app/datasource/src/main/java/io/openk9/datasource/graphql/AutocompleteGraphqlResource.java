@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2020-present SMC Treviso s.r.l. All rights reserved.
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -22,9 +22,9 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;

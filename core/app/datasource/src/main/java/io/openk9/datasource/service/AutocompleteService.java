@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2020-present SMC Treviso s.r.l. All rights reserved.
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,8 +28,8 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.AutocompleteMapper;
 import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocomplete_;
@@ -106,8 +106,8 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldConnection(
-			Long autocompleteId, String after, String before, Integer first, Integer last,
-			String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		Long autocompleteId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
 		return findJoinConnection(
 			autocompleteId, Autocomplete_.FIELDS, DocTypeField.class,
