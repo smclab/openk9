@@ -21,6 +21,7 @@ import io.openk9.apigw.security.TenantIdResolverFilter;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -31,11 +32,12 @@ public class TenantIdHeaderGlobalPreFilter implements GlobalFilter {
 	@Override
 	public Mono<Void> filter(
 		ServerWebExchange exchange, GatewayFilterChain chain) {
+
 		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+		ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+			.header("X-TENANT-ID", tenantId)
+			.build();
 
-		var headers = exchange.getRequest().getHeaders();
-		headers.add("X-TENANT-ID", tenantId);
-
-		return chain.filter(exchange);
+		return chain.filter(exchange.mutate().request(mutatedRequest).build());
 	}
 }

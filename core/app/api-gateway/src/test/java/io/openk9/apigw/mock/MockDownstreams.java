@@ -24,6 +24,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
+import org.reactivestreams.Publisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,8 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
+import reactor.netty.http.server.HttpServerRequest;
+import reactor.netty.http.server.HttpServerResponse;
 
 /**
  * Provides simple in-process HTTP servers for demonstration purposes.
@@ -45,10 +48,11 @@ public class MockDownstreams {
 
 	private static final ObjectMapper objMapper = new ObjectMapper();
 
-	private static String json(String serviceName, String tenantId) {
-		Map<String, String> mapJson = Map.of(
+	private static String json(String serviceName, String tenantId, SignedJWT signedJWT) {
+		Map<String, Object> mapJson = Map.of(
 			"data", "hello from %s".formatted(serviceName),
-			"tenantId", tenantId != null ? tenantId : "unknown"
+			"tenantId", tenantId != null ? tenantId : "unknown",
+			"jwt", signedJWT
 		);
 
 		try {
@@ -63,35 +67,7 @@ public class MockDownstreams {
 	DisposableServer datasourceServer() {
 
 		return HttpServer.create()
-			.handle((req, res) -> {
-				res.header("Content-Type", "application/json");
-
-				var headers = req.requestHeaders();
-
-				if (headers.contains(HttpHeaders.AUTHORIZATION)) {
-					var authorization = headers.get(HttpHeaders.AUTHORIZATION);
-					if (StringUtils.startsWithIgnoreCase(authorization, "bearer")) {
-						var token = authorization.substring(7);
-
-						SignedJWT jwtToken = null;
-						try {
-							jwtToken = SignedJWT.parse(token);
-							return res.sendString(Mono.just(
-								jwtToken.getJWTClaimsSet().toString(false)));
-						}
-						catch (ParseException e) {
-							// ignore
-						}
-					}
-				}
-
-				var tenantId = headers.get("X-TENANT-ID");
-
-				return res
-					.header("Content-Type", "application/json")
-					.sendString(Mono.just(json("datasource", tenantId)));
-				}
-			)
+			.handle((req, res) -> response(req, res, "datasource"))
 			.bind()
 			.block();
 	}
@@ -105,15 +81,7 @@ public class MockDownstreams {
 	DisposableServer searcherServer() {
 
 		return HttpServer.create()
-			.handle((req, res) -> {
-				var headers = req.requestHeaders();
-				var tenantId = headers.get("X-TENANT-ID");
-
-				return res
-					.header("Content-Type", "application/json")
-					.sendString(Mono.just(json("service", tenantId)));
-				}
-			)
+			.handle((req, res) -> response(req, res, "searcher"))
 			.bind()
 			.block();
 	}
@@ -123,4 +91,36 @@ public class MockDownstreams {
 		return searcherServer.port();
 	}
 
+	private static  Publisher<Void> response(
+		HttpServerRequest req, HttpServerResponse res, String downstream) {
+
+		res.header("Content-Type", "application/json");
+
+		var headers = req.requestHeaders();
+		SignedJWT jwt = null;
+
+		if (!headers.contains(HttpHeaders.AUTHORIZATION)) {
+
+			return res.status(400).send();
+		}
+		String authorization = headers.get(HttpHeaders.AUTHORIZATION);
+
+		if (!StringUtils.startsWithIgnoreCase(authorization, "bearer")) {
+			return res.status(400).send();
+		}
+		String jwtString = authorization.substring(7);
+
+		try {
+			jwt = SignedJWT.parse(jwtString);
+		}
+		catch (ParseException e) {
+			return res.status(400).send();
+		}
+
+		var tenantId = headers.get("X-TENANT-ID");
+
+		return res
+			.header("Content-Type", "application/json")
+			.sendString(Mono.just(json(downstream, tenantId, jwt)));
+	}
 }
