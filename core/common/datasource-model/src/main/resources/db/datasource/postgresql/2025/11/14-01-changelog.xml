@@ -27,9 +27,7 @@
 
 	<changeSet id="1763119031-1" author="openk9">
 		<addNotNullConstraint tableName="enrich_item" columnName="base_uri"/>
-		<addNotNullConstraint tableName="enrich_item" columnName="path"/>
 		<addNotNullConstraint tableName="plugin_driver" columnName="base_uri"/>
-		<addNotNullConstraint tableName="plugin_driver" columnName="path"/>
 	</changeSet>
 
 	<changeSet id="1763119031-2" author="openk9">

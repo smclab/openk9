@@ -27,19 +27,15 @@
 
 	<changeSet id="1762856949-1" author="openk9">
 		<addColumn tableName="enrich_item">
-			<column name="base_uri" type="TEXT">
-			</column>
-			<column name="path" type="TEXT">
-			</column>
+			<column name="base_uri" type="TEXT"/>
+			<column name="path" type="TEXT"/>
 		</addColumn>
 	</changeSet>
 
 	<changeSet id="1762856949-2" author="openk9">
 		<addColumn tableName="plugin_driver">
-			<column name="base_uri" type="TEXT">
-			</column>
-			<column name="path" type="TEXT">
-			</column>
+			<column name="base_uri" type="TEXT"/>
+			<column name="path" type="TEXT"/>
 		</addColumn>
 	</changeSet>
 

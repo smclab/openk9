@@ -25,7 +25,7 @@
 	logicalFilePath="db/datasource/2025/11/13-01-changelog.xml"
 >
 	<changeSet id="1763026323-1" author="openk9">
-		<comment>Popola il campo 'base_uri' dal 'service_name' di 'enrich_item'</comment>
+		<comment>Populate 'base_uri' column from 'service_name' of 'enrich_item'</comment>
 		<sql>
 			UPDATE enrich_item SET base_uri = SPLIT_PART(service_name, '/', 1) || '//'
 			|| SPLIT_PART(service_name, '/', 3);
@@ -34,21 +34,21 @@
 	</changeSet>
 
 	<changeSet id="1763026323-2" author="openk9">
-		<comment>Popola il campo 'path' dal 'base_uri' di 'enrich_item'</comment>
+		<comment>Populate 'path' column from 'base_uri' of 'enrich_item'</comment>
 		<sql>
 			UPDATE enrich_item SET path = '/' || SPLIT_PART(service_name, base_uri || '/', 2);
 		</sql>
 	</changeSet>
 
 	<changeSet id="1763026323-3" author="openk9">
-		<comment>Popola il campo 'base_uri' dalla 'json_config' di 'plugin_driver'</comment>
+		<comment>Populate 'base_uri' column from 'json_config' of 'plugin_driver'</comment>
 		<sql>
 			UPDATE plugin_driver SET base_uri = json_config::json->>'baseUri';
 		</sql>
 	</changeSet>
 
 	<changeSet id="1763026323-4" author="openk9">
-		<comment>Popola il campo 'path' dalla 'json_config' di 'plugin_driver'</comment>
+		<comment>Populate 'base_uri' column from 'json_config' of 'plugin_driver'</comment>
 		<sql>
 			UPDATE plugin_driver SET path = json_config::json->>'path';
 		</sql>
