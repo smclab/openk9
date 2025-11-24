@@ -3,12 +3,12 @@
 	<parent>
 		<artifactId>client</artifactId>
 		<groupId>io.openk9.client</groupId>
-		<version>1.7.6</version>
+		<version>1.7.7-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<name>OpenK9 :: Client :: Common</name>
-	<version>1.7.6</version>
+	<version>1.7.7-SNAPSHOT</version>
 
 	<modelVersion>4.0.0</modelVersion>
 
