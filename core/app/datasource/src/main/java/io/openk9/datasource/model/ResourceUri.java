@@ -36,7 +36,7 @@ public class ResourceUri {
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String baseUri;
 
-	@Column(name = "path", nullable = false)
+	@Column(name = "path")
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	private String path;
 }
