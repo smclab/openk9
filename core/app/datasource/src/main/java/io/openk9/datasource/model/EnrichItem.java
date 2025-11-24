@@ -18,7 +18,12 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import jakarta.persistence.Embedded;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
