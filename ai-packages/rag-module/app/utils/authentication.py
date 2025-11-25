@@ -15,74 +15,73 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""This module provides authentication utilities using Keycloak for token verification.
+"""This module provides JWT token verification.
 
-It includes functions to verify JWT tokens against a Keycloak server, handle unauthorized responses,
-and communicate with gRPC services to retrieve tenant-specific configurations.
+It includes functions to verify JWT tokens expiration, decode JWT tokens and handle unauthorized responses.
 """
 
-import os
-
-from dotenv import load_dotenv
 from fastapi import HTTPException, status
-from keycloak import KeycloakOpenID
-from keycloak.exceptions import KeycloakError, KeycloakInvalidTokenError
+from simple_jwt import jwt
 
-from app.external_services.grpc.grpc_client import get_tenant_manager_configuration
 from app.utils.logger import logger
 
-load_dotenv()
 
-KEYCLOAK_URL = os.getenv("KEYCLOAK_URL")
-
-
-def verify_token(grpc_host: str, virtual_host: str, token: str) -> dict:
-    """Verify the validity of a Keycloak JWT token using tenant-specific configuration.
-
-    Retrieves the tenant's Keycloak configuration (client ID and realm) via gRPC, then
-    verifies the provided token with the Keycloak server. Returns user information if valid.
+def verify_token(token: str) -> bool:
+    """Verify if a JWT token is valid and not expired.
 
     Args:
-        grpc_host (str): Hostname or IP address of the gRPC server for tenant configuration.
-        virtual_host (str): Virtual host identifier for the tenant.
-        token (str): The JWT token to be verified.
+        token (str): The JWT token string to verify.
 
     Returns:
-        dict: User information dictionary from Keycloak if token is valid.
-            Returns an empty dictionary on errors (invalid token, Keycloak issues, etc.).
+        bool: True if token is valid and not expired, False if token is expired.
 
     Example:
-        >>> user_info = verify_token("grpc.example.com", "tenant_vhost", "bearer_token")
-        >>> if not user_info:
-        ...     unauthorized_response()
+        >>> token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        >>> verify_token(token)
+        True
 
-    Note:
-        Depends on environment variable `KEYCLOAK_URL` for Keycloak server URL.
-        All exceptions are caught and logged internally.
+        >>> expired_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        >>> verify_token(expired_token)
+        False
     """
+
     try:
-        keycloak_info = get_tenant_manager_configuration(grpc_host, virtual_host)
+        expired = jwt.is_expired(token)
 
-        keycloak_client_id = keycloak_info["client_id"]
-        keycloak_realm = keycloak_info["realm_name"]
+        if expired:
+            logger.error("JWT token expired!")
+            return False
 
-        keycloak_openid = KeycloakOpenID(
-            server_url=KEYCLOAK_URL,
-            client_id=keycloak_client_id,
-            realm_name=keycloak_realm,
-        )
-
-        userinfo = keycloak_openid.userinfo(token=token)
-        userinfo.update({"realm_name": keycloak_realm})
-        return userinfo
-
-    except KeycloakInvalidTokenError as e:
-        logger.error(f"Invalid token: {e}")
-    except KeycloakError as e:
-        logger.error(f"Keycloak error: {e}")
+        return True
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-    return {}
+        logger.error(f"Error verifying token: {str(e)}")
+        return False
+
+
+def decode_token(token: str) -> dict:
+    """Decode a JWT token and return its payload.
+
+    Args:
+        token (str): The JWT token string to decode.
+
+    Returns:
+        dict: The decoded token payload as a dictionary.
+
+    Raises:
+        Exception: If the token is malformed or cannot be decoded.
+
+    Example:
+        >>> token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        >>> decode_token(token)
+        {'user_id': 123, 'exp': 1672531200, 'iat': 1672527600}
+    """
+
+    try:
+        decoded_token = jwt.decode(token)
+        return decoded_token
+    except Exception as e:
+        logger.error(f"Error decoding token: {str(e)}")
+        unauthorized_response()
 
 
 def unauthorized_response() -> None:
