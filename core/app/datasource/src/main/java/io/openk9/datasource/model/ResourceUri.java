@@ -33,10 +33,10 @@ import org.hibernate.type.SqlTypes;
 public class ResourceUri {
 
 	@Column(name = "base_uri", nullable = false)
-	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@JdbcTypeCode(SqlTypes.LONGVARCHAR)
 	private String baseUri;
 
 	@Column(name = "path")
-	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@JdbcTypeCode(SqlTypes.LONGVARCHAR)
 	private String path;
 }
