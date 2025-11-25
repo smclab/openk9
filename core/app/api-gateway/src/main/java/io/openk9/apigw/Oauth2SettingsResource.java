@@ -83,7 +83,7 @@ public class Oauth2SettingsResource {
 
 		return String.format(
 			"""
-				window.ISSUE_URI ='%s';
+				window.ISSUER_URI ='%s';
 				window.CLIENT_ID ='%s';
 			""",
 			oauth2Settings.issuerUri(),
