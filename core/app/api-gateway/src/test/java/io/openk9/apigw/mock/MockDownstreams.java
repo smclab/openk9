@@ -101,11 +101,14 @@ public class MockDownstreams {
 
 		if (!headers.contains(HttpHeaders.AUTHORIZATION)) {
 
+			log.warn("authorization header does not exist");
 			return res.status(400).send();
 		}
 		String authorization = headers.get(HttpHeaders.AUTHORIZATION);
 
 		if (!StringUtils.startsWithIgnoreCase(authorization, "bearer")) {
+
+			log.warn("authorization is not bearer scheme");
 			return res.status(400).send();
 		}
 		String jwtString = authorization.substring(7);
@@ -114,6 +117,7 @@ public class MockDownstreams {
 			jwt = SignedJWT.parse(jwtString);
 		}
 		catch (ParseException e) {
+			log.warn("error parsing jwtString as json", e);
 			return res.status(400).send();
 		}
 

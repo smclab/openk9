@@ -40,7 +40,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-@Slf4j
 @Component
 public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 
@@ -64,10 +63,9 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 
 		String token = createToken();
 		ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-			.header(HttpHeaders.AUTHORIZATION, token)
+			.header(HttpHeaders.AUTHORIZATION, "bearer " + token)
 			.build();
 
-		log.info("selfSigned jwt: {}", token);
 		return chain.filter(exchange.mutate().request(mutatedRequest).build());
 	}
 
@@ -80,7 +78,7 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
 				.subject("admin")
-				.issuer("https://my-gateway.com")
+				.issuer("openk9-gateway")
 				.claim("upn", "admin")
 				.claim("groups", List.of("k9-admin"))
 				.expirationTime(new Date(Long.MAX_VALUE))
