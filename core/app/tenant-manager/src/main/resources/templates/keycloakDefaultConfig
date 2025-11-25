@@ -157,7 +157,7 @@
 		"useTemplateConfig" : null,
 		"useTemplateScope" : null,
 		"useTemplateMappers" : null,
-		"defaultClientScopes" : [ "profile", "email", "roles" ],
+		"defaultClientScopes" : [ "profile", "email", "roles", "basic" ],
 		"optionalClientScopes" : null,
 		"authorizationSettings" : null,
 		"access" : null,
