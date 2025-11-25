@@ -32,6 +32,11 @@
 		  <artifactId>quarkus-smallrye-openapi</artifactId>
 	  </dependency>
 
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-jwt</artifactId>
+	  </dependency>
+
 	  <!-- // OpenSearch -->
 	  <dependency>
 		  <groupId>io.quarkiverse.opensearch</groupId>

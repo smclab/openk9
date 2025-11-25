@@ -58,6 +58,11 @@
 		  <artifactId>quarkus-reactive-routes</artifactId>
 	  </dependency>
 
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-jwt</artifactId>
+	  </dependency>
+
     <!-- Web API // -->
 
     <!-- // ingest -->
