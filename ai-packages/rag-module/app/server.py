@@ -34,6 +34,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
+    get_tenant_manager_configuration,
 )
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
@@ -64,6 +65,7 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 KEYCLOAK_USER_INFO_KEY = "sub"
+TENANT_ID_KEY = "realm_name"
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
 UPLOAD_DIR.mkdir(exist_ok=True)
 UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
@@ -278,6 +280,7 @@ async def rag_chat(
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
         x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -319,6 +322,12 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -421,6 +430,7 @@ async def rag_chat_tool(
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
         x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -465,6 +475,12 @@ async def rag_chat_tool(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -638,6 +654,7 @@ async def get_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         dict: Dictionary containing:
@@ -661,6 +678,12 @@ async def get_chat(
         - Uses OpenSearch for data storage and retrieval
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
     token = headers.authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -736,6 +759,7 @@ async def delete_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         JSONResponse: Response containing:
@@ -760,6 +784,12 @@ async def delete_chat(
         - Uses OpenSearch's delete_by_query operation
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
     token = headers.authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -841,6 +871,7 @@ async def rename_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         JSONResponse: Response containing:
@@ -865,6 +896,12 @@ async def rename_chat(
         - The chat must contain at least one message to be renamed
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
     token = headers.authorization.replace(TOKEN_PREFIX, "")
 
     user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
@@ -1027,6 +1064,12 @@ async def upload_files(
         }
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
 
     if not headers.authorization:
         unauthorized_response()
