@@ -15,47 +15,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""This module provides JWT token verification.
+"""This module provides JWT token decode.
 
-It includes functions to verify JWT tokens expiration, decode JWT tokens and handle unauthorized responses.
+It includes functions to decode JWT tokens and handle unauthorized responses.
 """
 
 from fastapi import HTTPException, status
 from simple_jwt import jwt
 
 from app.utils.logger import logger
-
-
-def verify_token(token: str) -> bool:
-    """Verify if a JWT token is valid and not expired.
-
-    Args:
-        token (str): The JWT token string to verify.
-
-    Returns:
-        bool: True if token is valid and not expired, False if token is expired.
-
-    Example:
-        >>> token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        >>> verify_token(token)
-        True
-
-        >>> expired_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        >>> verify_token(expired_token)
-        False
-    """
-
-    try:
-        expired = jwt.is_expired(token)
-
-        if expired:
-            logger.error("JWT token expired!")
-            return False
-
-        return True
-    except Exception as e:
-        logger.error(f"Error verifying token: {str(e)}")
-        return False
 
 
 def decode_token(token: str) -> dict:

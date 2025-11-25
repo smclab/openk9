@@ -39,7 +39,7 @@ from app.external_services.grpc.grpc_client import (
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
-from app.utils.authentication import decode_token, unauthorized_response, verify_token
+from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
@@ -210,8 +210,6 @@ async def rag_generate(
         if headers.authorization
         else None
     )
-    if token and not verify_token(token):
-        unauthorized_response()
 
     configurations = get_configurations(
         rag_type=RagType.SIMPLE_GENERATE.value,
@@ -340,11 +338,8 @@ async def rag_chat(
     user_id = None
 
     if token:
-        if verify_token(token):
-            decoded_token = decode_token(token)
-            user_id = decoded_token["claims"][USER_ID_KEY]
-        else:
-            unauthorized_response()
+        decoded_token = decode_token(token)
+        user_id = decoded_token["claims"][USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
@@ -492,11 +487,8 @@ async def rag_chat_tool(
     user_id = None
 
     if token:
-        if verify_token(token):
-            decoded_token = decode_token(token)
-            user_id = decoded_token["claims"][USER_ID_KEY]
-        else:
-            unauthorized_response()
+        decoded_token = decode_token(token)
+        user_id = decoded_token["claims"][USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
@@ -597,7 +589,7 @@ async def get_user_chats(
         else None
     )
 
-    if token and verify_token(token):
+    if token:
         decoded_token = decode_token(token)
         user_id = decoded_token["claims"][USER_ID_KEY]
     else:
@@ -691,7 +683,7 @@ async def get_chat(
         else None
     )
 
-    if token and verify_token(token):
+    if token:
         decoded_token = decode_token(token)
         user_id = decoded_token["claims"][USER_ID_KEY]
     else:
@@ -799,7 +791,7 @@ async def delete_chat(
         else None
     )
 
-    if token and verify_token(token):
+    if token:
         decoded_token = decode_token(token)
         user_id = decoded_token["claims"][USER_ID_KEY]
     else:
@@ -913,7 +905,7 @@ async def rename_chat(
         else None
     )
 
-    if token and verify_token(token):
+    if token:
         decoded_token = decode_token(token)
         user_id = decoded_token["claims"][USER_ID_KEY]
     else:
@@ -1083,7 +1075,7 @@ async def upload_files(
         else None
     )
 
-    if token and verify_token(token):
+    if token:
         decoded_token = decode_token(token)
         user_id = decoded_token["claims"][USER_ID_KEY]
     else:
