@@ -103,7 +103,7 @@ def save_chat_message(
     sources: list,
     chat_id: str,
     user_id: str,
-    realm_name: str,
+    tenant_id: str,
     timestamp: str,
     chat_sequence_number: int,
     retrieve_from_uploaded_documents: bool,
@@ -166,7 +166,7 @@ def save_chat_message(
         "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
     }
 
-    # open_search_index = f"{realm_name}-{user_id}"
+    # open_search_index = f"{tenant_id}-{user_id}"
 
     if not open_search_client.indices.exists(index=user_id):
         index_body = {
@@ -324,7 +324,7 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
 
 def save_uploaded_documents(
-    opensearch_host: str, realm_name: str, documents: list, vector_size: int
+    opensearch_host: str, tenant_id: str, documents: list, vector_size: int
 ):
     """
     Save uploaded documents to OpenSearch index.
@@ -335,8 +335,8 @@ def save_uploaded_documents(
 
     :param opensearch_host: The host URL of the OpenSearch instance (e.g., "http://localhost:9200")
     :type opensearch_host: str
-    :param realm_name: The name of the Keycloak realm for the user (used for index naming and isolation)
-    :type realm_name: str
+    :param tenant_id: The id of the Tenant for the user (used for index naming and isolation)
+    :type tenant_id: str
     :param documents: List of document dictionaries containing text, metadata, and vector embeddings
     :type documents: list
     :param vector_size: The dimensionality of the vector embeddings for proper index mapping
@@ -352,7 +352,7 @@ def save_uploaded_documents(
 
         save_uploaded_documents(
             opensearch_host="http://localhost:9200",
-            realm_name="my-realm",
+            tenant_id="my-realm",
             documents=[
                 {
                     "filename": "doc1.pdf",
@@ -407,7 +407,7 @@ def save_uploaded_documents(
     open_search_client = OpenSearch(
         hosts=[opensearch_host],
     )
-    uploaded_documents_index = f"{realm_name}-uploaded-documents-index"
+    uploaded_documents_index = f"{tenant_id}-uploaded-documents-index"
 
     index_actions = []
     for doc in documents:
