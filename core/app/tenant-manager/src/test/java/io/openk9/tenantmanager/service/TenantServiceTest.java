@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Inject;
 
@@ -42,6 +43,16 @@ public class TenantServiceTest {
 	TenantService tenantService;
 	@InjectSpy(delegate = true)
 	OutboxEventService outboxService;
+
+	@Test
+	@DisplayName("Tenant should be fetched from database.")
+	void should_fetch_existing_tenants() {
+
+		List<TenantResponseDTO> tenants = tenantService.findAllTenant().await().indefinitely();
+		// tenants must be equals or greater than 2 because there are
+		// at least 2 tenants created from liquibase.
+		Assertions.assertTrue(tenants.size() >= 2);
+	}
 
 	@Test
 	@DisplayName("Tenant should be persisted and then deleted, with events persisted too.")

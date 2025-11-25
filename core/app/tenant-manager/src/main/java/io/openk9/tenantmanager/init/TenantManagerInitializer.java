@@ -59,7 +59,8 @@ public class TenantManagerInitializer {
 
 		logger.info("Check for schema upgrades...");
 
-		VertxContextSupport.executeBlocking(() -> tenantService
+		try {
+			VertxContextSupport.subscribeAndAwait(() -> tenantService
 				.findAllSchemaNameAndLiquibaseSchemaName()
 				.flatMap((schemas) -> {
 						LinkedList<Params> schemaParamList = new LinkedList<>();
@@ -82,18 +83,15 @@ public class TenantManagerInitializer {
 						return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
 					}
 				)
-			)
-			.subscribe()
-			.with(
-				nothing -> {
-					logger.info("Tenant Upgrade Finished");
-					eventBus.send(INITIALIZED, INITIALIZED);
-				},
-				throwable -> {
-					logger.error("Tenant Upgrade Failed", throwable);
-					eventBus.send(ERROR, ERROR);
-				}
 			);
+
+			logger.info("Tenant Upgrade Finished");
+			eventBus.send(INITIALIZED, INITIALIZED);
+		}
+		catch (Throwable e) {
+			logger.error("Tenant Upgrade Failed", e);
+			eventBus.send(ERROR, ERROR);
+		}
 
 	}
 
