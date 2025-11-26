@@ -339,7 +339,7 @@ async def rag_chat(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
@@ -488,7 +488,7 @@ async def rag_chat_tool(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
@@ -591,7 +591,7 @@ async def get_user_chats(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
     else:
         unauthorized_response()
 
@@ -685,7 +685,7 @@ async def get_chat(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
     else:
         unauthorized_response()
 
@@ -793,7 +793,7 @@ async def delete_chat(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
     else:
         unauthorized_response()
 
@@ -907,7 +907,7 @@ async def rename_chat(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
     else:
         unauthorized_response()
 
@@ -1077,7 +1077,7 @@ async def upload_files(
 
     if token:
         decoded_token = decode_token(token)
-        user_id = decoded_token["claims"][USER_ID_KEY]
+        user_id = decoded_token[USER_ID_KEY]
     else:
         unauthorized_response()
 

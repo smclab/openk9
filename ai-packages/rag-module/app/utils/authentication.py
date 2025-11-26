@@ -20,8 +20,8 @@
 It includes functions to decode JWT tokens and handle unauthorized responses.
 """
 
+import jwt
 from fastapi import HTTPException, status
-from simple_jwt import jwt
 
 from app.utils.logger import logger
 
@@ -45,7 +45,7 @@ def decode_token(token: str) -> dict:
     """
 
     try:
-        decoded_token = jwt.decode(token)
+        decoded_token = jwt.decode(token, options={"verify_signature": False})
         return decoded_token
     except Exception as e:
         logger.error(f"Error decoding token: {str(e)}")
