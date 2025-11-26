@@ -145,10 +145,27 @@ public class PluginDrivers {
 		return createPluginDriverDTO(schemaName, preset);
 	}
 
+	private static ResourceUri buildResourceUri(PresetConfiguration presetConfiguration, String schemaName) {
+		StringBuilder baseUri  = new StringBuilder(presetConfiguration.resourceUri.getBaseUri());
+
+		if (schemaName != null) {
+			baseUri.append("-");
+			baseUri.append(schemaName);
+		}
+
+		baseUri.append(":");
+		baseUri.append(PORT);
+
+		return ResourceUri.builder()
+			.baseUri(baseUri.toString())
+			.path(presetConfiguration.resourceUri.getPath())
+			.build();
+	}
+
 	private static PluginDriverDTO createPluginDriverDTO(String schemaName, Preset preset) {
 		PresetConfiguration presetConfiguration = CONFIGURATION_MAP.get(preset);
 
-		var resourceUri = presetConfiguration.getResourceUri();
+		var resourceUri = buildResourceUri(presetConfiguration, schemaName);
 
 		return PluginDriverDTO.builder()
 			.name(presetConfiguration.getName())
