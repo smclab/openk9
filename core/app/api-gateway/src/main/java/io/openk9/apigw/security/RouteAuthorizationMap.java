@@ -30,10 +30,11 @@ public final class RouteAuthorizationMap {
 
 	static {
 		for (RoutePath r : RoutePath.values()) {
-			Object ignored = switch (r) {
+			Object obj = switch (r) {
 				case ANY,
 					 DATASOURCE_OAUTH2_SETTINGS,
-					 DATASOURCE_PUBLIC_CONFIGS,
+					 DATASOURCE_CURRENT_BUCKET,
+					 DATASOURCE_TEMPLATES,
 					 SEARCHER -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
 				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
 			};

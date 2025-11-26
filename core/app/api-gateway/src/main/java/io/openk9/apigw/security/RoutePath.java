@@ -57,9 +57,15 @@ public enum RoutePath {
 
 	/**
 	 * Route for the datasource service, that doesn't need to be protected.
-	 * Matches requests under {@code /api/datasource/buckets/**}
+	 * Matches requests under {@code /api/datasource/buckets/current/**}
 	 */
-	DATASOURCE_PUBLIC_CONFIGS("/api/datasource/buckets/current/**"),
+	DATASOURCE_CURRENT_BUCKET("/api/datasource/buckets/current/**"),
+
+	/**
+	 * Route for the datasource service, that doesn't need to be protected.
+	 * Matches requests under {@code /api/datasource/templates/current/**}
+	 */
+	DATASOURCE_TEMPLATES("/api/datasource/templates/**"),
 
 	/**
 	 * Route for the datasource service.

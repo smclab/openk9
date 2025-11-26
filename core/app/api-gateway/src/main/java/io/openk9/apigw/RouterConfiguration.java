@@ -55,15 +55,20 @@ public class RouterConfiguration {
 		var routes = builder.routes();
 
 		for (RoutePath routePath : RoutePath.values()) {
-			Object ignore = switch (routePath) {
+			Object obj = switch (routePath) {
 				case DATASOURCE_OAUTH2_SETTINGS -> routes.route(
 					RoutePath.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
 						.path(RoutePath.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
 						.uri("forward:/oauth2/settings.js")
 				);
-				case DATASOURCE_PUBLIC_CONFIGS -> routes.route(
-					RoutePath.DATASOURCE_PUBLIC_CONFIGS.name(), r -> r
-						.path(RoutePath.DATASOURCE_PUBLIC_CONFIGS.getAntPattern())
+				case DATASOURCE_CURRENT_BUCKET -> routes.route(
+					RoutePath.DATASOURCE_CURRENT_BUCKET.name(), r -> r
+						.path(RoutePath.DATASOURCE_CURRENT_BUCKET.getAntPattern())
+						.uri(datasource)
+				);
+				case DATASOURCE_TEMPLATES -> routes.route(
+					RoutePath.DATASOURCE_TEMPLATES.name(), r -> r
+						.path(RoutePath.DATASOURCE_TEMPLATES.getAntPattern())
 						.uri(datasource)
 				);
 				case DATASOURCE -> routes.route(
