@@ -78,7 +78,7 @@ public class Http {
 
 		_handleResponse(
 			ctx, post.replyTo(),
-			httpEnricherClient.process(post.resourceUri, post.enricherInputDTO)
+			httpEnricherClient.process(post.resourceUri, post.enricherInputDTO, timeout)
 		);
 
 		return Behaviors.same();

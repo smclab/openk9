@@ -35,7 +35,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
 	public static final String PROCESS_PATH = "/process";
 
-	public Uni<HttpResponse<Buffer>> process(ResourceUri resourceUri, EnricherInputDTO enricherInputDTO) {
+	public Uni<HttpResponse<Buffer>> process(ResourceUri resourceUri, EnricherInputDTO enricherInputDTO, long timeout) {
 		String path = resourceUri.getPath();
 		if (path == null || path.isEmpty()) {
 			path = PROCESS_PATH;
@@ -43,6 +43,7 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 
 		return webClient
 			.requestAbs(HttpMethod.POST, resourceUri.getBaseUri() + path)
+			.timeout(timeout)
 			.sendJson(enricherInputDTO)
 			.flatMap(this::validateResponse);
 	}
