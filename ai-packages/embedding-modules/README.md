@@ -16,18 +16,18 @@ It is an essential component of OpenK9’s ingestion pipeline, where documents a
 This module provides:
 
 - Multiple chunking strategies, such as:
-    - Recursive
-    - Sentence-based
-    - Token-based
-    - Semantic
-    - Table-aware
-    - Neural chunking
+    - `Recursive`
+    - `Sentence-based`
+    - `Token-based`
+    - `Semantic`
+    - `Table-aware`
+    - `Neural chunking`
 
 - Provider-agnostic embedding generation, supporting:
-    - OpenAI
-    - Ollama local models
-    - IBM Watsonx
-    - Google Vertex AI
+    - `OpenAI`
+    - `Ollama local models`
+    - `IBM Watsonx`
+    - `Google Vertex AI`
 
 - gRPC interface used internally by OpenK9 services
 
@@ -43,8 +43,21 @@ This module provides:
 ???
 
 ## Configuration
+**ChunkType**:
+| ChunkType           | Key |
+|---------------------|--------|
+| DEFAULT             | 0      |
+| TEXT_SPLITTER       | 1      |
+| TOKEN_TEXT_SPLITTER | 2      |
+| CHARACTER_TEXT_SPLITTER | 3  |
+| SEMANTIC_SPLITTER   | 4      |
+| SENTENCE_SPLITTER   | 5      |
+| RECURSIVE_SPLITTER  | 6      |
+| TABLE_CHUNKER       | 7      |
+| LATE_CHUNKER        | 8      |
+| NEURAL_CHUNKER      | 9      |
 
-???
+
 
 ## License
 
