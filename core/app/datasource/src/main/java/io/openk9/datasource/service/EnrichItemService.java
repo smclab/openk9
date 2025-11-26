@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.enricher.HttpEnricherClient;
+import io.openk9.datasource.client.HttpEnricherClient;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;

@@ -20,6 +20,7 @@ package io.openk9.datasource.plugindriver;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.model.ResourceUri;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;

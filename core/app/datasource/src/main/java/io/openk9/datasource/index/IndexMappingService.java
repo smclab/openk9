@@ -31,7 +31,7 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.processor.util.Field;
 import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;

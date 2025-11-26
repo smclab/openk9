@@ -31,6 +31,7 @@ import io.openk9.datasource.TestUtils;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 
 public class WireMockPluginDriver implements QuarkusTestResourceLifecycleManager {

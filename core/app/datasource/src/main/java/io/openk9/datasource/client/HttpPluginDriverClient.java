@@ -15,10 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.plugindriver;
+package io.openk9.datasource.client;
 
-import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.model.ResourceUri;
+import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import io.openk9.datasource.processor.payload.IngestionPayload;

@@ -15,9 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.enricher;
+package io.openk9.datasource.client;
 
-import io.openk9.datasource.client.HttpDatasourceServiceClient;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.smallrye.mutiny.Uni;

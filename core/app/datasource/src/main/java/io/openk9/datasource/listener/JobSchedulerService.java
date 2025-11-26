@@ -33,7 +33,7 @@ import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.HttpPluginDriverContext;
 import io.openk9.datasource.service.SchedulerService;
 

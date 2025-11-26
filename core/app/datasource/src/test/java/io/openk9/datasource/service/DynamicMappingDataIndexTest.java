@@ -21,7 +21,7 @@ import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.ResourceUri;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;

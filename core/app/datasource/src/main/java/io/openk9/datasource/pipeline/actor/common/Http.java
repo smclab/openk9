@@ -18,7 +18,7 @@
 package io.openk9.datasource.pipeline.actor.common;
 
 import io.openk9.datasource.actor.PekkoUtils;
-import io.openk9.datasource.enricher.HttpEnricherClient;
+import io.openk9.datasource.client.HttpEnricherClient;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
 import io.quarkus.arc.Arc;
