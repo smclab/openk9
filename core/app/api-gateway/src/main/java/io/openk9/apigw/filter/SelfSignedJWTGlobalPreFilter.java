@@ -18,8 +18,12 @@
 package io.openk9.apigw.filter;
 
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
+import jakarta.annotation.PostConstruct;
+
+import io.openk9.apigw.security.TenantIdResolverFilter;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -28,7 +32,6 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -43,14 +46,24 @@ import reactor.core.publisher.Mono;
 @Component
 public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 
-	private static final OctetSequenceKey JWK;
-	private static final JWSSigner SIGNER;
-	static {
+	private static OctetSequenceKey JWK;
+	private static JWSSigner SIGNER;
+	private static final String UNIQUE_PRINCIPAL_NAME = "upn";
+	private static final String GROUPS_PERMISSION_GRANT = "groups";
+	private static final String ISSUER_VALUE = "openk9-gateway";
+	private static final String AUDIENCE_VALUE = "openk9";
+	private static final String TENANT_ID = "tenantId";
+
+	//@Value("${io.openk9.apigw.jwk-path}")
+	//private String jwkGatewayPath;
+
+	@PostConstruct
+	void init() {
 		try {
-			ResourceLoader RESOURCE_LOADER = new DefaultResourceLoader();
-			Resource JWK_RESOURCE = RESOURCE_LOADER.getResource("classpath:gateway.jwk");
-			String JWK_JSON_STRING = JWK_RESOURCE.getContentAsString(StandardCharsets.UTF_8);
-			JWK = OctetSequenceKey.parse(JWK_JSON_STRING);
+			ResourceLoader resourceLoader = new DefaultResourceLoader();
+			Resource jwkResource = resourceLoader.getResource("classpath:gateway.jwk");
+			String jwkJsonString = jwkResource.getContentAsString(StandardCharsets.UTF_8);
+			JWK = OctetSequenceKey.parse(jwkJsonString);
 			SIGNER = new MACSigner(JWK);
 		}
 		catch (Exception e) {
@@ -61,7 +74,54 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		String token = createToken();
+		HttpHeaders headers = exchange.getRequest().getHeaders();
+		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
+
+		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+		String token = null;
+
+		// do nothing and go on
+		if (authorization == null) {
+			return chain.filter(exchange);
+		}
+
+		String authScheme = authorization.substring(0, 7);
+		if (authScheme.equalsIgnoreCase("bearer ")) {
+			String jwtString = authorization.substring(7);
+			try {
+				SignedJWT jwt = SignedJWT.parse(jwtString);
+
+				JWTClaimsSet claims = jwt.getJWTClaimsSet();
+
+				String subject = claims.getSubject();
+				List<String> groups = claims.getStringListClaim("groups");
+				Date issueTime = claims.getIssueTime();
+				Date expirationTime = claims.getExpirationTime();
+
+				token = createToken(
+					subject, groups, issueTime, expirationTime, tenantId);
+			}
+			catch (ParseException e) {
+				throw new RuntimeException(e);
+			}
+
+		}
+		else if (authScheme.equalsIgnoreCase("apikey ")) {
+			String apiKey = authorization.substring(7);
+			token = createToken(
+				"system",
+				List.of("k9-admin"),
+				new Date(),
+				new Date(Long.MAX_VALUE),
+				tenantId
+			);
+		}
+		else {
+			// unknown Authorization scheme
+			// do nothing and go on
+			return chain.filter(exchange);
+		}
+
 		ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
 			.header(HttpHeaders.AUTHORIZATION, "bearer " + token)
 			.build();
@@ -69,7 +129,8 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 		return chain.filter(exchange.mutate().request(mutatedRequest).build());
 	}
 
-	public String createToken() {
+	public String createToken(
+		String sub, List<String> groups, Date iat, Date exp, String tenantId) {
 
 		try {
 			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
@@ -77,12 +138,14 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 				.build();
 
 			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-				.subject("admin")
-				.issuer("openk9-gateway")
-				.claim("upn", "admin")
-				.claim("groups", List.of("k9-admin"))
-				.expirationTime(new Date(Long.MAX_VALUE))
-				.issueTime(new Date())
+				.subject(sub)
+				.claim(UNIQUE_PRINCIPAL_NAME, sub)
+				.issuer(ISSUER_VALUE)
+				.audience(AUDIENCE_VALUE)
+				.claim(GROUPS_PERMISSION_GRANT, groups)
+				.issueTime(iat)
+				.expirationTime(exp)
+				.claim(TENANT_ID, tenantId)
 				.build();
 
 			SignedJWT signedJWT = new SignedJWT(
