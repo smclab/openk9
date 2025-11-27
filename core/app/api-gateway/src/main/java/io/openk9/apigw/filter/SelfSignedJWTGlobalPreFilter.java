@@ -54,9 +54,6 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 	private static final String AUDIENCE_VALUE = "openk9";
 	private static final String TENANT_ID = "tenantId";
 
-	//@Value("${io.openk9.apigw.jwk-path}")
-	//private String jwkGatewayPath;
-
 	@PostConstruct
 	void init() {
 		try {
@@ -78,14 +75,19 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
 
 		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
-		String token = null;
+		String authScheme = "";
+		String token = createToken(
+			"anonymous",
+			List.of(),
+			new Date(),
+			new Date(Long.MAX_VALUE),
+			tenantId
+		);
 
-		// do nothing and go on
-		if (authorization == null) {
-			return chain.filter(exchange);
+		if (authorization != null) {
+			authScheme = authorization.substring(0, 7);
 		}
 
-		String authScheme = authorization.substring(0, 7);
 		if (authScheme.equalsIgnoreCase("bearer ")) {
 			String jwtString = authorization.substring(7);
 			try {
@@ -116,11 +118,6 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 				tenantId
 			);
 		}
-		else {
-			// unknown Authorization scheme
-			// do nothing and go on
-			return chain.filter(exchange);
-		}
 
 		ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
 			.header(HttpHeaders.AUTHORIZATION, "bearer " + token)
@@ -129,7 +126,7 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 		return chain.filter(exchange.mutate().request(mutatedRequest).build());
 	}
 
-	public String createToken(
+	public static String createToken(
 		String sub, List<String> groups, Date iat, Date exp, String tenantId) {
 
 		try {
