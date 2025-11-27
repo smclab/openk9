@@ -68,9 +68,10 @@ class ApiGatewaySecurityTest {
     private int port;
 
 	// credentials
-    private static final String INVALID_JWT_TOKEN = "Bearer invalid.token.here";
-    private static final String INVALID_API_KEY = "ApiKey sk_9a6ef1042afe82404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667";
-	private static final String ALABASTA_VALID_JWT_TOKEN = "Bearer alabasta.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9";
+    private static final String INVALID_JWT_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vdW5rbm93bklzc3Vlci5sb2NhbGhvc3QiLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.azSxTv3dA4-360UsoOwxtHkJaVcGYdM_y8YcJbckNRI";
+	private static final String ALABASTA_VALID_JWT_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vYWxhYmFzdGEubG9jYWxob3N0OjkwMDAiLCJzdWIiOiJhZG1pbiIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6OTk5OTk5OTk5OSwiZ3JvdXBzIjpbIms5LWFkbWluIl0sInRlbmFudElkIjoiYWxhYmFzdGEifQ.MGX1UGrM8j5E0TzTzbK8OLBClmnBjtDdzBtgKK8LGwY";
+
+	private static final String INVALID_API_KEY = "ApiKey sk_9a6ef1042afe82404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667";
 	private static final String ALABASTA_VALID_API_KEY = "ApiKey sk_f5b4136fd3449f94f7d60b11180bd7b63eef073b84e3b34d6098b0c71f3cc930_a9d05b90";
 	private static final String SABAODY_VALID_API_KEY = "ApiKey sk_814f53a1a84a67dbe128ba2b072fbb268bf84b04234ea286aa237262c33f38fa_bd0a32e2";
 	private static final String LOGUETOWN_VALID_API_KEY = "ApiKey sk_e5d2dc591d339bd6dbc26c9e63ee79e1ff97de58f1a17803feba35f2ac3e1efb_4679e9c9";
@@ -80,7 +81,6 @@ class ApiGatewaySecurityTest {
     private static final String SABAODY_HOST = "sabaody.localhost";
     private static final String LOGUETOWN_HOST = "loguetown.localhost";
     private static final String UNKNOWN_HOST = "unknown.localhost";
-
 
     @Nested
     @DisplayName("Alabasta Tenant Security Tests")

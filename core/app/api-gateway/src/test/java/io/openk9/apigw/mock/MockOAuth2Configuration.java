@@ -17,9 +17,14 @@
 
 package io.openk9.apigw.mock;
 
+import java.text.ParseException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
@@ -44,44 +49,40 @@ public class MockOAuth2Configuration {
 
 			ReactiveJwtDecoder jwtDecoder = token -> Mono.defer(() -> {
 
-					if (token == null) {
-						return Mono.error(new JwtValidationException(
-							"empty token",
-							List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
-						));
-					}
-
-					if (token.toLowerCase().contains("invalid")) {
-
-						return Mono.error(new JwtValidationException(
-							"invalid token",
-							List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
-						));
-					}
-
-					if (tenantId == null || !token.contains(tenantId)) {
-						return Mono.error(new JwtValidationException(
-							"the issuer isn't known for this tenant",
-							List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
-						));
-					}
-
-					// todo: create a more dynamic token authentication
-					return Mono.just(Jwt.withTokenValue(token)
-						.issuer("noop://" + tenantId + ".issuer/")
-						.subject("cobra")
-						.claim("scope", "user reader")
-						.claim("realm_access",
-							Map.of(
-								"roles", List.of("k9-admin", "k9-reader")
-							)
-						)
-						.header("typ", "JWT")
-						.header("alg", "HS256")
-						.build());
+				SignedJWT jwt;
+				JWSHeader jwtHeader;
+				JWTClaimsSet jwtClaimSet;
+				String issuer;
+				try {
+					jwt = SignedJWT.parse(token);
+					jwtHeader = jwt.getHeader();
+					jwtClaimSet = jwt.getJWTClaimsSet();
+					issuer = jwtClaimSet.getIssuer();
+				}
+				catch (ParseException e) {
+					return Mono.error(new JwtValidationException(
+						"Token cannot be parsed",
+						List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
+					));
 				}
 
-			);
+				if (tenantId == null || !issuer.contains(tenantId)) {
+
+					return Mono.error(new JwtValidationException(
+						"The token was signed from another issuer",
+						List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
+					));
+				}
+
+				Map<String, Object> headerMap = jwtHeader.toJSONObject();
+				Map<String, Object> claimMap = jwtClaimSet.getClaims();
+				return Mono.just(Jwt.withTokenValue(token)
+					.headers(headers -> headers.putAll(headerMap))
+					.claims(claims -> claims.putAll(claimMap))
+					.issuedAt(Instant.now())
+					.expiresAt(Instant.MAX)
+					.build());
+			});
 
 			return Mono.just(new JwtReactiveAuthenticationManager(jwtDecoder));
 		};

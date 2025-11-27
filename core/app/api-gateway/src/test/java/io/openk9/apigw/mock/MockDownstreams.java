@@ -91,7 +91,7 @@ public class MockDownstreams {
 		return searcherServer.port();
 	}
 
-	private static  Publisher<Void> response(
+	private static Publisher<Void> response(
 		HttpServerRequest req, HttpServerResponse res, String downstream) {
 
 		res.header("Content-Type", "application/json");
