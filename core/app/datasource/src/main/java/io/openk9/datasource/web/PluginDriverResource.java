@@ -47,6 +47,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 
+
 @ApplicationScoped
 @Path("/pluginDrivers")
 public class PluginDriverResource {
