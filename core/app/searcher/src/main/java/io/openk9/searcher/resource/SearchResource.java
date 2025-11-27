@@ -103,6 +103,7 @@ import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.json.PlainJsonSerializable;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.SortOrder;
@@ -319,7 +320,7 @@ public class SearchResource {
 	@Operation(operationId = "autocomplete-query")
 	@Tag(
 		name = "Autocomplete Query API",
-		description = "Transform Openk9 Search Request in equivalent OpenSearch query configured for autocomplete suggestions"
+		description = "Transform Openk9 Autocomplete Request in equivalent OpenSearch query configured for autocomplete suggestions"
 	)
 	@APIResponses(value = {
 		@APIResponse(responseCode = "200", description = "success"),
@@ -359,8 +360,7 @@ public class SearchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
 		return _buildAutocompleteContext(autocompleteRequest)
-			.map(searchRequest ->
-				_validateSearchRequestQuery(searchRequest).toJsonString()
+			.map(PlainJsonSerializable::toJsonString
 			);
 	}
 
@@ -1334,18 +1334,6 @@ public class SearchResource {
 		if (autocorrectionConfig == null) {
 			throw new AutocorrectionException("Autocorrection is disabled.");
 		}
-	}
-
-	private Query _validateSearchRequestQuery(
-		org.opensearch.client.opensearch.core.SearchRequest searchRequest) {
-
-		var query = searchRequest.query();
-
-		if (query == null) {
-			throw new AutocompleteException("Error generating autocomplete OpenSearch query.");
-		}
-
-		return query;
 	}
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
