@@ -27,15 +27,15 @@
 
 	<changeSet id="1762856949-1" author="openk9">
 		<addColumn tableName="enrich_item">
-			<column name="base_uri" type="VARCHAR2"/>
-			<column name="path" type="VARCHAR2"/>
+			<column name="base_uri" type="VARCHAR2(255)"/>
+			<column name="path" type="VARCHAR2(255)"/>
 		</addColumn>
 	</changeSet>
 
 	<changeSet id="1762856949-2" author="openk9">
 		<addColumn tableName="plugin_driver">
-			<column name="base_uri" type="VARCHAR2"/>
-			<column name="path" type="VARCHAR2"/>
+			<column name="base_uri" type="VARCHAR2(255)"/>
+			<column name="path" type="VARCHAR2(255)"/>
 		</addColumn>
 	</changeSet>
 
