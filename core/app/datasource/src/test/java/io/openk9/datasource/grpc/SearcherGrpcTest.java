@@ -634,6 +634,10 @@ public class SearcherGrpcTest {
 		unbindAutocorrectionToBucket(getBucketOne());
 		EntitiesUtils.removeEntity(AUTOCORRECTION_NAME_ONE, autocorrectionService, sessionFactory);
 
+		// Autocomplete
+		unbindAutocompleteToBucket(getBucketOne());
+		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_ONE, autocompleteService, sessionFactory);
+
 		// Bucket
 		enableBucket(getBucketDefault());
 		var bucketOne = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sessionFactory);
@@ -656,6 +660,9 @@ public class SearcherGrpcTest {
 			ragConfigurationService,
 			sessionFactory
 		);
+
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sessionFactory);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_TWO, docTypeFieldService, sessionFactory);
 	}
 
 	private void bindAutocompleteToBucket(Bucket bucket, Autocomplete autocomplete) {
@@ -895,6 +902,12 @@ public class SearcherGrpcTest {
 
 	private void unbindAutocorrectionToBucket(Bucket bucket) {
 		bucketService.unbindAutocorrection(bucket.getId())
+			.await()
+			.indefinitely();
+	}
+
+	private void unbindAutocompleteToBucket(Bucket bucket) {
+		bucketService.unbindAutocomplete(bucket.getId())
 			.await()
 			.indefinitely();
 	}
