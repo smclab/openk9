@@ -35,18 +35,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.openk9.searcher.client.dto.ParserSearchToken;
-import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
-import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
-import io.openk9.searcher.grpc.SortType;
-import io.openk9.searcher.payload.response.AutocorrectionDTO;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.annotations.WithSpan;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -57,8 +45,14 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
+import io.openk9.searcher.client.dto.AutocompleteRequestDTO;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsResponse;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -67,24 +61,23 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
+import io.openk9.searcher.grpc.SortType;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
+import io.openk9.searcher.payload.response.AutocorrectionDTO;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -96,6 +89,14 @@ import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
@@ -104,7 +105,11 @@ import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.SuggestMode;
+import org.opensearch.client.opensearch._types.query_dsl.Operator;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
 import org.opensearch.client.opensearch.core.search.Suggest;
 import org.opensearch.client.opensearch.core.search.SuggestSort;
 import org.opensearch.client.opensearch.core.search.Suggester;
@@ -309,6 +314,54 @@ public class SearchResource {
 			return List.of();
 		}
 		return List.of(pos);
+	}
+
+	@Operation(operationId = "autocomplete-query")
+	@Tag(
+		name = "Autocomplete Query API",
+		description = "Transform Openk9 Search Request in equivalent OpenSearch query configured for autocomplete suggestions"
+	)
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Ingestion successful",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = SearchRequestExamples.AUTOCOMPLETE_QUERY_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = SearchRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "search",
+						value = SearchRequestExamples.AUTOCOMPLETE_SEARCH_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/autocomplete-query")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
+		return _buildAutocompleteContext(autocompleteRequest)
+			.map(searchRequest ->
+				_validateSearchRequestQuery(searchRequest).toJsonString()
+			);
 	}
 
 	@Operation(operationId = "autocorrection-query")
@@ -599,6 +652,52 @@ public class SearchResource {
 	}
 
 	/**
+	 * Creates an OpenSearch autocomplete query based on the provided search request and
+	 * Autocomplete configurations.
+	 *
+	 * <p>This method retrieves autocomplete configurations for the current virtual host,
+	 * validates that autocomplete is enabled, extracts and validates the query text from
+	 * the search token, and creates an OpenSearch autocomplete request based on the
+	 * configurations.
+	 *
+	 * <p>The method operates asynchronously and chains multiple validation and transformation steps.
+	 * If any validation fails or configurations cannot be retrieved, the returned Uni will emit
+	 * the corresponding exception.
+	 *
+	 * @param autocompleteRequest the search request containing the search query and search tokens
+	 * @return a {@link Uni} that emits an OpenSearch SearchRequest configured for autocomplete.
+	 *         The Uni will emit an exception if validation fails or configurations are unavailable
+	 *
+	 * @throws AutocompleteException if autocomplete is disabled or if the query text is invalid
+	 *
+	 * @see AutocompleteRequestDTO
+	 * @see org.opensearch.client.opensearch.core.SearchRequest
+	 * @see AutocompleteConfigurationsRequest
+	 * @see ParserSearchToken
+	 */
+	private Uni<org.opensearch.client.opensearch.core.SearchRequest> _buildAutocompleteContext(
+		AutocompleteRequestDTO autocompleteRequest) {
+
+		var virtualHost = request.authority().toString();
+		var autocompleteConfigurationsRequest = AutocompleteConfigurationsRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build();
+
+		// retrieve Autocomplete configurations
+		return _getAutocompleteConfigurations(autocompleteConfigurationsRequest)
+			.map(autocompleteConfig -> {
+
+				_validateAutocompleteConfig(autocompleteConfig);
+
+				var queryText = autocompleteRequest.getQueryText();
+
+				// Create the autocomplete request for OpenSearch according to the
+				// autocomplete configurations.
+				return _createAutocompleteRequest(autocompleteConfig, queryText);
+			});
+	}
+
+	/**
 	 * Creates an OpenSearch autocorrection query based on the provided search request and
 	 * Autocorrection configurations.
 	 *
@@ -710,6 +809,49 @@ public class SearchResource {
 			.searchedWithCorrectedText(enableSearchWithCorrection)
 			.suggestions(resultSuggestions)
 			.build();
+	}
+
+	/**
+	 * Creates an OpenSearch search request for autocomplete based on the provided configurations.
+	 * Builds a multi-match query with bool_prefix type that searches the query text across
+	 * the configured fields, applying fuzziness, minimum should match, and operator settings.
+	 *
+	 * @param configurations the autocomplete configurations containing fields, and indices.
+	 * @param queryText the text to get the autocorrection for
+	 * @return a configured search request sorted by relevance in descending order
+	 */
+	private org.opensearch.client.opensearch.core.SearchRequest _createAutocompleteRequest(
+			AutocompleteConfigurationsResponse configurations, String queryText) {
+
+		var fieldPathList = configurations.getFieldsList().stream()
+			.map(io.openk9.searcher.grpc.Field::getFieldPath)
+			.toList();
+
+		Query autocompleteMultiMatchQuery = Query.of(
+			q -> q
+				.multiMatch(m -> m
+					.query(queryText)
+					.fields(fieldPathList)
+					.type(TextQueryType.BoolPrefix)
+					.fuzziness(configurations.getFuzziness())
+					.minimumShouldMatch(configurations.getMinimumShouldMatch())
+					.operator(_grpcEnumToOperator(configurations.getOperator()))
+				)
+		);
+
+		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
+			.index(configurations.getIndexNameList())
+			.query(autocompleteMultiMatchQuery)
+			.size(configurations.getFallbackResultSize())
+			.source(src -> src
+				.filter(f -> f
+					.includes(fieldPathList)
+				)
+			)
+			.sort(sort -> sort
+				.score(sc -> sc.order(SortOrder.Desc))
+			)
+		);
 	}
 
 	/**
@@ -896,6 +1038,46 @@ public class SearchResource {
 	}
 
 	/**
+	 * Retrieves autocomplete configurations from the search service.
+	 *
+	 * <p>This method sends a request to datasource to fetch autocomplete configurations.
+	 * If the configurations are not found (404 response), the method returns null. For any other
+	 * failure, the method logs the error and propagates an AutocompleteException.
+	 *
+	 * <p>Error handling:
+	 * <ul>
+	 *   <li>404 Not Found: Returns null</li>
+	 *   <li>Other failures: Logs the error and throws AutocompleteException</li>
+	 * </ul>
+	 *
+	 * @param request the request containing parameters for fetching autocomplete configurations
+	 * @return a {@link Uni} that emits the autocomplete configurations if found, or null if not found.
+	 *         In case of unexpected errors, the Uni will emit an AutocompleteException
+	 *
+	 * @throws AutocompleteException if the retrieval fails for any reason other than 404 Not Found
+	 *
+	 * @see AutocompleteConfigurationsRequest
+	 * @see AutocompleteConfigurationsResponse
+	 * @see AutocompleteException
+	 */
+	private Uni<AutocompleteConfigurationsResponse> _getAutocompleteConfigurations(
+			AutocompleteConfigurationsRequest request) {
+
+		return searcherClient.getAutocompleteConfigurations(request)
+			.onFailure(this::_isNotFound)
+			.recoverWithNull()
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Retrieve autocomplete configurations failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocompleteException(
+						"Retrieve autocomplete configurations failed", throwable
+					)
+				);
+			});
+	}
+
+	/**
 	 * Retrieves autocorrection configurations from the search service.
 	 *
 	 * <p>This method sends a request to datasource to fetch autocorrection configurations.
@@ -1000,6 +1182,20 @@ public class SearchResource {
 	}
 
 	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.Operator} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch._types.query_dsl.Operator} enum.
+	 *
+	 * @param operator the gRPC Operator to convert
+	 * @return the corresponding Operator value (Or for OR/UNRECOGNIZED, And for AND)
+	 */
+	private Operator _grpcEnumToOperator(io.openk9.searcher.grpc.Operator operator) {
+		return switch (operator) {
+			case OR, UNRECOGNIZED -> Operator.Or;
+			case AND -> Operator.And;
+		};
+	}
+
+	/**
 	 * Converts a gRPC {@link io.openk9.searcher.grpc.SuggestMode} enum
 	 * to the corresponding {@link org.opensearch.client.opensearch._types.SuggestMode} enum.
 	 *
@@ -1099,6 +1295,27 @@ public class SearchResource {
 	}
 
 	/**
+	 * Validates that the autocomplete configuration is not null.
+	 *
+	 * <p>This method ensures that autocomplete is enabled by verifying the presence
+	 * of a valid autocomplete configuration. If the configuration is null, it indicates
+	 * that autocomplete is disabled.
+	 *
+	 * @param autocompleteConfig the autocomplete configuration to validate
+	 * @throws AutocompleteException if the configuration is null, indicating autocomplete is disabled
+	 *
+	 * @see AutocompleteConfigurationsResponse
+	 * @see AutocompleteException
+	 */
+	private void _validateAutocompleteConfig(
+		AutocompleteConfigurationsResponse autocompleteConfig) {
+
+		if (autocompleteConfig == null) {
+			throw new AutocompleteException("Autocomplete is disabled.");
+		}
+	}
+
+	/**
 	 * Validates that the autocorrection configuration is not null.
 	 *
 	 * <p>This method ensures that autocorrection is enabled by verifying the presence
@@ -1111,10 +1328,24 @@ public class SearchResource {
 	 * @see AutocorrectionConfigurationsResponse
 	 * @see AutocorrectionException
 	 */
-	private void _validateAutocorrectionConfig(AutocorrectionConfigurationsResponse autocorrectionConfig) {
+	private void _validateAutocorrectionConfig(
+		AutocorrectionConfigurationsResponse autocorrectionConfig) {
+
 		if (autocorrectionConfig == null) {
 			throw new AutocorrectionException("Autocorrection is disabled.");
 		}
+	}
+
+	private Query _validateSearchRequestQuery(
+		org.opensearch.client.opensearch.core.SearchRequest searchRequest) {
+
+		var query = searchRequest.query();
+
+		if (query == null) {
+			throw new AutocompleteException("Error generating autocomplete OpenSearch query.");
+		}
+
+		return query;
 	}
 
 	private jakarta.ws.rs.core.Response getErrorResponse(Throwable throwable) {
