@@ -148,7 +148,7 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		JWTClaimsSet claims, Set<String> aggregateRoles)
 		throws ParseException {
 
-		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim("realmAccess");
+		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim("realm_access");
 		if (realmAccessClaim == null) {
 			return;
 		}
