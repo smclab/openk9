@@ -103,7 +103,6 @@ import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
-import org.opensearch.client.json.PlainJsonSerializable;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.SortOrder;
@@ -359,9 +358,19 @@ public class SearchResource {
 	@Path("/autocomplete-query")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
-		return _buildAutocompleteContext(autocompleteRequest)
-			.map(PlainJsonSerializable::toJsonString
-			);
+		// retrieve Autocomplete configurations
+		return _getAutocompleteConfigurations(
+			AutocompleteConfigurationsRequest.newBuilder()
+				.setVirtualHost(request.authority().toString())
+				.build()
+		)
+		.map(autocompleteConfig -> {
+
+			_validateAutocompleteConfig(autocompleteConfig);
+
+			return _createAutocompleteRequest(
+				autocompleteConfig, autocompleteRequest.getQueryText()).toJsonString();
+		});
 	}
 
 	@Operation(operationId = "autocorrection-query")
@@ -649,52 +658,6 @@ public class SearchResource {
 			.suggestionsQueryParser(queryParserRequest)
 			.map(internalSearcherMapper::toSuggestionsResponse);
 
-	}
-
-	/**
-	 * Creates an OpenSearch autocomplete query based on the provided search request and
-	 * Autocomplete configurations.
-	 *
-	 * <p>This method retrieves autocomplete configurations for the current virtual host,
-	 * validates that autocomplete is enabled, extracts and validates the query text from
-	 * the search token, and creates an OpenSearch autocomplete request based on the
-	 * configurations.
-	 *
-	 * <p>The method operates asynchronously and chains multiple validation and transformation steps.
-	 * If any validation fails or configurations cannot be retrieved, the returned Uni will emit
-	 * the corresponding exception.
-	 *
-	 * @param autocompleteRequest the search request containing the search query and search tokens
-	 * @return a {@link Uni} that emits an OpenSearch SearchRequest configured for autocomplete.
-	 *         The Uni will emit an exception if validation fails or configurations are unavailable
-	 *
-	 * @throws AutocompleteException if autocomplete is disabled or if the query text is invalid
-	 *
-	 * @see AutocompleteRequestDTO
-	 * @see org.opensearch.client.opensearch.core.SearchRequest
-	 * @see AutocompleteConfigurationsRequest
-	 * @see ParserSearchToken
-	 */
-	private Uni<org.opensearch.client.opensearch.core.SearchRequest> _buildAutocompleteContext(
-		AutocompleteRequestDTO autocompleteRequest) {
-
-		var virtualHost = request.authority().toString();
-		var autocompleteConfigurationsRequest = AutocompleteConfigurationsRequest.newBuilder()
-			.setVirtualHost(virtualHost)
-			.build();
-
-		// retrieve Autocomplete configurations
-		return _getAutocompleteConfigurations(autocompleteConfigurationsRequest)
-			.map(autocompleteConfig -> {
-
-				_validateAutocompleteConfig(autocompleteConfig);
-
-				var queryText = autocompleteRequest.getQueryText();
-
-				// Create the autocomplete request for OpenSearch according to the
-				// autocomplete configurations.
-				return _createAutocompleteRequest(autocompleteConfig, queryText);
-			});
 	}
 
 	/**
