@@ -44,7 +44,13 @@
 	<changeSet id="1763026323-3" author="openk9">
 		<comment>Populate 'base_uri' column from 'json_config' of 'plugin_driver'</comment>
 		<sql>
-			UPDATE plugin_driver SET base_uri = JSON_VALUE(json_config, '$.baseUri');
+			UPDATE plugin_driver SET base_uri =
+			CASE
+			    WHEN JSON_VALUE(json_config, '$.secure') = 'true'
+			    THEN 'https://' || JSON_VALUE(json_config, '$.baseUri')
+
+			    ELSE 'http://' || JSON_VALUE(json_config, '$.baseUri')
+			END;
 		</sql>
 	</changeSet>
 
