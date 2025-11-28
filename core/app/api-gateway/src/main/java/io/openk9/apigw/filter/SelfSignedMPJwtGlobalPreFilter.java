@@ -19,8 +19,13 @@ package io.openk9.apigw.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import jakarta.annotation.PostConstruct;
 
 import io.openk9.apigw.security.TenantIdResolverFilter;
@@ -32,31 +37,44 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
-public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
+public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 
+	private static final long ONE_DAY_MILLIS = 86_400_000L;
 	private static OctetSequenceKey JWK;
 	private static JWSSigner SIGNER;
+
+	// MP-JWT claims to be added in the self-signed JWT.
 	private static final String UNIQUE_PRINCIPAL_NAME = "upn";
 	private static final String GROUPS_PERMISSION_GRANT = "groups";
+
+	// MP-JWT Constant JWT claim values,
+	// because they are related to the OpenK9 Api Gateway.
 	private static final String ISSUER_VALUE = "openk9-gateway";
 	private static final String AUDIENCE_VALUE = "openk9";
+
+	// TenantId claim, useful to handle multi-tenancy in downstream services.
 	private static final String TENANT_ID = "tenantId";
 
 	@PostConstruct
 	void init() {
 		try {
+			// Retrieves the JWK used to sign the JWT.
+			// This key is shared across all services as a static resource in
+			// the classpath, we don't need store it as a secret,
+			// because we are routing request in a trusted zone.
 			ResourceLoader resourceLoader = new DefaultResourceLoader();
 			Resource jwkResource = resourceLoader.getResource("classpath:gateway.jwk");
 			String jwkJsonString = jwkResource.getContentAsString(StandardCharsets.UTF_8);
@@ -76,57 +94,86 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 
 		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
 		String authScheme = "";
-		String token = createToken(
-			"anonymous",
-			List.of(),
-			new Date(),
-			new Date(Long.MAX_VALUE),
-			tenantId
-		);
 
-		if (authorization != null) {
+		String subject = "anonymous";
+		List<String> groups = List.of();
+		Date issueTime = new Date();
+		Date expirationTime = new Date(System.currentTimeMillis() + ONE_DAY_MILLIS);
+
+		if (authorization != null && authorization.length() >= 7) {
 			authScheme = authorization.substring(0, 7);
 		}
 
 		if (authScheme.equalsIgnoreCase("bearer ")) {
 			String jwtString = authorization.substring(7);
+
 			try {
 				SignedJWT jwt = SignedJWT.parse(jwtString);
-
 				JWTClaimsSet claims = jwt.getJWTClaimsSet();
 
-				String subject = claims.getSubject();
-				List<String> groups = claims.getStringListClaim("groups");
-				Date issueTime = claims.getIssueTime();
-				Date expirationTime = claims.getExpirationTime();
+				subject = claims.getSubject();
+				issueTime = claims.getIssueTime();
+				expirationTime = claims.getExpirationTime();
 
-				token = createToken(
-					subject, groups, issueTime, expirationTime, tenantId);
+				// Aggregate groups from known claims used for listing roles.
+				// In MP-JWT specification, "groups" is the claim suggested for
+				// grouping permission grants.
+				Set<String> aggregateGroups = new HashSet<>();
+				addGroupsFromGroupsClaim(claims, aggregateGroups);
+				addGroupsFromRealmAccessRolesClaim(claims, aggregateGroups);
+				groups = new ArrayList<>(aggregateGroups);
 			}
 			catch (ParseException e) {
-				throw new RuntimeException(e);
+				log.warn("A error occurred while parsing jwt. Fallback with anonymous token", e);
 			}
 
 		}
 		else if (authScheme.equalsIgnoreCase("apikey ")) {
-			String apiKey = authorization.substring(7);
-			token = createToken(
-				"system",
-				List.of("k9-admin"),
-				new Date(),
-				new Date(Long.MAX_VALUE),
-				tenantId
-			);
+			// TODO: API Key mapping needs to be implemented.
+			// right now we can create a new jwt,
+			// defining a subject related to API Keys.
+			subject = "apiKeyUser";
 		}
 
-		ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-			.header(HttpHeaders.AUTHORIZATION, "bearer " + token)
-			.build();
+		String serializedToken = createInternalToken(
+			subject, groups, issueTime, expirationTime, tenantId);
 
-		return chain.filter(exchange.mutate().request(mutatedRequest).build());
+		return chain.filter(exchange.mutate()
+			.request(request -> request
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + serializedToken))
+			.build());
 	}
 
-	public static String createToken(
+	private static void addGroupsFromRealmAccessRolesClaim(
+		JWTClaimsSet claims, Set<String> aggregateRoles)
+		throws ParseException {
+
+		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim("realmAccess");
+		if (realmAccessClaim == null) {
+			return;
+		}
+
+		Object rolesObj = realmAccessClaim.get("roles");
+		if (rolesObj instanceof List<?> list) {
+			for (Object item : list) {
+				if (item instanceof String role) {
+					aggregateRoles.add(role);
+				}
+			}
+		}
+	}
+
+	private static void addGroupsFromGroupsClaim(
+		JWTClaimsSet claims, Set<String> aggregateRoles)
+		throws ParseException {
+
+		List<String> groupsClaim = claims.getStringListClaim("groups");
+		if (groupsClaim != null) {
+			aggregateRoles.addAll(groupsClaim);
+		}
+	}
+
+	public static String createInternalToken(
 		String sub, List<String> groups, Date iat, Date exp, String tenantId) {
 
 		try {
@@ -143,6 +190,7 @@ public class SelfSignedJWTGlobalPreFilter implements GlobalFilter {
 				.issueTime(iat)
 				.expirationTime(exp)
 				.claim(TENANT_ID, tenantId)
+				.jwtID(UUID.randomUUID().toString())
 				.build();
 
 			SignedJWT signedJWT = new SignedJWT(
