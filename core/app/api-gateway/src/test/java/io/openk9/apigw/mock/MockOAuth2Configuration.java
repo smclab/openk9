@@ -18,11 +18,11 @@
 package io.openk9.apigw.mock;
 
 import java.text.ParseException;
-import java.time.Instant;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +32,7 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtValidationException;
+import org.springframework.security.oauth2.jwt.MappedJwtClaimSetConverter;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtReactiveAuthenticationManager;
 import org.springframework.web.server.ServerWebExchange;
@@ -44,49 +45,80 @@ public class MockOAuth2Configuration {
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver() {
 
 		return exchange -> {
-
-			String tenantId = exchange.getAttribute("tenantId");
-
-			ReactiveJwtDecoder jwtDecoder = token -> Mono.defer(() -> {
-
-				SignedJWT jwt;
-				JWSHeader jwtHeader;
-				JWTClaimsSet jwtClaimSet;
-				String issuer;
-				try {
-					jwt = SignedJWT.parse(token);
-					jwtHeader = jwt.getHeader();
-					jwtClaimSet = jwt.getJWTClaimsSet();
-					issuer = jwtClaimSet.getIssuer();
-				}
-				catch (ParseException e) {
-					return Mono.error(new JwtValidationException(
-						"Token cannot be parsed",
-						List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
-					));
-				}
-
-				if (tenantId == null || !issuer.contains(tenantId)) {
-
-					return Mono.error(new JwtValidationException(
-						"The token was signed from another issuer",
-						List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
-					));
-				}
-
-				Map<String, Object> headerMap = jwtHeader.toJSONObject();
-				Map<String, Object> claimMap = jwtClaimSet.getClaims();
-				return Mono.just(Jwt.withTokenValue(token)
-					.headers(headers -> headers.putAll(headerMap))
-					.claims(claims -> claims.putAll(claimMap))
-					.issuedAt(Instant.now())
-					.expiresAt(Instant.MAX)
-					.build());
-			});
+			ReactiveJwtDecoder jwtDecoder = token -> processNimbusJwt(exchange, token)
+				.map(MockOAuth2Configuration::convertToSpringJwt);
 
 			return Mono.just(new JwtReactiveAuthenticationManager(jwtDecoder));
 		};
-
 	}
 
+	// Parses the jwt token, applies a mock verification, returns jwt parts
+	private static Mono<JwtParts> processNimbusJwt(
+		ServerWebExchange exchange, String token) {
+
+		return Mono.defer(() -> {
+
+			// Jwt parsing
+			SignedJWT jwt;
+			JWTClaimsSet jwtClaimSet;
+			try {
+				jwt = SignedJWT.parse(token);
+
+				// verify that there is a valid JWTClaimSet
+				jwtClaimSet = jwt.getJWTClaimsSet();
+				if (jwtClaimSet == null) {
+					return Mono.error(new JwtValidationException(
+						"JWT Claims are not available",
+						List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
+					));
+				}
+			}
+			catch (ParseException e) {
+				return Mono.error(new JwtValidationException(
+					"Token cannot be parsed",
+					List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
+				));
+			}
+
+			// Mock jwt verification!
+			// This just verifies that the issuer contains,
+			// the tenantId in its name.
+			String tenantId = exchange.getAttribute("tenantId");
+			String issuer = jwtClaimSet.getIssuer();
+			if (tenantId == null || !issuer.contains(tenantId)) {
+				return Mono.error(new JwtValidationException(
+					"The tokenValue was signed from another issuer",
+					List.of(new OAuth2Error(OAuth2ErrorCodes.INVALID_TOKEN))
+				));
+			}
+
+			// return nimbus jwt parts as maps
+			var jwsHeader = jwt.getHeader();
+			Map<String, Object> headerMap = jwsHeader != null
+				? new LinkedHashMap<>(jwsHeader.toJSONObject())
+				: Map.of();
+			var claimMap = jwtClaimSet.getClaims();
+
+			return Mono.just(new JwtParts(token, headerMap, claimMap));
+		});
+	}
+
+	// This function converts jwt parts, obtained from the processed SignedJWT,
+	// into a Spring Security OAuth2 JWT.
+	private static Jwt convertToSpringJwt(JwtParts jwtParts) {
+
+		var headerMap = jwtParts.headerMap();
+		var claimMap = NIMBUS_CLAIM_SET_CONVERTER.convert(jwtParts.claimMap());
+		return Jwt.withTokenValue(jwtParts.tokenValue())
+			.headers(headers -> headers.putAll(headerMap))
+			.claims(claims -> claims.putAll(claimMap))
+			.build();
+	}
+
+	private record JwtParts(
+		String tokenValue, Map<String, Object> headerMap,
+		Map<String, Object> claimMap) {}
+
+	private static final MappedJwtClaimSetConverter NIMBUS_CLAIM_SET_CONVERTER =
+		MappedJwtClaimSetConverter.withDefaults(Collections.emptyMap());
 }
