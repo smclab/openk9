@@ -28,7 +28,6 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.ReactiveAuthenticationManagerResolver;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtAudienceValidator;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
@@ -62,8 +61,14 @@ public class TenantJwtAuthenticationManagerResolver
 		NimbusReactiveJwtDecoder jwtDecoder =
 			ReactiveJwtDecoders.fromIssuerLocation(settings.issuerUri());
 
-		String clientId = settings.clientId();
+		// TODO: adds azp or aud claim validator,
+		//  in this way we verify that the token was issued for this
+		// 	specific clientId.
 
+		return new JwtReactiveAuthenticationManager(jwtDecoder);
+	}
+
+	private static void addsAzpClaimValidator(String clientId, NimbusReactiveJwtDecoder jwtDecoder) {
 		JwtClaimValidator<String> jwtAzpValidator = new JwtClaimValidator<>(
 			"azp",
 			(claimValue) -> claimValue != null && claimValue.equals(clientId)
@@ -73,8 +78,6 @@ public class TenantJwtAuthenticationManagerResolver
 			JwtValidators.createDefaultWithValidators(jwtAzpValidator);
 
 		jwtDecoder.setJwtValidator(validator);
-
-		return new JwtReactiveAuthenticationManager(jwtDecoder);
 	}
 
 	private static ReactiveAuthenticationManager denied() {
