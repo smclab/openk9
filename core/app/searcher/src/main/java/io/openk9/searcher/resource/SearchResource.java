@@ -360,8 +360,7 @@ public class SearchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
 		return _buildAutocompleteContext(autocompleteRequest)
-			.map(PlainJsonSerializable::toJsonString
-			);
+			.map(PlainJsonSerializable::toJsonString);
 	}
 
 	@Operation(operationId = "autocorrection-query")
@@ -1248,6 +1247,17 @@ public class SearchResource {
 	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
 	 * Otherwise, logs only the message at WARN level.
 	 *
+	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
+	 */
+	private void _logMessage(Throwable throwable) {
+		_logMessage(throwable.getMessage(), throwable);
+	}
+
+	/**
+	 * Logs a message with optional throwable information based on debug level.
+	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
+	 * Otherwise, logs only the message at WARN level.
+	 *
 	 * @param message the message to log
 	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
 	 */
@@ -1311,7 +1321,9 @@ public class SearchResource {
 		AutocompleteConfigurationsResponse autocompleteConfig) {
 
 		if (autocompleteConfig == null) {
-			throw new AutocompleteException("Autocomplete is disabled.");
+			var autocompleteException = new AutocompleteException("Autocomplete is disabled.");
+			_logMessage(autocompleteException);
+			throw autocompleteException;
 		}
 	}
 
