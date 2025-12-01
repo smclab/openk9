@@ -20,38 +20,22 @@ package io.openk9.apigw.messaging;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventConsumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
-// todo using rabbit stream
-public class RabbitAdapterConfiguration {
+public class RabbitAdapter {
 
 	private final TenantManagementEventConsumer consumer;
 
-	@Bean
-	public Queue tenantEventQueue() {
-		return QueueBuilder
-			.durable(TenantManagementEvent.TOPIC)
-			.stream()
-			.build();
-	}
-
-	@Bean
-	public MessageConverter messageConverter(ObjectMapper objectMapper) {
-		return new TenantManagementEventMessageConverter(objectMapper);
-	}
-
-	@RabbitListener(queues = TenantManagementEvent.TOPIC)
+	@RabbitListener(
+		queues = TenantManagementEvent.TOPIC,
+		containerFactory = "replayContainerFactory"
+	)
 	public void adapter(TenantManagementEvent payload) {
 		if (log.isDebugEnabled()) {
 			log.debug("Processing: {}", payload);
