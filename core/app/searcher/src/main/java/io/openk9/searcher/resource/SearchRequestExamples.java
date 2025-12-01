@@ -306,8 +306,20 @@ public class SearchRequestExamples {
                  ],
                  "afterKey": "eyJuZXdzLnRvcGljLmkxOG4uaXRfSVQua2V5d29yZCI6IiBzdGlsZSBlIGJlbGxlenphIn0="
              }""";
-    public static final String AUTOCOMPLETE_QUERY_RESPONSE =
-        """
+	public static final String AUTOCOMPLETE_RESPONSE =
+		"""
+			[
+				{
+					"autocomplete": "testo suggerito",
+					"labelDocType": "documento"
+				},
+				{
+					"autocomplete": "testo suggerito due",
+					"labelDocType": "Documento"
+				}
+			]""";
+	public static final String AUTOCOMPLETE_QUERY_RESPONSE =
+		"""
 			{
 			\t"_source": {
 			\t\t"includes": [
