@@ -239,6 +239,33 @@ Trigger Tenant-Manager:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
 
 ################################################################################
+#                             TRIGGER API-GATEWAY                              #
+################################################################################
+Trigger API-Gateway:
+  stage: trigger
+  rules:
+  # Case 1: push on main
+  - if: '$CI_COMMIT_BRANCH == "main"'
+
+  # Case 2: approved merge request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_APPROVED == "true"'
+
+  # Case 3: tag creation
+  - if: "$CI_COMMIT_TAG"
+
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
+    changes:
+    - core/app/api-gateway/**/*
+    - core/common/resources-common/**/*
+  trigger:
+    include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
+
+################################################################################
 #                                TRIGGER TIKA                                  #
 ################################################################################
 Trigger Tika:
