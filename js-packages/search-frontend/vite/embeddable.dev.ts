@@ -13,9 +13,6 @@ export default defineConfig({
       },
     }),
   ],
-  resolve: {
-    extensions: [".tsx", ".ts", ".js"],
-  },
   build: {
     sourcemap: true,
     minify: false,
@@ -28,16 +25,16 @@ export default defineConfig({
       fileName: () => `embeddable.js`,
     },
     rollupOptions: {
-      external: [
-        "react",
-        "react-dom",
-        "react/jsx-runtime",
-        "styled-components",
-        "react-query",
-        "i18next",
-        "lodash",
-      ],
       output: {
+        globals: {
+          react: "React",
+          "react-dom": "ReactDOM",
+          "react/jsx-runtime": "jsxRuntime",
+          "styled-components": "styled",
+          "react-query": "ReactQuery",
+          i18next: "i18next",
+          lodash: "_",
+        },
         exports: "named",
       },
     },

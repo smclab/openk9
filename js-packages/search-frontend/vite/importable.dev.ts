@@ -12,12 +12,13 @@ export default defineConfig(() => {
       sourcemap: true,
       minify: false,
       outDir: "dist",
+      emptyOutDir: false,
       cssCodeSplit: true,
       lib: {
         entry: path.resolve(__dirname, "../src/index.ts"),
         name: "OpenK9SearchFrontend",
         formats: ["es", "cjs"],
-        fileName: (format) => `index.${format}.js`,
+        fileName: (format) => `importable.${format}.js`,
       },
       rollupOptions: {
         external: [

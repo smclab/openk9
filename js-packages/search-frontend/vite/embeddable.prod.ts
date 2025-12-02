@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import license from "rollup-plugin-license";
 
 export default defineConfig({
   plugins: [
@@ -13,22 +14,27 @@ export default defineConfig({
         ],
       },
     }),
+    license({
+      thirdParty: {
+        allow: (name) => true,
+        output: [
+          {
+            file: path.join(__dirname, "../dist/embeddable.js.LICENSE.txt"),
+          },
+        ],
+      },
+    }),
   ],
 
   define: {
     "process.env": {},
     global: "globalThis",
   },
-
-  resolve: {
-    extensions: [".tsx", ".ts", ".js"],
-  },
-
   build: {
-    target: "es2018",
-    minify: true,
+    minify: false,
     sourcemap: true,
     cssCodeSplit: false,
+    emptyOutDir: false,
     outDir: "dist",
     lib: {
       entry: path.resolve(__dirname, "../src/embeddable/entry.tsx"),
@@ -38,10 +44,8 @@ export default defineConfig({
     },
     rollupOptions: {
       external: [],
-
       output: {
         inlineDynamicImports: true,
-
         exports: "named",
       },
     },
