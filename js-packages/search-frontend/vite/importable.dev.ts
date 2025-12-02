@@ -18,7 +18,7 @@ export default defineConfig(() => {
         entry: path.resolve(__dirname, "../src/index.ts"),
         name: "OpenK9SearchFrontend",
         formats: ["es", "cjs"],
-        fileName: (format) => `importable.${format}.js`,
+        fileName: (format) => `index.${format}.js`,
       },
       rollupOptions: {
         external: [
