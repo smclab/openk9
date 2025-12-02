@@ -490,7 +490,7 @@ public class SearcherGrpcTest {
 
 				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
 				assertFalse(response.getAllFields().isEmpty());
-				assertEquals(2, response.getFieldsList().size());
+				assertEquals(2, response.getFieldList().size());
 				assertEquals(FALLBACK_RESULT_SIZE, response.getFallbackResultSize());
 				assertEquals(FUZZINESS, response.getFuzziness());
 				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());

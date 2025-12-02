@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -210,6 +211,34 @@ public class SearchResource {
 		correctedText.append(originalText.substring(currentPosition));
 
 		return correctedText.toString();
+	}
+
+	protected static Object _getNestedValue(Map<String, Object> map, String path) {
+		if (path == null || path.isEmpty()) {
+			return null;
+		}
+
+		String[] keys = path.split("\\.");
+		Object current = map;
+
+		for (String key : keys) {
+			if (current instanceof Map) {
+				@SuppressWarnings("unchecked")
+				Map<String, Object> currentMap = (Map<String, Object>) current;
+				current = currentMap.get(key);
+
+				// Key not found
+				if (current == null) {
+					return null;
+				}
+			}
+			else {
+				// Expected a Map but got something else
+				return null;
+			}
+		}
+
+		return current;
 	}
 
 	private static QueryAnalysisSearchToken.Builder createQastBuilder(
@@ -747,7 +776,7 @@ public class SearchResource {
 				// Create the autocomplete request for OpenSearch according to the
 				// autocomplete configurations.
 				var query = _createAutocompleteRequest(autocompleteConfig, queryText);
-				var fields = autocompleteConfig.getFieldsList();
+				var fields = autocompleteConfig.getFieldList();
 
 				return new AutocompleteContext(query, fields);
 			});
@@ -836,12 +865,12 @@ public class SearchResource {
 	private org.opensearch.client.opensearch.core.SearchRequest _createAutocompleteRequest(
 			AutocompleteConfigurationsResponse configurations, String queryText) {
 
-		var fieldPathList = configurations.getFieldsList().stream()
+		var fieldPathList = configurations.getFieldList().stream()
 			.map(field -> field.getFieldPath() + "^" + field.getBoost())
 			.toList();
-		var parentPathList = configurations.getFieldsList().stream()
+		var parentPathSet = configurations.getFieldList().stream()
 			.map(io.openk9.searcher.grpc.Field::getParentPath)
-			.toList();
+			.collect(Collectors.toSet());
 
 		Query autocompleteMultiMatchQuery = Query.of(
 			q -> q
@@ -861,7 +890,7 @@ public class SearchResource {
 			.size(configurations.getFallbackResultSize())
 			.source(src -> src
 				.filter(f -> f
-					.includes(parentPathList)
+					.includes(List.copyOf(parentPathSet))
 				)
 			)
 			.sort(sort -> sort
@@ -1015,7 +1044,8 @@ public class SearchResource {
 
 			if (source != null) {
 				for (io.openk9.searcher.grpc.Field field : fields) {
-					var autocomplete = (String) source.get(field.getFieldPath());
+					var autocomplete = (String) _getNestedValue(source, field.getParentPath());
+
 					if (autocomplete != null) {
 						autocompleteHits.add(new AutocompleteHit(autocomplete, field.getLabel()));
 					}
