@@ -45,12 +45,6 @@ data:
   QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
   QUARKUS_LOG_CATEGORY__ORG_HIBERNATE__LEVEL: {{ .Values.quarkus.LogLevelHibernate | quote }}
 
-  # Keycloak env variables
-  QUARKUS_OIDC_AUTH_SERVER_URL: '{{ include "helper.keycloakURL" . }}/realms/master'
-  QUARKUS_OIDC_CLIENT_ID: {{ .Values.keycloak.clientId | quote }}
-  QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: {{ include "helper.keycloakURL" . | quote }}
-  OPENK9_AUTHSERVERURL_TEMPLATE: '{{ include "helper.keycloakURL" . }}/realms/{realm}'
-
   # Custom variables
   OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: {{ .Values.datasource.aclQueryExtraParamsEnabled | quote }}
   OPENK9_DATASOURCE_QUERY_PARSER_MAX_TEXT_QUERY_LENGTH: {{ .Values.queryParser.maxTextQueryLength | quote }}

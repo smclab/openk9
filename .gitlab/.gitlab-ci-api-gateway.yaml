@@ -1,0 +1,103 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
+stages:
+- build
+- container-scanning
+- restart
+
+variables:
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
+
+include:
+- local: '/.gitlab/.gitlab-templates.yaml'
+
+################################################################################
+#                                   JOBS                                        #
+################################################################################
+
+######################### BUILD API-GATEWAY IMAGE ##########################
+Build API-Gateway Image:
+  extends: .build_template
+  variables:
+    COMPONENT: "api-gateway"
+  stage: build
+  script:
+  - cd core
+  - |
+    # Extract the version from pom.xml and set it as an environment variable
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    echo "VERSION=$VERSION"
+    echo "$VERSION" > $CI_PROJECT_DIR/.version
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" || $CI_COMMIT_TAG != "" ]]; then
+      # Build on main or tag with official version
+      echo "Build on main or tag with official version: $VERSION"
+      ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS
+      ./mvnw jib:build -f app/api-gateway/pom.xml \
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION
+
+    elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+      # Build without push on merge request
+      echo "Build on MR without push"
+      ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS
+      ./mvnw jib:dockerBuild -f app/api-gateway/pom.xml \
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION
+
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+      # Feature branch by Michele => push with tag 998-SNAPSHOT
+      echo "Triggered by Michele - using tag 998-SNAPSHOT"
+      ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -P 'exclude-quarkus-test'
+      ./mvnw jib:build -f app/api-gateway/pom.xml \
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:998-SNAPSHOT
+
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
+      # Feature branch by Mirko => push with tag 999-SNAPSHOT
+      echo "Triggered by Mirko - using tag 999-SNAPSHOT"
+      ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -P 'exclude-quarkus-test'
+      ./mvnw jib:build -f app/api-gateway/pom.xml \
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT
+
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # Feature branch by other developer => push with tag 999-SNAPSHOT
+      echo "Triggered by other developer - using tag 999-SNAPSHOT"
+      ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -P 'exclude-quarkus-test'
+      ./mvnw jib:build -f app/api-gateway/pom.xml \
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT
+    fi
+  artifacts:
+    paths:
+    - .version
+    expire_in: 24 hours
+  rules:
+  # Case 1: When there is a commit to main (push to main)
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  # Case 2: When a merge request is approved
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  # Case 3: When a tag is created
+  - if: '$CI_COMMIT_TAG'
+  # Block the first execution when a branch is created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # Case 4: When the commit is made on a feature branch that matches the pattern ^[0-9]+-.*$
+  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
+
+#################### CONTAINER SCANNING API-GATEWAY ####################
+Container Scanning API-Gateway:
+  dependencies: [ Build API-Gateway Image ]
+  extends: .container-scanning-template
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-api-gateway"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
+
+##################### TRIGGER RESTART API-GATEWAY #####################
+Trigger Restart API-Gateway:
+  extends: .restart_job_template
+  dependencies:
+  - Build API-Gateway Image
+  variables:
+    COMPONENT_NAME: "api-gateway"
+    COMPONENT_TYPE: "backend"

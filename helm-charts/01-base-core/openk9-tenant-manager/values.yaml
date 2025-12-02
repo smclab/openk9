@@ -95,6 +95,16 @@ timeoutDb:
   CreateTenantTimeout: 45
 
 
+## Security configuration
+security:
+  adminPassword: "k9-backend"  
+
+## RabbitMQ configuration
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+  username: "openk9"
+
 ## Keycloak configuration
 keycloak:
   host: "keycloak.local"   #-TBMD
@@ -107,6 +117,7 @@ keycloak:
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
+  baseIssuerUri: "https://keycloak-backend.openk9.io/realms/"
 
 
 ## Database configuration

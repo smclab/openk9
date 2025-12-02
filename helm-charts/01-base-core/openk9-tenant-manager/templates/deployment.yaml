@@ -72,6 +72,16 @@ spec:
           {{- end }}
           ############################################################
           env:
+            - name: OPENK9_TENANT_MANAGER_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tenant-manager-admin-password
+                  key: password
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-password
+                  key: rabbitmq-password
             - name: {{ .Values.keycloak.keyPasswordEnvName }}
               valueFrom:
                 secretKeyRef:

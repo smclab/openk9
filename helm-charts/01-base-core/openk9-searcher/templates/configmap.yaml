@@ -10,10 +10,6 @@ data:
   QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: {{ include "helper.datasourceHost" . | quote }}
   QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
   OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'
-  QUARKUS_OIDC_AUTH_SERVER_URL: '{{ include "helper.keycloakURL" . }}/realms/master'
-  QUARKUS_OIDC_CLIENT_ID: {{ .Values.keycloak.clientId | quote }}
-  QUARKUS_REST_CLIENT_KEYCLOAK_CLIENT_URL: {{ include "helper.keycloakURL" . | quote }}
-  OPENK9_AUTHSERVERURL_TEMPLATE: '{{ include "helper.keycloakURL" . }}/realms/{realm}'
   ##
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}

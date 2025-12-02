@@ -1,0 +1,43 @@
+# Example values for local development/testing environment
+# Usage: helm install api-gateway . -f scenarios/local-runtime.yaml
+
+replicaCount: 1
+
+image:
+  registry: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+debug:
+  enabled: true
+
+database:
+  postgresql:
+    host: "localhost"
+    port: 5432
+
+rabbitmq:
+  host: "localhost"
+  port: "5672"
+
+openk9:
+  searcher:
+    host: "localhost"
+    port: "8080"
+  datasource:
+    host: "localhost"
+    port: "8080"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+livenessProbe:
+  initialDelaySeconds: 60
+  
+readinessProbe:
+  initialDelaySeconds: 60

@@ -1,0 +1,24 @@
+# Example PostgreSQL configuration for API Gateway
+# This file shows how to configure PostgreSQL for the API Gateway
+# 
+# Prerequisites:
+# 1. PostgreSQL instance running
+# 2. Secret with postgres admin password created
+#
+# Usage:
+# kubectl apply -f postgresql-apigateway.yaml
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-password
+  namespace: k9-backend
+type: Opaque
+stringData:
+  postgres-password: "postgres"  # Change this in production!
+  user-password: "openk9"        # Change this in production!
+
+---
+# The database and user creation is handled by the Helm chart's Job
+# See templates/db-job.yaml for the automated setup

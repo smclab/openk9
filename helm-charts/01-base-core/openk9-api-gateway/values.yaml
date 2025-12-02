@@ -1,24 +1,24 @@
 # Copyright Smc Treviso, S.r.l All Rights Reserved.
 # SPDX-License-Identifier: APACHE-2.0
 
-# Default values for openk9-searcher.
+# Default values for openk9-api-gateway.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-## @param replicaCount Number of Datasource replicas to deploy
+## @param replicaCount Number of API Gateway replicas to deploy
 ##
 replicaCount: 1
 
-## @section Datasource Image parameters
-## Docker Searcher image version
+## @section API Gateway Image parameters
+## Docker API Gateway image version
 ## ref: https://hub.docker.com/u/smclab
-## @param image.registry [default: REGISTRY_NAME] Datasource image registry
-## @skip image.tag Searcher image tag (immutable tags are recommended)
-## @param image.pullPolicy Searcher image pull policy
+## @param image.registry [default: REGISTRY_NAME] API Gateway image registry
+## @skip image.tag API Gateway image tag (immutable tags are recommended)
+## @param image.pullPolicy API Gateway image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: ""
-  name: smclab/openk9-searcher
+  registry: "" #-TBMD
+  name: smclab/openk9-api-gateway
   ## Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
@@ -35,13 +35,11 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets:
-    - docker-registry-secret
+  - docker-registry-secret
 
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
-commonAnnotations:
-  prometheus.io/scheme: http
-  prometheus.io/scrape: "false"
+commonAnnotations: {}
 
 ## @param nameOverride String to partially override fullname template (will maintain the release name)
 ##
@@ -51,15 +49,100 @@ nameOverride: ""
 ##
 fullnameOverride: ""
 
-## Http Access Log configuration
-config:
-  httpAccessLog:
-    enabled: true
-    pattern: "%h %l %u %t \"%r\" %s %b %D"
+## Java Debug configuration
+debug:
+  enabled: false
 
-## JVM configuration
-jvm:
-  toolOptions: ""
+## Database Job configuration
+databaseJob:
+  enabled: true
+  ttlSecondsAfterFinished: 120
+  image:
+    registry: docker.io
+    name: bitnamilegacy/postgresql
+    tag: "16.2.0-debian-12-r8"
+
+## Database configuration
+database:
+  type: "postgresql"
+
+  # ---- Parameters PostgreSQL ----
+  postgresql:
+    host: "postgresql"
+    port: 5432
+    database: "apigateway"
+    username: "openk9"
+    passwordSecretName: "postgres-password"
+    keyPasswordSecret: "user-password"
+    keyPasswordEnvName: "SPRING_R2DBC_PASSWORD"
+    liquibasePasswordEnvName: "SPRING_LIQUIBASE_PASSWORD"
+    postgresPasswordSecret: "postgres-password"
+
+## Rabbitmq configuration
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+  username: "openk9"
+  passwordSecretName: "rabbitmq-password"
+  keyPasswordSecret: "rabbitmq-password"
+  keyPasswordEnvName: "SPRING_RABBITMQ_PASSWORD"
+
+## Openk9 services configuration
+openk9:
+  searcher:
+    host: "openk9-searcher"
+    port: "8080"
+  datasource:
+    host: "openk9-datasource"
+    port: "8080"
+
+## Spring Gateway configuration
+spring:
+  gateway:
+    trustedProxies: ".*"
+
+## API Gateway pods ServiceAccount
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for API Gateway pods
+  ##
+  create: true
+  ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
+  ##
+  annotations: {}
+  ## @param serviceAccount.name Name of the created serviceAccount
+  ## If not set and create is true, a name is generated using the fullname template
+  ##
+  name: "api-gateway"
+
+## @param podAnnotations API Gateway Pod annotations. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## API Gateway pods' Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+## @param podSecurityContext.enabled Enable API Gateway pods' Security Context
+## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
+## @param podSecurityContext.supplementalGroups Set filesystem extra groups
+## @param podSecurityContext.fsGroup Set API Gateway pod's Security Context fsGroup
+##
+podSecurityContext: {} # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+## @param hostAliases Deployment pod host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+##
+hostAliases: []
 
 ## Kubernetes service type
 ##
@@ -71,118 +154,20 @@ service:
   ## @param service.port Http service port
   port: 8080
   ## Service ports
-  ## @param service.port Http service port
-  debugPort: 5005
-  ## Service ports
-  ## @param service.port Http service port
-  grpcPort: 9000
-
-## Quarkus configuration
-quarkus:
-## - add rel 1.6.0
-  HttpCors: true
-  HttpCorsOrigin: "/https://.*.openk9.local/,"
-  LogConsoleJson: false ## put to true to force json log format
-  LogLevel: "INFO"
-
-## Keycloak configuration
-keycloak:
-##  Puntamento Route Services
-  host: "keycloak.openk9.local"  #-TBMD
-  clientId: "openk9"
-
-## Opensearch configuration
-opensearch:
-  host: 
-    - "opensearch-cluster-master-headless:9200"
-  username: "opensearch"
-  passwordSecretName: "opensearch-password"
-  keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"
-  keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
-
-
-## Openk9 Services configuration
-openk9:
-  ## Openk9 Datasource configuration
-  datasource:
-    host: "openk9-datasource"
-  ## Openk9 Tenant Manager configuration
-  tenantManager:
-    host: "openk9-tenant-manager"
-
-search:
-  total:
-    limit: 10000
-
-## Opentelemetry configuration
-otel:
-  disabled: true
-  endpoint: ""
-
-## Searcher pods ServiceAccount
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-##
-serviceAccount:
-  ## @param serviceAccount.create Enable creation of ServiceAccount for Searcher pods
-  ##
-  create: false
-  ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
-  ##
-  annotations: {}
-  ## @param serviceAccount.name Name of the created serviceAccount
-  ## If not set and create is true, a name is generated using the fullname template
-  ##
-  name: ""
-
-## @param podAnnotations Searcher Pod annotations. Evaluated as a template
-## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-##
-podAnnotations: {}
-
-## Searcher pods' Security Context
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
-## @param podSecurityContext.enabled Enable Searcher pods' Security Context
-## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
-## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
-## @param podSecurityContext.supplementalGroups Set filesystem extra groups
-## @param podSecurityContext.fsGroup Set Searcher pod's Security Context fsGroup
-##
-podSecurityContext: {}
-  # fsGroup: 2000
-
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-
-## @param hostAliases Deployment pod host aliases
-## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-##
-hostAliases: []
-
+  ## @param service.managementPort Management service port
+  managementPort: 8081
 
 ## Configure the ingress resource that allows you to access the
-## Searcher installation. Set up the URL
+## API Gateway installation. Set up the URL
 ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ##
 ingress:
-  ## @param ingress.enabled Enable ingress resource for Searcher console
+  ## @param ingress.enabled Enable ingress resource for API Gateway console
   ##
   enabled: false
-  ## @param ingress.useApiGateway Route traffic through API Gateway instead of direct service
+  ## @param ingress.host Ingress host
   ##
-  useApiGateway: true
-  ## @param ingress.apiGatewayService Name of the API Gateway service
-  ##
-  apiGatewayService: "openk9-api-gateway"
-  ## @param ingress.enabled Enable ingress resource for Searcher console
-  ##
-  host: openk9.local   #-TBMD
+  host: openk9.local #-TBMD
   ## @param ingress.annotations Additional annotations for the Ingress resource.
   ## For a full list of possible ingress annotations, please see
   ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
@@ -198,18 +183,22 @@ ingress:
   ## @param ingress.paths Paths for the default host.
   ##
   paths:
-    - /api/searcher
+  - /api/datasource
+  - /api/searcher
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
     enabled: false
-    secretName: openk9-tls-star-secret   #-TBMD
+    secretName: openk9-tls-star-secret #-TBMD
 
+# In OpenShift use Route instead of Ingress
 route:
   enabled: false
   annotations: {}
   host: openk9.local #-TBMD
-  path: /api/datasource
+  paths:
+  - /api/datasource
+  - /api/searcher
   tls:
     enabled: false
     secretName: openk9-tls-star-secret #-TBMD
@@ -227,12 +216,11 @@ route:
 resources:
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 128Mi
   limits:
     cpu: 1000m
-    memory: 1024Mi
+    memory: 512Mi
 
-    
 autoscaling:
   enabled: false
   minReplicas: 1
@@ -256,24 +244,7 @@ tolerations: []
 ##
 affinity: {}
 
-## Configure Datasource containers' extra options for startup probe
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
-## @param startupProbe.enabled Enable startupProbe
-## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
-## @param startupProbe.periodSeconds Period seconds for startupProbe
-## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
-## @param startupProbe.failureThreshold Failure threshold for startupProbe
-## @param startupProbe.successThreshold Success threshold for startupProbe
-##
-startupProbe:
-  enabled: true
-  initialDelaySeconds: 90
-  periodSeconds: 10
-  timeoutSeconds: 5
-  successThreshold: 1
-  failureThreshold: 5
-
-## Configure Datasource containers' extra options for liveness probe
+## Configure API Gateway containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
 ## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
@@ -284,13 +255,14 @@ startupProbe:
 ##
 livenessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  path: /actuator/health/liveness
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5
 
-## Configure Datasource containers' extra options for readiness probe
+## Configure API Gateway containers' extra options for readiness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param readinessProbe.enabled Enable readinessProbe
 ## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
@@ -301,17 +273,15 @@ livenessProbe:
 ##
 readinessProbe:
   enabled: true
-  initialDelaySeconds: 90
+  path: /actuator/health/readiness
+  initialDelaySeconds: 30
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5
 
-
-
 metrics:
-  ## @param metrics.prometheusAuthType Authentication mode for Prometheus (`jwt` or `public`)
-  ## To allow public access without authentication for prometheus metrics set environment as follows.
+  ## @param metrics.enabled Enable metrics
   ##
   enabled: false
   ## Prometheus Operator ServiceMonitor configuration
@@ -332,10 +302,10 @@ metrics:
     jobLabel: ""
     ## @param metrics.serviceMonitor.path HTTP path to scrape for metrics
     ##
-    path: /metrics
-    ## @param metrics.serviceMonitor.port port for metrics expose for Quarkus
+    path: /actuator/prometheus
+    ## @param metrics.serviceMonitor.port port for metrics expose
     ##
-    port: http
+    port: management
     ## @param metrics.serviceMonitor.interval Interval at which metrics should be scraped
     ##
     interval: 30s
@@ -356,34 +326,10 @@ metrics:
     ## ref: https://github.com/bitnami/charts/tree/main/bitnami/prometheus-operator#prometheus-configuration
     ##
     selector:
-      app.kubernetes.io/instance: searcher
+      app: api-gateway
+
     ## @param metrics.serviceMonitor.apiVersion ApiVersion for the serviceMonitor Resource (defaults to "monitoring.coreos.com/v1")
     apiVersion: "monitoring.coreos.com/v1"
     ## @param metrics.serviceMonitor.tlsConfig Additional TLS configuration for metrics endpoint with "https" scheme
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#monitoring.coreos.com/v1.TLSConfig
     tlsConfig: {}
-
-  ## Prometheus Operator PrometheusRule configuration
-  ##
-  prometheusRule:
-    ## @param metrics.prometheusRule.enabled Create a Prometheus Operator PrometheusRule (also requires `metrics.enabled` to be `true` and `metrics.prometheusRule.rules`)
-    ##
-    enabled: false
-    ## @param metrics.prometheusRule.namespace Namespace for the PrometheusRule Resource (defaults to the Release Namespace)
-    ##
-    namespace: ""
-    ## @param metrics.prometheusRule.additionalLabels Additional labels that can be used so PrometheusRule will be discovered by Prometheus
-    ##
-    additionalLabels: {}
-    ## @param metrics.prometheusRule.rules Prometheus Rule definitions
-      # - alert: minio cluster nodes offline
-      #   annotations:
-      #     summary: "minio cluster nodes offline"
-      #     description: "minio cluster nodes offline, pod {{`{{`}} $labels.pod {{`}}`}} service {{`{{`}} $labels.job {{`}}`}} offline"
-      #   for: 10m
-      #   expr: minio_cluster_nodes_offline_total > 0
-      #   labels:
-      #     severity: critical
-      #     group: PaaS
-    ##
-    rules: []
