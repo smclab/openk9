@@ -50,14 +50,14 @@ public class WebFilterChainConfiguration {
 
 	@Bean
 	SecurityWebFilterChain actuatorSecurityFilterChain(ServerHttpSecurity http) {
+
 		return http.securityMatcher(EndpointRequest.toAnyEndpoint())
 			.authorizeExchange(auth -> auth.anyExchange().permitAll())
 			.build();
 	}
 
 	@Bean
-	SecurityWebFilterChain securityWebFilterChainBrowser(
-		ServerHttpSecurity http) {
+	SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 
 		return http
 			.addFilterBefore(
