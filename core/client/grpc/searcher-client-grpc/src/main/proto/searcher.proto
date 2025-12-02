@@ -77,8 +77,9 @@ enum SuggestMode {
 
 message Field {
   string fieldPath = 1;
-  string label = 2;
-  double boost = 3;
+  string parentPath = 2;
+  string label = 3;
+  double boost = 4;
 }
 
 enum Operator {

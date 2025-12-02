@@ -837,7 +837,10 @@ public class SearchResource {
 			AutocompleteConfigurationsResponse configurations, String queryText) {
 
 		var fieldPathList = configurations.getFieldsList().stream()
-			.map(io.openk9.searcher.grpc.Field::getFieldPath)
+			.map(field -> field.getFieldPath() + "^" + field.getBoost())
+			.toList();
+		var parentPathList = configurations.getFieldsList().stream()
+			.map(io.openk9.searcher.grpc.Field::getParentPath)
 			.toList();
 
 		Query autocompleteMultiMatchQuery = Query.of(
@@ -858,7 +861,7 @@ public class SearchResource {
 			.size(configurations.getFallbackResultSize())
 			.source(src -> src
 				.filter(f -> f
-					.includes(fieldPathList)
+					.includes(parentPathList)
 				)
 			)
 			.sort(sort -> sort
