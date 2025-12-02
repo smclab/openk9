@@ -56,6 +56,10 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	private static OctetSequenceKey JWK;
 	private static JWSSigner SIGNER;
 
+	private static final String REALM_ACCESS = "realm_access";
+	private static final String ROLES = "roles";
+	private static final String PREFERRED_USERNAME = "preferred_username";
+
 	// MP-JWT claims to be added in the self-signed JWT.
 	private static final String UNIQUE_PRINCIPAL_NAME = "upn";
 	private static final String GROUPS_PERMISSION_GRANT = "groups";
@@ -64,6 +68,8 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	// because they are related to the OpenK9 Api Gateway.
 	private static final String ISSUER_VALUE = "openk9-gateway";
 	private static final String AUDIENCE_VALUE = "openk9";
+
+	private static final String ANONYMOUS_SUB = "anonymous";
 
 	// TenantId claim, useful to handle multi-tenancy in downstream services.
 	private static final String TENANT_ID = "tenantId";
@@ -95,7 +101,7 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
 		String authScheme = "";
 
-		String subject = "anonymous";
+		String subject = ANONYMOUS_SUB;
 		List<String> groups = List.of();
 		Date issueTime = new Date();
 		Date expirationTime = new Date(System.currentTimeMillis() + ONE_DAY_MILLIS);
@@ -111,7 +117,27 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 				SignedJWT jwt = SignedJWT.parse(jwtString);
 				JWTClaimsSet claims = jwt.getJWTClaimsSet();
 
-				subject = claims.getSubject();
+				// Referring the MP-JWT Specification:
+				//
+				// MP-JWT "upn" claim is the user principal name
+				// in the java.security.Principal interface,
+				// and is the caller principal name
+				// in jakarta.security.enterprise.identitystore.IdentityStore.
+				// If this claim is missing,
+				// fallback to the "preferred_username",
+				// OIDC Section 5.1 should be attempted,
+				// and if that claim is missing,
+				// fallback to the "sub" claim should be used.
+				if (claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME) != null) {
+					subject = claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME);
+				}
+				else if (claims.getClaimAsString(PREFERRED_USERNAME) != null) {
+					subject = claims.getClaimAsString(PREFERRED_USERNAME);
+				}
+				if (claims.getSubject() != null) {
+					subject = claims.getSubject();
+				}
+
 				issueTime = claims.getIssueTime();
 				expirationTime = claims.getExpirationTime();
 
@@ -148,12 +174,12 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		JWTClaimsSet claims, Set<String> aggregateRoles)
 		throws ParseException {
 
-		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim("realm_access");
+		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim(REALM_ACCESS);
 		if (realmAccessClaim == null) {
 			return;
 		}
 
-		Object rolesObj = realmAccessClaim.get("roles");
+		Object rolesObj = realmAccessClaim.get(ROLES);
 		if (rolesObj instanceof List<?> list) {
 			for (Object item : list) {
 				if (item instanceof String role) {
@@ -167,7 +193,7 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		JWTClaimsSet claims, Set<String> aggregateRoles)
 		throws ParseException {
 
-		List<String> groupsClaim = claims.getStringListClaim("groups");
+		List<String> groupsClaim = claims.getStringListClaim(GROUPS_PERMISSION_GRANT);
 		if (groupsClaim != null) {
 			aggregateRoles.addAll(groupsClaim);
 		}
