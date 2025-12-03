@@ -19,7 +19,15 @@ package io.openk9.datasource.model;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import io.openk9.datasource.model.util.K9Entity;
 

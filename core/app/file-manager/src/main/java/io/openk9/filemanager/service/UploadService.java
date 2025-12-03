@@ -18,9 +18,12 @@
 package io.openk9.filemanager.service;
 
 import io.grpc.StatusRuntimeException;
-import io.minio.*;
+import io.minio.BucketExistsArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import io.minio.RemoveObjectArgs;
 import io.minio.errors.MinioException;
-import io.openk9.filemanager.grpc.*;
 import io.quarkus.grpc.GrpcClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -32,6 +35,11 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
+
+import io.openk9.filemanager.grpc.FileManagerGrpc;
+import io.openk9.filemanager.grpc.FileResourceRequest;
+import io.openk9.filemanager.grpc.FileResourceResponse;
+import io.openk9.filemanager.grpc.FindFileResourceByDatasourceIdFileIdRequest;
 
 @ApplicationScoped
 public class UploadService {

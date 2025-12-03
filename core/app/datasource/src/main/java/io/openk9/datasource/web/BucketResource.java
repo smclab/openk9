@@ -22,7 +22,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import io.openk9.datasource.web.dto.*;
+import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
+import io.openk9.datasource.web.dto.SortingResponseDTO;
+import io.openk9.datasource.web.dto.TabResponseDTO;
+import io.openk9.datasource.web.dto.TemplateResponseDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
