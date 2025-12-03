@@ -37,16 +37,11 @@
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
 
-    <!-- // authentication -->
+    <!-- authentication -->
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-oidc</artifactId>
+		<groupId>io.quarkus</groupId>
+		<artifactId>quarkus-smallrye-jwt</artifactId>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-keycloak-authorization</artifactId>
-    </dependency>
-    <!-- authentication // -->
 
     <!-- consumes grpc client -->
     <dependency>
