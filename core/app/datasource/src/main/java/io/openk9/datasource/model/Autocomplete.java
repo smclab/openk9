@@ -46,15 +46,15 @@ import lombok.ToString;
 @ToString
 public class Autocomplete extends K9Entity {
 
-	public static final int DEFAULT_FALLBACK_RESULT_SIZE = 10;
+	public static final int RESULT_SIZE = 10;
 	public static final String DEFAULT_FUZZINESS = "AUTO";
 	public static final String DEFAULT_MINIMUM_SHOULD_MATCH = "75%";
 	public static final BooleanOperator DEFAULT_OPERATOR = BooleanOperator.OR;
 
 	@Column(name = "description", length = 4096)
 	private String description;
-	@Column(name = "fallback_result_size")
-	private Integer fallbackResultSize = DEFAULT_FALLBACK_RESULT_SIZE;
+	@Column(name = "result_size")
+	private Integer resultSize = RESULT_SIZE;
 	@ManyToMany(cascade = {
 		jakarta.persistence.CascadeType.PERSIST,
 		jakarta.persistence.CascadeType.MERGE,
@@ -81,9 +81,9 @@ public class Autocomplete extends K9Entity {
 	@Column(name = "operator")
 	private BooleanOperator operator = DEFAULT_OPERATOR;
 
-	public void setFallbackResultSize(Integer fallbackResultSize) {
-		this.fallbackResultSize =
-			Objects.requireNonNullElse(fallbackResultSize, DEFAULT_FALLBACK_RESULT_SIZE);
+	public void setResultSize(Integer resultSize) {
+		this.resultSize =
+			Objects.requireNonNullElse(resultSize, RESULT_SIZE);
 	}
 
 	public void setFuzziness(String fuzziness) {

@@ -540,7 +540,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				return AutocompleteConfigurationsResponse.newBuilder()
 					.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 					.addAllField(grpcFields)
-					.setFallbackResultSize(autocomplete.getFallbackResultSize())
+					.setResultSize(autocomplete.getResultSize())
 					.setFuzziness(autocomplete.getFuzziness())
 					.setMinimumShouldMatch(autocomplete.getMinimumShouldMatch())
 					.setOperator(

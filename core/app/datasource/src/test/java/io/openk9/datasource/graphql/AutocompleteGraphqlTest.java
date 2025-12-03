@@ -66,8 +66,6 @@ public class AutocompleteGraphqlTest {
 	private static final String DOC_TYPE_FIELD_NAME_TWO = ENTITY_NAME_PREFIX + "Doc type field 2";
 	private static final String EDGES = "edges";
 	private static final String ENTITY = "entity";
-	private static final String FALLBACK_RESULT_SIZE = "fallbackResultSize";
-	private static final int FALLBACK_RESULT_SIZE_VALUE = 5;
 	private static final String FIELD = "field";
 	private static final String FIELD_IDS = "fieldIds";
 	private static final String FIELD_TYPE = "fieldType";
@@ -82,6 +80,8 @@ public class AutocompleteGraphqlTest {
 	private static final String NAME = "name";
 	private static final String NODE = "node";
 	private static final String OPERATOR = "operator";
+	private static final String RESULT_SIZE = "resultSize";
+	private static final int RESULT_SIZE_VALUE = 5;
 
 	@Inject
 	AutocompleteService service;
@@ -142,7 +142,7 @@ public class AutocompleteGraphqlTest {
 					),
 					field(ID),
 					field(NAME),
-					field(FALLBACK_RESULT_SIZE),
+					field(RESULT_SIZE),
 					field(FUZZINESS),
 					field(MINIMUM_SHOULD_MATCH),
 					field(OPERATOR),
@@ -194,7 +194,7 @@ public class AutocompleteGraphqlTest {
 							AUTOCOMPLETE_DTO,
 							inputObject(
 								prop(NAME, AUTOCOMPLETE_NAME_ONE),
-								prop(FALLBACK_RESULT_SIZE, FALLBACK_RESULT_SIZE_VALUE),
+								prop(RESULT_SIZE, RESULT_SIZE_VALUE),
 								prop(FUZZINESS, FUZZINESS_VALUE),
 								prop(MINIMUM_SHOULD_MATCH, MINIMUM_SHOULD_MATCH_VALUE),
 								prop(OPERATOR, BooleanOperator.AND),
@@ -206,7 +206,7 @@ public class AutocompleteGraphqlTest {
 						ENTITY,
 						field(ID),
 						field(NAME),
-						field(FALLBACK_RESULT_SIZE),
+						field(RESULT_SIZE),
 						field(FUZZINESS),
 						field(MINIMUM_SHOULD_MATCH),
 						field(OPERATOR),
@@ -245,7 +245,7 @@ public class AutocompleteGraphqlTest {
 		log.debug(String.format("Autocorrection: %s", autocomplete.toString()));
 
 		assertEquals(AUTOCOMPLETE_NAME_ONE, autocomplete.getName());
-		assertEquals(FALLBACK_RESULT_SIZE_VALUE, autocomplete.getFallbackResultSize());
+		assertEquals(RESULT_SIZE_VALUE, autocomplete.getResultSize());
 		assertEquals(FUZZINESS_VALUE, autocomplete.getFuzziness());
 		assertEquals(MINIMUM_SHOULD_MATCH_VALUE, autocomplete.getMinimumShouldMatch());
 		assertEquals(BooleanOperator.AND, autocomplete.getOperator());

@@ -887,7 +887,7 @@ public class SearchResource {
 		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
 			.index(configurations.getIndexNameList())
 			.query(autocompleteMultiMatchQuery)
-			.size(configurations.getFallbackResultSize())
+			.size(configurations.getResultSize())
 			.source(src -> src
 				.filter(f -> f
 					.includes(List.copyOf(parentPathSet))

@@ -95,7 +95,6 @@ public class SearcherGrpcTest {
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
 	private static final int EM_VECTOR_SIZE = 1330;
-	private static final int FALLBACK_RESULT_SIZE = 7;
 	private static final String FUZZINESS = "2";
 	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
@@ -136,6 +135,7 @@ public class SearcherGrpcTest {
 	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
 	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
 	private static final boolean REFORMULATE = true;
+	private static final int RESULT_SIZE = 7;
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(JSON_CONFIG);
 	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
@@ -324,7 +324,7 @@ public class SearcherGrpcTest {
 		var autocompleteDTO = AutocompleteDTO.builder()
 			.name(AUTOCOMPLETE_NAME_ONE)
 			.fieldIds(autocompleteFieldIds)
-			.fallbackResultSize(FALLBACK_RESULT_SIZE)
+			.resultSize(RESULT_SIZE)
 			.fuzziness(FUZZINESS)
 			.minimumShouldMatch(MINIMUM_SHOULD_MATCH)
 			.operator(OPERATOR)
@@ -491,7 +491,7 @@ public class SearcherGrpcTest {
 				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
 				assertFalse(response.getAllFields().isEmpty());
 				assertEquals(2, response.getFieldList().size());
-				assertEquals(FALLBACK_RESULT_SIZE, response.getFallbackResultSize());
+				assertEquals(RESULT_SIZE, response.getResultSize());
 				assertEquals(FUZZINESS, response.getFuzziness());
 				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());
 				assertEquals(OPERATOR.name(), response.getOperator().name());

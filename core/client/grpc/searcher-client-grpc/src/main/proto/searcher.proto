@@ -47,7 +47,7 @@ message AutocorrectionConfigurationsRequest {
 message AutocompleteConfigurationsResponse {
   repeated string indexName = 1;
   repeated Field field = 2;
-  int32 fallbackResultSize = 3;
+  int32 resultSize = 3;
   string fuzziness = 4;
   string minimumShouldMatch = 5;
   Operator operator = 6;

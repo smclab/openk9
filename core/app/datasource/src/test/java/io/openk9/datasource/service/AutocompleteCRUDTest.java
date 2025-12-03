@@ -111,8 +111,8 @@ public class AutocompleteCRUDTest {
 		log.debugf("Autocomplete from DB: %s", autocomplete);
 
 		assertEquals(
-			Autocomplete.DEFAULT_FALLBACK_RESULT_SIZE,
-			autocomplete.getFallbackResultSize());
+			Autocomplete.RESULT_SIZE,
+			autocomplete.getResultSize());
 		assertEquals(fieldIds.size(), autocomplete.getFields().size());
 		assertTrue(
 			autocomplete.getFields().stream()

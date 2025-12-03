@@ -40,9 +40,9 @@ public class AutocompleteDTO extends K9EntityDTO{
 
 	@Nullable
 	@Description("""
-		Maximum number of results to return when no explicit limit is specified in the query.
+		Maximum number of results to return.
 	""")
-	private Integer fallbackResultSize;
+	private Integer resultSize;
 	@Description("""
 		The field list used in the autocomplete query,
 		must not be empty and all the docTypeField must be of type search_as_you_type.
