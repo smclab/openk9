@@ -181,13 +181,15 @@ graph TD
 
 ## 🔧 **Component-Specific Behaviors**
 
-### **Backend Components** (`tika-no-ocr`, `datasource`, `searcher`, etc.)
+### **Backend Components** (`api-gateway`, `datasource`, `searcher`, `tenant-manager`, `tika-no-ocr`, etc.)
 
 | Branch Type | User | Target Namespaces | Image Tag |
 |-------------|------|-------------------|-----------|
 | Feature | mirko.zizzari | `k9-backend` | `999-SNAPSHOT` |
-| Feature | michele.bastianelli | `k9-backend01` | `999-SNAPSHOT` |
+| Feature | michele.bastianelli | `k9-backend01` | `998-SNAPSHOT` |
 | Main/Tag | Any | `k9-backend`, `k9-backend01`, `k9-test` | Version/Tag |
+
+**Note**: API Gateway uses Maven/Jib instead of Quarkus for containerization.
 
 ### **Frontend Components** (`admin-ui`, `tenant-ui`, etc.)
 
@@ -237,7 +239,7 @@ case "$COMPONENT_NAME" in
   *-ui|admin-ui|tenant-ui|search-frontend)
     NAMESPACES="k9-frontend" ;;
   # Backend components  
-  datasource|searcher|ingestion|tika-no-ocr|entity-manager)
+  api-gateway|datasource|searcher|ingestion|tika-no-ocr|entity-manager|tenant-manager)
     NAMESPACES="k9-backend k9-backend01 k9-test" ;;
   # AI components
   *-ai|embedding-*|rag-*)
