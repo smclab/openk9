@@ -27,7 +27,7 @@
 
 	<changeSet id="1764751952025-1" author="openk9">
 		<addColumn tableName="autocomplete">
-			<column name="result_size" defaultValueNumeric="10">
+			<column name="result_size" type="NUMBER(10)" defaultValueNumeric="10">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
