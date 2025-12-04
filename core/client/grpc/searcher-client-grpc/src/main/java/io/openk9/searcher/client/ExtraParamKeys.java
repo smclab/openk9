@@ -15,34 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.searcher.client;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.openk9.searcher.grpc.QueryParserRequest;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
+/**
+ * Defining the Extra Param Keys that could be added to
+ * {@code extra} map in {@link QueryParserRequest}.
+ */
+public final class ExtraParamKeys {
 
-public enum UserField {
+	/**
+	 * Extra roles that will be used for ACL filtering.
+	 */
+	public static final String EXTRA_ROLES = "openk9.acl.extra-roles";
 
-	USERNAME {
-		@Override
-		public List<String> getTerms(JsonWebToken jwt) {
 
-			String username = jwt.getSubject();
-
-			return List.of(username);
-		}
-	},
-	ROLES {
-		@Override
-		public List<String> getTerms(JsonWebToken jwt) {
-
-			var groups = jwt.getGroups();
-
-			return groups != null ? new ArrayList<>(groups) : List.of();
-		}
-	};
-
-	public abstract List<String> getTerms(JsonWebToken jwt);
-
+	private ExtraParamKeys(){}
 }

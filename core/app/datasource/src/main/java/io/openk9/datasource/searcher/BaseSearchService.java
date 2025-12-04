@@ -54,7 +54,6 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -67,6 +66,7 @@ import com.google.protobuf.ByteString;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -152,7 +152,7 @@ public abstract class BaseSearchService {
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
 		Map<QueryParserType, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
-		JWT jwt, Map<String, List<String>> extraParams, String language) {
+		JsonWebToken jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 

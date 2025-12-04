@@ -17,41 +17,30 @@
 
 package io.openk9.apigw.filter;
 
-import io.openk9.apigw.security.TenantIdResolverFilter;
 import io.openk9.common.util.web.InternalHeaders;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * A {@link GlobalFilter} that injects the header {@link InternalHeaders#TENANT_ID}
- * to the request towards the downstream service.
+ * A {@link GlobalFilter} that removes {@link InternalHeaders}
+ * not injected from this Api Gateway.
  */
 @Slf4j
 @Component
-public class TenantIdHeaderGlobalPreFilter implements GlobalFilter {
+public class InternalHeadersSanitizerGlobalPreFilter implements GlobalFilter {
 
 	@Override
-	public Mono<Void> filter(
-		ServerWebExchange exchange, GatewayFilterChain chain) {
+	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
-
-		ServerHttpRequest request = exchange.getRequest().mutate()
-			.header(InternalHeaders.TENANT_ID, tenantId)
-			.build();
-
-		if (log.isDebugEnabled()) {
-			log.debug(
-				"Setting internalHeader: {} value to {} for request with id {}",
-				InternalHeaders.TENANT_ID, tenantId, request.getId());
-		}
-
-		return chain.filter(exchange.mutate().request(request).build());
+		// Remove just X-K9-ROLES
+		return chain.filter(exchange.mutate()
+			.request(req -> req.headers(headers -> headers.remove(InternalHeaders.ROLES)))
+			.build());
 	}
+
 }

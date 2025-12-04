@@ -47,7 +47,6 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.impl.HybridQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.Grammar;
@@ -100,6 +99,9 @@ import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.grpc.GrpcService;
+import io.smallrye.jwt.auth.cdi.NullJsonWebToken;
+import io.smallrye.jwt.auth.principal.DefaultJWTParser;
+import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.buffer.Buffer;
@@ -112,6 +114,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
@@ -138,7 +141,11 @@ import org.opensearch.search.sort.SortOrder;
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+	private static final JsonWebToken NULL_JWT = new NullJsonWebToken();
 
+	@Inject
+	DefaultJWTParser jwtParser;
+	
 	@Inject
 	BucketService bucketService;
 
@@ -783,6 +790,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Override
 	public Uni<QueryAnalysisResponse> queryAnalysis(QueryAnalysisRequest request) {
 
+		var jwt = getJwt(request.getJwt());
+
 		String searchText = request.getSearchText();
 
         if (maxSearchTextLength > 0 && searchText.length() > maxSearchTextLength) {
@@ -792,7 +801,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
         String mode = request.getMode();
 
 		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), JWT.of(request.getJwt()));
+			grammarProvider.getOrCreateGrammar(request.getVirtualHost(), jwt);
 
         String finalSearchText = searchText;
 
@@ -960,11 +969,27 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
+	private JsonWebToken getJwt(String jwtString) {
+		JsonWebToken jwt = null;
+		try {
+			jwt = jwtParser.parse(jwtString);
+		}
+		catch (ParseException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("The jwt cannot be parsed.", e);
+			}
+			jwt = NULL_JWT;
+		}
+		return jwt;
+	}
+
 	@Override
 	@ActivateRequestContext
 	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
 
 		return Uni.createFrom().deferred(() -> {
+
+			var jwt = getJwt(request.getJwt());
 
 			Map<QueryParserType, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
@@ -1011,7 +1036,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 									.tenantWithBucket(tenantWithBucket)
 									.queryParserConfig(queryParserConfig)
 									.tokenTypeGroup(searchTokens)
-									.jwt(JWT.of(request.getJwt()))
+									.jwt(jwt)
 									.extraParams(extraParams)
 									.language(language)
 									.build(),
@@ -1031,7 +1056,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						return createBoolQuery(
 							tokenGroup,
 							tenantWithBucket,
-							JWT.of(request.getJwt()),
+							jwt,
 							extraParams,
 							language
 						)
@@ -1058,6 +1083,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Override
 	public Uni<SuggestionsResponse> suggestionsQueryParser(QueryParserRequest request) {
 		return Uni.createFrom().deferred(() -> {
+
+			var jwt = getJwt(request.getJwt());
 
 			Map<QueryParserType, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
@@ -1100,7 +1127,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					return createBoolQuery(
 						tokenGroup,
 						tenantWithBucket,
-						JWT.of(request.getJwt()),
+						jwt,
 						extraParams,
 						language
 					)

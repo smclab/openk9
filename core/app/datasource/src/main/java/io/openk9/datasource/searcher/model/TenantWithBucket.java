@@ -20,6 +20,7 @@ package io.openk9.datasource.searcher.model;
 import java.util.HashSet;
 
 import io.openk9.datasource.index.model.IndexName;
+import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
 
@@ -31,6 +32,7 @@ public class TenantWithBucket {
 	private final String tenantId;
 	private final Bucket bucket;
 	private final String[] indexNames;
+	private final AclMapping[] aclMappings;
 
 	public TenantWithBucket(String tenantId, Bucket bucket) {
 
@@ -40,14 +42,18 @@ public class TenantWithBucket {
 		var datasources = this.bucket.getDatasources();
 
 		var indexNameSet = new HashSet<String>();
+		var aclMappingSet = new HashSet<AclMapping>();
 		for (Datasource datasource : datasources) {
 			var dataIndex = datasource.getDataIndex();
 
 			indexNameSet.add(IndexName.from(tenantId, dataIndex).toString());
+
+			var pluginDriverAclMappings = datasource.getPluginDriver().getAclMappings();
+			aclMappingSet.addAll(pluginDriverAclMappings);
 		}
 
 		this.indexNames = indexNameSet.toArray(String[]::new);
-
+		this.aclMappings = aclMappingSet.toArray(AclMapping[]::new);
 	}
 
 }

@@ -55,7 +55,7 @@ public class RouterConfiguration {
 		var routes = builder.routes();
 
 		for (RoutePath routePath : RoutePath.values()) {
-			Object obj = switch (routePath) {
+			var enforcer = switch (routePath) {
 				case DATASOURCE_OAUTH2_SETTINGS -> routes.route(
 					RoutePath.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
 						.path(RoutePath.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())

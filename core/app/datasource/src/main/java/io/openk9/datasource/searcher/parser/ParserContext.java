@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 
@@ -30,6 +29,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.opensearch.index.query.BoolQueryBuilder;
 
 @Data
@@ -41,7 +41,7 @@ public class ParserContext {
 	private BoolQueryBuilder mutableQuery;
 	private TenantWithBucket tenantWithBucket;
 	private JsonObject queryParserConfig;
-	private JWT jwt;
+	private JsonWebToken jwt;
 	private Map<String, List<String>> extraParams;
 	private String language;
 

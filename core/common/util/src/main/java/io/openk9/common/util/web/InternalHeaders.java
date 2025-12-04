@@ -15,34 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.model;
+package io.openk9.common.util.web;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Getter;
 
-import org.eclipse.microprofile.jwt.JsonWebToken;
+/**
+ * Defining the Request Headers that can be handled by OpenK9 internal services.
+ */
+@Getter
+public final class InternalHeaders {
 
-public enum UserField {
+	/**
+	 * Contains the {@code tenantId} related to this request.
+	 */
+	public static final String TENANT_ID = "X-K9-TENANT-ID";
 
-	USERNAME {
-		@Override
-		public List<String> getTerms(JsonWebToken jwt) {
+	/**
+	 * Contains the roles that will be added as extra parameters
+	 * for the search query.
+	 */
+	public static final String ROLES = "X-K9-ROLES";
 
-			String username = jwt.getSubject();
 
-			return List.of(username);
-		}
-	},
-	ROLES {
-		@Override
-		public List<String> getTerms(JsonWebToken jwt) {
-
-			var groups = jwt.getGroups();
-
-			return groups != null ? new ArrayList<>(groups) : List.of();
-		}
-	};
-
-	public abstract List<String> getTerms(JsonWebToken jwt);
-
+	private InternalHeaders() {}
 }

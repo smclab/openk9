@@ -27,11 +27,11 @@ import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.Annotator;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -50,7 +50,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 		Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		String includeField, String searchKeyword, JWT jwt) {
+		String includeField, String searchKeyword, JsonWebToken jwt) {
 		super(bucket, annotator, stopWords);
 		this.includeField = includeField;
 		this.searchKeyword = searchKeyword;
@@ -245,7 +245,7 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 	protected final String includeField;
 
-	protected final JWT jwt;
+	protected final JsonWebToken jwt;
 
 	private static final Logger _log = Logger.getLogger(
 		BaseAutoCompleteAnnotator.class);

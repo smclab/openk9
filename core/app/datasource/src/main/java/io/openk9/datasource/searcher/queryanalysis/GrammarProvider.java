@@ -27,7 +27,6 @@ import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
 import io.openk9.datasource.service.TenantRegistry;
@@ -36,12 +35,13 @@ import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class GrammarProvider {
 
-	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JWT jwt) {
+	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JsonWebToken jwt) {
 
 		return getTenantWithBucket(virtualHost)
 			.onItem().ifNull().fail()
@@ -69,7 +69,7 @@ public class GrammarProvider {
 	}
 
 	private List<io.openk9.datasource.searcher.queryanalysis.annotator.Annotator> _toAnnotator(
-		TenantWithBucket tenantWithBucket, QueryAnalysis queryAnalysis, JWT jwt) {
+		TenantWithBucket tenantWithBucket, QueryAnalysis queryAnalysis, JsonWebToken jwt) {
 
 		var stopWords = queryAnalysis.getStopWordsList();
 

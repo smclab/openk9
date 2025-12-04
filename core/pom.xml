@@ -314,7 +314,6 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>${compiler-plugin.version}</version>
 					<configuration>
-						<forceLegacyJavacApi>true</forceLegacyJavacApi>
 						<annotationProcessorPaths>
 							<path>
 								<groupId>org.projectlombok</groupId>

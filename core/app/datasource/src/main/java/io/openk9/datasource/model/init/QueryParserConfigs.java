@@ -67,7 +67,7 @@ public class QueryParserConfigs {
 
 	static {
 		for (var type : QueryParserType.values()) {
-			Object switch1 = switch (type) {
+			var enforcer = switch (type) {
 				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> null;
 				case DATE_ORDER -> DTOs.put(type, DateOrder.DTO);
 				case DATE -> DTOs.put(type, Date.DTO);
@@ -76,9 +76,10 @@ public class QueryParserConfigs {
 				case HYBRID -> DTOs.put(type, Hybrid.DTO);
 				case KNN -> DTOs.put(type, Knn.DTO);
 				case TEXT -> DTOs.put(type, Text.DTO);
+				// no default case to prevent accidental omissions at compile-time.
 			};
 
-			Object switch2 = switch (type) {
+			var enforcer2 = switch (type) {
 				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> null;
 				case DATE_ORDER -> FORM_TEMPLATES.put(type, DateOrder.FORM_TEMPLATE);
 				case DATE -> FORM_TEMPLATES.put(type, Date.FORM_TEMPLATE);
@@ -87,6 +88,7 @@ public class QueryParserConfigs {
 				case HYBRID -> FORM_TEMPLATES.put(type, Hybrid.FORM_TEMPLATE);
 				case KNN -> FORM_TEMPLATES.put(type, Knn.FORM_TEMPLATE);
 				case TEXT -> FORM_TEMPLATES.put(type, Text.FORM_TEMPLATE);
+				// no default case to prevent accidental omissions at compile-time.
 			};
 		}
 	}

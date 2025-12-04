@@ -30,12 +30,12 @@ import io.openk9.datasource.mapper.FuzzinessMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.UserField;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.impl.AclQueryParser;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 import io.openk9.datasource.searcher.util.Tuple;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -57,7 +57,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		JWT jwt,
+		JsonWebToken jwt,
 		String...keywords) {
 
 		this(tenantWithBucket, annotator, stopWords, restHighLevelClient, jwt, List.of(keywords));
@@ -68,7 +68,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 		io.openk9.datasource.model.Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		JWT jwt,
+		JsonWebToken jwt,
 		List<String> keywords) {
 
 		super(tenantWithBucket, annotator, stopWords);
@@ -263,7 +263,7 @@ abstract class BaseAggregatorAnnotator extends BaseAnnotator {
 	private final RestHighLevelClient restHighLevelClient;
 	private final List<String> keywords;
 
-	protected final JWT jwt;
+	protected final JsonWebToken jwt;
 
 	private static final Logger _log = Logger.getLogger(
 		BaseAggregatorAnnotator.class);

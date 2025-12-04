@@ -109,8 +109,8 @@ public class HybridQueryParser implements QueryParser {
 				.map(hybridQuery -> {
 					searchSourceBuilder.query(hybridQuery);
 
-					var aclFilterQuery = AclQueryParser.getAclFilterQuery(
-						parserContext, extraParamsKey, extraParamsEnabled);
+					var aclFilterQuery = AclQueryParser.getBoolQuery(
+						parserContext, extraParamsEnabled);
 
 					searchSourceBuilder.postFilter(aclFilterQuery);
 
