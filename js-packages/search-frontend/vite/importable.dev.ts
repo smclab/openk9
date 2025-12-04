@@ -1,10 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { noCustomOutput } from "./plugins/noCustomOutput";
 
 export default defineConfig(() => {
   return {
-    plugins: [react()],
+    plugins: [react(), noCustomOutput()],
     resolve: {
       extensions: [".tsx", ".ts", ".js"],
     },
@@ -15,10 +16,12 @@ export default defineConfig(() => {
       emptyOutDir: false,
       cssCodeSplit: true,
       lib: {
-        entry: path.resolve(__dirname, "../src/index.ts"),
+        entry: {
+          importable: path.resolve(__dirname, "../src/index.ts"),
+        },
         name: "OpenK9SearchFrontend",
         formats: ["es", "cjs"],
-        fileName: (format) => `index.${format}.js`,
+        fileName: (format) => `importable.${format}.js`,
       },
       rollupOptions: {
         external: [
@@ -31,7 +34,9 @@ export default defineConfig(() => {
           "lodash",
         ],
         output: {
-          exports: "named",
+          path: path.resolve(__dirname, "../dist"),
+          entryFileNames: "[name].js",
+          libraryTarget: "umd",
         },
       },
     },
