@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.filter;
 
+import io.openk9.common.util.web.InternalHeaders;
+
 import io.quarkus.vertx.web.RouteFilter;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
@@ -29,7 +31,7 @@ public class RouteFilters {
 	void tenantIdRouteFilter(RoutingContext rc) {
 		HttpServerRequest request = rc.request();
 		MultiMap headers = request.headers();
-		String tenantId = headers.get("X-TENANT-ID");
+		String tenantId = headers.get(InternalHeaders.TENANT_ID);
 
 		if (tenantId != null) {
 			if (log.isDebugEnabled()) {
@@ -40,7 +42,9 @@ public class RouteFilters {
 		}
 		else {
 			if (log.isDebugEnabled()) {
-				log.warn("No 'X-TENANT-ID' identified in request headers.");
+				log.warnf(
+					"No '%s' identified in request headers.",
+					InternalHeaders.TENANT_ID);
 			}
 		}
 

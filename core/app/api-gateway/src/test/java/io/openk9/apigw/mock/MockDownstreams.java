@@ -20,6 +20,8 @@ package io.openk9.apigw.mock;
 import java.text.ParseException;
 import java.util.Map;
 
+import io.openk9.common.util.web.InternalHeaders;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
@@ -91,6 +93,11 @@ public class MockDownstreams {
 		return searcherServer.port();
 	}
 
+	@Bean
+	int ragPort() {
+		return 0;
+	}
+
 	private static Publisher<Void> response(
 		HttpServerRequest req, HttpServerResponse res, String downstream) {
 
@@ -121,7 +128,7 @@ public class MockDownstreams {
 			return res.status(400).send();
 		}
 
-		var tenantId = headers.get("X-TENANT-ID");
+		var tenantId = headers.get(InternalHeaders.TENANT_ID);
 
 		return res
 			.header("Content-Type", "application/json")
