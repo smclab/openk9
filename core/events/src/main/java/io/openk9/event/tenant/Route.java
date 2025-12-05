@@ -20,5 +20,6 @@ package io.openk9.event.tenant;
 public enum Route {
 	DATASOURCE,
 	SEARCHER,
+	RAG,
 	ANY
 }

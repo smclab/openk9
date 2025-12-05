@@ -301,6 +301,7 @@ public class TenantWriteServiceR2dbc {
 		return (switch (route) {
 			case DATASOURCE -> RoutePath.DATASOURCE;
 			case SEARCHER -> RoutePath.SEARCHER;
+			case RAG -> RoutePath.RAG;
 			case ANY -> RoutePath.ANY;
 		}).name();
 	}

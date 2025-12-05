@@ -95,7 +95,8 @@ public class TenantService {
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
 								Route.DATASOURCE, Authorization.OAUTH2,
-								Route.SEARCHER, Authorization.NO_AUTH
+								Route.SEARCHER, Authorization.NO_AUTH,
+								Route.RAG, Authorization.NO_AUTH
 							))
 							.build()
 					)

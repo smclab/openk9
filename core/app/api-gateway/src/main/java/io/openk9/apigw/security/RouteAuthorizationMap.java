@@ -35,7 +35,8 @@ public final class RouteAuthorizationMap {
 					 DATASOURCE_OAUTH2_SETTINGS,
 					 DATASOURCE_CURRENT_BUCKET,
 					 DATASOURCE_TEMPLATES,
-					 SEARCHER -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
+					 SEARCHER,
+					 RAG-> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
 				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
 				// no default case to prevent accidental omissions at compile-time.
 			};

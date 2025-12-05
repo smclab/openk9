@@ -35,11 +35,15 @@ public class RouterConfiguration {
 	int datasourcePort;
 	@Autowired(required = false)
 	int searcherPort;
+	@Autowired(required = false)
+	int ragPort;
 
 	@Value("${io.openk9.apigw.datasource-url:}")
 	String datasourceUrl;
 	@Value("${io.openk9.apigw.searcher-url:}")
 	String searcherUrl;
+	@Value("${io.openk9.apigw.rag-url:}")
+	String ragUrl;
 
 	@Bean
 	RouteLocator locatorBuilder(RouteLocatorBuilder builder) {
@@ -51,6 +55,10 @@ public class RouterConfiguration {
 		String searcher = searcherPort > 0
 			? "http://localhost:" + searcherPort
 			: searcherUrl;
+
+		String rag = ragPort > 0
+			? "http://localhost:" + ragPort
+			: ragUrl;
 
 		var routes = builder.routes();
 
@@ -80,6 +88,11 @@ public class RouterConfiguration {
 					RoutePath.SEARCHER.name(), r -> r
 						.path(RoutePath.SEARCHER.getAntPattern())
 						.uri(searcher)
+				);
+				case RAG -> routes.route(
+					RoutePath.RAG.name(), r -> r
+						.path(RoutePath.RAG.getAntPattern())
+						.uri(rag)
 				);
 				case ANY -> routes.route(
 					RoutePath.ANY.name(), r -> r

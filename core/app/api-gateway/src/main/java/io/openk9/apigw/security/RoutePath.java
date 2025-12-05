@@ -80,6 +80,12 @@ public enum RoutePath {
 	SEARCHER("/api/searcher/**"),
 
 	/**
+	 * Route for the rag service.
+	 * Matches requests under {@code /api/rag/**}.
+	 */
+	RAG("/api/rag/**"),
+
+	/**
 	 * Catch-all route that matches any request.
 	 * Matches requests under {@code /**}.
 	 */
