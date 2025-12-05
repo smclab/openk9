@@ -19,7 +19,9 @@ package io.openk9.datasource.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 public enum UserField {
@@ -30,16 +32,25 @@ public enum UserField {
 
 			String username = jwt.getSubject();
 
-			return List.of(username);
+			return username != null ? List.of(username) : List.of();
 		}
 	},
 	ROLES {
 		@Override
 		public List<String> getTerms(JsonWebToken jwt) {
 
-			var groups = jwt.getGroups();
+			Set<String> groups = jwt.getGroups();
 
 			return groups != null ? new ArrayList<>(groups) : List.of();
+		}
+	},
+	EMAIL {
+		@Override
+		public List<String> getTerms(JsonWebToken jwt) {
+
+			String email = jwt.getClaim(Claims.email);
+
+			return email != null ? List.of(email) : List.of();
 		}
 	};
 
