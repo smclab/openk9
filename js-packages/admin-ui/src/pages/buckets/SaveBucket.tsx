@@ -32,6 +32,7 @@ import {
   useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
@@ -266,6 +267,33 @@ export function SaveBucket() {
   });
 
   if (bucketQuery.loading) return null;
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "refreshOnDate",
+          "refreshOnQuery",
+          "refreshOnSuggestionCategory",
+          "refreshOnTab",
+          "retrieveType",
+          "datasourceIds",
+          "suggestionCategoryIds",
+          "tabIds",
+          "queryAnalysisId",
+          "defaultLanguageId",
+          "searchConfigId",
+          "ragConfigurationChatId",
+          "ragConfigurationChatToolId",
+          "ragConfigurationSimpleGenerateId",
+        ],
+        label: "Recap Document Type",
+      },
+    ],
+  });
 
   return (
     <ContainerFluid style={{ width: "55%" }}>
@@ -538,6 +566,7 @@ export function SaveBucket() {
                         }
                       />
                     </Box>
+                    <Recap recapData={recapSections} />
                   </>
                 ),
                 page: 0,
