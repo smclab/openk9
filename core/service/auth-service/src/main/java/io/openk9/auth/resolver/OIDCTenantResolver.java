@@ -54,7 +54,7 @@ public class OIDCTenantResolver implements TenantConfigResolver {
 	}
 
 	private Uni<OidcTenantConfig> createTenantConfig(RoutingContext routingContext) {
-		String virtualHost = routingContext.request().authority().host();
+		String virtualHost = routingContext.request().authority().toString();
 		return tenantRegistry
 			.getTenantByVirtualHost(virtualHost)
 			.map(tenant -> {
