@@ -107,12 +107,17 @@ import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.json.PlainJsonSerializable;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.SuggestMode;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Operator;
+import org.opensearch.client.opensearch._types.query_dsl.PrefixQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
+import org.opensearch.client.opensearch.core.search.Highlight;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.core.search.Suggest;
 import org.opensearch.client.opensearch.core.search.SuggestSort;
@@ -854,6 +859,83 @@ public class SearchResource {
 	}
 
 	/**
+	 * Builds an OpenSearch Highlight configuration for the given fields and query text.
+	 * <p>
+	 * This method constructs a highlight clause that creates a boolean query combining both prefix
+	 * and match queries for each field path. The highlighting is configured to return the entire
+	 * field content (numberOfFragments=0) with custom tags wrapping matched terms, and
+	 * disables field match requirement to allow highlighting across all specified fields.
+	 * </p>
+	 * <p>
+	 * The highlight clause uses a boolean "should" query that includes prefix queries
+	 * (matching terms that start with the query text) and match queries (matching terms
+	 * containing the query text using OR operator). This combination ensures that both
+	 * exact prefix matches and partial word matches are highlighted in the search results.
+	 * </p>
+	 * <p>
+	 * The highlighting is configured with number of fragments set to 0 (returns entire field
+	 * content), and require field match set to false (highlights across all fields regardless of
+	 * where match occurred).
+	 * </p>
+	 *
+	 * @param parentPathSet the list of fields to use for highlighting
+	 * @param queryText the text to search for and highlight in the results
+	 * @return a configured Highlight object ready to be used in an OpenSearch query
+	 */
+	private static Highlight _buildHighlight(Set<String> parentPathSet, String queryText) {
+
+		// used to collect all queries used in the bool query
+		List<Query> boolQueryList = new ArrayList<>();
+
+		// prefix queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new PrefixQuery.Builder().field(parent).value(queryText).build()
+			)
+			.map(prefixQuery ->
+				new Query.Builder().prefix(prefixQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// match queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new MatchQuery.Builder()
+					.field(parent)
+					.query(new FieldValue.Builder().stringValue(queryText).build())
+					.operator(Operator.Or)
+					.build()
+			)
+			.map(matchQuery ->
+				new Query.Builder().match(matchQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// highlight
+		var highlightBuilder = new Highlight.Builder()
+			.requireFieldMatch(false)
+			.preTags("")
+			.postTags("")
+			.numberOfFragments(0)
+			.highlightQuery(
+				new Query.Builder()
+					.bool(new BoolQuery.Builder().should(boolQueryList).build())
+					.build()
+			);
+
+		// fields
+		var highlightField = new org.opensearch.client.opensearch.core.search.HighlightField.Builder()
+			.numberOfFragments(0)
+			.build();
+
+		for (String parentPath : parentPathSet) {
+			highlightBuilder.fields(parentPath, highlightField);
+		}
+
+		return highlightBuilder.build();
+	}
+
+	/**
 	 * Creates an OpenSearch search request for autocomplete based on the provided configurations.
 	 * Builds a multi-match query with bool_prefix type that searches the query text across
 	 * the configured fields, applying fuzziness, minimum should match, and operator settings.
@@ -865,14 +947,16 @@ public class SearchResource {
 	private org.opensearch.client.opensearch.core.SearchRequest _createAutocompleteRequest(
 			AutocompleteConfigurationsResponse configurations, String queryText) {
 
-		var fieldPathList = configurations.getFieldList().stream()
+		var fieldList = configurations.getFieldList();
+
+		var fieldPathList = fieldList.stream()
 			.map(field -> field.getFieldPath() + "^" + field.getBoost())
 			.toList();
-		var parentPathSet = configurations.getFieldList().stream()
+		var parentPathSet = fieldList.stream()
 			.map(io.openk9.searcher.grpc.Field::getParentPath)
 			.collect(Collectors.toSet());
 
-		Query autocompleteMultiMatchQuery = Query.of(
+		Query mainQuery = Query.of(
 			q -> q
 				.multiMatch(m -> m
 					.query(queryText)
@@ -884,15 +968,13 @@ public class SearchResource {
 				)
 		);
 
+		var highlight = _buildHighlight(parentPathSet, queryText);
+
 		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
 			.index(configurations.getIndexNameList())
-			.query(autocompleteMultiMatchQuery)
+			.query(mainQuery)
 			.size(configurations.getResultSize())
-			.source(src -> src
-				.filter(f -> f
-					.includes(List.copyOf(parentPathSet))
-				)
-			)
+			.highlight(highlight)
 			.sort(sort -> sort
 				.score(sc -> sc.order(SortOrder.Desc))
 			)
@@ -1025,8 +1107,8 @@ public class SearchResource {
 	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
 	 * <p>
 	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
-	 * and constructs an {@link AutocompleteHit} containing autocomplete text and the doc type field
-	 * label.
+	 * and constructs an {@link AutocompleteHit} containing autocomplete text, the doc type field
+	 * label and the score.
 	 *
 	 * @param response the OpenSearch search response containing autocomplete suggestions
 	 * @param fields the fields used to retrieve the autocomplete suggestions
@@ -1040,14 +1122,17 @@ public class SearchResource {
 		List<AutocompleteHit> autocompleteHits = new ArrayList<>();
 
 		for (Hit<Map> hit : response.hits().hits()) {
-			var source = hit.source();
+			var score = hit.score();
+			var highlight = hit.highlight();
 
-			if (source != null) {
+			if (highlight != null) {
 				for (io.openk9.searcher.grpc.Field field : fields) {
-					var autocomplete = (String) _getNestedValue(source, field.getParentPath());
+					List<String> autocomplete = highlight.get(field.getParentPath());
 
-					if (autocomplete != null) {
-						autocompleteHits.add(new AutocompleteHit(autocomplete, field.getLabel()));
+					if (autocomplete != null && !autocomplete.isEmpty()) {
+						autocompleteHits.add(
+							new AutocompleteHit(autocomplete.getFirst(), field.getLabel(), score)
+						);
 					}
 				}
 			}

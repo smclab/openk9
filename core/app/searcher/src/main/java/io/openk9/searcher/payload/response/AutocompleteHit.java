@@ -31,4 +31,6 @@ public class AutocompleteHit {
 	private String autocomplete;
 	@Schema(description = "Doc type field label")
 	private String labelDocType;
+	@Schema(description = "The score of the hit")
+	private Double score;
 }
