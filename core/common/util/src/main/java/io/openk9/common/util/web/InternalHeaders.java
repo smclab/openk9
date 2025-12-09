@@ -28,7 +28,7 @@ public final class InternalHeaders {
 	/**
 	 * Contains the {@code tenantId} related to this request.
 	 */
-	public static final String TENANT_ID = "X-K9-TENANT-ID";
+	public static final String TENANT_ID = "X-TENANT-ID";
 
 	/**
 	 * Contains the roles that will be added as extra parameters
