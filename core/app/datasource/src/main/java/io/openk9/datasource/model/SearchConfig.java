@@ -52,6 +52,12 @@ public class SearchConfig extends K9Entity {
 	private boolean minScoreSuggestions = false;
 	@Column(name = "min_score_search", nullable = false)
 	private boolean minScoreSearch = false;
+	@Column(name = "max_search_page_from")
+	private Integer maxSearchPageFrom;
+	@Column(name = "max_search_page_size")
+	private Integer maxSearchPageSize;
+	@Column(name = "max_text_query_length")
+	private Integer maxTextQueryLength;
 
 	@OneToMany(
 		mappedBy = "searchConfig",
