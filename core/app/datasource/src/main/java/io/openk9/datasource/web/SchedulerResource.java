@@ -18,7 +18,6 @@
 package io.openk9.datasource.web;
 
 import java.util.List;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -40,12 +39,10 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestResponse;
 
 @ApplicationScoped
 @Path("/schedulers")
-@RolesAllowed("k9-admin")
 public class SchedulerResource {
 
 	@Operation(operationId = "getDeletedContentIds")

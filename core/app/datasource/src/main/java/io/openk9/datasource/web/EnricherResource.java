@@ -17,12 +17,6 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.service.EnrichItemService;
-import io.openk9.datasource.web.dto.HealthDTO;
-import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
-import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -30,6 +24,13 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.service.EnrichItemService;
+import io.openk9.datasource.web.dto.HealthDTO;
+import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
+
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -40,7 +41,6 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @ApplicationScoped
 @Path("/enrichers")
-@RolesAllowed("k9-admin")
 public class EnricherResource {
 
 	@Inject

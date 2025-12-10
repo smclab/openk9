@@ -20,13 +20,12 @@ package io.openk9.datasource.web;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.model.MappingsKey;
@@ -36,16 +35,14 @@ import io.openk9.datasource.service.DataIndexService;
 import io.openk9.datasource.service.DocTypeService;
 import io.openk9.datasource.service.util.K9EntityServiceException;
 import io.openk9.datasource.web.dto.DataIndexByDocTypes;
+import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
@@ -53,11 +50,9 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @CircuitBreaker
 @Path("/v1/data-index")
-@RolesAllowed("k9-admin")
 public class DataIndexResource {
 
 	@Inject
