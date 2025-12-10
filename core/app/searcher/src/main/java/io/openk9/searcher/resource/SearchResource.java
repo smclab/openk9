@@ -173,6 +173,83 @@ public class SearchResource {
 	Tracer tracer;
 
 	/**
+	 * Builds an OpenSearch Highlight configuration for the given fields and query text.
+	 * <p>
+	 * This method constructs a highlight clause that creates a boolean query combining both prefix
+	 * and match queries for each field path. The highlighting is configured to return the entire
+	 * field content (numberOfFragments=0) with custom tags wrapping matched terms, and
+	 * disables field match requirement to allow highlighting across all specified fields.
+	 * </p>
+	 * <p>
+	 * The highlight clause uses a boolean "should" query that includes prefix queries
+	 * (matching terms that start with the query text) and match queries (matching terms
+	 * containing the query text using OR operator). This combination ensures that both
+	 * exact prefix matches and partial word matches are highlighted in the search results.
+	 * </p>
+	 * <p>
+	 * The highlighting is configured with number of fragments set to 0 (returns entire field
+	 * content), and require field match set to false (highlights across all fields regardless of
+	 * where match occurred).
+	 * </p>
+	 *
+	 * @param parentPathSet the list of fields to use for highlighting
+	 * @param queryText the text to search for and highlight in the results
+	 * @return a configured Highlight object ready to be used in an OpenSearch query
+	 */
+	private static Highlight _buildHighlight(Set<String> parentPathSet, String queryText) {
+
+		// used to collect all queries used in the bool query
+		List<Query> boolQueryList = new ArrayList<>();
+
+		// prefix queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new PrefixQuery.Builder().field(parent).value(queryText).build()
+			)
+			.map(prefixQuery ->
+				new Query.Builder().prefix(prefixQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// match queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new MatchQuery.Builder()
+					.field(parent)
+					.query(new FieldValue.Builder().stringValue(queryText).build())
+					.operator(Operator.Or)
+					.build()
+			)
+			.map(matchQuery ->
+				new Query.Builder().match(matchQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// highlight
+		var highlightBuilder = new Highlight.Builder()
+			.requireFieldMatch(false)
+			.preTags("")
+			.postTags("")
+			.numberOfFragments(0)
+			.highlightQuery(
+				new Query.Builder()
+					.bool(new BoolQuery.Builder().should(boolQueryList).build())
+					.build()
+			);
+
+		// fields
+		var highlightField = new org.opensearch.client.opensearch.core.search.HighlightField.Builder()
+			.numberOfFragments(0)
+			.build();
+
+		for (String parentPath : parentPathSet) {
+			highlightBuilder.fields(parentPath, highlightField);
+		}
+
+		return highlightBuilder.build();
+	}
+
+	/**
 	 * Generates the corrected text by applying autocorrection suggestions to the original text.
 	 * <p>
 	 * This method iterates through the suggestions sorted by offset and replaces each incorrect
@@ -216,34 +293,6 @@ public class SearchResource {
 		correctedText.append(originalText.substring(currentPosition));
 
 		return correctedText.toString();
-	}
-
-	protected static Object _getNestedValue(Map<String, Object> map, String path) {
-		if (path == null || path.isEmpty()) {
-			return null;
-		}
-
-		String[] keys = path.split("\\.");
-		Object current = map;
-
-		for (String key : keys) {
-			if (current instanceof Map) {
-				@SuppressWarnings("unchecked")
-				Map<String, Object> currentMap = (Map<String, Object>) current;
-				current = currentMap.get(key);
-
-				// Key not found
-				if (current == null) {
-					return null;
-				}
-			}
-			else {
-				// Expected a Map but got something else
-				return null;
-			}
-		}
-
-		return current;
 	}
 
 	private static QueryAnalysisSearchToken.Builder createQastBuilder(
@@ -859,83 +908,6 @@ public class SearchResource {
 	}
 
 	/**
-	 * Builds an OpenSearch Highlight configuration for the given fields and query text.
-	 * <p>
-	 * This method constructs a highlight clause that creates a boolean query combining both prefix
-	 * and match queries for each field path. The highlighting is configured to return the entire
-	 * field content (numberOfFragments=0) with custom tags wrapping matched terms, and
-	 * disables field match requirement to allow highlighting across all specified fields.
-	 * </p>
-	 * <p>
-	 * The highlight clause uses a boolean "should" query that includes prefix queries
-	 * (matching terms that start with the query text) and match queries (matching terms
-	 * containing the query text using OR operator). This combination ensures that both
-	 * exact prefix matches and partial word matches are highlighted in the search results.
-	 * </p>
-	 * <p>
-	 * The highlighting is configured with number of fragments set to 0 (returns entire field
-	 * content), and require field match set to false (highlights across all fields regardless of
-	 * where match occurred).
-	 * </p>
-	 *
-	 * @param parentPathSet the list of fields to use for highlighting
-	 * @param queryText the text to search for and highlight in the results
-	 * @return a configured Highlight object ready to be used in an OpenSearch query
-	 */
-	private static Highlight _buildHighlight(Set<String> parentPathSet, String queryText) {
-
-		// used to collect all queries used in the bool query
-		List<Query> boolQueryList = new ArrayList<>();
-
-		// prefix queries used in the bool query
-		parentPathSet.stream()
-			.map(parent ->
-				new PrefixQuery.Builder().field(parent).value(queryText).build()
-			)
-			.map(prefixQuery ->
-				new Query.Builder().prefix(prefixQuery).build()
-			)
-			.forEach(boolQueryList::add);
-
-		// match queries used in the bool query
-		parentPathSet.stream()
-			.map(parent ->
-				new MatchQuery.Builder()
-					.field(parent)
-					.query(new FieldValue.Builder().stringValue(queryText).build())
-					.operator(Operator.Or)
-					.build()
-			)
-			.map(matchQuery ->
-				new Query.Builder().match(matchQuery).build()
-			)
-			.forEach(boolQueryList::add);
-
-		// highlight
-		var highlightBuilder = new Highlight.Builder()
-			.requireFieldMatch(false)
-			.preTags("")
-			.postTags("")
-			.numberOfFragments(0)
-			.highlightQuery(
-				new Query.Builder()
-					.bool(new BoolQuery.Builder().should(boolQueryList).build())
-					.build()
-			);
-
-		// fields
-		var highlightField = new org.opensearch.client.opensearch.core.search.HighlightField.Builder()
-			.numberOfFragments(0)
-			.build();
-
-		for (String parentPath : parentPathSet) {
-			highlightBuilder.fields(parentPath, highlightField);
-		}
-
-		return highlightBuilder.build();
-	}
-
-	/**
 	 * Creates an OpenSearch search request for autocomplete based on the provided configurations.
 	 * Builds a multi-match query with bool_prefix type that searches the query text across
 	 * the configured fields, applying fuzziness, minimum should match, and operator settings.
@@ -1105,6 +1077,45 @@ public class SearchResource {
 	}
 
 	/**
+	 * Extracts and validates the query text from the provided search token.
+	 *
+	 * <p>This method performs the following validations:
+	 * <ul>
+	 *   <li>Ensures the search token contains exactly one value</li>
+	 *   <li>Ensures the query text is not null or empty</li>
+	 * </ul>
+	 *
+	 * @param searchTokenUserInput the search token to validate
+	 * @return the validated query text entered by the user in the search input
+	 * @throws AutocorrectionException if the search token contains 0 or more than 1 values
+	 * @throws AutocorrectionException if the query text is null or empty
+	 *
+	 * @see ParserSearchToken
+	 * @see AutocorrectionException
+	 */
+	private String _extractAndValidateQueryText(ParserSearchToken searchTokenUserInput) {
+
+		var searchTokenUserInputValues = searchTokenUserInput.getValues();
+
+		if (searchTokenUserInputValues.size() != 1) {
+			throw new AutocorrectionException(
+				"Autocorrection was not performed because the user input search token has 0 or more than 1 values."
+			);
+		}
+
+		// retrieve the text entered by the user in the search input.
+		var queryText = searchTokenUserInputValues.getFirst();
+
+		if (queryText == null || queryText.isEmpty()) {
+			throw new AutocorrectionException(
+				"Autocorrection was not performed because the user input text is null or empty."
+			);
+		}
+
+		return queryText;
+	}
+
+	/**
 	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
 	 * <p>
 	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
@@ -1186,45 +1197,6 @@ public class SearchResource {
 	}
 
 	/**
-	 * Extracts and validates the query text from the provided search token.
-	 *
-	 * <p>This method performs the following validations:
-	 * <ul>
-	 *   <li>Ensures the search token contains exactly one value</li>
-	 *   <li>Ensures the query text is not null or empty</li>
-	 * </ul>
-	 *
-	 * @param searchTokenUserInput the search token to validate
-	 * @return the validated query text entered by the user in the search input
-	 * @throws AutocorrectionException if the search token contains 0 or more than 1 values
-	 * @throws AutocorrectionException if the query text is null or empty
-	 *
-	 * @see ParserSearchToken
-	 * @see AutocorrectionException
-	 */
-	private String _extractAndValidateQueryText(ParserSearchToken searchTokenUserInput) {
-
-		var searchTokenUserInputValues = searchTokenUserInput.getValues();
-
-		if (searchTokenUserInputValues.size() != 1) {
-			throw new AutocorrectionException(
-				"Autocorrection was not performed because the user input search token has 0 or more than 1 values."
-			);
-		}
-
-		// retrieve the text entered by the user in the search input.
-		var queryText = searchTokenUserInputValues.getFirst();
-
-		if (queryText == null || queryText.isEmpty()) {
-			throw new AutocorrectionException(
-				"Autocorrection was not performed because the user input text is null or empty."
-			);
-		}
-
-		return queryText;
-	}
-
-	/**
 	 * Extracts and transforms term suggestions from the OpenSearch suggest response.
 	 *
 	 * @param suggestions the OpenSearch suggestions list
@@ -1287,6 +1259,44 @@ public class SearchResource {
 	}
 
 	/**
+	 * Retrieves autocomplete suggestions from OpenSearch.
+	 *
+	 * <p>This method executes an autocomplete query against OpenSearch using the provided query.
+	 * The method uses distributed tracing to track the OpenSearch request execution.
+	 *
+	 * @param autocompleteQuery the OpenSearch query configured according to the Autocomplete configurations.
+	 * @return a {@link Uni} that emits an {@link SearchResponse} containing autocomplete suggestions
+	 *         and metadata. If the OpenSearch request fails, the Uni emits an AutocompleteException.
+	 *
+	 * @throws AutocompleteException if the OpenSearch autocomplete request fails or returns an error.
+	 *
+	 * @see org.opensearch.client.opensearch.core.SearchRequest
+	 * @see SearchResponse
+	 * @see AutocompleteException
+	 */
+	@WithSpan
+	protected Uni<org.opensearch.client.opensearch.core.SearchResponse<Map>> _getAutocompleteSuggest(
+			org.opensearch.client.opensearch.core.SearchRequest autocompleteQuery) {
+
+		// retrieve autocomplete suggestions
+		return Uni.createFrom().completionStage(() -> {
+				try {
+					return client.search(autocompleteQuery, Map.class);
+				}
+				catch (IOException | OpenSearchException e) {
+					return CompletableFuture.failedFuture(e);
+				}
+			})
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Autocomplete failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocompleteException("Autocomplete failed", throwable)
+				);
+			});
+	}
+
+	/**
 	 * Retrieves autocorrection configurations from the search service.
 	 *
 	 * <p>This method sends a request to datasource to fetch autocorrection configurations.
@@ -1323,44 +1333,6 @@ public class SearchResource {
 					new AutocorrectionException(
 						"Retrieve autocorrection configurations failed", throwable
 					)
-				);
-			});
-	}
-
-	/**
-	 * Retrieves autocomplete suggestions from OpenSearch.
-	 *
-	 * <p>This method executes an autocomplete query against OpenSearch using the provided query.
-	 * The method uses distributed tracing to track the OpenSearch request execution.
-	 *
-	 * @param autocompleteQuery the OpenSearch query configured according to the Autocomplete configurations.
-	 * @return a {@link Uni} that emits an {@link SearchResponse} containing autocomplete suggestions
-	 *         and metadata. If the OpenSearch request fails, the Uni emits an AutocompleteException.
-	 *
-	 * @throws AutocompleteException if the OpenSearch autocomplete request fails or returns an error.
-	 *
-	 * @see org.opensearch.client.opensearch.core.SearchRequest
-	 * @see SearchResponse
-	 * @see AutocompleteException
-	 */
-	@WithSpan
-	protected Uni<org.opensearch.client.opensearch.core.SearchResponse<Map>> _getAutocompleteSuggest(
-			org.opensearch.client.opensearch.core.SearchRequest autocompleteQuery) {
-
-		// retrieve autocomplete suggestions
-		return Uni.createFrom().completionStage(() -> {
-				try {
-					return client.search(autocompleteQuery, Map.class);
-				}
-				catch (IOException | OpenSearchException e) {
-					return CompletableFuture.failedFuture(e);
-				}
-			})
-			.onFailure()
-			.recoverWithUni(throwable -> {
-				_logMessage("Autocomplete failed", throwable);
-				return Uni.createFrom().failure(
-					new AutocompleteException("Autocomplete failed", throwable)
 				);
 			});
 	}
