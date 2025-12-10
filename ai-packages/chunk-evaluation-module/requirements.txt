@@ -1,0 +1,8 @@
+pika==1.3.2
+chonkie[semantic]
+requests
+scikit-learn
+arize-phoenix
+arize-phoenix-otel
+pandas
+
