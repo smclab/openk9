@@ -972,6 +972,7 @@ public class SearchResource {
 
 		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
 			.index(configurations.getIndexNameList())
+			.source(src -> src.fetch(false))
 			.query(mainQuery)
 			.size(configurations.getResultSize())
 			.highlight(highlight)
