@@ -530,8 +530,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 				var grpcFields = autocomplete.getFields().stream()
 					.map(field -> Field.newBuilder()
-						.setFieldPath(field.getPath())
-						.setParentPath(field.getParentDocTypeField().getPath())
+						.setFieldPath(DocTypeFieldUtils.fieldPath(field))
+						.setParentPath(DocTypeFieldUtils.fieldPath(field.getParentDocTypeField()))
 						.setLabel(DocTypeFieldUtils.generateLabel(field))
 						.setBoost(field.getBoost())
 						.build()
