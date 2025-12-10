@@ -5,8 +5,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server.py .
-COPY metrics/ ./metrics/
-COPY rabbit_manager/ ./rabbit_manager/
+COPY app/server.py .
+COPY app/metrics/ ./metrics/
+COPY app/rabbit_manager/ ./rabbit_manager/
 
 CMD ["python", "server.py"]
