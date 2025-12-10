@@ -17,6 +17,8 @@
 
 package io.openk9.searcher.payload.response;
 
+import java.util.Objects;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,4 +35,19 @@ public class AutocompleteHit {
 	private String labelDocType;
 	@Schema(description = "The score of the hit")
 	private Double score;
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		AutocompleteHit that = (AutocompleteHit) o;
+		return Objects.equals(autocomplete, that.autocomplete) && Objects.equals(
+			labelDocType, that.labelDocType);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(autocomplete, labelDocType);
+	}
 }

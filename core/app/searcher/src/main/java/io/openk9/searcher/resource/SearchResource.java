@@ -394,7 +394,7 @@ public class SearchResource {
 	@POST
 	@Path("/autocomplete")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<List<AutocompleteHit>> autocomplete(AutocompleteRequestDTO autocompleteRequest) {
+	public Uni<Set<AutocompleteHit>> autocomplete(AutocompleteRequestDTO autocompleteRequest) {
 		return _buildAutocompleteContext(autocompleteRequest)
 			.flatMap(context ->
 				_getAutocompleteSuggest(context.query())
@@ -1114,13 +1114,13 @@ public class SearchResource {
 	 * @param response the OpenSearch search response containing autocomplete suggestions
 	 * @param fields the fields used to retrieve the autocomplete suggestions
 	 *
-	 * @return an {@link List<AutocompleteHit>} containing autocomplete data
+	 * @return an {@link Set<AutocompleteHit>} containing autocomplete data
 	 */
-	private List<AutocompleteHit> _extractAutocompleteResponse(
+	private Set<AutocompleteHit> _extractAutocompleteResponse(
 			org.opensearch.client.opensearch.core.SearchResponse<Map> response,
 			List<io.openk9.searcher.grpc.Field> fields) {
 
-		List<AutocompleteHit> autocompleteHits = new ArrayList<>();
+		Set<AutocompleteHit> autocompleteHits = new HashSet<>();
 
 		for (Hit<Map> hit : response.hits().hits()) {
 			var score = hit.score();
