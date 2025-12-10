@@ -1,0 +1,41 @@
+server:
+  max-http-request-header-size: 20KB
+  port: 8443
+  ssl:
+    certificate: "classpath:certs/localhost.crt"
+    certificate-private-key: "classpath:certs/localhost.key"
+
+spring.cloud.gateway.server.webflux.routes:
+  - id: oauth2-settings
+    uri: forward:/oauth2/settings.js
+    predicates:
+      - Path=/api/datasource/oauth2/settings.js
+  - id: datasource
+    uri: http://datasource:8080
+    predicates:
+      - Path=/api/datasource/**
+  - id: searcher
+    uri: http://searcher:8080
+    predicates:
+      - Path=/api/searcher/**
+  - id: ingestion
+    uri: http://ingestion:8080
+    predicates:
+      - Path=/api/ingestion/**
+  - id: rag-module
+    uri: http://rag-module:5000
+    predicates:
+      - Path=/api/rag/**
+  - id: admin-ui
+    uri: http://admin-ui:8080
+    predicates:
+      - Path=/admin/**
+  - id: talk-to
+    uri: http://talk-to:8080
+    predicates:
+      - Path=/chat/**
+  - id: frontend
+    uri: http://search-frontend:8080
+    predicates:
+      - Path=/**
+    order: 999

@@ -1,5 +1,22 @@
 #!/bin/bash
 
+#
+# Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 set -e
 set -u
 
@@ -10,7 +27,7 @@ function create_user() {
 EOSQL
 }
 
-function create_user_and_database() {
+function create_database() {
 	local database=$1
 	echo "  Creating database '$database'"
 	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
@@ -18,27 +35,12 @@ function create_user_and_database() {
 	    GRANT ALL PRIVILEGES ON DATABASE $database TO $OPENK9_USER;
 EOSQL
 }
-function create_schemas_on_openk9_database() {
-	psql -U openk9 -d openk9 -f docker-entrypoint-initdb.d/scripts/init_openk9_schemas.sql
-}
-
-function inittenantmanager() {
-	psql -U openk9 -d tenantmanager -f /docker-entrypoint-initdb.d/scripts/insert-tenant-manager.sql
-}
-
-function initkeycloak() {
-	psql -U openk9 -d keycloak -f /docker-entrypoint-initdb.d/scripts/init-keycloak.sql
-}
-
 
 if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
 	echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
 	create_user
 	for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
-		create_user_and_database $db
+		create_database $db
 	done
-	create_schemas_on_openk9_database
-	inittenantmanager
-	initkeycloak
 	echo "Multiple databases created"
 fi
