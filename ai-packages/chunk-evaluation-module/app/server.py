@@ -14,6 +14,9 @@ from metrics.redundancy_bloat import calculate_rb
 from metrics.semantic_choerence_ratio import calculate_scr
 from phoenix.experiments import run_experiment
 from phoenix.experiments.evaluators import create_evaluator
+from rabbit_manager.structure import setup_rabbitmq
+
+setup_rabbitmq()
 
 
 def semantic_choerence(output: dict):
@@ -50,6 +53,7 @@ EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
 rabbit_user = os.getenv("RABBITMQ_USER", "user")
 rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
+MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 
 print(
     "ENV:",
@@ -88,50 +92,78 @@ print("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
 
 
 def callback(ch, method, properties, body):
-    data = json.loads(body.decode("utf-8"))
-    chunks = data.get("chunks")
-    text = data.get("text")
-    chonkie_chunks = []
-    rand_name = text[0:25] + str(random.randint(0, 100))
-    df_cose = {
-        "name": [rand_name],
-        "expected": [
-            {
-                "semantic_choerence": {"forward": [1.0, 1.2], "backward": [1.0, 1.2]},
-                "redundancy_bloat": {"redundancy": [0.0, 0.25]},
-                "layout_fidelity": {"coverage": 1.0},
-            }
-        ],
-    }
+    try:
+        data = json.loads(body.decode("utf-8"))
+        chunks = data.get("chunks")
+        text = data.get("text")
+        chonkie_chunks = []
+        rand_name = text[0:25] + str(random.randint(0, 100))
+        df_cose = {
+            "name": [rand_name],
+            "expected": [
+                {
+                    "semantic_choerence": {
+                        "forward": [1.0, 1.2],
+                        "backward": [1.0, 1.2],
+                    },
+                    "redundancy_bloat": {"redundancy": [0.0, 0.25]},
+                    "layout_fidelity": {"coverage": 1.0},
+                }
+            ],
+        }
 
-    for chunk in chunks:
-        current_dict = chunk.get(list(chunk.keys())[0])
-        c_text = current_dict.get("text")
-        embedding = current_dict.get("embedding")
-        chonkie_chunks.append(Chunk(text=c_text, embedding=embedding))
+        for chunk in chunks:
+            current_dict = chunk.get(list(chunk.keys())[0])
+            c_text = current_dict.get("text")
+            embedding = current_dict.get("embedding")
+            chonkie_chunks.append(Chunk(text=c_text, embedding=embedding))
 
-    task = partial(score, chonkie_chunks=chonkie_chunks, text=text)
+        task = partial(score, chonkie_chunks=chonkie_chunks, text=text)
 
-    df = pd.DataFrame(df_cose)
+        df = pd.DataFrame(df_cose)
 
-    dataset = px.Client().upload_dataset(
-        dataset_name=rand_name,
-        dataframe=df,
-        input_keys=["name"],
-        output_keys=["expected"],
-    )
-    experiment = run_experiment(
-        dataset=dataset,
-        task=task,
-        evaluators=EVALUATORS,
-        experiment_metadata={"version": "1.0"},
-    )
-    # push_chunk_score(affiot["coverage"])
+        dataset = px.Client().upload_dataset(
+            dataset_name=rand_name,
+            dataframe=df,
+            input_keys=["name"],
+            output_keys=["expected"],
+        )
+        experiment = run_experiment(
+            dataset=dataset,
+            task=task,
+            evaluators=EVALUATORS,
+            experiment_metadata={"version": "1.0"},
+        )
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
-    # with open("/app/dati/results.json", "w") as file:
-    #     json.dump(results, file, indent=4, ensure_ascii=False)
+    except Exception as e:
+        headers = properties.headers or {}
+        retry_count = headers.get("retry-count", 0)
+
+        if retry_count >= int(MAX_RETRIES):
+            print(f"[ERROR] Max retries reached ({retry_count}) - invio in error queue")
+            ch.basic_publish(
+                exchange="error.exchange",
+                routing_key="error",
+                body=body,
+                properties=pika.BasicProperties(delivery_mode=2),
+            )
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+        else:
+            # incrementa il contatore e manda alla retry queue
+            headers["retry-count"] = retry_count + 1
+            ch.basic_publish(
+                exchange="retry.exchange",
+                routing_key="retry",
+                body=body,
+                properties=pika.BasicProperties(delivery_mode=2, headers=headers),
+            )
+            ch.basic_ack(delivery_tag=method.delivery_tag)
+            print(
+                f"[RETRY] Retry count {retry_count + 1} - messaggio inviato alla retry queue"
+            )
 
 
-channel.basic_consume(queue="chunks", on_message_callback=callback, auto_ack=True)
+channel.basic_consume(queue="main.queue", on_message_callback=callback)
 
 channel.start_consuming()
