@@ -13,12 +13,13 @@ import {
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
-import { Box, Button } from "@mui/material";
+import { Box, Button, ClickAwayListener, TextField } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
 import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
 
 enum fuzziness {
   ZERO = "ZERO",
@@ -54,6 +55,74 @@ enum globalQueryType {
 
 const globalQueryTypeDefaultValue = globalQueryType.MUST.toString();
 
+type TokenTypeAutocompleteProps<TokenType> = {
+  label?: string;
+  value: TokenType;
+  dict: Record<string, string>;
+  onChange: (value: TokenType) => void;
+  disabled?: boolean;
+};
+
+function TokenTypeAutocomplete<TokenType extends string>({
+  label = "Token Type",
+  value,
+  dict,
+  onChange,
+  disabled,
+}: TokenTypeAutocompleteProps<TokenType>) {
+  const [open, setOpen] = React.useState(false);
+  const [highlightedIndex, setHighlightedIndex] = React.useState(0);
+
+  const options = React.useMemo(
+    () =>
+      Object.entries(dict).map(([val, lab]) => ({
+        value: val,
+        label: lab,
+      })),
+    [dict],
+  );
+
+  const selectedOption = options.find((o) => o.value === value) ?? null;
+
+  const handleSelect = (option: { value: string; label: string }) => {
+    onChange(option.value as TokenType);
+  };
+
+  React.useEffect(() => {
+    const idx = options.findIndex((o) => o.value === value);
+    if (idx >= 0) setHighlightedIndex(idx);
+  }, [value, options]);
+
+  return (
+    <ClickAwayListener onClickAway={() => setOpen(false)}>
+      <Box sx={{ position: "relative" }}>
+        <TextField
+          label={label}
+          fullWidth
+          value={selectedOption?.label ?? ""}
+          onClick={() => !disabled && setOpen((prev) => !prev)}
+          InputProps={{
+            readOnly: true,
+          }}
+          disabled={disabled}
+        />
+
+        {open && !disabled && (
+          <AutocompleteOptionsList
+            options={options}
+            highlightedIndex={highlightedIndex}
+            loading={false}
+            onSelect={(option) => {
+              handleSelect(option);
+              setOpen(false);
+            }}
+          />
+        )}
+      </Box>
+    </ClickAwayListener>
+  );
+}
+
 export function SaveTokenTab() {
   const { tokenTabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
@@ -70,12 +139,16 @@ export function SaveTokenTab() {
       navigate(`/token-tab/${tokenTabId}`);
     }
   };
+
   const disabled = page === 1 || view === "view";
+
   const tabTokenTabQuery = useTabTokenTabQuery({
     variables: { id: tokenTabId as string },
     skip: !tokenTabId || tokenTabId === "new",
   });
+
   const toast = useToast();
+
   const [createOrUpdateTabTokenMutate, createOrUpdateTabTokenMutation] = useCreateOrUpdateTabTokenMutation({
     refetchQueries: ["TabTokenTab", "TabTokens"],
     onCompleted(data: any) {
@@ -97,8 +170,7 @@ export function SaveTokenTab() {
         });
       }
     },
-    onError(error) {
-      console.log(error);
+    onError() {
       const isNew = tokenTabId === "new" ? "create" : "update";
       toast({
         title: `Error ${isNew}`,
@@ -183,12 +255,14 @@ export function SaveTokenTab() {
           Choose between differe Token Tabs depending on the search you want to configure."
             id={tokenTabId}
           />
+
           {view === "view" && (
             <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
               Edit
             </Button>
           )}
         </Box>
+
         <form style={{ borderStyle: "unset", padding: "0 16px" }}>
           <CreateDataEntity
             form={form}
@@ -208,39 +282,34 @@ export function SaveTokenTab() {
                       {...form.inputProps("value")}
                       description="Value it must match for this token"
                     />
+
                     <TooltipDescription informationDescription="Type of Token Tab. Every type implements a different search logic.">
-                      <CustomSelect
+                      <TokenTypeAutocomplete<TokenType>
                         label="Token Type"
                         dict={TokenType}
-                        {...form.inputProps("tokenType")}
+                        value={form.inputProps("tokenType").value}
                         onChange={(tokenType: TokenType) => {
                           form.inputProps("tokenType").onChange(tokenType);
+
                           if (tokenType !== tokenTypeInitialValue) {
                             form.inputProps("boost").onChange(boostDefaultValue);
                             form.inputProps("fuzziness").onChange(fuzzinessDefaultValue);
                             form.inputProps("valuesQueryType").onChange(valuesQueryTypeDefaultValue);
                             form.inputProps("globalQueryType").onChange(globalQueryTypeDefaultValue);
                           } else {
-                            form
-                              .inputProps("boost")
-                              .onChange(extraParams.boost ? extraParams.boost : boostDefaultValue);
-                            form
-                              .inputProps("fuzziness")
-                              .onChange(extraParams.fuziness ? extraParams.fuziness : fuzzinessDefaultValue);
+                            form.inputProps("boost").onChange(extraParams.boost || boostDefaultValue);
+                            form.inputProps("fuzziness").onChange(extraParams.fuziness || fuzzinessDefaultValue);
                             form
                               .inputProps("valuesQueryType")
-                              .onChange(
-                                extraParams.valuesQueryType ? extraParams.valuesQueryType : valuesQueryTypeDefaultValue,
-                              );
+                              .onChange(extraParams.valuesQueryType || valuesQueryTypeDefaultValue);
                             form
                               .inputProps("globalQueryType")
-                              .onChange(
-                                extraParams.globalQueryType ? extraParams.globalQueryType : globalQueryTypeDefaultValue,
-                              );
+                              .onChange(extraParams.globalQueryType || globalQueryTypeDefaultValue);
                           }
                         }}
                       />
                     </TooltipDescription>
+
                     <AutocompleteDropdown
                       label="DocType Field"
                       onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
@@ -256,22 +325,26 @@ export function SaveTokenTab() {
                       disabled={page === 1}
                       useOptions={useDocTypeTokenTab}
                     />
+
                     {(form.inputProps("tokenType").value === "TEXT" ||
                       form.inputProps("tokenType").value === "FILTER") && (
                       <div>
                         <TextInput label="boost" {...form.inputProps("boost")} disabled={disabled} />
+
                         <CustomSelect
                           label="valuesQueryType"
                           dict={valuesQueryType}
                           {...form.inputProps("valuesQueryType")}
                           disabled={disabled}
                         />
+
                         <CustomSelect
                           label="globalQueryType"
                           dict={globalQueryType}
                           {...form.inputProps("globalQueryType")}
                           disabled={disabled}
                         />
+
                         <CustomSelect
                           label="fuzziness"
                           dict={fuzziness}
@@ -280,6 +353,7 @@ export function SaveTokenTab() {
                         />
                       </div>
                     )}
+
                     <BooleanInput label="Filter" {...form.inputProps("filter")} disabled={disabled} />
                   </>
                 ),
