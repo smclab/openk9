@@ -69,6 +69,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
   minio:
     image: minio/minio:latest
+    container_name: minio
     command: server /data --console-address ":9090"
     ports:
       - "9000:9000"
@@ -80,6 +81,7 @@ services:
       - minio-data:/data
   keycloak:
     image: bitnamilegacy/keycloak:26.1.3-debian-12-r0
+    container_name: keycloak
     hostname: keycloak.openk9.localhost
     environment:
       KEYCLOAK_CREATE_ADMIN_USER: 'true'
@@ -107,8 +109,19 @@ services:
       default:
         aliases:
           - keycloak.openk9.localhost
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./compose-utilities/Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+    depends_on:
+      - api-gateway
   tenant-manager:
-    image: openk9/openk9-tenant-manager:999-SNAPSHOT
+    image: smclab/openk9-tenant-manager:3.1.0-SNAPSHOT
     container_name: tenant-manager
     hostname: tenant-manager
     environment:
@@ -148,18 +161,10 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-  caddy:
-    image: caddy:latest
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./compose-utilities/Caddyfile:/etc/caddy/Caddyfile
-      - caddy-data:/data
-    depends_on:
-      - api-gateway
   api-gateway:
-    image: openk9/api-gateway:latest
+    image: smclab/api-gateway:3.1.0-SNAPSHOT
+    container_name: api-gateway
+    hostname: api-gateway
     environment:
       SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: .*
       SPRING_LIQUIBASE_URL: jdbc:postgresql://postgresql/apigateway
@@ -171,14 +176,13 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: openk9
       SPRING_RABBITMQ_PASSWORD: openk9
-    hostname: api-gateway
     healthcheck:
       test: "curl --insecure --silent --fail https://localhost:8081/actuator/health"
       interval: 10s
       timeout: 10s
       retries: 10
   datasource:
-    image: openk9/openk9-datasource:999-SNAPSHOT
+    image: smclab/openk9-datasource:3.1.0-SNAPSHOT
     container_name: datasource
     hostname: openk9-datasource
     environment:
@@ -203,8 +207,7 @@ services:
       QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
       QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
-      # QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      QUARKUS_HTTP_ACCESS_LOG_PATTERN: 'long'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_CORS: 'true'
       QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
@@ -255,7 +258,7 @@ services:
       timeout: 10s
       retries: 10
   searcher:
-    image: openk9/openk9-searcher:999-SNAPSHOT
+    image: smclab/openk9-searcher:3.1.0-SNAPSHOT
     container_name: searcher
     environment:
       QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
