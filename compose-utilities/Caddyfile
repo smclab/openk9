@@ -1,0 +1,37 @@
+localhost, *.localhost, *.*.localhost {
+	tls internal
+
+    handle /api/datasource/* {
+        reverse_proxy api-gateway:8080
+    }
+
+    handle /api/searcher/* {
+        reverse_proxy api-gateway:8080
+    }
+
+    handle /api/rag/* {
+        reverse_proxy api-gateway:8080
+    }
+
+    handle /api/ingestion/* {
+        reverse_proxy ingestion:8080
+    }
+
+	@adminPaths {
+		path /admin /admin/*
+	}
+    handle @adminPaths {
+        reverse_proxy admin-ui:8080
+    }
+
+	@chatPaths {
+		path /chat /chat/*
+	}
+    handle @chatPaths {
+        reverse_proxy talk-to:8081
+    }
+
+    handle {
+        reverse_proxy search-frontend:8080
+    }
+}

@@ -145,6 +145,35 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./compose-utilities/Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+    depends_on:
+      - api-gateway
+  api-gateway:
+    image: openk9/api-gateway:latest
+    environment:
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: .*
+      SPRING_LIQUIBASE_URL: jdbc:postgresql://postgresql/apigateway
+      SPRING_LIQUIBASE_USER: openk9
+      SPRING_LIQUIBASE_PASSWORD: openk9
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgresql/apigateway
+      SPRING_R2DBC_USERNAME: openk9
+      SPRING_R2DBC_PASSWORD: openk9
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: openk9
+      SPRING_RABBITMQ_PASSWORD: openk9
+    hostname: api-gateway
+    healthcheck:
+      test: "curl --insecure --silent --fail https://localhost:8081/actuator/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
   datasource:
     image: openk9/openk9-datasource:999-SNAPSHOT
     container_name: datasource
@@ -317,30 +346,9 @@ services:
   admin-ui:
     image: smclab/openk9-admin-ui:3.1.0-SNAPSHOT
     container_name: admin-ui
-  gateway:
-    image: openk9/api-gateway:latest
-    environment:
-      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: .*
-      SPRING_PROFILES_ACTIVE: compose
-      SPRING_LIQUIBASE_URL: jdbc:postgresql://postgresql/apigateway
-      SPRING_LIQUIBASE_USER: openk9
-      SPRING_LIQUIBASE_PASSWORD: openk9
-      SPRING_R2DBC_URL: r2dbc:postgresql://postgresql/apigateway
-      SPRING_R2DBC_USERNAME: openk9
-      SPRING_R2DBC_PASSWORD: openk9
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_USERNAME: openk9
-      SPRING_RABBITMQ_PASSWORD: openk9
-    hostname: gateway
-    ports:
-      - '443:8443'
-    healthcheck:
-      test: "curl --insecure --silent --fail https://localhost:8081/actuator/health"
-      interval: 10s
-      timeout: 10s
-      retries: 10
 
 volumes:
   opensearch-data:
   postgres-data:
   minio-data:
+  caddy-data:
