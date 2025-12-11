@@ -34,40 +34,8 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 public class JWT {
-	@JsonProperty("exp")
-	private long exp;
-	@JsonProperty("iat")
-	private long iat;
-	@JsonProperty("auth_time")
-	private long authTime;
-	@JsonProperty("jti")
-	private String jti;
-	@JsonProperty("iss")
-	private String iss;
-	@JsonProperty("aud")
-	private String aud;
-	@JsonProperty("sub")
-	private String sub;
-	@JsonProperty("typ")
-	private String typ;
-	@JsonProperty("azp")
-	private String azp;
-	@JsonProperty("session_state")
-	private String sessionState;
-	@JsonProperty("acr")
-	private String acr;
-	@JsonProperty("allowed-origins")
-	private List<String> allowedOrigins;
 	@JsonProperty("realm_access")
 	private Map<String, List<String>> realmAccess;
-	@JsonProperty("resource_access")
-	private Map<String, Map<String, List<String>>> resourceAccess;
-	@JsonProperty("scope")
-	private String scope;
-	@JsonProperty("sid")
-	private String sid;
-	@JsonProperty("email_verified")
-	private boolean emailVerified;
 	@JsonProperty("preferred_username")
 	private String preferredUsername;
 	@JsonProperty("given_name")
