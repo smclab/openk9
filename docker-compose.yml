@@ -49,7 +49,7 @@ services:
     container_name: postgresql
     hostname: postgresql
     environment:
-      - POSTGRES_MULTIPLE_DATABASES=openk9,tenantmanager,keycloak,apigateway
+      - POSTGRES_MULTIPLE_DATABASES=keycloak,tenantmanager,apigateway,openk9
       - POSTGRES_PASSWORD=openk9
       - POSTGRES_USER=postgres
       - OPENK9_USER=openk9
@@ -113,7 +113,7 @@ services:
       RABBITMQ_PASSWORD: 'openk9'
       RABBITMQ_USERNAME: 'openk9'
       RABBITMQ_PORT: '5672'
-      QUARKUS_DATASOURCE_USERNAME: 'postgres'
+      QUARKUS_DATASOURCE_USERNAME: 'openk9'
       QUARKUS_DATASOURCE_PASSWORD: 'openk9'
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/tenantmanager'
       OPENK9_DATASOURCE_URL: 'postgresql://postgresql/openk9'
@@ -163,7 +163,7 @@ services:
       QUARKUS_HTTP_AUTH_PERMISSION__ADMINISTRATOR__ENABLED: false
       QUARKUS_DATASOURCE_PASSWORD: 'openk9'
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'
-      QUARKUS_DATASOURCE_USERNAME: 'postgres'
+      QUARKUS_DATASOURCE_USERNAME: 'openk9'
       QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
       QUARKUS_OPENSEARCH_PASSWORD: 'admin'
       QUARKUS_OPENSEARCH_USERNAME: 'admin'
