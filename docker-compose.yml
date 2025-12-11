@@ -65,7 +65,7 @@ services:
       timeout: 10s
       retries: 10
     volumes:
-      - ./compose-utilities:/docker-entrypoint-initdb.d
+      - ./compose-utilities/postgresql:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
   minio:
     image: minio/minio:latest
@@ -116,14 +116,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./compose-utilities/Caddyfile:/etc/caddy/Caddyfile
+      - ./compose-utilities/caddy/Caddyfile:/etc/caddy/Caddyfile
       - caddy-data:/data
     depends_on:
       - api-gateway
   tenant-manager:
     image: smclab/openk9-tenant-manager:3.1.0-SNAPSHOT
-    container_name: tenant-manager
-    hostname: tenant-manager
+    container_name: openk9-tenant-manager
+    hostname: openk9-tenant-manager
     environment:
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
@@ -162,9 +162,9 @@ services:
       timeout: 10s
       retries: 10
   api-gateway:
-    image: smclab/api-gateway:3.1.0-SNAPSHOT
-    container_name: api-gateway
-    hostname: api-gateway
+    image: smclab/openk9-api-gateway:3.1.0-SNAPSHOT
+    container_name: openk9-api-gateway
+    hostname: openk-api-gateway
     environment:
       SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: .*
       SPRING_LIQUIBASE_URL: jdbc:postgresql://postgresql/apigateway
@@ -177,13 +177,13 @@ services:
       SPRING_RABBITMQ_USERNAME: openk9
       SPRING_RABBITMQ_PASSWORD: openk9
     healthcheck:
-      test: "curl --insecure --silent --fail https://localhost:8081/actuator/health"
+      test: "curl --silent --fail http://localhost:8081/actuator/health"
       interval: 10s
       timeout: 10s
       retries: 10
   datasource:
     image: smclab/openk9-datasource:3.1.0-SNAPSHOT
-    container_name: datasource
+    container_name: openk9-datasource
     hostname: openk9-datasource
     environment:
       PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
@@ -201,9 +201,8 @@ services:
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'
       QUARKUS_DATASOURCE_USERNAME: 'openk9'
       QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
-      QUARKUS_OPENSEARCH_PASSWORD: 'admin'
-      QUARKUS_OPENSEARCH_USERNAME: 'admin'
-      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'tenant-manager'
+      QUARKUS_OPENSEARCH_USERNAME: 'opensearch'
+      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'openk9-tenant-manager'
       QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
       QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
@@ -213,14 +212,12 @@ services:
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
-      QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'true'
+      QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'false'
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
       RABBITMQ_PORT: '5672'
       RABBITMQ_USERNAME: 'openk9'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
-    ports:
-      - 8185:8080
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -237,7 +234,8 @@ services:
       retries: 10
   ingestion:
     image: smclab/openk9-ingestion:3.1.0-SNAPSHOT
-    container_name: ingestion
+    container_name: openk9-ingestion
+    hostname: openk9-ingestion
     environment:
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
@@ -246,7 +244,7 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
-      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://file-manager:8080
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://openk9-file-manager:8080
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
     depends_on:
@@ -259,11 +257,12 @@ services:
       retries: 10
   searcher:
     image: smclab/openk9-searcher:3.1.0-SNAPSHOT
-    container_name: searcher
+    container_name: openk9-searcher
+    hostname: openk9-searcher
     environment:
-      QUARKUS_OPENSEARCH_HOSTS: opensearch:9200
-      QUARKUS_OPENSEARCH_USERNAME: elastic
-      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: 'datasource'
+      QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
+      QUARKUS_OPENSEARCH_USERNAME: 'opensearch'
+      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: 'openk9-datasource'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
     depends_on:
@@ -276,7 +275,8 @@ services:
       retries: 10
   file-manager:
     image: smclab/openk9-file-manager:3.1.0-SNAPSHOT
-    container_name: file-manager
+    container_name: openk9-file-manager
+    hostname: openk9-file-manager
     environment:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
@@ -287,7 +287,7 @@ services:
       QUARKUS_MINIO_SECRET_KEY: 'minio123'
       QUARKUS_MINIO_SECURE: 'false'
       QUARKUS_MINIO_URL: 'http://minio:9000'
-      QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'datasource'
+      QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'openk9-datasource'
     healthcheck:
       test: "curl --silent --fail http://localhost:8080/q/health"
       interval: 10s
@@ -295,7 +295,8 @@ services:
       retries: 10
   tika:
     image: smclab/openk9-tika:3.1.0-SNAPSHOT
-    container_name: tika
+    container_name: openk9-tika
+    hostname: openk9-tika
     environment:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
@@ -305,8 +306,8 @@ services:
       OPENK9_TIKA_OCR_CHARACTER_LENGTH: '10'
       OPENK9_TIKA_OCR_ENABLED: 'true'
       OPENK9_TIKA_POOL_SIZE: '1'
-      QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://datasource:8080'
-      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://file-manager:8080'
+      QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://openk9-datasource:8080'
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://openk9-file-manager:8080'
     healthcheck:
       test: "curl --silent --fail http://localhost:8080/q/health"
       interval: 10s
@@ -314,25 +315,28 @@ services:
       retries: 10
   web-connector:
     image: smclab/openk9-web-connector:3.1.0-SNAPSHOT
-    container_name: web-connector
+    container_name: openk9-web-connector
+    hostname: openk9-web-connector
     ports:
       - "5001:5000"
       - "6800:6800"
   minio-connector:
     image: smclab/openk9-minio-connector:3.1.0-SNAPSHOT
-    container_name: minio-connector
+    container_name: openk9-minio-connector
+    hostname: openk9-minio-connector
     ports:
       - "5002:5000"
   rag-module:
     image: smclab/openk9-rag-module:3.1.0-SNAPSHOT
-    container_name: rag-module
+    container_name: openk9-rag-module
+    hostname: openk9-rag-module
     environment:
       ORIGINS: '*'
       OPENSEARCH_USERNAME: 'opensearch'
       OPENSEARCH_HOST: 'opensearch:9200'
-      GRPC_DATASOURCE_HOST: 'datasource:9000'
-      GRPC_TENANT_MANAGER_HOST: 'tenant-manager:9000'
-      GRPC_EMBEDDING_MODULE_HOST: 'embedding-module:5000'
+      GRPC_DATASOURCE_HOST: 'openk9-datasource:9000'
+      GRPC_TENANT_MANAGER_HOST: 'openk9-tenant-manager:9000'
+      GRPC_EMBEDDING_MODULE_HOST: 'openk9-embedding-module:5000'
       KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
       UPLOAD_DIR: 'uploads'
       UPLOAD_FILE_EXTENSIONS: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
@@ -340,18 +344,31 @@ services:
       MAX_UPLOAD_FILES_NUMBER: '5'
   embedding-module:
     image: smclab/openk9-embedding-module-base:3.1.0-SNAPSHOT
-    container_name: embedding-module
+    container_name: openk9-embedding-module
+    hostname: openk9-embedding-module
     environment:
       ORIGINS: '*'
   search-frontend:
     image: smclab/openk9-search-frontend:3.1.0-SNAPSHOT
-    container_name: search-frontend
+    container_name: openk9-search-frontend
   talk-to:
     image: smclab/openk9-talk-to:3.1.0-SNAPSHOT
-    container_name: talk-to
+    container_name: openk9-talk-to
   admin-ui:
     image: smclab/openk9-admin-ui:3.1.0-SNAPSHOT
-    container_name: admin-ui
+    container_name: openk9-admin-ui
+  initializer:
+    build: ./compose-utilities/initializer
+    container_name: openk9-initializer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      tenant-manager:
+        condition: service_healthy
+      datasource:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
 
 volumes:
   opensearch-data:

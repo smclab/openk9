@@ -2,19 +2,19 @@ localhost, *.localhost, *.*.localhost {
 	tls internal
 
     handle /api/datasource/* {
-        reverse_proxy api-gateway:8080
+        reverse_proxy openk9-api-gateway:8080
     }
 
     handle /api/searcher/* {
-        reverse_proxy api-gateway:8080
+        reverse_proxy openk9-api-gateway:8080
     }
 
     handle /api/rag/* {
-        reverse_proxy api-gateway:8080
+        reverse_proxy openk9-api-gateway:8080
     }
 
     handle /api/ingestion/* {
-        reverse_proxy ingestion:8080
+        reverse_proxy openk9-ingestion:8080
     }
 
 	@adminPaths {
