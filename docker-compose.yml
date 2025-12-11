@@ -27,7 +27,10 @@ services:
       - "DISABLE_SECURITY_PLUGIN=true"
       - "DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI=true"
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "_JAVA_OPTIONS=-XX:UseSVE=0"
+      # The environment variable below is necessary when you
+      # run the opensearch image with an ARM64 chip.
+      # More details at https://github.com/elastic/elasticsearch/issues/118583#issuecomment-2567270484
+      # - "_JAVA_OPTIONS=-XX:UseSVE=0"
     ports:
       - 9200:9200
     healthcheck:
