@@ -261,24 +261,8 @@ public class SearcherGrpcTest {
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_TOOL_ONE));
 
 		// DocTypeField
-		DocTypeFieldDTO fieldDtoOne = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_NAME_ONE)
-			.fieldName("fieldOne")
-			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
-			.boost(3D)
-			.build();
-		DocTypeFieldDTO fieldDtoTwo = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_NAME_TWO)
-			.fieldName("fieldTwo")
-			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
-			.build();
-
-		EntitiesUtils.createEntity(fieldDtoOne, docTypeFieldService, sessionFactory);
-		EntitiesUtils.createEntity(fieldDtoTwo, docTypeFieldService, sessionFactory);
-
 		var allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
-		// Autocorrection
 		var firstSampleTextField = allDocTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
 			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
@@ -291,6 +275,27 @@ public class SearcherGrpcTest {
 			docTypeFieldPath = firstSampleTextField.get().getPath();
 		}
 
+		DocTypeFieldDTO fieldDtoOne = DocTypeFieldDTO.builder()
+			.name(DOC_TYPE_FIELD_NAME_ONE)
+			.fieldName("fieldOne")
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.boost(3D)
+			.build();
+		DocTypeFieldDTO fieldDtoTwo = DocTypeFieldDTO.builder()
+			.name(DOC_TYPE_FIELD_NAME_TWO)
+			.fieldName("fieldTwo")
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.build();
+
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoOne, docTypeFieldService);
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoTwo, docTypeFieldService);
+
+		// updates all doc type
+		allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
+
+		// Autocorrection
 		AutocorrectionDTO autocorrectionDTO = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_ONE)
 			.autocorrectionDocTypeFieldId(docTypeFieldId)

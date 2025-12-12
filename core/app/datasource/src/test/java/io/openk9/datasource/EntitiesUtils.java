@@ -28,6 +28,7 @@ import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
@@ -196,6 +197,24 @@ public class EntitiesUtils {
 			.build();
 
 		searchConfigService.create(dto)
+			.await()
+			.indefinitely();
+	}
+
+	/**
+	 * Creates and persists a {@link DocTypeField} as a child of an existing parent field.
+	 *
+	 * @param parentDocTypeFieldId the ID of the parent {@link DocTypeField}
+	 * @param docTypeFieldDTO the DTO containing the field configuration
+	 * @param docTypeFieldService the service used to perform the creation
+	 * @return the newly created and persisted {@link DocTypeField}
+	 * @throws RuntimeException if the asynchronous operation fails or times out
+	 */
+	public static DocTypeField createSubField(
+			long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
+			DocTypeFieldService docTypeFieldService) {
+
+		return docTypeFieldService.createSubField(parentDocTypeFieldId, docTypeFieldDTO)
 			.await()
 			.indefinitely();
 	}
