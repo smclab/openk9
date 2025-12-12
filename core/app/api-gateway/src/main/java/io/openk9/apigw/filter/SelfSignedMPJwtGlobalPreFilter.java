@@ -30,6 +30,7 @@ import jakarta.annotation.PostConstruct;
 
 import io.openk9.apigw.security.TenantIdResolverFilter;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
@@ -52,7 +53,6 @@ import reactor.core.publisher.Mono;
 @Component
 public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 
-	private static final long ONE_DAY_MILLIS = 86_400_000L;
 	private static OctetSequenceKey JWK;
 	private static JWSSigner SIGNER;
 
@@ -68,8 +68,6 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	// because they are related to the OpenK9 Api Gateway.
 	private static final String ISSUER_VALUE = "openk9-gateway";
 	private static final String AUDIENCE_VALUE = "openk9";
-
-	private static final String ANONYMOUS_SUB = "anonymous";
 
 	// TenantId claim, useful to handle multi-tenancy in downstream services.
 	private static final String TENANT_ID = "tenantId";
@@ -95,79 +93,19 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		HttpHeaders headers = exchange.getRequest().getHeaders();
-		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
-
-		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
-		String authScheme = "";
-
-		String subject = ANONYMOUS_SUB;
-		List<String> groups = List.of();
-		Date issueTime = new Date();
-		Date expirationTime = new Date(System.currentTimeMillis() + ONE_DAY_MILLIS);
-
-		if (authorization != null && authorization.length() >= 7) {
-			authScheme = authorization.substring(0, 7);
-		}
-
-		if (authScheme.equalsIgnoreCase("bearer ")) {
-			String jwtString = authorization.substring(7);
-
-			try {
-				SignedJWT jwt = SignedJWT.parse(jwtString);
-				JWTClaimsSet claims = jwt.getJWTClaimsSet();
-
-				// Referring the MP-JWT Specification:
-				//
-				// MP-JWT "upn" claim is the user principal name
-				// in the java.security.Principal interface,
-				// and is the caller principal name
-				// in jakarta.security.enterprise.identitystore.IdentityStore.
-				// If this claim is missing,
-				// fallback to the "preferred_username",
-				// OIDC Section 5.1 should be attempted,
-				// and if that claim is missing,
-				// fallback to the "sub" claim should be used.
-				if (claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME) != null) {
-					subject = claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME);
-				}
-				else if (claims.getClaimAsString(PREFERRED_USERNAME) != null) {
-					subject = claims.getClaimAsString(PREFERRED_USERNAME);
-				}
-				if (claims.getSubject() != null) {
-					subject = claims.getSubject();
-				}
-
-				issueTime = claims.getIssueTime();
-				expirationTime = claims.getExpirationTime();
-
-				// Aggregate groups from known claims used for listing roles.
-				// In MP-JWT specification, "groups" is the claim suggested for
-				// grouping permission grants.
-				Set<String> aggregateGroups = new HashSet<>();
-				addGroupsFromGroupsClaim(claims, aggregateGroups);
-				addGroupsFromRealmAccessRolesClaim(claims, aggregateGroups);
-				groups = new ArrayList<>(aggregateGroups);
-			}
-			catch (ParseException e) {
-				log.warn("A error occurred while parsing jwt. Fallback with anonymous token", e);
-			}
-
-		}
-		else if (authScheme.equalsIgnoreCase("apikey ")) {
-			// TODO: API Key mapping needs to be implemented.
-			// right now we can create a new jwt,
-			// defining a subject related to API Keys.
-			subject = "apiKeyUser";
-		}
-
-		String serializedToken = createInternalToken(
-			subject, groups, issueTime, expirationTime, tenantId);
-
+		String internalToken = createInternalToken(exchange);
 		return chain.filter(exchange.mutate()
 			.request(request -> request
-				.header(HttpHeaders.AUTHORIZATION, "Bearer " + serializedToken))
-			.build());
+				.headers(httpHeaders -> {
+					if (internalToken != null) {
+						httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + internalToken);
+					}
+					else {
+						httpHeaders.remove(HttpHeaders.AUTHORIZATION);
+					}
+				}).build()
+			).build()
+		);
 	}
 
 	private static void addGroupsFromRealmAccessRolesClaim(
@@ -199,38 +137,98 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		}
 	}
 
-	public static String createInternalToken(
-		String sub, List<String> groups, Date iat, Date exp, String tenantId) {
 
-		try {
-			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
-				.keyID(JWK.getKeyID())
-				.build();
+	private static String createInternalToken(ServerWebExchange exchange) {
+		HttpHeaders headers = exchange.getRequest().getHeaders();
+		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
 
-			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-				.subject(sub)
-				.claim(UNIQUE_PRINCIPAL_NAME, sub)
-				.issuer(ISSUER_VALUE)
-				.audience(AUDIENCE_VALUE)
-				.claim(GROUPS_PERMISSION_GRANT, groups)
-				.issueTime(iat)
-				.expirationTime(exp)
-				.claim(TENANT_ID, tenantId)
-				.jwtID(UUID.randomUUID().toString())
-				.build();
+		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+		String authScheme = "";
 
-			SignedJWT signedJWT = new SignedJWT(
-				header,
-				claimsSet
-			);
-
-			signedJWT.sign(SIGNER);
-
-			return signedJWT.serialize();
+		if (authorization != null && authorization.length() >= 7) {
+			authScheme = authorization.substring(0, 7);
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+
+		if (authScheme.equalsIgnoreCase("bearer ")) {
+			String jwtString = authorization.substring(7);
+
+			try {
+				SignedJWT jwt = SignedJWT.parse(jwtString);
+				JWTClaimsSet claims = jwt.getJWTClaimsSet();
+
+				String sub;
+				List<String> groups;
+				Date iat;
+				Date exp;
+
+				// Referring the MP-JWT Specification:
+				//
+				// MP-JWT "upn" claim is the user principal name
+				// in the java.security.Principal interface,
+				// and is the caller principal name
+				// in jakarta.security.enterprise.identitystore.IdentityStore.
+				// If this claim is missing,
+				// fallback to the "preferred_username",
+				// OIDC Section 5.1 should be attempted,
+				// and if that claim is missing,
+				// fallback to the "sub" claim should be used.
+				if (claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME) != null) {
+					sub = claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME);
+				}
+				else if (claims.getClaimAsString(PREFERRED_USERNAME) != null) {
+					sub = claims.getClaimAsString(PREFERRED_USERNAME);
+				}
+				else if (claims.getSubject() != null) {
+					sub = claims.getSubject();
+				}
+				else {
+					log.warn("The subject cannot be found in the current JWT.");
+					return null;
+				}
+
+				iat = claims.getIssueTime();
+				exp = claims.getExpirationTime();
+
+				// Aggregate groups from known claims used for listing roles.
+				// In MP-JWT specification, "groups" is the claim suggested for
+				// grouping permission grants.
+				Set<String> aggregateGroups = new HashSet<>();
+				addGroupsFromGroupsClaim(claims, aggregateGroups);
+				addGroupsFromRealmAccessRolesClaim(claims, aggregateGroups);
+				groups = new ArrayList<>(aggregateGroups);
+
+				JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
+					.keyID(JWK.getKeyID())
+					.build();
+
+				JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+					.subject(sub)
+					.claim(UNIQUE_PRINCIPAL_NAME, sub)
+					.issuer(ISSUER_VALUE)
+					.audience(AUDIENCE_VALUE)
+					.claim(GROUPS_PERMISSION_GRANT, groups)
+					.issueTime(iat)
+					.expirationTime(exp)
+					.claim(TENANT_ID, tenantId)
+					.jwtID(UUID.randomUUID().toString())
+					.build();
+
+				SignedJWT signedJWT = new SignedJWT(
+					header,
+					claimsSet
+				);
+
+				signedJWT.sign(SIGNER);
+
+				return signedJWT.serialize();
+			}
+			catch (ParseException | JOSEException e) {
+				log.warn("An error occurred while creating internal JWT.", e);
+			}
+
 		}
+
+		return null;
 	}
 
 }

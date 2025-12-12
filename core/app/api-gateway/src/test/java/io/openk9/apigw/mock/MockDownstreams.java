@@ -50,11 +50,11 @@ public class MockDownstreams {
 
 	private static final ObjectMapper objMapper = new ObjectMapper();
 
-	private static String json(String serviceName, String tenantId, SignedJWT signedJWT) {
+	private static String json(String serviceName, String tenantId, SignedJWT jwt) {
 		Map<String, Object> mapJson = Map.of(
 			"data", "hello from %s".formatted(serviceName),
 			"tenantId", tenantId != null ? tenantId : "unknown",
-			"jwt", signedJWT
+			"jwt", jwt != null ? jwt : "unknown"
 		);
 
 		try {
@@ -101,37 +101,29 @@ public class MockDownstreams {
 	private static Publisher<Void> response(
 		HttpServerRequest req, HttpServerResponse res, String downstream) {
 
-		res.header("Content-Type", "application/json");
-
 		var headers = req.requestHeaders();
-		SignedJWT jwt = null;
-
-		if (!headers.contains(HttpHeaders.AUTHORIZATION)) {
-
-			log.warn("authorization header does not exist");
-			return res.status(400).send();
-		}
-		String authorization = headers.get(HttpHeaders.AUTHORIZATION);
-
-		if (!StringUtils.startsWithIgnoreCase(authorization, "bearer")) {
-
-			log.warn("authorization is not bearer scheme");
-			return res.status(400).send();
-		}
-		String jwtString = authorization.substring(7);
-
-		try {
-			jwt = SignedJWT.parse(jwtString);
-		}
-		catch (ParseException e) {
-			log.warn("error parsing jwtString as json", e);
-			return res.status(400).send();
-		}
+		SignedJWT jwt =  getSignedJWT(headers);
 
 		var tenantId = headers.get(InternalHeaders.TENANT_ID);
 
 		return res
 			.header("Content-Type", "application/json")
 			.sendString(Mono.just(json(downstream, tenantId, jwt)));
+	}
+
+	private static SignedJWT getSignedJWT(io.netty.handler.codec.http.HttpHeaders headers) {
+
+		String authorization = headers.get(HttpHeaders.AUTHORIZATION);
+		if (authorization != null && StringUtils.startsWithIgnoreCase(authorization, "bearer")) {
+			try {
+				String jwtString = authorization.substring(7);
+				return SignedJWT.parse(jwtString);
+			}
+			catch (ParseException e) {
+				log.warn("error parsing jwtString as json", e);
+			}
+		}
+
+		return null;
 	}
 }
