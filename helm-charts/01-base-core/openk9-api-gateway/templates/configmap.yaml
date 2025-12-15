@@ -12,7 +12,7 @@ data:
   SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: {{ .Values.spring.gateway.trustedProxies | quote }}
 
   # Rabbitmq env variables
-  SPRING_RABBITMQ_HOST: {{ .Values.rabbitmq.host | quote }}
+  SPRING_RABBITMQ_HOST: {{ include "helper.rabbitmqHost" . | quote }}
   SPRING_RABBITMQ_PORT: {{ .Values.rabbitmq.port | quote }}
   SPRING_RABBITMQ_USERNAME: {{ .Values.rabbitmq.username | quote }}
 

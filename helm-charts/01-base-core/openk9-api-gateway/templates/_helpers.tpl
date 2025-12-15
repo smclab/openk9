@@ -17,6 +17,13 @@ Create JDBC URL for Liquibase
 {{- end }}
 
 {{/*
+Create RabbitMQ Host
+*/}}
+{{- define "helper.rabbitmqHost" -}}
+{{- .Values.rabbitmq.host }}
+{{- end }}
+
+{{/*
 Create OpenK9 Searcher URL
 */}}
 {{- define "helper.searcherURL" -}}
