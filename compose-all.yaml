@@ -1,0 +1,91 @@
+# version: "3.5" # deprecated
+include:
+  - path:
+      - compose.yaml
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9090"
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=minio123
+    volumes:
+      - minio-data:/data
+  file-manager:
+    image: smclab/openk9-file-manager:3.1.0-SNAPSHOT
+    container_name: openk9-file-manager
+    hostname: openk9-file-manager
+    environment:
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      QUARKUS_MINIO_ACCESS_KEY: 'minio'
+      QUARKUS_MINIO_SECRET_KEY: 'minio123'
+      QUARKUS_MINIO_SECURE: 'false'
+      QUARKUS_MINIO_URL: 'http://minio:9000'
+      QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: 'openk9-datasource'
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  tika:
+    image: smclab/openk9-tika:3.1.0-SNAPSHOT
+    container_name: openk9-tika
+    hostname: openk9-tika
+    environment:
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      OPENK9_TIKA_OCR_CHARACTER_LENGTH: '10'
+      OPENK9_TIKA_OCR_ENABLED: 'true'
+      OPENK9_TIKA_POOL_SIZE: '1'
+      QUARKUS_REST_CLIENT_DATASOURCE_URL: 'http://openk9-datasource:8080'
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: 'http://openk9-file-manager:8080'
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  minio-connector:
+    image: smclab/openk9-minio-connector:3.1.0-SNAPSHOT
+    container_name: openk9-minio-connector
+    hostname: openk9-minio-connector
+    ports:
+      - "5002:5000"
+  rag-module:
+    image: smclab/openk9-rag-module:3.1.0-SNAPSHOT
+    container_name: openk9-rag-module
+    hostname: openk9-rag-module
+    environment:
+      ORIGINS: '*'
+      OPENSEARCH_USERNAME: 'opensearch'
+      OPENSEARCH_HOST: 'opensearch:9200'
+      GRPC_DATASOURCE_HOST: 'openk9-datasource:9000'
+      GRPC_TENANT_MANAGER_HOST: 'openk9-tenant-manager:9000'
+      GRPC_EMBEDDING_MODULE_HOST: 'openk9-embedding-module:5000'
+      KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
+      UPLOAD_DIR: 'uploads'
+      UPLOAD_FILE_EXTENSIONS: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+      MAX_UPLOAD_FILE_SIZE: '10'
+      MAX_UPLOAD_FILES_NUMBER: '5'
+  embedding-module:
+    image: smclab/openk9-embedding-module-base:3.1.0-SNAPSHOT
+    container_name: openk9-embedding-module
+    hostname: openk9-embedding-module
+    environment:
+      ORIGINS: '*'
+  talk-to:
+    image: smclab/openk9-talk-to:3.1.0-SNAPSHOT
+    container_name: openk9-talk-to
+
+volumes:
+  minio-data:
