@@ -1,5 +1,5 @@
-# Example values for local Kubernetes development/testing environment
-# Usage: helm install api-gateway . -f scenarios/local-runtime.yaml
+# Example values for OpenShift (CRC) environment
+# Usage: helm install api-gateway . -f scenarios/local-crc.yaml
 
 replicaCount: 1
 
@@ -9,7 +9,7 @@ image:
   pullSecrets: []
 
 debug:
-  enabled: true
+  enabled: false
 
 databaseJob:
   enabled: false
@@ -31,8 +31,13 @@ openk9:
     host: "openk9-datasource"
     port: "8080"
 
-ingress:
-  enabled: false
+route:
+  enabled: true
+  host: "openk9.local"
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret
 
 resources:
   requests:

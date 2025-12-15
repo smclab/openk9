@@ -97,7 +97,8 @@ timeoutDb:
 
 ## Security configuration
 security:
-  adminPassword: "k9-backend"  
+  adminPasswordSecretName: "tenant-manager-admin-password"
+  adminPasswordSecretKey: "password"
 
 ## RabbitMQ configuration
 rabbitmq:

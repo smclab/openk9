@@ -17,10 +17,10 @@ replicaCount: 1
 ## @param image.pullPolicy API Gateway image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: "docker.io" #-TBMD
-  name: dimitri98/openk9-api-gateway
+  registry: "" #-TBMD
+  name: smclab/openk9-api-gateway
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "3.1.0-SNAPSHOT"
+  tag: ""
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
@@ -34,8 +34,8 @@ image:
   ## pullSecrets:
   ##   - myRegistryKeySecretName
   ##
-  #pullSecrets:
-#  - docker-registry-secret
+  pullSecrets:
+  - docker-registry-secret
 
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
@@ -80,7 +80,7 @@ database:
 
 ## Rabbitmq configuration
 rabbitmq:
-  host: "rabbitmq-headless.k9-requirements"
+  host: "rabbitmq-headless"
   port: "5672"
   username: "openk9"
   passwordSecretName: "rabbitmq-password"
@@ -216,10 +216,10 @@ route:
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 512Mi
   limits:
     cpu: 1000m
-    memory: 512Mi
+    memory: 1Gi
 
 autoscaling:
   enabled: false
