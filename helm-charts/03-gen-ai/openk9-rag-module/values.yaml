@@ -81,10 +81,6 @@ retention:
   cronexpression: "0 0 * ? * *"
   interval: "30"
 
-## Keycloak configuration
-keycloak:
-  url: "keycloak.openk9.local"
-
 ## OpenK9 grpc services configuration
 openk9:
   ## Openk9 Datasource configuration
