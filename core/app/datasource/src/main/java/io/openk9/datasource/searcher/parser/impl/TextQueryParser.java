@@ -59,11 +59,12 @@ public class TextQueryParser implements QueryParser {
 	public static final String ALLOW_PHRASE_MATCH_TYPE = "allowPhraseMatchType";
 
 	// use 0 or a negative value to disable maximum text query length enforcement
+	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.query-parser.max-text-query-length",
 		defaultValue = "0"
 	)
-	Integer maxTextQueryLength;
+	Integer defaultMaxTextQueryLength;
 
 	@Override
 	public QueryParserType getType() {
@@ -76,6 +77,9 @@ public class TextQueryParser implements QueryParser {
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
 		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
+		var maxTextQueryLength = bucket.getSearchConfig().getMaxTextQueryLength() != null
+			? bucket.getSearchConfig().getMaxTextQueryLength()
+			: defaultMaxTextQueryLength;
 
 		Set<Datasource> datasources = bucket.getDatasources();
 

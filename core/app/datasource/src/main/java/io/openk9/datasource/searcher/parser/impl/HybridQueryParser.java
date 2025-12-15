@@ -51,11 +51,12 @@ public class HybridQueryParser implements QueryParser {
 	EmbeddingService embeddingService;
 
 	// use 0 or a negative value to disable maximum text query length enforcement
+	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.query-parser.max-text-query-length",
 		defaultValue = "0"
 	)
-	Integer maxTextQueryLength;
+	Integer defaultMaxTextQueryLength;
 
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
@@ -81,6 +82,12 @@ public class HybridQueryParser implements QueryParser {
 		var fuzziness = TextQueryParser.getFuzziness(parserSearchToken, jsonConfig);
 
 		var values = parserSearchToken.getValues().iterator();
+
+		var maxTextQueryLength = parserContext.getTenantWithBucket().getBucket().getSearchConfig()
+			.getMaxTextQueryLength() != null
+			? parserContext.getTenantWithBucket().getBucket().getSearchConfig()
+			.getMaxTextQueryLength()
+			: defaultMaxTextQueryLength;
 
 		if (values.hasNext()) {
 			var value = values.next();

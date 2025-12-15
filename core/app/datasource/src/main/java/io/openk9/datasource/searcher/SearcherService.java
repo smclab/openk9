@@ -160,17 +160,19 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
+	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.searcher-service.max-search-page-from",
 		defaultValue = "10000"
 	)
-	Integer maxSearchPageFrom;
+	Integer defaultMaxSearchPageFrom;
 
+	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.searcher-service.max-search-page-size",
 		defaultValue = "200"
 	)
-	Integer maxSearchPageSize;
+	Integer defaultMaxSearchPageSize;
 
     @ConfigProperty(
             name = "openk9.datasource.query-analysis.search-text-length",
@@ -179,17 +181,17 @@ public class SearcherService extends BaseSearchService implements Searcher {
     Integer maxSearchTextLength;
 
 
-    private static String _getLanguage(QueryParserRequest request, Bucket tenant) {
+    private static String _getLanguage(QueryParserRequest request, Bucket bucket) {
 		String requestLanguage = request.getLanguage();
 		if (requestLanguage != null && !requestLanguage.isBlank()) {
-			for (Language available : tenant.getAvailableLanguages()) {
+			for (Language available : bucket.getAvailableLanguages()) {
 				if (available.getValue().equals(requestLanguage)) {
 					return requestLanguage;
 				}
 			}
 		}
 
-		Language defaultLanguage = tenant.getDefaultLanguage();
+		Language defaultLanguage = bucket.getDefaultLanguage();
 		if (defaultLanguage != null) {
 			return defaultLanguage.getValue();
 		}
@@ -1440,11 +1442,19 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	}
 
 	private SearchSourceBuilder _getSearchSourceBuilder(
-		QueryParserRequest request, Bucket tenant, String language) {
+		QueryParserRequest request, Bucket bucket, String language) {
 
 		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
 
 		searchSourceBuilder.trackTotalHits(true);
+
+		var maxSearchPageFrom =  bucket.getSearchConfig().getMaxSearchPageFrom() != null
+			? bucket.getSearchConfig().getMaxSearchPageFrom()
+			: defaultMaxSearchPageFrom;
+
+		var maxSearchPageSize = bucket.getSearchConfig().getMaxSearchPageSize() != null
+			? bucket.getSearchConfig().getMaxSearchPageSize()
+			: defaultMaxSearchPageSize;
 
 		if (request.getRangeCount() == 2) {
 			searchSourceBuilder.from(Math.min(
@@ -1455,7 +1465,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		List<DocTypeField> docTypeFieldList = Utils
-			.getDocTypeFieldsFrom(tenant)
+			.getDocTypeFieldsFrom(bucket)
 			.filter(docTypeField -> !docTypeField.isI18N())
 			.toList();
 
@@ -1472,7 +1482,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
 
-		SearchConfig searchConfig = tenant.getSearchConfig();
+		SearchConfig searchConfig = bucket.getSearchConfig();
 
 		applyMinScore(searchSourceBuilder, searchQuery, searchConfig);
 
