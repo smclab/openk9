@@ -1,4 +1,4 @@
-import { combineErrorMessages, ModalConfirm, TitleEntity, useToast } from "@components/Form";
+import { combineErrorMessages, ModalConfirm, TitleEntity, useForm, useToast } from "@components/Form";
 import { useSideNavigation } from "@components/sideNavigationContext";
 import { ArrowDropDown, ArrowDropUp, Close } from "@mui/icons-material";
 import {
@@ -29,6 +29,7 @@ import {
   useEnrichPipelineWithItemsMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SavePipeline() {
   const { pipelineId = "new", mode } = useParams();
@@ -60,6 +61,26 @@ export function SavePipeline() {
     name: element?.node?.name,
     description: element?.node?.description,
   }));
+
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        name: pipelineData?.name || "",
+        description: pipelineData?.description || "",
+        associatedEnrichItems: pipelineData?.associatedEnrichItems || [],
+      }),
+      [pipelineData],
+    ),
+
+    originalValues: pipelineData,
+    isLoading: pipelineQuery.loading || associatedEnrichItemsQuery.loading,
+    onSubmit(updated: any) {
+      setPipelineData((prev) => ({
+        ...prev,
+        ...updated,
+      }));
+    },
+  });
 
   const getMaxEnrichItemOrder = () => {
     if (pipelineData.associatedEnrichItems.length === 0) {
@@ -206,6 +227,16 @@ export function SavePipeline() {
   if (isLoading || pipelineData.associatedEnrichItems === undefined) {
     return null;
   }
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "associatedEnrichItems"],
+        label: "Recap Enrich Pipeline",
+      },
+    ],
+  });
 
   return (
     <>
@@ -507,6 +538,7 @@ export function SavePipeline() {
         </Box>
       </Container>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </>
   );
 }

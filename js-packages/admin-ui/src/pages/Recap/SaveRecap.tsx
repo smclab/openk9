@@ -109,7 +109,7 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
           bottom: 24,
           right: 24,
           zIndex: 1300,
-          borderRadius: 9999,
+          borderRadius: "10px",
           px: 2.5,
           py: 1.5,
           bgcolor: "background.paper",
@@ -153,7 +153,7 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
         <Box
           sx={{
             position: "fixed",
-            bottom: 88,
+            bottom: 100,
             right: 24,
             zIndex: 1300,
           }}
@@ -164,7 +164,6 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
               width: 440,
               maxWidth: "90vw",
               maxHeight: "70vh",
-              borderRadius: 4,
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",

@@ -18,6 +18,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI" },
@@ -130,6 +131,26 @@ export function SaveLargeLanguageModel() {
     return !!((view || LargeLanguageModelId !== "new") && form.inputProps("apiKey").value);
   }, [view, LargeLanguageModelId, form.inputProps("apiKey").value]);
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "apiKey",
+          "apiUrl",
+          "contextWindow",
+          "retrieveCitations",
+          "provider",
+          "model",
+          "jsonConfig",
+        ],
+        label: "Recap Large Language Model",
+      },
+    ],
+  });
+
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -241,6 +262,7 @@ export function SaveLargeLanguageModel() {
         />
       </form>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </>
   );
 }

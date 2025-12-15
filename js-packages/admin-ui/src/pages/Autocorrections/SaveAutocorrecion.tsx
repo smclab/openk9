@@ -23,6 +23,7 @@ import {
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAutocorrection() {
   const { autocorrectionId = "new", view } = useParams();
@@ -119,6 +120,25 @@ export function SaveAutocorrection() {
     getValidationMessages: fromFieldValidators([]),
   });
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "suggestMode",
+          "sort",
+          "prefixLength",
+          "minWordLength",
+          "maxEdit",
+          "enableSearchWithCorrection",
+          "docTypeFields",
+        ],
+        label: "Recap Autocorrection",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -198,6 +218,7 @@ export function SaveAutocorrection() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

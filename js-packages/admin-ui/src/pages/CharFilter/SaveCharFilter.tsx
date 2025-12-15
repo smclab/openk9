@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCharFilterQuery, useCreateOrUpdateCharFilterMutation } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { CharFilters } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveCharFilter() {
   const { charFilterId = "new", view } = useParams();
@@ -99,7 +100,19 @@ export function SaveCharFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateCharFilterMutation.data?.charFilter?.fieldValidators),
   });
+
   const isRecap = page === 1;
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "type", "jsonConfig"],
+        label: "Recap Char Filter",
+      },
+    ],
+  });
+
   if (charFilterQuery.loading) {
     return <div></div>;
   }
@@ -157,6 +170,7 @@ export function SaveCharFilter() {
           </form>
         </>
         <ConfirmModal />
+        <Recap recapData={recapSections} />
       </ContainerFluid>
     </>
   );

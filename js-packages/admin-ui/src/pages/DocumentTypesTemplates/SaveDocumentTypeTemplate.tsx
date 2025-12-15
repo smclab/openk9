@@ -33,6 +33,7 @@ import {
   useEnrichPipelinesValueOptionsQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveDocumentTypeTemplate() {
   const { documentTypeTemplateId = "new", name, view } = useParams();
@@ -58,7 +59,7 @@ export function SaveDocumentTypeTemplate() {
   const toast = useToast();
   const [createOrUpdateDocumentTypeTemplateMutate, createOrUpdateDocumentTypeTempalteMutation] =
     useCreateOrUpdateDocumentTypeTemplateMutation({
-      refetchQueries: ["DocumentTypeTemplate", "DocumentTypeTemplates", "docTypeTemplateList"],
+      refetchQueries: ["DocumentTypeTemplate", "DocumentTypeTemplates"],
       onCompleted(data) {
         if (data.docTypeTemplate?.entity) {
           const isNew = documentTypeTemplateId === "new" ? "created" : "updated";
@@ -130,6 +131,16 @@ export function SaveDocumentTypeTemplate() {
     ),
   });
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "templateType", "source", "compiled"],
+        label: "Recap Document Type Template",
+      },
+    ],
+  });
+
   return (
     <Box sx={{ overflowX: "hidden" }}>
       <>
@@ -162,6 +173,7 @@ export function SaveDocumentTypeTemplate() {
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
+                      width: "100%",
                     }}
                   >
                     <TextInput label="Name" {...form.inputProps("name")} />
@@ -241,6 +253,7 @@ export function SaveDocumentTypeTemplate() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </Box>
   );
 }

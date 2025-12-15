@@ -23,6 +23,7 @@ import {
   useCreateOrUpdateAnnotatorMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAnnotator() {
   const { annotatorId = "new", view } = useParams();
@@ -150,6 +151,27 @@ export function SaveAnnotator() {
   const isDisabled = (inputName: formInput): boolean => {
     return view === "view" || page === 1 || form.inputProps(inputName).disabled;
   };
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "fieldName",
+          "fuziness",
+          "type",
+          "description",
+          "size",
+          "boost",
+          "valuesQueryType",
+          "globalQueryType",
+          "docTypeFieldId",
+        ],
+        label: "Recap Annotator",
+      },
+    ],
+  });
 
   return (
     <ContainerFluid>
@@ -292,6 +314,7 @@ export function SaveAnnotator() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

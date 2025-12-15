@@ -29,6 +29,7 @@ import {
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateAnalyzers } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
   { label: "Char Filters", id: "charFilters" },
@@ -171,6 +172,16 @@ export function SaveAnalyzer() {
       form.inputProps(field).onChange(updatedData);
     };
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "type", "jsonConfig", "charFilters", "tokenFilters", "tokenizerId"],
+        label: "Recap Analyzer",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -243,6 +254,7 @@ export function SaveAnalyzer() {
                         />
                       </>
                     )}
+                    <Recap recapData={recapSections} />
                   </>
                 ),
                 page: 0,

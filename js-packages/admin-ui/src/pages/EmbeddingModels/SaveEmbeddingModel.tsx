@@ -16,6 +16,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../../graphql-generated";
 import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI" },
@@ -127,6 +128,16 @@ export function SaveEmbeddingModel() {
     return !!((view || embeddingModelsId !== "new") && form.inputProps("apiKey").value);
   }, [view, embeddingModelsId, form.inputProps("apiKey").value]);
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "provider", "model", "apiKey", "apiUrl", "vectorSize", "jsonConfig"],
+        label: "Recap Embedding Model",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -236,6 +247,7 @@ export function SaveEmbeddingModel() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

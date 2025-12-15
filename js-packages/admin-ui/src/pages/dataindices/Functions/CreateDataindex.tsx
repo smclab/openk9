@@ -5,6 +5,7 @@ import {
   CustomSelectRelationsOneToOne,
   NumberInput,
   TitleEntity,
+  useForm,
 } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import {
@@ -30,6 +31,7 @@ import { ChunkType, useDataSourcesQuery, useDocumentTypesQuery } from "../../../
 import { DataindexData } from "../SaveDataindex";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useDocTypeOptions } from "../../../utils/RelationOneToOne";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function CreateDataindex({
   dataindexData,
@@ -121,44 +123,103 @@ export function CreateDataindex({
     }
   };
 
-  const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
-    if (!docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage) return [];
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        name: dataindexData?.name || "",
+        description: dataindexData?.description || "",
+        datasourceId: dataindexData?.datasourceId?.id
+          ? { id: dataindexData.datasourceId.id, name: dataindexData.datasourceId.name }
+          : { id: "", name: "" },
+        docTypeIds: dataindexData?.docTypeIds || [],
+        knnIndex: dataindexData?.knnIndex || false,
+        chunkType: dataindexData?.chunkType || "",
+        chunkWindowSize: dataindexData?.chunkWindowSize || 0,
+        embeddingJsonConfig: dataindexData?.embeddingJsonConfig || "{}",
+        embeddingDocTypeFieldId: dataindexData?.embeddingDocTypeFieldId?.id
+          ? { id: dataindexData.embeddingDocTypeFieldId.id, name: dataindexData.embeddingDocTypeFieldId.name }
+          : { id: "", name: "" },
+        settings: dataindexData?.settings || "{}",
+      }),
+      [dataindexData],
+    ),
 
-    try {
-      const response = await docTypesQuery.fetchMore({
-        variables: {
-          after: docTypesQuery.data.docTypeFields.pageInfo.endCursor,
-        },
-      });
+    originalValues: dataindexData,
+    isLoading: false, // o imposta loadingQuery se stai ancora fetchando da GraphQL
+    onSubmit(updatedData: any) {
+      // qui puoi richiamare la mutation o il metodo di salvataggio esistente
+      setDataindexData((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updatedData,
+            }
+          : updatedData,
+      );
+    },
 
-      const newEdges = response.data?.docTypeFields?.edges || [];
-      const newPageInfo = response.data?.docTypeFields?.pageInfo;
+    // getValidationMessages: () => ({}),
+  });
 
-      if (!newEdges.length || !newPageInfo) {
-        console.warn("No new data fetched or pageInfo is missing.");
-        return [];
-      }
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "datasourceId",
+          "docTypeIds",
+          "knnIndex",
+          "chunkType",
+          "chunkWindowSize",
+          "embeddingJsonConfig",
+          "embeddingDocTypeFieldId",
+          "settings",
+        ],
+        label: "Recap Data Index",
+      },
+    ],
+  });
 
-      docTypesQuery.updateQuery((prev) => ({
-        ...prev,
-        docTypeFields: {
-          ...prev.docTypeFields,
-          edges: [...(prev.docTypeFields?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
+  // const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
+  //   if (!docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage) return [];
 
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Error loading more options:", error);
-      return [];
-    }
-  };
+  //   try {
+  //     const response = await docTypesQuery.fetchMore({
+  //       variables: {
+  //         after: docTypesQuery.data.docTypeFields.pageInfo.endCursor,
+  //       },
+  //     });
+
+  //     const newEdges = response.data?.docTypeFields?.edges || [];
+  //     const newPageInfo = response.data?.docTypeFields?.pageInfo;
+
+  //     if (!newEdges.length || !newPageInfo) {
+  //       console.warn("No new data fetched or pageInfo is missing.");
+  //       return [];
+  //     }
+
+  //     docTypesQuery.updateQuery((prev) => ({
+  //       ...prev,
+  //       docTypeFields: {
+  //         ...prev.docTypeFields,
+  //         edges: [...(prev.docTypeFields?.edges || []), ...newEdges],
+  //         pageInfo: newPageInfo,
+  //       },
+  //     }));
+
+  //     return newEdges
+  //       .map((item) => ({
+  //         value: item?.node?.id || "",
+  //         label: item?.node?.name || "",
+  //       }))
+  //       .filter((option) => option.value && option.label);
+  //   } catch (error) {
+  //     console.error("Error loading more options:", error);
+  //     return [];
+  //   }
+  // };
 
   return (
     <ContainerFluid>
@@ -462,6 +523,7 @@ export function CreateDataindex({
               dataIndex={dataindexData}
             />
           )}
+          <Recap recapData={recapSections} />
         </>
       )}
     </ContainerFluid>

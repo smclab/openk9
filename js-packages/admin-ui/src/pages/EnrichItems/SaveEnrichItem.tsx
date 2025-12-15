@@ -23,6 +23,7 @@ import {
 } from "../../graphql-generated";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveEnrichItem() {
   const { enrichItemId = "new", name, view } = useParams();
@@ -103,6 +104,25 @@ export function SaveEnrichItem() {
       });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichItemMutation.data?.enrichItem?.fieldValidators),
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "type",
+          "serviceName",
+          "jsonPath",
+          "requestTimeout",
+          "behaviorMergeType",
+          "behaviorOnError",
+        ],
+        label: "Recap Enrich Item",
+      },
+    ],
   });
 
   return (
@@ -206,6 +226,7 @@ export function SaveEnrichItem() {
         />
       </form>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </>
   );
 }
