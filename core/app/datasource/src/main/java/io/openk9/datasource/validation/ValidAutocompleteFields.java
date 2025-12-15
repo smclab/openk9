@@ -29,7 +29,7 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidAutocompleteFields {
 
-	String message() default "All fields must be an autocomplete field (type search_as_you_type)";
+	String message() default "All fields must be an autocomplete field (type search_as_you_type) and must have a parent.";
 
 	Class<?>[] groups() default {};
 

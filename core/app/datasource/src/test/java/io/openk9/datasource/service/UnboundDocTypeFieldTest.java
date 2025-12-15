@@ -87,12 +87,12 @@ public class UnboundDocTypeFieldTest {
 		//3. docTypeField with "I18N" to leave unbound
 		createDocTypeFieldI18N(DOC_TYPE_FIELD_THREE_NAME);
 		//4. docTypeField without either "KEYWORD" or "I18N" to leave unbound
-		createDocTypeFieldText(DOC_TYPE_FIELD_FOUR_NAME);
+		var docTypeFieldFour = createDocTypeFieldText(DOC_TYPE_FIELD_FOUR_NAME);
 		//5-6. two docTypeFields with "SEARCH_AS_YOU_TYPE" to bound to the AutocompleteOne
-		createDocTypeFieldSearchAsYouType(DOC_TYPE_FIELD_FIVE_NAME);
-		createDocTypeFieldSearchAsYouType(DOC_TYPE_FIELD_SIX_NAME);
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_FIVE_NAME);
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SIX_NAME);
 		//7. docTypeField with "SEARCH_AS_YOU_TYPE" to leave unbound
-		createDocTypeFieldSearchAsYouType(DOC_TYPE_FIELD_SEVEN_NAME);
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SEVEN_NAME);
 
 		//create suggestion category and bound with docTypeFieldOne
 		createSuggestionCategoryOneWithDocTypeFieldOne();
@@ -108,7 +108,8 @@ public class UnboundDocTypeFieldTest {
 
 		EntitiesUtils.createEntity(autocorrectionDTO, autocorrectionService, sf);
 
-		//create Autocomplete and bound with docTypeFieldFive and docTypeFieldSix
+		// Create Autocomplete and bound with docTypeFieldFive and docTypeFieldSix.
+		// This two fields are child of the docTypeFieldFour.
 		var docTypeFieldFive =
 			EntitiesUtils.getEntity(DOC_TYPE_FIELD_FIVE_NAME, docTypeFieldService, sf);
 		var docTypeFieldSix =
@@ -131,7 +132,8 @@ public class UnboundDocTypeFieldTest {
 		// Expected unbound DocTypeField are all filtered DocTypeField
 		// except the one bound to the given SuggestionCategory.
 		var expectedUnboundDocTypeFields = getAllFilteredDocTypeFields().stream()
-			.filter(docTypeField -> !Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
+			.filter(docTypeField ->
+				!Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
 			.toList();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
@@ -194,7 +196,8 @@ public class UnboundDocTypeFieldTest {
 		// Expected unbound DocTypeField are all textual DocTypeField
 		// except the one bound to the given Autocorrection.
 		var expectedUnboundDocTypeFields = getAllTextDocTypeFields().stream()
-			.filter(docTypeField -> !Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
+			.filter(docTypeField ->
+				!Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
 			.toList();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
@@ -243,7 +246,8 @@ public class UnboundDocTypeFieldTest {
 		// Expected unbound DocTypeField are all search_as_you_type DocTypeField
 		// except the two bound to the given Autocomplete.
 		var expectedUnboundDocTypeFields = getAllSearchAsYouTypeDocTypeFields().stream()
-			.filter(docTypeField -> !boundDocTypeFieldId.contains(docTypeField.getId()))
+			.filter(docTypeField ->
+				!boundDocTypeFieldId.contains(docTypeField.getId()))
 			.toList();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
@@ -272,19 +276,20 @@ public class UnboundDocTypeFieldTest {
 		//remove suggestion
 		removeSuggestionCategory(getSuggestionCategoryOne().getId());
 
-		//remove all the four doc type fields
+		//remove doc type fields
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_ONE_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_TWO_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_THREE_NAME, docTypeFieldService, sf);
-		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FOUR_NAME, docTypeFieldService, sf);
 
 		//removes autocorrection and autocomplete
 		EntitiesUtils.removeEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sf);
 		EntitiesUtils.removeEntity(AUTOCOMPLETE_ONE_NAME, autocompleteService, sf);
 
+		//remove remaining doc type fields
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FIVE_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SIX_NAME, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SEVEN_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FOUR_NAME, docTypeFieldService, sf);
 	}
 
 	private void createDocTypeFieldKeyword(String name) {
@@ -319,7 +324,7 @@ public class UnboundDocTypeFieldTest {
 			.indefinitely();
 	}
 
-	private void createDocTypeFieldText(String name) {
+	private DocTypeField createDocTypeFieldText(String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
 			.name(name)
 			.fieldName(name)
@@ -328,14 +333,14 @@ public class UnboundDocTypeFieldTest {
 			.fieldType(FieldType.TEXT)
 			.build();
 
-		sf.withTransaction(
+		return sf.withTransaction(
 				s -> docTypeFieldService.create(dto)
 			)
 			.await()
 			.indefinitely();
 	}
 
-	private void createDocTypeFieldSearchAsYouType(String name) {
+	private void createSubDocTypeFieldSearchAsYouType(long parentId, String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
 			.name(name)
 			.fieldName(name)
@@ -344,11 +349,7 @@ public class UnboundDocTypeFieldTest {
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 
-		sf.withTransaction(
-				s -> docTypeFieldService.create(dto)
-			)
-			.await()
-			.indefinitely();
+		EntitiesUtils.createSubField(parentId, dto, docTypeFieldService);
 	}
 
 	private void createSuggestionCategoryOneWithDocTypeFieldOne() {
@@ -376,7 +377,8 @@ public class UnboundDocTypeFieldTest {
 			)
 			.await()
 			.indefinitely().stream()
-				.filter(docTypeField -> docTypeField.isI18N() || docTypeField.isKeyword())
+				.filter(docTypeField ->
+					docTypeField.isI18N() || docTypeField.isKeyword())
 				.toList();
 	}
 

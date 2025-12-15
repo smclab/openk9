@@ -38,6 +38,7 @@ import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
+import io.openk9.datasource.validation.ValidAutocompleteFieldsValidator;
 
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -136,7 +137,7 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 									fieldId -> session.find(DocTypeField.class, fieldId)
 								)
 								.select().where(Objects::nonNull)
-								.collect().asList()
+								.collect().asSet()
 								.invoke(fields -> {
 									if (fields.size() != fieldIds.size()) {
 										throw new InvalidDocTypeFieldSetException(
@@ -144,9 +145,11 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 										);
 									}
 
-									if (!fields.stream().allMatch(DocTypeField::isAutocomplete)) {
+									if (!ValidAutocompleteFieldsValidator
+											.validateAutocompleteFields(fields)) {
+
 										throw new InvalidDocTypeFieldSetException(
-											"All fields must be of type autocomplete (search_as_you_type)"
+											"All fields must be of type autocomplete (search_as_you_type) and must have a parent."
 										);
 									}
 								})
@@ -179,7 +182,7 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 									fieldId -> session.find(DocTypeField.class, fieldId)
 								)
 								.select().where(Objects::nonNull)
-								.collect().asList()
+								.collect().asSet()
 								.invoke(fields -> {
 									if (fields.size() != fieldIds.size()) {
 										throw new InvalidDocTypeFieldSetException(
@@ -187,9 +190,11 @@ public class AutocompleteService extends BaseK9EntityService<Autocomplete, Autoc
 										);
 									}
 
-									if (!fields.stream().allMatch(DocTypeField::isAutocomplete)) {
+									if (!ValidAutocompleteFieldsValidator
+											.validateAutocompleteFields(fields)) {
+
 										throw new InvalidDocTypeFieldSetException(
-											"All fields must be of type autocomplete (search_as_you_type)"
+											"All fields must be of type autocomplete (search_as_you_type) and must have a parent."
 										);
 									}
 								})

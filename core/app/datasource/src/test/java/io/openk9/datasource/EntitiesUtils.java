@@ -234,6 +234,19 @@ public class EntitiesUtils {
 
 	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
 		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
+			long id,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> service.findById(session, id)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
 			String name,
 			SERVICE service,
 			Mutiny.SessionFactory sessionFactory) {
@@ -246,14 +259,15 @@ public class EntitiesUtils {
 	}
 
 	// Custom retrieval methods for entities needing eager fetching
-	public static Set<DocTypeField> getAllSearchAsYouTypeDocTypeField(
+	public static Set<DocTypeField> getAllSearchAsYouTypeDocTypeFieldWithParent(
 			DocTypeFieldService docTypeFieldService,
 			Mutiny.SessionFactory sessionFactory) {
 
 		var docTypeFields = getAllEntities(docTypeFieldService, sessionFactory);
 
 		return docTypeFields.stream()
-			.filter(field -> FieldType.SEARCH_AS_YOU_TYPE.equals(field.getFieldType()))
+			.filter(DocTypeField::isAutocomplete)
+			.filter(field -> field.getParentDocTypeField() != null)
 			.collect(Collectors.toSet());
 	}
 

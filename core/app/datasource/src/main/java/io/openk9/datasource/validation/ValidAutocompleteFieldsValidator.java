@@ -27,16 +27,19 @@ public class ValidAutocompleteFieldsValidator
 	implements ConstraintValidator<ValidAutocompleteFields, Set<DocTypeField>> {
 	@Override
 	public boolean isValid(Set<DocTypeField> fields, ConstraintValidatorContext context) {
+		return validateAutocompleteFields(fields);
+	}
+
+	public static boolean validateAutocompleteFields(Set<DocTypeField> fields) {
 		if (fields == null || fields.isEmpty()) {
 			return true;
 		}
 
-		for (DocTypeField field : fields) {
-			if (field == null || !field.isAutocomplete()) {
-				return false;
-			}
-		}
-
-		return true;
+		return fields.stream()
+			.allMatch(field ->
+				field != null
+					&& field.isAutocomplete()
+					&& field.getParentDocTypeField() != null
+			);
 	}
 }

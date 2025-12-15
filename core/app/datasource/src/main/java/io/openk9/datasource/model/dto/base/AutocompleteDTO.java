@@ -45,7 +45,8 @@ public class AutocompleteDTO extends K9EntityDTO{
 	private Integer resultSize;
 	@Description("""
 		The field list used in the autocomplete query,
-		must not be empty and all the docTypeField must be of type search_as_you_type.
+		must not be empty, all the docTypeField must be of type search_as_you_type
+		 and must have a parent.
 	""")
 	private Set<Long> fieldIds;
 	@Nullable

@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,6 +53,7 @@ public class AutocompleteCRUDTest {
 	private static final String AUTOCOMPLETE_NAME_TWO = ENTITY_NAME_PREFIX + "Autocomplete 2";
 	private static final String DOC_TYPE_FIELD_NAME_ONE = ENTITY_NAME_PREFIX + "Doc type field 1";
 	private static final String DOC_TYPE_FIELD_NAME_TWO = ENTITY_NAME_PREFIX + "Doc type field 2";
+	private static final String DOC_TYPE_FIELD_NAME_THREE = ENTITY_NAME_PREFIX + "Doc type field 3";
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
@@ -64,23 +66,47 @@ public class AutocompleteCRUDTest {
 
 	@BeforeEach
 	void setup() {
+		var allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sf);
+
+		var firstSampleTextField = allDocTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.findFirst();
+
+		var docTypeFieldId = 0L;
+
+		if (firstSampleTextField.isPresent()) {
+			docTypeFieldId = firstSampleTextField.get().getId();
+		}
 
 		DocTypeFieldDTO fieldDtoOne = DocTypeFieldDTO.builder()
 			.name(DOC_TYPE_FIELD_NAME_ONE)
-			.fieldName("searchasyoutype")
+			.fieldName("sample.searchasyoutypeone")
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 		DocTypeFieldDTO fieldDtoTwo = DocTypeFieldDTO.builder()
 			.name(DOC_TYPE_FIELD_NAME_TWO)
-			.fieldName("searchasyoutype")
+			.fieldName("sample.searchasyoutypetwo")
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.build();
+		DocTypeFieldDTO fieldDtoThree = DocTypeFieldDTO.builder()
+			.name(DOC_TYPE_FIELD_NAME_THREE)
+			.fieldName("searchasyoutypethree")
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 
-		EntitiesUtils.createEntity(fieldDtoOne, docTypeFieldService, sf);
-		EntitiesUtils.createEntity(fieldDtoTwo, docTypeFieldService, sf);
+		// child doc type fields
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoOne, docTypeFieldService);
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoTwo, docTypeFieldService);
+
+		// doc type field without parent
+		EntitiesUtils.createEntity(fieldDtoThree, docTypeFieldService, sf);
 
 		var fieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf)
+				.stream()
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
@@ -95,7 +121,8 @@ public class AutocompleteCRUDTest {
 	@Test
 	void should_create_empty_autocomplete() {
 		var fieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf)
+				.stream()
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
@@ -128,7 +155,9 @@ public class AutocompleteCRUDTest {
 	}
 
 	@Test
-	void should_fail_creating_autocomplete_with_no_searchAsYouType_field() throws NoSuchMethodException {
+	void should_fail_creating_autocomplete_from_dto_with_no_searchAsYouType_field()
+		throws NoSuchMethodException {
+
 		var fieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
 
 		AutocompleteDTO dto = AutocompleteDTO.builder()
@@ -149,14 +178,81 @@ public class AutocompleteCRUDTest {
 	}
 
 	@Test
-	void should_fail_patching_autocomplete_with_no_searchAsYouType_field() throws NoSuchMethodException {
+	void should_fail_creating_autocomplete_from_empty_entity() {
+		Autocomplete autocomplete = new Autocomplete();
+
+		var exception = assertThrows(
+			HibernateException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_creating_autocomplete_from_entity_with_name_only() {
+		Autocomplete autocomplete = new Autocomplete();
+		autocomplete.setName(AUTOCOMPLETE_NAME_ONE);
+
+		var exception = assertThrows(
+			HibernateException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_creating_autocomplete_from_entity_with_no_searchAsYouType_field() {
+		var sampleField = EntitiesUtils.getAllEntities(docTypeFieldService, sf).stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.findFirst()
+			.orElse(null);
+
+		assertNotNull(sampleField);
+
+		Autocomplete autocomplete = new Autocomplete();
+		autocomplete.setName(AUTOCOMPLETE_NAME_ONE);
+		autocomplete.setFields(Set.of(sampleField));
+
+		var exception = assertThrows(
+			HibernateException.class, () -> EntitiesUtils.createEntity(autocomplete, service, sf));
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_creating_autocomplete_from_dto_with_field_without_parent()
+		throws NoSuchMethodException {
+
+		var fieldId =
+			EntitiesUtils.getEntity(DOC_TYPE_FIELD_NAME_THREE, docTypeFieldService, sf).getId();
+
+		AutocompleteDTO dto = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_ONE)
+			.fieldIds(Set.of(fieldId))
+			.build();
+
+		var exception = assertThrows(
+			HibernateException.class, () -> EntitiesUtils.createEntity(dto, service, sf));
+
+		var defaultValidatorMessage = ValidAutocompleteFields.class
+			.getMethod("message")
+			.getDefaultValue()
+			.toString();
+
+		assertTrue(exception.getMessage().contains(defaultValidatorMessage));
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_updating_autocomplete_with_no_searchAsYouType_field() {
 		var textFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
 
 		var updateFieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf)
+				.stream()
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
+		// adds field of type TEXT
 		updateFieldIds.add(textFieldId);
 
 		AutocompleteDTO dto = AutocompleteDTO.builder()
@@ -175,15 +271,68 @@ public class AutocompleteCRUDTest {
 	}
 
 	@Test
-	void should_fail_updating_autocomplete_with_no_searchAsYouType_field() throws NoSuchMethodException {
-		var textFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
-
+	void should_fail_updating_autocomplete_with_field_without_parent() {
+		// retrieve all search_as_you_type fields without parent
 		var updateFieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllEntities(docTypeFieldService, sf).stream()
+				.filter(DocTypeField::isAutocomplete)
+				.filter(field -> field.getParentDocTypeField() == null)
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
+		AutocompleteDTO dto = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_TWO)
+			.fieldIds(updateFieldIds)
+			.build();
+
+		var autocompleteToUpdate = EntitiesUtils.getEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
+
+		var exception = assertThrows(
+			InvalidDocTypeFieldSetException.class,
+			() -> updateAutocomplete(autocompleteToUpdate.getId(), dto)
+		);
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_patching_autocomplete_with_no_searchAsYouType_field() {
+		var textFieldId = EntitiesUtils.getSampleTextDocTypeFieldId(docTypeFieldService, sf);
+
+		var updateFieldIds =
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf)
+				.stream()
+				.filter(field -> field.getParentDocTypeField() != null)
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
+
+		// adds field of type TEXT
 		updateFieldIds.add(textFieldId);
+
+		AutocompleteDTO dto = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_TWO)
+			.fieldIds(updateFieldIds)
+			.build();
+
+		var autocompleteToUpdate = EntitiesUtils.getEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
+
+		var exception = assertThrows(
+			InvalidDocTypeFieldSetException.class,
+			() -> patchAutocomplete(autocompleteToUpdate.getId(), dto)
+		);
+
+		log.errorf(exception, "Exception message: %s\n\n", exception.getMessage());
+	}
+
+	@Test
+	void should_fail_patching_autocomplete_with_field_without_parent() {
+		// retrieve all search_as_you_type fields without parent
+		var updateFieldIds =
+			EntitiesUtils.getAllEntities(docTypeFieldService, sf).stream()
+				.filter(DocTypeField::isAutocomplete)
+				.filter(field -> field.getParentDocTypeField() == null)
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
 
 		AutocompleteDTO dto = AutocompleteDTO.builder()
 			.name(AUTOCOMPLETE_NAME_TWO)
@@ -202,10 +351,18 @@ public class AutocompleteCRUDTest {
 
 	@AfterEach
 	void tearDown() {
+		try {
+			EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_ONE, service, sf);
+		}
+		catch (Exception e) {
+			log.debugf("Autocomplete with name \"%s\" does not exist.", AUTOCOMPLETE_NAME_ONE);
+		}
+
 		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
 
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sf);
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_TWO, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_THREE, docTypeFieldService, sf);
 	}
 
 	private void patchAutocomplete(Long id, AutocompleteDTO dto) {

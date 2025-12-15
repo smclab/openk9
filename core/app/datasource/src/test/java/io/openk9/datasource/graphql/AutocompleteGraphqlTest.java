@@ -100,23 +100,36 @@ public class AutocompleteGraphqlTest {
 
 	@BeforeEach
 	void setup() {
+		// Create DocTypeField one and two as child of the first sample field of type TEXT
+		var allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sf);
+
+		var firstSampleTextField = allDocTypeFields.stream()
+			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
+			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
+			.findFirst();
+
+		var docTypeFieldId = 0L;
+
+		if (firstSampleTextField.isPresent()) {
+			docTypeFieldId = firstSampleTextField.get().getId();
+		}
 
 		DocTypeFieldDTO fieldDtoOne = DocTypeFieldDTO.builder()
 			.name(DOC_TYPE_FIELD_NAME_ONE)
-			.fieldName("searchasyoutype")
+			.fieldName("sample.searchasyoutypeone")
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 		DocTypeFieldDTO fieldDtoTwo = DocTypeFieldDTO.builder()
 			.name(DOC_TYPE_FIELD_NAME_TWO)
-			.fieldName("searchasyoutype")
+			.fieldName("sample.searchasyoutypetwo")
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 
-		EntitiesUtils.createEntity(fieldDtoOne, docTypeFieldService, sf);
-		EntitiesUtils.createEntity(fieldDtoTwo, docTypeFieldService, sf);
+		EntitiesUtils.createSubField(docTypeFieldId, fieldDtoOne, docTypeFieldService);
+		EntitiesUtils.createSubField(docTypeFieldId, fieldDtoTwo, docTypeFieldService);
 
 		var fieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf).stream()
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
@@ -180,7 +193,8 @@ public class AutocompleteGraphqlTest {
 	@Test
 	void should_create_autocorrection_one() throws ExecutionException, InterruptedException {
 		var fieldIds =
-			EntitiesUtils.getAllSearchAsYouTypeDocTypeField(docTypeFieldService, sf).stream()
+			EntitiesUtils.getAllSearchAsYouTypeDocTypeFieldWithParent(docTypeFieldService, sf)
+				.stream()
 				.map(DocTypeField::getId)
 				.collect(Collectors.toSet());
 
@@ -257,6 +271,12 @@ public class AutocompleteGraphqlTest {
 
 	@AfterEach
 	void tearDown() {
+		try {
+			EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_ONE, service, sf);
+		}
+		catch (Exception e) {
+			log.debugf("Autocomplete with name \"%s\" does not exist.", AUTOCOMPLETE_NAME_ONE);
+		}
 		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_TWO, service, sf);
 
 		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sf);
