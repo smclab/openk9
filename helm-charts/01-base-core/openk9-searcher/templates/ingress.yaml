@@ -2,9 +2,6 @@
 {{- $paths := .Values.ingress.paths -}}
 {{- $serviceport := .Values.ingress.servicePort -}}
 {{- $service := include "common.names.name" . -}}
-{{- if .Values.ingress.useApiGateway }}
-{{- $service = .Values.ingress.apiGatewayService -}}
-{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

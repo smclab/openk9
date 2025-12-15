@@ -17,10 +17,10 @@ replicaCount: 1
 ## @param image.pullPolicy API Gateway image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: "" #-TBMD
-  name: smclab/openk9-api-gateway
+  registry: "docker.io" #-TBMD
+  name: dimitri98/openk9-api-gateway
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "3.1.0-SNAPSHOT"
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
@@ -34,8 +34,8 @@ image:
   ## pullSecrets:
   ##   - myRegistryKeySecretName
   ##
-  pullSecrets:
-  - docker-registry-secret
+  #pullSecrets:
+#  - docker-registry-secret
 
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
@@ -55,7 +55,7 @@ debug:
 
 ## Database Job configuration
 databaseJob:
-  enabled: true
+  enabled: false
   ttlSecondsAfterFinished: 120
   image:
     registry: docker.io
@@ -80,7 +80,7 @@ database:
 
 ## Rabbitmq configuration
 rabbitmq:
-  host: "rabbitmq-headless"
+  host: "rabbitmq-headless.k9-requirements"
   port: "5672"
   username: "openk9"
   passwordSecretName: "rabbitmq-password"
@@ -256,7 +256,7 @@ affinity: {}
 livenessProbe:
   enabled: true
   path: /actuator/health/liveness
-  initialDelaySeconds: 30
+  initialDelaySeconds: 60
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1
@@ -274,7 +274,7 @@ livenessProbe:
 readinessProbe:
   enabled: true
   path: /actuator/health/readiness
-  initialDelaySeconds: 30
+  initialDelaySeconds: 60
   periodSeconds: 10
   timeoutSeconds: 5
   successThreshold: 1

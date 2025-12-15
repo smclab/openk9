@@ -117,7 +117,7 @@ keycloak:
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
-  baseIssuerUri: "https://keycloak-backend.openk9.io/realms/"
+  baseIssuerUri: "https://keycloak.openk9.local/realms/"
 
 
 ## Database configuration

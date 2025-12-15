@@ -174,12 +174,6 @@ ingress:
   ## @param ingress.enabled Enable ingress resource for Searcher console
   ##
   enabled: false
-  ## @param ingress.useApiGateway Route traffic through API Gateway instead of direct service
-  ##
-  useApiGateway: true
-  ## @param ingress.apiGatewayService Name of the API Gateway service
-  ##
-  apiGatewayService: "openk9-api-gateway"
   ## @param ingress.enabled Enable ingress resource for Searcher console
   ##
   host: openk9.local   #-TBMD
