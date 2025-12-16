@@ -49,17 +49,11 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 		return new String[]{EnrichItem_.NAME, EnrichItem_.TYPE, EnrichItem_.RESOURCE_URI};
 	}
 
-	public Uni<FormTemplate> getForm(String serviceName) {
-		ResourceUri resourceUri = ResourceUri.builder()
-			.baseUri(serviceName)
-			.build();
+	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {
 		return httpEnricherClient.getForm(resourceUri);
 	}
 
-	public Uni<HealthDTO> getHealth(String serviceName) {
-		ResourceUri resourceUri = ResourceUri.builder()
-			.baseUri(serviceName)
-			.build();
+	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
 		return httpEnricherClient.getHealth(resourceUri);
 	}
 

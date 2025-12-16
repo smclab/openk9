@@ -17,11 +17,12 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.model.ResourceUri;
+import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -33,11 +34,13 @@ import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
 
 @ApplicationScoped
 @Path("/enrichers")
@@ -67,12 +70,24 @@ public class EnricherResource {
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
-	@GET
-	@Path("/health/{serviceName}")
-	public Uni<HealthDTO> getHealth(
-		@Parameter(description = "ServiceName of enricher")
-		@PathParam("serviceName") String serviceName) {
-		return service.getHealth(serviceName);
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = ResourceUri.class),
+				examples = {
+					@ExampleObject(
+						name = "ResourceUri",
+						value = SchedulerDtoExamples.RESOURCE_URI_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/health/")
+	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
+		return service.getHealth(resourceUri);
 	}
 
 	@Operation(operationId = "form")
@@ -96,12 +111,24 @@ public class EnricherResource {
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
-	@GET
-	@Path("/form/{serviceName}")
-	public Uni<FormTemplate> getForm(
-		@Parameter(description = "ServiceName of enricher")
-		@PathParam("serviceName") String serviceName) {
-		return service.getForm(serviceName);
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = ResourceUri.class),
+				examples = {
+					@ExampleObject(
+						name = "ResourceUri",
+						value = SchedulerDtoExamples.RESOURCE_URI_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/form")
+	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {
+		return service.getForm(resourceUri);
 	}
 
 }
