@@ -1,8 +1,10 @@
-import { Badge, Box, Fade, IconButton, Paper, Typography } from "@mui/material";
-import RecapDatasource, { areaType } from "@pages/datasources/RecapDatasource";
 import React from "react";
+import { Badge, Box, Fade, IconButton, Paper, Typography } from "@mui/material";
+
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
+
+import RecapDatasource, { areaType } from "@pages/datasources/RecapDatasource";
 
 export type RecapField = {
   key: string;
@@ -15,57 +17,56 @@ export type RecapField = {
 export type RecapSingleSection = {
   id: string;
   fields: RecapField[];
-  section: { sectionId: string; sectionLabel: string };
-  tabId?: string;
-  isRequired?: boolean;
-  callbackNext?: () => void;
-  callbackBack?: () => void;
+  section: {
+    sectionId: string;
+    sectionLabel: string;
+  };
 };
 
 export type formType = {
   id: string;
-  value: any;
-  disabled: boolean;
   inputProps<K extends keyof any>(
     field: K,
   ): {
-    id: string;
-    value: any[K];
-    onChange: (value: any[K]) => void;
-    disabled: boolean;
+    value: any;
     validationMessages: string[];
-    map<M>(
-      mapValue: (value: any[K]) => M,
-      mapOnChange: (value: M) => any[K],
-    ): {
-      id: string;
-      value: M;
-      onChange: (value: M) => void;
-      disabled: boolean;
-      validationMessages: string[];
-    };
   };
 };
 
-type AssociationItem = {
-  label: string;
-  value: string | number;
-};
+function looksLikeJsonString(value: any): value is string {
+  if (typeof value !== "string") return false;
+  const v = value.trim();
+  return (v.startsWith("{") && v.endsWith("}")) || (v.startsWith("[") && v.endsWith("]"));
+}
 
-function isAssociationItem(value: any): value is AssociationItem {
-  return typeof value === "object" && value !== null && "label" in value && "value" in value;
+function safeJsonParse(value: string): any | null {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function detectValueType(value: any): RecapField["type"] {
   if (Array.isArray(value)) return "array";
-  if (isAssociationItem(value)) return "json";
   if (typeof value === "number") return "number";
   if (typeof value === "boolean") return "boolean";
+
+  if (looksLikeJsonString(value)) {
+    const parsed = safeJsonParse(value);
+    if (parsed !== null) return Array.isArray(parsed) ? "array" : "json";
+  }
+
   if (typeof value === "object" && value !== null) return "json";
   return "string";
 }
 
-function normalizeValue(value: any, type: RecapField["type"]) {
+function normalizeValue(value: any, type?: RecapField["type"]) {
+  if ((type === "json" || type === "array") && typeof value === "string" && looksLikeJsonString(value)) {
+    const parsed = safeJsonParse(value);
+    if (parsed !== null) return parsed;
+  }
+
   if (type === "array") return value ?? [];
   if (type === "json") return value ?? {};
   return value ?? null;
@@ -74,42 +75,26 @@ function normalizeValue(value: any, type: RecapField["type"]) {
 export default function Recap({ recapData }: { recapData: RecapSingleSection[] }) {
   const [open, setOpen] = React.useState(false);
 
-  const title = React.useMemo(() => {
-    if (!recapData || recapData.length === 0) return "Recap";
-    return recapData[0].section.sectionLabel || "Recap";
-  }, [recapData]);
+  if (!recapData?.length) return null;
 
-  const totalFields = React.useMemo(
-    () => recapData.reduce((acc, section) => acc + section.fields.length, 0),
-    [recapData],
-  );
+  const title = recapData[0].section.sectionLabel;
+  const totalFields = recapData.reduce((acc, s) => acc + s.fields.length, 0);
 
-  const handleToggle = () => {
-    if (!recapData || recapData.length === 0) return;
-    setOpen((prev) => !prev);
-  };
-
-  const areas: areaType[] = React.useMemo(
-    () =>
-      recapData.map((section) => ({
-        title: section.section.sectionLabel || "",
-        fields: section.fields,
-      })),
-    [recapData],
-  );
-
-  if (!recapData || recapData.length === 0) return null;
+  const areas: areaType[] = recapData.map((s) => ({
+    title: s.section.sectionLabel,
+    fields: s.fields,
+  }));
 
   return (
     <>
       <Box
-        onClick={handleToggle}
+        onClick={() => setOpen((p) => !p)}
         sx={{
           position: "fixed",
           bottom: 24,
           right: 24,
           zIndex: 1300,
-          borderRadius: "10px",
+          borderRadius: 2,
           px: 2.5,
           py: 1.5,
           bgcolor: "background.paper",
@@ -118,88 +103,52 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
           alignItems: "center",
           gap: 1.5,
           cursor: "pointer",
-          minWidth: 160,
-          maxWidth: 260,
-          overflow: "hidden",
-          with: "fit-content",
         }}
       >
         <Box
           sx={{
-            borderRadius: 9999,
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
             bgcolor: "primary.main",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 32,
-            height: 32,
-            with: "fit-content",
           }}
         >
-          <SummarizeRoundedIcon sx={{ fontSize: 20, color: "primary.contrastText" }} />
+          <SummarizeRoundedIcon sx={{ color: "primary.contrastText" }} />
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
-            {title}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {recapData.length} sezioni · {totalFields} campi
+
+        <Box>
+          <Typography fontWeight={600}>{title}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {totalFields} campi
           </Typography>
         </Box>
-        <Badge color="primary" variant="dot" overlap="circular" invisible={!totalFields} />
+
+        <Badge color="primary" variant="dot" />
       </Box>
 
       <Fade in={open}>
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 100,
-            right: 24,
-            zIndex: 1300,
-          }}
-        >
-          <Paper
-            elevation={8}
-            sx={{
-              width: 440,
-              maxWidth: "90vw",
-              maxHeight: "70vh",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+        <Box sx={{ position: "fixed", bottom: 100, right: 24, zIndex: 1300 }}>
+          <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
             <Box
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
                 px: 2,
                 py: 1.5,
                 borderBottom: "1px solid",
                 borderColor: "divider",
-                bgcolor: "background.default",
+                display: "flex",
+                justifyContent: "space-between",
               }}
             >
-              <Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  {title}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Recap
-                </Typography>
-              </Box>
+              <Typography fontWeight={600}>{title}</Typography>
               <IconButton size="small" onClick={() => setOpen(false)}>
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
 
-            <Box
-              sx={{
-                p: 2,
-                overflowY: "auto",
-              }}
-            >
+            <Box sx={{ p: 2, overflowY: "auto" }}>
               <RecapDatasource area={areas} />
             </Box>
           </Paper>
@@ -212,33 +161,37 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
 export function mappingCardRecap({
   form,
   sections,
+  valueOverride,
 }: {
   form: formType;
   sections: { label: string; keys: string[] }[];
+  valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
     const fields: RecapField[] = sectionDef.keys.map((key) => {
       const input = form.inputProps<any>(key as any);
-      const detectedType = detectValueType(input.value);
-      const normalized = normalizeValue(input.value, detectedType);
+
+      const rawValue = valueOverride?.[key] !== undefined ? valueOverride[key] : input.value;
+
+      const type = detectValueType(rawValue);
+      const value = normalizeValue(rawValue, type);
 
       return {
         key,
         label: key,
-        value: normalized,
-        type: detectedType,
+        value,
+        type,
         isValid: input.validationMessages.length === 0,
       };
     });
 
     return {
-      id: `${form.id}-${sectionDef.label}`,
+      id: `${sectionDef.label}`,
       fields,
       section: {
-        sectionId: form.id,
+        sectionId: sectionDef.label,
         sectionLabel: sectionDef.label,
       },
-      callbackBack: () => {},
     };
   });
 }
