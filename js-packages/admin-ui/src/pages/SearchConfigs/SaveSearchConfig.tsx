@@ -242,14 +242,14 @@ export function SaveSearchConfig() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "minScore",
-          "minScoreSuggestions",
-          "minScoreSearch",
-          "queryParserConfig",
-          "jsonConfig",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "minScore" },
+          { key: "minScoreSuggestions" },
+          { key: "minScoreSearch" },
+          { key: "queryParserConfig" },
+          { key: "jsonConfig" },
         ],
         label: "Recap Search Config",
       },

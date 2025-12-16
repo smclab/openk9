@@ -232,7 +232,7 @@ export function SavePipeline() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "associatedEnrichItems"],
+        cell: [{ key: "name" }, { key: "description" }, { key: "associatedEnrichItems" }],
         label: "Recap Enrich Pipeline",
       },
     ],

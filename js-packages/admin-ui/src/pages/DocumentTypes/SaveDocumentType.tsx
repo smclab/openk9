@@ -74,7 +74,9 @@ export function SaveDocumentType() {
   });
   const recapSections = mappingCardRecap({
     form: form as any,
-    sections: [{ keys: ["name", "description", "docTypeTemplateId"], label: "Recap Document Type" }],
+    sections: [
+      { cell: [{ key: "name" }, { key: "description" }, { key: "docTypeTemplateId" }], label: "Recap Document Type" },
+    ],
   });
 
   return (

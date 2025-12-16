@@ -196,11 +196,11 @@ export function SaveQueryAnalysis() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "stopWords"],
+        cell: [{ key: "name" }, { key: "description" }, { key: "stopWords" }],
         label: "Recap Query Analysis",
       },
       {
-        keys: ["annotatorsIds", "rulesIds"],
+        cell: [{ key: "annotatorsIds" }, { key: "rulesIds" }],
         label: "Associations",
       },
     ],

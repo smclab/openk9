@@ -165,17 +165,17 @@ export function CreateDataindex({
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "datasourceId",
-          "docTypeIds",
-          "knnIndex",
-          "chunkType",
-          "chunkWindowSize",
-          "embeddingJsonConfig",
-          "embeddingDocTypeFieldId",
-          "settings",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "datasourceId" },
+          { key: "docTypeIds" },
+          { key: "knnIndex" },
+          { key: "chunkType" },
+          { key: "chunkWindowSize" },
+          { key: "embeddingJsonConfig" },
+          { key: "embeddingDocTypeFieldId" },
+          { key: "settings" },
         ],
         label: "Recap Data Index",
       },

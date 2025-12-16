@@ -135,7 +135,13 @@ export function SaveDocumentTypeTemplate() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "templateType", "source", "compiled"],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "templateType" },
+          { key: "source" },
+          { key: "compiled" },
+        ],
         label: "Recap Document Type Template",
       },
     ],

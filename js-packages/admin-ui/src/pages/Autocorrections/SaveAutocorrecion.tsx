@@ -124,15 +124,15 @@ export function SaveAutocorrection() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "suggestMode",
-          "sort",
-          "prefixLength",
-          "minWordLength",
-          "maxEdit",
-          "enableSearchWithCorrection",
-          "docTypeFields",
+        cell: [
+          { key: "name" },
+          { key: "suggestMode" },
+          { key: "sort" },
+          { key: "prefixLength" },
+          { key: "minWordLength" },
+          { key: "maxEdit" },
+          { key: "enableSearchWithCorrection" },
+          { key: "docTypeFields" },
         ],
         label: "Recap Autocorrection",
       },

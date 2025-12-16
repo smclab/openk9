@@ -156,17 +156,17 @@ export function SaveAnnotator() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "fieldName",
-          "fuziness",
-          "type",
-          "description",
-          "size",
-          "boost",
-          "valuesQueryType",
-          "globalQueryType",
-          "docTypeFieldId",
+        cell: [
+          { key: "name" },
+          { key: "fieldName" },
+          { key: "fuziness" },
+          { key: "type" },
+          { key: "description" },
+          { key: "size" },
+          { key: "boost" },
+          { key: "valuesQueryType" },
+          { key: "globalQueryType" },
+          { key: "docTypeFieldId" },
         ],
         label: "Recap Annotator",
       },

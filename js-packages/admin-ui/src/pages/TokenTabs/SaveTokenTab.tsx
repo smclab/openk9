@@ -178,17 +178,17 @@ export function SaveTokenTab() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "value",
-          "filter",
-          "tokenType",
-          "boost",
-          "fuzziness",
-          "valuesQueryType",
-          "globalQueryType",
-          "docTypeFieldId",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "value" },
+          { key: "filter" },
+          { key: "tokenType" },
+          { key: "boost" },
+          { key: "fuzziness" },
+          { key: "valuesQueryType" },
+          { key: "globalQueryType" },
+          { key: "docTypeFieldId" },
         ],
         label: "Recap Token Tab",
       },

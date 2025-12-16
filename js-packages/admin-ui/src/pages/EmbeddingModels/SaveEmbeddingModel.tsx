@@ -132,7 +132,16 @@ export function SaveEmbeddingModel() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "provider", "model", "apiKey", "apiUrl", "vectorSize", "jsonConfig"],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "provider" },
+          { key: "model" },
+          { key: "apiKey" },
+          { key: "apiUrl" },
+          { key: "vectorSize" },
+          { key: "jsonConfig" },
+        ],
         label: "Recap Embedding Model",
       },
     ],

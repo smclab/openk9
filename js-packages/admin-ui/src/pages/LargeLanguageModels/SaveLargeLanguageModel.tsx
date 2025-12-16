@@ -135,16 +135,16 @@ export function SaveLargeLanguageModel() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "apiKey",
-          "apiUrl",
-          "contextWindow",
-          "retrieveCitations",
-          "provider",
-          "model",
-          "jsonConfig",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "apiKey" },
+          { key: "apiUrl" },
+          { key: "contextWindow" },
+          { key: "retrieveCitations" },
+          { key: "provider" },
+          { key: "model" },
+          { key: "jsonConfig" },
         ],
         label: "Recap Large Language Model",
       },

@@ -99,7 +99,7 @@ export function SaveCharFilter() {
         sections: [
           {
             label: "Recap Char Filter",
-            keys: ["name", "description", "type", "jsonConfig"],
+            cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
           },
         ],
         valueOverride: {

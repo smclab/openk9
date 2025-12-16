@@ -164,11 +164,12 @@ export function mappingCardRecap({
   valueOverride,
 }: {
   form: formType;
-  sections: { label: string; keys: string[] }[];
+  sections: { label: string; cell: { key: string; label?: string }[] }[];
   valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
-    const fields: RecapField[] = sectionDef.keys.map((key) => {
+    const fields: RecapField[] = sectionDef.cell.map((element) => {
+      const { key, label } = element;
       const input = form.inputProps<any>(key as any);
 
       const rawValue = valueOverride?.[key] !== undefined ? valueOverride[key] : input.value;
@@ -178,7 +179,7 @@ export function mappingCardRecap({
 
       return {
         key,
-        label: key,
+        label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
         value,
         type,
         isValid: input.validationMessages.length === 0,

@@ -110,15 +110,15 @@ export function SaveEnrichItem() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "type",
-          "serviceName",
-          "jsonPath",
-          "requestTimeout",
-          "behaviorMergeType",
-          "behaviorOnError",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "type" },
+          { key: "serviceName" },
+          { key: "jsonPath" },
+          { key: "requestTimeout" },
+          { key: "behaviorMergeType" },
+          { key: "behaviorOnError" },
         ],
         label: "Recap Enrich Item",
       },

@@ -121,7 +121,12 @@ export function SaveTab() {
   });
   const recapSections = mappingCardRecap({
     form: form as any,
-    sections: [{ keys: ["name", "description", "priority", "tokenTabIds"], label: "Recap Tab" }],
+    sections: [
+      {
+        cell: [{ key: "name" }, { key: "description" }, { key: "priority" }, { key: "tokenTabIds" }],
+        label: "Recap Tab",
+      },
+    ],
   });
   return (
     <ContainerFluid>

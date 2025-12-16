@@ -109,7 +109,13 @@ export function SaveSuggestionCategory() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "priority", "multiSelect", "docTypeFieldId"],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "priority" },
+          { key: "multiSelect" },
+          { key: "docTypeFieldId" },
+        ],
         label: "Recap Suggestion Category",
       },
     ],

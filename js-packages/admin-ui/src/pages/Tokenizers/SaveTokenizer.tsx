@@ -113,7 +113,7 @@ export function SaveTokenizer() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "type", "jsonConfig"],
+        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
         label: "Recap Tokenizer",
       },
     ],

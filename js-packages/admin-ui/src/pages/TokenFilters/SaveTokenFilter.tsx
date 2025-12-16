@@ -112,7 +112,7 @@ export function SaveTokenFilter() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "type", "jsonConfig"],
+        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
         label: "Recap Token Filter",
       },
     ],

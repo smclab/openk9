@@ -269,7 +269,14 @@ export const SavePluginnDriverModel = React.forwardRef(
       form: form as any,
       sections: [
         {
-          keys: ["name", "description", "type", "jsonConfig", "provisioning", "docTypeUserDTOSet"],
+          cell: [
+            { key: "name" },
+            { key: "description" },
+            { key: "type" },
+            { key: "jsonConfig" },
+            { key: "provisioning" },
+            { key: "docTypeUserDTOSet" },
+          ],
           label: "Recap Connector",
         },
       ],

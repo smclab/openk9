@@ -152,17 +152,17 @@ export function SaveRagConfiguration() {
     form: form as any,
     sections: [
       {
-        keys: [
-          "name",
-          "description",
-          "type",
-          "reformulate",
-          "chunkWindow",
-          "rephrasePrompt",
-          "prompt",
-          "jsonConfig",
-          "ragToolDescription",
-          "promptNoRag",
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "type" },
+          { key: "reformulate" },
+          { key: "chunkWindow" },
+          { key: "rephrasePrompt" },
+          { key: "prompt" },
+          { key: "jsonConfig" },
+          { key: "ragToolDescription" },
+          { key: "promptNoRag" },
         ],
         label: "Recap RAG Configuration",
       },

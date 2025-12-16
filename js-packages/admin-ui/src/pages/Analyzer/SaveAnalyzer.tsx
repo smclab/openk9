@@ -176,7 +176,15 @@ export function SaveAnalyzer() {
     form: form as any,
     sections: [
       {
-        keys: ["name", "description", "type", "jsonConfig", "charFilters", "tokenFilters", "tokenizerId"],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "type" },
+          { key: "jsonConfig" },
+          { key: "charFilters" },
+          { key: "tokenFilters" },
+          { key: "tokenizerId" },
+        ],
         label: "Recap Analyzer",
       },
     ],
