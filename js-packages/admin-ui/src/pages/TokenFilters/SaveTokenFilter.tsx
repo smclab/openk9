@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { Filters } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveTokenFilter() {
   const { tokenFilterId = "new", view } = useParams();
@@ -100,10 +101,23 @@ export function SaveTokenFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
+
   const isRecap = page === 1;
+
   if (tokenFilterQuery.loading) {
     return <div></div>;
   }
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "type", "jsonConfig"],
+        label: "Recap Token Filter",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -156,6 +170,7 @@ export function SaveTokenFilter() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

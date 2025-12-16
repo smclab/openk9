@@ -25,6 +25,7 @@ import {
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 type ReturnQueryAnalysis = {
   annotators: AssociatedUnassociated;
@@ -191,6 +192,20 @@ export function SaveQueryAnalysis() {
     ),
   });
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "stopWords"],
+        label: "Recap Query Analysis",
+      },
+      {
+        keys: ["annotatorsIds", "rulesIds"],
+        label: "Associations",
+      },
+    ],
+  });
+
   return (
     <>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -289,6 +304,7 @@ export function SaveQueryAnalysis() {
         />
       </form>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </>
   );
 }

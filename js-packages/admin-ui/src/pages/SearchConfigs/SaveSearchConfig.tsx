@@ -43,6 +43,7 @@ import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique }
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { QueryParserConfig } from "./gql";
 import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 interface ConfigureHybridSearchInterface {
   searchConfigId: string;
@@ -236,6 +237,25 @@ export function SaveSearchConfig() {
   });
 
   if (!searchConfigId && searchConfigQuery.loading) return null;
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "minScore",
+          "minScoreSuggestions",
+          "minScoreSearch",
+          "queryParserConfig",
+          "jsonConfig",
+        ],
+        label: "Recap Search Config",
+      },
+    ],
+  });
+
   return (
     <>
       <ContainerFluid size="md">
@@ -354,6 +374,7 @@ export function SaveSearchConfig() {
           </form>
         </>
         <ConfirmModal />
+        <Recap recapData={recapSections} />
       </ContainerFluid>
       <CustomizedDialogs isHybridSearch={isHybridSearch} searchConfigId={searchConfigId} onClose={handleCloseDialog} />
     </>

@@ -19,6 +19,7 @@ import {
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { RagConfigurationQuery } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveRagConfiguration() {
   const { ragConfigId = "new", view } = useParams();
@@ -147,6 +148,27 @@ export function SaveRagConfiguration() {
 
   const selectedType = form.inputProps("type").value;
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "type",
+          "reformulate",
+          "chunkWindow",
+          "rephrasePrompt",
+          "prompt",
+          "jsonConfig",
+          "ragToolDescription",
+          "promptNoRag",
+        ],
+        label: "Recap RAG Configuration",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -258,6 +280,7 @@ export function SaveRagConfiguration() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

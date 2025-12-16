@@ -19,6 +19,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
 import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 enum fuzziness {
   ZERO = "ZERO",
@@ -173,6 +174,27 @@ export function SaveTokenTab() {
     ),
   });
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: [
+          "name",
+          "description",
+          "value",
+          "filter",
+          "tokenType",
+          "boost",
+          "fuzziness",
+          "valuesQueryType",
+          "globalQueryType",
+          "docTypeFieldId",
+        ],
+        label: "Recap Token Tab",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -295,6 +317,7 @@ export function SaveTokenTab() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

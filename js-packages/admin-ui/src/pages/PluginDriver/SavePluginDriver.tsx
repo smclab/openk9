@@ -36,6 +36,7 @@ import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-gener
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigType } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
@@ -263,6 +264,17 @@ export const SavePluginnDriverModel = React.forwardRef(
         form.submit();
       },
     }));
+
+    const recapSections = mappingCardRecap({
+      form: form as any,
+      sections: [
+        {
+          keys: ["name", "description", "type", "jsonConfig", "provisioning", "docTypeUserDTOSet"],
+          label: "Recap Connector",
+        },
+      ],
+    });
+
     return (
       <ContainerFluid size="md">
         <>
@@ -485,6 +497,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             />
           </form>
           <ConfirmModal />
+          <Recap recapData={recapSections} />
         </>
         {viewDeleteModal.view && (
           <ModalConfirm

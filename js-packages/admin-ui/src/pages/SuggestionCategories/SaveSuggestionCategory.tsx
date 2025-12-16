@@ -23,6 +23,7 @@ import {
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import useOptionsSuggestionCategory from "./useOptionsSuggestionCategory";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveSuggestionCategory() {
   const { suggestionCategoryId = "new", view } = useParams();
@@ -103,6 +104,17 @@ export function SaveSuggestionCategory() {
       createOrUpdateSuggestionCategoryMutation.data?.suggestionCategoryWithDocTypeField?.fieldValidators,
     ),
   });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "priority", "multiSelect", "docTypeFieldId"],
+        label: "Recap Suggestion Category",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -184,6 +196,7 @@ export function SaveSuggestionCategory() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} />
     </ContainerFluid>
   );
 }

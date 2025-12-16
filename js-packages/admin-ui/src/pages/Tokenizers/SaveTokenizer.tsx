@@ -17,6 +17,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateTokenizer } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveTokenizer() {
   const { tokenizerId = "new", view } = useParams();
@@ -108,60 +109,69 @@ export function SaveTokenizer() {
     return <div></div>;
   }
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        keys: ["name", "description", "type", "jsonConfig"],
+        label: "Recap Tokenizer",
+      },
+    ],
+  });
+
   return (
-    <>
-      <ContainerFluid>
-        <>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-            <TitleEntity
-              nameEntity="Tokenizers"
-              description="Create or Edit an Tokenizer to definire a specific token splitting logic to apply to fields. 
+    <ContainerFluid>
+      <>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <TitleEntity
+            nameEntity="Tokenizers"
+            description="Create or Edit an Tokenizer to definire a specific token splitting logic to apply to fields. 
             You can choose between pre-built Tokenizers choosing prefer type."
-              id={tokenizerId}
-            />
-            {view === "view" && (
-              <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-                Edit
-              </Button>
-            )}
-          </Box>
-          <form style={{ borderStyle: "unset", padding: "0 16px" }}>
-            <CreateDataEntity
-              form={form}
-              page={page}
-              id={tokenizerId}
-              pathBack="/tokenizers/"
-              setPage={setPage}
-              haveConfirmButton={view ? false : true}
-              informationSuggestion={[
-                {
-                  content: (
-                    <>
-                      <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-                      <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
-                      <GenerateDynamicFieldsMemo
-                        templates={TemplateTokenizer}
-                        type={typeSelected}
-                        template={template}
-                        setType={changeType}
-                        isRecap={isRecap}
-                        changeValueKey={changeValueKey}
-                      />{" "}
-                    </>
-                  ),
-                  page: 0,
-                  validation: view ? true : false,
-                },
-                {
-                  validation: true,
-                },
-              ]}
-              fieldsControll={["name"]}
-            />
-          </form>
-          <ConfirmModal />
-        </>
-      </ContainerFluid>
-    </>
+            id={tokenizerId}
+          />
+          {view === "view" && (
+            <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
+              Edit
+            </Button>
+          )}
+        </Box>
+        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+          <CreateDataEntity
+            form={form}
+            page={page}
+            id={tokenizerId}
+            pathBack="/tokenizers/"
+            setPage={setPage}
+            haveConfirmButton={view ? false : true}
+            informationSuggestion={[
+              {
+                content: (
+                  <>
+                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <GenerateDynamicFieldsMemo
+                      templates={TemplateTokenizer}
+                      type={typeSelected}
+                      template={template}
+                      setType={changeType}
+                      isRecap={isRecap}
+                      changeValueKey={changeValueKey}
+                    />{" "}
+                  </>
+                ),
+                page: 0,
+                validation: view ? true : false,
+              },
+              {
+                validation: true,
+              },
+            ]}
+            fieldsControll={["name"]}
+          />
+        </form>
+        <ConfirmModal />
+        <Recap recapData={recapSections} />
+      </>
+    </ContainerFluid>
   );
 }
