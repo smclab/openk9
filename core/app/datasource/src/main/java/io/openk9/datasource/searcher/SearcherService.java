@@ -160,6 +160,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
+	/**
+	 * This value is only used if the associated {@link SearchConfig} entity
+	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * from SearchConfig takes priority.
+	 *
+	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
+	 *             This property is maintained only as a fallback.
+	 */
 	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.searcher-service.max-search-page-from",
@@ -167,6 +175,14 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	)
 	Integer defaultMaxSearchPageFrom;
 
+	/**
+	 * This value is only used if the associated {@link SearchConfig} entity
+	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * from SearchConfig takes priority.
+	 *
+	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
+	 *             This property is maintained only as a fallback.
+	 */
 	@Deprecated
 	@ConfigProperty(
 		name = "openk9.datasource.searcher-service.max-search-page-size",

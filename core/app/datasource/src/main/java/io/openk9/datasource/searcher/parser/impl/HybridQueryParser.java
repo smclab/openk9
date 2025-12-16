@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
+import io.openk9.datasource.model.SearchConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -50,9 +51,17 @@ public class HybridQueryParser implements QueryParser {
 	@Inject
 	EmbeddingService embeddingService;
 
-	// use 0 or a negative value to disable maximum text query length enforcement
+	/**
+	 * This value is only used if the associated {@link SearchConfig} entity
+	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * from SearchConfig takes priority.
+	 *
+	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
+	 *             This property is maintained only as a fallback.
+	 */
 	@Deprecated
 	@ConfigProperty(
+		// use 0 or a negative value to disable maximum text query length enforcement
 		name = "openk9.datasource.query-parser.max-text-query-length",
 		defaultValue = "0"
 	)
