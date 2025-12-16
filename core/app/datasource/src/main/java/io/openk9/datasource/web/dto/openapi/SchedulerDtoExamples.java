@@ -55,4 +55,10 @@ public class SchedulerDtoExamples {
                 "oldSchedulerType":"NO_RUNNING_SCHEDULER",
                 "triggerStatus":"STARTED"
             }""";
+    public static final String RESOURCE_URI_REQUEST =
+			"""
+			{
+				"base_uri": "https://example.com",
+				"path": "/test"
+			}""";
 }
