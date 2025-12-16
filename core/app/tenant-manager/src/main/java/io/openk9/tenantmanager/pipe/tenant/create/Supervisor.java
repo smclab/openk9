@@ -20,7 +20,7 @@ package io.openk9.tenantmanager.pipe.tenant.create;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantSchemaService;
 import io.openk9.tenantmanager.service.TenantService;
 
 import org.apache.pekko.actor.typed.ActorRef;
@@ -33,7 +33,7 @@ public class Supervisor {
 
 	public record Start(
 		String virtualHost, String schemaName,
-		DatasourceLiquibaseService liquibaseService,
+		TenantSchemaService liquibaseService,
 		TenantService tenantService,
 		AppManager appManager,
 		KeycloakContext keycloakContext,

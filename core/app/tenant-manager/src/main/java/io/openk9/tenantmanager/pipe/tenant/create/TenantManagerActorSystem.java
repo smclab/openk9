@@ -27,7 +27,7 @@ import jakarta.inject.Inject;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantSchemaService;
 import io.openk9.tenantmanager.service.TenantService;
 
 import io.quarkus.grpc.GrpcClient;
@@ -63,7 +63,7 @@ public class TenantManagerActorSystem {
 					new Supervisor.Start(
 						virtualHost,
 						realmName,
-						liquibaseService,
+						schemaService,
 						tenantService,
 						appManager,
 						config,
@@ -101,15 +101,14 @@ public class TenantManagerActorSystem {
 			.<Void>emitter(sink -> {
 
 			try {
-				liquibaseService.runInitialization(schemaName, virtualHost, false);
+				schemaService.runInitialization(schemaName, virtualHost, false);
 				sink.complete(null);
 			}
 			catch (Exception e) {
 				sink.fail(e);
 			}
 
-		})
-			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+		}).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
 
 	private ActorSystem<Supervisor.Command> _actorSystem;
@@ -122,7 +121,7 @@ public class TenantManagerActorSystem {
 	TenantService tenantService;
 
 	@Inject
-	DatasourceLiquibaseService liquibaseService;
+	TenantSchemaService schemaService;
 
 	@Inject
 	KeycloakContext config;

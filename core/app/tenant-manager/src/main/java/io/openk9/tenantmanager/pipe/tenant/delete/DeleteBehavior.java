@@ -26,7 +26,7 @@ import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteGroupMessage;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
-import io.openk9.tenantmanager.service.DeleteService;
+import io.openk9.tenantmanager.service.TenantDeletionService;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -72,7 +72,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 				LOGGER.infof("Start Delete tenant for virtualHost %s ", virtualHost);
 
 				eventBus.<TenantResponseDTO>request(
-						DeleteService.FIND_TENANT_BY_VIRTUAL_HOST, virtualHost)
+						TenantDeletionService.FIND_TENANT_BY_VIRTUAL_HOST, virtualHost)
 					.flatMap((Message<TenantResponseDTO> message) -> {
 
 						var tenant = message.body();
@@ -87,7 +87,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 						);
 
 						Uni<Void> deleteSchema = eventBus.request(
-							DeleteService.DELETE_SCHEMA,
+							TenantDeletionService.DELETE_SCHEMA,
 							tenant.schemaName()
 						).invoke(() -> LOGGER.infof(
 								"Schema %s for virtualHost %s deleted.",
@@ -99,7 +99,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 						unis.add(deleteSchema);
 
 						Uni<Void> deleteRealm = eventBus.request(
-							DeleteService.DELETE_REALM,
+							TenantDeletionService.DELETE_REALM,
 							tenant.realmName()
 						).invoke(() -> LOGGER.infof(
 								"Realm for %s virtualHost %s deleted.",
@@ -111,7 +111,7 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 						unis.add(deleteRealm);
 
 						Uni<Void> deleteTenant = eventBus.request(
-							DeleteService.DELETE_TENANT,
+							TenantDeletionService.DELETE_TENANT,
 							tenant.id()
 						).invoke(() -> LOGGER.infof(
 								"Tenant with id %s for virtualHost %s deleted.",

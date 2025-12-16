@@ -39,7 +39,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 @ApplicationScoped
-public class DatasourceLiquibaseService {
+public class TenantSchemaService {
 
 	@ConfigProperty(name = "openk9.datasource.url")
 	String openk9DatasourceUrl;

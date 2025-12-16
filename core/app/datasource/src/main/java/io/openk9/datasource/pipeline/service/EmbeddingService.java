@@ -26,7 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.client.grpc.common.StructUtils;
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
@@ -71,7 +71,7 @@ public class EmbeddingService {
 	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(
 				GET_EMBEDDING_CHUNKS_CONFIGURATION,
 				new GetConfigurationRequest(tenantId, scheduleId)

@@ -31,7 +31,7 @@ import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
-public class Keycloak {
+public class Realm {
 
 	public sealed interface Command {}
 	public enum Start implements Command {INSTANCE}

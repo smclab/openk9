@@ -42,7 +42,7 @@ import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.web.FieldValidator;
 import io.openk9.common.util.web.Response;
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.mapper.PluginDriverMapper;
@@ -517,8 +517,7 @@ public class PluginDriverService
 					case SYSTEM -> getCurrentTenant(session)
 						.flatMap(tenantId -> {
 							// fire and forget using the eventBus message
-							EventBusInstanceHolder.getEventBus()
-								.send(
+							EventBusInstanceHolder.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenantId,
@@ -626,8 +625,7 @@ public class PluginDriverService
 					case SYSTEM -> getCurrentTenant(s)
 						.flatMap(tenantId -> {
 							// fire and forget using the eventBus message
-							EventBusInstanceHolder.getEventBus()
-								.send(
+							EventBusInstanceHolder.send(
 									IndexMappingService.GENERATE_DOC_TYPE,
 									new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(
 										tenantId,

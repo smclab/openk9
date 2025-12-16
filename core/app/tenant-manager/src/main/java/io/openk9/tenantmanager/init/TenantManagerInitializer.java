@@ -23,10 +23,11 @@ import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSystem;
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantSchemaService;
 import io.openk9.tenantmanager.service.TenantService;
 
 import io.quarkus.vertx.VertxContextSupport;
@@ -40,16 +41,17 @@ public class TenantManagerInitializer {
 	public static final String INITIALIZED = "TenantManagerInitializer#INITIALIZED";
 	public static final String ERROR = "TenantManagerInitializer#ERROR";
 
+	private static final Logger logger =
+		Logger.getLogger(TenantManagerInitializer.class);
+
 	@ConfigProperty(name = "quarkus.datasource.username")
 	String datasourceUsername;
 	@ConfigProperty(name = "quarkus.datasource.password")
 	String datasourcePassword;
 	@Inject
-	DatasourceLiquibaseService liquibaseService;
+	TenantSchemaService liquibaseService;
 	@Inject
 	TenantService tenantService;
-	@Inject
-	Logger logger;
 	@Inject
 	LiquibaseValidatorActorSystem liquibaseValidatorActorSystem;
 	@Inject
@@ -58,6 +60,8 @@ public class TenantManagerInitializer {
 	public void onStart(@Observes Startup startup) {
 
 		logger.info("Check for schema upgrades...");
+
+		EventBusInstanceHolder.setEventBus(eventBus);
 
 		try {
 			VertxContextSupport.subscribeAndAwait(() -> tenantService
@@ -86,11 +90,11 @@ public class TenantManagerInitializer {
 			);
 
 			logger.info("Tenant Upgrade Finished");
-			eventBus.send(INITIALIZED, INITIALIZED);
+			EventBusInstanceHolder.send(INITIALIZED, INITIALIZED);
 		}
 		catch (Throwable e) {
 			logger.error("Tenant Upgrade Failed", e);
-			eventBus.send(ERROR, ERROR);
+			EventBusInstanceHolder.send(ERROR, ERROR);
 		}
 
 	}

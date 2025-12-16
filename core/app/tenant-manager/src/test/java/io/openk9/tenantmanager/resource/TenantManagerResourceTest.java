@@ -40,6 +40,7 @@ class TenantManagerResourceTest {
 			.post()
 			.then()
 			.statusCode(200);
+
 	}
 
 }

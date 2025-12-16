@@ -15,20 +15,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.datasource.actor;
+package io.openk9.quarkus.common;
 
+import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
-import lombok.Getter;
+import io.vertx.mutiny.core.eventbus.Message;
 
+/**
+ * This helper class is used to hold a reference to the
+ * instance of the {@link EventBus} object, created by Quarkus
+ * during the bootstrap of the application.
+ * It is useful when we need to call the eventBus from a class
+ * that isn't a CDI bean.
+ */
 public class EventBusInstanceHolder {
 
-	@Getter
 	private static EventBus eventBus;
 
-	private EventBusInstanceHolder() {}
+	public static EventBus getEventBus() {
+		return eventBus;
+	}
 
-	protected static void setEventBus(EventBus eventBus) {
+	public static void setEventBus(EventBus eventBus) {
 		EventBusInstanceHolder.eventBus = eventBus;
 	}
+
+	public static void send(String address, Object message) {
+		eventBus.send(address, message);
+	}
+
+	public static <T> Uni<Message<T>> request(String address, Object message) {
+		return eventBus.request(address, message);
+	}
+
+	private EventBusInstanceHolder() {}
 
 }

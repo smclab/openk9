@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
@@ -93,7 +93,7 @@ public class JobSchedulerService {
 			lastIngestionDate
 		);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Void>request(CALL_PLUGIN_DRIVER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -104,7 +104,7 @@ public class JobSchedulerService {
 
 		var request = new CancelSchedulerRequest(tenantId, schedulerId);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Void>request(CANCEL_SCHEDULER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -115,7 +115,7 @@ public class JobSchedulerService {
 		CopyIndexTemplateRequest request =
 			new CopyIndexTemplateRequest(tenantId, scheduler);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Void>request(COPY_INDEX_TEMPLATE, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -129,7 +129,7 @@ public class JobSchedulerService {
 			datasourceId
 		);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Datasource>request(FETCH_DATASOURCE_CONNECTION, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -140,7 +140,7 @@ public class JobSchedulerService {
 
 		var request = new FetchEmbeddingModelRequest(tenantId);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<EmbeddingModel>request(FETCH_EMBEDDING_MODEL, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -152,7 +152,7 @@ public class JobSchedulerService {
 		var request = new TriggerDatasourceRequest(
 			tenantId, datasource, reindex);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<TriggerType>request(TRIGGER_DATASOURCE, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -163,7 +163,7 @@ public class JobSchedulerService {
 
 		var request = new PersistSchedulerRequest(tenantId, scheduler);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Scheduler>request(PERSIST_SCHEDULER, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();

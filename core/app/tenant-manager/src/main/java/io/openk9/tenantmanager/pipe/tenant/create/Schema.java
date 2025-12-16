@@ -17,7 +17,7 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantSchemaService;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -29,7 +29,7 @@ public class Schema {
 	public enum Start implements Command {INSTANCE}
 
 	private static Behavior<Command> rollback(
-		ActorContext<Command> context, DatasourceLiquibaseService service, String schemaName) {
+		ActorContext<Command> context, TenantSchemaService service, String schemaName) {
 		return Behaviors.receive(Command.class)
 			.onMessage(Rollback.class, (msg) -> {
 
@@ -56,19 +56,19 @@ public class Schema {
 	public record Params(String virtualHost, String schemaName) {}
 
 	public static Behavior<Command> create(
-		DatasourceLiquibaseService service, Params params, ActorRef<Response> replyTo) {
+		TenantSchemaService service, Params params, ActorRef<Response> replyTo) {
 		return Behaviors.setup(context -> initial(context, service, params, replyTo));
 	}
 
 	public static Behavior<Command> createRollback(
-		DatasourceLiquibaseService service, String schemaName) {
+		TenantSchemaService service, String schemaName) {
 		return Behaviors.setup(context -> rollback(context, service, schemaName));
 	}
 
 	public record Rollback(ActorRef<Response> replyTo) implements Command {}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> context, DatasourceLiquibaseService service,
+		ActorContext<Command> context, TenantSchemaService service,
 		Params params, ActorRef<Response> replyTo) {
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(Start.INSTANCE, () -> onStart(context, service, params, replyTo))
@@ -76,7 +76,7 @@ public class Schema {
 	}
 
 	private static Behavior<Command> onStart(
-		ActorContext<Command> context, DatasourceLiquibaseService service,
+		ActorContext<Command> context, TenantSchemaService service,
 		Params params, ActorRef<Response> replyTo) {
 
 		try {

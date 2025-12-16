@@ -18,28 +18,33 @@
 package io.openk9.tenantmanager.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 
 import io.quarkus.vertx.ConsumeEvent;
-import io.smallrye.common.annotation.Blocking;
+import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
+import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 
 @ApplicationScoped
-public class DeleteService {
+public class TenantDeletionService {
 
+	public static final String CREATE_REALM = "CREATE_REALM";
+	public static final String CREATE_SCHEMA = "CREATE_SCHEMA";
+	public static final String CREATE_TENANT = "CREATE_TENANT";
 	public static final String DELETE_REALM = "DELETE_REALM";
 	public static final String DELETE_SCHEMA = "DELETE_SCHEMA";
 	public static final String DELETE_TENANT = "DELETE_TENANT";
 	public static final String FIND_TENANT_BY_VIRTUAL_HOST = "FIND_TENANT_BY_VIRTUAL_HOST";
 
+	private static final Logger log = Logger.getLogger(TenantDeletionService.class);
+
 	@Inject
 	Keycloak keycloakAdmin;
 	@Inject
-	DatasourceLiquibaseService datasourceLiquibaseService;
+	TenantSchemaService tenantSchemaService;
 	@Inject
 	TenantService tenantService;
 
@@ -48,23 +53,36 @@ public class DeleteService {
 		return tenantService.findTenantByVirtualHost(virtualHost);
 	}
 
-	@ActivateRequestContext
 	@ConsumeEvent(DELETE_REALM)
-	@Blocking
-	public int deleteRealm(String realmName) {
+	public Uni<Void> deleteRealm(String realmName) {
 
-		keycloakAdmin.realm(realmName).remove();
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				keycloakAdmin.realm(realmName).remove();
+			}
+			catch (Exception e) {
+				log.errorf(
+					e, "An error occurred while deleting realm %s", realmName);
+			}
 
-		return 0;
+			return null;
+		});
 	}
 
 	@ConsumeEvent(DELETE_SCHEMA)
-	@Blocking
-	public int deleteSchema(String schemaName) {
+	public Uni<Void> deleteSchema(String schemaName) {
 
-		datasourceLiquibaseService.rollbackRunLiquibaseMigration(schemaName);
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				tenantSchemaService.rollbackRunLiquibaseMigration(schemaName);
+			}
+			catch (Exception e) {
+				log.errorf(
+					e, "An error occurred while deleting schema %s", schemaName);
+			}
 
-		return 0;
+			return null;
+		});
 	}
 
 	@ConsumeEvent(DELETE_TENANT)

@@ -20,7 +20,7 @@ package io.openk9.datasource.events;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 
 import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
@@ -37,7 +37,7 @@ public class DatasourceEventBus {
 	private static final String SEND_EVENT = "DatasourceEventBus#sendEvent";
 
 	public static void sendMessage(DatasourceMessage message) {
-		EventBusInstanceHolder.getEventBus().send(SEND_EVENT, message);
+		EventBusInstanceHolder.send(SEND_EVENT, message);
 	}
 
 	@Inject

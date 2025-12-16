@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.service;
 
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.ResourceUri;
@@ -95,7 +95,7 @@ class DynamicMappingDataIndexTest {
 
 	@Test
 	void should_create_docTypes_from_event_bus_message() {
-		Message<Object> responseMessage = EventBusInstanceHolder.getEventBus()
+		Message<Object> responseMessage = EventBusInstanceHolder
 			.request(
 				IndexMappingService.GENERATE_DOC_TYPE,
 				new IndexMappingService.GenerateDocTypeFromPluginSampleMessage(

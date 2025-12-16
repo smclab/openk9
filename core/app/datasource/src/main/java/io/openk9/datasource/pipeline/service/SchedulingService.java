@@ -24,7 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.common.util.ingestion.ShardingKey;
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.service.mapper.SchedulerMapper;
@@ -54,7 +54,7 @@ public class SchedulingService {
 
 	public static CompletableFuture<SchedulerDTO> fetchScheduler(ShardingKey shardingKey) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(FETCH_SCHEDULER, new FetchRequest(shardingKey))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();
@@ -62,7 +62,7 @@ public class SchedulingService {
 
 	public static CompletableFuture<List<String>> getDeletedContentIds(ShardingKey shardingKey) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(
 				GET_DELETED_CONTENT_ID,
 				new GetDeletedContentIdRequest(shardingKey)
@@ -74,7 +74,7 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistErrorDescription(
 		ShardingKey shardingKey, Exception exception) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(
 				PERSIST_ERROR_DESCRIPTION,
 				new PersistErrorDescription(shardingKey, exception)
@@ -86,7 +86,7 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistLastIngestionDate(
 		ShardingKey shardingKey, OffsetDateTime lastIngestionDate) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(
 				PERSIST_LAST_INGESTION_DATE,
 				new PersistLastIngestionDateRequest(shardingKey, lastIngestionDate)
@@ -98,7 +98,7 @@ public class SchedulingService {
 	public static CompletableFuture<SchedulerDTO> persistStatus(
 		ShardingKey shardingKey, Scheduler.SchedulerStatus status) {
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.request(PERSIST_STATUS, new PersistStatusRequest(shardingKey, status))
 			.map(message -> (SchedulerDTO) message.body())
 			.subscribeAsCompletionStage();

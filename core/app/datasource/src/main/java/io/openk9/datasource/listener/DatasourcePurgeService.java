@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.actor.EventBusInstanceHolder;
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
@@ -74,7 +74,7 @@ public class DatasourcePurgeService {
 
 		var request = new DeleteDataIndicesRequest(tenantId, datasourceId, dataIndices);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Void>request(DELETE_DATA_INDICES, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -86,7 +86,7 @@ public class DatasourcePurgeService {
 
 		var request = new DeleteIndicesRequest(tenantName, dataIndices);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<Void>request(DELETE_INDICES, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
@@ -97,7 +97,7 @@ public class DatasourcePurgeService {
 
 		var request = new FetchOrphansRequest(tenantId, datasourceId, maxAge);
 
-		return EventBusInstanceHolder.getEventBus()
+		return EventBusInstanceHolder
 			.<List<DataIndex>>request(FETCH_ORPHANS, request)
 			.map(Message::body)
 			.subscribeAsCompletionStage();

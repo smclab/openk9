@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.DatasourceLiquibaseService;
+import io.openk9.tenantmanager.service.TenantSchemaService;
 import io.openk9.tenantmanager.service.TenantService;
 
 import org.apache.pekko.actor.typed.ActorRef;
@@ -45,21 +45,21 @@ public class Manager {
 
 	public static Behavior<Command> create(
 		String virtualHost, String schemaName,
-		DatasourceLiquibaseService liquibaseService, TenantService tenantService,
+		TenantSchemaService liquibaseService, TenantService tenantService,
 		AppManager appManager,
 		KeycloakContext keycloakContext,
 		ActorRef<Manager.Response> replyTo) {
 
 		return Behaviors.setup(context -> {
 
-			ActorRef<Keycloak.Response> keycloakResponse =
-				context.messageAdapter(Keycloak.Response.class, ResponseWrapper::new);
+			ActorRef<Realm.Response> keycloakResponse =
+				context.messageAdapter(Realm.Response.class, ResponseWrapper::new);
 
-			ActorRef<Keycloak.Command> keycloakRef =
+			ActorRef<Realm.Command> keycloakRef =
 				context.spawn(
-					Keycloak.create(
+					Realm.create(
 						keycloakContext,
-						new Keycloak.Params(virtualHost, schemaName),
+						new Realm.Params(virtualHost, schemaName),
 						keycloakResponse
 					),
 					"keycloak-" + schemaName
@@ -94,7 +94,7 @@ public class Manager {
 
 
 			schemaRef.tell(Schema.Start.INSTANCE);
-			keycloakRef.tell(Keycloak.Start.INSTANCE);
+			keycloakRef.tell(Realm.Start.INSTANCE);
 			ingressRef.tell(Ingress.Start.INSTANCE);
 
 			return initial(
@@ -108,7 +108,7 @@ public class Manager {
 	private static Behavior<Command> initial(
 		ActorContext<Command> context,
 		ActorRef<Manager.Response> replyTo,
-		DatasourceLiquibaseService liquibaseService,
+		TenantSchemaService liquibaseService,
 		TenantService tenantService,
 		AppManager appManager,
 		KeycloakContext keycloakContext,
@@ -141,7 +141,7 @@ public class Manager {
 	private static Behavior<Command> finalize(
 		ActorContext<Command> context,
 		ActorRef<Response> replyTo,
-		DatasourceLiquibaseService liquibaseService,
+		TenantSchemaService liquibaseService,
 		TenantService tenantService,
 		AppManager appManager,
 		KeycloakContext keycloakContext,
@@ -153,7 +153,7 @@ public class Manager {
 			.stream()
 			.map(ResponseWrapper::response)
 			.collect(Collectors.partitioningBy(response ->
-				response instanceof Keycloak.Success ||
+				response instanceof Realm.Success ||
 				response instanceof Schema.Success ||
 				response instanceof Ingress.Success)
 			);
@@ -169,7 +169,7 @@ public class Manager {
 			String clientSecret = null;
 			String liquibaseSchemaName = null;
 			for (Object o : successList) {
-				if (o instanceof Keycloak.Success success) {
+				if (o instanceof Realm.Success success) {
 					realmName = success.realmName();
 					clientId = success.clientId();
 					clientSecret = success.clientSecret();
@@ -237,7 +237,7 @@ public class Manager {
 
 			for (Object obj : errorList) {
 
-				if (obj instanceof Keycloak.Error error) {
+				if (obj instanceof Realm.Error error) {
 					context.getLog().error("Keycloak: {}", error);
 					errors.add(Operations.KEYCLOAK);
 				}
@@ -307,23 +307,23 @@ public class Manager {
 		String schemaName) {
 
 		var replyTo = context.messageAdapter(
-			Keycloak.Response.class,
+			Realm.Response.class,
 			res -> CompensationResponse.INSTANCE
 		);
 
-		ActorRef<Keycloak.Command> ref =
+		ActorRef<Realm.Command> ref =
 			context.spawn(
-				Keycloak.createRollback(
+				Realm.createRollback(
 					keycloakContext.getKeycloakAdminClientConfig(), schemaName),
 				"keycloak-rollback-" + schemaName
 			);
 
-		ref.tell(new Keycloak.Rollback(replyTo));
+		ref.tell(new Realm.Rollback(replyTo));
 	}
 
 	private static void compensateSchema(
 		ActorContext<Command> context,
-		DatasourceLiquibaseService liquibaseService,
+		TenantSchemaService liquibaseService,
 		String schemaName) {
 
 		var replyTo = context.messageAdapter(
@@ -343,7 +343,7 @@ public class Manager {
 	private static void compensateAll(
 		ActorContext<Command> context,
 		AppManager appManager,
-		DatasourceLiquibaseService liquibaseService,
+		TenantSchemaService liquibaseService,
 		KeycloakContext keycloakContext,
 		String schemaName,
 		String virtualHost) {
