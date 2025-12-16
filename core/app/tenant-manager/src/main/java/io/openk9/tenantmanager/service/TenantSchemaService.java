@@ -17,10 +17,16 @@
 
 package io.openk9.tenantmanager.service;
 
-import io.openk9.tenantmanager.dto.SchemaTuple;
-import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import io.openk9.tenantmanager.dto.SchemaTuple;
+import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
+
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
@@ -32,11 +38,6 @@ import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.List;
 
 @ApplicationScoped
 public class TenantSchemaService {

@@ -51,7 +51,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
-public class TenantService {
+public class TenantDbService {
 
 	public Uni<TenantResponseDTO> findById(Long id) {
 
@@ -119,6 +119,7 @@ public class TenantService {
 	}
 
 	public Uni<TenantResponseDTO> persist(Tenant tenant) {
+
 		return persist(
 			tenant.getVirtualHost(),
 			tenant.getSchemaName(),
@@ -279,7 +280,7 @@ public class TenantService {
 	private static final String FETCH_ALL_SCHEMA_NAMES_SQL = "SELECT schema_name, liquibase_schema_name FROM tenant";
 	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";
 
-	private static final Logger log = Logger.getLogger(TenantService.class);
+	private static final Logger log = Logger.getLogger(TenantDbService.class);
 
 
 }

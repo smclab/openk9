@@ -32,7 +32,7 @@ import io.openk9.common.util.RandomGenerator;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
-import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.service.TenantDbService;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
@@ -46,11 +46,11 @@ public class TenantManagerResource {
 
 		String virtualHost = createTenantRequest.virtualHost();
 
-		return tenantService
+		return tenantDbService
 			.findTenantByVirtualHost(virtualHost)
 			.flatMap(tenant -> {
 				if (tenant == null) {
-					return tenantService
+					return tenantDbService
 						.findAllSchemaName()
 						.flatMap(schemaNames -> {
 
@@ -77,7 +77,7 @@ public class TenantManagerResource {
 	@POST
 	@Path("/{id}/tables")
 	public Uni<CreateTablesResponse> createTables(@PathParam("id") Long id) {
-		return tenantService.findById(id).flatMap(t -> {
+		return tenantDbService.findById(id).flatMap(t -> {
 			if (t == null) {
 				return Uni.createFrom().failure(
 					new WebApplicationException(
@@ -110,7 +110,7 @@ public class TenantManagerResource {
 
 		String virtualHost = deleteTenantRequest.virtualHost();
 
-		return tenantService
+		return tenantDbService
 			.findTenantByVirtualHost(virtualHost)
 			.flatMap(tenant -> {
 				if (tenant == null) {
@@ -150,7 +150,7 @@ public class TenantManagerResource {
 	}
 
 	@Inject
-	TenantService tenantService;
+	TenantDbService tenantDbService;
 
 	@Inject
 	TenantManagerActorSystem tenantManagerActorSystem;

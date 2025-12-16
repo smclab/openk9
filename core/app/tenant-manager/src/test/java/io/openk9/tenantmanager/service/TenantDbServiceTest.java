@@ -37,10 +37,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 
 @QuarkusTest
-public class TenantServiceTest {
+public class TenantDbServiceTest {
 
 	@Inject
-	TenantService tenantService;
+	TenantDbService tenantDbService;
 	@InjectSpy(delegate = true)
 	OutboxEventService outboxService;
 
@@ -48,7 +48,7 @@ public class TenantServiceTest {
 	@DisplayName("Tenant should be fetched from database.")
 	void should_fetch_existing_tenants() {
 
-		List<TenantResponseDTO> tenants = tenantService.findAllTenant().await().indefinitely();
+		List<TenantResponseDTO> tenants = tenantDbService.findAllTenant().await().indefinitely();
 		// tenants must be equals or greater than 2 because there are
 		// at least 2 tenants created from liquibase.
 		Assertions.assertTrue(tenants.size() >= 2);
@@ -62,7 +62,7 @@ public class TenantServiceTest {
 			generateTenantParameters("shiny-bulbasaur");
 
 		// create tenant will be committed
-		TenantResponseDTO tenantCreated = tenantService.persist(
+		TenantResponseDTO tenantCreated = tenantDbService.persist(
 				parameters.virtualHost(),
 				parameters.schemaName(),
 				parameters.liquibaseSchemaName(),
@@ -90,11 +90,11 @@ public class TenantServiceTest {
 
 		long tenantId = Long.parseLong(tenantCreated.id());
 
-		tenantService.deleteTenant(tenantId)
+		tenantDbService.deleteTenant(tenantId)
 			.await()
 			.indefinitely();
 
-		TenantResponseDTO deleted = tenantService.findById(tenantId)
+		TenantResponseDTO deleted = tenantDbService.findById(tenantId)
 			.await()
 			.indefinitely();
 
@@ -124,7 +124,7 @@ public class TenantServiceTest {
 		TenantParameters parameters = generateTenantParameters("shiny-squirtle");
 
 		// create tenant will be rolled back
-		TenantResponseDTO tenantCreated = tenantService.persist(
+		TenantResponseDTO tenantCreated = tenantDbService.persist(
 				parameters.virtualHost,
 				parameters.schemaName(),
 				parameters.liquibaseSchemaName(),
@@ -151,7 +151,7 @@ public class TenantServiceTest {
 		TenantParameters parameters = generateTenantParameters("shiny-eevee");
 
 		// create a tenant
-		TenantResponseDTO tenant = tenantService.persist(
+		TenantResponseDTO tenant = tenantDbService.persist(
 				parameters.virtualHost(),
 				parameters.schemaName(),
 				parameters.liquibaseSchemaName(),
@@ -175,14 +175,14 @@ public class TenantServiceTest {
 			.persist(argThat(StubOnceMatcher.TENANT_DELETED_INSTANCE));
 
 		// deletes the tenant, this operation will be rolled back
-		tenantService.deleteTenant(tenantId)
+		tenantDbService.deleteTenant(tenantId)
 			.await()
 			.indefinitely();
 
 		int outboxUnsentSizeAfter =
 			outboxService.unsentEvents().await().indefinitely().size();
 
-		TenantResponseDTO stillThere = tenantService
+		TenantResponseDTO stillThere = tenantDbService
 			.findById(tenantId)
 			.await()
 			.indefinitely();
@@ -193,7 +193,7 @@ public class TenantServiceTest {
 
 		// clean-up tenant
 
-		tenantService.deleteTenant(tenantId)
+		tenantDbService.deleteTenant(tenantId)
 			.await()
 			.indefinitely();
 

@@ -17,9 +17,8 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.quarkus.common.VertxUtil;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -33,27 +32,32 @@ public class Tenant {
 	private record TenantCreated(TenantResponseDTO tenant) implements Command {}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> context, TenantService service, ActorRef<Response> replyTo,
+		ActorContext<Command> context, ActorRef<Response> replyTo,
 		String virtualHost, String schemaName, String liquibaseSchemaName,
 		String realmName, String clientId, String clientSecret) {
 
 		return Behaviors.receive(Command.class)
-			.onMessageEquals(Start.INSTANCE, () -> onStart(
-				context, service, virtualHost, schemaName,
-				liquibaseSchemaName, realmName, clientId, clientSecret
-			))
-			.onMessage(TenantCreated.class,
-				msg -> onTenantCreated(
-					context, replyTo, msg.tenant()
+			.onMessageEquals(
+				Start.INSTANCE,
+				() -> onStart(
+					context,
+					virtualHost,
+					schemaName,
+					liquibaseSchemaName,
+					realmName,
+					clientId,
+					clientSecret
 				)
 			)
-			.onMessage(TenantError.class,
-				msg -> onTenantError(
-					context, replyTo, msg.exception()
-				)
+			.onMessage(
+				TenantCreated.class,
+				msg -> onTenantCreated(context, replyTo, msg.tenant())
+			)
+			.onMessage(
+				TenantError.class,
+				msg -> onTenantError(context, replyTo, msg.exception())
 			)
 			.build();
-
 	}
 
 	public sealed interface Response {}
@@ -61,21 +65,27 @@ public class Tenant {
 	public record Error(String message) implements Response {}
 
 	public static Behavior<Command> create(
-		TenantService service, ActorRef<Response> replyTo, String virtualHost,
+		ActorRef<Response> replyTo, String virtualHost,
 		String schemaName, String liquibaseSchemaName, String realmName,
 		String clientId, String clientSecret) {
 
 		return Behaviors.setup(
 			context -> initial(
-				context, service, replyTo, virtualHost, schemaName, liquibaseSchemaName, realmName,
-				clientId, clientSecret
+				context,
+				replyTo,
+				virtualHost,
+				schemaName,
+				liquibaseSchemaName,
+				realmName,
+				clientId,
+				clientSecret
 			)
 		);
-
 	}
 
 	private static Behavior<Command> onTenantError(
-		ActorContext<Command> context, ActorRef<Response> replyTo,
+		ActorContext<Command> context,
+		ActorRef<Response> replyTo,
 		TenantException exception) {
 
 		context.getLog().error("Tenant not created.", exception);
@@ -83,11 +93,10 @@ public class Tenant {
 		replyTo.tell(new Error(exception.getMessage()));
 
 		return Behaviors.stopped();
-
 	}
 
 	private static Behavior<Command> onStart(
-		ActorContext<Command> context, TenantService service,
+		ActorContext<Command> context,
 		String virtualHost, String schemaName, String liquibaseSchemaName,
 		String realmName, String clientId, String clientSecret) {
 
@@ -101,13 +110,15 @@ public class Tenant {
 		tenant.setClientId(clientId);
 		tenant.setClientSecret(clientSecret);
 
-		VertxUtil.runOnContext(
-			() -> service
-				.persist(tenant)
-				.onItem()
-				.invoke(t -> context.getSelf().tell(new TenantCreated(t)))
-				.onFailure()
-				.invoke(t -> context.getSelf().tell(new TenantError(new TenantException(t))))
+		context.pipeToSelf(
+			TenantProvisioningService.createEntity(tenant),
+			(res, err) -> {
+				if (err != null) {
+					return new TenantError(new TenantException(err));
+				}
+
+				return new TenantCreated(res);
+			}
 		);
 
 		return Behaviors.same();
@@ -123,7 +134,6 @@ public class Tenant {
 		replyTo.tell(new Success(tenant));
 
 		return Behaviors.stopped();
-
 	}
 
 	private record TenantError(TenantException exception) implements Command {}

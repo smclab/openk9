@@ -17,29 +17,30 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.tenantmanager.config.KeycloakContext;
-import io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory;
-import io.openk9.tenantmanager.pipe.tenant.create.factory.RealmRepresentationFactory;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
+import io.openk9.tenantmanager.service.TenantRealmService;
 
-import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig;
-import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfigUtil;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
-import org.keycloak.admin.client.KeycloakBuilder;
-import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 
 public class Realm {
 
 	public sealed interface Command {}
-	public enum Start implements Command {INSTANCE}
+	public enum Start implements Command { INSTANCE } 
+	
+	private record CreateRealmResponse(
+		TenantRealmService.CreatedRealm createdRealm,
+		Throwable error
+	) implements Command {}
+	
+	private record DeleteRealmResponse(
+		Void result,
+		Throwable error
+	) implements Command {}
 
-	public static Behavior<Command> createRollback(
-		KeycloakAdminClientConfig config, String realmName) {
-		return Behaviors.setup(context -> rollback(context, config, realmName));
-	}
+	public enum Rollback implements Command { INSTANCE }
 
 	public sealed interface Response {}
 
@@ -49,122 +50,132 @@ public class Realm {
 		String virtualHost,
 		String realmName,
 		String username,
-		String password) implements Response {}
+		String password
+	) implements Response {}
 
-	private static Behavior<Command> rollback(
-		ActorContext<Command> context,
-		KeycloakAdminClientConfig clientConfig,
-		String realmName) {
-
-		return Behaviors.receive(Command.class)
-			.onMessage(Rollback.class, (msg) -> {
-
-				try (var keycloakClient = createKeycloakClient(clientConfig)) {
-					keycloakClient.realms().realm(realmName).remove();
-					context.getLog().info("realm {} rollback", realmName);
-				}
-				catch (Exception e) {
-					context.getLog().error(e.getMessage(), e);
-				}
-
-				msg.replyTo().tell(SuccessRollback.INSTANCE);
-
-				return Behaviors.stopped();
-
-			})
-			.build();
-	}
 	public record Error(String message) implements Response {}
 
-	public record Params(String virtualHost, String realmName) {}
+	public enum SuccessRollback implements Response { INSTANCE }
 
+	// Setup behaviors
+	
 	public static Behavior<Command> create(
-		KeycloakContext keycloakContext, Params params, ActorRef<Response> replyTo) {
-		return Behaviors.setup(context -> {
+		String virtualHost, String realmName, ActorRef<Response> replyTo) {
 
-			org.keycloak.admin.client.Keycloak keycloakClient =
-				createKeycloakClient(keycloakContext.getKeycloakAdminClientConfig());
-
-			return initial(
-				context, replyTo, keycloakClient,
-				keycloakContext.getKeycloakDefaultRealmRepresentationFactory(),
-				params);
-		});
+		return Behaviors.setup(context ->
+			initial(context, replyTo, virtualHost, realmName));
 	}
 
-	public enum SuccessRollback implements Response {
-		INSTANCE
+	public static Behavior<Command> createRollback(
+		ActorRef<Response> replyTo, String realmName) {
+
+		return Behaviors.setup(context -> rollback(context, replyTo, realmName));
 	}
 
-	public record Rollback(ActorRef<Response> replyTo) implements Command {}
-
+	// Creation behaviors
+	
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		org.keycloak.admin.client.Keycloak keycloakClient,
-		KeycloakDefaultRealmRepresentationFactory keycloakDefaultRealmRepresentationFactory,
-		Params params) {
+		String virtualHost, String realmName) {
+
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
 				Start.INSTANCE,
-				() -> onStart(
-					context, replyTo, keycloakClient,
-					keycloakDefaultRealmRepresentationFactory, params))
+				() -> onStart(context, replyTo, virtualHost, realmName))
 			.build();
 	}
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
-		org.keycloak.admin.client.Keycloak keycloakClient,
-		KeycloakDefaultRealmRepresentationFactory keycloakDefaultRealmRepresentationFactory,
-		Params params) {
+		String virtualHost, String realmName) {
 
-		RealmRepresentation realmRepresentation =
-			RealmRepresentationFactory.createRealmRepresentation(
-				params.virtualHost, params.realmName,
-				keycloakDefaultRealmRepresentationFactory.getDefaultRealmRepresentation());
+		context.pipeToSelf(
+			TenantProvisioningService.createRealm(virtualHost, realmName),
+			CreateRealmResponse::new
+		);
 
-		try {
-			keycloakClient.realms().create(realmRepresentation);
-			String clientId = realmRepresentation.getClients().get(0).getName();
-			UserRepresentation userRepresentation =
-				realmRepresentation.getUsers().get(0);
+		return awaitCreateRealm(replyTo);
+	}
+	
+	private static Behavior<Command> awaitCreateRealm(
+		ActorRef<Response> replyTo) {
+
+		return Behaviors.receive(Command.class)
+			.onMessage(
+				CreateRealmResponse.class,
+				msg -> onCreateRealmResponse(replyTo, msg))
+			.build();
+	}
+
+	private static Behavior<Command> onCreateRealmResponse(
+		ActorRef<Response> replyTo, CreateRealmResponse message) {
+
+		if (message.error() != null) {
+			var e = message.error();
+			replyTo.tell(new Error(e.getMessage()));
+		}
+		else {
+			var createdRealm = message.createdRealm();
+
 			replyTo.tell(
 				new Success(
-					clientId, null, params.virtualHost(), params.realmName(),
-					userRepresentation.getUsername(),
-					userRepresentation.getCredentials().get(0).getValue()
+					createdRealm.clientId(),
+					createdRealm.clientSecret(),
+					createdRealm.virtualHost(),
+					createdRealm.realmName(),
+					createdRealm.username(),
+					createdRealm.password()
 				)
 			);
-		}
-		catch (Exception e) {
-			replyTo.tell(new Error(e.getMessage()));
 		}
 
 		return Behaviors.stopped();
 	}
 
-	private static org.keycloak.admin.client.Keycloak createKeycloakClient(
-		KeycloakAdminClientConfig config) {
+	// Deletion behaviors
+	
+	private static Behavior<Command> rollback(
+		ActorContext<Command> context,
+		ActorRef<Response> replyTo,
+		String realmName) {
 
-		KeycloakAdminClientConfigUtil.validate(config);
+		return Behaviors.receive(Command.class)
+			.onMessage(Rollback.class, (msg) -> {
 
-		if (config.serverUrl().isEmpty()) {
-			throw new IllegalStateException("keycloak serverUrl is empty");
+				context.pipeToSelf(
+					TenantProvisioningService.deleteRealm(realmName),
+					DeleteRealmResponse::new
+				);
+
+				return awaitDeleteBehavior(replyTo);
+			})
+			.build();
+	}
+
+	private static Behavior<Command> awaitDeleteBehavior(
+		ActorRef<Response> replyTo) {
+
+		return Behaviors.receive(Command.class)
+			.onMessage(
+				DeleteRealmResponse.class,
+				msg -> onDeleteRealmResponse(replyTo, msg)
+			)
+			.build();
+	}
+
+
+	private static Behavior<Command> onDeleteRealmResponse(
+		ActorRef<Response> replyTo, DeleteRealmResponse message) {
+
+		if (message.error() != null) {
+			var e = message.error();
+			replyTo.tell(new Error(e.getMessage()));
+		}
+		else {
+			replyTo.tell(SuccessRollback.INSTANCE);
 		}
 
-		KeycloakBuilder keycloakBuilder = KeycloakBuilder
-			.builder()
-			.clientId(config.clientId())
-			.clientSecret(config.clientSecret().orElse(null))
-			.grantType(config.grantType().asString())
-			.username(config.username().orElse(null))
-			.password(config.password().orElse(null))
-			.realm(config.realm())
-			.serverUrl(config.serverUrl().get())
-			.scope(config.scope().orElse(null));
-
-		return keycloakBuilder.build();
-
+		return Behaviors.stopped();
 	}
 
 }

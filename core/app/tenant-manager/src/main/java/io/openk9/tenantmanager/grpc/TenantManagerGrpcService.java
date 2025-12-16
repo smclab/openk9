@@ -22,7 +22,7 @@ import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
 import io.openk9.tenantmanager.mapper.TenantMapper;
-import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.service.TenantDbService;
 
 import com.google.protobuf.Empty;
 import io.quarkus.grpc.GrpcService;
@@ -32,7 +32,7 @@ import io.smallrye.mutiny.Uni;
 public class TenantManagerGrpcService implements TenantManager {
 
 	@Inject
-	TenantService tenantService;
+	TenantDbService tenantDbService;
 	@Inject
 	TenantMapper tenantMapper;
 
@@ -40,7 +40,7 @@ public class TenantManagerGrpcService implements TenantManager {
 	@ActivateRequestContext
 	public Uni<TenantResponse> findTenant(TenantRequest request) {
 
-		return tenantService.findTenantByVirtualHost(request.getVirtualHost())
+		return tenantDbService.findTenantByVirtualHost(request.getVirtualHost())
 			.onItem()
 			.ifNotNull()
 			.transform(tenantMapper::toTenantResponse);
@@ -50,7 +50,7 @@ public class TenantManagerGrpcService implements TenantManager {
 	@Override
 	public Uni<TenantListResponse> findTenantList(Empty request) {
 
-		return tenantService.findAllTenant()
+		return tenantDbService.findAllTenant()
 			.onItem()
 			.ifNotNull()
 			.transform(list -> list

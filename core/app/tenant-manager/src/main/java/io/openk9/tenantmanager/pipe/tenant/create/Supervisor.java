@@ -17,11 +17,7 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import io.openk9.app.manager.grpc.AppManager;
-import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.TenantSchemaService;
-import io.openk9.tenantmanager.service.TenantService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -33,10 +29,6 @@ public class Supervisor {
 
 	public record Start(
 		String virtualHost, String schemaName,
-		TenantSchemaService liquibaseService,
-		TenantService tenantService,
-		AppManager appManager,
-		KeycloakContext keycloakContext,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public record ResponseWrapper(
@@ -61,10 +53,6 @@ public class Supervisor {
 					Manager.create(
 						start.virtualHost(),
 						start.schemaName(),
-						start.liquibaseService(),
-						start.tenantService(),
-						start.appManager(),
-						start.keycloakContext(),
 						responseActorRef
 					),
 					"manager-" + start.schemaName()

@@ -24,13 +24,9 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.app.manager.grpc.AppManager;
-import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.TenantSchemaService;
-import io.openk9.tenantmanager.service.TenantService;
 
-import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.smallrye.mutiny.unchecked.Unchecked;
@@ -46,7 +42,7 @@ public class TenantManagerActorSystem {
 
 	@PostConstruct
 	public void init() {
-		_actorSystem = ActorSystem.create(
+		actorSystem = ActorSystem.create(
 			Behaviors
 				.supervise(Supervisor.create())
 				.onFailure(SupervisorStrategy.resume()),
@@ -58,19 +54,11 @@ public class TenantManagerActorSystem {
 
 		CompletionStage<Supervisor.Response> ask =
 			AskPattern.ask(
-				_actorSystem,
+				actorSystem,
 				(ActorRef<Supervisor.Response> actorRef) ->
-					new Supervisor.Start(
-						virtualHost,
-						realmName,
-						schemaService,
-						tenantService,
-						appManager,
-						config,
-						actorRef
-					),
+					new Supervisor.Start(virtualHost, realmName, actorRef),
 				requestTimeout,
-				_actorSystem.scheduler()
+				actorSystem.scheduler()
 			);
 
 		return Uni
@@ -111,20 +99,10 @@ public class TenantManagerActorSystem {
 		}).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
 	}
 
-	private ActorSystem<Supervisor.Command> _actorSystem;
-
-	@Inject
-	@GrpcClient("appmanager")
-	AppManager appManager;
-
-	@Inject
-	TenantService tenantService;
+	private ActorSystem<Supervisor.Command> actorSystem;
 
 	@Inject
 	TenantSchemaService schemaService;
-
-	@Inject
-	KeycloakContext config;
 
 	@ConfigProperty(
 		name = "openk9.tenant-manager.create-tenant-timeout",

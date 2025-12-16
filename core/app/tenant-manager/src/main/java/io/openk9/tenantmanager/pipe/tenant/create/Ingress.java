@@ -19,12 +19,9 @@ package io.openk9.tenantmanager.pipe.tenant.create;
 
 import java.util.Optional;
 
-import io.openk9.app.manager.grpc.AppManager;
-import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
-import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
-import io.openk9.quarkus.common.VertxUtil;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -36,7 +33,6 @@ import org.eclipse.microprofile.config.ConfigProvider;
 
 public class Ingress extends AbstractBehavior<Ingress.Command> {
 
-	private final AppManager appManager;
 	private final String schemaName;
 	private final String virtualHost;
 	private final boolean defaultBehavior;
@@ -44,7 +40,6 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 	public Ingress(
 		ActorContext<Command> context,
-		AppManager appManager,
 		String schemaName,
 		String virtualHost,
 		boolean defaultBehavior,
@@ -52,7 +47,6 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 	) {
 
 		super(context);
-		this.appManager = appManager;
 		this.schemaName = schemaName;
 		this.virtualHost = virtualHost;
 		this.defaultBehavior = defaultBehavior;
@@ -60,18 +54,19 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 	}
 
 	public static Behavior<Command> create(
-		AppManager appManager, String schemaName, String virtualHost,
+		String schemaName,
+		String virtualHost,
 		ActorRef<Ingress.Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, appManager, schemaName, virtualHost, true, replyTo));
+			new Ingress(ctx, schemaName, virtualHost, true, replyTo));
 	}
 
 	public static Behavior<Command> rollback(
-		AppManager appManager, String schemaName, String virtualHost, ActorRef<Response> replyTo) {
+		String schemaName, String virtualHost, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, appManager, schemaName, virtualHost, false, replyTo));
+			new Ingress(ctx, schemaName, virtualHost, false, replyTo));
 	}
 
 	@Override
@@ -120,32 +115,25 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 	private Behavior<Command> onStartRollback(Command ignore) {
 
-		k8sNamespace()
-			.ifPresentOrElse(
-				(ns) -> VertxUtil.runOnContext(() -> appManager
-					.deleteIngress(DeleteIngressRequest.newBuilder()
-						.setSchemaName(schemaName)
-						.setVirtualHost(virtualHost)
-						.build())
-					.onItemOrFailure()
-					.invoke((response, throwable) -> {
-							IngressException exception = null;
-							if (throwable != null) {
-								exception = new IngressException(throwable);
-							}
+		if (k8sNamespace().isPresent()) {
 
-							getContext()
-								.getSelf()
-								.tell(new HandleRollback(response, exception));
-						}
-					)
-				),
-				() -> {
-					getContext().getLog().info("Skipped. Kubernetes namespace not defined.");
-					replyTo.tell(Success.INSTANCE);
+			getContext().pipeToSelf(
+				TenantProvisioningService.deleteIngress(virtualHost, schemaName),
+				(result, throwable) -> {
+					IngressException exception = null;
+					if (throwable != null) {
+						exception = new IngressException(throwable);
+					}
+
+					return new HandleRollback(result, exception);
 				}
 			);
+		}
+		else {
 
+			getContext().getLog().info("Skipped. Kubernetes namespace not defined.");
+			replyTo.tell(Success.INSTANCE);
+		}
 
 		return newReceiveBuilder()
 			.onMessage(HandleRollback.class, this::onHandleRollback)
@@ -154,26 +142,18 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 	private Behavior<Command> onStartDefault(Command ignore) {
 
-		k8sNamespace()
-			.ifPresentOrElse(
-				(ns) -> VertxUtil.runOnContext(() ->
-					appManager.createIngress(CreateIngressRequest
-							.newBuilder()
-							.setSchemaName(schemaName)
-							.setVirtualHost(virtualHost)
-							.build())
-						.onItemOrFailure()
-						.invoke((response, throwable) -> getContext()
-							.getSelf()
-							.tell(new HandleCreate(response, throwable))
-						)
-				),
-				() -> {
-					getContext().getLog().info(
-						"Skipping ingress creation. No kubernetes namespace defined.");
-					replyTo.tell(Success.INSTANCE);
-				}
+		if (k8sNamespace().isPresent()) {
+			getContext().pipeToSelf(
+				TenantProvisioningService.createIngress(virtualHost, schemaName),
+				HandleCreate::new
 			);
+		}
+		else {
+
+			getContext().getLog().info(
+				"Skipping ingress creation. No kubernetes namespace defined.");
+			replyTo.tell(Success.INSTANCE);
+		}
 
 		return newReceiveBuilder()
 			.onMessage(HandleCreate.class, this::onHandleCreate)

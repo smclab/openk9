@@ -28,7 +28,7 @@ import io.openk9.tenantmanager.dto.TenantRequestDTO;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
 import io.openk9.tenantmanager.service.TenantGraphQLRelayService;
-import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.service.TenantDbService;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -58,12 +58,12 @@ public class TenantGraphqlResource {
 
 	@Query
 	public Uni<TenantResponseDTO> getTenant(@Id String id) {
-		return tenantService.findById(Long.valueOf(id));
+		return tenantDbService.findById(Long.valueOf(id));
 	}
 
 	@Mutation
 	public Uni<Response<TenantResponseDTO>> tenant(TenantRequestDTO tenantRequestDTO) {
-		return tenantService.create(tenantRequestDTO);
+		return tenantDbService.create(tenantRequestDTO);
 	}
 
 	@Inject
@@ -71,6 +71,6 @@ public class TenantGraphqlResource {
 	@Inject
 	TenantGraphQLRelayService relayService;
 	@Inject
-	TenantService tenantService;
+	TenantDbService tenantDbService;
 
 }

@@ -28,7 +28,7 @@ import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSystem;
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.TenantSchemaService;
-import io.openk9.tenantmanager.service.TenantService;
+import io.openk9.tenantmanager.service.TenantDbService;
 
 import io.quarkus.vertx.VertxContextSupport;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -51,7 +51,7 @@ public class TenantManagerInitializer {
 	@Inject
 	TenantSchemaService liquibaseService;
 	@Inject
-	TenantService tenantService;
+	TenantDbService tenantDbService;
 	@Inject
 	LiquibaseValidatorActorSystem liquibaseValidatorActorSystem;
 	@Inject
@@ -64,7 +64,7 @@ public class TenantManagerInitializer {
 		EventBusInstanceHolder.setEventBus(eventBus);
 
 		try {
-			VertxContextSupport.subscribeAndAwait(() -> tenantService
+			VertxContextSupport.subscribeAndAwait(() -> tenantDbService
 				.findAllSchemaNameAndLiquibaseSchemaName()
 				.flatMap((schemas) -> {
 						LinkedList<Params> schemaParamList = new LinkedList<>();

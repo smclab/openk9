@@ -23,11 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import io.openk9.app.manager.grpc.AppManager;
-import io.openk9.tenantmanager.config.KeycloakContext;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.service.TenantSchemaService;
-import io.openk9.tenantmanager.service.TenantService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -45,36 +41,29 @@ public class Manager {
 
 	public static Behavior<Command> create(
 		String virtualHost, String schemaName,
-		TenantSchemaService liquibaseService, TenantService tenantService,
-		AppManager appManager,
-		KeycloakContext keycloakContext,
 		ActorRef<Manager.Response> replyTo) {
 
 		return Behaviors.setup(context -> {
 
-			ActorRef<Realm.Response> keycloakResponse =
+			ActorRef<Realm.Response> realmResponse =
 				context.messageAdapter(Realm.Response.class, ResponseWrapper::new);
 
-			ActorRef<Realm.Command> keycloakRef =
+			ActorRef<Realm.Command> realm =
 				context.spawn(
 					Realm.create(
-						keycloakContext,
-						new Realm.Params(virtualHost, schemaName),
-						keycloakResponse
+						virtualHost,
+						schemaName, // todo change with realmname
+						realmResponse
 					),
-					"keycloak-" + schemaName
+					"realm-" + schemaName
 				);
 
 			ActorRef<Schema.Response> schemaResponse =
 				context.messageAdapter(Schema.Response.class, ResponseWrapper::new);
 
-			ActorRef<Schema.Command> schemaRef =
+			ActorRef<Schema.Command> schema =
 				context.spawn(
-					Schema.create(
-						liquibaseService,
-						new Schema.Params(virtualHost, schemaName),
-						schemaResponse
-					),
+					Schema.create(virtualHost, schemaName, schemaResponse),
 					"schema-" + schemaName
 				);
 
@@ -83,23 +72,17 @@ public class Manager {
 
 			ActorRef<Ingress.Command> ingressRef =
 				context.spawn(
-					Ingress.create(
-						appManager,
-						schemaName,
-						virtualHost,
-						ingressResponse
-					),
+					Ingress.create(schemaName, virtualHost, ingressResponse),
 					"ingress-" + schemaName
 				);
 
 
-			schemaRef.tell(Schema.Start.INSTANCE);
-			keycloakRef.tell(Realm.Start.INSTANCE);
+			schema.tell(Schema.Start.INSTANCE);
+			realm.tell(Realm.Start.INSTANCE);
 			ingressRef.tell(Ingress.Start.INSTANCE);
 
 			return initial(
-				context, replyTo, liquibaseService, tenantService, appManager,
-				keycloakContext, schemaName, virtualHost, List.of(), 3);
+				context, replyTo, schemaName, virtualHost, List.of(), 3);
 
 		});
 
@@ -108,10 +91,6 @@ public class Manager {
 	private static Behavior<Command> initial(
 		ActorContext<Command> context,
 		ActorRef<Manager.Response> replyTo,
-		TenantSchemaService liquibaseService,
-		TenantService tenantService,
-		AppManager appManager,
-		KeycloakContext keycloakContext,
 		String schemaName,
 		String virtualHost,
 		List<ResponseWrapper> responses,
@@ -124,14 +103,13 @@ public class Manager {
 				newResponses.add(response);
 				if (newResponses.size() == messageCount) {
 					return finalize(
-						context, replyTo, liquibaseService, tenantService, appManager,
-						keycloakContext, List.copyOf(newResponses), schemaName, virtualHost);
+						context, replyTo, List.copyOf(newResponses),
+						schemaName, virtualHost);
 				}
 				else {
 					return initial(
-						context, replyTo, liquibaseService, tenantService, appManager,
-						keycloakContext, schemaName, virtualHost, List.copyOf(newResponses),
-						messageCount);
+						context, replyTo, schemaName, virtualHost,
+						List.copyOf(newResponses), messageCount);
 				}
 
 			})
@@ -141,10 +119,6 @@ public class Manager {
 	private static Behavior<Command> finalize(
 		ActorContext<Command> context,
 		ActorRef<Response> replyTo,
-		TenantSchemaService liquibaseService,
-		TenantService tenantService,
-		AppManager appManager,
-		KeycloakContext keycloakContext,
 		List<ResponseWrapper> responseList,
 		String schemaName,
 		String virtualHost) {
@@ -173,7 +147,7 @@ public class Manager {
 					realmName = success.realmName();
 					clientId = success.clientId();
 					clientSecret = success.clientSecret();
-					context.getLog().info("Keycloak: {}", success);
+					context.getLog().info("Realm: {}", success);
 				}
 				else if (o instanceof Schema.Success success) {
 					liquibaseSchemaName = success.schemaName() + "_liquibase";
@@ -191,7 +165,6 @@ public class Manager {
 			ActorRef<Tenant.Command> tenantRef =
 				context.spawn(
 					Tenant.create(
-						tenantService,
 						tenantResponseRef,
 						virtualHost,
 						schemaName,
@@ -217,14 +190,7 @@ public class Manager {
 
 						context.getLog().error("Tenant: {}", error);
 
-						compensateAll(
-							context,
-							appManager,
-							liquibaseService,
-							keycloakContext,
-							schemaName,
-							virtualHost
-						);
+						compensateAll(context, schemaName, virtualHost);
 
 						replyTo.tell(Error.INSTANCE);
 					}
@@ -239,7 +205,7 @@ public class Manager {
 
 				if (obj instanceof Realm.Error error) {
 					context.getLog().error("Keycloak: {}", error);
-					errors.add(Operations.KEYCLOAK);
+					errors.add(Operations.REALM);
 				}
 				else if (obj instanceof Schema.Error error) {
 					context.getLog().error("Schema: {}", error);
@@ -255,9 +221,9 @@ public class Manager {
 
 			for (Operations compensation : compensations) {
 				switch (compensation) {
-					case INGRESS -> compensateIngress(context, appManager, schemaName, virtualHost);
-					case KEYCLOAK -> compensateKeycloak(context, keycloakContext, schemaName);
-					case SCHEMA -> compensateSchema(context, liquibaseService, schemaName);
+					case INGRESS -> compensateIngress(context, schemaName, virtualHost);
+					case REALM -> compensateRealm(context, schemaName);
+					case SCHEMA -> compensateSchema(context, schemaName);
 				}
 			}
 
@@ -282,10 +248,7 @@ public class Manager {
 	}
 
 	private static void compensateIngress(
-		ActorContext<Command> context,
-		AppManager appManager,
-		String schemaName,
-		String virtualHost) {
+		ActorContext<Command> context, String schemaName, String virtualHost) {
 
 		var replyTo = context.messageAdapter(
 			Ingress.Response.class,
@@ -294,17 +257,15 @@ public class Manager {
 
 		ActorRef<Ingress.Command> ref =
 			context.spawn(
-				Ingress.rollback(appManager, schemaName, virtualHost, replyTo),
+				Ingress.rollback(schemaName, virtualHost, replyTo),
 				"ingress-rollback-" + schemaName
 			);
 
 		ref.tell(Ingress.Start.INSTANCE);
 	}
 
-	private static void compensateKeycloak(
-		ActorContext<Command> context,
-		KeycloakContext keycloakContext,
-		String schemaName) {
+	private static void compensateRealm(
+		ActorContext<Command> context, String schemaName) {
 
 		var replyTo = context.messageAdapter(
 			Realm.Response.class,
@@ -313,18 +274,15 @@ public class Manager {
 
 		ActorRef<Realm.Command> ref =
 			context.spawn(
-				Realm.createRollback(
-					keycloakContext.getKeycloakAdminClientConfig(), schemaName),
-				"keycloak-rollback-" + schemaName
+				Realm.createRollback(replyTo, schemaName),
+				"realm-rollback-" + schemaName
 			);
 
-		ref.tell(new Realm.Rollback(replyTo));
+		ref.tell(Realm.Rollback.INSTANCE);
 	}
 
 	private static void compensateSchema(
-		ActorContext<Command> context,
-		TenantSchemaService liquibaseService,
-		String schemaName) {
+		ActorContext<Command> context, String schemaName) {
 
 		var replyTo = context.messageAdapter(
 			Schema.Response.class,
@@ -333,24 +291,18 @@ public class Manager {
 
 		ActorRef<Schema.Command> ref =
 			context.spawn(
-				Schema.createRollback(
-					liquibaseService, schemaName),
+				Schema.createRollback(replyTo, schemaName),
 				"schema-rollback-" + schemaName);
 
-		ref.tell(new Schema.Rollback(replyTo));
+		ref.tell(Schema.Rollback.INSTANCE);
 	}
 
 	private static void compensateAll(
-		ActorContext<Command> context,
-		AppManager appManager,
-		TenantSchemaService liquibaseService,
-		KeycloakContext keycloakContext,
-		String schemaName,
-		String virtualHost) {
+		ActorContext<Command> context, String schemaName, String virtualHost) {
 
-		compensateIngress(context, appManager, schemaName, virtualHost);
-		compensateKeycloak(context, keycloakContext, schemaName);
-		compensateSchema(context, liquibaseService, schemaName);
+		compensateIngress(context, schemaName, virtualHost);
+		compensateRealm(context, schemaName);
+		compensateSchema(context, schemaName);
 	}
 
 	public enum Error implements Response {
@@ -363,7 +315,7 @@ public class Manager {
 
 	private enum Operations {
 		INGRESS,
-		KEYCLOAK,
+		REALM,
 		SCHEMA
 	}
 
