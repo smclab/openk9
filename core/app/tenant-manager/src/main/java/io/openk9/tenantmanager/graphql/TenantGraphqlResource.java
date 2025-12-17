@@ -17,6 +17,7 @@
 
 package io.openk9.tenantmanager.graphql;
 
+import java.util.List;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -27,8 +28,9 @@ import io.openk9.common.util.web.Response;
 import io.openk9.tenantmanager.dto.TenantRequestDTO;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
-import io.openk9.tenantmanager.service.TenantGraphQLRelayService;
+import io.openk9.tenantmanager.model.Preconfiguration;
 import io.openk9.tenantmanager.service.TenantDbService;
+import io.openk9.tenantmanager.service.TenantGraphQLRelayService;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -59,6 +61,12 @@ public class TenantGraphqlResource {
 	@Query
 	public Uni<TenantResponseDTO> getTenant(@Id String id) {
 		return tenantDbService.findById(Long.valueOf(id));
+	}
+
+	@Query
+	public Uni<List<Preconfiguration>> getPreconfigurations() {
+
+		return Uni.createFrom().item(Preconfiguration.PRECONFIGURATIONS);
 	}
 
 	@Mutation
