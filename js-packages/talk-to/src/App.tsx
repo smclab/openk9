@@ -8,7 +8,7 @@ import "./App.css";
 import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
 import { InitialConversation } from "./components/InitialConversation";
-import { keycloak } from "./components/keycloak";
+import { kc } from "./auth/kc";
 import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
 import Sidebar from "./components/Sidebar";
@@ -135,13 +135,11 @@ function App() {
 										sx={{ margin: "10px", borderRadius: "10px" }}
 										onClick={() => {
 											const timestamp = String(Date.now());
-											const newId = keycloak.authenticated
-												? `${userId}_${timestamp}`
-												: `anonymous_${uuidv4()}_${timestamp}`;
+											const newId = kc.authenticated ? `${userId}_${timestamp}` : `anonymous_${uuidv4()}_${timestamp}`;
 											setChatId({ id: newId, isNew: true });
 										}}
 									>
-										{t("new-chat")}
+										{t("new-chat", { defaultValue: "New Chat" })}
 									</Button>
 								)}
 							</Box>
@@ -213,7 +211,7 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 			if (chatId?.isNew) {
 				return [];
 			}
-			return (await client.getInitialMessages(chatId?.id || "")).messages;
+			return await client.getInitialMessages(chatId?.id || "");
 		},
 		{
 			enabled: !!chatId?.id,
@@ -222,7 +220,7 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 
 	return {
 		initialMessages: {
-			recoveryChat: initialMessagesQuery.data,
+			recoveryChat: initialMessagesQuery.data?.messages,
 			isLoadingChat: initialMessagesQuery.isLoading || false,
 		},
 		initialMessagesError: initialMessagesQuery.error,

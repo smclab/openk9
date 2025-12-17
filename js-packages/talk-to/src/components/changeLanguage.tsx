@@ -53,16 +53,18 @@ const ChangeLanguage = () => {
 	});
 
 	const languages: { label: string; value: string }[] = languagesTest
-		.map((lang) => {
+		.map((lang: { name: string; value: string }) => {
 			if (lang.name && lang.value) {
 				return {
-					label: lang.name,
-					value: lang.value,
+					label: lang.name || "",
+					value: lang.value || "",
 				};
 			}
 			return undefined;
 		})
-		.filter((val): val is { label: string; value: string } => val !== undefined);
+		.filter(
+			(val: { label: string; value: string } | undefined): val is { label: string; value: string } => val !== undefined,
+		);
 
 	return (
 		<>

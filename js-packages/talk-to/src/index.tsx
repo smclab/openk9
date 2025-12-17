@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import App from "./App";
 import { keycloakInit } from "./components/authentication";
 import { ChatInfoContext } from "./components/ChatInfoContext";
-import './i18n';
+import "./i18n";
 import i18n from "./i18n";
 import reportWebVitals from "./reportWebVitals";
 import { ChatProvider } from "./context/HistoryChatContext";
@@ -17,6 +17,7 @@ declare global {
 		KEYCLOAK_URL: string;
 		KEYCLOAK_REALM: string;
 		KEYCLOAK_CLIENT_ID: string;
+		tenant: string;
 	}
 }
 
