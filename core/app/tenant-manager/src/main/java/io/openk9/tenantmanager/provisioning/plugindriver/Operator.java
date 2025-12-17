@@ -17,9 +17,8 @@
 
 package io.openk9.tenantmanager.provisioning.plugindriver;
 
-import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
-import io.openk9.quarkus.common.VertxUtil;
+import io.openk9.tenantmanager.service.ConnectorProvisioningService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -30,29 +29,21 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 
 public class Operator extends AbstractBehavior<Operator.Command> {
 
-	private final AppManager client;
 	private final AppManifest request;
 
-	public Operator(
-		ActorContext<Command> context,
-		AppManager client,
-		AppManifest request) {
-
+	public Operator(ActorContext<Command> context, AppManifest request) {
 		super(context);
-		this.client = client;
 		this.request = request;
-
 	}
 
-	public static Behavior<Command> create(
-		AppManager client,
-		AppManifest request) {
+	public static Behavior<Command> create(AppManifest request) {
 
-		return Behaviors.setup(ctx -> new Operator(ctx, client, request));
+		return Behaviors.setup(ctx -> new Operator(ctx, request));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
+
 		return newReceiveBuilder()
 			.onMessage(Install.class, this::onInstall)
 			.build();
@@ -62,55 +53,57 @@ public class Operator extends AbstractBehavior<Operator.Command> {
 
 		var replyTo = install.replyTo;
 
-		VertxUtil.runOnContext(() -> client
-			.applyResource(request)
-			.invoke(() -> tell(new Installed(replyTo)))
-			.onFailure()
-			.invoke(() -> replyTo.tell(Response.ERROR))
+		getContext().pipeToSelf(
+			ConnectorProvisioningService.install(request),
+			(res, err) -> new InstallResponse(res, err, replyTo)
 		);
 
 		return newReceiveBuilder()
-			.onMessage(Installed.class, this::onInstalled)
+			.onMessage(InstallResponse.class, this::onInstallResponse)
 			.build();
 	}
+
 
 	private Behavior<Command> onCompensate(Compensate compensate) {
 
 		var replyTo = compensate.replyTo;
 
-		VertxUtil.runOnContext(() -> client
-			.deleteResource(request)
-			.invoke(() -> tell(new Compensated(replyTo)))
-			.onFailure()
-			.invoke(() -> replyTo.tell(Response.NOT_COMPENSATED))
+		getContext().pipeToSelf(
+			ConnectorProvisioningService.uninstall(request),
+			(res, err) -> new UninstallResponse(res, err, replyTo)
 		);
 
 		return newReceiveBuilder()
-			.onMessage(Compensated.class, this::onCompensated)
+			.onMessage(UninstallResponse.class, this::onUninstallResponse)
 			.build();
 	}
 
+	private Behavior<Command> onInstallResponse(InstallResponse response) {
+		var replyTo = response.replyTo;
 
-	private Behavior<Command> onInstalled(Installed installed) {
-		var replyTo = installed.replyTo;
-
-		replyTo.tell(Response.SUCCESS);
+		if (response.error() != null) {
+			replyTo.tell(Response.ERROR);
+		}
+		else {
+			replyTo.tell(Response.SUCCESS);
+		}
 
 		return newReceiveBuilder()
 			.onMessage(Compensate.class, this::onCompensate)
 			.build();
 	}
 
-	private Behavior<Command> onCompensated(Compensated compensated) {
-		var replyTo = compensated.replyTo;
+	private Behavior<Command> onUninstallResponse(UninstallResponse response) {
+		var replyTo = response.replyTo;
 
-		replyTo.tell(Response.COMPENSATED);
+		if (response.error() != null) {
+			replyTo.tell(Response.NOT_COMPENSATED);
+		}
+		else {
+			replyTo.tell(Response.COMPENSATED);
+		}
 
 		return Behaviors.stopped();
-	}
-
-	private void tell(Command command) {
-		getContext().getSelf().tell(command);
 	}
 
 	public enum Response {
@@ -123,11 +116,15 @@ public class Operator extends AbstractBehavior<Operator.Command> {
 	public sealed interface Command {}
 
 	public record Install(ActorRef<Response> replyTo) implements Command {}
-
 	public record Compensate(ActorRef<Response> replyTo) implements Command {}
 
-	private record Compensated(ActorRef<Response> replyTo) implements Command {}
+	private record InstallResponse(
+		Void result, Throwable error, ActorRef<Response> replyTo)
+		implements Command {}
 
-	private record Installed(ActorRef<Response> replyTo) implements Command {}
+	private record UninstallResponse(
+		Void result, Throwable error, ActorRef<Response> replyTo)
+		implements Command {}
+
 
 }

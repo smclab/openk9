@@ -26,6 +26,9 @@ import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
+import io.openk9.datasource.grpc.Datasource;
+import io.openk9.datasource.grpc.InitTenantRequest;
+import io.openk9.datasource.grpc.InitTenantResponse;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.Tenant;
@@ -40,17 +43,26 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class TenantProvisioningService {
 
-	private static final String CREATE_REALM = "CREATE_REALM";
-	private static final String CREATE_SCHEMA = "CREATE_SCHEMA";
-	private static final String CREATE_INGRESS = "CREATE_INGRESS";
-	private static final String CREATE_ENTITY = "CREATE_TENANT";
-	private static final String DELETE_REALM = "DELETE_REALM";
-	private static final String DELETE_SCHEMA = "DELETE_SCHEMA";
-	private static final String DELETE_INGRESS = "DELETE_INGRESS";
-	private static final String DELETE_ENTITY = "DELETE_TENANT";
-	private static final String FIND_TENANT_BY_VIRTUAL_HOST = "FIND_TENANT_BY_VIRTUAL_HOST";
-
 	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
+
+	// ========================================================================
+	// Event Bus addresses.
+	// ========================================================================
+
+	private static final String CREATE_REALM = "TenantProvisioningService#createRealm";
+	private static final String CREATE_SCHEMA = "TenantProvisioningService#createSchema";
+	private static final String CREATE_INGRESS = "TenantProvisioningService#createIngress";
+	private static final String CREATE_ENTITY = "TenantProvisioningService#createEntity";
+	private static final String DELETE_REALM = "TenantProvisioningService#deleteRealm";
+	private static final String DELETE_SCHEMA = "TenantProvisioningService#deleteSchema";
+	private static final String DELETE_INGRESS = "TenantProvisioningService#deleteIngress";
+	private static final String DELETE_ENTITY = "TenantProvisioningService#deleteEntity";
+	private static final String FIND_TENANT_BY_VIRTUAL_HOST = "TenantProvisioningService#findTenantByVirtualHost";
+
+	// ========================================================================
+	// Aggregated services.
+	// These are the services invoked from Event Bus consumers.
+	// ========================================================================
 
 	@Inject
 	TenantRealmService realmService;
@@ -58,11 +70,16 @@ public class TenantProvisioningService {
 	TenantSchemaService schemaService;
 	@Inject
 	TenantDbService dbService;
-	@Inject
 	@GrpcClient("appmanager")
-	AppManager appManager;
+	AppManager appManagerService;
+	@GrpcClient
+	Datasource datasourceService;
 
-	// Event Bus requests
+	// ========================================================================
+	// Event Bus requests.
+	// Messages are produced and handled from Pekko Actors that orchestrate the
+	// provisioning/deprovisioning of a Tenant.
+	// ========================================================================
 
 	public static CompletionStage<TenantResponseDTO> findTenant(
 		String virtualHost) {
@@ -151,7 +168,9 @@ public class TenantProvisioningService {
 	}
 
 
-	// Event Bus Consumers
+	// ========================================================================
+	// Event Bus Consumers.
+	// ========================================================================
 
 	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
 	Uni<TenantResponseDTO> findTenant(FindTenantRequest request) {
@@ -185,7 +204,7 @@ public class TenantProvisioningService {
 	@ConsumeEvent(DELETE_INGRESS)
 	Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
 
-		return appManager.deleteIngress(request);
+		return appManagerService.deleteIngress(request);
 	}
 
 	@ConsumeEvent(DELETE_ENTITY)
@@ -226,7 +245,7 @@ public class TenantProvisioningService {
 	@ConsumeEvent(CREATE_INGRESS)
 	Uni<CreateIngressResponse> createingress(CreateIngressRequest request) {
 
-		return appManager.createIngress(request);
+		return appManagerService.createIngress(request);
 	}
 
 	@ConsumeEvent(CREATE_ENTITY)
@@ -236,7 +255,23 @@ public class TenantProvisioningService {
 		return dbService.persist(tenant);
 	}
 
-	// Event Bus Request Messages
+	// ========================================================================
+	// Async APIs.
+	// ========================================================================
+
+	public Uni<Long> initTenant(String schemaName) {
+
+		return datasourceService.initTenant(InitTenantRequest
+				.newBuilder()
+				.setSchemaName(schemaName)
+				.build()
+			)
+			.map(InitTenantResponse::getBucketId);
+	}
+
+	// ========================================================================
+	// Event Bus Request Messages.
+	// =======================================================================
 
 	private record FindTenantRequest(String virtualHost) {
 

@@ -24,15 +24,13 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
-import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
-import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.Preset;
 import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
 
-import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.javadsl.AskPattern;
@@ -41,10 +39,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @Path("/provisioning")
 public class ProvisioningResource {
 
-	@GrpcClient
-	Datasource datasource;
-	@GrpcClient("appmanager")
-	AppManager appManager;
+	@Inject
+	TenantProvisioningService tenantProvisioningService;
 
 	@Inject
 	@ConfigProperty(name = "quarkus.application.version")
@@ -53,10 +49,9 @@ public class ProvisioningResource {
 	@POST
 	@Path("/initTenant")
 	public Uni<InitTenantResponse> initTenant(@Valid InitTenantRequest request) {
-		return datasource.initTenant(io.openk9.datasource.grpc.InitTenantRequest.newBuilder()
-			.setSchemaName(request.tenantName)
-			.build()
-		).map(initTenantResponse -> new InitTenantResponse(initTenantResponse.getBucketId()));
+		return tenantProvisioningService
+			.initTenant(request.tenantName())
+			.map(InitTenantResponse::new);
 	}
 
 	@POST
@@ -72,13 +67,11 @@ public class ProvisioningResource {
 
 		var actorSystem = ActorSystem.apply(
 			CreateConnectorSaga.create(
-				appManager,
 				AppManifest.newBuilder()
 					.setSchemaName(request.tenantName)
 					.setChart(PresetPluginDrivers.getPluginDriver(request.preset))
 					.setVersion(applicationVersion)
 					.build(),
-				datasource,
 				CreatePresetPluginDriverRequest.newBuilder()
 					.setSchemaName(request.tenantName)
 					.setPreset(request.preset)

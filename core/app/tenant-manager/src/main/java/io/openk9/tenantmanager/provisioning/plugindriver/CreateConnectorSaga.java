@@ -75,15 +75,13 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 	}
 
 	public static Behavior<Command> create(
-		AppManager opsClient,
 		AppManifest opsRequest,
-		Datasource persistenceClient,
 		CreatePresetPluginDriverRequest persistenceRequest) {
 
 		return Behaviors.setup(ctx -> new CreateConnectorSaga(
 			ctx,
-			ctx.spawnAnonymous(Operator.create(opsClient, opsRequest)),
-			ctx.spawnAnonymous(Persistence.create(persistenceClient, persistenceRequest))
+			ctx.spawnAnonymous(Operator.create(opsRequest)),
+			ctx.spawnAnonymous(Persistence.create(persistenceRequest))
 		));
 	}
 
@@ -116,6 +114,7 @@ public class CreateConnectorSaga extends AbstractBehavior<CreateConnectorSaga.Co
 
 	private Behavior<Command> onPersisted() {
 		replyTo.tell(Responses.SUCCESS);
+
 		return Behaviors.stopped();
 	}
 

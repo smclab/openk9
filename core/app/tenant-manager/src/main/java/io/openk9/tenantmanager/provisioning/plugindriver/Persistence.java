@@ -17,10 +17,8 @@
 
 package io.openk9.tenantmanager.provisioning.plugindriver;
 
-import io.openk9.datasource.grpc.CreatePluginDriverResponse;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
-import io.openk9.datasource.grpc.Datasource;
-import io.openk9.quarkus.common.VertxUtil;
+import io.openk9.tenantmanager.service.ConnectorProvisioningService;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -31,25 +29,20 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 
 public class Persistence extends AbstractBehavior<Persistence.Command> {
 
-	private final Datasource client;
 	private final CreatePresetPluginDriverRequest request;
-	private long pluginDriverId;
 
 	public Persistence(
 		ActorContext<Command> context,
-		Datasource client,
 		CreatePresetPluginDriverRequest request) {
 
 		super(context);
-		this.client = client;
 		this.request = request;
 	}
 
 	public static Behavior<Command> create(
-		Datasource client,
 		CreatePresetPluginDriverRequest request) {
 
-		return Behaviors.setup(ctx -> new Persistence(ctx, client, request));
+		return Behaviors.setup(ctx -> new Persistence(ctx, request));
 	}
 
 	@Override
@@ -63,11 +56,9 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 
 		var replyTo = persist.replyTo;
 
-		VertxUtil.runOnContext(() -> client
-			.createPresetPluginDriver(request)
-			.invoke((response) -> tell(Persisted.of(response, replyTo)))
-			.onFailure()
-			.invoke(throwable -> replyTo.tell(Response.ERROR))
+		getContext().pipeToSelf(
+			ConnectorProvisioningService.persist(request),
+			(res, err) -> new Persisted(res, err, replyTo)
 		);
 
 		return newReceiveBuilder()
@@ -76,14 +67,16 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 	}
 
 	private Behavior<Command> onPersisted(Persisted persisted) {
-		this.pluginDriverId = persisted.pluginDriverId();
-		persisted.replyTo.tell(Response.SUCCESS);
+		var replyTo = persisted.replyTo();
+
+		if (persisted.error() != null) {
+			replyTo.tell(Response.ERROR);
+		}
+		else {
+			replyTo.tell(Response.SUCCESS);
+		}
 
 		return Behaviors.stopped();
-	}
-
-	private void tell(Command command) {
-		getContext().getSelf().tell(command);
 	}
 
 	public enum Response {
@@ -95,11 +88,8 @@ public class Persistence extends AbstractBehavior<Persistence.Command> {
 
 	public record Persist(ActorRef<Response> replyTo) implements Command {}
 
-	private record Persisted(long pluginDriverId, ActorRef<Response> replyTo) implements Command {
-		static Persisted of(CreatePluginDriverResponse response, ActorRef<Response> replyTo) {
-			return new Persisted(response.getPluginDriverId(), replyTo);
-		}
-
-	}
+	private record Persisted(
+		Long result, Throwable error, ActorRef<Response> replyTo)
+		implements Command {}
 
 }
