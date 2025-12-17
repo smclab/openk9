@@ -23,7 +23,6 @@ import jakarta.enterprise.event.Startup;
 import jakarta.inject.Inject;
 
 import io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory;
-import io.openk9.tenantmanager.pipe.tenant.create.factory.RealmRepresentationFactory;
 
 import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig;
 import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfigUtil;

@@ -72,7 +72,7 @@ public class TenantProvisioningService {
 	TenantDbService dbService;
 	@GrpcClient("appmanager")
 	AppManager appManagerService;
-	@GrpcClient
+	@GrpcClient("datasource")
 	Datasource datasourceService;
 
 	// ========================================================================

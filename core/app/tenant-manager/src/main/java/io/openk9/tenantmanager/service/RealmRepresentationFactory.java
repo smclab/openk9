@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.pipe.tenant.create.factory;
+package io.openk9.tenantmanager.service;
 
 import java.util.ArrayList;
 import java.util.List;
