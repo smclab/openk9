@@ -80,7 +80,7 @@ export function useConfigureHybridSearchMutation({
   );
 }
 
-export function SaveSearchConfig() {
+export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
@@ -374,7 +374,7 @@ export function SaveSearchConfig() {
           </form>
         </>
         <ConfirmModal />
-        <Recap recapData={recapSections} />
+        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
       </ContainerFluid>
       <CustomizedDialogs isHybridSearch={isHybridSearch} searchConfigId={searchConfigId} onClose={handleCloseDialog} />
     </>

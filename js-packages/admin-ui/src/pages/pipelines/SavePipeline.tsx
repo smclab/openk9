@@ -31,7 +31,7 @@ import {
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SavePipeline() {
+export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { pipelineId = "new", mode } = useParams();
   type KeyValue = {
     [key: string]: any;
@@ -538,7 +538,7 @@ export function SavePipeline() {
         </Box>
       </Container>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </>
   );
 }

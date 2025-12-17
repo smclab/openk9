@@ -38,6 +38,7 @@ export const TabsSection = ({
   setIsRecap,
   handleDatasource,
   isCreated,
+  setExtraFab,
 }: tabsPropsConstructor) => {
   const isRecapTab = "recap";
   isRecap && handleTabChange(null, isRecapTab);
@@ -200,6 +201,7 @@ export const TabsSection = ({
           setAreaEnabled={setAreaEnabled}
           setFormValues={setFormValues}
           setShowDialog={setShowDialog}
+          setExtraFab={setExtraFab}
         />
       )}
       {activeTab === "datasource" && (

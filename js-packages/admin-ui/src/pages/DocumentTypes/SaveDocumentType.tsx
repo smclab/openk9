@@ -16,7 +16,7 @@ import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveDocumentType() {
+export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { documentTypeId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -140,7 +140,7 @@ export function SaveDocumentType() {
             fieldsControll={["name"]}
           />
         </form>
-        <Recap recapData={recapSections} />
+        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
       </>
       <ConfirmModal />
     </ContainerFluid>

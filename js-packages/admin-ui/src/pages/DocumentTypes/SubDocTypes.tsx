@@ -45,7 +45,7 @@ type TreeNode = {
   children: TreeNode[];
 };
 
-export function SubDocTypes() {
+export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { documentTypeId = "new" } = useParams();
   const topRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<string>("");
@@ -224,6 +224,7 @@ export function SubDocTypes() {
               callback={() => {
                 documentTypesQuery.refetch({ docTypeId: documentTypeId, parentId, searchText: "" });
               }}
+              setExtraFab={setExtraFab}
             />
           </ModalConfirm>
         )}

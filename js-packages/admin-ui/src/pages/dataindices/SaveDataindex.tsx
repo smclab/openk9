@@ -19,7 +19,7 @@ export type DataindexData = {
   embeddingJsonConfig: string | null | undefined;
 };
 
-export function SaveDataindex() {
+export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { dataindexId = "new", mode } = useParams();
   const [dataindexData, setDataindexData] = useState<DataindexData | null | undefined>(null);
   const [verifyData, setVerifyData] = useState(mode);
@@ -104,6 +104,7 @@ export function SaveDataindex() {
           verifyData={verifyData}
           setVerifyData={setVerifyData}
           isReadOnly={false}
+          setExtraFab={setExtraFab}
         />
       )}
       {(verifyData === "view" || verifyData === "editView") && (

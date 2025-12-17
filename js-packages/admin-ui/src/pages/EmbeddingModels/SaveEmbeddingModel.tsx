@@ -25,7 +25,7 @@ const PROVIDER_OPTIONS = [
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
 ];
 
-export function SaveEmbeddingModel() {
+export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { embeddingModelsId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
@@ -256,7 +256,7 @@ export function SaveEmbeddingModel() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

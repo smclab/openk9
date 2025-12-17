@@ -22,7 +22,7 @@ import { useCharFilterQuery, useCreateOrUpdateCharFilterMutation } from "../../g
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { CharFilters } from "./gql";
 
-export function SaveCharFilter() {
+export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { charFilterId = "new", view } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -159,7 +159,7 @@ export function SaveCharFilter() {
           />
         </form>
 
-        <Recap recapData={recapSections} />
+        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
       </>
     </ContainerFluid>
   );

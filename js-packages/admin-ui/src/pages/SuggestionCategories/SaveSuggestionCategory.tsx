@@ -25,7 +25,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import useOptionsSuggestionCategory from "./useOptionsSuggestionCategory";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveSuggestionCategory() {
+export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { suggestionCategoryId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
@@ -202,7 +202,7 @@ export function SaveSuggestionCategory() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

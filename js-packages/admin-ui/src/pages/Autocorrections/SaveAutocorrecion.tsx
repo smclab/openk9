@@ -25,7 +25,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveAutocorrection() {
+export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { autocorrectionId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const autocorrectionQuery = useAutocorrectionValueQuery({
@@ -218,7 +218,7 @@ export function SaveAutocorrection() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

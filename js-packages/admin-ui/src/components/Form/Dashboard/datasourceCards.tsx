@@ -29,11 +29,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import cronstrue from "cronstrue";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { scrollToTop } from "../../../App";
+import { scrollToTop, themeColor } from "../../../App";
 import { useConfirmModal } from "../../../utils/useConfirmModal";
 
 type DatasourceType = "database" | "api" | "filesystem" | "web" | string;
@@ -201,6 +201,9 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
     </StyledCard>
   );
 
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode;
+
   const DatasourceCard: React.FC<{ datasource: any }> = ({ datasource }) => {
     const typeConfig: {
       icon: React.ReactElement;
@@ -209,12 +212,19 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
     } = {
       icon: <DatabaseIcon />,
       color: getStatusColor(datasource?.schedulable ? "active" : "syncing"),
-      bgcolor: "#e3f2fd",
+      bgcolor: isDarkMode === "dark" ? "#e3f2fd" : "#86ccff",
     };
 
     return (
       <StyledCard>
-        <CardContent style={{ padding: "10px" }}>
+        <CardContent
+          style={{
+            padding: "10px",
+            ...(isDarkMode === "dark" && {
+              backgroundColor: themeColor.dark.secondary,
+            }),
+          }}
+        >
           <Box
             sx={{
               display: "grid",

@@ -29,7 +29,7 @@ const PROVIDER_OPTIONS = [
   { value: "chat_vertex_ai_model_garden", label: "Chat Vertex AI Model Garden" },
 ];
 
-export function SaveLargeLanguageModel() {
+export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { LargeLanguageModelId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
@@ -262,7 +262,7 @@ export function SaveLargeLanguageModel() {
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </>
   );
 }

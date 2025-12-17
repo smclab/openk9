@@ -19,7 +19,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { Filters } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveTokenFilter() {
+export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenFilterId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -170,7 +170,7 @@ export function SaveTokenFilter() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

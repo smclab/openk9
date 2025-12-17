@@ -88,7 +88,7 @@ const useQueryAnalysisData = ({
   return { ...data };
 };
 
-export function SaveQueryAnalysis() {
+export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { queryAnalysisId = "new", view } = useParams();
   const navigate = useNavigate();
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
@@ -304,7 +304,7 @@ export function SaveQueryAnalysis() {
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </>
   );
 }

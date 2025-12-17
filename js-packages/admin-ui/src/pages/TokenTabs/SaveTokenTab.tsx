@@ -55,7 +55,7 @@ enum globalQueryType {
 
 const globalQueryTypeDefaultValue = globalQueryType.MUST.toString();
 
-export function SaveTokenTab() {
+export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenTabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
@@ -317,7 +317,7 @@ export function SaveTokenTab() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

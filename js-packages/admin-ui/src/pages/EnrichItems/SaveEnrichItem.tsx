@@ -25,7 +25,7 @@ import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveEnrichItem() {
+export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { enrichItemId = "new", name, view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -226,7 +226,7 @@ export function SaveEnrichItem() {
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </>
   );
 }

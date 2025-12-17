@@ -19,7 +19,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateTokenizer } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveTokenizer() {
+export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenizerId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -170,7 +170,7 @@ export function SaveTokenizer() {
           />
         </form>
         <ConfirmModal />
-        <Recap recapData={recapSections} />
+        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
       </>
     </ContainerFluid>
   );

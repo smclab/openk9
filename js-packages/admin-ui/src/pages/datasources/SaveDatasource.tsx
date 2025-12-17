@@ -10,7 +10,8 @@ import { useDatasourceForm } from "./hooks/useDatasourceForm";
 import { useDatasourceMutations } from "./hooks/useDatasourceMutations";
 import { constructTabs, useRecoveryForm } from "./RecoveryData";
 import { FormSection, Header, TabsSection } from "./StructureDatasource";
-export function SaveDatasource() {
+
+export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
   const [areaEnabled, setAreaEnabled] = useState<Section>("card");
   const [isRecap, setIsRecap] = React.useState(false);
@@ -288,6 +289,7 @@ export function SaveDatasource() {
         setIsRecap={setIsRecap}
         handleDatasource={handleDatasource}
         isCreated={datasourceId === "new"}
+        setExtraFab={setExtraFab}
       />
     </ContainerFluid>
   );

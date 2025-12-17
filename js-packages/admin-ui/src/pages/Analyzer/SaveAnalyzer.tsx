@@ -36,7 +36,7 @@ const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = 
   { label: "Token Filters", id: "tokenFilters" },
 ];
 
-export function SaveAnalyzer() {
+export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { analyzerId = "new", view } = useParams();
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
@@ -262,7 +262,7 @@ export function SaveAnalyzer() {
                         />
                       </>
                     )}
-                    <Recap recapData={recapSections} />
+                    <Recap recapData={recapSections} setExtraFab={setExtraFab} />
                   </>
                 ),
                 page: 0,

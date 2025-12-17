@@ -39,12 +39,14 @@ export function CreateDataindex({
   verifyData,
   setVerifyData,
   isReadOnly,
+  setExtraFab,
 }: {
   dataindexData: DataindexData | null | undefined;
   setDataindexData: React.Dispatch<React.SetStateAction<DataindexData | null | undefined>>;
   verifyData: string;
   setVerifyData: React.Dispatch<React.SetStateAction<string | undefined>>;
   isReadOnly: boolean;
+  setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
   const saveAndContinueDataindex = () => {
     setVerifyData("editView");
@@ -145,9 +147,8 @@ export function CreateDataindex({
     ),
 
     originalValues: dataindexData,
-    isLoading: false, // o imposta loadingQuery se stai ancora fetchando da GraphQL
+    isLoading: false,
     onSubmit(updatedData: any) {
-      // qui puoi richiamare la mutation o il metodo di salvataggio esistente
       setDataindexData((prev) =>
         prev
           ? {
@@ -157,8 +158,6 @@ export function CreateDataindex({
           : updatedData,
       );
     },
-
-    // getValidationMessages: () => ({}),
   });
 
   const recapSections = mappingCardRecap({
@@ -523,7 +522,7 @@ export function CreateDataindex({
               dataIndex={dataindexData}
             />
           )}
-          <Recap recapData={recapSections} />
+          <Recap recapData={recapSections} setExtraFab={setExtraFab} />
         </>
       )}
     </ContainerFluid>

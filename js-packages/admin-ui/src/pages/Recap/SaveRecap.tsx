@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Box, Fade, IconButton, Paper, Typography } from "@mui/material";
+import { Badge, Box, Fade, IconButton, Paper, Popover, Typography } from "@mui/material";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
@@ -72,10 +72,17 @@ function normalizeValue(value: any, type?: RecapField["type"]) {
   return value ?? null;
 }
 
-export default function Recap({ recapData }: { recapData: RecapSingleSection[] }) {
+export default function Recap({
+  recapData,
+  setExtraFab,
+}: {
+  recapData: RecapSingleSection[];
+  setExtraFab: (fab: React.ReactNode | null) => void;
+}) {
   const [open, setOpen] = React.useState(false);
+  const [panelPos, setPanelPos] = React.useState<{ bottom: number; right: number } | null>(null);
 
-  if (!recapData?.length) return null;
+  const triggerRef = React.useRef<HTMLDivElement | null>(null);
 
   const title = recapData[0].section.sectionLabel;
   const totalFields = recapData.reduce((acc, s) => acc + s.fields.length, 0);
@@ -85,15 +92,26 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
     fields: s.fields,
   }));
 
-  return (
-    <>
+  const handleToggle = () => {
+    const el = triggerRef.current;
+    if (!el) return;
+
+    const rect = el.getBoundingClientRect();
+    const offsetY = 12;
+
+    const right = window.innerWidth - rect.right;
+    const bottom = window.innerHeight - rect.top + offsetY;
+
+    setPanelPos({ bottom, right });
+    setOpen((prev) => !prev);
+  };
+
+  React.useEffect(() => {
+    const trigger = (
       <Box
-        onClick={() => setOpen((p) => !p)}
+        ref={triggerRef}
+        onClick={handleToggle}
         sx={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          zIndex: 1300,
           borderRadius: 2,
           px: 2.5,
           py: 1.5,
@@ -128,32 +146,48 @@ export default function Recap({ recapData }: { recapData: RecapSingleSection[] }
 
         <Badge color="primary" variant="dot" />
       </Box>
+    );
 
-      <Fade in={open}>
-        <Box sx={{ position: "fixed", bottom: 100, right: 24, zIndex: 1300 }}>
-          <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                borderBottom: "1px solid",
-                borderColor: "divider",
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-            >
-              <Typography fontWeight={600}>{title}</Typography>
-              <IconButton size="small" onClick={() => setOpen(false)}>
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
+    setExtraFab(trigger);
+    return () => setExtraFab(null);
+  }, [setExtraFab, title, totalFields]);
 
-            <Box sx={{ p: 2, overflowY: "auto" }}>
-              <RecapDatasource area={areas} />
-            </Box>
-          </Paper>
-        </Box>
-      </Fade>
+  return (
+    <>
+      {open && panelPos && (
+        <Fade in={open}>
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: panelPos.bottom,
+              right: panelPos.right,
+              zIndex: 1300,
+            }}
+          >
+            <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <Typography fontWeight={600}>{title}</Typography>
+                <IconButton size="small" onClick={() => setOpen(false)}>
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <Box sx={{ p: 2, overflowY: "auto" }}>
+                <RecapDatasource area={areas} />
+              </Box>
+            </Paper>
+          </Box>
+        </Fade>
+      )}
     </>
   );
 }

@@ -21,7 +21,7 @@ import { useConfirmModal } from "../../utils/useConfirmModal";
 import { RagConfigurationQuery } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveRagConfiguration() {
+export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { ragConfigId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const navigate = useNavigate();
@@ -280,7 +280,7 @@ export function SaveRagConfiguration() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }

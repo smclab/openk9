@@ -35,7 +35,7 @@ import {
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveDocumentTypeTemplate() {
+export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { documentTypeTemplateId = "new", name, view } = useParams();
 
   const [page, setPage] = React.useState(0);
@@ -259,7 +259,7 @@ export function SaveDocumentTypeTemplate() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </Box>
   );
 }

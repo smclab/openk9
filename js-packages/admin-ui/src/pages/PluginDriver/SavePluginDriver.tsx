@@ -53,10 +53,12 @@ export const SavePluginnDriverModel = React.forwardRef(
       isConnector,
       customButtonModalStyle,
       onSubmitSuccess,
+      setExtraFab,
     }: {
       isConnector?: boolean;
       customButtonModalStyle?: any;
       onSubmitSuccess?: () => void;
+      setExtraFab: (fab: React.ReactNode | null) => void;
     },
     ref: React.Ref<{ submit: () => void }>,
   ) => {
@@ -504,7 +506,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             />
           </form>
           <ConfirmModal />
-          <Recap recapData={recapSections} />
+          <Recap recapData={recapSections} setExtraFab={setExtraFab} />
         </>
         {viewDeleteModal.view && (
           <ModalConfirm

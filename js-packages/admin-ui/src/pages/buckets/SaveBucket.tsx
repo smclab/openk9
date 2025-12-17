@@ -67,7 +67,7 @@ const sxControl = {
   },
 };
 
-export function SaveBucket() {
+export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { bucketId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const isRecap = page === 1;
@@ -566,7 +566,7 @@ export function SaveBucket() {
                         }
                       />
                     </Box>
-                    <Recap recapData={recapSections} />
+                    <Recap recapData={recapSections} setExtraFab={setExtraFab} />
                   </>
                 ),
                 page: 0,

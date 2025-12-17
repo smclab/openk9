@@ -20,7 +20,7 @@ import { formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ReturnUserTabData } from "./gql";
 
-export function SaveTab() {
+export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const tabQuery = useTabQuery({
@@ -201,7 +201,7 @@ export function SaveTab() {
             fieldsControll={["name"]}
           />
         </form>
-        <Recap recapData={recapSections} />
+        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
       </>
       <ConfirmModal />
     </ContainerFluid>

@@ -25,7 +25,7 @@ import {
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveAnnotator() {
+export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { annotatorId = "new", view } = useParams();
   const annotatorQuery = useAnnotatorQuery({
     variables: { id: annotatorId as string },
@@ -314,7 +314,7 @@ export function SaveAnnotator() {
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
     </ContainerFluid>
   );
 }
