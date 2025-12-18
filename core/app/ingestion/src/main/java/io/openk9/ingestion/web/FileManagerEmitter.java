@@ -74,78 +74,73 @@ public class FileManagerEmitter {
 
 						try {
 
-							String data = binaryDTO.getData();
+							byte[] data = binaryDTO.getData();
 
 							String fileId = binaryDTO.getId();
 
-							if (!data.isEmpty()) {
+							InputStream inputStream =
+								new BufferedInputStream(
+									new ByteArrayInputStream(data));
 
-								byte[] contentBytes =
-									Base64.getDecoder().decode(data);
+							var uploadUni = fileManagerClient.upload(
+								datasourceId,
+								fileId,
+								schemaName,
+								inputStream
+							).map(resourceId -> {
 
-								InputStream inputStream =
-									new BufferedInputStream(
-										new ByteArrayInputStream(contentBytes));
+								BinaryDTO newBinaryDTO = new BinaryDTO();
+								newBinaryDTO.setId(fileId);
+								newBinaryDTO.setName(binaryDTO.getName());
+								newBinaryDTO.setContentType(
+									binaryDTO.getContentType());
+								newBinaryDTO.setResourceId(resourceId);
 
-								var uploadUni = fileManagerClient.upload(
-									datasourceId,
-									fileId,
-									schemaName,
-									inputStream
-								).map(resourceId -> {
+								return newBinaryDTO;
+							}).invoke(newBinaryDTO -> {
 
-									BinaryDTO newBinaryDTO = new BinaryDTO();
-									newBinaryDTO.setId(fileId);
-									newBinaryDTO.setName(binaryDTO.getName());
-									newBinaryDTO.setContentType(
-										binaryDTO.getContentType());
-									newBinaryDTO.setResourceId(resourceId);
+								if (ingestionDTO.getResources().isSplitBinaries()) {
 
-									return newBinaryDTO;
-								}).invoke(newBinaryDTO -> {
+									IngestionDTO newIngestionDto =
+										new IngestionDTO();
 
-									if (ingestionDTO.getResources().isSplitBinaries()) {
+									ResourcesDTO newResourcesDTO =
+										new ResourcesDTO();
+									List<BinaryDTO> singeBinariesList =
+										new ArrayList<>();
+									singeBinariesList.add(newBinaryDTO);
 
-										IngestionDTO newIngestionDto =
-											new IngestionDTO();
+									newResourcesDTO.setBinaries(
+										singeBinariesList);
 
-										ResourcesDTO newResourcesDTO =
-											new ResourcesDTO();
-										List<BinaryDTO> singeBinariesList =
-											new ArrayList<>();
-										singeBinariesList.add(newBinaryDTO);
+									newIngestionDto.setResources(
+										newResourcesDTO);
+									newIngestionDto.setContentId(fileId);
+									newIngestionDto.setAcl(
+										ingestionDTO.getAcl());
+									newIngestionDto.setDatasourceId(
+										ingestionDTO.getDatasourceId());
+									newIngestionDto.setScheduleId(
+										ingestionDTO.getScheduleId());
+									newIngestionDto.setParsingDate(
+										ingestionDTO.getParsingDate());
+									newIngestionDto.setRawContent("");
 
-										newResourcesDTO.setBinaries(
-											singeBinariesList);
+									Map<String, Object> datasourcePayload =
+										new HashMap<>();
+									datasourcePayload.put(
+										"file",
+										new JsonObject()
+									);
+									newIngestionDto.setDatasourcePayload(
+										datasourcePayload);
 
-										newIngestionDto.setResources(
-											newResourcesDTO);
-										newIngestionDto.setContentId(fileId);
-										newIngestionDto.setAcl(
-											ingestionDTO.getAcl());
-										newIngestionDto.setDatasourceId(
-											ingestionDTO.getDatasourceId());
-										newIngestionDto.setScheduleId(
-											ingestionDTO.getScheduleId());
-										newIngestionDto.setParsingDate(
-											ingestionDTO.getParsingDate());
-										newIngestionDto.setRawContent("");
+									emitter.emit(newIngestionDto);
+								}
+							});
 
-										Map<String, Object> datasourcePayload =
-											new HashMap<>();
-										datasourcePayload.put(
-											"file",
-											new JsonObject()
-										);
-										newIngestionDto.setDatasourcePayload(
-											datasourcePayload);
+							uploadUnis.add(uploadUni);
 
-										emitter.emit(newIngestionDto);
-									}
-								});
-
-								uploadUnis.add(uploadUni);
-							}
 						} catch (NoSuchQueueException e) {
 							throw e;
 						} catch (Exception e) {
