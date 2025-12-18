@@ -22,22 +22,22 @@ export function OpenK9Client() {
 
 		return fetch(resolveTenantUrl(route), { ...init, headers });
 	}
-	console.log(resolveTenantUrl);
 	return {
 		authInit: keycloakInit,
 
 		async authenticate() {
-			await kc.login();
+			await keycloakInit;
+			return kc.login();
 		},
 
 		async deauthenticate() {
-			await kc.logout();
+			await keycloakInit;
+			return kc.logout();
 		},
 
-		async getUserProfile(): Promise<{ name?: string } | undefined | null> {
-			if (!kc.authenticated) {
-				throw new Error("User is not authenticated");
-			}
+		async getUserProfile() {
+			await keycloakInit;
+			if (!kc.authenticated) throw new Error("User is not authenticated");
 			return kc.loadUserInfo();
 		},
 
