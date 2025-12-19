@@ -35,7 +35,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 import jakarta.inject.Named;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
@@ -57,6 +56,7 @@ public class TextQueryParser implements QueryParser {
 	public static final String VALUES_QUERY_TYPE = "valuesQueryType";
 	public static final String MULTI_MATCH_TYPE = "multiMatchType";
 	public static final String TIE_BREAKER = "tieBreaker";
+	public static final String ALLOW_PHRASE_MATCH_TYPE = "allowPhraseMatchType";
 
 	// use 0 or a negative value to disable maximum text query length enforcement
 	@ConfigProperty(
@@ -126,6 +126,8 @@ public class TextQueryParser implements QueryParser {
 
 			org.opensearch.common.unit.Fuzziness fuzziness = getFuzziness(token, jsonConfig);
 
+			boolean allowPhraseMatchType = isAllowPraseMatchType(token, jsonConfig);
+
 			QueryType valuesQueryType = getValuesQueryType(token, jsonConfig);
 
 			for (String value : values) {
@@ -162,7 +164,7 @@ public class TextQueryParser implements QueryParser {
 
 				}
 
-				if (length > 1) {
+				if (length > 1 && allowPhraseMatchType) {
 
 					MultiMatchQueryBuilder multiMatchQueryBuilder =
 						new MultiMatchQueryBuilder(value);
@@ -183,7 +185,6 @@ public class TextQueryParser implements QueryParser {
 							tokenClauseBuilder, multiMatchQueryBuilder);
 
 				}
-
 			}
 
 			doAddTokenClause(token, jsonConfig, mutableQuery, tokenClauseBuilder);
@@ -209,8 +210,7 @@ public class TextQueryParser implements QueryParser {
 
 		if (!language.equals(Language.NONE)) {
 			return isI18nOrNotBase(fieldPath, language);
-		}
-		else {
+		} else {
 			return isBaseOrNotI18n(fieldPath);
 		}
 	}
@@ -221,7 +221,7 @@ public class TextQueryParser implements QueryParser {
 
 	private static boolean isI18nOrNotBase(String fieldPath, String language) {
 		return fieldPath.contains(".i18n." + language)
-			   || !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
+			|| !fieldPath.contains(".base") && !fieldPath.contains(".i18n");
 	}
 
 	protected static float getBoost(
@@ -256,6 +256,13 @@ public class TextQueryParser implements QueryParser {
 			.orElse(Fuzziness.ZERO)
 		);
 
+	}
+
+	private static boolean isAllowPraseMatchType(
+		ParserSearchToken token, JsonObject jsonConfig) {
+
+		return ParserContext.getBoolean(token, jsonConfig, ALLOW_PHRASE_MATCH_TYPE)
+			.orElse(true);
 	}
 
 	private MultiMatchQueryBuilder.Type getMultiMatchType(
