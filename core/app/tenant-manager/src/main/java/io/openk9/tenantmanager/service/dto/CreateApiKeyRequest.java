@@ -15,10 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.model;
+package io.openk9.tenantmanager.service.dto;
 
-public enum EventType {
-	TENANT_CREATED,
-	TENANT_UPDATED,
-	TENANT_DELETED
+import java.time.OffsetDateTime;
+import java.util.List;
+
+import io.openk9.tenantmanager.model.Route;
+
+public record CreateApiKeyRequest(
+	String tenantId,
+	String name,
+	List<Route> routes,
+	OffsetDateTime expirationDate
+) {
+
+	public static CreateApiKeyRequest of(
+		String tenantId,
+		String name,
+		List<Route> routes,
+		OffsetDateTime expirationDate) {
+
+		return new CreateApiKeyRequest(tenantId, name, routes, expirationDate);
+	}
 }

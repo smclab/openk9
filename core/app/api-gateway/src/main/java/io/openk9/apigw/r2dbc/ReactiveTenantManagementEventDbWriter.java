@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import io.openk9.event.tenant.Authorization;
+import io.openk9.event.tenant.AuthorizationScheme;
 import io.openk9.event.tenant.ReactiveTenantManagementEventConsumer;
-import io.openk9.event.tenant.Route;
+import io.openk9.event.tenant.RouteGroup;
 import io.openk9.event.tenant.TenantManagementEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -55,11 +55,11 @@ public class ReactiveTenantManagementEventDbWriter
 	public Publisher<Void> handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event) {
 		log.info("Received tenant created event: {}", event.tenantId());
 
-		Map<Route, Authorization> routeAuthorizationMap = event.routeAuthorizationMap();
+		Map<RouteGroup, AuthorizationScheme> routeAuthorizationMap = event.routeAuthorizationMap();
 
 		List<Mono<Void>> routeSecurityInserts = new ArrayList<>();
 		if (routeAuthorizationMap != null) {
-			for (Map.Entry<Route, Authorization> entry : routeAuthorizationMap.entrySet()) {
+			for (Map.Entry<RouteGroup, AuthorizationScheme> entry : routeAuthorizationMap.entrySet()) {
 				routeSecurityInserts.add(writeService.insertRouteSecurity(
 					event.tenantId(), entry.getKey(), entry.getValue()));
 			}

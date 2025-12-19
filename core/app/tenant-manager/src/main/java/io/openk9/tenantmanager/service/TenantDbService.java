@@ -30,8 +30,8 @@ import jakarta.validation.Validator;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.common.util.web.Response;
 import io.openk9.common.util.web.ResponseUtil;
-import io.openk9.event.tenant.Authorization;
-import io.openk9.event.tenant.Route;
+import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.AuthorizationScheme;
 import io.openk9.event.tenant.TenantManagementEvent;
 import io.openk9.event.tenant.TenantManagementEventProducer;
 import io.openk9.tenantmanager.dto.SchemaTuple;
@@ -59,7 +59,11 @@ public class TenantDbService {
 			.execute(Tuple.of(id))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
-			.onItem().transform(iterator -> iterator.hasNext() ? mapTenantResponseDTO((Row)iterator.next()) : null);
+			.onItem()
+			.transform(iterator -> iterator.hasNext()
+				? mapTenantResponseDTO((Row)iterator.next())
+				: null
+			);
 	}
 
 	public Uni<TenantResponseDTO> persist(
@@ -94,9 +98,9 @@ public class TenantDbService {
 							.clientId(clientId)
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
-								Route.DATASOURCE, Authorization.OAUTH2,
-								Route.SEARCHER, Authorization.NO_AUTH,
-								Route.RAG, Authorization.NO_AUTH
+								RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+								RouteGroup.SEARCHER, AuthorizationScheme.NO_AUTH,
+								RouteGroup.RAG, AuthorizationScheme.NO_AUTH
 							))
 							.build()
 					)
@@ -183,6 +187,14 @@ public class TenantDbService {
 	public Uni<TenantResponseDTO> findTenantByVirtualHost(String virtualHost) {
 		return pool.preparedQuery(FETCH_BY_VIRTUAL_HOST)
 			.execute(Tuple.of(virtualHost))
+			.map(RowSet::getDelegate)
+			.map(io.vertx.sqlclient.RowSet::iterator)
+			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row)it.next()) : null);
+	}
+
+	public Uni<TenantResponseDTO> findTenantByTenantId(String tenantId) {
+		return pool.preparedQuery(FETCH_BY_TENANT_ID)
+			.execute(Tuple.of(tenantId))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
 			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row)it.next()) : null);
@@ -276,6 +288,7 @@ public class TenantDbService {
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
 	private static final String FETCH_BY_VIRTUAL_HOST = "SELECT * FROM tenant WHERE virtual_host = $1";
+	private static final String FETCH_BY_TENANT_ID = "SELECT * FROM tenant WHERE tenant_id = $1";
 	private static final String FETCH_ALL_SCHEMA_NAME_SQL = "SELECT schema_name FROM tenant";
 	private static final String FETCH_ALL_SCHEMA_NAMES_SQL = "SELECT schema_name, liquibase_schema_name FROM tenant";
 	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";

@@ -22,8 +22,8 @@ import java.util.Objects;
 import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.RoutePath;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
-import io.openk9.event.tenant.Authorization;
-import io.openk9.event.tenant.Route;
+import io.openk9.event.tenant.AuthorizationScheme;
+import io.openk9.event.tenant.RouteGroup;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -174,22 +174,22 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	/**
-	 * Insert a new route security configuration into the database.
+	 * Insert a new routeGroup security configuration into the database.
 	 *
 	 * @param tenantId the tenant identifier
-	 * @param route the route pattern
+	 * @param routeGroup the routeGroup pattern
 	 * @param authorizationScheme the authorization scheme (OAUTH2, API_KEY, NO_AUTH)
 	 * @return Mono that completes when insertion is done
 	 */
 	public Mono<Void> insertRouteSecurity(
-		String tenantId, Route route, Authorization authorizationScheme) {
+		String tenantId, RouteGroup routeGroup, AuthorizationScheme authorizationScheme) {
 
 		Objects.requireNonNull(tenantId);
-		String routePath = mapRoute(route);
+		String routePath = mapRoute(routeGroup);
 		String authScheme = mapAuthorization(authorizationScheme);
 
 		log.debug(
-			"Inserting route security {route: {}, scheme: {}} for tenantId: {}",
+			"Inserting routeGroup security {routeGroup: {}, scheme: {}} for tenantId: {}",
 			routePath, authScheme, tenantId);
 
 		long id = idGenerator.nextId();
@@ -202,13 +202,15 @@ public class TenantWriteServiceR2dbc {
 
 		return stmt.then()
 			.doOnSuccess(v -> log.info(
-				"Successfully inserted route security for tenantId: {}", tenantId))
+				"Successfully inserted routeGroup security for tenantId: {}", tenantId))
 			.doOnError(DuplicateKeyException.class, e -> log.warn(
-				"Insert discarded because RouteSecurity with tenantId: {} and route: {} is already created",
-				tenantId, route))
+				"Insert discarded because RouteSecurity with tenantId: {} and routeGroup: {} is already created",
+				tenantId,
+				routeGroup
+			))
 			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
-				"Failed to insert route security for tenantId: {}", tenantId, e));
+				"Failed to insert routeGroup security for tenantId: {}", tenantId, e));
 	}
 
 	/**
@@ -282,32 +284,32 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	/**
-	 * Delete a route security configuration by its ID.
+	 * Delete a routeGroup security configuration by its ID.
 	 *
-	 * @param id the route security ID to delete
+	 * @param id the routeGroup security ID to delete
 	 * @return Mono that completes when deletion is done
 	 */
 	public Mono<Void> deleteRouteSecurity(Long id) {
-		log.debug("Deleting route security: id={}", id);
+		log.debug("Deleting routeGroup security: id={}", id);
 
 		return dbClient.sql(DELETE_ROUTE_SECURITY_SQL)
 			.bind("id", id)
 			.then()
-			.doOnSuccess(v -> log.info("Successfully deleted route security: {}", id))
-			.doOnError(e -> log.error("Failed to delete route security: {}", id, e));
+			.doOnSuccess(v -> log.info("Successfully deleted routeGroup security: {}", id))
+			.doOnError(e -> log.error("Failed to delete routeGroup security: {}", id, e));
 	}
 
-	private static String mapRoute(Route route) {
-		return (switch (route) {
-			case DATASOURCE -> RoutePath.DATASOURCE;
+	private static String mapRoute(RouteGroup routeGroup) {
+		return (switch (routeGroup) {
+			case ADMINISTRATION -> RoutePath.DATASOURCE;
 			case SEARCHER -> RoutePath.SEARCHER;
 			case RAG -> RoutePath.RAG;
 			case ANY -> RoutePath.ANY;
 		}).name();
 	}
 
-	private static String mapAuthorization(Authorization authorization) {
-		return (switch (authorization) {
+	private static String mapAuthorization(AuthorizationScheme authorizationScheme) {
+		return (switch (authorizationScheme) {
 			case OAUTH2 -> AuthorizationSchemeToken.OAUTH2;
 			case API_KEY -> AuthorizationSchemeToken.API_KEY;
 			case NO_AUTH -> AuthorizationSchemeToken.NO_AUTH;

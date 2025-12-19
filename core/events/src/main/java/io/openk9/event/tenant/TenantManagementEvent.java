@@ -45,7 +45,7 @@ sealed public interface TenantManagementEvent {
 		String issuerUri,
 		String clientId,
 		String clientSecret,
-		Map<Route, Authorization> routeAuthorizationMap)
+		Map<RouteGroup, AuthorizationScheme> routeAuthorizationMap)
 		implements TenantManagementEvent {}
 
 	/**

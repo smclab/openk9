@@ -20,8 +20,8 @@ package io.openk9.apigw.mock;
 import java.util.List;
 import java.util.Map;
 
-import io.openk9.event.tenant.Authorization;
-import io.openk9.event.tenant.Route;
+import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.AuthorizationScheme;
 import io.openk9.event.tenant.TenantManagementEvent;
 
 public class MockEvents {
@@ -34,7 +34,7 @@ public class MockEvents {
 				.schemaName("loguetown")
 				.hostName("loguetown.localhost")
 				.routeAuthorizationMap(Map.of(
-					Route.DATASOURCE, Authorization.API_KEY
+					RouteGroup.ADMINISTRATION, AuthorizationScheme.API_KEY
 				))
 				.build(),
 
@@ -45,8 +45,8 @@ public class MockEvents {
 				.issuerUri("http://drum.localhost:9090/realms/drum")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					Route.DATASOURCE, Authorization.OAUTH2,
-					Route.SEARCHER, Authorization.OAUTH2))
+					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+					RouteGroup.SEARCHER, AuthorizationScheme.OAUTH2))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()
@@ -56,8 +56,8 @@ public class MockEvents {
 				.issuerUri("http://alabasta.localhost:9090/realms/alabasta")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					Route.DATASOURCE, Authorization.OAUTH2,
-					Route.SEARCHER, Authorization.API_KEY))
+					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+					RouteGroup.SEARCHER, AuthorizationScheme.API_KEY))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()
@@ -67,8 +67,8 @@ public class MockEvents {
 				.issuerUri("http://sabaody.localhost:9090/realms/sabaody")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					Route.DATASOURCE, Authorization.API_KEY,
-					Route.SEARCHER, Authorization.API_KEY))
+					RouteGroup.ADMINISTRATION, AuthorizationScheme.API_KEY,
+					RouteGroup.SEARCHER, AuthorizationScheme.API_KEY))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()

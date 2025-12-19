@@ -231,10 +231,28 @@ public class ApiKeys {
 		if (idx == -1 || idx == apiKey.length() - 1) {
 			return false;
 		}
-		String withoutChecksum = apiKey.substring(0, idx);
 		String checksum = apiKey.substring(idx + 1);
 
+		String withoutChecksum = apiKey.substring(0, idx);
+
 		return checksumHex(withoutChecksum).equals(checksum);
+	}
+
+	/**
+	 * Extract the checksum from the given ApiKey.
+	 * If the given ApiKey doesn't contain a checksum part, it returns null.
+	 *
+	 * @param apiKey The apiKey String from which the checksum is obtained.
+	 * @return the checksum hex string.
+	 */
+	public static String getChecksum(String apiKey) {
+		var parts = apiKey.split(String.valueOf(KEY_PART_SEPARATOR));
+
+		if (parts.length < 3) {
+			return null;
+		}
+
+		return parts[parts.length - 1];
 	}
 
 	/**

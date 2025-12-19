@@ -18,62 +18,74 @@
 package io.openk9.tenantmanager.model;
 
 import java.util.List;
+import java.util.Set;
 
 public record Preconfiguration(
 	PreconfigurationType name, List<Config> configs) {
 
-	public record Config(Route route, AuthScheme authScheme) {}
+	public static Preconfiguration of(
+		PreconfigurationType name, List<Config> configs) {
 
-	public static final List<Preconfiguration> PRECONFIGURATIONS =
-			List.of(
-				new Preconfiguration(
+		return new Preconfiguration(name, configs);
+	}
+
+	public record Config(Route route, AuthScheme authScheme) {
+
+		public static Config of(Route route, AuthScheme authScheme) {
+			return new Config(route, authScheme);
+		}
+	}
+
+	public static final Set<Preconfiguration> PRECONFIGURATIONS =
+			Set.of(
+				Preconfiguration.of(
 					PreconfigurationType.LEGACY,
 					List.of(
-						new Config(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						new Config(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
-						new Config(Route.SEARCHER, AuthScheme.OPEN),
-						new Config(Route.RAG, AuthScheme.OPEN),
-						new Config(Route.INGESTION, AuthScheme.OPEN)
+						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
+						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
+						Config.of(Route.SEARCHER, AuthScheme.OPEN),
+						Config.of(Route.RAG, AuthScheme.OPEN),
+						Config.of(Route.INGESTION, AuthScheme.OPEN)
 					)
 				),
-				new Preconfiguration(
+				Preconfiguration.of(
 					PreconfigurationType.PROFILED_LEGACY,
 					List.of(
-						new Config(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						new Config(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
-						new Config(Route.SEARCHER, AuthScheme.OAUTH2),
-						new Config(Route.RAG, AuthScheme.OAUTH2),
-						new Config(Route.INGESTION, AuthScheme.OPEN)
+						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
+						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
+						Config.of(Route.SEARCHER, AuthScheme.OAUTH2),
+						Config.of(Route.RAG, AuthScheme.OAUTH2),
+						Config.of(Route.INGESTION, AuthScheme.OPEN)
 					)
 				),
-				new Preconfiguration(
+				Preconfiguration.of(
 					PreconfigurationType.PROFILED,
 					List.of(
-						new Config(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						new Config(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						new Config(Route.SEARCHER, AuthScheme.OAUTH2),
-						new Config(Route.RAG, AuthScheme.OAUTH2),
-						new Config(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
+						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
+						Config.of(Route.SEARCHER, AuthScheme.OAUTH2),
+						Config.of(Route.RAG, AuthScheme.OAUTH2),
+						Config.of(Route.INGESTION, AuthScheme.API_KEY)
 					)
 				),
-				new Preconfiguration(
+				Preconfiguration.of(
 					PreconfigurationType.PUBLIC_USAGE,
 					List.of(
-						new Config(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						new Config(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						new Config(Route.SEARCHER, AuthScheme.API_KEY),
-						new Config(Route.RAG, AuthScheme.API_KEY),
-						new Config(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
+						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
+						Config.of(Route.SEARCHER, AuthScheme.API_KEY),
+						Config.of(Route.RAG, AuthScheme.API_KEY),
+						Config.of(Route.INGESTION, AuthScheme.API_KEY)
 					)
 				),
-				new Preconfiguration(
+				Preconfiguration.of(
 					PreconfigurationType.API_KEY_ONLY,
 					List.of(
-						new Config(Route.DATASOURCE_ADMIN, AuthScheme.API_KEY),
-						new Config(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						new Config(Route.SEARCHER, AuthScheme.API_KEY),
-						new Config(Route.RAG, AuthScheme.API_KEY),
-						new Config(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.API_KEY),
+						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
+						Config.of(Route.SEARCHER, AuthScheme.API_KEY),
+						Config.of(Route.RAG, AuthScheme.API_KEY),
+						Config.of(Route.INGESTION, AuthScheme.API_KEY)
 					)
 				)
 			)

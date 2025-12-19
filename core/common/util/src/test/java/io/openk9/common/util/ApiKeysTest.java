@@ -58,7 +58,9 @@ public class ApiKeysTest {
 		assertTrue(key.startsWith(DEFAULT_KEY_PREFIX + KEY_PART_SEPARATOR));
 		assertFalse(key.endsWith("_")); // should not end with separator
 
-		assertEquals("pp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".length(), key.length());
+		assertEquals(
+			"pp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx".length(),
+			key.length());
 	}
 
 	@Test

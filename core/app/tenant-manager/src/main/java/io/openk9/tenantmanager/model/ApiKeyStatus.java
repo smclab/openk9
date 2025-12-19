@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.event.tenant;
+package io.openk9.tenantmanager.model;
 
-public enum Route {
-	DATASOURCE,
-	SEARCHER,
-	RAG,
-	ANY
+public enum ApiKeyStatus {
+
+	ACTIVE,
+	REVOKED,
+	EXPIRED
+
 }
