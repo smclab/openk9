@@ -46,6 +46,7 @@ from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
 from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
 from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
@@ -91,6 +92,7 @@ class ModelType(Enum):
     OLLAMA = "ollama"
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
+    HUGGING_FACE = "hugging_face"
 
 
 def save_google_application_credentials(credentials, credentials_file_path="./"):
@@ -204,6 +206,12 @@ def initialize_embedding_model(configuration):
             model = configuration.get("model")
 
             embeddings = VertexAIEmbeddings(model_name=model, project=project_id)
+        case ModelType.HUGGING_FACE.value:
+            embeddings = HuggingFaceEmbeddings(model_name=model)
+            logger.info(
+                "Hugging face model %s loaded.",
+                model,
+            )
         case _:
             embeddings = OpenAIEmbeddings(model=model)
 

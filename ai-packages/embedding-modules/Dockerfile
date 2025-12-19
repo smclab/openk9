@@ -8,8 +8,8 @@ RUN mkdir -p /embedding_module  && \
 mkdir -p /var/log/openk9
 WORKDIR /embedding_module/
 
-COPY app/base/requirements.base.txt ./requirements.txt
-COPY app/base/requirements_cpu.base.txt ./requirements_cpu.txt
+COPY app/requirements.txt ./requirements.txt
+COPY app/requirements_cpu.txt ./requirements_cpu.txt
 COPY app/external_services/grpc/embedding/embedding.proto ./
 
 RUN echo "$MODE" && \
@@ -24,7 +24,7 @@ COPY app/text_splitters/derived_text_splitter.py ./
 COPY app/text_splitters/character_text_splitter.py ./
 COPY app/text_splitters/token_text_splitter.py ./
 COPY app/utils/text_cleaner.py ./
-COPY app/base/server.base.py ./server.py
+COPY app/server.py ./server.py
 
 EXPOSE 5000
 
