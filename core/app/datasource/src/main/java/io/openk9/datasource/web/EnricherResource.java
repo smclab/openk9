@@ -85,7 +85,7 @@ public class EnricherResource {
 		}
 	)
 	@POST
-	@Path("/health/")
+	@Path("/health")
 	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
 		return service.getHealth(resourceUri);
 	}
