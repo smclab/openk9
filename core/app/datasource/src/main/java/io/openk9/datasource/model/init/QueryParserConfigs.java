@@ -446,6 +446,7 @@ public class QueryParserConfigs {
 				"valuesQueryType": "SHOULD",
 				"globalQueryType": "MUST",
 				"fuzziness": "ZERO",
+				"allowPhraseMatchType": true,
 				"multiMatchType": "MOST_FIELDS",
 				"tieBreaker": 0.0
 			}
@@ -520,6 +521,19 @@ public class QueryParserConfigs {
 					.build()
 				)
 				.type(FormFieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("allowPhraseMatchType")
+				.label("Allow Phrase Match Type")
+				.value(FieldValue.builder()
+					.value(true)
+					.isDefault(true)
+					.build())
+				.value(FieldValue.builder()
+					.value(false)
+					.build())
+				.type(FormFieldType.CHECKBOX)
 				.build()
 			)
 			.field(FormField.builder()
