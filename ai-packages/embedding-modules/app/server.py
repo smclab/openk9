@@ -158,7 +158,7 @@ def initialize_embedding_model(configuration):
             - "model_type": str
                 The type of model to instantiate. Should match one of the values defined
                 in the ModelType enumeration (e.g., 'OPENAI', 'OLLAMA', 'IBM_WATSONX',
-                'CHAT_VERTEX_AI').
+                'CHAT_VERTEX_AI', 'HUGGING_FACE).
             - "model": str
                 Name of the model to use; defaults to DEFAULT_MODEL if not provided.
             - "watsonx_project_id": str
