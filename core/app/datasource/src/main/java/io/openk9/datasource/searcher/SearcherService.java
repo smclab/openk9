@@ -162,7 +162,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	/**
 	 * This value is only used if the associated {@link SearchConfig} entity
-	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
 	 * from SearchConfig takes priority.
 	 *
 	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
@@ -177,7 +177,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	/**
 	 * This value is only used if the associated {@link SearchConfig} entity
-	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
 	 * from SearchConfig takes priority.
 	 *
 	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
@@ -1464,11 +1464,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		searchSourceBuilder.trackTotalHits(true);
 
-		var maxSearchPageFrom =  bucket.getSearchConfig().getMaxSearchPageFrom() != null
+		var maxSearchPageFrom = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxSearchPageFrom() != null)
 			? bucket.getSearchConfig().getMaxSearchPageFrom()
 			: defaultMaxSearchPageFrom;
 
-		var maxSearchPageSize = bucket.getSearchConfig().getMaxSearchPageSize() != null
+		var maxSearchPageSize = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxSearchPageSize() != null)
 			? bucket.getSearchConfig().getMaxSearchPageSize()
 			: defaultMaxSearchPageSize;
 

@@ -61,7 +61,7 @@ public class TextQueryParser implements QueryParser {
 
 	/**
 	 * This value is only used if the associated {@link SearchConfig} entity
-	 * does not have a configured value (is {@code null}). Otherwise, the value
+	 * with {@link Bucket} does not have a configured value (is {@code null}). Otherwise, the value
 	 * from SearchConfig takes priority.
 	 *
 	 * @deprecated Configure the value directly in the {@link SearchConfig} entity.
