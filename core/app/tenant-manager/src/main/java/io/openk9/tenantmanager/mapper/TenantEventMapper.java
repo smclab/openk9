@@ -15,23 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.model;
+package io.openk9.tenantmanager.mapper;
 
-import lombok.Getter;
+import io.openk9.event.tenant.RouteGroup;
+import io.openk9.tenantmanager.model.TenantRouteGroup;
 
-public enum Route {
+public class TenantEventMapper {
 
-	DATASOURCE_ADMIN("/api/datasource/graphql"),
-	DATASOURCE_PUBLIC("/api/datasource/buckets/current/**"),
-	SEARCHER("/api/searcher/**"),
-	RAG("/api/rag/**"),
-	INGESTION("/api/ingestion/**");
-
-	@Getter
-	private final String path;
-
-	Route(String path) {
-		this.path = path;
+	public static TenantRouteGroup map(RouteGroup routeGroup) {
+		return switch (routeGroup) {
+			case ADMINISTRATION -> null;
+			case SEARCH -> null;
+			case PUBLIC -> null;
+		};
 	}
 
 }

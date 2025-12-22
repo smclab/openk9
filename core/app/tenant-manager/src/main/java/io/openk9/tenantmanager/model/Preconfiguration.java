@@ -29,10 +29,10 @@ public record Preconfiguration(
 		return new Preconfiguration(name, configs);
 	}
 
-	public record Config(Route route, AuthScheme authScheme) {
+	public record Config(TenantRouteGroup tenantRouteGroup, AuthScheme authScheme) {
 
-		public static Config of(Route route, AuthScheme authScheme) {
-			return new Config(route, authScheme);
+		public static Config of(TenantRouteGroup tenantRouteGroup, AuthScheme authScheme) {
+			return new Config(tenantRouteGroup, authScheme);
 		}
 	}
 
@@ -41,51 +41,46 @@ public record Preconfiguration(
 				Preconfiguration.of(
 					PreconfigurationType.LEGACY,
 					List.of(
-						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
-						Config.of(Route.SEARCHER, AuthScheme.OPEN),
-						Config.of(Route.RAG, AuthScheme.OPEN),
-						Config.of(Route.INGESTION, AuthScheme.OPEN)
+						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.OPEN),
+						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OPEN),
+						Config.of(TenantRouteGroup.INGESTION, AuthScheme.OPEN)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PROFILED_LEGACY,
 					List.of(
-						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.OPEN),
-						Config.of(Route.SEARCHER, AuthScheme.OAUTH2),
-						Config.of(Route.RAG, AuthScheme.OAUTH2),
-						Config.of(Route.INGESTION, AuthScheme.OPEN)
+						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.OPEN),
+						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.INGESTION, AuthScheme.OPEN)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PROFILED,
 					List.of(
-						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						Config.of(Route.SEARCHER, AuthScheme.OAUTH2),
-						Config.of(Route.RAG, AuthScheme.OAUTH2),
-						Config.of(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PUBLIC_USAGE,
 					List.of(
-						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.OAUTH2),
-						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						Config.of(Route.SEARCHER, AuthScheme.API_KEY),
-						Config.of(Route.RAG, AuthScheme.API_KEY),
-						Config.of(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
+						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.API_KEY_ONLY,
 					List.of(
-						Config.of(Route.DATASOURCE_ADMIN, AuthScheme.API_KEY),
-						Config.of(Route.DATASOURCE_PUBLIC, AuthScheme.API_KEY),
-						Config.of(Route.SEARCHER, AuthScheme.API_KEY),
-						Config.of(Route.RAG, AuthScheme.API_KEY),
-						Config.of(Route.INGESTION, AuthScheme.API_KEY)
+						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.API_KEY),
+						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
 					)
 				)
 			)

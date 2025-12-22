@@ -300,11 +300,11 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	private static String mapRoute(RouteGroup routeGroup) {
+		// todo expand the routes
 		return (switch (routeGroup) {
 			case ADMINISTRATION -> RoutePath.DATASOURCE;
-			case SEARCHER -> RoutePath.SEARCHER;
-			case RAG -> RoutePath.RAG;
-			case ANY -> RoutePath.ANY;
+			case SEARCH -> RoutePath.SEARCHER;
+			case PUBLIC -> RoutePath.ANY;
 		}).name();
 	}
 

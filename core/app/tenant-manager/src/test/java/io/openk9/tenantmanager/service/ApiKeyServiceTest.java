@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import io.openk9.tenantmanager.model.Route;
+import io.openk9.tenantmanager.model.TenantRouteGroup;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyResponse;
 
@@ -40,12 +40,15 @@ public class ApiKeyServiceTest {
 
 		String tenantId = "pikachu";
 		String name = "Search APIs";
-		List<Route> routes = List.of(
-			Route.DATASOURCE_PUBLIC, Route.SEARCHER, Route.RAG);
 		OffsetDateTime expirationDate = OffsetDateTime.now().plusMonths(6);
 
 		CreateApiKeyRequest createApiKeyRequest =
-			CreateApiKeyRequest.of(tenantId, name, routes, expirationDate);
+			CreateApiKeyRequest.of(
+				tenantId,
+				name,
+				TenantRouteGroup.SEARCH_EXPERIENCE,
+				expirationDate
+			);
 
 		Uni<CreateApiKeyResponse> apiKey =
 			apiKeyService.create(createApiKeyRequest);

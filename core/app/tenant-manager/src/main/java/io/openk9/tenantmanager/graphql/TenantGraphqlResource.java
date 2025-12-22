@@ -17,7 +17,6 @@
 
 package io.openk9.tenantmanager.graphql;
 
-import java.util.List;
 import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

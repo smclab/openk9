@@ -99,8 +99,8 @@ public class TenantDbService {
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
 								RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-								RouteGroup.SEARCHER, AuthorizationScheme.NO_AUTH,
-								RouteGroup.RAG, AuthorizationScheme.NO_AUTH
+								RouteGroup.SEARCH, AuthorizationScheme.NO_AUTH,
+								RouteGroup.PUBLIC, AuthorizationScheme.NO_AUTH
 							))
 							.build()
 					)

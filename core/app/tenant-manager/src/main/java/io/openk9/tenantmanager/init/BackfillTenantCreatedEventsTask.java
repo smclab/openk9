@@ -158,7 +158,7 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 					//  - Searcher APIs were allowed to everyone.
 					objectNode.set("routeAuthorizationMap", OBJ_MAPPER.createObjectNode()
 						.put(RouteGroup.ADMINISTRATION.name(), AuthorizationScheme.OAUTH2.name())
-						.put(RouteGroup.SEARCHER.name(), AuthorizationScheme.NO_AUTH.name())
+						.put(RouteGroup.SEARCH.name(), AuthorizationScheme.NO_AUTH.name())
 					);
 
 					var payload = objectNode.toString();

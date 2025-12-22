@@ -23,8 +23,7 @@ package io.openk9.event.tenant;
 public enum RouteGroup {
 
 	ADMINISTRATION,
-	SEARCHER,
-	RAG,
-	ANY
+	SEARCH,
+	PUBLIC
 
 }

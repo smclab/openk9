@@ -48,7 +48,7 @@ public class ApiKeyService {
 		var suffix = ApiKeys.getChecksum(apiKey);
 		var tenantId = request.tenantId();
 		var name = request.name();
-		var routes = request.routes();
+		var routes = request.tenantRouteGroups();
 		var expirationDate = request.expirationDate();
 
 		return pool.withTransaction(conn -> conn.preparedQuery("""

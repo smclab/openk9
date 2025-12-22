@@ -46,7 +46,7 @@ public class MockEvents {
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
 					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-					RouteGroup.SEARCHER, AuthorizationScheme.OAUTH2))
+					RouteGroup.SEARCH, AuthorizationScheme.OAUTH2))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()
@@ -57,7 +57,7 @@ public class MockEvents {
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
 					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-					RouteGroup.SEARCHER, AuthorizationScheme.API_KEY))
+					RouteGroup.SEARCH, AuthorizationScheme.API_KEY))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()
@@ -68,7 +68,7 @@ public class MockEvents {
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
 					RouteGroup.ADMINISTRATION, AuthorizationScheme.API_KEY,
-					RouteGroup.SEARCHER, AuthorizationScheme.API_KEY))
+					RouteGroup.SEARCH, AuthorizationScheme.API_KEY))
 				.build(),
 
 			TenantManagementEvent.TenantCreated.builder()

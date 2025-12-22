@@ -18,17 +18,17 @@
 package io.openk9.tenantmanager.model;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 public class ApiKey {
+
 	private long id;
 	private Tenant tenant;
 	private String name;
-	// todo
-	private List<Route> routes;
+	private TenantRouteGroup tenantRouteGroup;
 	private ApiKeyStatus status;
 	private String prefix;
 	private String suffix;
 	private OffsetDateTime createDate;
 	private OffsetDateTime expirationDate;
+
 }
