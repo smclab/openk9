@@ -86,7 +86,7 @@ public class TextQueryParser implements QueryParser {
 		BoolQueryBuilder mutableQuery = parserContext.getMutableQuery();
 
 		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
-		var maxTextQueryLength = bucket.getSearchConfig().getMaxTextQueryLength() != null
+		var maxTextQueryLength = (bucket.getSearchConfig() != null && bucket.getSearchConfig().getMaxTextQueryLength() != null)
 			? bucket.getSearchConfig().getMaxTextQueryLength()
 			: defaultMaxTextQueryLength;
 
