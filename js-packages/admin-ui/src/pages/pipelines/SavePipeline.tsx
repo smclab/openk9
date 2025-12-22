@@ -166,6 +166,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   };
 
   const [verifyData, setVerifyData] = React.useState(mode);
+  const isRecap = verifyData === "confirm";
 
   React.useEffect(() => {
     setVerifyData(mode);
@@ -538,7 +539,7 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         </Box>
       </Container>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </>
   );
 }

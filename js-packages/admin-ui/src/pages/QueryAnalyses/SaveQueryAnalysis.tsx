@@ -105,6 +105,8 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = queryAnalysisId === "new";
 
   const queryAnalysisQuery = useQueryAnalysisQuery({
     variables: { id: queryAnalysisId as string },
@@ -304,7 +306,17 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

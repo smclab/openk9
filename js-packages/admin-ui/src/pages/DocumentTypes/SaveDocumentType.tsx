@@ -31,6 +31,8 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = documentTypeId === "new";
   const documentTypeQuery = useDocumentTypeQuery({
     variables: { id: documentTypeId as string },
     skip: !documentTypeId || documentTypeId === "new",
@@ -140,7 +142,17 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
             fieldsControll={["name"]}
           />
         </form>
-        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
       <ConfirmModal />
     </ContainerFluid>

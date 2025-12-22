@@ -28,6 +28,7 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { suggestionCategoryId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isNew = suggestionCategoryId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Filter",
@@ -41,6 +42,7 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
       navigate(`/suggestion-category/${suggestionCategoryId}`);
     }
   };
+  const isRecap = page === 1;
   const suggestionCategoryQuery = useSuggestionCategoryQuery({
     variables: { id: suggestionCategoryId as string },
     skip: !suggestionCategoryId || suggestionCategoryId === "new",
@@ -202,7 +204,17 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

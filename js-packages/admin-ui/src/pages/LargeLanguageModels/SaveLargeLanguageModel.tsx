@@ -46,6 +46,8 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = LargeLanguageModelId === "new";
   const embeddingModelQuery = useLargeLanguageModelQuery({
     variables: { id: LargeLanguageModelId as string },
     skip: !LargeLanguageModelId || LargeLanguageModelId === "new",
@@ -262,7 +264,17 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

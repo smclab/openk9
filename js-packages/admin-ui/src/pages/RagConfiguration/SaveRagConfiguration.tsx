@@ -24,6 +24,8 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { ragConfigId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
+  const isRecap = page === 1;
+  const isNew = ragConfigId === "new";
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -280,7 +282,17 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

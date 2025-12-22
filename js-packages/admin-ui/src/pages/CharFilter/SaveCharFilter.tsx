@@ -29,6 +29,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
 
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
+  const isNew = charFilterId === "new";
 
   const charFilterQuery = useCharFilterQuery({
     variables: { id: charFilterId },
@@ -159,7 +160,17 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
           />
         </form>
 
-        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
     </ContainerFluid>
   );

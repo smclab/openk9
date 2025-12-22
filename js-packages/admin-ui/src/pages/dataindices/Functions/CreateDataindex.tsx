@@ -48,6 +48,8 @@ export function CreateDataindex({
   isReadOnly: boolean;
   setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
+  const isRecap = verifyData === "editView" || verifyData === "view";
+
   const saveAndContinueDataindex = () => {
     setVerifyData("editView");
   };
@@ -490,6 +492,7 @@ export function CreateDataindex({
                   display: "flex",
                   justifyContent: "space-between",
                   marginTop: "20px",
+                  marginBottom: "70px",
                 }}
               >
                 <Link to={"/dataindices"}>
@@ -522,7 +525,7 @@ export function CreateDataindex({
               dataIndex={dataindexData}
             />
           )}
-          <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+          <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
         </>
       )}
     </ContainerFluid>

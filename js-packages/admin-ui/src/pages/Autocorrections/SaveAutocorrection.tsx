@@ -28,6 +28,7 @@ import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { autocorrectionId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const autocorrectionQuery = useAutocorrectionValueQuery({
     variables: { id: autocorrectionId as string },
     skip: !autocorrectionId || autocorrectionId === "new",
@@ -218,7 +219,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </ContainerFluid>
   );
 }

@@ -36,6 +36,8 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
   };
 
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = tokenFilterId === "new";
   const tokenFilterQuery = useTokenFilterQuery({
     variables: { id: tokenFilterId as string },
     skip: !tokenFilterId || tokenFilterId === "new",
@@ -101,8 +103,6 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
-
-  const isRecap = page === 1;
 
   if (tokenFilterQuery.loading) {
     return <div></div>;
@@ -170,7 +170,17 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

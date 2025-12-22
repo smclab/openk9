@@ -1,7 +1,9 @@
 import React from "react";
-import { Badge, Box, Fade, IconButton, Paper, Popover, Typography } from "@mui/material";
+import ReactDOM from "react-dom";
+import { Badge, Box, Button, Fade, IconButton, Paper, Typography } from "@mui/material";
 
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 
 import RecapDatasource, { areaType } from "@pages/datasources/RecapDatasource";
@@ -75,9 +77,18 @@ function normalizeValue(value: any, type?: RecapField["type"]) {
 export default function Recap({
   recapData,
   setExtraFab,
+  forceFullScreen = false,
+  actions,
 }: {
   recapData: RecapSingleSection[];
   setExtraFab: (fab: React.ReactNode | null) => void;
+  forceFullScreen?: boolean;
+  actions?: {
+    onBack?: () => void;
+    onSubmit?: () => void;
+    submitLabel?: string;
+    backLabel?: string;
+  };
 }) {
   const [open, setOpen] = React.useState(false);
   const [panelPos, setPanelPos] = React.useState<{ bottom: number; right: number } | null>(null);
@@ -107,6 +118,12 @@ export default function Recap({
   };
 
   React.useEffect(() => {
+    if (forceFullScreen) {
+      setOpen(true);
+      setExtraFab(null);
+      return () => setExtraFab(null);
+    }
+
     const trigger = (
       <Box
         ref={triggerRef}
@@ -150,46 +167,149 @@ export default function Recap({
 
     setExtraFab(trigger);
     return () => setExtraFab(null);
-  }, [setExtraFab, title, totalFields]);
+  }, [setExtraFab, title, totalFields, open, forceFullScreen]);
 
-  return (
-    <>
-      {open && panelPos && (
-        <Fade in={open}>
-          <Box
+  const mainElement = typeof document !== "undefined" ? document.querySelector("main") : null;
+
+  // No scroll when the popup container is fullscreen
+  React.useEffect(() => {
+    if (!forceFullScreen || !mainElement) return;
+    const prevOverflow = mainElement.style.overflow;
+    if (open) {
+      mainElement.style.overflow = "hidden";
+      mainElement.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      mainElement.style.overflow = prevOverflow;
+    }
+    return () => {
+      mainElement.style.overflow = prevOverflow;
+    };
+  }, [forceFullScreen, mainElement, open]);
+
+  const compactPanel =
+    open && panelPos && !forceFullScreen ? (
+      <Fade in={open}>
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: panelPos.bottom,
+            right: panelPos.right,
+            zIndex: 1300,
+          }}
+        >
+          <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <Typography fontWeight={600}>{title}</Typography>
+              <IconButton size="small" onClick={() => setOpen(false)}>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ p: 2, overflowY: "auto" }}>
+              <RecapDatasource area={areas} />
+            </Box>
+          </Paper>
+        </Box>
+      </Fade>
+    ) : null;
+
+  const fullScreenPanel =
+    open && forceFullScreen ? (
+      <Fade in={open}>
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 10,
+            zIndex: 1300,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Paper
             sx={{
-              position: "fixed",
-              bottom: panelPos.bottom,
-              right: panelPos.right,
-              zIndex: 1300,
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: 12,
+              borderRadius: 2,
             }}
           >
-            <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  borderBottom: "1px solid",
-                  borderColor: "divider",
-                  display: "flex",
-                  justifyContent: "space-between",
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography fontWeight={600}>{title}</Typography>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  actions?.onBack?.();
+                  setOpen(false);
                 }}
               >
-                <Typography fontWeight={600}>{title}</Typography>
-                <IconButton size="small" onClick={() => setOpen(false)}>
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
-              </Box>
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </Box>
 
-              <Box sx={{ p: 2, overflowY: "auto" }}>
-                <RecapDatasource area={areas} />
-              </Box>
-            </Paper>
-          </Box>
-        </Fade>
-      )}
-    </>
-  );
+            <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
+              <RecapDatasource area={areas} />
+            </Box>
+
+            <Box
+              sx={{
+                p: 2,
+                borderTop: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Button
+                variant="outlined"
+                startIcon={<KeyboardArrowDownRoundedIcon />}
+                onClick={() => {
+                  actions?.onBack?.();
+                  setOpen(false);
+                }}
+              >
+                {actions?.backLabel || "Back"}
+              </Button>
+              {actions?.onSubmit && (
+                <Button variant="contained" onClick={actions.onSubmit}>
+                  {actions.submitLabel || "Create entity"}
+                </Button>
+              )}
+            </Box>
+          </Paper>
+        </Box>
+      </Fade>
+    ) : null;
+
+  if (forceFullScreen) {
+    return fullScreenPanel && mainElement ? ReactDOM.createPortal(fullScreenPanel, mainElement) : fullScreenPanel;
+  }
+
+  return <>{compactPanel}</>;
 }
 
 export function mappingCardRecap({

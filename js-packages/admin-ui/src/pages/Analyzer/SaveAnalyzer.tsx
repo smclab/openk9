@@ -161,6 +161,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
   if (analyzerQuery.loading) return null;
 
   const isRecap = page === 1;
+  const isNew = analyzerId === "new";
 
   const handleAssociationSelect =
     (field: "charFilters" | "tokenFilters") =>
@@ -262,7 +263,17 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                         />
                       </>
                     )}
-                    <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+                    <Recap
+                      recapData={recapSections}
+                      setExtraFab={setExtraFab}
+                      forceFullScreen={isRecap}
+                      actions={{
+                        onBack: () => setPage(0),
+                        onSubmit: () => form.submit(),
+                        submitLabel: isNew ? "Create entity" : "Update entity",
+                        backLabel: "Back",
+                      }}
+                    />
                   </>
                 ),
                 page: 0,

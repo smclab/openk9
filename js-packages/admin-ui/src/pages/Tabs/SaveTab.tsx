@@ -23,6 +23,7 @@ import { ReturnUserTabData } from "./gql";
 export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const tabQuery = useTabQuery({
     variables: { id: tabId as string },
     skip: !tabId || tabId === "new",
@@ -41,6 +42,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
       navigate(`/tab/${tabId}`);
     }
   };
+  const isNew = tabId === "new";
   const toast = useToast();
   const [createOrUpdateTabMutate, createOrUpdateTabMutation] = useCreateOrUpdateTabMutation({
     refetchQueries: ["Tab", "Tabs"],
@@ -201,7 +203,17 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
             fieldsControll={["name"]}
           />
         </form>
-        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
       <ConfirmModal />
     </ContainerFluid>

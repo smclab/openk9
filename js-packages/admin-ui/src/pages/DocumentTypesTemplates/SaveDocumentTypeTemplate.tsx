@@ -39,6 +39,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
   const { documentTypeTemplateId = "new", name, view } = useParams();
 
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Document Type Template",
@@ -259,7 +260,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </Box>
   );
 }

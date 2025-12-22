@@ -77,7 +77,7 @@ import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
 import ThemeSwitcher from "./utils/ThemeSwitcher";
 import Autocorrections from "@pages/Autocorrections/Autocorrections";
-import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrecion";
+import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrection";
 
 export const themeColor = {
   light: {

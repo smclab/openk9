@@ -71,7 +71,9 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
       navigate(`/token-tab/${tokenTabId}`);
     }
   };
-  const disabled = page === 1 || view === "view";
+  const isRecap = page === 1;
+  const isNew = tokenTabId === "new";
+  const disabled = isRecap || view === "view";
   const tabTokenTabQuery = useTabTokenTabQuery({
     variables: { id: tokenTabId as string },
     skip: !tokenTabId || tokenTabId === "new",
@@ -317,7 +319,17 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

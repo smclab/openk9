@@ -34,6 +34,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const navigate = useNavigate();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const toast = useToast();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Annotator",
@@ -314,7 +315,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </ContainerFluid>
   );
 }

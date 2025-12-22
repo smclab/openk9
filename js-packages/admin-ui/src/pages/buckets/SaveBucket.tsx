@@ -71,6 +71,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
   const { bucketId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const isRecap = page === 1;
+  const isNew = bucketId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Bucket",
@@ -566,7 +567,17 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                         }
                       />
                     </Box>
-                    <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+                    <Recap
+                      recapData={recapSections}
+                      setExtraFab={setExtraFab}
+                      forceFullScreen={isRecap}
+                      actions={{
+                        onBack: () => setPage(0),
+                        onSubmit: () => form.submit(),
+                        submitLabel: isNew ? "Create entity" : "Update entity",
+                        backLabel: "Back",
+                      }}
+                    />
                   </>
                 ),
                 page: 0,

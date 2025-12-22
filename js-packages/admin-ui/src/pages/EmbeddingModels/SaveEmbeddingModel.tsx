@@ -42,6 +42,8 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = embeddingModelsId === "new";
   const [providerModel, setProviderModel] = React.useState<{
     provider: string | null | undefined;
     model: string | null | undefined;
@@ -256,7 +258,17 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

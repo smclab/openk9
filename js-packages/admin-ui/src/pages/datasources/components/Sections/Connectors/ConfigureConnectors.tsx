@@ -273,6 +273,7 @@ export function ConfigureConnectors({
         sx={{
           display: "flex",
           marginTop: "10px",
+          marginBottom: "70px",
           justifyContent: "space-between",
           width: "100%",
           paddingBlock: "20px",

@@ -120,6 +120,7 @@ export function ConfigureDatasource({
             <Box
               sx={{
                 marginTop: "10px",
+                marginBottom: "70px",
                 display: "flex",
                 justifyContent: "space-between",
               }}

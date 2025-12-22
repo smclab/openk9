@@ -46,6 +46,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
     fetchPolicy: "network-only",
   });
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = enrichItemId === "new";
   const toast = useToast();
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
     refetchQueries: ["EnrichItem", "EnrichItems"],
@@ -226,7 +228,17 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         />
       </form>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

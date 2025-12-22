@@ -90,6 +90,8 @@ export const SavePluginnDriverModel = React.forwardRef(
       }
     };
     const [page, setPage] = React.useState(0);
+    const isRecap = page === 1;
+    const isNew = pluginDriverId === "new";
     const pluginDriverQuery = usePluginDriverQuery({
       variables: { id: pluginDriverId as string },
       skip: !pluginDriverId || pluginDriverId === "new",
@@ -506,7 +508,17 @@ export const SavePluginnDriverModel = React.forwardRef(
             />
           </form>
           <ConfirmModal />
-          <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+          <Recap
+            recapData={recapSections}
+            setExtraFab={setExtraFab}
+            forceFullScreen={isRecap}
+            actions={{
+              onBack: () => setPage(0),
+              onSubmit: () => form.submit(),
+              submitLabel: isNew ? "Create entity" : "Update entity",
+              backLabel: "Back",
+            }}
+          />
         </>
         {viewDeleteModal.view && (
           <ModalConfirm

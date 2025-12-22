@@ -35,6 +35,8 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = tokenizerId === "new";
   const tokenizerQuery = useTokenizerQuery({
     variables: { id: tokenizerId as string },
     skip: !tokenizerId || tokenizerId === "new",
@@ -76,8 +78,6 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     jsonConfig: tokenizerQuery.data?.tokenizer?.jsonConfig,
     type: tokenizerQuery.data?.tokenizer?.type,
   });
-  const isRecap = page === 1;
-
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -170,7 +170,17 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           />
         </form>
         <ConfirmModal />
-        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
     </ContainerFluid>
   );

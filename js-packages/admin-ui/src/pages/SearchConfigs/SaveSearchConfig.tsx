@@ -99,6 +99,8 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = searchConfigId === "new";
   const [isHybridSearch, setIsHybridSearch] = React.useState<boolean>(false);
   const [jsonConfigs, setJsonConfigs] = React.useState<string[]>([]);
 
@@ -374,7 +376,17 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           </form>
         </>
         <ConfirmModal />
-        <Recap recapData={recapSections} setExtraFab={setExtraFab} />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </ContainerFluid>
       <CustomizedDialogs isHybridSearch={isHybridSearch} searchConfigId={searchConfigId} onClose={handleCloseDialog} />
     </>

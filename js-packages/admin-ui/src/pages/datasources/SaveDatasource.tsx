@@ -1,8 +1,8 @@
-import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useToast } from "@components/Form";
+import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useForm, useToast } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDataSourceQuery } from "../../graphql-generated";
+import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
 import DynamicForm from "./components/Sections/DataSource/DynamicForm";
 import { defaultModal, useGenerateDocumentTypesMutation } from "./Function";
@@ -10,6 +10,7 @@ import { useDatasourceForm } from "./hooks/useDatasourceForm";
 import { useDatasourceMutations } from "./hooks/useDatasourceMutations";
 import { constructTabs, useRecoveryForm } from "./RecoveryData";
 import { FormSection, Header, TabsSection } from "./StructureDatasource";
+import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 
 export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
@@ -231,6 +232,158 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     setIsRecap(false);
   };
 
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        // Datasource base
+        name: formValues.name || "",
+        description: formValues.description || "",
+
+        // Connector/PluginDriver
+        ...(formValues.pluginDriverSelect?.id && {
+          pluginDriverSelect: {
+            id: formValues.pluginDriverSelect?.id || null,
+            nameConnectors: formValues.pluginDriverSelect?.nameConnectors || "",
+            provisioning: formValues.pluginDriverSelect?.provisioning || Provisioning.System,
+            json: formValues.pluginDriverSelect?.json || "",
+          },
+        }),
+
+        // Cron sections
+        datasourceId: formValues.datasourceId,
+        isCronSectionreindex: formValues.isCronSectionreindex || false,
+        isCronSectionscheduling: formValues.isCronSectionscheduling || false,
+        isCronSectionpurge: formValues.isCronSectionpurge || false,
+        reindexing: formValues.reindexing || "",
+        scheduling: formValues.scheduling || "",
+        purging: formValues.purging || "",
+
+        // Pipeline
+        enrichPipeline: {
+          id: formValues.enrichPipeline?.id || "",
+          name: formValues.enrichPipeline?.name || "",
+        },
+        enrichPipelineCustom: {
+          id: formValues.enrichPipelineCustom?.id || "",
+          name: formValues.enrichPipelineCustom?.name || "",
+          linkedEnrichItems: formValues.enrichPipelineCustom?.linkedEnrichItems || [],
+        },
+
+        // Data Index
+        dataIndex: {
+          id: formValues.dataIndex?.id || "",
+          name: formValues.dataIndex?.name || "",
+          description: formValues.dataIndex?.description || "",
+        },
+        vectorIndex: {
+          chunkType: formValues.vectorIndex?.chunkType || null,
+          chunkWindowSize: formValues.vectorIndex?.chunkWindowSize || 0,
+          embeddingJsonConfig: formValues.vectorIndex?.embeddingJsonConfig || "",
+          knnIndex: formValues.vectorIndex?.knnIndex || false,
+          embeddingDocTypeFieldId: formValues.vectorIndex?.embeddingDocTypeFieldId || { id: "", name: "" },
+          docTypeIds: formValues.vectorIndex?.docTypeIds || [],
+        },
+        dataIndices: formValues.dataIndices || [],
+
+        // Dynamic JSON (se lo passi da fuori)
+        dynamicFormJson: dynamicFormJson || "",
+      }),
+      [formValues, dynamicFormJson],
+    ),
+
+    originalValues: {},
+    isLoading: datasourceQuery.loading,
+
+    onSubmit(updated: any) {
+      setFormValues((prev) => ({
+        ...prev,
+        ...updated,
+        // Ripopola nested objects preservando struttura
+        pluginDriverSelect: {
+          ...prev.pluginDriverSelect,
+          ...updated.pluginDriverSelect,
+        },
+        enrichPipeline: {
+          ...prev.enrichPipeline,
+          ...updated.enrichPipeline,
+        },
+        dataIndex: {
+          ...prev.dataIndex,
+          ...updated.dataIndex,
+        },
+        vectorIndex: {
+          ...prev.vectorIndex,
+          ...updated.vectorIndex,
+        },
+      }));
+    },
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        label: "Connector",
+        cell: [
+          { key: "pluginDriverSelect.nameConnectors", label: "Name Connector" },
+          { key: "pluginDriverSelect.provisioning", label: "Provisioning" },
+          { key: "pluginDriverSelect.json", label: "Json" },
+        ],
+      },
+      {
+        label: "Datasource",
+        cell: [
+          { key: "name", label: "Name" },
+          { key: "isCronSectionreindex", label: "Reindexing" },
+          { key: "isCronSectionscheduling", label: "Scheduling" },
+          { key: "isCronSectionpurge", label: "Purging" },
+          { key: "reindexing", label: "Reindexing" },
+          { key: "scheduling", label: "Scheduling" },
+          { key: "purging", label: "Purging" },
+          { key: "dynamicFormJson", label: "Json" },
+        ],
+      },
+      {
+        label: "Pipeline",
+        cell: [{ key: "enrichPipeline.name", label: "Name" }],
+      },
+      {
+        label: "Pipeline Custom",
+        cell: [
+          {
+            key: "enrichPipelineCustom.linkedEnrichItems",
+            label: "Enrich Item Custom",
+          },
+        ],
+      },
+      {
+        label: "Data Index",
+        cell: [
+          { key: "dataIndex.name", label: "Name" },
+          { key: "dataIndex.description", label: "Description" },
+          { key: "vectorIndex.chunkType", label: "chunk Type" },
+          { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
+          {
+            key: "vectorIndex.embeddingJsonConfig",
+            label: "Embedding json Config",
+          },
+          {
+            key: "vectorIndex.knnIndex",
+            label: "Embedding knn index",
+          },
+          {
+            key: "vectorIndex.embeddingDocTypeFieldId.name",
+            label: "Doc Type",
+          },
+          {
+            key: "dataIndices",
+            label: "dataIndices",
+          },
+        ],
+      },
+    ],
+  });
+
   return (
     <ContainerFluid style={{ width: "100%" }}>
       {modalHeaderButton && (
@@ -291,6 +444,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         isCreated={datasourceId === "new"}
         setExtraFab={setExtraFab}
       />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </ContainerFluid>
   );
 }
