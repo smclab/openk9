@@ -232,55 +232,54 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 			}
 
 		}
-
 		// Else we try to delete and then to write chunks
+		else {
+			try {
 
-		try {
+				var chunks = parseChunks(dataPayload);
 
-			var chunks = parseChunks(dataPayload);
+				// If there are no chunks to write, send a failure to the caller
+				if (chunks.isEmpty()) {
+					if (log.isDebugEnabled()) {
+						log.debugf(
+							"%s: There isn't any chunk to write.",
+							heldMessage
+						);
+					}
 
-			// If there are no chunks to write, send a failure to the caller
-			if (chunks.isEmpty()) {
-				if (log.isDebugEnabled()) {
-					log.debugf(
-						"%s: There isn't any chunk to write.",
-						heldMessage
+					replyTo.tell(new Writer.Failure(
+							new WriterException("The list of chunks to write is empty."),
+							heldMessage
+						)
 					);
+
+					return this;
 				}
 
-				replyTo.tell(new Writer.Failure(
-						new WriterException("The list of chunks to write is empty."),
-						heldMessage
-					)
+				getContext().pipeToSelf(
+					deleteChunksByContentId(heldMessage),
+					(deleteChunksResponse, throwable) ->
+						new WriteDocuments(
+							heldMessage,
+							deleteChunksResponse,
+							throwable,
+							chunks
+						)
 				);
-
-				return this;
 			}
+			catch (IllegalArgumentException e) {
+				log.warnf("%s: Failed to parse chunks from jsonPayload.", heldMessage);
 
-			getContext().pipeToSelf(
-				deleteChunksByContentId(heldMessage),
-				(deleteChunksResponse, throwable) ->
-					new WriteDocuments(
-						heldMessage,
-						deleteChunksResponse,
-						throwable,
-						chunks
-					)
-			);
-		}
-		catch (IllegalArgumentException e) {
-			log.warnf("%s: Failed to parse chunks from jsonPayload.", heldMessage);
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+			}
+			catch (IOException e) {
+				log.errorf("%s: I/O failed to search engine.", heldMessage);
 
-			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
-		}
-		catch (IOException e) {
-			log.errorf("%s: I/O failed to search engine.", heldMessage);
-
-			replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+				replyTo.tell(new Writer.Failure(new WriterException(e), heldMessage));
+			}
 		}
 
 		return this;
-
 	}
 
 	private Behavior<Writer.Command> onWriteDocuments(WriteDocuments writeDocuments) {
