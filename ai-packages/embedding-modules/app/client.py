@@ -15,10 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import embedding_pb2
-import embedding_pb2_grpc
 import grpc
 from google.protobuf.struct_pb2 import Struct
+
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 
 
 def run(chunk, embeddingModel, text):
@@ -53,7 +53,10 @@ if __name__ == "__main__":
             "chat_vertex_ai_model_garden": "chat_vertex_ai_model_garden",
         }
     )
-    providerModel = {"provider": "openai", "model": "text-embedding-3-small"}
+    providerModel = {
+        "provider": "hugging_face",
+        "model": "intfloat/multilingual-e5-large",
+    }
     embeddingModel = {
         "apiKey": "apikey",
         "providerModel": providerModel,

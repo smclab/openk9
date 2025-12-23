@@ -8,9 +8,9 @@ RUN mkdir -p /embedding_module  && \
 mkdir -p /var/log/openk9
 WORKDIR /embedding_module/
 
-COPY app/requirements.txt ./requirements.txt
-COPY app/requirements_cpu.txt ./requirements_cpu.txt
-COPY app/external_services/grpc/embedding/embedding.proto ./
+COPY ./requirements.txt ./
+COPY ./requirements_cpu.txt ./
+COPY ./app ./app
 
 RUN echo "$MODE" && \
     if [ "$MODE" = "gpu" ]; then \
@@ -18,14 +18,9 @@ RUN echo "$MODE" && \
     else \
         pip install --no-cache-dir -r requirements_cpu.txt; \
     fi && \
-    python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. embedding.proto
-
-COPY app/text_splitters/derived_text_splitter.py ./
-COPY app/text_splitters/character_text_splitter.py ./
-COPY app/text_splitters/token_text_splitter.py ./
-COPY app/utils/text_cleaner.py ./
-COPY app/server.py ./server.py
+    python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
+    ./app/external_services/grpc/embedding/embedding.proto
 
 EXPOSE 5000
 
-CMD ["python", "server.py"]
+CMD ["python", "-m", "app.server"]

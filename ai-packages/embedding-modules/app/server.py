@@ -24,8 +24,6 @@ from enum import Enum
 from logging.handlers import TimedRotatingFileHandler
 from typing import get_type_hints
 
-import embedding_pb2
-import embedding_pb2_grpc
 import grpc
 import pika
 from character_text_splitter import CharacterTextChunker
@@ -38,7 +36,6 @@ from chonkie import (
     TableChunker,
     TokenChunker,
 )
-from derived_text_splitter import DerivedTextSplitter
 from dotenv import load_dotenv
 from google.protobuf import json_format
 from grpc_health.v1 import health_pb2, health_pb2_grpc
@@ -50,8 +47,12 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from text_cleaner import clean_text
-from token_text_splitter import TokenTextChunker
+
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
+from app.text_splitters.character_text_splitter import CharacterTextChunker
+from app.text_splitters.derived_text_splitter import DerivedTextSplitter
+from app.text_splitters.token_text_splitter import TokenTextChunker
+from app.utils.text_cleaner import clean_text
 
 load_dotenv()
 
