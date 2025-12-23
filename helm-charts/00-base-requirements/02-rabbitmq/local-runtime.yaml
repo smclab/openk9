@@ -1,220 +1,104 @@
-# This scenario creates a single-instance standalone RabbitMQ
-# machine, with the most basic configuration and limited
-# resource to be fit in a local K8s/K3s/Minukube environment
+# RabbitMQ CloudPirates - Configurazione Semplificata per OpenK9
 
-auth:
-  ## @param auth.username RabbitMQ application username
-  username: "openk9"
-  ## @param auth.password RabbitMQ application password
- # password: "openk9"
-  existingPasswordSecret: "rabbitmq-password"
-  #username: "openk9"
-  #password: "openk9"
+## Immagine RabbitMQ
+image:
+  registry: docker.io
+  repository: rabbitmq
+  tag: "4.1.4-management"
+  imagePullPolicy: IfNotPresent
 
+## Deployment
 replicaCount: 1
 
+## Service
+service:
+  type: ClusterIP
+  amqpPort: 5672
+  managementPort: 15672
+
+## Autenticazione - USA SECRET
+auth:
+  existingSecret: "rabbitmq-password"
+  existingSecretUsernameKey: "rabbitmq-username"
+  existingSecretPasswordKey: "rabbitmq-password"
+  existingSecretErlangCookieKey: "erlang-cookie"
+
+## Configurazione
+config:
+  ## Configurazione RabbitMQ personalizzata
+  configuration: |
+    ## Management plugin
+    management.tcp.port = 15672
+
+    ## AMQP port
+    listeners.tcp.default = 5672
+
+    ## Logging
+    log.console = true
+    log.console.level = info
+
+    ## Memory settings
+    vm_memory_high_watermark.relative = 0.6
+
+## Risorse
 resources:
-  limits:
-    cpu: "1000m"
-    memory: "2Gi"
   requests:
-    cpu: "300m"
-    memory: "1Gi"
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 1024Mi
 
+## Storage
 persistence:
-  size: 5Gi
+  enabled: true
+  storageClass: "ibmc-vpc-block-general-purpose"
+  size: 8Gi
+  accessModes:
+  - ReadWriteOnce
 
-volumePermissions:
+## Management UI
+management:
   enabled: true
 
-extraConfiguration: |-
-  consumer_timeout = 14400000
+## Plugins
+plugins:
+- rabbitmq_management
+- rabbitmq_prometheus
 
-memoryHighWatermark:
-  ## @param memoryHighWatermark.enabled Enable configuring Memory high watermark on RabbitMQ
-  ##
-  enabled: true
-  ## @param memoryHighWatermark.type Memory high watermark type. Either `absolute` or `relative`
-  ##
-  type: "absolute"
-  ## Memory high watermark value.
-  ## @param memoryHighWatermark.value Memory high watermark value
-  ## The default value of 0.4 stands for 40% of available RAM
-  ## Note: the memory relative limit is applied to the resource.limits.memory to calculate the memory threshold
-  ## You can also use an absolute value, e.g.: 256MB
-  ##
-  value: 3G
-
-## Prometheus Metrics
-##
-metrics:
-  ## @param metrics.enabled Enable exposing RabbitMQ metrics to be gathered by Prometheus
-  ##
+## Clustering (disabilitato per semplicità)
+clustering:
   enabled: false
-  ## @param metrics.plugins Plugins to enable Prometheus metrics in RabbitMQ
-  ##
-  plugins: "rabbitmq_prometheus"
-  ## Prometheus pod annotations
-  ## @param metrics.podAnnotations [object] Annotations for enabling prometheus to access the metrics endpoint
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "{{ .Values.service.ports.metrics }}"
 
-  ## Prometheus Service Monitor
-  ## ref: https://github.com/coreos/prometheus-operator
-  ##
-  serviceMonitor:
-    ## @param metrics.serviceMonitor.enabled Create ServiceMonitor Resource for scraping metrics using PrometheusOperator
-    ##
-    enabled: false
-    ## @param metrics.serviceMonitor.namespace Specify the namespace in which the serviceMonitor resource will be created
-    ##
-    namespace: ""  #MD
-    ## @param metrics.serviceMonitor.interval Specify the interval at which metrics should be scraped
-    ##
-    interval: 30s
-    ## @param metrics.serviceMonitor.scrapeTimeout Specify the timeout after which the scrape is ended
-    ## e.g:
-    ## scrapeTimeout: 30s
-    ##
-    scrapeTimeout: "15s"
-    ## @param metrics.serviceMonitor.jobLabel The name of the label on the target service to use as the job name in prometheus.
-    ##
-    jobLabel: "rabbitmq"
-    ## @param metrics.serviceMonitor.relabelings RelabelConfigs to apply to samples before scraping.
-    ##
-    relabelings: []
-    ## @param metrics.serviceMonitor.metricRelabelings MetricsRelabelConfigs to apply to samples before ingestion.
-    ##
-    metricRelabelings: []
-    ## @param metrics.serviceMonitor.honorLabels honorLabels chooses the metric's labels on collisions with target labels
-    ##
-    honorLabels: false
-    ## @param metrics.serviceMonitor.targetLabels Used to keep given service's labels in target
-    ## e.g:
-    ## - app.kubernetes.io/name
-    ##
-    targetLabels: {}
-    ## @param metrics.serviceMonitor.podTargetLabels Used to keep given pod's labels in target
-    ## e.g:
-    ## - app.kubernetes.io/name
-    ##
-    podTargetLabels: {}
-    ## @param metrics.serviceMonitor.path Define the path used by ServiceMonitor to scrap metrics
-    ## Could be /metrics for aggregated metrics or /metrics/per-object for more details
-    ##
-    #path: "/metrics"
-    ## @param metrics.serviceMonitor.selector ServiceMonitor selector labels
-    ## ref: https://github.com/bitnami/charts/tree/master/bitnami/prometheus-operator#prometheus-configuration
-    ##
-    #selector:
-    #  prometheus: monitor/prometheus-stack-kube-prom-prometheus
-    ##
-    #selector: {}
-    ## @param metrics.serviceMonitor.labels Extra labels for the ServiceMonitor
-    ##
-    labels:
-      release: prometheus-stack
-    ## @param metrics.serviceMonitor.annotations Extra annotations for the ServiceMonitor
-    ##
-    annotations: {}
-
+## Ingress - DISABILITATO (non serve)
 ingress:
-  ## @param ingress.enabled Enable ingress resource for Management console
-  ##
   enabled: false
 
-  ## @param ingress.path Path for the default host. You may need to set this to '/*' in order to use this with ALB ingress controllers.
-  ##
-  path: /
+## TLS - DISABILITATO (non serve)
+tls:
+  enabled: false
 
-  ## @param ingress.pathType Ingress path type
-  ##
-  pathType: ImplementationSpecific
-  ## @param ingress.hostname Default host for the ingress resource
-  ##
-  hostname: rabbitmq.openk9.local
-  ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
-  ## For a full list of possible ingress annotations, please see
-  ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/user-guide/nginx-configuration/annotations.md
-  ## Use this parameter to set the required annotations for cert-manager, see
-  ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
-  ##
-  ## e.g:
-  ## annotations:
-  ##   kubernetes.io/ingress.class: nginx
-  ##   cert-manager.io/cluster-issuer: cluster-issuer-name
-  ##
-  annotations: {}
-  ## @param ingress.tls Enable TLS configuration for the hostname defined at `ingress.hostname` parameter
-  ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname }}
-  ## You can:
-  ##   - Use the `ingress.secrets` parameter to create this TLS secret
-  ##   - Rely on cert-manager to create it by setting the corresponding annotations
-  ##   - Rely on Helm to create self-signed certificates by setting `ingress.selfSigned=true`
-  ##
-  tls: false
-  ## @param ingress.selfSigned Set this to true in order to create a TLS secret for this ingress record
-  ## using self-signed certificates generated by Helm
-  ##
-  selfSigned: false
-  ## @param ingress.extraHosts The list of additional hostnames to be covered with this ingress record.
-  ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
-  ## e.g:
-  ## extraHosts:
-  ##   - name: rabbitmq.local
-  ##     path: /
-  ##
-  extraHosts: []
-  ## @param ingress.extraPaths An array with additional arbitrary paths that may need to be added to the ingress under the main host
-  ## e.g:
-  ## extraPaths:
-  ## - path: /*
-  ##   backend:
-  ##     serviceName: ssl-redirect
-  ##     servicePort: use-annotation
-  ##
-  extraPaths: []
-  ## @param ingress.extraRules The list of additional rules to be added to this ingress record. Evaluated as a template
-  ## Useful when looking for additional customization, such as using different backend
-  ##
-  extraRules:
-  ## @param ingress.extraTls The tls configuration for additional hostnames to be covered with this ingress record.
-  ## see: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
-  ## e.g:
-  #extraTls:
-  #  - hosts:
-  #    - rabbitmq.openk9.local
-  #    secretName: openk9-tls-star-secret
-  ##
-  extraTls: []
-  ## @param ingress.secrets Custom TLS certificates as secrets
-  ## NOTE: 'key' and 'certificate' are expected in PEM format
-  ## NOTE: 'name' should line up with a 'secretName' set further up
-  ## If it is not set and you're using cert-manager, this is unneeded, as it will create a secret for you with valid certificates
-  ## If it is not set and you're NOT using cert-manager either, self-signed certificates will be created valid for 365 days
-  ## It is also possible to create and manage the certificates outside of this helm chart
-  ## Please see README.md for more information
-  ## e.g:
-  ## secrets:
-  ##   - name: rabbitmq.local-tls
-  ##     key: |-
-  ##       -----BEGIN RSA PRIVATE KEY-----
-  ##       ...
-  ##       -----END RSA PRIVATE KEY-----
-  ##     certificate: |-
-  ##       -----BEGIN CERTIFICATE-----
-  ##       ...
-  ##       -----END CERTIFICATE-----
-  ##
-  secrets: []
-  ## @param ingress.ingressClassName IngressClass that will be be used to implement the Ingress (Kubernetes 1.18+)
-  ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
-  ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
-  ##
-  # ingressClassName: "public-iks-k8s-nginx"
-  ## @param ingress.existingSecret It is you own the certificate as secret.
-  ##
-  existingSecret: "openk9-tls-star-secret"
+## Metrics
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+
+## Security Context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+## Node Selector (opzionale)
+nodeSelector: {}
+
+## Tolerations (opzionale)
+tolerations: []
+
+## Affinity (opzionale)
+affinity: {}
