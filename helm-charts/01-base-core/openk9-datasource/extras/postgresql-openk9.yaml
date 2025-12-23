@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: openk9-datasource-db-setup
+  name: openk9-datasource-db
 spec:
   # Auto-delete job after 120 seconds of completion
   ttlSecondsAfterFinished: 120
@@ -23,7 +23,7 @@ spec:
           psql -d openk9 -c "GRANT ALL ON SCHEMA public TO openk9;"
         env:
         - name: PGHOST
-          value: "postgres.test-charts.svc.cluster.local"
+          value: "postgresql"
         - name: PGPORT
           value: "5432"
         - name: PGUSER

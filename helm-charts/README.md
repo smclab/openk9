@@ -206,16 +206,16 @@ Install Opensearch
 For Kubernetes execute:
 
 ```bash
-helm install opensearch opensearch/opensearch --version 3.3.2 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
+helm install opensearch opensearch/opensearch --version 2.32.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
 ```
 
 For Openshift execute:
 
 ```bash
-helm install opensearch opensearch/opensearch --version 3.3.2 -n openk9 -f 00-base-requirements/01-opensearch/local-crc.yaml
+helm install opensearch opensearch/opensearch --version 2.32.0 -n openk9 -f 00-base-requirements/01-opensearch/local-crc.yaml
 ```
 
-To customize Opensearch installation follow [official chart documentation](https://github.com/opensearch-project/helm-charts/tree/opensearch-2.20.0/charts/opensearch) for Kubernetes or [bitnami chart configuration](https://github.com/bitnami/charts/tree/opensearch/1.8.0/bitnami/opensearch) for Openshift.
+To customize Opensearch installation follow [official chart documentation](https://github.com/opensearch-project/helm-charts/tree/opensearch-2.20.0/charts/opensearch) for Kubernetes and Openshift.
 
 #### Verify Installation
 
@@ -256,7 +256,7 @@ Open browser on [http://localhost:9200](http://localhost:9200). If you get follo
 ```
 
 
-### RabbitMQ v4.1.0
+### RabbitMQ v4.1.4
 
 [RabbitMQ](https://www.rabbitmq.com/) is a fundamental element of OpenK9 as it allows asynchronous dialogue between the different components of the solution.
 
@@ -267,8 +267,8 @@ For Kubernetes execute:
 
 ```bash
 kubectl -n openk9 create secret generic rabbitmq-password \
-  --from-literal=username=admin \
-  --from-literal=password=openk9 \
+  --from-literal=rabbitmq-username=admin \
+  --from-literal=rabbitmq-password=openk9 \
   --from-literal=erlang-cookie=$(openssl rand -base64 32)
 ```
 
@@ -276,8 +276,8 @@ For OpenShift execute:
 
 ```bash
 oc -n openk9 create secret generic rabbitmq-password \
-  --from-literal=username=admin \
-  --from-literal=password=openk9 \
+  --from-literal=rabbitmq-username=admin \
+  --from-literal=rabbitmq-password=openk9 \
   --from-literal=erlang-cookie=$(openssl rand -base64 32)
 ```
 
@@ -292,7 +292,7 @@ helm install rabbitmq oci://registry-1.docker.io/cloudpirates/rabbitmq \
   -f 00-base-requirements/02-rabbitmq/local-runtime.yaml
 ```
 
-To customize Rabbitmq installation follow [chart documentation](https://github.com/bitnami/charts/tree/main/bitnami/rabbitmq)
+To customize Rabbitmq installation follow [chart documentation](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/rabbitmq)
 
 #### Verify Installation
 
@@ -317,8 +317,7 @@ open browser on [http://localhost:15672](http://localhost:15672) and log in with
 
 Several elements of OpenK9 require the presence of a relational database. [PostgreSQL](https://www.postgresql.org/) represents the best open source solution.
 
-To install PostgreSQL use the Helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) which manages the different aspects of a stand-alone installation.
-
+To install PostgreSQL use the Helm Chart created by [Cloud Pirates](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/postgres) which manages the different aspects of a stand-alone installation.
 
 
 Create a secret with credentials for PostgreSQL:
@@ -359,7 +358,7 @@ export POSTGRES_PASSWORD=$(kubectl get secret -n openk9 postgres-password -o jso
 ```bash
 kubectl run postgresql-client --rm --tty -i --restart='Never' \
    -n openk9 \
-   --image docker.io/bitnami/postgresql:14 \
+   --image docker.io/postgres:16.0 \
    --env="PGPASSWORD=$POSTGRES_PASSWORD" \
    --command -- psql --host postgresql -U postgres -d postgres -p 5432
 ```
@@ -373,14 +372,19 @@ export POSTGRES_PASSWORD=$(oc get secret -n openk9 postgres-password -o jsonpath
 ```bash
 oc run postgresql-client --rm --tty -i --restart='Never' \
    -n openk9 \
-   --image docker.io/bitnami/postgresql:14 \
+   --image docker.io/postgres:16.0 \
    --env="PGPASSWORD=$POSTGRES_PASSWORD" \
    --command -- psql --host postgresql -U postgres -d postgres -p 5432
 ```
 
 When the message `If you don't see a command prompt, try pressing enter.` appears, you need to enter the password for the user `postgres` and then press enter.
 
-From `psql` I can use the `\l` command to see the databases and templates present.
+From `psql` I can use the `\l` command 
+```bash
+oc describe jobs/keycloak-db -n openk9
+```
+
+If you get this response job is completeto see the databases and templates present.
 
 ```
 If you don't see a command prompt, try pressing enter.
@@ -472,7 +476,7 @@ oc -n openk9 create secret generic postgresql-keycloak-secret \
   --from-literal=password=openk9
 ```
 
-For installation within Kubernets/OpenShift we will use the [Helm Charts](https://github.com/bitnami/charts/tree/main/bitnami/keycloak) provided by Bitnami.
+For installation within Kubernets/OpenShift we will use the [Helm Charts](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/keycloak) provided by Cloud Pirates.
 
 
 Create a secrets with credentials for Keycloak admin user.
@@ -489,7 +493,7 @@ Install Keycloak
 For Kubernetes execute:
 
 ```bash
-helm install keycloak-cloudpirates oci://registry-1.docker.io/cloudpirates/keycloak \
+helm install keycloak oci://registry-1.docker.io/cloudpirates/keycloak \
   --namespace openk9 \
   --values 00-base-requirements/06-keycloak/local-runtime.yaml \
   --version 0.8.4
@@ -499,7 +503,7 @@ helm install keycloak-cloudpirates oci://registry-1.docker.io/cloudpirates/keycl
 For Openshift execute:
 
 ```bash
-helm install keycloak-cloudpirates oci://registry-1.docker.io/cloudpirates/keycloak \
+helm install keycloak oci://registry-1.docker.io/cloudpirates/keycloak \
   --namespace openk9 \
   --values 00-base-requirements/06-keycloak/local-crc.yaml \
   --version 0.8.4
@@ -985,7 +989,7 @@ helm upgrade -i k8s-client 06-utilities/openk9-k8s-client -n openk9 -f 06-utilit
 ```
 
 #### Verify Installation
-
+keycloak-tls
 Expose the http interface on the host PC and use health endpoint to verify status of component.
 
 For Kubernetes execute:

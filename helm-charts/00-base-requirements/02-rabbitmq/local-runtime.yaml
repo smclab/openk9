@@ -19,8 +19,8 @@ service:
 ## Autenticazione - USA SECRET
 auth:
   existingSecret: "rabbitmq-password"
-  existingSecretUsernameKey: "username"
-  existingSecretPasswordKey: "password"
+  existingSecretUsernameKey: "rabbitmq-username"
+  existingSecretPasswordKey: "rabbitmq-password"
   existingSecretErlangCookieKey: "erlang-cookie"
 
 ## Configurazione
@@ -47,7 +47,7 @@ resources:
     memory: 256Mi
   limits:
     cpu: 500m
-    memory: 512Mi
+    memory: 1024Mi
 
 ## Storage
 persistence:

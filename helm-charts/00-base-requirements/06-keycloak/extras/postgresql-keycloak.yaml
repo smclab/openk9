@@ -3,14 +3,14 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: keycloak-db-setup
+  name: keycloak-db
 spec:
   # Auto-delete job after 120 seconds of completion
   ttlSecondsAfterFinished: 120
   template:
     spec:
       containers:
-      - name: keycloak-db-setup
+      - name: keycloak-db
         image: postgres:18
         command: [ "/bin/sh", "-c" ]
         args:
@@ -23,7 +23,7 @@ spec:
           psql -d keycloak -c "GRANT ALL ON SCHEMA public TO keycloak;"
         env:
         - name: PGHOST
-          value: "postgres.test-charts.svc.cluster.local"
+          value: "postgresql"
         - name: PGPORT
           value: "5432"
         - name: PGUSER

@@ -176,7 +176,7 @@ opensearch:
 rabbitmq:
   host: "rabbitmq-headless"
   port: "5672"
-  username: "openk9"
+  username: "admin"
   passwordSecretName: "rabbitmq-password"
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"
