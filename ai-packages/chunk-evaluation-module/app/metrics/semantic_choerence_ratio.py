@@ -38,7 +38,11 @@ class IntraSimilarityRefinery(BaseRefinery):
         sim_matrix = cosine_similarity(embeddings)
         n = sim_matrix.shape[0]
         mask = ~np.eye(n, dtype=bool)
-        intragroup_similarity = sim_matrix[mask].mean()
+        values = sim_matrix[mask]
+        if values.size > 0:
+            intragroup_similarity = values.mean()
+        else:
+            intragroup_similarity = 0.0
         return intragroup_similarity
 
 
