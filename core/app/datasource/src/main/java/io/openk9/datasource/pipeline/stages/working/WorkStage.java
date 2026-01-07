@@ -182,6 +182,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				if (documentTypes == null || documentTypes.length == 0) {
 
 					log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
+
+					this.replyTo.tell(new Working(heldMessage, requester));
 					writer.tell(new Writer.Start(null, heldMessage));
 
 					return this;
