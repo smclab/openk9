@@ -37,7 +37,9 @@ Build API-Gateway Image:
       echo "Build on main or tag with official version: $VERSION"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
       ./mvnw jib:build -f app/api-gateway/pom.xml \
-        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION
+        -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION \
+        -Djib.to.auth.username=$CI_REGISTRY_USER \
+        -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
 
     elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
       # Build without push on merge request
@@ -45,6 +47,8 @@ Build API-Gateway Image:
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
       ./mvnw jib:dockerBuild -f app/api-gateway/pom.xml \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION
+        -Djib.to.auth.username=$CI_REGISTRY_USER \
+        -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
       # Feature branch by Michele => push with tag 998-SNAPSHOT
@@ -52,6 +56,9 @@ Build API-Gateway Image:
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
       ./mvnw jib:build -f app/api-gateway/pom.xml \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:998-SNAPSHOT
+        -Djib.to.auth.username=$CI_REGISTRY_USER \
+        -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
+
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ && "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
       # Feature branch by Mirko => push with tag 999-SNAPSHOT
@@ -59,6 +66,8 @@ Build API-Gateway Image:
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
       ./mvnw jib:build -f app/api-gateway/pom.xml \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT
+        -Djib.to.auth.username=$CI_REGISTRY_USER \
+        -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       # Feature branch by other developer => push with tag 999-SNAPSHOT
@@ -66,6 +75,8 @@ Build API-Gateway Image:
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
       ./mvnw jib:build -f app/api-gateway/pom.xml \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT
+        -Djib.to.auth.username=$CI_REGISTRY_USER \
+        -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
     fi
   artifacts:
     paths:
