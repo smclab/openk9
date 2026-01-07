@@ -9,6 +9,7 @@ from functools import partial
 import numpy as np
 import pandas as pd
 import pika
+from apscheduler.schedulers.background import BackgroundScheduler
 from rabbit_manager.structure import setup_rabbitmq
 from utils.evaluators import layout_fidelity, redundancy_bloat, semantic_choerence
 from utils.helpers import client, make_experiment, manage_daily_dataset, score
@@ -25,7 +26,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 task = partial(score)
-last_time = datetime.min
+should_make_experiment = False
 
 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
 rabbit_user = os.getenv("RABBITMQ_USER", "user")
@@ -34,19 +35,29 @@ rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
 MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
-print(
-    "ENV:",
-    {
-        k: os.getenv(k)
-        for k in [
-            "PHOENIX_COLLECTOR_ENDPOINT",
-            "PHOENIX_OTEL_EXPORTER_ENDPOINT",
-            "PHOENIX_API_KEY",
-            "PHOENIX_PROJECT_NAME",
-        ]
+
+
+def interval_experiment(task, evaluators):
+    global should_make_experiment
+    if should_make_experiment:
+        make_experiment(task, evaluators)
+        should_make_experiment = False
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    interval_experiment,
+    trigger="interval",
+    minutes=MIN_TIME_DELAY,
+    misfire_grace_time=120,
+    id="experiment_pending_documents",
+    kwargs={
+        "task": task,
+        "evaluators": EVALUATORS,
     },
 )
 
+scheduler.start()
 setup_rabbitmq()
 
 credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
@@ -73,6 +84,7 @@ print("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
 
 
 def callback(ch, method, properties, body):
+    global should_make_experiment
     try:
         data = json.loads(body.decode("utf-8"))
         chunks = data.get("chunks")
@@ -128,7 +140,7 @@ def callback(ch, method, properties, body):
             print(
                 f"[RETRY] Retry count {retry_count + 1} - messaggio inviato alla retry queue"
             )
-    make_experiment(task=task, evaluators=EVALUATORS)
+    should_make_experiment = True
 
 
 channel.basic_consume(queue="main.queue", on_message_callback=callback)
