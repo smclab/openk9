@@ -1,60 +1,39 @@
 import json
+import logging
 import os
 import random
 import time
+from datetime import datetime, timedelta
 from functools import partial
 
 import numpy as np
 import pandas as pd
-import phoenix as px
 import pika
-from chonkie.types import Chunk
-from metrics.layout_fidelity import calculate_lf
-from metrics.redundancy_bloat import calculate_rb
-from metrics.semantic_choerence_ratio import calculate_scr
-from phoenix.experiments import run_experiment
-from phoenix.experiments.evaluators import create_evaluator
 from rabbit_manager.structure import setup_rabbitmq
+from utils.evaluators import layout_fidelity, redundancy_bloat, semantic_choerence
+from utils.helpers import client, make_experiment, manage_daily_dataset, score
 
-setup_rabbitmq()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # console
+        logging.FileHandler("app.log"),  # file
+    ],
+)
 
+logger = logging.getLogger(__name__)
 
-def semantic_choerence(output: dict):
-    results = output["semantic_choerence"]
-    forward = results["forward"]
-    backward = results["backward"]
-    mean = np.mean([forward, backward])
-    return mean
+task = partial(score)
+last_time = datetime.min
 
-
-def redundancy_bloat(output: dict):
-    results = output["redundancy_bloat"]
-    redundancy = results["redundancy"]
-    return redundancy
-
-
-def layout_fidelity(output: dict):
-    results = output["layout_fidelity"]
-    coverage = results["coverage"]
-    return coverage
-
-
-def score(input, chonkie_chunks, text) -> dict:
-    results = {}
-    results["semantic_choerence"] = calculate_scr(chonkie_chunks)
-    results["redundancy_bloat"] = calculate_rb(chonkie_chunks, text)
-    results["layout_fidelity"] = calculate_lf(chonkie_chunks, text)
-
-    return results
-
-
-EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
-################################################################
 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
 rabbit_user = os.getenv("RABBITMQ_USER", "user")
 rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
-MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 
+MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
+MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
+EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
 print(
     "ENV:",
     {
@@ -67,6 +46,8 @@ print(
         ]
     },
 )
+
+setup_rabbitmq()
 
 credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
 
@@ -97,42 +78,27 @@ def callback(ch, method, properties, body):
         chunks = data.get("chunks")
         text = data.get("text")
         chonkie_chunks = []
-        rand_name = text[0:25] + str(random.randint(0, 100))
-        df_cose = {
-            "name": [rand_name],
-            "expected": [
-                {
-                    "semantic_choerence": {
-                        "forward": [1.0, 1.2],
-                        "backward": [1.0, 1.2],
-                    },
-                    "redundancy_bloat": {"redundancy": [0.0, 0.25]},
-                    "layout_fidelity": {"coverage": 1.0},
-                }
-            ],
-        }
+        dataset_name = f"dataset-{datetime.today().strftime('%d-%m-%Y')}"
+        experiment_name = f"experiment-{datetime.today().strftime('%d-%m-%Y-%H-%M')}"
 
-        for chunk in chunks:
-            current_dict = chunk.get(list(chunk.keys())[0])
-            c_text = current_dict.get("text")
-            embedding = current_dict.get("embedding")
-            chonkie_chunks.append(Chunk(text=c_text, embedding=embedding))
+        input_item = [{"chunks": chunks, "text": text}]
+        output_item = [
+            {
+                "expected": [
+                    {
+                        "semantic_choerence": {
+                            "forward": [1.0, 1.2],
+                            "backward": [1.0, 1.2],
+                        },
+                        "redundancy_bloat": {"redundancy": [0.0, 0.25]},
+                        "layout_fidelity": {"coverage": 1.0},
+                    }
+                ]
+            }
+        ]
 
-        task = partial(score, chonkie_chunks=chonkie_chunks, text=text)
-
-        df = pd.DataFrame(df_cose)
-
-        dataset = px.Client().upload_dataset(
-            dataset_name=rand_name,
-            dataframe=df,
-            input_keys=["name"],
-            output_keys=["expected"],
-        )
-        experiment = run_experiment(
-            dataset=dataset,
-            task=task,
-            evaluators=EVALUATORS,
-            experiment_metadata={"version": "1.0"},
+        dataset = manage_daily_dataset(
+            dataset_name=dataset_name, input_item=input_item, output_item=output_item
         )
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
@@ -162,6 +128,7 @@ def callback(ch, method, properties, body):
             print(
                 f"[RETRY] Retry count {retry_count + 1} - messaggio inviato alla retry queue"
             )
+    make_experiment(task=task, evaluators=EVALUATORS)
 
 
 channel.basic_consume(queue="main.queue", on_message_callback=callback)
