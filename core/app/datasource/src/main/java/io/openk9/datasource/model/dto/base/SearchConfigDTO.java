@@ -35,10 +35,7 @@ public class SearchConfigDTO extends K9EntityDTO {
 	private boolean minScoreSearch;
 	@NotNull
 	private boolean minScoreSuggestions;
-	@NotNull
 	private Integer maxSearchPageFrom;
-	@NotNull
 	private Integer maxSearchPageSize;
-	@NotNull
 	private Integer maxTextQueryLength;
 }
