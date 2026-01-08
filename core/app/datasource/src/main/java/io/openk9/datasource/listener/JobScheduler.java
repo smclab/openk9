@@ -329,6 +329,10 @@ public class JobScheduler {
 			scheduler.setNewDataIndex(newDataIndex);
 
 			if (oldDataIndex != null) {
+				newDataIndex.setKnnIndex(oldDataIndex.getKnnIndex());
+				newDataIndex.setChunkType(oldDataIndex.getChunkType());
+				newDataIndex.setChunkWindowSize(oldDataIndex.getChunkWindowSize());
+				newDataIndex.setEmbeddingJsonConfig(oldDataIndex.getEmbeddingJsonConfig());
 				Set<DocType> docTypes = oldDataIndex.getDocTypes();
 				newDataIndex.setEmbeddingDocTypeField(oldDataIndex.getEmbeddingDocTypeField());
 
