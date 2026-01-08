@@ -520,46 +520,7 @@ For Openshift execute:
 kubectl -n openk9 port-forward svc/keycloak 8280:80
 ```
 
-Access to console using url [http://localhost:8280](http://localhost:8280) and login with user **user** and with password inserted in secret previously created.
-
-
-#### Expose Keycloak using Ingress
-
-Keycloak must be exposed through Ingress in order to be externally reachable for the login flow.
-
-Use following command to create ingress from terminal. Update host in spec.rules and in tls.hosts to match your domain and substitute to `keycloak.openk9.local`.
-
-Change also tls.secretName if you have renamed tls secret.
-
-```bash
-cat <<_EOF_ | kubectl apply -n openk9 -f -
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: keycloak
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-buffer-size: 8k
-spec:
-  rules:
-    - host: "keycloak.openk9.local"
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name:  keycloak-headless
-                port:
-                  number: 80
-  tls:
-    - hosts:
-        - "keycloak.openk9.local"
-      secretName: openk9-tls-star-secret
-_EOF_
-```
-
-The annotation `nginx.ingress.kubernetes.io/proxy-buffer-size: 8k` is needed to handle redirects to Keycloak with big headers.
-
+Access to console using url [http://localhost:8280](http://localhost:8280) and login with user **admin** and with password inserted in secret previously created.
 
 
 ## Openk9 Components
