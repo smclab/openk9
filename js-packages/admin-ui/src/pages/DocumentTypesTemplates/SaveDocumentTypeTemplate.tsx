@@ -139,7 +139,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "templateType" },
+          { key: "templateType", label: "Template Type" },
           { key: "source" },
           { key: "compiled" },
         ],

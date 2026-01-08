@@ -113,7 +113,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     form: form as any,
     sections: [
       {
-        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
+        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig", label: "JSON Config" }],
         label: "Recap Tokenizer",
       },
     ],

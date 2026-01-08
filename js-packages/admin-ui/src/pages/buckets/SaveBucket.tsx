@@ -16,6 +16,7 @@ import {
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { TooltipDescription } from "@components/Form/utils";
 import { Box, Button } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -32,7 +33,6 @@ import {
   useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
-import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
@@ -276,20 +276,20 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "refreshOnDate" },
-          { key: "refreshOnQuery" },
-          { key: "refreshOnSuggestionCategory" },
-          { key: "refreshOnTab" },
-          { key: "retrieveType" },
-          { key: "datasourceIds" },
-          { key: "suggestionCategoryIds" },
-          { key: "tabIds" },
-          { key: "queryAnalysisId" },
-          { key: "defaultLanguageId" },
-          { key: "searchConfigId" },
-          { key: "ragConfigurationChatId" },
-          { key: "ragConfigurationChatToolId" },
-          { key: "ragConfigurationSimpleGenerateId" },
+          { key: "refreshOnDate", label: "Refresh On Date" },
+          { key: "refreshOnQuery", label: "Refresh On Query" },
+          { key: "refreshOnSuggestionCategory", label: "Refresh On Suggestion Category" },
+          { key: "refreshOnTab", label: "Refresh On Tab" },
+          { key: "retrieveType", label: "Retriever Type" },
+          { key: "datasourceIds", label: "Datasources" },
+          { key: "suggestionCategoryIds", label: "Suggestion Categories" },
+          { key: "tabIds", label: "Tabs" },
+          { key: "queryAnalysisId", label: "Query Analysis" },
+          { key: "defaultLanguageId", label: "Default Language" },
+          { key: "searchConfigId", label: "Search Configuration" },
+          { key: "ragConfigurationChatId", label: "RAG Configuration Chat" },
+          { key: "ragConfigurationChatToolId", label: "RAG Configuration Chat Tool" },
+          { key: "ragConfigurationSimpleGenerateId", label: "RAG Configuration Simple Generate" },
         ],
         label: "Recap Document Type",
       },

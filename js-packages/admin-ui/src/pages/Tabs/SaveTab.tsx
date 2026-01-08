@@ -125,7 +125,12 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
     form: form as any,
     sections: [
       {
-        cell: [{ key: "name" }, { key: "description" }, { key: "priority" }, { key: "tokenTabIds" }],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "priority" },
+          { key: "tokenTabIds", label: "Token Tabs" },
+        ],
         label: "Recap Tab",
       },
     ],

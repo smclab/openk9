@@ -112,7 +112,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
     form: form as any,
     sections: [
       {
-        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig" }],
+        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig", label: "JSON Config" }],
         label: "Recap Token Filter",
       },
     ],
