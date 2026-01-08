@@ -20,7 +20,7 @@ package io.openk9.tenantmanager.init;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.service.OutboxEventService;
@@ -60,7 +60,7 @@ public class OutboxBackfillTest {
 		for (OutboxEvent event : backfilledEvents) {
 			var tenantCreatedEvent = Json.decodeValue(
 				event.getPayload(),
-				TenantManagementEvent.TenantCreated.class
+				TenantEvent.TenantCreated.class
 			);
 
 			String tenantId  = tenantCreatedEvent.tenantId();

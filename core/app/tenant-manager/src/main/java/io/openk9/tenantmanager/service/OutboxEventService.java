@@ -25,7 +25,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
 import io.smallrye.mutiny.Uni;
@@ -39,7 +39,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class OutboxEventService {
 
-	public Uni<Void> persist(TenantManagementEvent event) {
+	public Uni<Void> persist(TenantEvent event) {
 		Objects.requireNonNull(event);
 
 		long eventId = idGenerator.nextId();

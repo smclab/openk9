@@ -17,7 +17,7 @@
 
 package io.openk9.apigw.r2dbc;
 
-import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.AuthorizationScheme;
 
 import org.assertj.core.groups.Tuple;
@@ -81,7 +81,7 @@ public class TenantWriteServiceR2dbcTest {
 		StepVerifier.create(
 			service.insertRouteSecurity(
 				"tenant3",
-				RouteGroup.ADMINISTRATION,
+				ApiGroup.ADMINISTRATION,
 				AuthorizationScheme.NO_AUTH
 			)
 		).verifyComplete();
@@ -140,7 +140,7 @@ public class TenantWriteServiceR2dbcTest {
 			service.insertTenant(tenantId, "old.com", "old-uri", null, null)
 				.then(service.insertRouteSecurity(
 					tenantId,
-					RouteGroup.ADMINISTRATION,
+					ApiGroup.ADMINISTRATION,
 					AuthorizationScheme.NO_AUTH
 				))
 				.then(service.insertApiKey(tenantId, "hash123", "chk"))
@@ -209,7 +209,7 @@ public class TenantWriteServiceR2dbcTest {
 	@DisplayName("Insert RouteSecurity should be idempotent")
 	void should_ignore_insert_routeSecurity_with_same_tenantId_and_route() {
 		var tenantId = "tenant7";
-		var route = RouteGroup.ADMINISTRATION;
+		var route = ApiGroup.ADMINISTRATION;
 
 		StepVerifier.create(
 			service.insertRouteSecurity(

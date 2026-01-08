@@ -34,7 +34,7 @@
 	  <!-- tenant events producing -->
 	  <dependency>
 		  <groupId>io.openk9</groupId>
-		  <artifactId>events</artifactId>
+		  <artifactId>tenant-events</artifactId>
 	  </dependency>
 	  <dependency>
 		  <groupId>io.smallrye.reactive</groupId>

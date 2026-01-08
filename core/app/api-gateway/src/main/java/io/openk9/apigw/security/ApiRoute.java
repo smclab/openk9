@@ -47,7 +47,7 @@ import org.springframework.util.PathMatcher;
  * @see Tenant
  */
 @Getter
-public enum RoutePath {
+public enum ApiRoute {
 
 	/**
 	 * Route for the datasource service, that doesn't need to be protected.
@@ -86,6 +86,12 @@ public enum RoutePath {
 	RAG("/api/rag/**"),
 
 	/**
+	 * Route for the ingestion service.
+	 * Matches requests under {@code /api/ingestion/**}.
+	 */
+	INGESTION("/api/ingestion/**"),
+
+	/**
 	 * Catch-all route that matches any request.
 	 * Matches requests under {@code /**}.
 	 */
@@ -93,21 +99,21 @@ public enum RoutePath {
 
 	private final String antPattern;
 
-	RoutePath(String antPattern) {
+	ApiRoute(String antPattern) {
 		this.antPattern = antPattern;
 	}
 
 	/**
-	 * Return the first route that match the path, like {@link RoutePath#valueOf(String)}
+	 * Return the first route that match the path, like {@link ApiRoute#valueOf(String)}
 	 *
 	 * @param path the request path
 	 * @return the enum constant that matched the specified path
 	 */
-	public static RoutePath matchOf(String path) {
+	public static ApiRoute matchOf(String path) {
 
-		for (RoutePath routePath : values()) {
-			if (ANT_PATH_MATCHER.match(routePath.getAntPattern(), path)) {
-				return routePath;
+		for (ApiRoute apiRoute : values()) {
+			if (ANT_PATH_MATCHER.match(apiRoute.getAntPattern(), path)) {
+				return apiRoute;
 			}
 		}
 
@@ -118,11 +124,11 @@ public enum RoutePath {
 		if (ANT_PATTERNS != null) {
 			return ANT_PATTERNS;
 		}
-		var n = RoutePath.values().length;
+		var n = ApiRoute.values().length;
 		var patterns = new String[n];
 
 		for (int i = 0; i < n; i++) {
-			patterns[i] = RoutePath.values()[i].getAntPattern();
+			patterns[i] = ApiRoute.values()[i].getAntPattern();
 		}
 
 		ANT_PATTERNS = patterns;

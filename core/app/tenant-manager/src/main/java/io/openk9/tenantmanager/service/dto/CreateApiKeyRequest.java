@@ -19,21 +19,21 @@ package io.openk9.tenantmanager.service.dto;
 
 import java.time.OffsetDateTime;
 
-import io.openk9.tenantmanager.model.TenantRouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 
 public record CreateApiKeyRequest(
 	String tenantId,
 	String name,
-	TenantRouteGroup tenantRouteGroups,
+	ApiGroup apiGroup,
 	OffsetDateTime expirationDate
 ) {
 
 	public static CreateApiKeyRequest of(
 		String tenantId,
 		String name,
-		TenantRouteGroup tenantRouteGroups,
+		ApiGroup apiGroup,
 		OffsetDateTime expirationDate) {
 
-		return new CreateApiKeyRequest(tenantId, name, tenantRouteGroups, expirationDate);
+		return new CreateApiKeyRequest(tenantId, name, apiGroup, expirationDate);
 	}
 }

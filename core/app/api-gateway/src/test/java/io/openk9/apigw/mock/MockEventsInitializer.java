@@ -17,8 +17,8 @@
 
 package io.openk9.apigw.mock;
 
-import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.event.tenant.TenantManagementEventProducer;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventProducer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MockEventsInitializer implements ApplicationRunner {
 
-	private final TenantManagementEventProducer producer;
+	private final TenantEventProducer producer;
 
 	@Override
 	public void run(ApplicationArguments args) {
@@ -39,10 +39,10 @@ public class MockEventsInitializer implements ApplicationRunner {
 		log.info("Sending amqp messages...");
 
 		try {
-			for (TenantManagementEvent.TenantCreated tenantCreated : MockEvents.tenantCreatedEvents()) {
+			for (TenantEvent.TenantCreated tenantCreated : MockEvents.tenantCreatedEvents()) {
 				producer.send(tenantCreated);
 			}
-			for (TenantManagementEvent.ApiKeyCreated apiKeyCreated : MockEvents.apiKeyCreatedEvents()) {
+			for (TenantEvent.ApiKeyCreated apiKeyCreated : MockEvents.apiKeyCreatedEvents()) {
 				producer.send(apiKeyCreated);
 			}
 		}

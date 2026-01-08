@@ -18,17 +18,34 @@
 package io.openk9.tenantmanager.model;
 
 import java.time.OffsetDateTime;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
+@Entity
 public class ApiKey {
 
+	@Id
 	private long id;
 	private Tenant tenant;
 	private String name;
-	private TenantRouteGroup tenantRouteGroup;
-	private ApiKeyStatus status;
+	private ApiGroup apiGroup;
+	private Status status;
 	private String prefix;
 	private String suffix;
 	private OffsetDateTime createDate;
 	private OffsetDateTime expirationDate;
+
+	public enum Status {
+		ACTIVE,
+		REVOKED,
+		EXPIRED
+	}
+
+	public enum ApiGroup {
+		ADMINISTRATION,
+		SEARCH,
+		INGESTION,
+		PUBLIC,
+	}
 
 }

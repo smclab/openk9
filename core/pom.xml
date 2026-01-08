@@ -57,7 +57,7 @@
 		<module>app</module>
 		<module>client</module>
 		<module>common</module>
-		<module>events</module>
+		<module>tenant-events</module>
 	</modules>
 
 	<properties>
@@ -255,7 +255,7 @@
 			</dependency>
 			<dependency>
 				<groupId>io.openk9</groupId>
-				<artifactId>events</artifactId>
+				<artifactId>tenant-events</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 

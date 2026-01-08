@@ -20,58 +20,58 @@ package io.openk9.apigw.mock;
 import java.util.List;
 import java.util.Map;
 
-import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 
 public class MockEvents {
 
-	public static List<TenantManagementEvent.TenantCreated> tenantCreatedEvents() {
+	public static List<TenantEvent.TenantCreated> tenantCreatedEvents() {
 		return List.of(
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("loguetown")
 				.schemaName("loguetown")
 				.hostName("loguetown.localhost")
 				.routeAuthorizationMap(Map.of(
-					RouteGroup.ADMINISTRATION, AuthorizationScheme.API_KEY
+					ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY
 				))
 				.build(),
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("drum")
 				.schemaName("drum")
 				.hostName("drum.localhost")
 				.issuerUri("http://drum.localhost:9090/realms/drum")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-					RouteGroup.SEARCH, AuthorizationScheme.OAUTH2))
+					ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+					ApiGroup.SEARCH, AuthorizationScheme.OAUTH2))
 				.build(),
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("alabasta")
 				.schemaName("alabasta")
 				.hostName("alabasta.localhost")
 				.issuerUri("http://alabasta.localhost:9090/realms/alabasta")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-					RouteGroup.SEARCH, AuthorizationScheme.API_KEY))
+					ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+					ApiGroup.SEARCH, AuthorizationScheme.API_KEY))
 				.build(),
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("sabaody")
 				.schemaName("sabaody")
 				.hostName("sabaody.localhost")
 				.issuerUri("http://sabaody.localhost:9090/realms/sabaody")
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
-					RouteGroup.ADMINISTRATION, AuthorizationScheme.API_KEY,
-					RouteGroup.SEARCH, AuthorizationScheme.API_KEY))
+					ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY,
+					ApiGroup.SEARCH, AuthorizationScheme.API_KEY))
 				.build(),
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("skypea")
 				.schemaName("skypea")
 				.hostName("skypea.localhost")
@@ -80,7 +80,7 @@ public class MockEvents {
 				.routeAuthorizationMap(Map.of())
 				.build(),
 
-			TenantManagementEvent.TenantCreated.builder()
+			TenantEvent.TenantCreated.builder()
 				.tenantId("waterseven")
 				.schemaName("waterseven")
 				.hostName("waterseven.localhost")
@@ -91,41 +91,41 @@ public class MockEvents {
 		);
 	}
 
-	public static List<TenantManagementEvent.ApiKeyCreated> apiKeyCreatedEvents() {
+	public static List<TenantEvent.ApiKeyCreated> apiKeyCreatedEvents() {
 		return List.of(
 			// Loguetown API keys
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("loguetown")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
 				.build(),
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("loguetown")
 				.apiKeyHash("05a4f803d7b05d2308c586494db1d869eb14f1629dbda655fb62df72cfac75f6")
 				.checksum("4679e9c9")
 				.build(),
 
 			// Drum API key
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("drum")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
 				.build(),
 
 			// Alabasta API key
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("alabasta")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
 				.build(),
 
 			// Sabaody API keys
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("sabaody")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
 				.build(),
-			TenantManagementEvent.ApiKeyCreated.builder()
+			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("sabaody")
 				.apiKeyHash("dc94fddbae55ea98995b28eca222f934de35bc05eb8af91cc6956c0c3dcc233f")
 				.checksum("bd0a32e2")

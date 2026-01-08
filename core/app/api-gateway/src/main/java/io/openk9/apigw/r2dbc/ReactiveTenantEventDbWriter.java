@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.ReactiveTenantManagementEventConsumer;
-import io.openk9.event.tenant.RouteGroup;
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.ReactiveTenantEventConsumer;
+import io.openk9.event.tenant.ApiGroup;
+import io.openk9.event.tenant.TenantEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +40,8 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ReactiveTenantManagementEventDbWriter
-	implements ReactiveTenantManagementEventConsumer {
+public class ReactiveTenantEventDbWriter
+	implements ReactiveTenantEventConsumer {
 
 	private final TenantWriteServiceR2dbc writeService;
 
@@ -52,14 +52,14 @@ public class ReactiveTenantManagementEventDbWriter
 	 *
 	 */
 	@Override
-	public Publisher<Void> handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event) {
+	public Publisher<Void> handleTenantCreatedEvent(TenantEvent.TenantCreated event) {
 		log.info("Received tenant created event: {}", event.tenantId());
 
-		Map<RouteGroup, AuthorizationScheme> routeAuthorizationMap = event.routeAuthorizationMap();
+		Map<ApiGroup, AuthorizationScheme> routeAuthorizationMap = event.routeAuthorizationMap();
 
 		List<Mono<Void>> routeSecurityInserts = new ArrayList<>();
 		if (routeAuthorizationMap != null) {
-			for (Map.Entry<RouteGroup, AuthorizationScheme> entry : routeAuthorizationMap.entrySet()) {
+			for (Map.Entry<ApiGroup, AuthorizationScheme> entry : routeAuthorizationMap.entrySet()) {
 				routeSecurityInserts.add(writeService.insertRouteSecurity(
 					event.tenantId(), entry.getKey(), entry.getValue()));
 			}
@@ -81,7 +81,7 @@ public class ReactiveTenantManagementEventDbWriter
 	 * Handle API key creation events.
 	 */
 	@Override
-	public Publisher<Void> handleApiKeyCreatedEvent(TenantManagementEvent.ApiKeyCreated event) {
+	public Publisher<Void> handleApiKeyCreatedEvent(TenantEvent.ApiKeyCreated event) {
 		log.info("Received API key created event for tenant: {}", event.tenantId());
 
 		return writeService
@@ -93,7 +93,7 @@ public class ReactiveTenantManagementEventDbWriter
 	 * Handle tenant update events.
 	 */
 	@Override
-	public Publisher<Void> handleTenantUpdatedEvent(TenantManagementEvent.TenantUpdated event) {
+	public Publisher<Void> handleTenantUpdatedEvent(TenantEvent.TenantUpdated event) {
 		log.info("Received tenant updated event: {}", event.tenantId());
 
 		return writeService
@@ -111,7 +111,7 @@ public class ReactiveTenantManagementEventDbWriter
 	 * Handle tenant deletion events.
 	 */
 	@Override
-	public Publisher<Void> handleTenantDeletedEvent(TenantManagementEvent.TenantDeleted event) {
+	public Publisher<Void> handleTenantDeletedEvent(TenantEvent.TenantDeleted event) {
 		log.info("Received tenant deleted event: {}", event.tenantId());
 
 		return writeService.deleteTenant(event.tenantId())

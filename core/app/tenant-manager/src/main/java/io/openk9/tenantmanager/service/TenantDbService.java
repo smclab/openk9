@@ -30,10 +30,10 @@ import jakarta.validation.Validator;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.common.util.web.Response;
 import io.openk9.common.util.web.ResponseUtil;
-import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.event.tenant.TenantManagementEventProducer;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventProducer;
 import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.dto.TenantRequestDTO;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
@@ -91,16 +91,16 @@ public class TenantDbService {
 				.map(SqlResult::rowCount)
 				.flatMap(rowCount -> sendEvent(
 						rowCount,
-						TenantManagementEvent.TenantCreated.builder()
+						TenantEvent.TenantCreated.builder()
 							.tenantId(schemaName)
 							.schemaName(schemaName)
 							.hostName(virtualHost)
 							.clientId(clientId)
 							.issuerUri(issuerUri)
 							.routeAuthorizationMap(Map.of(
-								RouteGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-								RouteGroup.SEARCH, AuthorizationScheme.NO_AUTH,
-								RouteGroup.PUBLIC, AuthorizationScheme.NO_AUTH
+								ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
+								ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH,
+								ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH
 							))
 							.build()
 					)
@@ -157,7 +157,7 @@ public class TenantDbService {
 					.map(SqlResult::rowCount)
 					.flatMap(rowCount -> sendEvent(
 							rowCount,
-							TenantManagementEvent.TenantDeleted
+							TenantEvent.TenantDeleted
 								.builder()
 								.tenantId(tenant.realmName())
 								.build()
@@ -232,7 +232,7 @@ public class TenantDbService {
 			});
 	}
 
-	private Uni<Void> sendEvent(int rowCount, TenantManagementEvent event) {
+	private Uni<Void> sendEvent(int rowCount, TenantEvent event) {
 
 		log.debugf("Rows updated: %d", rowCount);
 
@@ -268,7 +268,7 @@ public class TenantDbService {
 	@Inject
 	Validator validator;
 	@Inject
-	TenantManagementEventProducer producer;
+	TenantEventProducer producer;
 	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
 	String baseIssuerUri;
 

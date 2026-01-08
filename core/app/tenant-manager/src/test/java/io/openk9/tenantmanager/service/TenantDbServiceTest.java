@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Inject;
 
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
 
@@ -228,27 +228,27 @@ public class TenantDbServiceTest {
 
 
 	/**
-	 * In order to stub the call to {@link OutboxEventService#persist(TenantManagementEvent)}
+	 * In order to stub the call to {@link OutboxEventService#persist(TenantEvent)}
 	 * only once, we need to declare a custom {@link ArgumentMatcher} that can
 	 * count the method's calls with that same argument.
 	 */
 	private static class StubOnceMatcher
-		implements ArgumentMatcher<TenantManagementEvent> {
+		implements ArgumentMatcher<TenantEvent> {
 
 		private static final StubOnceMatcher TENANT_DELETED_INSTANCE =
-			new StubOnceMatcher(TenantManagementEvent.TenantDeleted.class);
+			new StubOnceMatcher(TenantEvent.TenantDeleted.class);
 		private static final StubOnceMatcher TENANT_CREATED_INSTANCE =
-			new StubOnceMatcher(TenantManagementEvent.TenantCreated.class);
+			new StubOnceMatcher(TenantEvent.TenantCreated.class);
 
 		private final AtomicInteger callCount = new AtomicInteger(1);
-		private final Class<? extends TenantManagementEvent> clazz;
+		private final Class<? extends TenantEvent> clazz;
 
-		private StubOnceMatcher(Class<? extends TenantManagementEvent> clazz) {
+		private StubOnceMatcher(Class<? extends TenantEvent> clazz) {
 			this.clazz = clazz;
 		}
 
 		@Override
-		public boolean matches(TenantManagementEvent event) {
+		public boolean matches(TenantEvent event) {
 			// if it's already called then use real method
 			if (callCount.get() == 0) {
 				return false;

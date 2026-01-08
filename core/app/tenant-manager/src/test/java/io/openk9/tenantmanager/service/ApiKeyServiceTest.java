@@ -18,15 +18,12 @@
 package io.openk9.tenantmanager.service;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import jakarta.inject.Inject;
 
-import io.openk9.tenantmanager.model.TenantRouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
-import io.openk9.tenantmanager.service.dto.CreateApiKeyResponse;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -46,12 +43,12 @@ public class ApiKeyServiceTest {
 			CreateApiKeyRequest.of(
 				tenantId,
 				name,
-				TenantRouteGroup.SEARCH_EXPERIENCE,
+				ApiGroup.SEARCH,
 				expirationDate
 			);
 
-		Uni<CreateApiKeyResponse> apiKey =
-			apiKeyService.create(createApiKeyRequest);
+		apiKeyService.create(createApiKeyRequest)
+			.await().indefinitely();
 
 	}
 

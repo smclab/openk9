@@ -28,8 +28,8 @@ import java.util.Objects;
 
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.RouteGroup;
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.ApiGroup;
+import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -157,8 +157,8 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 					//  - Datasource APIs were authorized for user with admin roles;
 					//  - Searcher APIs were allowed to everyone.
 					objectNode.set("routeAuthorizationMap", OBJ_MAPPER.createObjectNode()
-						.put(RouteGroup.ADMINISTRATION.name(), AuthorizationScheme.OAUTH2.name())
-						.put(RouteGroup.SEARCH.name(), AuthorizationScheme.NO_AUTH.name())
+						.put(ApiGroup.ADMINISTRATION.name(), AuthorizationScheme.OAUTH2.name())
+						.put(ApiGroup.SEARCH.name(), AuthorizationScheme.NO_AUTH.name())
 					);
 
 					var payload = objectNode.toString();
@@ -249,7 +249,7 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 	private final static CompactSnowflakeIdGenerator ID_GENERATOR =
 		new CompactSnowflakeIdGenerator();
 	private static final String EVENT_TYPE =
-		TenantManagementEvent.TenantCreated.class.getSimpleName();
+		TenantEvent.TenantCreated.class.getSimpleName();
 	private static final ObjectMapper OBJ_MAPPER = new ObjectMapper();
 
 	private record BackfillEvent(String payload, Timestamp createDate) {}

@@ -17,19 +17,28 @@
 
 package io.openk9.event.tenant;
 
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+
 /**
- * Defines the available authorization schemes
- * that would be verified by the API Gateway.
- * <p>
- * It's used in combination with a {@link RouteGroup} to create
- * different security configurations that could be applied to Tenants.
- *
- * @see RouteGroup
- * @see io.openk9.event.tenant.TenantManagementEvent.TenantCreated
- * @see io.openk9.event.tenant.TenantManagementEvent.TenantUpdated
+ * A producer of {@link TenantEvent}.
  */
-public enum AuthorizationScheme {
-	OAUTH2,
-	API_KEY,
-	NO_AUTH
+public interface TenantEventProducer {
+
+	/**
+	 * Send the {@link TenantEvent}.
+	 *
+	 * @param event the {@link TenantEvent} to send.
+	 */
+	void send(TenantEvent event) throws Throwable;
+
+	/**
+	 * Send the {@link TenantEvent} asynchronous.
+	 *
+	 * @param event that will be sent
+	 * @return a {@link Publisher} that will call
+	 * {@link Subscriber#onComplete()} when the event is sent.
+	 */
+	Publisher<Void> sendAsync(TenantEvent event);
+
 }

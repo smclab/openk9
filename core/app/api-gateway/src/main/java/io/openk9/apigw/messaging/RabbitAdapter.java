@@ -17,8 +17,8 @@
 
 package io.openk9.apigw.messaging;
 
-import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.event.tenant.TenantManagementEventConsumer;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventConsumer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,22 +30,22 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class RabbitAdapter {
 
-	private final TenantManagementEventConsumer consumer;
+	private final TenantEventConsumer consumer;
 
 	@RabbitListener(
-		queues = TenantManagementEvent.TOPIC,
+		queues = TenantEvent.TOPIC,
 		containerFactory = "replayContainerFactory"
 	)
-	public void adapter(TenantManagementEvent payload) {
+	public void adapter(TenantEvent payload) {
 		if (log.isDebugEnabled()) {
 			log.debug("Processing: {}", payload);
 		}
 
 		switch (payload) {
-			case TenantManagementEvent.ApiKeyCreated e -> consumer.handleApiKeyCreatedEvent(e);
-			case TenantManagementEvent.TenantCreated e -> consumer.handleTenantCreatedEvent(e);
-			case TenantManagementEvent.TenantDeleted e -> consumer.handleTenantDeletedEvent(e);
-			case TenantManagementEvent.TenantUpdated e -> consumer.handleTenantUpdatedEvent(e);
+			case TenantEvent.ApiKeyCreated e -> consumer.handleApiKeyCreatedEvent(e);
+			case TenantEvent.TenantCreated e -> consumer.handleTenantCreatedEvent(e);
+			case TenantEvent.TenantDeleted e -> consumer.handleTenantDeletedEvent(e);
+			case TenantEvent.TenantUpdated e -> consumer.handleTenantUpdatedEvent(e);
 		}
 	}
 }

@@ -20,6 +20,9 @@ package io.openk9.tenantmanager.model;
 import java.util.List;
 import java.util.Set;
 
+import io.openk9.event.tenant.ApiGroup;
+import io.openk9.event.tenant.AuthorizationScheme;
+
 public record Preconfiguration(
 	PreconfigurationType name, List<Config> configs) {
 
@@ -29,10 +32,10 @@ public record Preconfiguration(
 		return new Preconfiguration(name, configs);
 	}
 
-	public record Config(TenantRouteGroup tenantRouteGroup, AuthScheme authScheme) {
+	public record Config(ApiGroup apiGroup, AuthorizationScheme authScheme) {
 
-		public static Config of(TenantRouteGroup tenantRouteGroup, AuthScheme authScheme) {
-			return new Config(tenantRouteGroup, authScheme);
+		public static Config of(ApiGroup apiGroup, AuthorizationScheme authScheme) {
+			return new Config(apiGroup, authScheme);
 		}
 	}
 
@@ -41,46 +44,46 @@ public record Preconfiguration(
 				Preconfiguration.of(
 					PreconfigurationType.LEGACY,
 					List.of(
-						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.OPEN),
-						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OPEN),
-						Config.of(TenantRouteGroup.INGESTION, AuthScheme.OPEN)
+						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
+						Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
+						Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PROFILED_LEGACY,
 					List.of(
-						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.OPEN),
-						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.INGESTION, AuthScheme.OPEN)
+						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
+						Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PROFILED,
 					List.of(
-						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
+						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.PUBLIC_USAGE,
 					List.of(
-						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.OAUTH2),
-						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
+						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 					)
 				),
 				Preconfiguration.of(
 					PreconfigurationType.API_KEY_ONLY,
 					List.of(
-						Config.of(TenantRouteGroup.ADMINISTRATION, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.PUBLIC, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.SEARCH_EXPERIENCE, AuthScheme.API_KEY),
-						Config.of(TenantRouteGroup.INGESTION, AuthScheme.API_KEY)
+						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
+						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 					)
 				)
 			)

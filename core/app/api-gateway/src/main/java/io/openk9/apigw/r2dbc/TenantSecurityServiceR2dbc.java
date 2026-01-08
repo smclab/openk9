@@ -27,7 +27,7 @@ import io.openk9.apigw.security.ChecksumValidationException;
 import io.openk9.apigw.security.Keychain;
 import io.openk9.apigw.security.NoAuthenticationToken;
 import io.openk9.apigw.security.RouteAuthorizationMap;
-import io.openk9.apigw.security.RoutePath;
+import io.openk9.apigw.security.ApiRoute;
 import io.openk9.apigw.security.Tenant;
 import io.openk9.apigw.security.TenantIdResolverFilter;
 import io.openk9.apigw.security.TenantSecurityService;
@@ -128,11 +128,11 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
                     """)
 			.bind("tenantId", tenantId)
 			.map((row, meta) -> Map.entry(
-				RoutePath.valueOf(row.get("route", String.class)),
+				ApiRoute.valueOf(row.get("route", String.class)),
 				AuthorizationSchemeToken.valueOf(row.get("authorization_scheme", String.class))
 			))
 			.all()
-			.collectMap(Map.Entry::getKey, Map.Entry::getValue, () -> new EnumMap<>(RoutePath.class))
+			.collectMap(Map.Entry::getKey, Map.Entry::getValue, () -> new EnumMap<>(ApiRoute.class))
 			.map(RouteAuthorizationMap::of);
 	}
 
@@ -147,13 +147,13 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 		var request = exchange.getRequest();
 		var path = request.getPath();
 
-		RoutePath routePath = RoutePath.matchOf(path.value());
+		ApiRoute apiRoute = ApiRoute.matchOf(path.value());
 
 		return getTenantAggregate(tenantId)
 			.map(Tenant::routeAuthorizationMap)
 			.flatMap(routeAuthorizationMap -> authenticationMono
 				.defaultIfEmpty(NoAuthenticationToken.INSTANCE)
-				.map(auth -> routeAuthorizationMap.allows(routePath, auth)))
+				.map(auth -> routeAuthorizationMap.allows(apiRoute, auth)))
 			.defaultIfEmpty(false); // disallow if tenant doesn't exist
 	}
 

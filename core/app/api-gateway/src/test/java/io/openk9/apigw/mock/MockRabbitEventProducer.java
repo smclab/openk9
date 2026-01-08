@@ -17,8 +17,8 @@
 
 package io.openk9.apigw.mock;
 
-import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.event.tenant.TenantManagementEventProducer;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventProducer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,21 +30,21 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MockRabbitEventProducer
-	implements TenantManagementEventProducer {
+	implements TenantEventProducer {
 
 	private final AmqpTemplate amqp;
 
 	@Override
-	public void send(TenantManagementEvent event) {
+	public void send(TenantEvent event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Sending a new event: {}", event);
 		}
 
-		amqp.convertAndSend(TenantManagementEvent.TOPIC, event);
+		amqp.convertAndSend(TenantEvent.TOPIC, event);
 	}
 
 	@Override
-	public Publisher<Void> sendAsync(TenantManagementEvent event) {
+	public Publisher<Void> sendAsync(TenantEvent event) {
 		throw new UnsupportedOperationException();
 	}
 

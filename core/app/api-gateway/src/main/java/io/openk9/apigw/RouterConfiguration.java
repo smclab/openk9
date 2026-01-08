@@ -17,7 +17,7 @@
 
 package io.openk9.apigw;
 
-import io.openk9.apigw.security.RoutePath;
+import io.openk9.apigw.security.ApiRoute;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,41 +62,41 @@ public class RouterConfiguration {
 
 		var routes = builder.routes();
 
-		for (RoutePath routePath : RoutePath.values()) {
-			var enforcer = switch (routePath) {
+		for (ApiRoute apiRoute : ApiRoute.values()) {
+			var enforcer = switch (apiRoute) {
 				case DATASOURCE_OAUTH2_SETTINGS -> routes.route(
-					RoutePath.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
-						.path(RoutePath.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
+					ApiRoute.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
+						.path(ApiRoute.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
 						.uri("forward:/oauth2/settings.js")
 				);
 				case DATASOURCE_CURRENT_BUCKET -> routes.route(
-					RoutePath.DATASOURCE_CURRENT_BUCKET.name(), r -> r
-						.path(RoutePath.DATASOURCE_CURRENT_BUCKET.getAntPattern())
+					ApiRoute.DATASOURCE_CURRENT_BUCKET.name(), r -> r
+						.path(ApiRoute.DATASOURCE_CURRENT_BUCKET.getAntPattern())
 						.uri(datasource)
 				);
 				case DATASOURCE_TEMPLATES -> routes.route(
-					RoutePath.DATASOURCE_TEMPLATES.name(), r -> r
-						.path(RoutePath.DATASOURCE_TEMPLATES.getAntPattern())
+					ApiRoute.DATASOURCE_TEMPLATES.name(), r -> r
+						.path(ApiRoute.DATASOURCE_TEMPLATES.getAntPattern())
 						.uri(datasource)
 				);
 				case DATASOURCE -> routes.route(
-					RoutePath.DATASOURCE.name(), r -> r
-						.path(RoutePath.DATASOURCE.getAntPattern())
+					ApiRoute.DATASOURCE.name(), r -> r
+						.path(ApiRoute.DATASOURCE.getAntPattern())
 						.uri(datasource)
 				);
 				case SEARCHER -> routes.route(
-					RoutePath.SEARCHER.name(), r -> r
-						.path(RoutePath.SEARCHER.getAntPattern())
+					ApiRoute.SEARCHER.name(), r -> r
+						.path(ApiRoute.SEARCHER.getAntPattern())
 						.uri(searcher)
 				);
 				case RAG -> routes.route(
-					RoutePath.RAG.name(), r -> r
-						.path(RoutePath.RAG.getAntPattern())
+					ApiRoute.RAG.name(), r -> r
+						.path(ApiRoute.RAG.getAntPattern())
 						.uri(rag)
 				);
-				case ANY -> routes.route(
-					RoutePath.ANY.name(), r -> r
-					.path(RoutePath.ANY.getAntPattern())
+				case ANY, INGESTION -> routes.route(
+					ApiRoute.ANY.name(), r -> r
+					.path(ApiRoute.ANY.getAntPattern())
 					.filters(filter -> filter
 						.setStatus(200)
 						.setResponseHeader("X-Route", "No-Match"))

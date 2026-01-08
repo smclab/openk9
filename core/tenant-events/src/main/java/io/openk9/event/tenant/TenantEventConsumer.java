@@ -28,34 +28,34 @@ package io.openk9.event.tenant;
  * Each event type represents a specific change in the system state, such as
  * tenant creation, update, or deletion.
  */
-public interface TenantManagementEventConsumer {
+public interface TenantEventConsumer {
 
 	/**
 	 * Handles an event indicating that a new tenant has been created.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantCreated} containing tenant details
+	 * @param event the {@link TenantEvent.TenantCreated} containing tenant details
 	 */
-	void handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event);
+	void handleTenantCreatedEvent(TenantEvent.TenantCreated event);
 
 	/**
 	 * Handles an event indicating that a new API key has been created for a tenant route.
 	 *
-	 * @param event the {@link TenantManagementEvent.ApiKeyCreated} containing API key information
+	 * @param event the {@link TenantEvent.ApiKeyCreated} containing API key information
 	 */
-	void handleApiKeyCreatedEvent(TenantManagementEvent.ApiKeyCreated event);
+	void handleApiKeyCreatedEvent(TenantEvent.ApiKeyCreated event);
 
 	/**
 	 * Handles an event indicating that an existing tenant has been updated.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantUpdated} containing updated tenant details
+	 * @param event the {@link TenantEvent.TenantUpdated} containing updated tenant details
 	 */
-	void handleTenantUpdatedEvent(TenantManagementEvent.TenantUpdated event);
+	void handleTenantUpdatedEvent(TenantEvent.TenantUpdated event);
 
 	/**
 	 * Handles an event indicating that a tenant has been deleted.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantDeleted} identifying the deleted tenant
+	 * @param event the {@link TenantEvent.TenantDeleted} identifying the deleted tenant
 	 */
-	void handleTenantDeletedEvent(TenantManagementEvent.TenantDeleted event);
+	void handleTenantDeletedEvent(TenantEvent.TenantDeleted event);
 
 }

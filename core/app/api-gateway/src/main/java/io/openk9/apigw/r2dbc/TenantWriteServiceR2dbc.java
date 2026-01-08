@@ -17,13 +17,15 @@
 
 package io.openk9.apigw.r2dbc;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import io.openk9.apigw.security.AuthorizationSchemeToken;
-import io.openk9.apigw.security.RoutePath;
+import io.openk9.apigw.security.ApiRoute;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.RouteGroup;
+import io.openk9.event.tenant.ApiGroup;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
@@ -174,43 +176,56 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	/**
-	 * Insert a new routeGroup security configuration into the database.
+	 * Insert a new ApiGroup security configuration into the database.
 	 *
 	 * @param tenantId the tenant identifier
-	 * @param routeGroup the routeGroup pattern
+	 * @param apiGroup the apiGroup matching a list of route
 	 * @param authorizationScheme the authorization scheme (OAUTH2, API_KEY, NO_AUTH)
 	 * @return Mono that completes when insertion is done
 	 */
 	public Mono<Void> insertRouteSecurity(
-		String tenantId, RouteGroup routeGroup, AuthorizationScheme authorizationScheme) {
+		String tenantId, ApiGroup apiGroup, AuthorizationScheme authorizationScheme) {
 
 		Objects.requireNonNull(tenantId);
-		String routePath = mapRoute(routeGroup);
+		List<String> routes = mapApiGroup(apiGroup);
 		String authScheme = mapAuthorization(authorizationScheme);
 
 		log.debug(
-			"Inserting routeGroup security {routeGroup: {}, scheme: {}} for tenantId: {}",
-			routePath, authScheme, tenantId);
+			"Inserting apiGroup security config {apiGroup: {}, scheme: {}} for tenantId: {}",
+			routes, authScheme, tenantId
+		);
 
-		long id = idGenerator.nextId();
+		List<Mono<Void>> stmts = new ArrayList<>();
 
-		DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(INSERT_ROUTE_SECURITY)
-			.bind("id", id)
-			.bind("tenantId", tenantId)
-			.bind("route", routePath)
-			.bind("authorizationScheme", authScheme);
+		for (String route : routes) {
 
-		return stmt.then()
+			log.trace(
+				"Inserting route security {apiGroup: {}, route: {} scheme: {}} for tenantId: {}",
+				routes, route, authScheme, tenantId
+			);
+
+			long id = idGenerator.nextId();
+
+			DatabaseClient.GenericExecuteSpec stmt = dbClient.sql(INSERT_ROUTE_SECURITY)
+				.bind("id", id)
+				.bind("tenantId", tenantId)
+				.bind("route", route)
+				.bind("authorizationScheme", authScheme);
+
+			stmts.add(stmt.then());
+		}
+
+		return Mono.whenDelayError(stmts)
 			.doOnSuccess(v -> log.info(
-				"Successfully inserted routeGroup security for tenantId: {}", tenantId))
+				"Successfully inserted apiGroup security config for tenantId: {}", tenantId))
 			.doOnError(DuplicateKeyException.class, e -> log.warn(
-				"Insert discarded because RouteSecurity with tenantId: {} and routeGroup: {} is already created",
+				"Insert discarded because RouteSecurity with tenantId: {} and apiGroup: {} is already created",
 				tenantId,
-				routeGroup
+				apiGroup
 			))
 			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
-				"Failed to insert routeGroup security for tenantId: {}", tenantId, e));
+				"Failed to insert apiGroup security for tenantId: {}", tenantId, e));
 	}
 
 	/**
@@ -299,13 +314,24 @@ public class TenantWriteServiceR2dbc {
 			.doOnError(e -> log.error("Failed to delete routeGroup security: {}", id, e));
 	}
 
-	private static String mapRoute(RouteGroup routeGroup) {
-		// todo expand the routes
-		return (switch (routeGroup) {
-			case ADMINISTRATION -> RoutePath.DATASOURCE;
-			case SEARCH -> RoutePath.SEARCHER;
-			case PUBLIC -> RoutePath.ANY;
-		}).name();
+	private static List<String> mapApiGroup(ApiGroup apiGroup) {
+		return (switch (apiGroup) {
+			case ADMINISTRATION -> List.of(
+				ApiRoute.DATASOURCE.name()
+			);
+			case SEARCH -> List.of(
+				ApiRoute.SEARCHER.name(),
+				ApiRoute.RAG.name()
+			);
+			case INGESTION -> List.of(
+				ApiRoute.INGESTION.name()
+			);
+			case PUBLIC -> List.of(
+				ApiRoute.DATASOURCE_CURRENT_BUCKET.name(),
+				ApiRoute.DATASOURCE_OAUTH2_SETTINGS.name(),
+				ApiRoute.DATASOURCE_TEMPLATES.name()
+			);
+		});
 	}
 
 	private static String mapAuthorization(AuthorizationScheme authorizationScheme) {

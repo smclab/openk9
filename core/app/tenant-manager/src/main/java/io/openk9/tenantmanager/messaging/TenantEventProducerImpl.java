@@ -29,8 +29,8 @@ import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.event.tenant.TenantManagementEvent;
-import io.openk9.event.tenant.TenantManagementEventProducer;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventProducer;
 import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.service.OutboxEventService;
 
@@ -46,16 +46,16 @@ import org.jboss.logging.Logger;
 import org.reactivestreams.Publisher;
 
 @ApplicationScoped
-public class TenantManagementEventProducerImpl
-	implements TenantManagementEventProducer {
+public class TenantEventProducerImpl
+	implements TenantEventProducer {
 
 	@Override
-	public void send(TenantManagementEvent event) throws Throwable {
+	public void send(TenantEvent event) throws Throwable {
 		VertxContextSupport.subscribeAndAwait(() -> outbox.persist(event));
 	}
 
 	@Override
-	public Publisher<Void> sendAsync(TenantManagementEvent event) {
+	public Publisher<Void> sendAsync(TenantEvent event) {
 
 		return outbox.persist(event)
 			.convert()
@@ -74,15 +74,15 @@ public class TenantManagementEventProducerImpl
 			Channel channel = getChannel();
 
 			channel.queueDeclare(
-				TenantManagementEvent.TOPIC,
+				TenantEvent.TOPIC,
 				true,
 				false, false,
 				Collections.singletonMap(X_QUEUE_TYPE, "stream"));
 
 			channel.queueBind(
-				TenantManagementEvent.TOPIC,
+				TenantEvent.TOPIC,
 				EXCHANGE,
-				TenantManagementEvent.TOPIC);
+				TenantEvent.TOPIC);
 		}
 		catch (Exception e) {
 			log.error(
@@ -122,7 +122,7 @@ public class TenantManagementEventProducerImpl
 					if (log.isTraceEnabled()) {
 						log.tracef(
 							"Sending to %s queue a %s event: %s",
-							TenantManagementEvent.TOPIC,
+							TenantEvent.TOPIC,
 							event.getEventType(),
 							event.getPayload());
 					}
@@ -148,7 +148,7 @@ public class TenantManagementEventProducerImpl
 				.build();
 
 			channel.basicPublish(
-				EXCHANGE, TenantManagementEvent.TOPIC, properties, payload);
+				EXCHANGE, TenantEvent.TOPIC, properties, payload);
 		}
 		catch (Exception e) {
 			log.errorf(
@@ -182,5 +182,5 @@ public class TenantManagementEventProducerImpl
 	private static final String X_QUEUE_TYPE = "x-queue-type";
 
 	private final static Logger log = Logger.getLogger(
-		TenantManagementEventProducerImpl.class);
+		TenantEventProducerImpl.class);
 }

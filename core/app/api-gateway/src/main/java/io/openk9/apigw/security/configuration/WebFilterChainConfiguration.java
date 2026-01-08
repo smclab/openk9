@@ -18,7 +18,7 @@
 package io.openk9.apigw.security.configuration;
 
 import io.openk9.apigw.security.AuthorizationHeaderFilter;
-import io.openk9.apigw.security.RoutePath;
+import io.openk9.apigw.security.ApiRoute;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
@@ -74,7 +74,7 @@ public class WebFilterChainConfiguration {
 			.oauth2ResourceServer(oauth2 -> oauth2
 				.authenticationManagerResolver(jwtAuthManagerResolver))
 			.authorizeExchange(authorize -> authorize
-				.pathMatchers(RoutePath.antPatterns())
+				.pathMatchers(ApiRoute.antPatterns())
 				.access(authzManager)
 			)
 			.build();

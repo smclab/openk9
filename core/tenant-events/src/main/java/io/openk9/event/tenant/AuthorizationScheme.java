@@ -15,12 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.model;
+package io.openk9.event.tenant;
 
-public enum AuthScheme {
+/**
+ * Defines the available authorization schemes
+ * that would be verified by the API Gateway.
+ * <p>
+ * It's used in combination with a {@link ApiGroup} to create
+ * different security configurations that could be applied to Tenants.
+ *
+ * @see ApiGroup
+ * @see TenantEvent.TenantCreated
+ * @see TenantEvent.TenantUpdated
+ */
+public enum AuthorizationScheme {
 
-	API_KEY,
 	OAUTH2,
-	OPEN
+	API_KEY,
+	NO_AUTH
 
 }

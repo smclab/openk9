@@ -38,7 +38,7 @@ class TenantManagerGrpcServiceTest {
 		asserter.assertThat(
 			() -> client.findTenantList(Empty.newBuilder().build()),
 			// it must contain at least the two legacy tenant,
-			// from changelog 2025/11/17.sql
+			// from changelog 2025/11/00.sql
 			response -> Assertions.assertFalse(
 				response.getTenantResponseList().isEmpty()
 			)

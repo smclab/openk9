@@ -24,26 +24,27 @@ import org.springframework.security.core.Authentication;
 
 public final class RouteAuthorizationMap {
 
-	private final EnumMap<RoutePath, AuthorizationSchemeToken> tenantMappings;
-	private static final EnumMap<RoutePath, AuthorizationSchemeToken> FALLBACKS = new EnumMap<>(
-		RoutePath.class);
+	private final EnumMap<ApiRoute, AuthorizationSchemeToken> tenantMappings;
+	private static final EnumMap<ApiRoute, AuthorizationSchemeToken> FALLBACKS = new EnumMap<>(
+		ApiRoute.class);
 
 	static {
-		for (RoutePath r : RoutePath.values()) {
+		for (ApiRoute r : ApiRoute.values()) {
 			var enforcer = switch (r) {
 				case ANY,
 					 DATASOURCE_OAUTH2_SETTINGS,
 					 DATASOURCE_CURRENT_BUCKET,
 					 DATASOURCE_TEMPLATES,
+					 INGESTION,
 					 SEARCHER,
-					 RAG-> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
+					 RAG -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
 				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
 				// no default case to prevent accidental omissions at compile-time.
 			};
 		}
 	}
 
-	private RouteAuthorizationMap(Map<RoutePath, AuthorizationSchemeToken> tenantMappings) {
+	private RouteAuthorizationMap(Map<ApiRoute, AuthorizationSchemeToken> tenantMappings) {
 		this.tenantMappings = new EnumMap<>(tenantMappings);
 	}
 
@@ -51,16 +52,16 @@ public final class RouteAuthorizationMap {
 		return new RouteAuthorizationMap(FALLBACKS);
 	}
 
-	public static RouteAuthorizationMap of(Map<RoutePath, AuthorizationSchemeToken> tenantMappings) {
+	public static RouteAuthorizationMap of(Map<ApiRoute, AuthorizationSchemeToken> tenantMappings) {
 		return new RouteAuthorizationMap(tenantMappings);
 	}
 
-	private AuthorizationSchemeToken schemeFor(RoutePath routePath) {
-		return tenantMappings.getOrDefault(routePath, FALLBACKS.get(routePath));
+	private AuthorizationSchemeToken schemeFor(ApiRoute apiRoute) {
+		return tenantMappings.getOrDefault(apiRoute, FALLBACKS.get(apiRoute));
 	}
 
-	public boolean allows(RoutePath routePath, Authentication authentication) {
-		AuthorizationSchemeToken authSchemeToken = schemeFor(routePath);
+	public boolean allows(ApiRoute apiRoute, Authentication authentication) {
+		AuthorizationSchemeToken authSchemeToken = schemeFor(apiRoute);
 
 		// allows access when authScheme not defined or explicitly not required
 		if (authSchemeToken == null

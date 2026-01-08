@@ -31,38 +31,38 @@ import org.reactivestreams.Publisher;
  * tenant creation, update, or deletion. The methods return a {@link Publisher}
  * to support non-blocking, reactive event handling.
  */
-public interface ReactiveTenantManagementEventConsumer {
+public interface ReactiveTenantEventConsumer {
 
 	/**
 	 * Handles an event indicating that a new tenant has been created.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantCreated} containing tenant details
+	 * @param event the {@link TenantEvent.TenantCreated} containing tenant details
 	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	Publisher<Void> handleTenantCreatedEvent(TenantManagementEvent.TenantCreated event);
+	Publisher<Void> handleTenantCreatedEvent(TenantEvent.TenantCreated event);
 
 	/**
 	 * Handles an event indicating that a new API key has been created for a tenant route.
 	 *
-	 * @param event the {@link TenantManagementEvent.ApiKeyCreated} containing API key information
+	 * @param event the {@link TenantEvent.ApiKeyCreated} containing API key information
 	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	Publisher<Void> handleApiKeyCreatedEvent(TenantManagementEvent.ApiKeyCreated event);
+	Publisher<Void> handleApiKeyCreatedEvent(TenantEvent.ApiKeyCreated event);
 
 	/**
 	 * Handles an event indicating that an existing tenant has been updated.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantUpdated} containing updated tenant details
+	 * @param event the {@link TenantEvent.TenantUpdated} containing updated tenant details
 	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	Publisher<Void> handleTenantUpdatedEvent(TenantManagementEvent.TenantUpdated event);
+	Publisher<Void> handleTenantUpdatedEvent(TenantEvent.TenantUpdated event);
 
 	/**
 	 * Handles an event indicating that a tenant has been deleted.
 	 *
-	 * @param event the {@link TenantManagementEvent.TenantDeleted} identifying the deleted tenant
+	 * @param event the {@link TenantEvent.TenantDeleted} identifying the deleted tenant
 	 * @return a {@link Publisher} that completes when the event has been processed
 	 */
-	Publisher<Void> handleTenantDeletedEvent(TenantManagementEvent.TenantDeleted event);
+	Publisher<Void> handleTenantDeletedEvent(TenantEvent.TenantDeleted event);
 
 }

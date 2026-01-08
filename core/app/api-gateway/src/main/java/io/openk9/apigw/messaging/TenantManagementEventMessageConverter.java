@@ -19,7 +19,7 @@ package io.openk9.apigw.messaging;
 
 import java.io.IOException;
 
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,10 +43,10 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 		try {
 			String eventType = switch (object) {
-				case TenantManagementEvent.ApiKeyCreated e -> "ApiKeyCreated";
-				case TenantManagementEvent.TenantCreated e -> "TenantCreated";
-				case TenantManagementEvent.TenantDeleted e -> "TenantDeleted";
-				case TenantManagementEvent.TenantUpdated e -> "TenantUpdated";
+				case TenantEvent.ApiKeyCreated e -> "ApiKeyCreated";
+				case TenantEvent.TenantCreated e -> "TenantCreated";
+				case TenantEvent.TenantDeleted e -> "TenantDeleted";
+				case TenantEvent.TenantUpdated e -> "TenantUpdated";
 				default -> throw new MessageConversionException("invalid type");
 			};
 
@@ -77,10 +77,10 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 			String eventType = messageProperties.getHeader(X_EVENT_TYPE);
 			Object event = switch (eventType) {
-				case "ApiKeyCreated" -> mapper.readValue(body, TenantManagementEvent.ApiKeyCreated.class);
-				case "TenantCreated" -> mapper.readValue(body, TenantManagementEvent.TenantCreated.class);
-				case "TenantDeleted" -> mapper.readValue(body, TenantManagementEvent.TenantDeleted.class);
-				case "TenantUpdated" -> mapper.readValue(body, TenantManagementEvent.TenantUpdated.class);
+				case "ApiKeyCreated" -> mapper.readValue(body, TenantEvent.ApiKeyCreated.class);
+				case "TenantCreated" -> mapper.readValue(body, TenantEvent.TenantCreated.class);
+				case "TenantDeleted" -> mapper.readValue(body, TenantEvent.TenantDeleted.class);
+				case "TenantUpdated" -> mapper.readValue(body, TenantEvent.TenantUpdated.class);
 				default -> throw new MessageConversionException("unknown x-event-type value");
 			};
 

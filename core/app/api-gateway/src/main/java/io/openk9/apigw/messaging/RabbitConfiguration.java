@@ -19,7 +19,7 @@ package io.openk9.apigw.messaging;
 
 import java.util.Map;
 
-import io.openk9.event.tenant.TenantManagementEvent;
+import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class RabbitConfiguration {
 	@Bean
 	public Queue tenantEventQueue() {
 		return QueueBuilder
-			.durable(TenantManagementEvent.TOPIC)
+			.durable(TenantEvent.TOPIC)
 			.stream()
 			.build();
 	}

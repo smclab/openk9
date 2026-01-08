@@ -27,8 +27,8 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>events</artifactId>
-	<name>OpenK9 :: Events</name>
+	<artifactId>tenant-events</artifactId>
+	<name>OpenK9 :: Events :: Tenant Events</name>
 
 	<dependencies>
 		<dependency>
