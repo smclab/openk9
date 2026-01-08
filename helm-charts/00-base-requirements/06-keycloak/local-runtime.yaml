@@ -87,7 +87,7 @@ keycloak:
   secretKeys:
     adminPasswordKey: "admin-password"
   ## @param keycloak.hostname Keycloak hostname
-  hostname: "keycloak.openk9.local"
+  hostname: "keycloak-test-310.openk9.io"
   ## @param keycloak.hostnameAdmin Keycloak admin hostname
   hostnameAdmin: ""
   ## @param keycloak.hostnameStrict Enable strict hostname resolution
@@ -213,7 +213,7 @@ ingress:
   ## @param ingress.hosts[0].paths[0].path Path for Keycloak ingress
   ## @param ingress.hosts[0].paths[0].pathType Path type for Keycloak ingress
   hosts:
-    - host: keycloak.openk9.local
+    - host: keycloak-test-310.openk9.io
       paths:
         - path: /
           pathType: Prefix
