@@ -91,7 +91,7 @@ quarkus:
     namespace: "openk9"
 
 timeoutDb:
-  # increse timeot tenant db creation
+  # Increase timeout tenant db creation
   CreateTenantTimeout: 45
 
 
@@ -108,16 +108,15 @@ rabbitmq:
 
 ## Keycloak configuration
 keycloak:
-  host: "keycloak.local"   #-TBMD
-    ### Internal k8s URL for QUARQUS
+  ### Internal k8s URL for Quarkus
   svcport: 8080
   service: keycloak
-  ###
-  clientId: "tenant-manager"
+  ### Admin credentials
   username: "admin"
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
+  ### Base URI for Tenant Provisioning
   baseIssuerUri: "https://keycloak.openk9.local/realms/"
 
 

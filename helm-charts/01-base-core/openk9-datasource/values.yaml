@@ -181,13 +181,6 @@ rabbitmq:
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"
 
-## Keycloak realm configuration
-keycloak:
-  host: "keycloak.openk9.local" #-TBMD
-  clientId: "openk9"
-  realm:
-    master: "master"
-
 ## Openk9 Tenant Manager configuration
 openk9:
   tenantManager:

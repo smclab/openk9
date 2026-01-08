@@ -85,12 +85,6 @@ quarkus:
   LogConsoleJson: false ## put to true to force json log format
   LogLevel: "INFO"
 
-## Keycloak configuration
-keycloak:
-##  Puntamento Route Services
-  host: "keycloak.openk9.local"  #-TBMD
-  clientId: "openk9"
-
 ## Opensearch configuration
 opensearch:
   host: 
