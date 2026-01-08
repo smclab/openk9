@@ -266,19 +266,13 @@ Create a secret with credentials for Rabbitmq:
 For Kubernetes execute:
 
 ```bash
-kubectl -n openk9 create secret generic rabbitmq-password \
-  --from-literal=rabbitmq-username=admin \
-  --from-literal=rabbitmq-password=openk9 \
-  --from-literal=erlang-cookie=$(openssl rand -base64 32)
+kubectl -n openk9 create secret generic rabbitmq-password --from-literal=rabbitmq-password=openk9 --from-literal=erlang-cookie=$(openssl rand -base64 32)
 ```
 
 For OpenShift execute:
 
 ```bash
-oc -n openk9 create secret generic rabbitmq-password \
-  --from-literal=rabbitmq-username=admin \
-  --from-literal=rabbitmq-password=openk9 \
-  --from-literal=erlang-cookie=$(openssl rand -base64 32)
+oc -n openk9 create secret generic rabbitmq-password --from-literal=rabbitmq-password=openk9 --from-literal=erlang-cookie=$(openssl rand -base64 32)
 ```
 
 Install RabbitMQ

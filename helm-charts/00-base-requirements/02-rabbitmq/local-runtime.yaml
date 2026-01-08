@@ -18,10 +18,10 @@ service:
 
 ## Autenticazione - USA SECRET
 auth:
+  username: openk9
   existingSecret: "rabbitmq-password"
-  existingSecretUsernameKey: "rabbitmq-username"
-  existingSecretPasswordKey: "rabbitmq-password"
-  existingSecretErlangCookieKey: "erlang-cookie"
+  existingPasswordKey: "rabbitmq-password"
+  existingErlangCookieKey: "erlang-cookie"
 
 ## Configurazione
 config:
@@ -83,16 +83,6 @@ metrics:
   enabled: false
   serviceMonitor:
     enabled: false
-
-## Security Context
-podSecurityContext:
-  enabled: true
-  fsGroup: 1001
-
-securityContext:
-  enabled: true
-  runAsNonRoot: true
-  runAsUser: 1001
 
 ## Node Selector (opzionale)
 nodeSelector: {}
