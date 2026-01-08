@@ -8,7 +8,7 @@ data:
   QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
   QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
 
-  QUARKUS_OPENSEARCH_HOSTS: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
+  QUARKUS_OPENSEARCH_HOSTS: '{{- join "," .Values.elasticsearch.host }}'
   QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}

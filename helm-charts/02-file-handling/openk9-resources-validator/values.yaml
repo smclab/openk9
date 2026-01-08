@@ -87,8 +87,8 @@ quarkus:
 
 ## Opensearch configuration 
 opensearch:
-  host: "opensearch-master-headless"
-  port: 9200
+  host: 
+    - "opensearch-cluster-master-headless:9200"
   username: "opensearch"
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "password"
