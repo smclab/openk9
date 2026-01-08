@@ -90,7 +90,7 @@ public class DataIndexService
 			settingsMap = settingsJsonObj.getMap();
 		}
 		catch (Exception exception) {
-			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
+			log.warnf("Cannot decode settingsJson %s", settingsJson);
 			settingsMap = Map.of();
 		}
 
