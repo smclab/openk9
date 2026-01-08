@@ -98,9 +98,9 @@ limit:
 minio:
   host: "http://minio:9000"
   passwordSecretName: "minio-secret"
-  keyPasswordSecret: "root-password"
+  keyPasswordSecret: "password"
   keyPasswordEnvName: "QUARKUS_MINIO_SECRET_KEY"
-  keyUserSecret: "root-user"
+  keyUserSecret: "user"
   keyUserEnvName: "QUARKUS_MINIO_ACCESS_KEY"
 
 ## Openk9 Datasource configuration

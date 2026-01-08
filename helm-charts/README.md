@@ -1231,13 +1231,7 @@ For every charts, there is also a scenarios folder, with files to install compon
 
 [MinIO](https://min.io/) is used as S3 storage to support data processing.
 
-To install Minio we use the Helm Chart created by [Bitnami](https://github.com/bitnami/charts/tree/main/bitnami/minio).
-
-To proceed add the repository containing the charts to helm
-
-```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami
-```
+To install Minio we use the Helm Chart created by [Cloud Pirates](https://github.com/CloudPirates-io/helm-charts/tree/main/charts/minio).
 
 Create a secret with credentials for Minio:
 
@@ -1264,8 +1258,8 @@ For kubernetes/OpenShift execute:
 ```yaml
 helm install minio oci://registry-1.docker.io/cloudpirates/minio \
   -n openk9 \
-  --version 0.5.5 \
-  -f 02-file-handling/08-minio/local-runtime.yaml
+  --version 0.6.1 \
+  -f 00-base-requirements/08-minio/local-runtime.yaml
 ```
 
 To customize Minio installation follow [chart documentation](https://github.com/bitnami/charts/tree/main/bitnami/minio)
