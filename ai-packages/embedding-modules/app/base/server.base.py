@@ -27,6 +27,7 @@ from typing import get_type_hints
 import embedding_pb2
 import embedding_pb2_grpc
 import grpc
+import pika
 from character_text_splitter import CharacterTextChunker
 from chonkie import (
     LateChunker,
@@ -309,6 +310,35 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             total_chunks,
             round(end - start, 2),
         )
+        do_eval = os.getenv("DO_EVAL", False)
+        if do_eval:
+            rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
+            rabbit_user = os.getenv("RABBITMQ_USER", "openk9")
+            rabbit_pass = os.getenv("RABBITMQ_PASS", "openk9")
+
+            credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+            connection = pika.BlockingConnection(
+                pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
+            )
+            channel = connection.channel()
+
+            data = [
+                {f"chunk_{i}": {"text": chunk.text, "embedding": chunk.vectors}}
+                for i, chunk in enumerate(chunks)
+            ]
+            data_pack = {"chunks": data, "text": text}
+
+            body = json.dumps(data_pack).encode("utf-8")
+
+            channel.basic_publish(
+                exchange="main.exchange",
+                routing_key="main",
+                body=body,
+                properties=pika.BasicProperties(
+                    delivery_mode=2,  # messaggio persistente
+                    headers={"retry-count": 0},  # header custom per i retry
+                ),
+            )
 
         return embedding_pb2.EmbeddingResponse(chunks=chunks)
 
