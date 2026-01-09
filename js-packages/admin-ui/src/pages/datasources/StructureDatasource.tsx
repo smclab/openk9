@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigureDatasource, MonitoringTab } from "./Function";
 import Reindex from "./Function/Reindex";
-import RecapDatasource from "./RecapDatasource";
 import { ConfigureConnectors } from "./components/Sections/Connectors/ConfigureConnectors";
 import DataIndex from "./components/Sections/DataIndex/ConfigureDataIndex";
 import ConfigurePipeline from "./components/Sections/Pipeline/ConfigurePipeline";
@@ -317,59 +316,6 @@ export const TabsSection = ({
             setIsRecap={setIsRecap}
           />
         )
-      )}
-      {isRecap && activeTab === "recap" && (
-        <>
-          <Box sx={{ marginBlock: 2 }}>
-            {/* name: formValues.name || "",
-      schedulable: formValues.isCronSectionscheduling || false,
-      reindexable: formValues.isCronSectionreindex || false,
-      reindexing: formValues.reindexing || "0 0 1 * * ?",
-      scheduling: formValues.scheduling || "0 30 * ? * * *",
-      jsonConfig: dynamicFormJson,
-      description: formValues.description,
-      pluginDriverId: Number(formValues.pluginDriverSelect?.id),
-      pipelineId: formValues.enrichPipeline?.id || null,
-      purging: formValues.purging || "0 0 1 * * ?",
-      purgeable: formValues.isCronSectionpurge || false,
-      purgeMaxAge: formValues.purgeMaxAge || "2d",
-      ...(formValues.enrichPipelineCustom?.name && { */}
-            {/* pipeline: {
-          name: formValues.enrichPipelineCustom.name,
-          items: formValues?.enrichPipelineCustom.linkedEnrichItems?.map((forms) => ({
-            enrichItemId: forms.id || "",
-            weight: forms.weight || 0,
-          })) as [],
-        },
-      }), */}
-            <RecapDatasource area={area} />
-          </Box>
-          <Box display={"flex"} justifyContent={"space-between"}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => {
-                setIsRecap(false);
-                setActiveTab("dataIndex");
-                const pipelineTab = tabs.find((tab) => tab.value === "dataIndex");
-                if (pipelineTab) {
-                  navigate(pipelineTab.path);
-                }
-              }}
-            >
-              Back
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleDatasource();
-              }}
-            >
-              Confirm
-            </Button>
-          </Box>
-        </>
       )}
     </>
   );

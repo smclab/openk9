@@ -459,7 +459,17 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         isCreated={datasourceId === "new"}
         setExtraFab={setExtraFab}
       />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
+      <Recap
+        actions={{
+          onBack: () => {
+            setActiveTab("dataIndex");
+            setIsRecap(false);
+          },
+        }}
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+      />
     </ContainerFluid>
   );
 }

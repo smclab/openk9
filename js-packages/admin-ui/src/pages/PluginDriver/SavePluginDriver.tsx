@@ -508,17 +508,19 @@ export const SavePluginnDriverModel = React.forwardRef(
             />
           </form>
           <ConfirmModal />
-          <Recap
-            recapData={recapSections}
-            setExtraFab={setExtraFab}
-            forceFullScreen={isRecap}
-            actions={{
-              onBack: () => setPage(0),
-              onSubmit: () => form.submit(),
-              submitLabel: isNew ? "Create entity" : "Update entity",
-              backLabel: "Back",
-            }}
-          />
+          {!ref && (
+            <Recap
+              recapData={recapSections}
+              setExtraFab={setExtraFab}
+              forceFullScreen={isRecap}
+              actions={{
+                onBack: () => setPage(0),
+                onSubmit: () => form.submit(),
+                submitLabel: isNew ? "Create entity" : "Update entity",
+                backLabel: "Back",
+              }}
+            />
+          )}
         </>
         {viewDeleteModal.view && (
           <ModalConfirm
