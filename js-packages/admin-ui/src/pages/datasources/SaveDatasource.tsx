@@ -1,5 +1,6 @@
 import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useForm, useToast } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
+import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
@@ -10,7 +11,6 @@ import { useDatasourceForm } from "./hooks/useDatasourceForm";
 import { useDatasourceMutations } from "./hooks/useDatasourceMutations";
 import { constructTabs, useRecoveryForm } from "./RecoveryData";
 import { FormSection, Header, TabsSection } from "./StructureDatasource";
-import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 
 export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
@@ -319,17 +319,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     },
   });
 
-  const recapSections = mappingCardRecap({
+  const recapSectionsFromMapping = mappingCardRecap({
     form: form as any,
     sections: [
-      {
-        label: "Connector",
-        cell: [
-          { key: "pluginDriverSelect.nameConnectors", label: "Name Connector" },
-          { key: "pluginDriverSelect.provisioning", label: "Provisioning" },
-          { key: "pluginDriverSelect.json", label: "Json" },
-        ],
-      },
       {
         label: "Datasource",
         cell: [
@@ -383,6 +375,29 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       },
     ],
   });
+
+  const connectorSection: RecapSingleSection = {
+    id: "Connector",
+    section: { sectionId: "Connector", sectionLabel: "Connector" },
+    fields: [
+      {
+        key: "pluginDriverSelect.nameConnectors",
+        label: "Name",
+        value: formValues.pluginDriverSelect?.nameConnectors ?? null,
+        type: typeof formValues.pluginDriverSelect?.nameConnectors === "number" ? "number" : "string",
+        isValid: true,
+      },
+      {
+        key: "pluginDriverSelect.provisioning",
+        label: "Provisioning",
+        value: formValues.pluginDriverSelect?.provisioning ?? null,
+        type: typeof formValues.pluginDriverSelect?.provisioning === "boolean" ? "boolean" : "string",
+        isValid: true,
+      },
+    ],
+  };
+
+  const recapSections = [connectorSection, ...recapSectionsFromMapping];
 
   return (
     <ContainerFluid style={{ width: "100%" }}>
