@@ -120,43 +120,6 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   };
 
   const handleDatasource = () => {
-    // Validation for DataIndex section
-    if (activeTab === "recap") {
-      // Check if name is present
-      if (!formValues.dataIndex?.name || formValues.dataIndex.name.trim() === "") {
-        toast({
-          title: "Validation Failed",
-          content: "The 'Name' field is required for DataIndex",
-          displayType: "error",
-        });
-        return; // Stop function execution
-      }
-
-      // Check if at least one datasource is selected
-      // const hasSelectedDatasource =
-      //   formValues.associatedDatasources &&
-      //   Object.values(formValues.associatedDatasources).some((value) => value === true);
-
-      // if (!hasSelectedDatasource) {
-      //   toast({
-      //     title: "Validation Failed",
-      //     content: "You must select at least one datasource in 'Associate Datasource'",
-      //     displayType: "error",
-      //   });
-      //   return;
-      // }
-
-      // // Check if a doc type is selected
-      // if (!formValues.selectedDocType) {
-      //   toast({
-      //     title: "Validation Failed",
-      //     content: "You must select a document type",
-      //     displayType: "error",
-      //   });
-      //   return;
-      // }
-    }
-
     const commonVariables = {
       name: formValues.name || "",
       schedulable: formValues.isCronSectionscheduling || false,
@@ -180,8 +143,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
         },
       }),
     };
-
-    if (formValues.datasourceId !== "new") {
+    const isNewDatasource = formValues.datasourceId === "new";
+    if (!isNewDatasource) {
       updateDatasource({
         variables: {
           ...commonVariables,
@@ -219,6 +182,14 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           },
         },
         refetchQueries: ["DataSources"],
+        onCompleted: () => {
+          toast({
+            title: `Datasource ${isNewDatasource ? "Created" : "Updated"}`,
+            content: `The datasource has been ${isNewDatasource ? "created" : "updated"} successfully.`,
+            displayType: "success",
+          });
+          navigate(`/datasources/`, { replace: true });
+        },
         onError: (error) => {
           setActiveTab("recap");
           toast({
@@ -464,6 +435,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
           onBack: () => {
             setActiveTab("dataIndex");
             setIsRecap(false);
+          },
+          onSubmit: () => {
+            handleDatasource();
           },
         }}
         recapData={recapSections}
