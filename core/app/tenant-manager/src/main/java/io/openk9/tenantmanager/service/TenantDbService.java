@@ -46,7 +46,6 @@ import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.SqlResult;
 import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.sqlclient.Row;
-import mutiny.zero.flow.adapters.AdaptersToFlow;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -89,7 +88,8 @@ public class TenantDbService {
 					modifiedDate != null ? modifiedDate : OffsetDateTime.now()
 				}))
 				.map(SqlResult::rowCount)
-				.flatMap(rowCount -> sendEvent(
+				.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
+						producer,
 						rowCount,
 						TenantEvent.TenantCreated.builder()
 							.tenantId(schemaName)
@@ -155,7 +155,8 @@ public class TenantDbService {
 					.preparedQuery(DELETE_SQL)
 					.execute(Tuple.of(id))
 					.map(SqlResult::rowCount)
-					.flatMap(rowCount -> sendEvent(
+					.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
+							producer,
 							rowCount,
 							TenantEvent.TenantDeleted
 								.builder()
@@ -232,23 +233,6 @@ public class TenantDbService {
 			});
 	}
 
-	private Uni<Void> sendEvent(int rowCount, TenantEvent event) {
-
-		log.debugf("Rows updated: %d", rowCount);
-
-		if (rowCount == 0) {
-			if (log.isDebugEnabled()) {
-				log.debugf("No rows was updated. The event %s wont be sent.", event);
-			}
-
-			return Uni.createFrom().voidItem();
-		}
-
-		return Uni.createFrom().publisher(
-			AdaptersToFlow.publisher(producer.sendAsync(event))
-		);
-	}
-
 	private static TenantResponseDTO mapTenantResponseDTO(Row row) {
 		return TenantResponseDTO.builder()
 			.id(String.valueOf(row.getLong("id")))
@@ -288,7 +272,7 @@ public class TenantDbService {
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
 	private static final String FETCH_BY_VIRTUAL_HOST = "SELECT * FROM tenant WHERE virtual_host = $1";
-	private static final String FETCH_BY_TENANT_ID = "SELECT * FROM tenant WHERE tenant_id = $1";
+	private static final String FETCH_BY_TENANT_ID = "SELECT * FROM tenant WHERE schema_name = $1";
 	private static final String FETCH_ALL_SCHEMA_NAME_SQL = "SELECT schema_name FROM tenant";
 	private static final String FETCH_ALL_SCHEMA_NAMES_SQL = "SELECT schema_name, liquibase_schema_name FROM tenant";
 	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";

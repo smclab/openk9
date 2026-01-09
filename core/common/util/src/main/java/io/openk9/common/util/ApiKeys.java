@@ -124,6 +124,16 @@ public class ApiKeys {
 		}
 	}
 
+	/**
+	 * Computes a SHA-256 digest of the given secret.
+	 *
+	 * @param secret the input secret
+	 * @return Hex String representation of the digest
+	 */
+	public static String sha256Hex(String secret) {
+		return HEX.formatHex(sha256(secret));
+	}
+
 	// ========================================================================
 	// CHECKSUM
 	// ========================================================================

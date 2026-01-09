@@ -17,6 +17,7 @@
 
 package io.openk9.event.tenant;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 import lombok.Builder;
@@ -56,8 +57,22 @@ sealed public interface TenantEvent {
 	 * @param checksum   the checksum used for API key integrity verification
 	 */
 	@Builder
-	record ApiKeyCreated(String tenantId, String apiKeyHash, String checksum)
-		implements TenantEvent {}
+	record ApiKeyCreated(
+		String tenantId,
+		String apiKeyHash,
+		String checksum,
+		ApiGroup apiGroup,
+		OffsetDateTime expirationDate)
+		implements TenantEvent {
+	}
+
+	/**
+	 * Published when an Api Key is deleted or revoked.
+	 *
+	 * @param apiKeyHash the digest of the apiKey already stored in the database.
+	 */
+	@Builder
+	record ApiKeyRevoked(String apiKeyHash) {}
 
 	/**
 	 * Event published when an existing tenant’s information is updated.
@@ -76,7 +91,7 @@ sealed public interface TenantEvent {
 		String issuerUri,
 		String clientId,
 		String clientSecret,
-		Map<String, String> routeAuthorizationMap)
+		Map<ApiGroup, AuthorizationScheme> routeAuthorizationMap)
 		implements TenantEvent {}
 
 	/**

@@ -18,27 +18,59 @@
 package io.openk9.tenantmanager.model;
 
 import java.time.OffsetDateTime;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
+@Table(name = "api_key")
+@Getter
+@Setter
+@ToString
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ApiKey {
 
 	@Id
 	private long id;
+	@ManyToOne
+	@JoinColumn(name = "tenant_id")
 	private Tenant tenant;
+	@Column(name = "name")
 	private String name;
+	@Column(name = "hash")
+	private String hash;
+	@Column(name = "api_group")
+	@Enumerated(EnumType.STRING)
 	private ApiGroup apiGroup;
+	@Column(name = "status")
+	@Enumerated(EnumType.STRING)
 	private Status status;
+	@Column(name = "prefix")
 	private String prefix;
+	@Column(name = "suffix")
 	private String suffix;
+	@Column(name = "create_date")
 	private OffsetDateTime createDate;
+	@Column(name = "expiration_date")
 	private OffsetDateTime expirationDate;
 
 	public enum Status {
 		ACTIVE,
-		REVOKED,
-		EXPIRED
+		REVOKED
 	}
 
 	public enum ApiGroup {

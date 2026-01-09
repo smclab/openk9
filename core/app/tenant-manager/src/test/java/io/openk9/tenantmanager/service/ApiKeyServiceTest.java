@@ -21,9 +21,12 @@ import java.time.OffsetDateTime;
 import jakarta.inject.Inject;
 
 import io.openk9.event.tenant.ApiGroup;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -31,11 +34,13 @@ public class ApiKeyServiceTest {
 
 	@Inject
 	ApiKeyService apiKeyService;
+	@Inject
+	OutboxEventService outboxService;
 
 	@Test
 	void should_generate_an_api_key() {
 
-		String tenantId = "pikachu";
+		String tenantId = "shiny-pikachu";
 		String name = "Search APIs";
 		OffsetDateTime expirationDate = OffsetDateTime.now().plusMonths(6);
 
@@ -47,8 +52,23 @@ public class ApiKeyServiceTest {
 				expirationDate
 			);
 
-		apiKeyService.create(createApiKeyRequest)
-			.await().indefinitely();
+		var createdApiKey = apiKeyService.create(createApiKeyRequest)
+			.await()
+			.indefinitely();
+
+		// get the last event persisted
+		var createEvent = outboxService.lastEvents(1)
+			.await().indefinitely().getFirst();
+
+		// verify that the last event is of the right type
+		var createEventType = createEvent.getEventType();
+		Assertions.assertEquals("ApiKeyCreated", createEventType);
+
+		// delete apikey ...
+
+		// verify that deletions is committed
+
+		// verify that the last event is of the right type
 
 	}
 

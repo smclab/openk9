@@ -23,6 +23,9 @@ import jakarta.inject.Inject;
 
 import io.openk9.common.util.ApiKeys;
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
+import io.openk9.event.tenant.TenantEvent;
+import io.openk9.event.tenant.TenantEventProducer;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.ApiKey;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyResponse;
@@ -49,6 +52,7 @@ public class ApiKeyService {
 		// TODO: prefix could be made in conjunction with the API Group.
 		var prefix = API_KEY_PREFIX;
 		var apiKey = ApiKeys.generateApiKeyWithChecksum(prefix);
+		var hash = ApiKeys.sha256Hex(apiKey);
 		var suffix = ApiKeys.getChecksum(apiKey);
 		var tenantId = request.tenantId();
 		var name = request.name();
@@ -58,19 +62,35 @@ public class ApiKeyService {
 			? request.expirationDate()
 			: creationDate.plusWeeks(1);
 
-		return pool.withTransaction(conn -> conn
-			.preparedQuery(INSERT_SQL)
-			.execute(Tuple.from(new Object[]{
-				id, tenantId,
-				name, ApiKey.Status.ACTIVE,
-				prefix, suffix, apiGroup,
-				creationDate, expirationDate
-			}))
+		return tenantDbService.findTenantByTenantId(tenantId)
+			.map(TenantResponseDTO::id)
+			.map(Long::valueOf)
+			.flatMap(tenantIdentifier -> pool
+				.withTransaction(conn -> conn
+					.preparedQuery(INSERT_SQL)
+					.execute(Tuple.from(new Object[]{
+						id, tenantIdentifier,
+						hash, name, ApiKey.Status.ACTIVE,
+						prefix, suffix, apiGroup,
+						creationDate, expirationDate
+					}))
+					.map(SqlResult::rowCount)
+					.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
+						producer,
+						rowCount,
+						TenantEvent.ApiKeyCreated.builder()
+							.apiKeyHash(hash)
+							.checksum(suffix)
+							.tenantId(tenantId)
+							.apiGroup(apiGroup)
+							.expirationDate(expirationDate)
+							.build()
+					))
+					.map(rows -> new CreateApiKeyResponse(apiKey))
+				)
+			)
 			.onFailure()
-			.invoke(log::error)
-			.map(SqlResult::rowCount)
-			.map(rowCount -> new CreateApiKeyResponse(apiKey))
-		);
+			.invoke(log::error);
 	}
 
 	/**
@@ -91,19 +111,23 @@ public class ApiKeyService {
 
 	@Inject
 	Pool pool;
+	@Inject
+	TenantDbService tenantDbService;
+	@Inject
+	TenantEventProducer producer;
 
 	private static final String INSERT_SQL = """
 			INSERT INTO api_key (
 				id, tenant_id,
-				name, status,
+				hash, name, status,
 				prefix, suffix, api_group,
 				create_date, expiration_date
 			)
 			VALUES (
 				$1, $2,
-				$3, $4,
-				$5, $6, $7,
-				$8, $9)
+				$3, $4, $5,
+				$6, $7, $8,
+				$9, $10)
 		""";
 
 	private static final String API_KEY_PREFIX = "ok9";
