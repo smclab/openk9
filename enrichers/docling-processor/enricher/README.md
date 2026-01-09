@@ -1,10 +1,10 @@
 ## Title and Short Description
-An enricher that asynchronously processes documents (using Docling), extracts their Markdown content, and sends the result back to an Openk9 pipeline callback.
+Docling processor is an enricher that asynchronously processes documents (using Docling), extracts their Markdown content, and sends the result back to an Openk9 pipeline callback.
 
 ## Description
 
-This enricher asynchronously proces documents with a pipeline built on FastAPI.
-Given a payload by Openk9, it retrieves binary resources from a file-manager service, converts supported documents through Docling into Markdown format, and posts the processed result back to a callback URL (`replyTo`).
+This enricher asynchronously process documents with a pipeline built on FastAPI.
+Given a payload by Openk9, it retrieves binary resources from a file-manager service, converts supported documents through Docling into Markdown format, and post the processed result back to a callback URL (`replyTo`).
 
 The transformation is executed in a background thread so the API returns immediately while the processing continues.
 
@@ -22,14 +22,13 @@ Main features:
 
 ## Quickstart
 
-ALTRO?
+The prerequisites for this enricher are:
+- A running File Manager service
+- An Openk9 pipeline callback endpoint
 
-Environment variables expected:
+Optional: for local testing, the callback endpoint can be mocked using any HTTP listener.
 
-```
-FM_HOST=http://localhost:8000     # File Manager host
-S_HOST=http://localhost:8001      # Openk9 callback host
-```
+Note: this Quickstart assumes the external services are already available.
 
 ## API Reference
 
@@ -63,13 +62,14 @@ Starts the background document-processing task.
 * Downloads them from `FM_HOST`
 * Converts them into Markdown with Docling
 * Sends results to:
-  `POST {S_HOST}/api/datasource/pipeline/callback/{replyTo}`
 
-- **Returns immediately :**
+    `POST {S_HOST}/api/datasource/pipeline/callback/{replyTo}`
 
-```json
-{"status": "ok", "message": "Process started"}
-```
+- Returns immediately :
+
+  ```json
+  {"status": "ok", "message": "Process started"}
+  ```
 
 ---
 
@@ -98,8 +98,22 @@ Current implementation:
 
 ## Configuration
 
-???
+Environment variables expected:
 
+```
+FM_HOST=http://localhost:8000     # File Manager host
+S_HOST=http://localhost:8001      # Openk9 callback host
+```
 ## License
 
-???
+Copyright (c) the respective contributors, as shown by the AUTHORS file.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see http://www.gnu.org/licenses/.
