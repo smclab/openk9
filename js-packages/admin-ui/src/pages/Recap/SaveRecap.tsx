@@ -212,7 +212,7 @@ export default function Recap({
             </Box>
 
             <Box sx={{ p: 2, overflowY: "auto" }}>
-              <RecapDatasource area={areas} />
+              <RecapDatasource area={areas} forceFullScreen={forceFullScreen} />
             </Box>
           </Paper>
         </Box>
@@ -276,7 +276,7 @@ export default function Recap({
               </Box>
 
               <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
-                <RecapDatasource area={areas} />
+                <RecapDatasource area={areas} forceFullScreen={forceFullScreen} />
               </Box>
 
               <Box

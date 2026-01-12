@@ -11,7 +11,15 @@ export type areaType = {
   }>;
 };
 
-function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { title: string; action: () => void } }) {
+function RecapDatasource({
+  area,
+  actions,
+  forceFullScreen = false,
+}: {
+  area: areaType[];
+  actions?: { title: string; action: () => void };
+  forceFullScreen?: boolean;
+}) {
   const [expandedIndexes, setExpandedIndexes] = useState<Set<number>>(new Set());
   const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -24,7 +32,14 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
   };
 
   return (
-    <Box display="flex" flexDirection="row" gap={2}>
+    <Box
+      display={forceFullScreen ? "grid" : "flex"}
+      flexDirection={forceFullScreen ? undefined : "row"}
+      gap={forceFullScreen ? 3 : 2}
+      width={forceFullScreen ? "100%" : undefined}
+      gridTemplateColumns={forceFullScreen ? { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" } : undefined}
+      alignItems={forceFullScreen ? "stretch" : undefined}
+    >
       {area.map((section, idx) => {
         const isExpanded = expandedIndexes.has(idx);
 
@@ -32,16 +47,22 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
           <Card
             variant="outlined"
             sx={{
-              height: isExpanded ? "auto" : 297,
+              width: forceFullScreen ? "100%" : 440,
+              maxWidth: forceFullScreen ? "100%" : 440,
+              minWidth: forceFullScreen ? 0 : 200,
               minHeight: 297,
-              minWidth: 200,
+              height: isExpanded || forceFullScreen ? "auto" : 297,
               overflow: "auto",
               position: "relative",
               transition: "0.3s",
+              boxShadow: forceFullScreen ? 4 : undefined,
+              mb: 0,
+              display: "flex",
+              flexDirection: "column",
             }}
             onClick={() => toggleCard(idx)}
           >
-            <CardContent ref={(el) => (contentRefs.current[idx] = el)} sx={{ p: 2 }}>
+            <CardContent ref={(el) => (contentRefs.current[idx] = el)} sx={{ p: forceFullScreen ? 3 : 2, flex: 1 }}>
               {section.title && (
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                   <Typography variant="subtitle1" fontWeight={600}>
