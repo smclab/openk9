@@ -15,7 +15,7 @@ import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamic
 import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   AnalyzersAssociationsQuery,
@@ -158,6 +158,45 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     getValidationMessages: fromFieldValidators(createOrUpdateAnalyzerMutation.data?.analyzerWithLists?.fieldValidators),
   });
 
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              ...(typeSelected === "custom"
+                ? [
+                    { key: "charFilters", label: "Char Filters" },
+                    { key: "tokenFilters", label: "Token Filters" },
+                  ]
+                : []),
+              { key: "tokenizerId", label: "tokenizer id" },
+              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+            ],
+            label: "Recap Tokenizer",
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (analyzerQuery.loading) return null;
 
   const isRecap = page === 1;
@@ -172,24 +211,6 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         : currentData.filter((dataItem: any) => !items.some((item) => item.value === dataItem.value));
       form.inputProps(field).onChange(updatedData);
     };
-
-  const recapSections = mappingCardRecap({
-    form: form as any,
-    sections: [
-      {
-        cell: [
-          { key: "name" },
-          { key: "description" },
-          { key: "type" },
-          { key: "jsonConfig", label: "JSON Config" },
-          { key: "charFilters", label: "Char Filters" },
-          { key: "tokenFilters", label: "Token Filters" },
-          { key: "tokenizerId", label: "tokenizer id" },
-        ],
-        label: "Recap Analyzer",
-      },
-    ],
-  });
 
   return (
     <ContainerFluid>

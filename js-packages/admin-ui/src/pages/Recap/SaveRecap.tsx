@@ -5,7 +5,8 @@ import { Badge, Box, Button, Fade, IconButton, Paper, Typography } from "@mui/ma
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
-
+import Backdrop from "@mui/material/Backdrop";
+import Grow from "@mui/material/Grow";
 import RecapDatasource, { areaType } from "@pages/datasources/RecapDatasource";
 
 export type RecapField = {
@@ -14,6 +15,7 @@ export type RecapField = {
   value: string | number | boolean | Record<string, any> | Array<any> | null;
   type?: "string" | "number" | "boolean" | "json" | "array";
   isValid?: boolean;
+  keyNotView?: string;
 };
 
 export type RecapSingleSection = {
@@ -224,85 +226,96 @@ export default function Recap({
 
   const fullScreenPanel =
     open && forceFullScreen ? (
-      <Fade in={open}>
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 10,
-            zIndex: 1300,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+      <>
+        <Backdrop
+          open={open}
+          sx={{ zIndex: 1299 }}
+          onClick={() => {
+            actions?.onBack?.();
+            setOpen(false);
           }}
-        >
-          <Paper
+        />
+
+        <Grow in={open} timeout={{ enter: 260, exit: 180 }} style={{ transformOrigin: "center" }}>
+          <Box
             sx={{
-              width: "100%",
-              height: "100%",
-              overflow: "hidden",
+              position: "absolute",
+              inset: 10,
+              zIndex: 1300,
               display: "flex",
-              flexDirection: "column",
-              boxShadow: 12,
-              borderRadius: 2,
+              justifyContent: "center",
+              alignItems: "center",
             }}
           >
-            <Box
+            <Paper
               sx={{
-                px: 2,
-                py: 1.5,
-                borderBottom: "1px solid",
-                borderColor: "divider",
+                width: "100%",
+                height: "100%",
+                overflow: "hidden",
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
+                flexDirection: "column",
+                boxShadow: 12,
+                borderRadius: 2,
               }}
             >
-              <Typography fontWeight={600}>{title}</Typography>
-              <IconButton
-                size="small"
-                onClick={() => {
-                  actions?.onBack?.();
-                  setOpen(false);
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
-                <CloseRoundedIcon fontSize="small" />
-              </IconButton>
-            </Box>
+                <Typography fontWeight={600}>{title}</Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    actions?.onBack?.();
+                    setOpen(false);
+                  }}
+                >
+                  <CloseRoundedIcon fontSize="small" />
+                </IconButton>
+              </Box>
 
-            <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
-              <RecapDatasource area={areas} />
-            </Box>
+              <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
+                <RecapDatasource area={areas} />
+              </Box>
 
-            <Box
-              sx={{
-                p: 2,
-                borderTop: "1px solid",
-                borderColor: "divider",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              <Button
-                variant="outlined"
-                startIcon={<KeyboardArrowDownRoundedIcon />}
-                onClick={() => {
-                  actions?.onBack?.();
-                  setOpen(false);
+              <Box
+                sx={{
+                  p: 2,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 1,
                 }}
               >
-                {actions?.backLabel || "Back"}
-              </Button>
-              {actions?.onSubmit && (
-                <Button variant="contained" onClick={actions.onSubmit}>
-                  {actions.submitLabel || "Create entity"}
+                <Button
+                  variant="outlined"
+                  startIcon={<KeyboardArrowDownRoundedIcon />}
+                  onClick={() => {
+                    actions?.onBack?.();
+                    setOpen(false);
+                  }}
+                >
+                  {actions?.backLabel || "Back"}
                 </Button>
-              )}
-            </Box>
-          </Paper>
-        </Box>
-      </Fade>
+                {actions?.onSubmit && (
+                  <Button variant="contained" onClick={actions.onSubmit}>
+                    {actions.submitLabel || "Create entity"}
+                  </Button>
+                )}
+              </Box>
+            </Paper>
+          </Box>
+        </Grow>
+      </>
     ) : null;
 
   if (forceFullScreen) {
@@ -318,18 +331,33 @@ export function mappingCardRecap({
   valueOverride,
 }: {
   form: formType;
-  sections: { label: string; cell: { key: string; label?: string }[] }[];
+  sections: { label: string; cell: { key: string; label?: string; keyNotView?: string }[] }[];
   valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
     const fields: RecapField[] = sectionDef.cell.map((element) => {
-      const { key, label } = element;
+      const { key, label, keyNotView } = element;
       const input = form.inputProps<any>(key as any);
 
       const rawValue = valueOverride?.[key] !== undefined ? valueOverride[key] : input.value;
 
       const type = detectValueType(rawValue);
-      const value = normalizeValue(rawValue, type);
+      let value = normalizeValue(rawValue, type);
+
+      if (keyNotView && type === "json") {
+        if (Array.isArray(value)) {
+          value = value.map((item: any) => {
+            if (item && typeof item === "object" && !Array.isArray(item)) {
+              const { [keyNotView]: _omit, ...rest } = item;
+              return rest;
+            }
+            return item;
+          });
+        } else if (value && typeof value === "object") {
+          const { [keyNotView]: _omit, ...rest } = value as Record<string, any>;
+          value = rest;
+        }
+      }
 
       return {
         key,
@@ -337,6 +365,7 @@ export function mappingCardRecap({
         value,
         type,
         isValid: input.validationMessages.length === 0,
+        keyNotView: keyNotView,
       };
     });
 

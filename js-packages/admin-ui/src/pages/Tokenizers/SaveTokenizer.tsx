@@ -105,19 +105,41 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     getValidationMessages: fromFieldValidators(createOrUpdateTokenizerMutation.data?.tokenizer?.fieldValidators),
   });
 
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+            ],
+            label: "Recap Tokenizer",
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (tokenizerQuery.loading) {
     return <div></div>;
   }
-
-  const recapSections = mappingCardRecap({
-    form: form as any,
-    sections: [
-      {
-        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig", label: "JSON Config" }],
-        label: "Recap Tokenizer",
-      },
-    ],
-  });
 
   return (
     <ContainerFluid>

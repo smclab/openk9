@@ -104,19 +104,41 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
 
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            label: "Recap Char Filter",
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+            ],
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (tokenFilterQuery.loading) {
     return <div></div>;
   }
-
-  const recapSections = mappingCardRecap({
-    form: form as any,
-    sections: [
-      {
-        cell: [{ key: "name" }, { key: "description" }, { key: "type" }, { key: "jsonConfig", label: "JSON Config" }],
-        label: "Recap Token Filter",
-      },
-    ],
-  });
 
   return (
     <ContainerFluid>
