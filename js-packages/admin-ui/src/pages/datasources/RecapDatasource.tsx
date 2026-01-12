@@ -1,5 +1,5 @@
-import { Box, Button, Card, CardContent, Divider, Typography } from "@mui/material";
-import { useLayoutEffect, useRef, useState } from "react";
+import { Box, Button, Card, CardContent, Divider, Tooltip, Typography } from "@mui/material";
+import { useRef, useState } from "react";
 
 export type areaType = {
   title?: string;
@@ -113,9 +113,11 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
                                 >
                                   {key}:
                                 </Typography>
-                                <Typography variant="body1" fontWeight={400} noWrap>
-                                  {displayValue}
-                                </Typography>
+                                <Tooltip title={displayValue} placement="top" arrow>
+                                  <Typography variant="body1" fontWeight={400} noWrap sx={{ cursor: "help" }}>
+                                    {displayValue}
+                                  </Typography>
+                                </Tooltip>
                               </>
                             )}
                           </Box>
@@ -152,15 +154,25 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
                                     >
                                       {key} :
                                     </Typography>
-                                    <Typography variant="body1" color="text.secondary" fontWeight={400} noWrap>
-                                      {String(value)}
-                                    </Typography>
+                                    <Tooltip title={String(value)} placement="top" arrow>
+                                      <Typography
+                                        variant="body1"
+                                        color="text.secondary"
+                                        fontWeight={400}
+                                        noWrap
+                                        sx={{ cursor: "help" }}
+                                      >
+                                        {String(value)}
+                                      </Typography>
+                                    </Tooltip>
                                   </Box>
                                 ))
                               ) : (
-                                <Typography variant="body1" fontWeight={400} noWrap>
-                                  {String(item)}
-                                </Typography>
+                                <Tooltip title={String(item)} placement="top" arrow>
+                                  <Typography variant="body1" fontWeight={400} noWrap sx={{ cursor: "help" }}>
+                                    {String(item)}
+                                  </Typography>
+                                </Tooltip>
                               )}
                             </Box>
                           ))}
@@ -186,9 +198,11 @@ function RecapDatasource({ area, actions }: { area: areaType[]; actions?: { titl
                       >
                         {field.label}:
                       </Typography>
-                      <Typography variant="body1" fontWeight={400} noWrap>
-                        {displayValue}
-                      </Typography>
+                      <Tooltip title={displayValue} placement="top" arrow>
+                        <Typography variant="body1" fontWeight={400} noWrap sx={{ cursor: "help" }}>
+                          {displayValue}
+                        </Typography>
+                      </Tooltip>
                     </Box>
                   );
                 })}
