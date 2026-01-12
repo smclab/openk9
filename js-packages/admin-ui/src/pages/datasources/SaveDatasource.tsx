@@ -290,63 +290,6 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     },
   });
 
-  const recapSectionsFromMapping = mappingCardRecap({
-    form: form as any,
-    sections: [
-      {
-        label: "Datasource",
-        cell: [
-          { key: "name", label: "Name" },
-          { key: "isCronSectionreindex", label: "Reindexing" },
-          { key: "isCronSectionscheduling", label: "Scheduling" },
-          { key: "isCronSectionpurge", label: "Purging" },
-          { key: "reindexing", label: "Reindexing" },
-          { key: "scheduling", label: "Scheduling" },
-          { key: "purging", label: "Purging" },
-          { key: "dynamicFormJson", label: "Json" },
-        ],
-      },
-      {
-        label: "Pipeline",
-        cell: [{ key: "enrichPipeline.name", label: "Name" }],
-      },
-      {
-        label: "Pipeline Custom",
-        cell: [
-          {
-            key: "enrichPipelineCustom.linkedEnrichItems",
-            label: "Enrich Item Custom",
-          },
-        ],
-      },
-      {
-        label: "Data Index",
-        cell: [
-          { key: "dataIndex.name", label: "Name" },
-          { key: "dataIndex.description", label: "Description" },
-          { key: "vectorIndex.chunkType", label: "chunk Type" },
-          { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
-          {
-            key: "vectorIndex.embeddingJsonConfig",
-            label: "Embedding json Config",
-          },
-          {
-            key: "vectorIndex.knnIndex",
-            label: "Embedding knn index",
-          },
-          {
-            key: "vectorIndex.embeddingDocTypeFieldId.name",
-            label: "Doc Type",
-          },
-          {
-            key: "dataIndices",
-            label: "dataIndices",
-          },
-        ],
-      },
-    ],
-  });
-
   const connectorSection: RecapSingleSection = {
     id: "Connector",
     section: { sectionId: "Connector", sectionLabel: "Connector" },
@@ -368,7 +311,89 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     ],
   };
 
-  const recapSections = [connectorSection, ...recapSectionsFromMapping];
+  let pipelineSection: RecapSingleSection | null = null;
+  if (formValues.enrichPipeline?.name) {
+    pipelineSection = {
+      id: "Pipeline",
+      section: { sectionId: "Pipeline", sectionLabel: "Pipeline" },
+      fields: [
+        {
+          key: "enrichPipeline.name",
+          label: "Name",
+          value: formValues.enrichPipeline.name,
+          type: "string",
+          isValid: true,
+        },
+      ],
+    };
+  }
+
+  let pipelineCustomSection: RecapSingleSection | null = null;
+  if (
+    formValues.enrichPipelineCustom?.linkedEnrichItems &&
+    Array.isArray(formValues.enrichPipelineCustom.linkedEnrichItems) &&
+    formValues.enrichPipelineCustom.linkedEnrichItems.length > 0
+  ) {
+    pipelineCustomSection = {
+      id: "Pipeline Custom",
+      section: { sectionId: "Pipeline Custom", sectionLabel: "Pipeline Custom" },
+      fields: [
+        {
+          key: "enrichPipelineCustom.linkedEnrichItems",
+          label: "Enrich Item Custom",
+          value: formValues.enrichPipelineCustom.linkedEnrichItems,
+          type: "array",
+          isValid: true,
+        },
+      ],
+    };
+  }
+
+  const datasourceSection = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        label: "Datasource",
+        cell: [
+          { key: "name", label: "Name" },
+          { key: "isCronSectionreindex", label: "Reindexing" },
+          { key: "isCronSectionscheduling", label: "Scheduling" },
+          { key: "isCronSectionpurge", label: "Purging" },
+          { key: "reindexing", label: "Reindexing" },
+          { key: "scheduling", label: "Scheduling" },
+          { key: "purging", label: "Purging" },
+          { key: "dynamicFormJson", label: "Json" },
+        ],
+      },
+    ],
+  });
+
+  const dataIndexSection = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        label: "Data Index",
+        cell: [
+          { key: "dataIndex.name", label: "Name" },
+          { key: "dataIndex.description", label: "Description" },
+          { key: "vectorIndex.chunkType", label: "chunk Type" },
+          { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
+          { key: "vectorIndex.embeddingJsonConfig", label: "Embedding json Config" },
+          { key: "vectorIndex.knnIndex", label: "Embedding knn index" },
+          { key: "vectorIndex.embeddingDocTypeFieldId.name", label: "Doc Type" },
+          { key: "dataIndices", label: "dataIndices" },
+        ],
+      },
+    ],
+  });
+
+  const recapSections: RecapSingleSection[] = [
+    connectorSection,
+    ...datasourceSection,
+    ...(pipelineSection ? [pipelineSection] : []),
+    ...(pipelineCustomSection ? [pipelineCustomSection] : []),
+    ...dataIndexSection,
+  ];
 
   return (
     <ContainerFluid style={{ width: "100%" }}>
