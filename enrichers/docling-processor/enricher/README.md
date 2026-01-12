@@ -22,13 +22,60 @@ Main features:
 
 ## Quickstart
 
+### OpenK9 Setup
+<!-- Include this in the Docker Compose:
+
+```bash
+docling-processor:
+        build:
+            context: .
+            args:
+                MODE: cpu
+        env_file: .env
+        ports:
+            - "5000:5000"
+``` -->
+
 The prerequisites for this enricher are:
 - A running File Manager service
 - An Openk9 pipeline callback endpoint
 
-Optional: for local testing, the callback endpoint can be mocked using any HTTP listener.
+### Local Setup
+To run the enricher in local you have to:
+1. Create a virtual environment from the ernicher folder project, run:
+    ```bash
+    python -m venv venv
+    ```
+2. Activate the virtual environment:
+    ```bash
+    #On macOS / Linux
+    source venv/bin/activate
 
-Note: this Quickstart assumes the external services are already available.
+    #On Windows (PowerShell)
+    venv\Scripts\Activate
+
+    #On Windows (cmd)
+    venv\Scripts\activate.bat
+    ```
+3. Install the requirements:
+    ```bash 
+    #CPU only mode
+    pip install -r requirements_cpu.txt
+
+    #GPU mode
+    pip install -r requirements.txt
+    ```
+4. Run the following commands:
+    ```bash
+    #Docling Processor
+    uvicorn app.server:app --host 0.0.0.0 --port 8002
+
+    #File Manager mockup
+    uvicorn external.file_manager:app --host 0.0.0.0 --port 8000
+
+    #OpenK9 mockup
+    uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
+    ```
 
 ## API Reference
 
