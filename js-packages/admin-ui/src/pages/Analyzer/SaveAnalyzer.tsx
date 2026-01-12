@@ -181,9 +181,9 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                 ? [
                     { key: "charFilters", label: "Char Filters" },
                     { key: "tokenFilters", label: "Token Filters" },
+                    { key: "tokenizerId", label: "Tokenizer" },
                   ]
                 : []),
-              { key: "tokenizerId", label: "tokenizer id" },
               { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
             ],
             label: "Recap Tokenizer",
@@ -192,6 +192,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         valueOverride: {
           type: typeSelected,
           jsonConfig: computedJsonConfig,
+          tokenizerId: form.inputProps("tokenizerId").value?.name || "",
         },
       }),
     [form, typeSelected, computedJsonConfig],
