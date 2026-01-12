@@ -15,7 +15,7 @@
       "default": "./dist/index.es.js"
     },
     "./importable": {
-      "default": "./dist/importable.js"
+      "default": "./dist/index.es.js"
     },
     "./embeddable": {
       "default": "./dist/embeddable.js"

@@ -5,10 +5,20 @@ import { noCustomOutput } from "./plugins/noCustomOutput";
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), noCustomOutput()],
-    resolve: {
-      extensions: [".tsx", ".ts", ".js"],
-    },
+    plugins: [
+      react({
+        babel: {
+          plugins: [
+            [
+              "babel-plugin-styled-components",
+              { displayName: true, fileName: true, ssr: false },
+            ],
+          ],
+        },
+      }),
+      noCustomOutput(),
+    ],
+    resolve: { extensions: [".tsx", ".ts", ".js"] },
     build: {
       sourcemap: true,
       minify: false,
@@ -16,12 +26,10 @@ export default defineConfig(() => {
       emptyOutDir: false,
       cssCodeSplit: true,
       lib: {
-        entry: {
-          importable: path.resolve(__dirname, "../src/index.ts"),
-        },
+        entry: path.resolve(__dirname, "../src/index.ts"),
         name: "OpenK9SearchFrontend",
         formats: ["es", "cjs"],
-        fileName: (format) => `importable.${format}.js`,
+        fileName: (format) => `index.${format}.js`,
       },
       rollupOptions: {
         external: [
@@ -34,9 +42,12 @@ export default defineConfig(() => {
           "lodash",
         ],
         output: {
-          path: path.resolve(__dirname, "../dist"),
-          entryFileNames: "[name].js",
-          libraryTarget: "umd",
+          entryFileNames: "index.[format].js",
+          globals: {
+            react: "React",
+            "react-dom": "ReactDOM",
+            "styled-components": "styled",
+          },
         },
       },
     },

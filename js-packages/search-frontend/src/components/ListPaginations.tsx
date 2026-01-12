@@ -145,10 +145,6 @@ const PaginationsButton = styled.button<{ isActive?: boolean }>`
     box-shadow: ${isActive ? "0 2px 8px rgba(200,57,57,0.15)" : "none"};
     transition: background 0.2s, color 0.2s;
     outline: none;
-    &:hover:not(:disabled) {
-      background: #c83939;
-      color: #fff;
-    }
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
