@@ -3,8 +3,10 @@ import os
 import base64
 import requests
 import logging
-from datetime import datetime, UTC
+from datetime import datetime
 from logging.config import dictConfig
+
+from pandas import DataFrame
 
 from .log_config import LogConfig
 
@@ -24,6 +26,14 @@ def log_error_location(exception: Exception) -> None:
         logger.error(f"File: {os.path.relpath(frame.filename)}, line {frame.lineno}, in {frame.name}")
 
 
+def has_valid_header(df: DataFrame) -> bool:
+    # Checks if columns are all strings
+    return all([
+        isinstance(el, str)
+        for el in df.columns
+    ])
+
+
 class IngestionHandler:
     def __init__(self, ingestion_url, datasource_id, schedule_id, tenant_id, do_raise_error: bool = True):
         self.ingestion_url = ingestion_url
@@ -35,7 +45,7 @@ class IngestionHandler:
         self.status_logger = logging.getLogger("status-logger")
 
     def get_end_timestamp(self) -> float:
-        return datetime.now(UTC).timestamp() * 1000
+        return datetime.utcnow().timestamp() * 1000
 
     def post_message(self, payload):
         try:
