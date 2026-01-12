@@ -184,9 +184,9 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                     { key: "tokenizerId", label: "Tokenizer" },
                   ]
                 : []),
-              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+              ...(typeSelected ? [{ key: "jsonConfig", label: "JSON Config", keyNotView: "type" }] : []),
             ],
-            label: "Recap Tokenizer",
+            label: "Recap Analyzer",
           },
         ],
         valueOverride: {

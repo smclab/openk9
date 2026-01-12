@@ -291,7 +291,8 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   });
 
   const connectorSection: RecapSingleSection = {
-    id: "Connector",
+    id: "Recap",
+    title: "Recap",
     section: { sectionId: "Connector", sectionLabel: "Connector" },
     fields: [
       {

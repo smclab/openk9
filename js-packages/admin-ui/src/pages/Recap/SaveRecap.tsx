@@ -20,6 +20,7 @@ export type RecapField = {
 
 export type RecapSingleSection = {
   id: string;
+  title?: string;
   fields: RecapField[];
   section: {
     sectionId: string;
@@ -97,7 +98,7 @@ export default function Recap({
 
   const triggerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const title = recapData[0].section.sectionLabel;
+  const title = recapData[0]?.title ?? recapData[0].section.sectionLabel;
   const totalFields = recapData.reduce((acc, s) => acc + s.fields.length, 0);
 
   const areas: areaType[] = recapData.map((s) => ({
@@ -131,7 +132,6 @@ export default function Recap({
         ref={triggerRef}
         onClick={handleToggle}
         sx={{
-          borderRadius: 2,
           px: 2.5,
           py: 1.5,
           bgcolor: "background.paper",
@@ -158,12 +158,7 @@ export default function Recap({
 
         <Box>
           <Typography fontWeight={600}>{title}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {totalFields} campi
-          </Typography>
         </Box>
-
-        <Badge color="primary" variant="dot" />
       </Box>
     );
 
@@ -255,7 +250,6 @@ export default function Recap({
                 display: "flex",
                 flexDirection: "column",
                 boxShadow: 12,
-                borderRadius: 2,
               }}
             >
               <Box
