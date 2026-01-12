@@ -539,7 +539,29 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
         </Box>
       </Container>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => {
+            setVerifyData("edit");
+          },
+          onSubmit: () => {
+            createOrUpdatePipelineMutate({
+              variables: {
+                id: pipelineData.pipelineId !== "new" ? pipelineData.pipelineId : null,
+                name: pipelineData.name,
+                description: pipelineData.description,
+                items: pipelineData.associatedEnrichItems.map((val: { id: string; weight: number }) => ({
+                  enrichItemId: val.id,
+                  weight: val.weight,
+                })),
+              },
+            });
+          },
+        }}
+      />
     </>
   );
 }
