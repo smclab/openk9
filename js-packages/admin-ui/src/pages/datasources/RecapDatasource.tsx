@@ -8,6 +8,7 @@ export type areaType = {
     label?: string | null | undefined;
     value?: string | number | boolean | Record<string, any> | null | undefined;
     type?: "string" | "number" | "boolean" | "json" | "array";
+    jsonView?: boolean;
   }>;
 };
 
@@ -63,14 +64,16 @@ function RecapDatasource({
             onClick={() => toggleCard(idx)}
           >
             <CardContent ref={(el) => (contentRefs.current[idx] = el)} sx={{ p: forceFullScreen ? 3 : 2, flex: 1 }}>
-              {section.title && (
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {section.title}
-                  </Typography>
-                </Box>
+              {area.length > 1 && section.title && (
+                <>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {section.title}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ mb: 1 }} />
+                </>
               )}
-              <Divider sx={{ mb: 1 }} />
               {section.description && (
                 <Typography variant="body2" color="text.secondary" display="block" mb={1}>
                   {section.description}
@@ -210,6 +213,21 @@ function RecapDatasource({
                         : "No"
                       : String(field.value);
 
+                  if (field.jsonView) {
+                    return (
+                      <Box key={index} display="flex" flexDirection="column">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ minWidth: 110, flexShrink: 0, fontWeight: 700, mb: 0.5 }}
+                        >
+                          {field.label}:
+                        </Typography>
+                        <JsonFieldBox value={displayValue} />
+                      </Box>
+                    );
+                  }
+
                   return (
                     <Box key={index} display="flex" justifyContent={"space-between"} alignContent={"center"}>
                       <Typography
@@ -247,4 +265,64 @@ function RecapDatasource({
   );
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function highlightJson(json: string): string {
+  const escaped = escapeHtml(json);
+  // strings
+  let result = escaped.replace(/(".*?")/g, '<span class="json-string">$1</span>');
+  // keys
+  result = result.replace(/<span class="json-string">(".*?")<\/span>(\s*:)/g, '<span class="json-key">$1</span>$2');
+  // boolean
+  result = result.replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>');
+  // null
+  result = result.replace(/\b(null)\b/g, '<span class="json-null">$1</span>');
+  // numbers
+  result = result.replace(/\b(-?(0x)?\d+(\.\d+)?)\b/g, '<span class="json-number">$1</span>');
+  return result;
+}
+
+function JsonFieldBox({ value }: { value: string }) {
+  let pretty = value;
+
+  try {
+    pretty = JSON.stringify(JSON.parse(value), null, 2);
+  } catch {}
+  return (
+    <Box
+      component="pre"
+      sx={(theme) => {
+        const isDark = theme.palette.mode === "dark";
+
+        const colors = {
+          key: isDark ? "#9cdcfe" : "#0451a5",
+          string: isDark ? "#ce9178" : "#a31515",
+          boolean: isDark ? "#569cd6" : "#0000ff",
+          null: isDark ? "#569cd6" : "#0000ff",
+          number: isDark ? "#b5cea8" : "#098658",
+        };
+
+        return {
+          m: 0,
+          p: 1.5,
+          borderRadius: 1,
+          fontFamily: 'Menlo, Consolas, "Fira Code", monospace',
+          fontSize: 12,
+          overflowX: "auto",
+          whiteSpace: "pre",
+          bgcolor: isDark ? "#1e1e1e" : "#f5f5f5",
+          border: `1px solid ${isDark ? "#303030" : "#e0e0e0"}`,
+          "& .json-key": { color: colors.key },
+          "& .json-string": { color: colors.string },
+          "& .json-boolean": { color: colors.boolean },
+          "& .json-null": { color: colors.null },
+          "& .json-number": { color: colors.number },
+        };
+      }}
+      dangerouslySetInnerHTML={{ __html: highlightJson(pretty) }}
+    />
+  );
+}
 export default RecapDatasource;

@@ -121,6 +121,8 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "requestTimeout", label: "Request Timeout" },
           { key: "behaviorMergeType", label: "Behavior Merge Type" },
           { key: "behaviorOnError", label: "Behavior On Error" },
+          { key: "jsonConfig", label: "Configuration JSON", jsonView: true },
+          { key: "script", label: "Script JSON", jsonView: true },
         ],
         label: "Recap Enrich Item",
       },

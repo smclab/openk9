@@ -132,6 +132,7 @@ export default function Recap({
         ref={triggerRef}
         onClick={handleToggle}
         sx={{
+          borderRadius: "10px",
           px: 2.5,
           py: 1.5,
           bgcolor: "background.paper",
@@ -325,12 +326,12 @@ export function mappingCardRecap({
   valueOverride,
 }: {
   form: formType;
-  sections: { label: string; cell: { key: string; label?: string; keyNotView?: string }[] }[];
+  sections: { label: string; cell: { key: string; label?: string; keyNotView?: string; jsonView?: boolean }[] }[];
   valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
     const fields: RecapField[] = sectionDef.cell.map((element) => {
-      const { key, label, keyNotView } = element;
+      const { key, label, keyNotView, jsonView } = element;
       const input = form.inputProps<any>(key as any);
 
       const rawValue = valueOverride?.[key] !== undefined ? valueOverride[key] : input.value;
@@ -351,6 +352,18 @@ export function mappingCardRecap({
           const { [keyNotView]: _omit, ...rest } = value as Record<string, any>;
           value = rest;
         }
+      }
+
+      if (jsonView) {
+        return {
+          key,
+          label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
+          value: rawValue,
+          type: "string",
+          isValid: input.validationMessages.length === 0,
+          keyNotView,
+          jsonView: true,
+        };
       }
 
       return {
