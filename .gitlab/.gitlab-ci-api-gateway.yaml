@@ -36,7 +36,7 @@ Build API-Gateway Image:
       # Build on main or tag with official version
       echo "Build on main or tag with official version: $VERSION"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
-      ./mvnw jib:build -f app/api-gateway/pom.xml \
+      ./mvnw jib:build -f app/api-gateway/pom.xml -DskipTests \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION \
         -Djib.to.auth.username=$CI_REGISTRY_USERNAME \
         -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
@@ -45,7 +45,7 @@ Build API-Gateway Image:
       # Build without push on merge request
       echo "Build on MR without push"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
-      ./mvnw jib:dockerBuild -f app/api-gateway/pom.xml \
+      ./mvnw jib:dockerBuild -f app/api-gateway/pom.xml -DskipTests \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:$VERSION \
         -Djib.to.auth.username=$CI_REGISTRY_USERNAME \
         -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
@@ -54,7 +54,7 @@ Build API-Gateway Image:
       # Feature branch by Michele => push with tag 998-SNAPSHOT
       echo "Triggered by Michele - using tag 998-SNAPSHOT"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
-      ./mvnw jib:build -f app/api-gateway/pom.xml \
+      ./mvnw jib:build -f app/api-gateway/pom.xml -DskipTests \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:998-SNAPSHOT \
         -Djib.to.auth.username=$CI_REGISTRY_USERNAME \
         -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
@@ -64,7 +64,7 @@ Build API-Gateway Image:
       # Feature branch by Mirko => push with tag 999-SNAPSHOT
       echo "Triggered by Mirko - using tag 999-SNAPSHOT"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
-      ./mvnw jib:build -f app/api-gateway/pom.xml \
+      ./mvnw jib:build -f app/api-gateway/pom.xml -DskipTests \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT \
         -Djib.to.auth.username=$CI_REGISTRY_USERNAME \
         -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
@@ -73,7 +73,7 @@ Build API-Gateway Image:
       # Feature branch by other developer => push with tag 999-SNAPSHOT
       echo "Triggered by other developer - using tag 999-SNAPSHOT"
       ./mvnw clean install -am -pl app/api-gateway $MAVEN_OPTS -DskipTests
-      ./mvnw jib:build -f app/api-gateway/pom.xml \
+      ./mvnw jib:build -f app/api-gateway/pom.xml -DskipTests \
         -Djib.to.image=registry.smc.it:49083/openk9/openk9-api-gateway:999-SNAPSHOT \
         -Djib.to.auth.username=$CI_REGISTRY_USERNAME \
         -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
