@@ -24,6 +24,7 @@ from xlrd import XLRDError
 
 from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
+from .utility import has_valid_header
 
 dictConfig(LogConfig().dict())
 
@@ -33,13 +34,14 @@ logger = logging.getLogger("status-logger")
 class ExcelMinioExtractor(BaseMinioExtractor):
 
     def __init__(self, host, port, access_key, secret_key, bucket_name, columns, prefix, datasource_payload_key, 
-                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url):
+                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url, do_try_extract_header):
 
         super(ExcelMinioExtractor, self).__init__(host, port, access_key, secret_key, bucket_name, prefix,
                                                   datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
 
         self.columns = columns
         self.datasource_payload_key = datasource_payload_key
+        self.do_try_extract_header = do_try_extract_header
 
     def manage_data(self, client, obj, end_timestamp):
         y = client.get_object(self.bucket_name, obj.object_name)
@@ -47,14 +49,13 @@ class ExcelMinioExtractor(BaseMinioExtractor):
         data = y.data
 
         try:
-            df = pd.read_excel(BytesIO(data), engine='xlrd')
+            df = pd.read_excel(BytesIO(data), engine='xlrd', header=0 if self.do_try_extract_header else None)
+            if self.do_try_extract_header and not has_valid_header(df):
+                df = pd.read_excel(BytesIO(data), engine='xlrd', header=None)
         except XLRDError:
             # Is not file excel
             self.status_logger.warning(f"Skipped file {obj.object_name}. This is not an Excel File.")
             return
-
-        df = df.drop(columns=df.select_dtypes(include=['datetime64']).columns.tolist())
-        df = df.drop(columns=df.select_dtypes(include=['float64']).columns.tolist())
 
         df = df.astype(str)
 
