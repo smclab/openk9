@@ -28,7 +28,8 @@ This module provides:
     - `Ollama local models`
     - `IBM Watsonx`
     - `Google Vertex AI`
-
+    - `Hugging Face`
+    
 - gRPC interface used internally by OpenK9 services
 
 - Health checks and reflection for easier integration
