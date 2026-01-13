@@ -145,6 +145,74 @@ export type AnnotatorWithDocTypeFieldDtoInput = {
   type: AnnotatorType;
 };
 
+export type Autocomplete = {
+  __typename?: 'Autocomplete';
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  description?: Maybe<Scalars['String']>;
+  /**
+   * Retrieves all the DocTypeFields associated with an Autocomplete configuration.
+   *
+   * This field resolver fetches all the document type fields linked to the given Autocomplete.
+   *
+   * Returns:
+   * - The Set with all the associated DocTypeField, or null if not found.
+   *
+   */
+  fields?: Maybe<Connection_DocTypeField>;
+  fuzziness?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['ID']>;
+  minimumShouldMatch?: Maybe<Scalars['String']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  operator?: Maybe<BooleanOperator>;
+  resultSize?: Maybe<Scalars['Int']>;
+};
+
+
+export type AutocompleteFieldsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  notEqual?: InputMaybe<Scalars['Boolean']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+export type AutocompleteDtoInput = {
+  description?: InputMaybe<Scalars['String']>;
+  /**
+   * 	The field list used in the autocomplete query,
+   * 	must not be empty, all the docTypeField must be of type search_as_you_type
+   * 	 and must have a parent.
+   *
+   */
+  fieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  /**
+   * 	Edit distance allowed for fuzzy matching (e.g., "0", "1", "2", or "AUTO")
+   *
+   */
+  fuzziness?: InputMaybe<Scalars['String']>;
+  /**
+   * 	Minimum number of optional clauses that must match for a document to be returned
+   *
+   */
+  minimumShouldMatch?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  /**
+   * 	Boolean operator to combine query terms (AND or OR)
+   *
+   */
+  operator?: InputMaybe<BooleanOperator>;
+  /**
+   * 	Maximum number of results to return.
+   *
+   */
+  resultSize?: InputMaybe<Scalars['Int']>;
+};
+
 export type Autocorrection = {
   __typename?: 'Autocorrection';
   /**
@@ -232,8 +300,14 @@ export enum BehaviorOnError {
   Skip = 'SKIP'
 }
 
+export enum BooleanOperator {
+  And = 'AND',
+  Or = 'OR'
+}
+
 export type Bucket = {
   __typename?: 'Bucket';
+  autocomplete?: Maybe<Autocomplete>;
   autocorrection?: Maybe<Autocorrection>;
   catIndices?: Maybe<Array<Maybe<CatResponse>>>;
   /** ISO-8601 */
@@ -330,6 +404,7 @@ export type BucketDtoInput = {
 };
 
 export type BucketWithListsDtoInput = {
+  autocompleteId?: InputMaybe<Scalars['BigInteger']>;
   autocorrectionId?: InputMaybe<Scalars['BigInteger']>;
   datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
@@ -409,6 +484,14 @@ export type Connection_Analyzer = {
 export type Connection_Annotator = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_Annotator>>>;
+  /** details about this specific page */
+  pageInfo?: Maybe<PageInfo>;
+};
+
+/** A connection to a list of items. */
+export type Connection_Autocomplete = {
+  /** A list of edges. */
+  edges?: Maybe<Array<Maybe<Edge_Autocomplete>>>;
   /** details about this specific page */
   pageInfo?: Maybe<PageInfo>;
 };
@@ -841,6 +924,12 @@ export type DefaultConnection_Annotator = Connection_Annotator & {
   pageInfo?: Maybe<PageInfo>;
 };
 
+export type DefaultConnection_Autocomplete = Connection_Autocomplete & {
+  __typename?: 'DefaultConnection_Autocomplete';
+  edges?: Maybe<Array<Maybe<Edge_Autocomplete>>>;
+  pageInfo?: Maybe<PageInfo>;
+};
+
 export type DefaultConnection_Autocorrection = Connection_Autocorrection & {
   __typename?: 'DefaultConnection_Autocorrection';
   edges?: Maybe<Array<Maybe<Edge_Autocorrection>>>;
@@ -1013,6 +1102,12 @@ export type DefaultEdge_Annotator = Edge_Annotator & {
   __typename?: 'DefaultEdge_Annotator';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<Annotator>;
+};
+
+export type DefaultEdge_Autocomplete = Edge_Autocomplete & {
+  __typename?: 'DefaultEdge_Autocomplete';
+  cursor?: Maybe<Scalars['String']>;
+  node?: Maybe<Autocomplete>;
 };
 
 export type DefaultEdge_Autocorrection = Edge_Autocorrection & {
@@ -1354,6 +1449,14 @@ export type Edge_Annotator = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<Annotator>;
+};
+
+/** An edge in a connection */
+export type Edge_Autocomplete = {
+  /** cursor marks a unique position or index into the connection */
+  cursor?: Maybe<Scalars['String']>;
+  /** The item at the end of the edge */
+  node?: Maybe<Autocomplete>;
 };
 
 /** An edge in a connection */
@@ -1890,6 +1993,23 @@ export type Mutation = {
   annotator?: Maybe<Response_Annotator>;
   annotatorWithDocTypeField?: Maybe<Response_Annotator>;
   /**
+   * Creates or updates an Autocomplete configuration.
+   *
+   * This mutation handles both creation and updates/patch of Autocomplete configurations based on the provided ID.
+   * If no ID is provided, a new Autocomplete is created. If an ID is provided, the existing Autocomplete
+   * is either fully updated or partially patched based on the patch parameter.
+   *
+   * Arguments:
+   * - `id` (ID): The ID of the Autocomplete to update. If null, creates a new Autocomplete.
+   * - `AutocompleteDTO` (autocompleteDTO!): The Autocomplete data to create or update.
+   * - `patch` (Boolean): If true, performs a partial update (patch). If false, performs a full update. Defaults to false.
+   *
+   * Returns:
+   * - A Response containing the created or updated Autocomplete configuration.
+   *
+   */
+  autocomplete?: Maybe<Response_Autocomplete>;
+  /**
    * Creates or updates an Autocorrection configuration.
    *
    * This mutation handles both creation and updates/patch of Autocorrection configurations based on the provided ID.
@@ -1908,6 +2028,20 @@ export type Mutation = {
   autocorrection?: Maybe<Response_Autocorrection>;
   bindAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   bindAnnotatorToDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
+  /**
+   * Binds an existing Autocomplete to a specified Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket to bind the Autocomplete to.
+   * - `autocompleteId` (ID!): The ID of the Autocomplete to be bound.
+   *
+   * Returns:
+   * - A tuple containing:
+   *   - `bucket`: The updated Bucket with the linked Autocomplete.
+   *   - `autocomplete`: The linked Autocomplete.
+   *
+   */
+  bindAutocompleteToBucket?: Maybe<Tuple2_Bucket_Autocomplete>;
   /**
    * Binds an existing Autocorrection to a specified Bucket.
    *
@@ -1970,6 +2104,17 @@ export type Mutation = {
   datasource?: Maybe<Response_Datasource>;
   deleteAnalyzer?: Maybe<Analyzer>;
   deleteAnnotator?: Maybe<Annotator>;
+  /**
+   * Deletes an Autocomplete configuration by its ID.
+   *
+   * Arguments:
+   * - `id` (ID!): The ID of the Autocomplete to delete.
+   *
+   * Returns:
+   * - The deleted Autocomplete configuration.
+   *
+   */
+  deleteAutocomplete?: Maybe<Autocomplete>;
   /**
    * Deletes an Autocorrection configuration by its ID.
    *
@@ -2068,6 +2213,21 @@ export type Mutation = {
   tokenizer?: Maybe<Response_Tokenizer>;
   unbindAnalyzerFromDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   unbindAnnotatorFromDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
+  /**
+   * Unbinds the Autocomplete from a specified Bucket.
+   *
+   * This mutation removes the link between a Autocomplete and a Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket from which the Autocomplete will be unbound.
+   *
+   * Returns:
+   * - A tuple containing:
+   *   - `bucket`: The updated Bucket after unbinding the Autocomplete.
+   *   - `autocomplete`: Always null.
+   *
+   */
+  unbindAutocompleteFromBucket?: Maybe<Tuple2_Bucket_Autocomplete>;
   /**
    * Unbinds the Autocorrection from a specified Bucket.
    *
@@ -2306,6 +2466,14 @@ export type MutationAnnotatorWithDocTypeFieldArgs = {
 
 
 /** Mutation root */
+export type MutationAutocompleteArgs = {
+  autocompleteDTO?: InputMaybe<AutocompleteDtoInput>;
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Mutation root */
 export type MutationAutocorrectionArgs = {
   autocorrectionDTO?: InputMaybe<AutocorrectionDtoInput>;
   id?: InputMaybe<Scalars['ID']>;
@@ -2324,6 +2492,13 @@ export type MutationBindAnalyzerToDocTypeFieldArgs = {
 export type MutationBindAnnotatorToDocTypeFieldArgs = {
   docTypeFieldId: Scalars['ID'];
   id: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationBindAutocompleteToBucketArgs = {
+  autocompleteId: Scalars['ID'];
+  bucketId: Scalars['ID'];
 };
 
 
@@ -2485,6 +2660,12 @@ export type MutationDeleteAnalyzerArgs = {
 /** Mutation root */
 export type MutationDeleteAnnotatorArgs = {
   annotatorId: Scalars['ID'];
+};
+
+
+/** Mutation root */
+export type MutationDeleteAutocompleteArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -3058,6 +3239,12 @@ export type MutationUnbindAnnotatorFromDocTypeFieldArgs = {
 
 
 /** Mutation root */
+export type MutationUnbindAutocompleteFromBucketArgs = {
+  bucketId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationUnbindAutocorrectionFromBucketArgs = {
   bucketId: Scalars['ID'];
 };
@@ -3290,6 +3477,37 @@ export type Query = {
   annotator?: Maybe<Annotator>;
   annotators?: Maybe<Connection_Annotator>;
   /**
+   * Retrieves an Autocomplete configuration by its ID.
+   *
+   * Arguments:
+   * - `id` (ID!): The ID of the Autocomplete to retrieve.
+   *
+   * Returns:
+   * - The requested Autocomplete configuration, or null if not found.
+   *
+   */
+  autocomplete?: Maybe<Autocomplete>;
+  /**
+   * Retrieves a paginated connection of Autocomplete configurations with optional filtering and sorting.
+   *
+   * This query supports cursor-based pagination following the Relay specification, allowing forward
+   * and backward traversal through the result set. Results can be filtered by search text and sorted
+   * by multiple criteria.
+   *
+   * Arguments:
+   * - `after` (String): Cursor for forward pagination - fetches nodes after this cursor (exclusive).
+   * - `before` (String): Cursor for backward pagination - fetches nodes before this cursor (exclusive).
+   * - `first` (Integer): Limits the number of nodes returned from the start.
+   * - `last` (Integer): Limits the number of nodes returned from the end.
+   * - `searchText` (String): Optional text to filter Autocomplete configurations.
+   * - `sortByList` (Set<SortBy>): Optional set of sorting criteria.
+   *
+   * Returns:
+   * - A Connection containing the requested Autocomplete configurations with pagination info.
+   *
+   */
+  autocompletes?: Maybe<Connection_Autocomplete>;
+  /**
    * Retrieves an Autocorrection configuration by its ID.
    *
    * Arguments:
@@ -3391,6 +3609,19 @@ export type Query = {
   unboundAnalyzersByCharFilter?: Maybe<Array<Maybe<Analyzer>>>;
   unboundAnalyzersByTokenFilter?: Maybe<Array<Maybe<Analyzer>>>;
   /**
+   * Retrieves all Autocomplete configurations that are not bound to a specific Bucket.
+   *
+   * This query returns Autocomplete configurations that are available to be bound to the specified Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket to check for unbound Autocompletes.
+   *
+   * Returns:
+   * - A list of unbound Autocomplete configurations available for the specified Bucket.
+   *
+   */
+  unboundAutocompleteByBucket?: Maybe<Array<Maybe<Autocomplete>>>;
+  /**
    * Retrieves all Autocorrection configurations that are not bound to a specific Bucket.
    *
    * This query returns Autocorrection configurations that are available to be bound to the specified Bucket.
@@ -3406,6 +3637,21 @@ export type Query = {
   unboundBucketsByDatasource?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsBySuggestionCategory?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsByTab?: Maybe<Array<Maybe<Bucket>>>;
+  /**
+   * Retrieves all DocTypeField that are not bound to a specific Autocomplete and are of type
+   *  SEARCH_AS_YOU_TYPE.
+   *
+   * This query returns all DocTypeFields of autocomplete type (SEARCH_AS_YOU_TYPE)
+   *  that are available to be bound to the specified Autocomplete.
+   *
+   * Arguments:
+   * - `autocompleteId` (ID!): The ID of the Autocomplete to check for unbound DocTypeFields.
+   *
+   * Returns:
+   * - A list of unbound DocTypeFields available for the specified Autocomplete.
+   *
+   */
+  unboundDocTypeFieldByAutocomplete?: Maybe<Array<Maybe<DocTypeField>>>;
   /**
    * Retrieves all DocTypeField that are not bound to a specific Autocorrection.
    *
@@ -3469,6 +3715,23 @@ export type QueryAnnotatorArgs = {
 
 /** Query root */
 export type QueryAnnotatorsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
+  searchText?: InputMaybe<Scalars['String']>;
+  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryAutocompleteArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Query root */
+export type QueryAutocompletesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -4077,6 +4340,12 @@ export type QueryUnboundAnalyzersByTokenFilterArgs = {
 
 
 /** Query root */
+export type QueryUnboundAutocompleteByBucketArgs = {
+  bucketId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
 export type QueryUnboundAutocorrectionByBucketArgs = {
   bucketId: Scalars['BigInteger'];
 };
@@ -4097,6 +4366,12 @@ export type QueryUnboundBucketsBySuggestionCategoryArgs = {
 /** Query root */
 export type QueryUnboundBucketsByTabArgs = {
   tabId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
+export type QueryUnboundDocTypeFieldByAutocompleteArgs = {
+  autocompleteId: Scalars['BigInteger'];
 };
 
 
@@ -4285,6 +4560,12 @@ export type Response_Analyzer = {
 export type Response_Annotator = {
   __typename?: 'Response_Annotator';
   entity?: Maybe<Annotator>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
+export type Response_Autocomplete = {
+  __typename?: 'Response_Autocomplete';
+  entity?: Maybe<Autocomplete>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
@@ -4902,6 +5183,12 @@ export type Tuple2_Annotator_DocTypeField = {
   right?: Maybe<DocTypeField>;
 };
 
+export type Tuple2_Bucket_Autocomplete = {
+  __typename?: 'Tuple2_Bucket_Autocomplete';
+  left?: Maybe<Bucket>;
+  right?: Maybe<Autocomplete>;
+};
+
 export type Tuple2_Bucket_Autocorrection = {
   __typename?: 'Tuple2_Bucket_Autocorrection';
   left?: Maybe<Bucket>;
@@ -5229,6 +5516,43 @@ export type AnalyzersAssociationsQueryVariables = Exact<{
 
 
 export type AnalyzersAssociationsQuery = { __typename?: 'Query', analyzer?: { __typename?: 'Analyzer', id?: string | null, charFilters?: { __typename?: 'DefaultConnection_CharFilter', edges?: Array<{ __typename?: 'DefaultEdge_CharFilter', node?: { __typename?: 'CharFilter', id?: string | null, name?: string | null } | null } | null> | null } | null, tokenFilters?: { __typename?: 'DefaultConnection_TokenFilter', edges?: Array<{ __typename?: 'DefaultEdge_TokenFilter', node?: { __typename?: 'TokenFilter', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+
+export type AutocompletesQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  after?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type AutocompletesQuery = { __typename?: 'Query', autocompletes?: { __typename?: 'DefaultConnection_Autocomplete', edges?: Array<{ __typename?: 'DefaultEdge_Autocomplete', node?: { __typename?: 'Autocomplete', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type DeleteAutocompleteMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteAutocompleteMutation = { __typename?: 'Mutation', deleteAutocomplete?: { __typename?: 'Autocomplete', id?: string | null, name?: string | null } | null };
+
+export type AutocompleteQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type AutocompleteQuery = { __typename?: 'Query', autocomplete?: { __typename?: 'Autocomplete', id?: string | null, fuzziness?: string | null, minimumShouldMatch?: string | null, name?: string | null, operator?: BooleanOperator | null, resultSize?: number | null, fields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+
+export type CreateOrUpdateAutocompleteMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  autocompleteDTO: AutocompleteDtoInput;
+}>;
+
+
+export type CreateOrUpdateAutocompleteMutation = { __typename?: 'Mutation', autocomplete?: { __typename?: 'Response_Autocomplete', entity?: { __typename?: 'Autocomplete', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type UnboundDocTypeFieldByAutocompleteQueryVariables = Exact<{
+  autocompleteId: Scalars['BigInteger'];
+}>;
+
+
+export type UnboundDocTypeFieldByAutocompleteQuery = { __typename?: 'Query', unboundDocTypeFieldByAutocomplete?: Array<{ __typename?: 'DocTypeField', id?: string | null } | null> | null };
 
 export type AutocorrectionsOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -7441,6 +7765,209 @@ export function useAnalyzersAssociationsLazyQuery(baseOptions?: Apollo.LazyQuery
 export type AnalyzersAssociationsQueryHookResult = ReturnType<typeof useAnalyzersAssociationsQuery>;
 export type AnalyzersAssociationsLazyQueryHookResult = ReturnType<typeof useAnalyzersAssociationsLazyQuery>;
 export type AnalyzersAssociationsQueryResult = Apollo.QueryResult<AnalyzersAssociationsQuery, AnalyzersAssociationsQueryVariables>;
+export const AutocompletesDocument = gql`
+    query Autocompletes($searchText: String, $after: String) {
+  autocompletes(searchText: $searchText, first: 20, after: $after) {
+    edges {
+      node {
+        id
+        name
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useAutocompletesQuery__
+ *
+ * To run a query within a React component, call `useAutocompletesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAutocompletesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAutocompletesQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      after: // value for 'after'
+ *   },
+ * });
+ */
+export function useAutocompletesQuery(baseOptions?: Apollo.QueryHookOptions<AutocompletesQuery, AutocompletesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AutocompletesQuery, AutocompletesQueryVariables>(AutocompletesDocument, options);
+      }
+export function useAutocompletesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AutocompletesQuery, AutocompletesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AutocompletesQuery, AutocompletesQueryVariables>(AutocompletesDocument, options);
+        }
+export type AutocompletesQueryHookResult = ReturnType<typeof useAutocompletesQuery>;
+export type AutocompletesLazyQueryHookResult = ReturnType<typeof useAutocompletesLazyQuery>;
+export type AutocompletesQueryResult = Apollo.QueryResult<AutocompletesQuery, AutocompletesQueryVariables>;
+export const DeleteAutocompleteDocument = gql`
+    mutation DeleteAutocomplete($id: ID!) {
+  deleteAutocomplete(id: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteAutocompleteMutationFn = Apollo.MutationFunction<DeleteAutocompleteMutation, DeleteAutocompleteMutationVariables>;
+
+/**
+ * __useDeleteAutocompleteMutation__
+ *
+ * To run a mutation, you first call `useDeleteAutocompleteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteAutocompleteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteAutocompleteMutation, { data, loading, error }] = useDeleteAutocompleteMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteAutocompleteMutation(baseOptions?: Apollo.MutationHookOptions<DeleteAutocompleteMutation, DeleteAutocompleteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteAutocompleteMutation, DeleteAutocompleteMutationVariables>(DeleteAutocompleteDocument, options);
+      }
+export type DeleteAutocompleteMutationHookResult = ReturnType<typeof useDeleteAutocompleteMutation>;
+export type DeleteAutocompleteMutationResult = Apollo.MutationResult<DeleteAutocompleteMutation>;
+export type DeleteAutocompleteMutationOptions = Apollo.BaseMutationOptions<DeleteAutocompleteMutation, DeleteAutocompleteMutationVariables>;
+export const AutocompleteDocument = gql`
+    query Autocomplete($id: ID!) {
+  autocomplete(id: $id) {
+    id
+    fuzziness
+    minimumShouldMatch
+    name
+    operator
+    resultSize
+    fields {
+      edges {
+        node {
+          id
+          name
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useAutocompleteQuery__
+ *
+ * To run a query within a React component, call `useAutocompleteQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAutocompleteQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAutocompleteQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useAutocompleteQuery(baseOptions: Apollo.QueryHookOptions<AutocompleteQuery, AutocompleteQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AutocompleteQuery, AutocompleteQueryVariables>(AutocompleteDocument, options);
+      }
+export function useAutocompleteLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AutocompleteQuery, AutocompleteQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AutocompleteQuery, AutocompleteQueryVariables>(AutocompleteDocument, options);
+        }
+export type AutocompleteQueryHookResult = ReturnType<typeof useAutocompleteQuery>;
+export type AutocompleteLazyQueryHookResult = ReturnType<typeof useAutocompleteLazyQuery>;
+export type AutocompleteQueryResult = Apollo.QueryResult<AutocompleteQuery, AutocompleteQueryVariables>;
+export const CreateOrUpdateAutocompleteDocument = gql`
+    mutation CreateOrUpdateAutocomplete($id: ID, $autocompleteDTO: AutocompleteDTOInput!) {
+  autocomplete(id: $id, autocompleteDTO: $autocompleteDTO) {
+    entity {
+      id
+      name
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateAutocompleteMutationFn = Apollo.MutationFunction<CreateOrUpdateAutocompleteMutation, CreateOrUpdateAutocompleteMutationVariables>;
+
+/**
+ * __useCreateOrUpdateAutocompleteMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateAutocompleteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateAutocompleteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateAutocompleteMutation, { data, loading, error }] = useCreateOrUpdateAutocompleteMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      autocompleteDTO: // value for 'autocompleteDTO'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateAutocompleteMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateAutocompleteMutation, CreateOrUpdateAutocompleteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateAutocompleteMutation, CreateOrUpdateAutocompleteMutationVariables>(CreateOrUpdateAutocompleteDocument, options);
+      }
+export type CreateOrUpdateAutocompleteMutationHookResult = ReturnType<typeof useCreateOrUpdateAutocompleteMutation>;
+export type CreateOrUpdateAutocompleteMutationResult = Apollo.MutationResult<CreateOrUpdateAutocompleteMutation>;
+export type CreateOrUpdateAutocompleteMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateAutocompleteMutation, CreateOrUpdateAutocompleteMutationVariables>;
+export const UnboundDocTypeFieldByAutocompleteDocument = gql`
+    query UnboundDocTypeFieldByAutocomplete($autocompleteId: BigInteger!) {
+  unboundDocTypeFieldByAutocomplete(autocompleteId: $autocompleteId) {
+    id
+  }
+}
+    `;
+
+/**
+ * __useUnboundDocTypeFieldByAutocompleteQuery__
+ *
+ * To run a query within a React component, call `useUnboundDocTypeFieldByAutocompleteQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnboundDocTypeFieldByAutocompleteQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnboundDocTypeFieldByAutocompleteQuery({
+ *   variables: {
+ *      autocompleteId: // value for 'autocompleteId'
+ *   },
+ * });
+ */
+export function useUnboundDocTypeFieldByAutocompleteQuery(baseOptions: Apollo.QueryHookOptions<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>(UnboundDocTypeFieldByAutocompleteDocument, options);
+      }
+export function useUnboundDocTypeFieldByAutocompleteLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>(UnboundDocTypeFieldByAutocompleteDocument, options);
+        }
+export type UnboundDocTypeFieldByAutocompleteQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldByAutocompleteQuery>;
+export type UnboundDocTypeFieldByAutocompleteLazyQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldByAutocompleteLazyQuery>;
+export type UnboundDocTypeFieldByAutocompleteQueryResult = Apollo.QueryResult<UnboundDocTypeFieldByAutocompleteQuery, UnboundDocTypeFieldByAutocompleteQueryVariables>;
 export const AutocorrectionsOptionsDocument = gql`
     query AutocorrectionsOptions($searchText: String, $cursor: String) {
   autocorrections(searchText: $searchText, first: 5, after: $cursor) {
@@ -15281,4 +15808,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-11-03T15:54:23+01:00
+// Generated on 2026-01-13T14:47:40+01:00

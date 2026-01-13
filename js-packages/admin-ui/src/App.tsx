@@ -60,6 +60,10 @@ import {
   Tokenizers,
   TokenTabs,
 } from "@pages";
+import { SaveAutocomplete } from "@pages/Autocomplete/Autocomplete";
+import { Autocompletes } from "@pages/Autocomplete/Autocompletes";
+import Autocorrections from "@pages/Autocorrections/Autocorrections";
+import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrecion";
 import { Buckets, SaveBucket } from "@pages/buckets";
 import DocumentTypes from "@pages/DocumentTypes/DocumentTypes";
 import { SaveDocumentType } from "@pages/DocumentTypes/SaveDocumentType";
@@ -75,8 +79,6 @@ import { Logo } from "./components/common/Logo";
 import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
 import ThemeSwitcher from "./utils/ThemeSwitcher";
-import Autocorrections from "@pages/Autocorrections/Autocorrections";
-import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrecion";
 
 export const themeColor = {
   light: {
@@ -400,6 +402,9 @@ const AppRoutes = () => (
     <Route path="/tokenizers" element={<Tokenizers />} />
     <Route path="/tokenizer/:tokenizerId" element={<SaveTokenizer />} />
     <Route path="/tokenizer/:tokenizerId/:view" element={<SaveTokenizer />} />
+    <Route path="/autocompletes" element={<Autocompletes />} />
+    <Route path="/autocomplete/:autocompleteId" element={<SaveAutocomplete />} />
+    <Route path="/autocomplete/:autocompleteId/:view" element={<SaveAutocomplete />} />
     <Route path="/plugin-drivers" element={<PluginDrivers />} />
     <Route path="/plugin-driver/:pluginDriverId" element={<SavePluginnDriverModel />} />
     <Route path="/plugin-driver/:pluginDriverId/:view" element={<SavePluginnDriverModel />} />

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 
 export type NamePath =
   | "admin"
+  | "autocompletes"
   | "dashboard"
   | "bucket"
   | "buckets"
