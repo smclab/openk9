@@ -66,6 +66,7 @@ gql`
   query UnboundDocTypeFieldByAutocomplete($autocompleteId: BigInteger!) {
     unboundDocTypeFieldByAutocomplete(autocompleteId: $autocompleteId) {
       id
+      name
     }
   }
 `;

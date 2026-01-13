@@ -5552,7 +5552,7 @@ export type UnboundDocTypeFieldByAutocompleteQueryVariables = Exact<{
 }>;
 
 
-export type UnboundDocTypeFieldByAutocompleteQuery = { __typename?: 'Query', unboundDocTypeFieldByAutocomplete?: Array<{ __typename?: 'DocTypeField', id?: string | null } | null> | null };
+export type UnboundDocTypeFieldByAutocompleteQuery = { __typename?: 'Query', unboundDocTypeFieldByAutocomplete?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
 
 export type AutocorrectionsOptionsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -7937,6 +7937,7 @@ export const UnboundDocTypeFieldByAutocompleteDocument = gql`
     query UnboundDocTypeFieldByAutocomplete($autocompleteId: BigInteger!) {
   unboundDocTypeFieldByAutocomplete(autocompleteId: $autocompleteId) {
     id
+    name
   }
 }
     `;
@@ -15808,4 +15809,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-01-13T14:47:40+01:00
+// Generated on 2026-01-13T17:40:34+01:00

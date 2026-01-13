@@ -70,7 +70,7 @@ export function Autocompletes() {
             {
               label: "View",
               action: (autocomplete) => {
-                navigate(`/document-type-template/${autocomplete?.id}/view`, {
+                navigate(`/autocomplete/${autocomplete?.id}/view`, {
                   replace: true,
                 });
               },
@@ -79,7 +79,7 @@ export function Autocompletes() {
               label: "Edit",
               action: (autocomplete) => {
                 autocomplete.id &&
-                  navigate(`/document-type-template/${autocomplete?.id}`, {
+                  navigate(`/autocomplete/${autocomplete?.id}`, {
                     replace: true,
                   });
               },
