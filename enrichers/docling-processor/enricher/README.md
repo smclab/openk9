@@ -76,6 +76,7 @@ To run the enricher in local you have to:
     #OpenK9 mockup
     uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
     ```
+5. Go to http://localhost:8001/docs and send a payload with your file
 
 ## API Reference
 
