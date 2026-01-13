@@ -31,8 +31,7 @@ export function SaveAutocomplete() {
   });
 
   const associationsQuery = useUnboundDocTypeFieldByAutocompleteQuery({
-    variables: { autocompleteId: autocompletId || "0" },
-    skip: !autocompletId || autocompletId === "new",
+    variables: { autocompleteId: autocompletId !== "new" ? Number(autocompletId) : 0 },
     fetchPolicy: "network-only",
   });
 
@@ -50,6 +49,16 @@ export function SaveAutocomplete() {
     }
   };
   const toast = useToast();
+
+  const [localUnassociated, setLocalUnassociated] = React.useState<Array<{ value: string; label: string }>>([]);
+
+  const serverUnassociated = React.useMemo(
+    () =>
+      (associationsQuery?.data?.unboundDocTypeFieldByAutocomplete || [])
+        .map((f) => ({ value: String(f?.id ?? ""), label: f?.name ?? "" }))
+        .filter((x) => x.value),
+    [associationsQuery.data],
+  );
 
   const [createOrUpdateAutocompleteMutate, createOrUpdateAutocompleteMutation] = useCreateOrUpdateAutocompleteMutation({
     refetchQueries: ["autocomplete", "autocompletes"],
@@ -96,9 +105,13 @@ export function SaveAutocomplete() {
         name: "",
         operator: "AND" as BooleanOperator,
         resultSize: 10,
-        fieldIds: [associationsQuery.data?.unboundDocTypeFieldByAutocomplete?.map((field) => Number(field?.id)) || []],
+        fieldIds:
+          autocompleteQuery?.data?.autocomplete?.fields?.edges?.flatMap((field) => ({
+            id: Number(field?.node?.id),
+            label: field?.node?.name,
+          })) || [],
       }),
-      [associationsQuery.data],
+      [autocompleteQuery.data],
     ),
     originalValues: autocompleteQuery?.data?.autocomplete,
     isLoading: autocompleteQuery.loading || createOrUpdateAutocompleteMutation.loading,
@@ -108,7 +121,7 @@ export function SaveAutocomplete() {
           id: autocompletId !== "new" ? autocompletId : undefined,
           autocompleteDTO: {
             ...data,
-            fieldIds: [],
+            fieldIds: (data.fieldIds || []).map((x: any) => Number(x?.id)).filter((id: number) => !Number.isNaN(id)),
           },
         },
       });
@@ -157,17 +170,108 @@ export function SaveAutocomplete() {
                       onChange={(e: BooleanOperator) => form.inputProps("operator").onChange(e)}
                     />
                     <MultiAssociationCustomQuery
-                      label="Fields"
                       {...form.inputProps("fieldIds")}
                       list={{
-                        unassociated: (associationsQuery?.data?.unboundDocTypeFieldByAutocomplete as number[]) ?? [],
+                        associated: (() => {
+                          const raw = form.inputProps("fieldIds").value || [];
+                          return (Array.isArray(raw) ? raw : [])
+                            .map((x: any) => {
+                              const id = Number(x?.id);
+                              if (Number.isNaN(id)) return null;
+                              const label =
+                                (typeof x?.label === "string" && x.label) ||
+                                autocompleteQuery?.data?.autocomplete?.fields?.edges?.find(
+                                  (e) => Number(e?.node?.id) === id,
+                                )?.node?.name ||
+                                associationsQuery?.data?.unboundDocTypeFieldByAutocomplete?.find(
+                                  (f) => Number(f?.id) === id,
+                                )?.name ||
+                                "";
+                              return { value: String(id), label };
+                            })
+                            .filter((x: any): x is { value: string; label: any } => x !== null);
+                        })(),
+                        unassociated: (() => {
+                          const raw = form.inputProps("fieldIds").value || [];
+                          const associatedIds = new Set(
+                            (Array.isArray(raw) ? raw : [])
+                              .map((x: any) => Number(x?.id))
+                              .filter((id: number) => !Number.isNaN(id)),
+                          );
+
+                          const merged = [...serverUnassociated, ...localUnassociated];
+                          const byId = new Map<string, { value: string; label: string }>();
+                          merged.forEach((x) => {
+                            if (x.value) byId.set(x.value, x);
+                          });
+
+                          return Array.from(byId.values()).filter((x) => !associatedIds.has(Number(x.value)));
+                        })(),
                         isLoading: associationsQuery.loading,
                       }}
-                      getOptionLabel={(option: any) => option.name || ""}
-                      getOptionValue={(option: any) => option.id || ""}
                       disabled={false}
                       isRecap={false}
-                      onSelect={() => {}}
+                      onSelect={({ items, isAdd }) => {
+                        const currentRaw = form.inputProps("fieldIds").value || [];
+                        const current = (Array.isArray(currentRaw) ? currentRaw : [])
+                          .map((x: any) => {
+                            const id = Number(x?.id);
+                            if (Number.isNaN(id)) return null;
+                            const label = typeof x?.label === "string" ? x.label : "";
+                            return { id, label };
+                          })
+                          .filter((x: any) => x);
+
+                        const incoming = (items || [])
+                          .map((it) => {
+                            const id = Number(it?.value);
+                            if (Number.isNaN(id)) return null;
+                            return { id, label: it?.label ?? "" };
+                          })
+                          .filter((x: any) => x);
+
+                        if (isAdd) {
+                          setLocalUnassociated((prev) =>
+                            prev.filter((x) => !incoming.some((inc: any) => String(inc.id) === x.value)),
+                          );
+
+                          const existing = new Set(current.map((x: any) => x.id));
+                          const next = [
+                            ...current,
+                            ...incoming
+                              .filter((x: any) => !existing.has(x.id))
+                              .map((x: any) => ({
+                                id: x.id,
+                                label:
+                                  x.label ||
+                                  autocompleteQuery?.data?.autocomplete?.fields?.edges?.find(
+                                    (e) => Number(e?.node?.id) === x.id,
+                                  )?.node?.name ||
+                                  associationsQuery?.data?.unboundDocTypeFieldByAutocomplete?.find(
+                                    (f) => Number(f?.id) === x.id,
+                                  )?.name ||
+                                  "",
+                              })),
+                          ];
+                          form.inputProps("fieldIds").onChange(next as any);
+                          return;
+                        }
+
+                        const removeIds = new Set(incoming.map((x: any) => x.id));
+                        const next = current.filter((x: any) => !removeIds.has(x.id));
+                        form.inputProps("fieldIds").onChange(next as any);
+
+                        setLocalUnassociated((prev) => {
+                          const byId = new Map<string, { value: string; label: string }>();
+                          [
+                            ...prev,
+                            ...incoming.map((x: any) => ({ value: String(x.id), label: x.label || "" })),
+                          ].forEach((x) => {
+                            if (x.value) byId.set(x.value, x);
+                          });
+                          return Array.from(byId.values());
+                        });
+                      }}
                     />
                   </div>
                 ),

@@ -403,8 +403,8 @@ const AppRoutes = () => (
     <Route path="/tokenizer/:tokenizerId" element={<SaveTokenizer />} />
     <Route path="/tokenizer/:tokenizerId/:view" element={<SaveTokenizer />} />
     <Route path="/autocompletes" element={<Autocompletes />} />
-    <Route path="/autocomplete/:autocompleteId" element={<SaveAutocomplete />} />
-    <Route path="/autocomplete/:autocompleteId/:view" element={<SaveAutocomplete />} />
+    <Route path="/autocomplete/:autocompletId" element={<SaveAutocomplete />} />
+    <Route path="/autocomplete/:autocompletId/:view" element={<SaveAutocomplete />} />
     <Route path="/plugin-drivers" element={<PluginDrivers />} />
     <Route path="/plugin-driver/:pluginDriverId" element={<SavePluginnDriverModel />} />
     <Route path="/plugin-driver/:pluginDriverId/:view" element={<SavePluginnDriverModel />} />
