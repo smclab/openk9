@@ -26,7 +26,6 @@ from typing import get_type_hints
 
 import grpc
 import pika
-from character_text_splitter import CharacterTextChunker
 from chonkie import (
     LateChunker,
     NeuralChunker,

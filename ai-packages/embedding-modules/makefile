@@ -43,8 +43,9 @@ help:
 	@echo "  stop                         Stop running embedding module service"
 	@echo "  help                         Show this help message"
 	@echo ""
-	@echo "Typical workflow for a module (e.g., base):"
-	@echo "  make build_pytorch_cpu       # Build the Docker image"
+	@echo "Typical workflow:"
+	@echo "  make build_pytorch_cpu       # Build the Docker image installing pytorch-cpu"
+	@echo "  make build_pytorch_gpu       # Build the Docker image"
 	@echo "  make start                   # Start the service"
 	@echo "  make stop                    # Stop the service"
 
@@ -68,6 +69,7 @@ build_pytorch_cpu: load_config
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		--build-arg MODE=cpu \
+		--pull \
 		-t openk9-embedding-module:"$$OPENK9_VERSION" \
 		-f Dockerfile \
 		.
@@ -77,6 +79,7 @@ build_pytorch_gpu: load_config
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		--build-arg MODE=gpu \
+		--pull \
 		-t openk9-embedding-module:"$$OPENK9_VERSION" \
 		-f Dockerfile \
 		.
