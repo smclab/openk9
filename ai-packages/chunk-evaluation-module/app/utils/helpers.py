@@ -54,7 +54,6 @@ def score(input) -> dict:
 def delete_all_experiments(dataset):
     experiments = client.experiments.list(dataset_id=dataset.id)
     for experiment in experiments:
-        print(experiment)
         client.experiments.delete(experiment_id=experiment["id"])
 
 
