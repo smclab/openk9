@@ -41,7 +41,7 @@ const milestones = [
   {
     completed: false,
     title: "v3.1.0",
-    date: "will be released approximately at the end of December 2025",
+    date: "will be released approximately at the end of january 2025",
     imageSrc: "",
     notes: "It will be packed with new features as it will contain approximately 3 months of work.",
     description: (
@@ -60,9 +60,9 @@ const milestones = [
     {
     completed: false,
     title: "v3.2.0",
-    date: "will be released approximately at the end of March 2025",
+    date: "will be released approximately at the start of april 2025",
     imageSrc: "",
-    notes: "It will be packed with new features as it will contain approximately 3 months of work.",
+    notes: "It will be packed with new features as it will contain approximately 3 months of work. The list of evolutions may be revised after the release of the previous version.",
     description: (
       <ul>
         <li>Introducing Guardrails into the Rag pipeline</li>
