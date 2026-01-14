@@ -9,6 +9,7 @@ import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { useClickAway } from "./useClickAway";
+import { useAutocomplete } from "./useAutocomplete";
 
 type SearchProps = {
   configuration: Configuration;
@@ -51,6 +52,13 @@ export function Search({
     textPosition: number;
     optionPosition: number;
   } | null>({ textPosition: 0, optionPosition: 1 });
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(false);
+  const [highlightIndex, setHighlightIndex] = React.useState(-1);
+
+  const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
+  // const suggestions = autocompleteQ.data ?? [];
+
+  // console.log("autocompleteQ", autocompleteQ);
 
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
   useClickAway([clickAwayRef], () => setOpenedDropdown(null));
@@ -74,6 +82,17 @@ export function Search({
     actionSearch: characterControl?.actionCharacter,
   });
   const { t } = useTranslation();
+  const applySuggestion = (s: { autocomplete: string }) => {
+    selectionsDispatch({
+      type: "set-text",
+      text: s.autocomplete,
+      textOnchange: s.autocomplete,
+    });
+
+    setIsAutocompleteOpen(false);
+    setHighlightIndex(-1);
+    setOpenedDropdown(null);
+  };
 
   return (
     <React.Fragment>

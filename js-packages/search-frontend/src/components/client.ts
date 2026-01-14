@@ -295,6 +295,34 @@ export function OpenK9Client({
       const response = await request.json();
       return response;
     },
+    async getAutocompletes({
+      searchText,
+    }: {
+      searchText: string;
+    }): Promise<AutocompleteResponse> {
+      const res = await authFetch(`/api/searcher/v1/autocomplete-query`, {
+        method: "POST",
+        body: JSON.stringify({ queryText: searchText }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text().catch(() => "");
+        throw new Error(`Autocomplete failed (${res.status}): ${errorText}`);
+      }
+
+      const data = (await res.json()) as unknown;
+
+      if (!Array.isArray(data)) {
+        throw new Error("Autocomplete response is not an array");
+      }
+
+      return data as AutocompleteResponse;
+    },
+
     async handle_dynamic_filters() {
       const response = await authFetch(`/api/datasource/buckets/current`, {
         method: "GET",
@@ -577,6 +605,45 @@ export type SortField = {
     sort: "asc" | "desc";
     missing: "_last";
   };
+};
+
+export type AutocompleteResponseWrapped = {
+  items: AutocompleteSuggestion[];
+};
+
+export type AutocompleteSuggestion = {
+  autocomplete: string;
+  labelDocType: string;
+};
+
+export type AutocompleteResponse = AutocompleteSuggestion[];
+
+export type AutocompleteRequest = {
+  queryText: string;
+};
+
+export type AutocompleteEsQuery = {
+  _source: {
+    includes: Array<"web.title" | "web.productName" | string>;
+  };
+  query: {
+    multi_match: {
+      fields: Array<
+        "web.title.searchasyou" | "web.productName.searchasyou" | string
+      >;
+      fuzziness: "AUTO" | number | string;
+      minimum_should_match: string;
+      operator: "or" | "and";
+      query: string;
+      type: "bool_prefix";
+    };
+  };
+  size: number;
+  sort: Array<{
+    _score: {
+      order: "asc" | "desc";
+    };
+  }>;
 };
 
 type SearchRequest = {

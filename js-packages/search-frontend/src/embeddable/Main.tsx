@@ -1269,66 +1269,121 @@ function useSearch({
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
-  const [previousSearchTokens, setPreviousSearchTokens] = React.useState<
-    Array<SearchToken>
-  >([]);
-  const debounced = useDebounce(selectionsState, debounceTimeSearch);
+
+  const debouncedOnChange = useDebounce(
+    {
+      textOnChange: selectionsState.textOnChange,
+      selection: selectionsState.selection,
+    },
+    debounceTimeSearch,
+  );
+
   const infoSort = tabTokens?.sort?.sort;
   const { numberOfResults } = useRange();
-  const queryAnalysis = !configuration.useQueryAnalysis
-    ? { data: undefined }
+
+  const queryAnalysisSuggestions = !configuration.useQueryAnalysis
+    ? { data: undefined, isPreviousData: false }
     : useQueryAnalysis({
-        searchText: debounced.textOnChange,
-        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
+        searchText: debouncedOnChange.textOnChange,
+        tokens: debouncedOnChange.selection.flatMap(
+          ({ text, start, end, token }) =>
+            token ? [{ text, start, end, token }] : [],
         ),
       });
 
-  const spans = React.useMemo(
+  const spansSuggestions = React.useMemo(
     () =>
       calculateSpans(
         selectionsState.textOnChange,
-        queryAnalysis.data?.analysis,
+        queryAnalysisSuggestions.data?.analysis,
       ),
-    [queryAnalysis.data?.analysis, selectionsState.textOnChange],
+    [selectionsState.textOnChange, queryAnalysisSuggestions.data?.analysis],
   );
 
-  const searchTokens = React.useMemo(() => {
-    const value = deriveSearchQuery(
-      spans,
-      selectionsState.selection.flatMap(({ text, start, end, token }) =>
+  const queryAnalysisSearch = !configuration.useQueryAnalysis
+    ? { data: undefined, isPreviousData: false }
+    : useQueryAnalysis({
+        searchText: selectionsState.text,
+        tokens: selectionsState.selection.flatMap(
+          ({ text, start, end, token }) =>
+            token ? [{ text, start, end, token }] : [],
+        ),
+      });
+
+  const spansSearch = React.useMemo(
+    () =>
+      calculateSpans(selectionsState.text, queryAnalysisSearch.data?.analysis),
+    [selectionsState.text, queryAnalysisSearch.data?.analysis],
+  );
+
+  const [previousSearchTokens, setPreviousSearchTokens] = React.useState<
+    SearchToken[]
+  >([]);
+
+  const computedSearchTokens = React.useMemo(() => {
+    const selectionEntries = selectionsState.selection.flatMap(
+      ({ text, start, end, token }) =>
         token ? [{ text, start, end, token }] : [],
-      ),
-      selectionsState.text,
-      retrieveType || "TEXT",
     );
-    if (selectionsState.text === selectionsState.textOnChange) {
-      setPreviousSearchTokens(value as SearchToken[]);
-      return value;
+
+    return (
+      deriveSearchQuery(
+        spansSearch,
+        selectionEntries,
+        selectionsState.text,
+        retrieveType || "TEXT",
+      ) as SearchToken[]
+    ).filter(Boolean) as SearchToken[];
+  }, [
+    spansSearch,
+    selectionsState.selection,
+    selectionsState.text,
+    retrieveType,
+  ]);
+
+  const searchTokens: SearchToken[] = React.useMemo(() => {
+    if (selectionsState.text !== selectionsState.textOnChange) {
+      return previousSearchTokens;
     }
-    return previousSearchTokens;
-  }, [selectionsState.text, spans]) as SearchToken[];
-  const newSearch: SearchToken[] = searchTokens
-    .filter((search) => search)
-    .map((searchToken) => {
-      return { ...searchToken, search: true };
-    });
+    setPreviousSearchTokens(computedSearchTokens);
+    return computedSearchTokens;
+  }, [
+    computedSearchTokens,
+    previousSearchTokens,
+    selectionsState.text,
+    selectionsState.textOnChange,
+  ]);
+
+  const newSearch: SearchToken[] = React.useMemo(
+    () =>
+      searchTokens
+        .filter((t) =>
+          (t.values ?? []).some((v) => (v ?? "").trim().length > 0),
+        )
+        .map((t) => ({ ...t, search: true })),
+    [searchTokens],
+  );
 
   const newTokenFilter: SearchToken[] = React.useMemo(
     () => createFilter(filterTokens),
     [filterTokens],
   );
-  const sortField = {
-    sort: {
-      [infoSort?.field || ""]: {
-        sort: infoSort?.type as "asc" | "desc",
-        missing: "_last",
+
+  const sortField = React.useMemo(
+    () => ({
+      sort: {
+        [infoSort?.field || ""]: {
+          sort: infoSort?.type as "asc" | "desc",
+          missing: "_last",
+        },
       },
-    },
-    isSort: true,
-  };
+      isSort: true,
+    }),
+    [infoSort?.field, infoSort?.type],
+  );
 
   const completelySort = React.useMemo(() => sort, [sort]);
+
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
@@ -1342,20 +1397,28 @@ function useSearch({
       defaultTokens,
       tabTokens?.tabToken,
       newTokenFilter,
-      searchTokens,
+      newSearch,
       dateTokens,
+      tabTokens?.sort,
+      sortField,
     ],
   );
 
-  const searchQuery = useDebounce(searchQueryMemo, 600);
-  const isQueryAnalysisComplete =
-    selectionsState.textOnChange === debounced.textOnChange &&
-    queryAnalysis.data !== undefined &&
-    !queryAnalysis.isPreviousData;
+  const searchQuery = useDebounce(searchQueryMemo, debounceTimeSearch);
 
-  const counterTotalFilters = newTokenFilter.reduce((total, element) => {
-    return total + (element?.values?.length || 0);
-  }, 0);
+  const isQueryAnalysisComplete =
+    selectionsState.textOnChange === debouncedOnChange.textOnChange &&
+    queryAnalysisSuggestions.data !== undefined &&
+    !queryAnalysisSuggestions.isPreviousData;
+
+  const counterTotalFilters = React.useMemo(
+    () =>
+      newTokenFilter.reduce(
+        (total, element) => total + (element?.values?.length || 0),
+        0,
+      ),
+    [newTokenFilter],
+  );
 
   React.useEffect(() => {
     onQueryStateChange({
@@ -1369,21 +1432,24 @@ function useSearch({
   }, [
     onQueryStateChange,
     defaultTokens,
-    // tabTokens.tabToken,
-    //if you rewrite filters component you should remove filterTokens or the pagination doesn't work
+    tabTokens?.tabToken,
     filterTokens,
     searchTokens,
+    counterTotalFilters,
+    numberOfResults,
   ]);
+
   React.useEffect(() => {
     if (
       searchAutoselect &&
-      queryAnalysis.data &&
-      queryAnalysis.data.searchText === selectionsState.text
+      queryAnalysisSuggestions.data &&
+      queryAnalysisSuggestions.data.searchText === selectionsState.textOnChange
     ) {
       const autoSelections = getAutoSelections(
         selectionsState.selection,
-        queryAnalysis.data.analysis,
+        queryAnalysisSuggestions.data.analysis,
       );
+
       for (const selection of autoSelections) {
         selectionsDispatch({
           type: "set-selection",
@@ -1407,17 +1473,19 @@ function useSearch({
     searchAutoselect,
     searchReplaceText,
     selectionsDispatch,
-    queryAnalysis.data,
+    queryAnalysisSuggestions.data,
     selectionsState.selection,
-    selectionsState.text,
+    selectionsState.textOnChange,
   ]);
+
   return {
     searchQuery,
-    spans,
+    spans: spansSuggestions,
     isQueryAnalysisComplete,
     completelySort,
   };
 }
+
 function useQueryAnalysisWithoutSearch({
   configuration,
   debounceTimeSearch,
@@ -1436,14 +1504,6 @@ function useQueryAnalysisWithoutSearch({
           token ? [{ text, start, end, token }] : [],
         ),
       });
-  const queryAnalysisWithoutSearch = !configuration.useQueryAnalysis
-    ? { data: undefined }
-    : useQueryAnalysis({
-        searchText: debounced.textOnChange,
-        tokens: debounced.selection.flatMap(({ text, start, end, token }) =>
-          token ? [{ text, start, end, token }] : [],
-        ),
-      });
   const spans = React.useMemo(
     () =>
       calculateSpans(
@@ -1454,15 +1514,17 @@ function useQueryAnalysisWithoutSearch({
   );
 
   const isQueryAnalysisComplete =
-    selectionsState.textOnChange === debounced.textOnChange &&
-    queryAnalysis.data !== undefined &&
-    !queryAnalysis.isPreviousData;
+    !configuration.useQueryAnalysis ||
+    (selectionsState.textOnChange === debounced.textOnChange &&
+      queryAnalysis.data !== undefined &&
+      !queryAnalysis.isPreviousData);
 
   return {
     spansSuggestions: spans,
     isQueryAnalysisCompleteSuggestions: isQueryAnalysisComplete,
   };
 }
+
 function useTabs(
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>,
   language: string,
@@ -1883,7 +1945,6 @@ function useQueryAnalysis(request: AnalysisRequest) {
 
 function useQueryAnalysisWithoutSearchData(request: AnalysisRequest) {
   const client = useOpenK9Client();
-
   return useQuery(
     ["query-anaylis", request] as const,
     async ({ queryKey: [, request] }) =>
