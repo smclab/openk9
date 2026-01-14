@@ -17,9 +17,9 @@ from app.utils.fm_helper import FileManagerHelper
 
 load_dotenv()
 
-FM_HOST = os.getenv("FM_HOST", default="http://localhost:8000")
-S_HOST = os.getenv("S_HOST", default="http://localhost:8001")
-FMHelper = FileManagerHelper(FM_HOST)
+FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
+DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
+FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
 
 
 class Input(BaseModel):
@@ -103,8 +103,8 @@ def operation(payload, configs, token):
             print(f"generic error: {str(e)}")
 
     print("Process ended")
-    response = {"resources": {"binaries": binaries}}
+    response = {"binaries": binaries}
     response = requests.post(
-        f"{S_HOST}/api/datasource/pipeline/callback/{token}", json=response
+        f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/{token}", json=response
     )
     print("Status:", response.status_code)
