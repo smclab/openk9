@@ -3,16 +3,16 @@ import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAutocompletesQuery, useDeleteAutocorrectionMutation } from "../../graphql-generated";
+import { useAutocompletesQuery, useDeleteAutocompleteMutation } from "../../graphql-generated";
 
 export function Autocompletes() {
   const autocompletesQuery = useAutocompletesQuery();
   const navigate = useNavigate();
   const toast = useToast();
-  const [deleteAutocompleteMutate] = useDeleteAutocorrectionMutation({
+  const [deleteAutocompleteMutate] = useDeleteAutocompleteMutation({
     refetchQueries: ["Autocompletes"],
     onCompleted(data) {
-      if (data.deleteAutocorrection?.id) {
+      if (data.deleteAutocomplete?.id) {
         toast({
           title: "Autocomplete Deleted",
           content: "Autocompletes has been deleted successfully",
