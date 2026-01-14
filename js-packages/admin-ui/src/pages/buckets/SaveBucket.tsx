@@ -22,6 +22,7 @@ import {
   BucketDataSourcesQuery,
   RagType,
   RetrieveType,
+  useAutocompletesOptionsQuery,
   useAutocorrectionsOptionsQuery,
   useBucketDataSourcesQuery,
   useBucketQuery,
@@ -121,6 +122,12 @@ export function SaveBucket() {
   const { OptionQuery: autocorrectionOption } = useOptions({
     queryKeyPath: "autocorrections.edges",
     useQuery: useAutocorrectionsOptionsQuery,
+    accessKey: "node",
+  });
+
+  const { OptionQuery: autocompleteOption } = useOptions({
+    queryKeyPath: "autocompletes.edges",
+    useQuery: useAutocompletesOptionsQuery,
     accessKey: "node",
   });
 
@@ -228,6 +235,10 @@ export function SaveBucket() {
           id: bucketQuery.data?.bucket?.autocorrection?.id || "-1",
           name: bucketQuery.data?.bucket?.autocorrection?.name || "",
         },
+        autocompleteId: {
+          id: bucketQuery.data?.bucket?.autocomplete?.id || "-1",
+          name: bucketQuery.data?.bucket?.autocomplete?.name || "",
+        },
       }),
       [datasources, suggestionCategories, tabs, bucketQuery],
     ),
@@ -259,6 +270,7 @@ export function SaveBucket() {
             ? data.ragConfigurationSimpleGenerateId.id
             : undefined,
           autocorrection: data.autocorrectionId.id !== "-1" ? data.autocorrectionId.id : null,
+          autocomplete: data.autocompleteId.id !== "-1" ? data.autocompleteId.id : null,
         },
       });
     },
@@ -512,6 +524,16 @@ export function SaveBucket() {
                         value={{
                           id: form.inputProps("autocorrectionId").value.id,
                           name: form.inputProps("autocorrectionId").value.name || "",
+                        }}
+                        disabled={page === 1}
+                      />
+                      <CustomSelectRelationsOneToOne
+                        options={autocompleteOption}
+                        label="Autocomplete"
+                        onChange={(val) => form.inputProps("autocompleteId").onChange({ id: val.id, name: val.name })}
+                        value={{
+                          id: form.inputProps("autocompleteId").value.id,
+                          name: form.inputProps("autocompleteId").value.name || "",
                         }}
                         disabled={page === 1}
                       />

@@ -6670,7 +6670,7 @@ export type BucketQueryVariables = Exact<{
 }>;
 
 
-export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean, refreshOnDate?: boolean | null, refreshOnQuery?: boolean | null, refreshOnSuggestionCategory?: boolean | null, refreshOnTab?: boolean | null, retrieveType?: RetrieveType | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null } | null, ragConfigurationChat?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationChatTool?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationSimpleGenerate?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, language?: { __typename?: 'Language', id?: string | null, name?: string | null } | null, autocorrection?: { __typename?: 'Autocorrection', id?: string | null, name?: string | null } | null } | null };
+export type BucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null, description?: string | null, enabled: boolean, refreshOnDate?: boolean | null, refreshOnQuery?: boolean | null, refreshOnSuggestionCategory?: boolean | null, refreshOnTab?: boolean | null, retrieveType?: RetrieveType | null, queryAnalysis?: { __typename?: 'QueryAnalysis', id?: string | null, name?: string | null } | null, searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null } | null, ragConfigurationChat?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationChatTool?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, ragConfigurationSimpleGenerate?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null } | null, language?: { __typename?: 'Language', id?: string | null, name?: string | null } | null, autocorrection?: { __typename?: 'Autocorrection', id?: string | null, name?: string | null } | null, autocomplete?: { __typename?: 'Autocomplete', id?: string | null, name?: string | null } | null } | null };
 
 export type EnableBucketMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -6715,6 +6715,7 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   ragConfigurationChatTool?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
   autocorrection?: InputMaybe<Scalars['BigInteger']>;
+  autocomplete?: InputMaybe<Scalars['BigInteger']>;
 }>;
 
 
@@ -6803,6 +6804,21 @@ export type RemoveAutocorrectionFromBucketMutationVariables = Exact<{
 
 export type RemoveAutocorrectionFromBucketMutation = { __typename?: 'Mutation', unbindAutocorrectionFromBucket?: { __typename?: 'Tuple2_Bucket_Autocorrection', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Autocorrection', id?: string | null } | null } | null };
 
+export type AddAutocompleteToBucketMutationVariables = Exact<{
+  autocompleteId: Scalars['ID'];
+  parentId: Scalars['ID'];
+}>;
+
+
+export type AddAutocompleteToBucketMutation = { __typename?: 'Mutation', bindAutocompleteToBucket?: { __typename?: 'Tuple2_Bucket_Autocomplete', left?: { __typename?: 'Bucket', id?: string | null } | null } | null };
+
+export type RemoveAutocompleteFromBucketMutationVariables = Exact<{
+  parentId: Scalars['ID'];
+}>;
+
+
+export type RemoveAutocompleteFromBucketMutation = { __typename?: 'Mutation', unbindAutocompleteFromBucket?: { __typename?: 'Tuple2_Bucket_Autocomplete', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'Autocomplete', id?: string | null } | null } | null };
+
 export type BucketSuggestionCategoriesQueryVariables = Exact<{
   parentId: Scalars['ID'];
   searchText?: InputMaybe<Scalars['String']>;
@@ -6820,6 +6836,13 @@ export type UnboundAutocorrectionByBucketQueryVariables = Exact<{
 
 export type UnboundAutocorrectionByBucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null } | null };
 
+export type UnboundAutocompleteByBucketQueryVariables = Exact<{
+  parentId: Scalars['ID'];
+}>;
+
+
+export type UnboundAutocompleteByBucketQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, name?: string | null } | null };
+
 export type AddSuggestionCategoryToBucketMutationVariables = Exact<{
   childId: Scalars['ID'];
   parentId: Scalars['ID'];
@@ -6835,6 +6858,14 @@ export type RemoveSuggestionCategoryFromBucketMutationVariables = Exact<{
 
 
 export type RemoveSuggestionCategoryFromBucketMutation = { __typename?: 'Mutation', removeSuggestionCategoryFromBucket?: { __typename?: 'Tuple2_Bucket_SuggestionCategory', left?: { __typename?: 'Bucket', id?: string | null } | null, right?: { __typename?: 'SuggestionCategory', id?: string | null } | null } | null };
+
+export type AutocompletesOptionsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type AutocompletesOptionsQuery = { __typename?: 'Query', autocompletes?: { __typename?: 'DefaultConnection_Autocomplete', edges?: Array<{ __typename?: 'DefaultEdge_Autocomplete', cursor?: string | null, node?: { __typename?: 'Autocomplete', id?: string | null, description?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type CreateDataIndexMutationVariables = Exact<{
   name: Scalars['String'];
@@ -13696,6 +13727,10 @@ export const BucketDocument = gql`
       id
       name
     }
+    autocomplete {
+      id
+      name
+    }
   }
 }
     `;
@@ -13877,10 +13912,10 @@ export type BucketDataSourcesQueryHookResult = ReturnType<typeof useBucketDataSo
 export type BucketDataSourcesLazyQueryHookResult = ReturnType<typeof useBucketDataSourcesLazyQuery>;
 export type BucketDataSourcesQueryResult = Apollo.QueryResult<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $autocorrection: BigInteger) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $autocorrection: BigInteger, $autocomplete: BigInteger) {
   bucketWithLists(
     id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrectionId: $autocorrection}
+    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrectionId: $autocorrection, autocompleteId: $autocomplete}
   ) {
     entity {
       id
@@ -13927,6 +13962,7 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      ragConfigurationChatTool: // value for 'ragConfigurationChatTool'
  *      ragConfigurationSimpleGenerate: // value for 'ragConfigurationSimpleGenerate'
  *      autocorrection: // value for 'autocorrection'
+ *      autocomplete: // value for 'autocomplete'
  *   },
  * });
  */
@@ -14360,6 +14396,80 @@ export function useRemoveAutocorrectionFromBucketMutation(baseOptions?: Apollo.M
 export type RemoveAutocorrectionFromBucketMutationHookResult = ReturnType<typeof useRemoveAutocorrectionFromBucketMutation>;
 export type RemoveAutocorrectionFromBucketMutationResult = Apollo.MutationResult<RemoveAutocorrectionFromBucketMutation>;
 export type RemoveAutocorrectionFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveAutocorrectionFromBucketMutation, RemoveAutocorrectionFromBucketMutationVariables>;
+export const AddAutocompleteToBucketDocument = gql`
+    mutation AddAutocompleteToBucket($autocompleteId: ID!, $parentId: ID!) {
+  bindAutocompleteToBucket(autocompleteId: $autocompleteId, bucketId: $parentId) {
+    left {
+      id
+    }
+  }
+}
+    `;
+export type AddAutocompleteToBucketMutationFn = Apollo.MutationFunction<AddAutocompleteToBucketMutation, AddAutocompleteToBucketMutationVariables>;
+
+/**
+ * __useAddAutocompleteToBucketMutation__
+ *
+ * To run a mutation, you first call `useAddAutocompleteToBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddAutocompleteToBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addAutocompleteToBucketMutation, { data, loading, error }] = useAddAutocompleteToBucketMutation({
+ *   variables: {
+ *      autocompleteId: // value for 'autocompleteId'
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useAddAutocompleteToBucketMutation(baseOptions?: Apollo.MutationHookOptions<AddAutocompleteToBucketMutation, AddAutocompleteToBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddAutocompleteToBucketMutation, AddAutocompleteToBucketMutationVariables>(AddAutocompleteToBucketDocument, options);
+      }
+export type AddAutocompleteToBucketMutationHookResult = ReturnType<typeof useAddAutocompleteToBucketMutation>;
+export type AddAutocompleteToBucketMutationResult = Apollo.MutationResult<AddAutocompleteToBucketMutation>;
+export type AddAutocompleteToBucketMutationOptions = Apollo.BaseMutationOptions<AddAutocompleteToBucketMutation, AddAutocompleteToBucketMutationVariables>;
+export const RemoveAutocompleteFromBucketDocument = gql`
+    mutation RemoveAutocompleteFromBucket($parentId: ID!) {
+  unbindAutocompleteFromBucket(bucketId: $parentId) {
+    left {
+      id
+    }
+    right {
+      id
+    }
+  }
+}
+    `;
+export type RemoveAutocompleteFromBucketMutationFn = Apollo.MutationFunction<RemoveAutocompleteFromBucketMutation, RemoveAutocompleteFromBucketMutationVariables>;
+
+/**
+ * __useRemoveAutocompleteFromBucketMutation__
+ *
+ * To run a mutation, you first call `useRemoveAutocompleteFromBucketMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveAutocompleteFromBucketMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeAutocompleteFromBucketMutation, { data, loading, error }] = useRemoveAutocompleteFromBucketMutation({
+ *   variables: {
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useRemoveAutocompleteFromBucketMutation(baseOptions?: Apollo.MutationHookOptions<RemoveAutocompleteFromBucketMutation, RemoveAutocompleteFromBucketMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RemoveAutocompleteFromBucketMutation, RemoveAutocompleteFromBucketMutationVariables>(RemoveAutocompleteFromBucketDocument, options);
+      }
+export type RemoveAutocompleteFromBucketMutationHookResult = ReturnType<typeof useRemoveAutocompleteFromBucketMutation>;
+export type RemoveAutocompleteFromBucketMutationResult = Apollo.MutationResult<RemoveAutocompleteFromBucketMutation>;
+export type RemoveAutocompleteFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveAutocompleteFromBucketMutation, RemoveAutocompleteFromBucketMutationVariables>;
 export const BucketSuggestionCategoriesDocument = gql`
     query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
   bucket(id: $parentId) {
@@ -14452,6 +14562,42 @@ export function useUnboundAutocorrectionByBucketLazyQuery(baseOptions?: Apollo.L
 export type UnboundAutocorrectionByBucketQueryHookResult = ReturnType<typeof useUnboundAutocorrectionByBucketQuery>;
 export type UnboundAutocorrectionByBucketLazyQueryHookResult = ReturnType<typeof useUnboundAutocorrectionByBucketLazyQuery>;
 export type UnboundAutocorrectionByBucketQueryResult = Apollo.QueryResult<UnboundAutocorrectionByBucketQuery, UnboundAutocorrectionByBucketQueryVariables>;
+export const UnboundAutocompleteByBucketDocument = gql`
+    query unboundAutocompleteByBucket($parentId: ID!) {
+  bucket(id: $parentId) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useUnboundAutocompleteByBucketQuery__
+ *
+ * To run a query within a React component, call `useUnboundAutocompleteByBucketQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUnboundAutocompleteByBucketQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUnboundAutocompleteByBucketQuery({
+ *   variables: {
+ *      parentId: // value for 'parentId'
+ *   },
+ * });
+ */
+export function useUnboundAutocompleteByBucketQuery(baseOptions: Apollo.QueryHookOptions<UnboundAutocompleteByBucketQuery, UnboundAutocompleteByBucketQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<UnboundAutocompleteByBucketQuery, UnboundAutocompleteByBucketQueryVariables>(UnboundAutocompleteByBucketDocument, options);
+      }
+export function useUnboundAutocompleteByBucketLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<UnboundAutocompleteByBucketQuery, UnboundAutocompleteByBucketQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<UnboundAutocompleteByBucketQuery, UnboundAutocompleteByBucketQueryVariables>(UnboundAutocompleteByBucketDocument, options);
+        }
+export type UnboundAutocompleteByBucketQueryHookResult = ReturnType<typeof useUnboundAutocompleteByBucketQuery>;
+export type UnboundAutocompleteByBucketLazyQueryHookResult = ReturnType<typeof useUnboundAutocompleteByBucketLazyQuery>;
+export type UnboundAutocompleteByBucketQueryResult = Apollo.QueryResult<UnboundAutocompleteByBucketQuery, UnboundAutocompleteByBucketQueryVariables>;
 export const AddSuggestionCategoryToBucketDocument = gql`
     mutation AddSuggestionCategoryToBucket($childId: ID!, $parentId: ID!) {
   addSuggestionCategoryToBucket(
@@ -14536,6 +14682,53 @@ export function useRemoveSuggestionCategoryFromBucketMutation(baseOptions?: Apol
 export type RemoveSuggestionCategoryFromBucketMutationHookResult = ReturnType<typeof useRemoveSuggestionCategoryFromBucketMutation>;
 export type RemoveSuggestionCategoryFromBucketMutationResult = Apollo.MutationResult<RemoveSuggestionCategoryFromBucketMutation>;
 export type RemoveSuggestionCategoryFromBucketMutationOptions = Apollo.BaseMutationOptions<RemoveSuggestionCategoryFromBucketMutation, RemoveSuggestionCategoryFromBucketMutationVariables>;
+export const AutocompletesOptionsDocument = gql`
+    query AutocompletesOptions($searchText: String, $cursor: String) {
+  autocompletes(searchText: $searchText, first: 5, after: $cursor) {
+    edges {
+      cursor
+      node {
+        id
+        description
+        name
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useAutocompletesOptionsQuery__
+ *
+ * To run a query within a React component, call `useAutocompletesOptionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAutocompletesOptionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAutocompletesOptionsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useAutocompletesOptionsQuery(baseOptions?: Apollo.QueryHookOptions<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>(AutocompletesOptionsDocument, options);
+      }
+export function useAutocompletesOptionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>(AutocompletesOptionsDocument, options);
+        }
+export type AutocompletesOptionsQueryHookResult = ReturnType<typeof useAutocompletesOptionsQuery>;
+export type AutocompletesOptionsLazyQueryHookResult = ReturnType<typeof useAutocompletesOptionsLazyQuery>;
+export type AutocompletesOptionsQueryResult = Apollo.QueryResult<AutocompletesOptionsQuery, AutocompletesOptionsQueryVariables>;
 export const CreateDataIndexDocument = gql`
     mutation CreateDataIndex($name: String!, $datasourceId: ID!, $description: String, $knnIndex: Boolean, $docTypeIds: [BigInteger], $chunkType: ChunkType, $chunkWindowSize: Int, $embeddingJsonConfig: String, $embeddingDocTypeFieldId: BigInteger, $settings: String) {
   dataIndex(
@@ -15809,4 +16002,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-01-13T17:40:34+01:00
+// Generated on 2026-01-14T16:40:25+01:00

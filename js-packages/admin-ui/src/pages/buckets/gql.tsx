@@ -212,6 +212,10 @@ export const BucketQueryBucket = gql`
         id
         name
       }
+      autocomplete {
+        id
+        name
+      }
     }
   }
 `;
@@ -291,6 +295,7 @@ export const CreateUpdateBucketRecap = gql`
     $ragConfigurationChatTool: BigInteger
     $ragConfigurationSimpleGenerate: BigInteger
     $autocorrection: BigInteger
+    $autocomplete: BigInteger
   ) {
     bucketWithLists(
       id: $id
@@ -312,6 +317,7 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationChatTool: $ragConfigurationChatTool
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
         autocorrectionId: $autocorrection
+        autocompleteId: $autocomplete
       }
     ) {
       entity {
@@ -472,6 +478,28 @@ gql`
     }
   }
 `;
+gql`
+  mutation AddAutocompleteToBucket($autocompleteId: ID!, $parentId: ID!) {
+    bindAutocompleteToBucket(autocompleteId: $autocompleteId, bucketId: $parentId) {
+      left {
+        id
+      }
+    }
+  }
+`;
+
+gql`
+  mutation RemoveAutocompleteFromBucket($parentId: ID!) {
+    unbindAutocompleteFromBucket(bucketId: $parentId) {
+      left {
+        id
+      }
+      right {
+        id
+      }
+    }
+  }
+`;
 
 export const BucketsSuggestionCategories = gql`
   query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
@@ -501,6 +529,14 @@ export const BucketsAutocorrection = gql`
     }
   }
 `;
+export const BucketsAutocomplete = gql`
+  query unboundAutocompleteByBucket($parentId: ID!) {
+    bucket(id: $parentId) {
+      id
+      name
+    }
+  }
+`;
 
 gql`
   mutation AddSuggestionCategoryToBucket($childId: ID!, $parentId: ID!) {
@@ -523,6 +559,25 @@ gql`
       }
       right {
         id
+      }
+    }
+  }
+`;
+
+export const autocompleatesConfigOptions = gql`
+  query AutocompletesOptions($searchText: String, $cursor: String) {
+    autocompletes(searchText: $searchText, first: 5, after: $cursor) {
+      edges {
+        cursor
+        node {
+          id
+          description
+          name
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }
