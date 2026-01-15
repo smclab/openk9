@@ -56,7 +56,7 @@ Search frontend is available here:
 If you want to try Openk9 with also File Handling and Gen Ai components use [compose-all.yaml](compose-all.yaml) file:
 
 ```bash
-docker compose -f compose-all.yaml up -d
+docker compose -f compose.yaml -f compose-all.yaml up -d
 ```
 
 To test conversational search:
