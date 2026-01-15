@@ -53,7 +53,7 @@ Search frontend is available here:
 
 - [Standalone search frontend](http://demo.openk9.localhost) to test search on indexed data.
 
-If you want to try Openk9 with also File Handling and Gen Ai components use *compose-all.yaml* file:
+If you want to try Openk9 with also File Handling and Gen Ai components use [compose-all.yaml](compose-all.yaml) file:
 
 ```bash
 docker compose -f compose-all.yaml up -d
