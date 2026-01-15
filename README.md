@@ -22,13 +22,42 @@ To make Openk9 run on your machine with latest stable release, you just need [do
 docker compose up -d
 ```
 
-After all components have been started, openk9 is runinng with initial configuration at address *demo.openk9.localhost*.
+Monitor logs of *openk9-initializer* container to check when all is started:
 
-To access to admin panel go to [http://demo.openk9.localhost/admin](http://demo.openk9.localhost/admin). Access with username *k9admin* and password *openk9*.
+```bash
+docker logs -f openk9-initializer
+```
+
+Following message is displayed when all is started:
+
+```bash
+🚀 Starting Data Seeder...
+1️⃣  Creating Tenant...
+✅ 1/4 Tenant Created. Schema: grookey
+🕵️  Hunting for password in logs...
+🔎 Scanning logs for password (Attempt 1/10)...
+2️⃣  Initializing Default Data...
+✅ 2/4 Tenant Initialized.
+3️⃣  Configures Connectors...
+✅ 3/4 Web Connector configured.
+✅ 4/4 Minio Connector configured.
+🔐 FOUND PASSWORD: 52c1d7c5-2e50-471d-8b3f-12d286dafae3
+🎉 Done.
+```
+
+After all components have been started, openk9 is runinng with initial configuration at address *https://demo.openk9.localhost*.
+
+To access to admin panel go to [https://demo.openk9.localhost/admin](https://demo.openk9.localhost/admin). Access with username *k9admin* and using password founded in openk9-initizializer logs.
 
 Search frontend is available here:
 
 - [Standalone search frontend](http://demo.openk9.localhost) to test search on indexed data.
+
+If you want to try Openk9 with also File Handling and Gen Ai components use *compose-all.yaml* file:
+
+```bash
+docker compose -f compose-all.yaml up -d
+```
 
 To test conversational search:
 
