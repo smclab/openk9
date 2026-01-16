@@ -116,11 +116,14 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
           { key: "description" },
           { key: "priority" },
           { key: "multiSelect" },
-          { key: "docTypeFieldId" },
+          { key: "docTypeFieldId", label: "Search Config" },
         ],
         label: "Recap Suggestion Category",
       },
     ],
+    valueOverride: {
+      docTypeFieldId: form.inputProps("docTypeFieldId").value?.name || "",
+    },
   });
 
   return (

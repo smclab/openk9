@@ -177,7 +177,7 @@ const lightTheme = createTheme({
     mode: "light",
   },
   typography: {
-    fontFamily: "Lato, sans-serif",
+    fontFamily: '"Inter", "Inter Fallback"',
     h1: {
       fontSize: "2.125rem",
     },
@@ -328,7 +328,7 @@ const darkTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Lato, sans-serif",
+    fontFamily: '"Inter", "Inter Fallback"',
     subtitle1: {
       color: "#FFFFFF",
     },

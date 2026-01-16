@@ -158,13 +158,17 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           { key: "name" },
           { key: "description" },
           { key: "type" },
-          { key: "reformulate" },
-          { key: "chunkWindow" },
-          { key: "rephrasePrompt", label: "Rephrase Prompt" },
           { key: "prompt" },
-          { key: "jsonConfig", label: "JSON Config" },
-          { key: "ragToolDescription", label: "RAG Tool Description" },
-          { key: "promptNoRag", label: "Prompt No RAG" },
+          { key: "reformulate" },
+          { key: "rephrasePrompt", label: "Rephrase Prompt" },
+          { key: "chunkWindow" },
+          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+          ...(form.inputProps("type").value === RagType.ChatRagTool
+            ? [
+                { key: "ragToolDescription", label: "RAG Tool Description" },
+                { key: "promptNoRag", label: "Prompt No RAG" },
+              ]
+            : []),
         ],
         label: "Recap RAG Configuration",
       },

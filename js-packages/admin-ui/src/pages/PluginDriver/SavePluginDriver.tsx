@@ -278,12 +278,22 @@ export const SavePluginnDriverModel = React.forwardRef(
             { key: "description" },
             { key: "type" },
             { key: "jsonConfig", label: "JSON Config" },
-            { key: "provisioning" },
-            { key: "docTypeUserDTOSet", label: "Document Types User DTO Set" },
+            { key: "baseUri", label: "Base URI" },
+            { key: "secure" },
+            { key: "path" },
+            { key: "method" },
+            { key: "aclMapping", label: "ACL Mapping" },
           ],
           label: "Recap Connector",
         },
       ],
+      valueOverride: {
+        baseUri: config?.baseUri || "",
+        secure: config?.secure || "No",
+        path: config?.path || "",
+        method: config?.method || "",
+        aclMapping: fields?.map((e, index) => ({ [index + 1]: e.fieldName })) || [],
+      },
     });
 
     return (

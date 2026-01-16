@@ -146,7 +146,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
           { key: "retrieveCitations", label: "Retrieve Citations" },
           { key: "provider", label: "Provider" },
           { key: "model", label: "Model" },
-          { key: "jsonConfig", label: "JSON Config" },
+          { key: "jsonConfig", label: "JSON Config", jsonView: true },
         ],
         label: "Recap Large Language Model",
       },

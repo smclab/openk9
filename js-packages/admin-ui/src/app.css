@@ -3,6 +3,14 @@
   --openk9-embeddable-dashboard--secondary-color: #f7e5e6;
 }
 
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../public/fonts/Inter-Regular.woff2') format('woff2');
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

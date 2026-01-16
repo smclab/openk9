@@ -165,9 +165,19 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           { key: "description" },
           { key: "size" },
           { key: "boost" },
-          { key: "valuesQueryType", label: "Values Query Type" },
-          { key: "globalQueryType", label: "Global Query Type" },
-          { key: "docTypeFieldId", label: "Document Type Field" },
+          ...([
+            AnnotatorType.Autocomplete,
+            AnnotatorType.NerAutocomplete,
+            AnnotatorType.KeywordAutocomplete,
+            AnnotatorType.Ner,
+            AnnotatorType.Aggregator,
+          ].includes(form.inputProps("type").value)
+            ? [
+                { key: "valuesQueryType", label: "Values Query Type" },
+                { key: "globalQueryType", label: "Global Query Type" },
+                { key: "docTypeFieldId", label: "Document Type Field" },
+              ]
+            : []),
         ],
         label: "Recap Annotator",
       },

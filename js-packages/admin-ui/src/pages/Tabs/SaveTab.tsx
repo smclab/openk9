@@ -134,6 +134,10 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
         label: "Recap Tab",
       },
     ],
+    valueOverride: {
+      tokenTabIds:
+        form.inputProps("tokenTabIds").value?.map((tokentab, index) => ({ [index + 1]: tokentab.label })) || [],
+    },
   });
   return (
     <ContainerFluid>

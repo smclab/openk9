@@ -233,10 +233,20 @@ export function SavePipeline({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
     form: form as any,
     sections: [
       {
-        cell: [{ key: "name" }, { key: "description" }, { key: "associatedEnrichItems" }],
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "associatedEnrichItems", label: "Associated Enrich Items" },
+        ],
         label: "Recap Enrich Pipeline",
       },
     ],
+    valueOverride: {
+      associatedEnrichItems:
+        form
+          .inputProps("associatedEnrichItems")
+          .value?.map((e: any, index: number) => ({ [index + 1]: e.name || e.label })) || [],
+    },
   });
 
   return (

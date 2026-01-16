@@ -29,11 +29,9 @@ export default function AssociationsLayout({
   return (
     <Box sx={{ width: "100%", maxWidth: "100%" }}>
       <Typography
-        variant="h6"
+        variant="subtitle1"
         sx={{
-          p: 2,
-          fontWeight: 600,
-          color: "#333",
+          margin: "8px 0",
         }}
       >
         {title}

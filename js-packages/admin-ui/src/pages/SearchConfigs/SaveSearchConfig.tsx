@@ -239,6 +239,20 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   });
 
   if (!searchConfigId && searchConfigQuery.loading) return null;
+  const parsedQueryConfig = types.reduce((acc, type, i) => {
+    console.log(template?.template);
+    const raw = jsonConfigs[i];
+    if (!raw) return acc;
+
+    try {
+      const obj = JSON.parse(raw);
+      acc[type.itemLabel] = obj;
+    } catch {
+      acc[type.itemLabel] = raw;
+    }
+
+    return acc;
+  }, {} as Record<string, any>);
 
   const recapSections = mappingCardRecap({
     form: form as any,
@@ -252,10 +266,15 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           { key: "minScoreSearch", label: "Min Score Search" },
           { key: "queryParserConfig", label: "Query Parser Config" },
           { key: "jsonConfig", label: "JSON Config" },
+          // { key: "t", label: "prova" },
         ],
         label: "Recap Search Config",
       },
     ],
+    valueOverride: {
+      queryParserConfig: parsedQueryConfig || "",
+      // t: template?.template || "",
+    },
   });
 
   return (

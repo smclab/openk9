@@ -294,6 +294,19 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
         label: "Recap Document Type",
       },
     ],
+    valueOverride: {
+      searchConfigId: form.inputProps("searchConfigId").value?.name || "",
+      defaultLanguageId: form.inputProps("defaultLanguageId").value?.name || "",
+      queryAnalysisId: form.inputProps("queryAnalysisId").value?.name || "",
+      ragConfigurationChatId: form.inputProps("ragConfigurationChatId").value?.name || "",
+      ragConfigurationChatToolId: form.inputProps("ragConfigurationChatToolId").value?.name || "",
+      autocorrectionId: form.inputProps("autocorrectionId").value?.name || "",
+      ragConfigurationSimpleGenerateId: form.inputProps("ragConfigurationSimpleGenerateId").value?.name || "",
+      datasourceIds: form.inputProps("datasourceIds").value?.map((ds, index) => ({ [index + 1]: ds.label })) || [],
+      suggestionCategoryIds:
+        form.inputProps("suggestionCategoryIds").value?.map((sc, index) => ({ [index + 1]: sc.label })) || [],
+      tabIds: form.inputProps("tabIds").value?.map((tab, index) => ({ [index + 1]: tab.label })) || [],
+    },
   });
 
   return (

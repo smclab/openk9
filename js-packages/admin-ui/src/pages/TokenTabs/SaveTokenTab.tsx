@@ -184,17 +184,24 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           { key: "name" },
           { key: "description" },
           { key: "value" },
-          { key: "filter" },
           { key: "tokenType", label: "Token Type" },
-          { key: "boost" },
-          { key: "fuzziness" },
-          { key: "valuesQueryType", label: "Values Query Type" },
-          { key: "globalQueryType", label: "Global Query Type" },
-          { key: "docTypeFieldId", label: "Document Type Field ID" },
+          { key: "docTypeFieldId", label: "Document Type Field" },
+          ...(form.inputProps("tokenType").value === "FILTER" || form.inputProps("tokenType").value === "TEXT"
+            ? [
+                { key: "boost" },
+                { key: "valuesQueryType", label: "Values Query Type" },
+                { key: "globalQueryType", label: "Global Query Type" },
+                { key: "fuzziness" },
+              ]
+            : []),
+          { key: "filter" },
         ],
         label: "Recap Token Tab",
       },
     ],
+    valueOverride: {
+      docTypeFieldId: form.inputProps("docTypeFieldId").value || "",
+    },
   });
 
   return (

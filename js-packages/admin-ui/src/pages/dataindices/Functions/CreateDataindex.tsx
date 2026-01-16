@@ -169,58 +169,22 @@ export function CreateDataindex({
         cell: [
           { key: "name" },
           { key: "description" },
-          { key: "datasourceId" },
-          { key: "docTypeIds" },
-          { key: "knnIndex" },
-          { key: "chunkType" },
-          { key: "chunkWindowSize" },
-          { key: "embeddingJsonConfig" },
-          { key: "embeddingDocTypeFieldId" },
-          { key: "settings" },
+          { key: "datasourceId", label: "Datasource" },
+          { key: "docTypeIds", label: "Document Types" },
+          { key: "knnIndex", label: "KNN Index" },
+          ...(form.inputProps("knnIndex").value ? [{ key: "chunkType" }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "chunkWindowSize" }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "embeddingJsonConfig", jsonView: true }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "embeddingDocTypeFieldId" }] : []),
         ],
         label: "Recap Data Index",
       },
     ],
+    valueOverride: {
+      datasourceId: form.inputProps("datasourceId").value?.name || "",
+      embeddingDocTypeFieldId: form.inputProps("embeddingDocTypeFieldId").value?.name || "",
+    },
   });
-
-  // const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
-  //   if (!docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage) return [];
-
-  //   try {
-  //     const response = await docTypesQuery.fetchMore({
-  //       variables: {
-  //         after: docTypesQuery.data.docTypeFields.pageInfo.endCursor,
-  //       },
-  //     });
-
-  //     const newEdges = response.data?.docTypeFields?.edges || [];
-  //     const newPageInfo = response.data?.docTypeFields?.pageInfo;
-
-  //     if (!newEdges.length || !newPageInfo) {
-  //       console.warn("No new data fetched or pageInfo is missing.");
-  //       return [];
-  //     }
-
-  //     docTypesQuery.updateQuery((prev) => ({
-  //       ...prev,
-  //       docTypeFields: {
-  //         ...prev.docTypeFields,
-  //         edges: [...(prev.docTypeFields?.edges || []), ...newEdges],
-  //         pageInfo: newPageInfo,
-  //       },
-  //     }));
-
-  //     return newEdges
-  //       .map((item) => ({
-  //         value: item?.node?.id || "",
-  //         label: item?.node?.name || "",
-  //       }))
-  //       .filter((option) => option.value && option.label);
-  //   } catch (error) {
-  //     console.error("Error loading more options:", error);
-  //     return [];
-  //   }
-  // };
 
   return (
     <ContainerFluid>

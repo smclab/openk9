@@ -206,6 +206,11 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
         label: "Associations",
       },
     ],
+    valueOverride: {
+      annotatorsIds:
+        form.inputProps("annotatorsIds").value?.map((annotator, index) => ({ [index + 1]: annotator.label })) || [],
+      rulesIds: form.inputProps("rulesIds").value?.map((rule, index) => ({ [index + 1]: rule.label })) || [],
+    },
   });
 
   return (

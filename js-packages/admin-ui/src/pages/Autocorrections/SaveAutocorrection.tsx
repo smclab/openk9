@@ -127,17 +127,20 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
       {
         cell: [
           { key: "name" },
-          { key: "suggestMode", label: "Suggest Mode" },
-          { key: "sort" },
           { key: "prefixLength", label: "Prefix Lenght" },
           { key: "minWordLength", label: "Min Word Length" },
           { key: "maxEdit", label: "Max Edits" },
-          { key: "enableSearchWithCorrection", label: "Enable Search With Correction" },
+          { key: "sort" },
+          { key: "suggestMode", label: "Suggest Mode" },
+          { key: "enableSearchWithCorrection", label: "Search With Correction" },
           { key: "docTypeFields", label: "Document Type Field" },
         ],
         label: "Recap Autocorrection",
       },
     ],
+    valueOverride: {
+      docTypeFields: form.inputProps("docTypeFields").value.name || "",
+    },
   });
 
   return (

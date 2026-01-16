@@ -140,12 +140,17 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
           { key: "name" },
           { key: "description" },
           { key: "templateType", label: "Template Type" },
-          { key: "source" },
-          { key: "compiled" },
+          ...(form.inputProps("templateType").value === "JAVASCRIPT_SOURCE" ||
+          form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
+            ? [{ key: "source" }]
+            : [{ key: "compiled" }]),
         ],
         label: "Recap Document Type Template",
       },
     ],
+    // valueOverride: {
+    //   templateType: form.inputProps("templateType").value,
+    // },
   });
 
   return (

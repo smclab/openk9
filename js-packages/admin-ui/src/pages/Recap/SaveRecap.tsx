@@ -330,7 +330,7 @@ export function mappingCardRecap({
   valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
-    const fields: RecapField[] = sectionDef.cell.map((element) => {
+    const fields: RecapField[] = sectionDef.cell.flatMap((element) => {
       const { key, label, keyNotView, jsonView } = element;
       const input = form.inputProps<any>(key as any);
 
@@ -354,26 +354,61 @@ export function mappingCardRecap({
         }
       }
 
-      if (jsonView) {
-        return {
-          key,
-          label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
-          value: rawValue,
-          type: "string",
-          isValid: input.validationMessages.length === 0,
-          keyNotView,
-          jsonView: true,
-        };
+      // Case: object of object
+      if (key === "queryParserConfig" && value && typeof value === "object" && !Array.isArray(value)) {
+        const parentObj = value as Record<string, any>;
+
+        const expanded: RecapField[] = [];
+
+        Object.entries(parentObj).forEach(([parentKey, childObj]) => {
+          expanded.push({
+            key: `${key}.${parentKey}`,
+            label: parentKey,
+            value: null,
+            type: "string",
+            isValid: input.validationMessages.length === 0,
+          });
+
+          if (childObj && typeof childObj === "object") {
+            Object.entries(childObj as Record<string, any>).forEach(([childKey, childValue]) => {
+              expanded.push({
+                key: `${key}.${parentKey}.${childKey}`,
+                label: `  ${childKey}`, // indentazione visiva
+                value: typeof childValue === "object" ? JSON.stringify(childValue) : childValue,
+                type: detectValueType(childValue),
+                isValid: input.validationMessages.length === 0,
+              });
+            });
+          }
+        });
+
+        return expanded;
       }
 
-      return {
-        key,
-        label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
-        value,
-        type,
-        isValid: input.validationMessages.length === 0,
-        keyNotView: keyNotView,
-      };
+      if (jsonView) {
+        return [
+          {
+            key,
+            label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
+            value: rawValue,
+            type: "string",
+            isValid: input.validationMessages.length === 0,
+            keyNotView,
+            jsonView: true,
+          },
+        ];
+      }
+
+      return [
+        {
+          key,
+          label: label ?? `${key[0].toUpperCase()}${key.slice(1)}`,
+          value,
+          type,
+          isValid: input.validationMessages.length === 0,
+          keyNotView,
+        },
+      ];
     });
 
     return {
