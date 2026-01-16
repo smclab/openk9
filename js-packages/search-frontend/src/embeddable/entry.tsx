@@ -409,9 +409,22 @@ type correctionType = {
   ) => React.ReactNode;
 };
 
+export type translationGlobalType = {
+  labelStart?: string;
+  labelEnd?: string;
+  placeholderStart?: string;
+  placeholderEnd?: string;
+  errorFormatData?: string;
+  errorSelectData?: string;
+  filtersLabel?: string;
+  calendarLabel?: string;
+  buttonResetFilters?: string;
+};
+
 type allFiltersConfigurableProps = {
   element: Element | string | null;
   typeFilters: TypeAllFilters;
+  translationLabel?: translationGlobalType;
 };
 
 export type Configuration = {

@@ -34,6 +34,7 @@ type FilterCategoryDynamicallyProps = {
   noResultMessage?: string | null | undefined;
   numberItems?: number | null | undefined;
   iconCustom: IconsCustom;
+  isOpenFilter?: boolean;
   setHasMoreSuggestionsCategories?: React.Dispatch<
     React.SetStateAction<boolean>
   >;
@@ -57,6 +58,7 @@ function FilterCategoryDynamic({
   placeholder,
   iconCustom,
   haveSearch = true,
+  isOpenFilter = false,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState<string>("");
   const debounced = useDebounce(text, 600);
@@ -127,7 +129,7 @@ function FilterCategoryDynamic({
     }
   }, [suggestions?.hasNextPage, setHasMoreSuggestionsCategories]);
 
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isOpen, setIsOpen] = React.useState<boolean>(isOpenFilter);
   const [singleSelect, setSingleselect] = React.useState<
     SearchToken | undefined
   >(undefined);
@@ -216,6 +218,7 @@ function FilterCategoryDynamic({
           </strong>
         </legend>
         <div
+          className="openk9-filter-category-actions-buttons"
           css={css`
             display: flex;
             align-items: center;

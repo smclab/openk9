@@ -36,6 +36,7 @@ export type FiltersProps = {
   dynamicFilters?: boolean;
   overrideSearchWithCorrection?: RangeContextProviderProps;
   setOverrideSearchWithCorrection: setterConnection;
+  isOpenFilter?: boolean;
 };
 function Filters({
   searchQuery,
@@ -56,6 +57,7 @@ function Filters({
   state,
   dynamicFilters = true,
   overrideSearchWithCorrection,
+  isOpenFilter = false,
   setOverrideSearchWithCorrection,
 }: FiltersProps) {
   const suggestionCategories = useSuggestionCategories();
@@ -132,6 +134,7 @@ function Filters({
             placeholder={placeholder}
             iconCustom={iconCustom}
             haveSearch={haveSearch}
+            isOpenFilter={isOpenFilter}
           />
         </React.Suspense>
       ))}

@@ -1142,8 +1142,7 @@ export function Main({
             }}
             calendar={{
               calendarDate: dateRange,
-              translationLabel:
-                configuration.dataRangePickerVertical?.internationalLabel,
+              translationLabel: configuration.allFilters?.translationLabel,
               onChange: setDateRange,
             }}
           />

@@ -10,6 +10,7 @@ import { SortResultListMemo } from "./SortResultList";
 import { useTranslation } from "react-i18next";
 import { DataRangePickerVertical } from "./DateRangePickerVertical";
 import { css } from "styled-components";
+import { translationGlobalType } from "../embeddable/entry";
 
 type TypeFilter = "filters" | "sort" | "language" | "calendar";
 export type TypeAllFilters =
@@ -24,12 +25,14 @@ function CollapsableFilterCategoryLocal({
   title,
   description,
   children,
+  isOpenFilter = false,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  isOpenFilter?: boolean;
 }) {
-  const [isOpen, setIsOpen] = React.useState(true);
+  const [isOpen, setIsOpen] = React.useState(isOpenFilter);
 
   return (
     <div
@@ -167,22 +170,16 @@ function FactoryFilter(
   calendar: {
     calendarDate: SearchDateRange;
     setCalendarSelected: React.Dispatch<React.SetStateAction<SearchDateRange>>;
-    translationLabel?:
-      | {
-          labelStart?: string;
-          labelEnd?: string;
-          placeholderStart?: string;
-          placeholderEnd?: string;
-          errorFormatData?: string;
-          errorSelectData?: string;
-        }
-      | undefined;
+    translationLabel?: translationGlobalType | undefined;
   },
 ) {
   switch (filter) {
     case "calendar":
       return (
-        <CollapsableFilterCategoryLocal title="Calendar">
+        <CollapsableFilterCategoryLocal
+          title={calendar.translationLabel?.calendarLabel || "Calendar"}
+          isOpenFilter={true}
+        >
           <DataRangePickerVertical
             language={lang.lang || "it"}
             calendarDate={calendar.calendarDate}
@@ -217,7 +214,9 @@ function FactoryFilter(
     case "filters":
       return (
         <>
-          <span className="openk9-Filters-informations">Filters</span>
+          <span className="openk9-Filters-informations">
+            {calendar?.translationLabel?.filtersLabel || "Filters"}
+          </span>
           <FiltersMemo
             {...filterDefault}
             searchQuery={filtersSelect || []}
@@ -228,6 +227,7 @@ function FactoryFilter(
               )
             }
             dynamicFilters={false}
+            isOpenFilter={true}
           />
         </>
       );
@@ -255,16 +255,7 @@ export default function AllFilters({
   calendar: {
     calendarDate: SearchDateRange;
     onChange(date: SearchDateRange): void;
-    translationLabel?:
-      | {
-          labelStart?: string;
-          labelEnd?: string;
-          placeholderStart?: string;
-          placeholderEnd?: string;
-          errorFormatData?: string;
-          errorSelectData?: string;
-        }
-      | undefined;
+    translationLabel?: translationGlobalType | undefined;
   };
 }) {
   const [searchToken, setSearchToken] = React.useState<
@@ -310,44 +301,64 @@ export default function AllFilters({
           },
         ),
       )}
-      <button
-        className="Openk9-all-filters-save"
-        onClick={() => {
-          filterDefault.setAllFilters(searchToken || []);
-          filterDefault.setLanguageSelected(lang || "it");
-          i18n.changeLanguage(remappingLanguage({ language: lang || "it" }));
-          filterDefault.setSortSelected(sort || null);
-          calendar.onChange(calendarToken);
-        }}
-        css={css`
-          background: var(--openk9-embeddable-search--primary-color, #0078d4);
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          padding: 10px 24px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-          transition: background 0.2s, box-shadow 0.2s;
-          margin-top: 16px;
-          &:hover {
-            background: var(
-              --openk9-embeddable-search--primary-light-color,
-              #005fa3
+      <div className="container-openk9-all-filters">
+        <button
+          className="Openk9-all-filters-reset"
+          onClick={() => {
+            setSearchToken([]);
+            setLang(defaultLanguage);
+            i18n.changeLanguage(
+              remappingLanguage({ language: defaultLanguage }),
             );
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-          }
-          &:active {
-            background: var(
-              --openk9-embeddable-search--primary-color-active,
-              #004377
-            );
-          }
-        `}
-      >
-        Save
-      </button>
+            setSort(null);
+            setCalendarToken({
+              endDate: undefined,
+              startDate: undefined,
+              keywordKey: undefined,
+            });
+          }}
+        >
+          {calendar.translationLabel?.buttonResetFilters || "Reset Filters"}
+        </button>
+        <button
+          className="Openk9-all-filters-save"
+          onClick={() => {
+            filterDefault.setAllFilters(searchToken || []);
+            filterDefault.setLanguageSelected(lang || "it");
+            i18n.changeLanguage(remappingLanguage({ language: lang || "it" }));
+            filterDefault.setSortSelected(sort || null);
+            calendar.onChange(calendarToken);
+          }}
+          css={css`
+            background: var(--openk9-embeddable-search--primary-color, #0078d4);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+            margin-top: 16px;
+            &:hover {
+              background: var(
+                --openk9-embeddable-search--primary-light-color,
+                #005fa3
+              );
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            }
+            &:active {
+              background: var(
+                --openk9-embeddable-search--primary-color-active,
+                #004377
+              );
+            }
+          `}
+        >
+          Save
+        </button>
+      </div>
     </>
   );
 }

@@ -19,6 +19,7 @@ export function DataRangePickerVertical({
   classTab,
   readOnly = false,
   translationLabel,
+  isOpenFilter = false,
 }: {
   onChange(value: SearchDateRange): void;
   calendarDate: SearchDateRange;
@@ -27,6 +28,7 @@ export function DataRangePickerVertical({
   end?: any;
   classTab?: string;
   readOnly?: boolean;
+  isOpenFilter?: boolean;
   translationLabel:
     | {
         labelStart?: string;
