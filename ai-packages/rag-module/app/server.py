@@ -21,7 +21,6 @@ from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
-from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
