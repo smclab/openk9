@@ -137,7 +137,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
             informationSuggestion={[
               {
                 page: 0,
-                validation: true,
+                validation: false,
                 content: (
                   <>
                     <TextInput label="Name" {...form.inputProps("name")} />
