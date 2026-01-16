@@ -205,7 +205,7 @@ class CommonHeadersMinimal(BaseModel):
     Attributes:
         authorization (Optional[str]): Bearer token for authentication.
             Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        x_forwarded_host (Optional[str]): Original host header from the client request,
+        x_forwarded_host (str): Original host header from the client request,
             typically used in reverse proxy setups. Example: "example.com"
         x_tenant_id (Optional[str]): Identifier for the tenant/organization in a multi-tenant architecture.
             Example: "tenant-12345"
