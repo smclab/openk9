@@ -164,7 +164,7 @@ async def rag_generate(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_forwarded_host (str): Original host header for reverse proxy setups
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -199,15 +199,7 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
+    virtual_host = headers.x_forwarded_host.split(",")[0]
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -284,7 +276,7 @@ async def rag_chat(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_forwarded_host (str): Original host header for reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -326,15 +318,7 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
+    virtual_host = headers.x_forwarded_host.split(",")[0]
 
     tenant_id = (
         headers.x_tenant_id
@@ -439,7 +423,7 @@ async def rag_chat_tool(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_forwarded_host (str): Original host header for reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -484,15 +468,7 @@ async def rag_chat_tool(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
+    virtual_host = headers.x_forwarded_host.split(",")[0]
 
     tenant_id = (
         headers.x_tenant_id
@@ -584,7 +560,7 @@ async def get_user_chats(
             - paginationSize: Number of items to return per page
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_forwarded_host (str): Original host header from client, used in reverse proxy setups
 
     Returns:
         dict: Dictionary containing:
@@ -607,15 +583,7 @@ async def get_user_chats(
     chat_sequence_number = user_chats.chatSequenceNumber
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
-
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
+    virtual_host = headers.x_forwarded_host.split(",")[0]
 
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
@@ -680,7 +648,7 @@ async def get_chat(
         chat_id (str): Unique identifier of the chat to retrieve
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_forwarded_host (str): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -704,15 +672,7 @@ async def get_chat(
         - Only returns messages belonging to the authenticated user
         - Uses OpenSearch for data storage and retrieval
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
-
+    virtual_host = headers.x_forwarded_host.split(",")[0]
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -795,7 +755,7 @@ async def delete_chat(
         chat_id (str): Unique identifier of the chat to delete
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_forwarded_host (str): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -820,15 +780,7 @@ async def delete_chat(
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
-
+    virtual_host = headers.x_forwarded_host.split(",")[0]
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -917,7 +869,7 @@ async def rename_chat(
             - newTitle (str): The new title to assign to the chat
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_forwarded_host (str): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -942,15 +894,7 @@ async def rename_chat(
         - Only affects chats belonging to the authenticated user
         - The chat must contain at least one message to be renamed
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
-
+    virtual_host = headers.x_forwarded_host.split(",")[0]
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -1120,15 +1064,7 @@ async def upload_files(
             ]
         }
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
-    else:
-        logger.error("x_forwarded_host header is missing or empty.")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
-        )
-
+    virtual_host = headers.x_forwarded_host.split(",")[0]
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[

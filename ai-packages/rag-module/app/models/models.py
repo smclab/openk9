@@ -216,8 +216,8 @@ class CommonHeadersMinimal(BaseModel):
         description="Bearer token for authentication.",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
     )
-    x_forwarded_host: Optional[str] = Field(
-        None,
+    x_forwarded_host: str = Field(
+        ...,
         description="Original host header from the client request, typically used in reverse proxy setups.",
         example="example.com",
     )
