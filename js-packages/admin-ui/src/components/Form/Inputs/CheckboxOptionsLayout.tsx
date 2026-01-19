@@ -13,8 +13,7 @@ const RefreshOptionsLayout: React.FC<RefreshOptionsLayoutProps> = ({ children, t
       variant="outlined"
       sx={{
         p: 2,
-        borderRadius: 2,
-        borderColor: "grey.300",
+        borderRadius: "10px",
         mb: "16px",
       }}
     >
