@@ -5,5 +5,5 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
 data:
-  QUARKUS_REST_CLIENT_FILE_MANAGER_URL: {{ include "helper.fileManagerURL" . | quote }}
-  QUARKUS_REST_CLIENT_DATASOURCE_URL: {{ include "helper.datasourceURL" . | quote }}
+  FILE_MANAGER_HOST: {{ include "helper.fileManagerURL" . | quote }}
+  DATASOURCE_HOST: {{ include "helper.datasourceURL" . | quote }}
