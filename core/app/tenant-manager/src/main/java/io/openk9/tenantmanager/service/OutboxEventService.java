@@ -139,12 +139,14 @@ public class OutboxEventService {
 		SELECT *
 		FROM outbox_event
 		WHERE sent = false
+		ORDER BY create_date ASC
 		""";
 
 	private static final String FETCH_WINDOW_SQL = """
 		SELECT *
 		FROM outbox_event
 		WHERE create_date >= $1 and create_date <= $2
+		ORDER BY create_date ASC
 		""";
 
 	private static final String FETCH_LAST_SQL = """
@@ -153,9 +155,6 @@ public class OutboxEventService {
 		ORDER BY create_date DESC
 		LIMIT $1
 		""";
-
-	private static final String DELETE_FROM_TABLE_SQL =
-		"DELETE FROM outbox_event";
 
 	private static final String UPDATE_SENT_FLAG_SQL = """
 		UPDATE outbox_event
