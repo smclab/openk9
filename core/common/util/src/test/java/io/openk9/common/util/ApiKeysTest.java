@@ -19,20 +19,15 @@ package io.openk9.common.util;
 
 import static io.openk9.common.util.ApiKeys.DEFAULT_KEY_PREFIX;
 import static io.openk9.common.util.ApiKeys.DEFAULT_RANDOM_BYTES;
-import static io.openk9.common.util.ApiKeys.DEFAULT_SALT_BYTES;
 import static io.openk9.common.util.ApiKeys.KEY_PART_SEPARATOR;
-import static io.openk9.common.util.ApiKeys.SaltDigest;
 import static io.openk9.common.util.ApiKeys.generateApiKey;
 import static io.openk9.common.util.ApiKeys.generateApiKeyWithChecksum;
-import static io.openk9.common.util.ApiKeys.generateSalt;
 import static io.openk9.common.util.ApiKeys.sha256;
-import static io.openk9.common.util.ApiKeys.sha256WithSalt;
 import static io.openk9.common.util.ApiKeys.verifyChecksum;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -71,47 +66,12 @@ public class ApiKeysTest {
 		String apiKey = generateApiKeyWithChecksum(DEFAULT_KEY_PREFIX, DEFAULT_RANDOM_BYTES);
 		assertTrue(verifyChecksum(apiKey), "Checksum must be valid");
 
-		// Compute salted digest
+		// Compute digests
 		byte[] digest1 = sha256(apiKey);
 		byte[] digest2 = sha256(apiKey);
 
 		// Verify determinism
 		assertArrayEquals(digest1, digest2, "Digests must match for same input");
-	}
-
-
-	@Test
-	void apiKeyWithChecksum_andSaltedDigest_areConsistent() {
-		String apiKey = generateApiKeyWithChecksum(DEFAULT_KEY_PREFIX, DEFAULT_RANDOM_BYTES);
-		assertTrue(verifyChecksum(apiKey), "Checksum must be valid");
-
-		// Strip checksum part
-		int idx = apiKey.lastIndexOf(KEY_PART_SEPARATOR);
-		String withoutChecksum = apiKey.substring(0, idx);
-
-		// Generate salt
-		byte[] salt = generateSalt(DEFAULT_SALT_BYTES);
-
-		// Compute salted digest
-		SaltDigest digest1 = sha256WithSalt(apiKey, salt);
-		SaltDigest digest2 = sha256WithSalt(apiKey, salt);
-
-		// Verify determinism with same salt
-		assertArrayEquals(
-			digest1.digest(),
-			digest2.digest(),
-			"Salted digests must match for same input and salt"
-		);
-		assertArrayEquals(digest1.salt(), digest2.salt(), "Salt values must be preserved");
-
-		// Ensure digest differs with different salt
-		byte[] newSalt = generateSalt(DEFAULT_SALT_BYTES);
-		SaltDigest digest3 = sha256WithSalt(withoutChecksum, newSalt);
-
-		assertNotEquals(
-			new String(digest1.digest()), new String(digest3.digest()),
-			"Digests must differ when salt is different"
-		);
 	}
 
 }

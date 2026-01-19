@@ -27,13 +27,12 @@ import jakarta.annotation.Nullable;
 
 /**
  * Utility class for generating and validating API keys with optional
- * CRC-32 checksum suffixes and salted SHA-256 digests.
+ * CRC-32 checksum suffixes.
  * <p>
  * Features:
  * <ul>
  *   <li>Random API key generation with a prefix and random body bytes</li>
  *   <li>Optional CRC-32 checksum suffix for detecting accidental corruption</li>
- *   <li>Salted SHA-256 digest computation for secure storage and verification</li>
  *   <li>Utility helpers for conversion and checksum validation</li>
  * </ul>
  * <p>
@@ -50,8 +49,7 @@ import jakarta.annotation.Nullable;
  *   <li>{@code sk_dead020019934beef_039ab823} — with checksum suffix</li>
  * </ul>
  * <p>
- * This class is stateless and thread-safe. All random values are generated
- * with a cryptographically strong {@link SecureRandom}.
+ * All random values are generated with {@link SecureRandom}.
  */
 public class ApiKeys {
 
@@ -63,15 +61,13 @@ public class ApiKeys {
 	public static final char KEY_PART_SEPARATOR = '_';
 
 	public static void main(String[] args) {
-		// generate 10 apiKeys
-		for (int i = 0; i < 10; i++) {
-			var apiKey = ApiKeys.generateApiKeyWithChecksum();
+		var apiKey = ApiKeys.generateApiKeyWithChecksum();
 
-			// print the generated apiKey
-			System.out.println(apiKey);
-			// print the digest of the apiKey
-			System.out.println(HEX.formatHex(sha256(apiKey)));
-		}
+		// print api key in clear
+		System.out.println(apiKey);
+
+		// print api key's digest
+		System.out.println(HEX.formatHex(sha256(apiKey)));
 	}
 
 	// ========================================================================
@@ -266,58 +262,6 @@ public class ApiKeys {
 		return crc32.getValue();
 	}
 
-	// ========================================================================
-	// SALTING
-	// ========================================================================
-
-	/**
-	 * Generates a cryptographically strong random salt of the given length.
-	 *
-	 * @param saltLen the number of bytes to generate
-	 * @return a byte array containing the random salt
-	 */
-	public static byte[] generateSalt(int saltLen) {
-		byte[] salt = new byte[saltLen];
-		RANDOM.nextBytes(salt);
-
-		return salt;
-	}
-
-	/**
-	 * Computes a salted SHA-256 digest of the given secret.
-	 * <p>
-	 * A random salt of {@link #DEFAULT_SALT_BYTES} length is generated
-	 * and prepended to the secret before hashing.
-	 *
-	 * @param secret the input secret
-	 * @return a {@link SaltDigest} containing the generated salt and the resulting digest
-	 */
-	public static SaltDigest sha256WithSalt(String secret) {
-		byte[] salt = generateSalt(DEFAULT_SALT_BYTES);
-		return sha256WithSalt(secret, generateSalt(DEFAULT_SALT_BYTES));
-	}
-
-	/**
-	 * Computes a salted SHA-256 digest of the given secret.
-	 * <p>
-	 * The salt bytes are prepended to the secret before hashing.
-	 *
-	 * @param secret the input secret
-	 * @param salt the random salt bytes
-	 * @return a {@link SaltDigest} containing the salt and resulting digest
-	 */
-	public static SaltDigest sha256WithSalt(String secret, byte[] salt) {
-		try {
-			MessageDigest md = MessageDigest.getInstance("SHA-256");
-			md.update(salt);
-			byte[] digest = md.digest(toBytes(secret));
-			return new SaltDigest(salt, digest);
-		}
-		catch (NoSuchAlgorithmException e) {
-			throw new AssertionError("SHA-256 not available", e);
-		}
-	}
-
 	// ====================================================================
 	// UTILS
 	// ====================================================================
@@ -339,11 +283,4 @@ public class ApiKeys {
 
 	private ApiKeys() {}
 
-	/**
-	 * Immutable container for a salted SHA-256 digest.
-	 *
-	 * @param salt   the random salt bytes that were prepended to the secret
-	 * @param digest the resulting SHA-256 digest of {@code salt || secret}
-	 */
-	public record SaltDigest(byte[] salt, byte[] digest) {}
 }
