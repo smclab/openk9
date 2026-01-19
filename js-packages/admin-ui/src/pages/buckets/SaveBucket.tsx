@@ -165,7 +165,7 @@ export function SaveBucket() {
         refreshOnQuery: false,
         refreshOnSuggestionCategory: false,
         refreshOnTab: false,
-        retrieveType: RetrieveType.Hybrid,
+        retrieveType: RetrieveType.Text,
         datasourceIds: datasources?.associated || [],
         suggestionCategoryIds: suggestionCategories?.associated || [],
         tabIds: tabs?.associated || [],
