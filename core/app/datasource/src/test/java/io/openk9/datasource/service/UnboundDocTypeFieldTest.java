@@ -43,6 +43,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -59,6 +60,7 @@ public class UnboundDocTypeFieldTest {
 	private static final String DOC_TYPE_FIELD_FIVE_NAME = ENTITY_NAME_PREFIX + "Doc type field 5";
 	private static final String DOC_TYPE_FIELD_SIX_NAME = ENTITY_NAME_PREFIX + "Doc type field 6";
 	private static final String DOC_TYPE_FIELD_SEVEN_NAME = ENTITY_NAME_PREFIX + "Doc type field 7";
+	private static final String DOC_TYPE_FIELD_EIGHT_NAME = ENTITY_NAME_PREFIX + "Doc type field 8";
 	private static final String SUGGESTION_CATEGORY_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String AUTOCORRECTION_ONE_NAME = ENTITY_NAME_PREFIX + "Autocorrection 1";
 	private static final String AUTOCOMPLETE_ONE_NAME = ENTITY_NAME_PREFIX + "Autocomplete 1";
@@ -89,10 +91,12 @@ public class UnboundDocTypeFieldTest {
 		//4. docTypeField without either "KEYWORD" or "I18N" to leave unbound
 		var docTypeFieldFour = createDocTypeFieldText(DOC_TYPE_FIELD_FOUR_NAME);
 		//5-6. two docTypeFields with "SEARCH_AS_YOU_TYPE" to bound to the AutocompleteOne
-		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_FIVE_NAME);
-		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SIX_NAME);
+		createDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_FIVE_NAME);
+		createDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SIX_NAME);
 		//7. docTypeField with "SEARCH_AS_YOU_TYPE" to leave unbound
-		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SEVEN_NAME);
+		createDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SEVEN_NAME);
+		//8. docTypeField of type "SEARCH_AS_YOU_TYPE" but without parent to leave unbound
+		createDocTypeFieldSearchAsYouType(null, DOC_TYPE_FIELD_EIGHT_NAME);
 
 		//create suggestion category and bound with docTypeFieldOne
 		createSuggestionCategoryOneWithDocTypeFieldOne();
@@ -243,9 +247,9 @@ public class UnboundDocTypeFieldTest {
 			.map(DocTypeField::getId)
 			.collect(Collectors.toSet());
 
-		// Expected unbound DocTypeField are all search_as_you_type DocTypeField
+		// Expected unbound DocTypeField are all search_as_you_type with parent DocTypeField
 		// except the two bound to the given Autocomplete.
-		var expectedUnboundDocTypeFields = getAllSearchAsYouTypeDocTypeFields().stream()
+		var expectedUnboundDocTypeFields = getAllAutocompleteBoundableDocTypeFields().stream()
 			.filter(docTypeField ->
 				!boundDocTypeFieldId.contains(docTypeField.getId()))
 			.toList();
@@ -257,7 +261,8 @@ public class UnboundDocTypeFieldTest {
 	}
 
 	@Test
-	void should_retrieve_all_searchAsYouType_doc_type_fields_from_missing_autocomplete() {
+	@DisplayName("Should be retrieved all docTypeField boundable to an Autocomplete")
+	void should_retrieve_all_boundable_doc_type_fields_from_missing_autocomplete() {
 		var actualUnboundDocTypeFields = sf.withTransaction(s ->
 				docTypeFieldService.findUnboundDocTypeFieldByAutocomplete(0L)
 			)
@@ -265,7 +270,7 @@ public class UnboundDocTypeFieldTest {
 			.indefinitely();
 
 		// Expected unbound DocTypeField are all filtered DocTypeField
-		var expectedUnboundDocTypeFields = getAllSearchAsYouTypeDocTypeFields();
+		var expectedUnboundDocTypeFields = getAllAutocompleteBoundableDocTypeFields();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
 		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
@@ -340,7 +345,17 @@ public class UnboundDocTypeFieldTest {
 			.indefinitely();
 	}
 
-	private void createSubDocTypeFieldSearchAsYouType(long parentId, String name) {
+	/**
+	 * Creates a search-as-you-type field for a document type.
+	 * <p>
+	 * The field is configured as non-searchable and non-sortable. If a parent identifier is provided,
+	 * the field is created as a sub-field of the parent; otherwise, it is created as a top-level field.
+	 * </p>
+	 *
+	 * @param parentId the identifier of the parent field, or {@code null} for a top-level field
+	 * @param name the name of the field
+	 */
+	private void createDocTypeFieldSearchAsYouType(Long parentId, String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
 			.name(name)
 			.fieldName(name)
@@ -349,7 +364,12 @@ public class UnboundDocTypeFieldTest {
 			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
 			.build();
 
-		EntitiesUtils.createSubField(parentId, dto, docTypeFieldService);
+		if (parentId != null) {
+			EntitiesUtils.createSubField(parentId, dto, docTypeFieldService);
+		}
+		else {
+			EntitiesUtils.createEntity(dto, docTypeFieldService, sf);
+		}
 	}
 
 	private void createSuggestionCategoryOneWithDocTypeFieldOne() {
@@ -382,14 +402,30 @@ public class UnboundDocTypeFieldTest {
 				.toList();
 	}
 
-	private List<DocTypeField> getAllSearchAsYouTypeDocTypeFields() {
-		return sf.withTransaction(
+	/**
+	 * Retrieve all docTypeField boundable with an Autocomplete entity.
+	 * </p>
+	 * A docTypeField is considered boundable if it is of type SEARCH_AS_YOU_TYPE, and it has a parent.
+	 *
+	 * @return a List of boundable docTypeField.
+	 */
+	private List<DocTypeField> getAllAutocompleteBoundableDocTypeFields() {
+		var allFields = sf.withTransaction(
 				s -> docTypeFieldService.findAll()
 			)
 			.await()
-			.indefinitely().stream()
+			.indefinitely();
+
+			var autocompleteList = allFields.stream()
 			.filter(BaseDocTypeField::isAutocomplete)
 			.toList();
+
+			var boundableList = autocompleteList
+				.stream()
+				.filter(field -> field.getParentDocTypeField() != null)
+			.toList();
+
+			return boundableList;
 	}
 
 	private List<DocTypeField> getAllTextDocTypeFields() {

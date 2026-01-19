@@ -239,7 +239,8 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					cb.equal(
 						rootDocTypeField.get(DocTypeField_.fieldType),
 						FieldType.SEARCH_AS_YOU_TYPE
-					)
+					),
+					cb.isNotNull(rootDocTypeField.get(DocTypeField_.parentDocTypeField))
 				)
 			);
 
