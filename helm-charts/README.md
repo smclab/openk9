@@ -546,6 +546,85 @@ Inside every chart folder, there is a README file with chart documentation. Expl
 
 For every charts, there is also a scenarios folder, with files to install components in different platforms (Kubernetes/Openshift).
 
+### Api Gateway
+
+The Api Gateway component is used to handle and protect traffic through openk9 services.
+
+To learn more on Api Gateway component, read [official documentation](https://www.openk9.io/docs/api-gateway).
+
+#### Main Configurations
+
+Edit your local yaml file to overwrite main configurations and configure Tenant Manager to run correctly in your cluster.
+
+Following are main configurations to edit:
+
+```bash
+TO-DO
+```
+
+For advanced configurations read [README.md](./01-base-core/openk9-api-gateway/README.md) inside Api Gateway chart folder.
+
+#### Installation
+
+The Api Gteway requires the presence of a database for historicizing the configurations relating to the tenants created and security infos. 
+This is created by the job executed by the helm chart.
+
+Now you can install the Api Gateway.
+
+For Kubernetes execute:
+
+```bash
+helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 -f 01-base-core/openk9-api-gateway/scenarios/local-runtime.yaml
+```
+
+For Openshift execute:
+
+```bash
+helm upgrade -i api-gateway 01-base-core/openk9-api-gateway -n openk9 -f 01-base-core/openk9-api-gateway/scenarios/local-crc.yaml
+```
+
+Check status of Job about database creation:
+
+For Kubernetes execute:
+
+```bash
+kubectl describe jobs/openk9-api-gateway-db -n openk9
+```
+
+For Openshift execute:
+
+```bash
+oc describe jobs/openk9-api-gateway-db -n openk9
+```
+
+If you get this response job is completed in proper way:
+
+```bash
+Events:
+  Type    Reason            Age   From            Message
+  ----    ------            ----  ----            -------
+  Normal  SuccessfulCreate  38s   job-controller  Created pod: openk9-api-gateway-db-5mkn5
+  Normal  Completed         34s   job-controller  Job completed
+```
+
+## Verify Installation
+
+Expose the http interface on the host PC and use health endpoint to verify status of component.
+
+For Kubernetes execute:
+
+```bash
+kubectl -n openk9 port-forward svc/openk9-api-gateway 8080:8080
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 port-forward svc/openk9-api-gateway 8080:8080
+```
+
+Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
+
 ### Ingestion
 
 The Ingestion component exposes the Rest API through which Openk9 accepts the data arriving from the different external data sources connected.
@@ -703,6 +782,22 @@ For Openshift execute:
 oc -n openk9 create secret generic postgresql-tenant-manager-secret \
   --from-literal=database=tenantmanager \
   --from-literal=username=openk9 \
+  --from-literal=password=openk9
+```
+
+Then create a Secret with the password for tenant manager admin user.
+
+For Kubernetes execute:
+
+```bash
+kubectl -n openk9 create secret generic tenant-manager-admin-password \
+  --from-literal=password=openk9
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 create secret generic tenant-manager-admin-password-secret \
   --from-literal=password=openk9
 ```
 
