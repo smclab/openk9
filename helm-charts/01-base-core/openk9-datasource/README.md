@@ -88,15 +88,17 @@ Openk9 Datasource service handles pipelines. Following parameters allow to handl
 | ------------------- |--------------------------------------------------|-------|
 | `pipeline.HttpTimeout`      | Timeout used by Http client calling enrich items | `10s` |
 
-### QueryParser configurations
+### QueryParser and search configurations
 
-Openk9 Datasource service handles query parser. Following parameters allow to handle the parsing of search query tokens.
+Openk9 Datasource service handles query parser and query construction. Following parameters allow to handle the parsing of search query tokens and search globally.
 
 | Name                             | Description                                                                                 | Value |
 |----------------------------------|---------------------------------------------------------------------------------------------|-------|
 | `queryParser.maxTextQueryLength` | Enforce a maximum text query length (disabled if set to 0 or a negative value)              | `0` |
 | `queryAnalysis.searchTextLength` | Enforce a maximum search text for query analysis (disabled if set to 0 or a negative value) | `0` |
- 
+| `search.page.from` | Enforce a maximum value for search from pagination parameter              | `10000` |
+| `search.page.size` | Enforce a maximum value for search size pagination parameter | `200` |
+
 ### Datasource specific configurations
 
 Openk9 Datasource service has specific configurations that can be customized to control its behavior.
