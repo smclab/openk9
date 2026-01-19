@@ -241,9 +241,14 @@ export default function AllFilters({
   defaultLanguage,
   filterDefault,
   calendar,
+  callback,
 }: {
   filtersUse: TypeAllFilters;
   defaultLanguage: string;
+  callback?: {
+    save: () => void | null | undefined;
+    reset: () => void | null | undefined;
+  };
   filterDefault: FiltersProps & {
     setAllFilters(searchTokens: SearchToken[]): void;
     setLanguageSelected(language: string): void;
@@ -307,6 +312,9 @@ export default function AllFilters({
           onClick={() => {
             setSearchToken([]);
             setLang(defaultLanguage);
+            if (callback && callback.reset) {
+              callback.reset();
+            }
             i18n.changeLanguage(
               remappingLanguage({ language: defaultLanguage }),
             );
@@ -328,6 +336,9 @@ export default function AllFilters({
             i18n.changeLanguage(remappingLanguage({ language: lang || "it" }));
             filterDefault.setSortSelected(sort || null);
             calendar.onChange(calendarToken);
+            if (callback && callback.save) {
+              callback.save();
+            }
           }}
           css={css`
             background: var(--openk9-embeddable-search--primary-color, #0078d4);

@@ -1,14 +1,7 @@
 import { t } from "i18next";
-import { CreateLabel } from "./Filters";
-import React from "react";
-import { DeleteLogo } from "./DeleteLogo";
-import {
-  ConfigurationUpdateFunction,
-  resetFiltersType,
-} from "../embeddable/entry";
 import { css } from "styled-components";
+import { resetFiltersType } from "../embeddable/entry";
 import { CircleDelete } from "../svgElement/CircleDelete";
-import { SelectionsAction } from "./useSelections";
 
 function handleReset(
   itemsRemove?: resetFiltersType,
@@ -35,8 +28,10 @@ function handleReset(
 export function RemoveFilters({
   itemsRemove,
   reset,
+  configurableLabel,
 }: {
   itemsRemove?: resetFiltersType;
+  configurableLabel?: string | null | undefined;
   reset?: {
     calendar?(): void;
     filters?(): void;
@@ -67,7 +62,7 @@ export function RemoveFilters({
       `}
     >
       <CircleDelete aria-hidden="true" />
-      {t("removeFilters")}
+      {configurableLabel ? configurableLabel : t("removeFilters")}
     </button>
   );
 }

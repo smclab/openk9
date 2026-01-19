@@ -408,6 +408,7 @@ export function Main({
         <I18nextProvider i18n={i18next}>
           <RemoveFilters
             itemsRemove={configuration?.removeFiltersConfigurable?.itemsRemove}
+            configurableLabel={configuration.removeFiltersConfigurable?.label}
             reset={{
               calendar: () => {
                 setDateRange({
@@ -1139,6 +1140,10 @@ export function Main({
               defaultFilter: selectionsState.filters,
               setOverrideSearchWithCorrection: setOverrideSearchWithCorrection,
               overrideSearchWithCorrection: overrideSearchWithCorrection,
+            }}
+            callback={{
+              save: configuration?.allFilters?.callbackSave ?? (() => {}),
+              reset: configuration?.allFilters?.callbackReset ?? (() => {}),
             }}
             calendar={{
               calendarDate: dateRange,

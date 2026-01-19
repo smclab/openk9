@@ -359,6 +359,7 @@ type searchWithSuggestionsProps =
 type RemoveFiltersProps = {
   element: Element | string | null;
   itemsRemove?: resetFiltersType;
+  label?: string | null | undefined;
 };
 
 export type resetFiltersType = Array<
@@ -425,6 +426,8 @@ type allFiltersConfigurableProps = {
   element: Element | string | null;
   typeFilters: TypeAllFilters;
   translationLabel?: translationGlobalType;
+  callbackSave?(): void | null | undefined;
+  callbackReset?(): void | null | undefined;
 };
 
 export type Configuration = {
