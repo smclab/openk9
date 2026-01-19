@@ -38,15 +38,15 @@ export default function AssociationsLayout({
       </Typography>
 
       <Paper
+        variant="outlined"
         elevation={0}
         sx={{
-          border: "1px solid #e0e0e0",
           borderRadius: "10px",
           width: "100%",
           overflow: "scroll",
         }}
       >
-        <Box sx={{ borderBottom: "1px solid #e0e0e0" }}>
+        <Box>
           <Tabs
             value={value}
             onChange={handleChange}
