@@ -12,7 +12,9 @@ import {
   TitleEntity,
   useForm,
 } from "@components/Form";
+import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 import { useToast } from "@components/Form/Form/ToastProvider";
+import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { TooltipDescription } from "@components/Form/utils";
 import { useRestClient } from "@components/queryClient";
 import CloseIcon from "@mui/icons-material/Close";
@@ -35,15 +37,15 @@ import {
   GenerateDynamicForm,
   Template,
 } from "@pages/datasources/components/Sections/DataSource/DynamicForm";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
 import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique } from "../../openapi-generated";
+import { sxControl } from "../../utils/styleConfig";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { QueryParserConfig } from "./gql";
-import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
-import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 interface ConfigureHybridSearchInterface {
   searchConfigId: string;
@@ -324,23 +326,27 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                     <div>
                       <TextInput label="Name" {...form.inputProps("name")} />
                       <TextArea label="Description" {...form.inputProps("description")} />
-                      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
-                        <NumberInput
-                          label="minScore"
-                          {...form.inputProps("minScore")}
-                          description="Define score threshold used to filter results after query has been done"
-                        />
+                      {/* <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}> */}
+                      <NumberInput
+                        label="minScore"
+                        {...form.inputProps("minScore")}
+                        description="Define score threshold used to filter results after query has been done"
+                      />
+                      <RefreshOptionsLayout title="Min Score">
                         <BooleanInput
-                          label="min Score Suggestions"
+                          label="Suggestions"
+                          sxControl={sxControl}
                           {...form.inputProps("minScoreSuggestions")}
                           description="If use configured min score to filter search results"
                         />
                         <BooleanInput
-                          label="min Score Search"
+                          label="Search"
+                          sxControl={sxControl}
                           {...form.inputProps("minScoreSearch")}
                           description="If use configured min score to filter suggestions"
                         />
-                      </Box>
+                      </RefreshOptionsLayout>
+                      {/* </Box> */}
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
                           type="button"

@@ -39,6 +39,7 @@ import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@componen
 import { useLanguages, useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { sxCheckbox, sxControl } from "../../utils/styleConfig";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
   { label: "datasource", id: "datasourceIds", tooltip: "Datasources associated to current bucket" },
@@ -49,23 +50,6 @@ const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = 
   },
   { label: "tabs", id: "tabIds", tooltip: "Tabs associated to current bucket" },
 ];
-
-const sxCheckbox = {
-  p: 0.5,
-  "& .MuiSvgIcon-root": {
-    fontSize: 16,
-  },
-};
-
-const sxControl = {
-  m: 0,
-  mr: 0.5,
-  ml: 1,
-  cursor: "pointer",
-  "& .MuiFormControlLabel-label": {
-    fontSize: "0.875rem",
-  },
-};
 
 export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { bucketId = "new", view } = useParams();
