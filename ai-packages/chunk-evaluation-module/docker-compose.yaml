@@ -1,0 +1,31 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:4.1.0-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: openk9
+      RABBITMQ_DEFAULT_PASS: openk9
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/15672' || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  evaluator:
+    build: .
+    container_name: evaluator
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    env_file: .env
+    restart: always
+    volumes:
+      - ./dati:/app/dati
+
+      

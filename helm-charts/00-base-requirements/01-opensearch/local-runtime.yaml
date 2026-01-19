@@ -5,6 +5,11 @@ resources:
     cpu: "100m"
     memory: "100Mi"
 
+
+singleNode: true
+replicas: 1
+
+
 # Allows you to load environment variables from kubernetes secret or config map
 envFrom:
   - secretRef:

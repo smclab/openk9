@@ -32,11 +32,25 @@ service Searcher {
   rpc GetLLMConfigurations(GetLLMConfigurationsRequest) returns (GetLLMConfigurationsResponse) {}
   rpc GetRAGConfigurations(GetRAGConfigurationsRequest) returns (GetRAGConfigurationsResponse) {}
   rpc GetEmbeddingModelConfigurations(GetEmbeddingModelConfigurationsRequest) returns (GetEmbeddingModelConfigurationsResponse) {}
+  rpc GetAutocompleteConfigurations(AutocompleteConfigurationsRequest) returns (AutocompleteConfigurationsResponse) {}
   rpc GetAutocorrectionConfigurations(AutocorrectionConfigurationsRequest) returns (AutocorrectionConfigurationsResponse) {}
+}
+
+message AutocompleteConfigurationsRequest {
+  string virtualHost = 1;
 }
 
 message AutocorrectionConfigurationsRequest {
   string virtualHost = 1;
+}
+
+message AutocompleteConfigurationsResponse {
+  repeated string indexName = 1;
+  repeated Field field = 2;
+  int32 resultSize = 3;
+  string fuzziness = 4;
+  string minimumShouldMatch = 5;
+  Operator operator = 6;
 }
 
 message AutocorrectionConfigurationsResponse {
@@ -59,6 +73,18 @@ enum SuggestMode {
   MISSING = 0;
   POPULAR = 1;
   ALWAYS = 2;
+}
+
+message Field {
+  string fieldPath = 1;
+  string parentPath = 2;
+  string label = 3;
+  double boost = 4;
+}
+
+enum Operator {
+  OR = 0;
+  AND = 1;
 }
 
 message QueryParserResponse {

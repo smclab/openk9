@@ -346,7 +346,8 @@ public class IndexMappingService {
 			List<String> componentTemplates = new ArrayList<>();
 
 			// adds the knn component template on this indexTemplate
-			if (dataIndex.getKnnIndex() && embeddingModel != null) {
+			if (dataIndex.getKnnIndex() != null &&
+				dataIndex.getKnnIndex() && embeddingModel != null) {
 
 				var componentTemplate = new EmbeddingComponentTemplate(
 					tenantId,

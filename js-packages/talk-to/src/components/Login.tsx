@@ -32,6 +32,8 @@ export function Login({
 	return (
 		<Button
 			variant="contained"
+			id="talk-to-login-button-id"
+			className="talk-to-login-button"
 			size="small"
 			onClick={() => {
 				if (authenticated) {

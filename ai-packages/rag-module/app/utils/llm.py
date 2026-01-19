@@ -324,7 +324,7 @@ def stream_rag_conversation(
     grpc_host_datasource: str,
     chat_id: str,
     user_id: str,
-    realm_name: str,
+    tenant_id: str,
     retrieve_from_uploaded_documents: bool,
     chat_history: list,
     timestamp: str,
@@ -377,8 +377,8 @@ def stream_rag_conversation(
     :type chat_id: str
     :param user_id: Unique identifier for the user (None for unauthenticated users)
     :type user_id: str
-    :param realm_name: Keycloak realm name for user isolation
-    :type realm_name: str
+    :param tenant_id: Tenant id for user isolation
+    :type tenant_id: str
     :param retrieve_from_uploaded_documents: Whether to search in user's uploaded documents
     :type retrieve_from_uploaded_documents: bool
     :param chat_history: Previous chat messages for unauthenticated users
@@ -422,7 +422,7 @@ def stream_rag_conversation(
             grpc_host_datasource="localhost:50051",
             chat_id="chat_123",
             user_id="user_456",
-            realm_name="my-realm",
+            tenant_id="my-realm",
             retrieve_from_uploaded_documents=True,
             chat_history=[],
             timestamp="2023-01-01T00:00:00Z",
@@ -496,18 +496,18 @@ def stream_rag_conversation(
         hosts=[opensearch_host],
     )
 
-    if retrieve_from_uploaded_documents and user_id and realm_name:
+    if retrieve_from_uploaded_documents and user_id and tenant_id:
         retriever = OpenSearchUploadedDocumentsRetriever(
             opensearch_host=opensearch_host,
             grpc_host_embedding=grpc_host_embedding,
             embedding_model_configuration=embedding_model_configuration,
-            uploaded_documents_index=f"{realm_name}-uploaded-documents-index",
+            uploaded_documents_index=f"{tenant_id}-uploaded-documents-index",
             retrieve_type=retrieve_type,
             user_id=user_id,
             chat_id=chat_id,
             search_text=search_text,
         )
-    elif retrieve_from_uploaded_documents and (not user_id or not realm_name):
+    elif retrieve_from_uploaded_documents and (not user_id or not tenant_id):
         unauthorized_response()
     else:
         retriever = OpenSearchRetriever(
@@ -759,7 +759,7 @@ def stream_rag_conversation(
             documents,
             chat_id,
             user_id,
-            realm_name,
+            tenant_id,
             timestamp,
             chat_sequence_number,
             retrieve_from_uploaded_documents,

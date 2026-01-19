@@ -99,11 +99,11 @@ timeoutDb:
 keycloak:
   host: "keycloak.local"   #-TBMD
     ### Internal k8s URL for QUARQUS
-  svcport: 80
+  svcport: 8080
   service: keycloak
   ###
   clientId: "tenant-manager"
-  username: "user"
+  username: "admin"
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"

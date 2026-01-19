@@ -69,6 +69,12 @@ openk9:
     host: openk9-ingestion
     port: 8080
 
+log:
+  level: "INFO"
+
+playwright:
+  maxContexts: "1"
+  maxPagesPerContext: "4"
 
 ## Database Connector pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/

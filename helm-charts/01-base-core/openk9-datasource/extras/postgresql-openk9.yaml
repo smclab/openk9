@@ -1,16 +1,26 @@
+# OpenK9 Datasource Database Setup Job
+# Creates openk9 user and database with proper permissions
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: openk9-db
+  name: openk9-datasource-db
 spec:
+  # Auto-delete job after 120 seconds of completion
   ttlSecondsAfterFinished: 120
   template:
     spec:
       containers:
-      - name: openk9-db
-        image: bitnami/postgresql:14
-        command: ["/bin/sh", "-c"]
-        args: ["psql -c \"CREATE ROLE openk9 WITH LOGIN ENCRYPTED PASSWORD 'openk9'\"; psql -c \"CREATE DATABASE openk9 OWNER openk9;\"" ]
+      - name: openk9-datasource-db
+        image: postgres:18
+        command: [ "/bin/sh", "-c" ]
+        args:
+        - |
+          # Create openk9 role if not exists
+          psql -tc "SELECT 1 FROM pg_roles WHERE rolname='openk9'" | grep -q 1 || psql -c "CREATE ROLE openk9 WITH LOGIN ENCRYPTED PASSWORD 'openk9';"
+          # Create openk9 database if not exists
+          psql -lqt | cut -d \| -f 1 | grep -qw openk9 || psql -c "CREATE DATABASE openk9 OWNER openk9;"
+          # Grant schema permissions
+          psql -d openk9 -c "GRANT ALL ON SCHEMA public TO openk9;"
         env:
         - name: PGHOST
           value: "postgresql"

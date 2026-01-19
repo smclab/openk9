@@ -146,6 +146,24 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Description("""
+		Retrieves all DocTypeField that are not bound to a specific Autocomplete and are of type
+		 SEARCH_AS_YOU_TYPE.
+		
+		This query returns all DocTypeFields of autocomplete type (SEARCH_AS_YOU_TYPE)
+		 that are available to be bound to the specified Autocomplete.
+		
+		Arguments:
+		- `autocompleteId` (ID!): The ID of the Autocomplete to check for unbound DocTypeFields.
+		
+		Returns:
+		- A list of unbound DocTypeFields available for the specified Autocomplete.
+		""")
+	@Query
+	public Uni<List<DocTypeField>> getUnboundDocTypeFieldByAutocomplete(long autocompleteId) {
+		return docTypeFieldService.findUnboundDocTypeFieldByAutocomplete(autocompleteId);
+	}
+
+	@Description("""
 		Retrieves all DocTypeField that are not bound to a specific Autocorrection.
 		
 		This query returns all DocTypeFields of textual type (TEXT, KEYWORD, CONSTANT_KEYWORD, 

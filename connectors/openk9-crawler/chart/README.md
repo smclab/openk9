@@ -21,7 +21,7 @@ helm repo add openk9 https://registry.smc.it/repository/helm-private/
 Then install using following command:
 
 ```bash
-helm upgrade -i database-connector openk9/openk9-database-connector
+helm upgrade -i web-connector openk9/openk9-web-connector
 ```
 
 The command deploys Openk9 Web Crawler Connector on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
@@ -50,6 +50,17 @@ To configure connection to Ingestion following parameters are available:
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `openk9.ingestion.host`    | Ingestion host                         | `openk9-ingestion`            |
 | `openk9.ingestion.port`    | Ingestion port                         | `8080`            |
+
+### Configure playwright context settings
+
+In Openk9 Web Crawler Connector you can enable playwright if you need.
+
+In case you can configure number of context and pages per context using follwing parameter:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `playwright.maxContexts`    | Playwright max contexts                        | `1`            |
+| `playwright.maxPagesPerContext`    | Playwright max pages per context                         | `4`            |
 
 
 ### Service account and rbac
@@ -180,8 +191,12 @@ Is possible also to set autoscaling using following parameters:
 
 ### Advanced logging
 
-No settings are available to set up advanced configuration for logging.
+In case you want to configure Openk9 Crawler logging you can set up following parameters:
 
+```
+log:
+  level: "INFO" ## change log level
+```
 
 ### Known issues
 

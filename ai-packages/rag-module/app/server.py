@@ -34,11 +34,12 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
+    get_tenant_manager_configuration,
 )
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
 from app.utils import openapi_definitions as openapi
-from app.utils.authentication import unauthorized_response, verify_token
+from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
@@ -63,7 +64,8 @@ ARIZE_PHOENIX_ENDPOINT = os.getenv(
 )
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
-KEYCLOAK_USER_INFO_KEY = "sub"
+USER_ID_KEY = "sub"
+TENANT_ID_KEY = "realm_name"
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
 UPLOAD_DIR.mkdir(exist_ok=True)
 UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
@@ -208,8 +210,6 @@ async def rag_generate(
         if headers.authorization
         else None
     )
-    if token and not verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token):
-        unauthorized_response()
 
     configurations = get_configurations(
         rag_type=RagType.SIMPLE_GENERATE.value,
@@ -278,6 +278,7 @@ async def rag_chat(
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
         x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -319,6 +320,12 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -329,14 +336,10 @@ async def rag_chat(
         else None
     )
     user_id = None
-    realm_name = None
 
     if token:
-        user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-        if not user_info:
-            unauthorized_response()
-        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-        realm_name = user_info.get("realm_name")
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
@@ -369,7 +372,7 @@ async def rag_chat(
         search_text,
         chat_id,
         user_id,
-        realm_name,
+        tenant_id,
         retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
@@ -421,6 +424,7 @@ async def rag_chat_tool(
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
         x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -465,6 +469,12 @@ async def rag_chat_tool(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -475,14 +485,10 @@ async def rag_chat_tool(
         else None
     )
     user_id = None
-    realm_name = None
 
     if token:
-        user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-        if not user_info:
-            unauthorized_response()
-        user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-        realm_name = user_info.get("realm_name")
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
 
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
@@ -515,7 +521,7 @@ async def rag_chat_tool(
         search_text,
         chat_id,
         user_id,
-        realm_name,
+        tenant_id,
         retrieve_from_uploaded_documents,
         chat_history,
         timestamp,
@@ -577,14 +583,17 @@ async def get_user_chats(
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
 
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-
-    if not user_info:
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
         unauthorized_response()
-
-    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -638,6 +647,7 @@ async def get_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         dict: Dictionary containing:
@@ -661,15 +671,23 @@ async def get_chat(
         - Uses OpenSearch for data storage and retrieval
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
 
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-
-    if not user_info:
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
         unauthorized_response()
-
-    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -736,6 +754,7 @@ async def delete_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         JSONResponse: Response containing:
@@ -760,15 +779,23 @@ async def delete_chat(
         - Uses OpenSearch's delete_by_query operation
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
 
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-
-    if not user_info:
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
         unauthorized_response()
-
-    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -798,7 +825,7 @@ async def delete_chat(
             detail="Item not found.",
         )
 
-    uploaded_documents_index = f"{realm_name}-uploaded-documents-index"
+    uploaded_documents_index = f"{tenant_id}-uploaded-documents-index"
 
     if open_search_client.indices.exists(index=uploaded_documents_index):
         delete_uploaded_documents_query = {
@@ -841,6 +868,7 @@ async def rename_chat(
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
         x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         JSONResponse: Response containing:
@@ -865,15 +893,23 @@ async def rename_chat(
         - The chat must contain at least one message to be renamed
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
 
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-
-    if not user_info:
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
         unauthorized_response()
-
-    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-    realm_name = user_info.get("realm_name")
 
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
@@ -1027,18 +1063,23 @@ async def upload_files(
         }
     """
     virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
 
-    if not headers.authorization:
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
         unauthorized_response()
-
-    token = headers.authorization.replace(TOKEN_PREFIX, "")
-    user_info = verify_token(GRPC_TENANT_MANAGER_HOST, virtual_host, token)
-
-    if not user_info:
-        unauthorized_response()
-
-    user_id = user_info.get(KEYCLOAK_USER_INFO_KEY)
-    realm_name = user_info.get("realm_name")
 
     if len(files) > MAX_UPLOAD_FILES_NUMBER:
         logger.error(f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files")
@@ -1052,7 +1093,7 @@ async def upload_files(
             file,
             user_id,
             chat_id,
-            realm_name,
+            tenant_id,
             virtual_host,
             UPLOAD_FILE_EXTENSIONS,
             UPLOAD_DIR,

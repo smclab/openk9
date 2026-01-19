@@ -1,27 +1,25 @@
+import asyncio
+import base64
 import os
+import threading
+import time
 from io import BytesIO
 from typing import Dict, List
 
+import requests
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 from dotenv import dotenv_values, load_dotenv
 from fastapi import Body, FastAPI
+from pydantic import BaseModel
 
 from app.utils.fm_helper import FileManagerHelper
 
 load_dotenv()
 
-# accessing and printing value
-
-import asyncio
-import base64
-import threading
-import time
-
-import requests
-from pydantic import BaseModel
-
-FMHelper = FileManagerHelper(os.getenv("FM_HOST"))
+FM_HOST = os.getenv("FM_HOST", default="http://localhost:8000")
+S_HOST = os.getenv("S_HOST", default="http://localhost:8001")
+FMHelper = FileManagerHelper(FM_HOST)
 
 
 class Input(BaseModel):
@@ -81,30 +79,32 @@ def form():
 
 
 def operation(payload, configs, token):
-    s_host = os.getenv("S_HOST")
-
-    resource_ids = [
-        b.get("resourceId")
-        for b in payload["resources"].get("binaries", [])
-        if "resourceId" in b
+    binaries = [
+        b for b in payload["resources"].get("binaries", []) if "resourceId" in b
     ]
     tenant = payload["tenantId"]
 
-    resources = [
-        FMHelper.getBase64(tenant, resource_id) for resource_id in resource_ids
-    ]
-    bites = [BytesIO(base64.b64decode(resource)) for resource in resources]
-
     print("Starting process")
+    for bin in binaries:
+        try:
+            resource_id = bin.get("resourceId")
+            resource = FMHelper.get_base64(tenant, resource_id)
+            bites = BytesIO(base64.b64decode(resource))
+            source = DocumentStream(name="doc.docx", stream=bites)
+            converter = DocumentConverter()
+            result = converter.convert(source)
+            markdown = result.document.export_to_markdown()
+            bin["markdown"] = markdown
+        except (base64.binascii.Error, ValueError) as e:
+            print(f"base64 error: {str(e)}")
+        except AttributeError as e:
+            print(f"export error: {str(e)}")
+        except Exception as e:
+            print(f"generic error: {str(e)}")
 
-    source = DocumentStream(name="doc.docx", stream=bites[0])
-
-    converter = DocumentConverter()
-    result = converter.convert(source)
-    markdown = result.document.export_to_markdown()
     print("Process ended")
-    res = {"markdown": markdown}
+    response = {"resources": {"binaries": binaries}}
     response = requests.post(
-        f"{s_host}/api/datasource/pipeline/callback/{token}", json=res
-    )  # body json
+        f"{S_HOST}/api/datasource/pipeline/callback/{token}", json=response
+    )
     print("Status:", response.status_code)

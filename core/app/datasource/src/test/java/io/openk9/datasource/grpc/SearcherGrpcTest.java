@@ -17,14 +17,22 @@
 
 package io.openk9.datasource.grpc;
 
-import com.google.protobuf.Struct;
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
 import io.openk9.client.grpc.common.StructUtils;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.Initializer;
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
+import io.openk9.datasource.model.BooleanOperator;
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.LargeLanguageModel;
@@ -32,12 +40,15 @@ import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SortType;
 import io.openk9.datasource.model.SuggestMode;
+import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceService;
@@ -45,16 +56,20 @@ import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.service.RAGConfigurationService;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.Searcher;
+
+import com.google.protobuf.Struct;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
@@ -62,27 +77,25 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 @QuarkusTest
 public class SearcherGrpcTest {
 
 	private static final String ENTITY_NAME_PREFIX = "SearcherGrpcTest - ";
 
+	private static final String AUTOCOMPLETE_NAME_ONE = ENTITY_NAME_PREFIX + "Autocomplete 1";
 	private static final String AUTOCORRECTION_NAME_ONE = ENTITY_NAME_PREFIX + "Autocorrection 1";
 	private static final Bucket BUCKET = new Bucket();
 	private static final String BUCKET_ONE = ENTITY_NAME_PREFIX + "Bucket 1";
 	private static final String BUCKET_TWO = ENTITY_NAME_PREFIX + "Bucket 2";
 	private static final int CHUNK_WINDOW = 1500;
 	private static final int CONTEXT_WINDOW_VALUE = 1300;
+	private static final String DOC_TYPE_FIELD_NAME_ONE = ENTITY_NAME_PREFIX + "Doc type field 1";
+	private static final String DOC_TYPE_FIELD_NAME_TWO = ENTITY_NAME_PREFIX + "Doc type field 2";
 	private static final String EMBEDDING_MODEL_ONE = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
 	private static final int EM_VECTOR_SIZE = 1330;
+	private static final String FUZZINESS = "2";
 	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
 		"    \"id\": 1,\n" +
@@ -112,7 +125,9 @@ public class SearcherGrpcTest {
 	private static final String LLM_API_URL = "api_url";
 	private static final int MAX_EDIT = 2;
 	private static final int MIN_WORD_LENGTH = 3;
+	private static final String MINIMUM_SHOULD_MATCH = "50%";
 	private static final String MODEL = "model";
+	private static final BooleanOperator OPERATOR = BooleanOperator.AND;
 	private static final int PREFIX_LENGTH = 3;
 	private static final String PROMPT_TEST = "Test prompt";
 	private static final String PROVIDER = "provider";
@@ -120,6 +135,7 @@ public class SearcherGrpcTest {
 	private static final String RAG_SEARCH_ONE = ENTITY_NAME_PREFIX + "Rag configuration SEARCH 1";
 	private static final String RAG_CHAT_TOOL_ONE = ENTITY_NAME_PREFIX + "Rag configuration CHAT_TOOL 1";
 	private static final boolean REFORMULATE = true;
+	private static final int RESULT_SIZE = 7;
 	private static final Struct STRUCT_JSON_CONFIG = StructUtils.fromJson(JSON_CONFIG);
 	private static final Struct STRUCT_JSON_CONFIG_SHORT = StructUtils.fromJson(JSON_CONFIG_SHORT);
 	private static final String SCHEMA_NAME = "public";
@@ -139,6 +155,9 @@ public class SearcherGrpcTest {
 
 	@GrpcClient
 	Searcher searcher;
+
+	@Inject
+	AutocompleteService autocompleteService;
 
 	@Inject
 	AutocorrectionService autocorrectionService;
@@ -177,7 +196,6 @@ public class SearcherGrpcTest {
 			.map(dataIndex -> SCHEMA_NAME + "-" + dataIndex.getName())
 			.collect(Collectors.joining(","));
 
-
 		// Bucket
 		createBucketOne();
 		var bucketOne = EntitiesUtils.getEntity(
@@ -195,7 +213,6 @@ public class SearcherGrpcTest {
 		enableLargeLanguageModelOne();
 
 		// RAGConfiguration
-
 		EntitiesUtils.createRAGConfiguration(
 			ragConfigurationService,
 			CreateRAGConfigurationDTO.builder()
@@ -243,21 +260,42 @@ public class SearcherGrpcTest {
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_SEARCH_ONE));
 		bindRAGConfigurationToBucket(bucketOne, getRAGConfiguration(RAG_CHAT_TOOL_ONE));
 
-		// Autocorrection
-		var docTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
+		// DocTypeField
+		var allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
 
-		var docTypeField = docTypeFields.stream()
+		var firstSampleTextField = allDocTypeFields.stream()
 			.filter(field -> "sample".equalsIgnoreCase(field.getDocType().getName()))
 			.filter(field -> FieldType.TEXT.equals(field.getFieldType()))
 			.findFirst();
 
 		var docTypeFieldId = 0L;
 
-		if (docTypeField.isPresent()) {
-			docTypeFieldId = docTypeField.get().getId();
-			docTypeFieldPath = docTypeField.get().getPath();
+		if (firstSampleTextField.isPresent()) {
+			docTypeFieldId = firstSampleTextField.get().getId();
+			docTypeFieldPath = firstSampleTextField.get().getPath();
 		}
 
+		DocTypeFieldDTO fieldDtoOne = DocTypeFieldDTO.builder()
+			.name(DOC_TYPE_FIELD_NAME_ONE)
+			.fieldName("fieldOne")
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.boost(3D)
+			.build();
+		DocTypeFieldDTO fieldDtoTwo = DocTypeFieldDTO.builder()
+			.name(DOC_TYPE_FIELD_NAME_TWO)
+			.fieldName("fieldTwo")
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.build();
+
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoOne, docTypeFieldService);
+		EntitiesUtils.createSubField(
+			docTypeFieldId, fieldDtoTwo, docTypeFieldService);
+
+		// updates all doc type
+		allDocTypeFields = EntitiesUtils.getAllEntities(docTypeFieldService, sessionFactory);
+
+		// Autocorrection
 		AutocorrectionDTO autocorrectionDTO = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_NAME_ONE)
 			.autocorrectionDocTypeFieldId(docTypeFieldId)
@@ -281,6 +319,36 @@ public class SearcherGrpcTest {
 		assertNotNull(autocorrectionOne.getAutocorrectionDocTypeField());
 
 		bindAutocorrectionToBucket(bucketOne, autocorrectionOne);
+
+		// Autocomplete
+		var autocompleteFieldIds = allDocTypeFields.stream()
+			.filter(DocTypeField::isAutocomplete)
+			.map(DocTypeField::getId)
+			.collect(Collectors.toSet());
+
+		var autocompleteDTO = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_NAME_ONE)
+			.fieldIds(autocompleteFieldIds)
+			.resultSize(RESULT_SIZE)
+			.fuzziness(FUZZINESS)
+			.minimumShouldMatch(MINIMUM_SHOULD_MATCH)
+			.operator(OPERATOR)
+			.build();
+
+		EntitiesUtils.createEntity(autocompleteDTO,autocompleteService, sessionFactory);
+
+		var autocompleteOne =
+			EntitiesUtils.getAutocomplete(
+				AUTOCOMPLETE_NAME_ONE,
+				autocompleteService,
+				sessionFactory
+			);
+
+		assertNotNull(autocompleteOne.getFields());
+		assertFalse(autocompleteOne.getFields().isEmpty());
+		assertEquals(autocompleteFieldIds.size(), autocompleteOne.getFields().size());
+
+		bindAutocompleteToBucket(bucketOne, autocompleteOne);
 	}
 
 	@Test
@@ -410,6 +478,34 @@ public class SearcherGrpcTest {
 
 	@Test
 	@RunOnVertxContext
+	void should_get_autocomplete_configurations(UniAsserter asserter) {
+		asserter.assertThat(
+			() -> searcher.getAutocompleteConfigurations(
+				AutocompleteConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+				log.debug(String.format("Response on new line: \n%s\n", response));
+
+				var indexNameList = response.getIndexNameList();
+
+				String indexNames =
+					String.join(",", indexNameList);
+
+				assertTrue(defaultDataindexNames.equalsIgnoreCase(indexNames));
+				assertFalse(response.getAllFields().isEmpty());
+				assertEquals(2, response.getFieldList().size());
+				assertEquals(RESULT_SIZE, response.getResultSize());
+				assertEquals(FUZZINESS, response.getFuzziness());
+				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());
+				assertEquals(OPERATOR.name(), response.getOperator().name());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
 	void should_get_autocorrection_configurations(UniAsserter asserter) {
 		asserter.assertThat(
 			() -> searcher.getAutocorrectionConfigurations(
@@ -418,7 +514,7 @@ public class SearcherGrpcTest {
 					.build()
 			),
 			response -> {
-				log.debug(String.format("Response on new line: \n%s", response));
+				log.debug(String.format("Response on new line: \n%s\n", response));
 
 				var indexNameList = response.getIndexNameList();
 
@@ -543,6 +639,10 @@ public class SearcherGrpcTest {
 		unbindAutocorrectionToBucket(getBucketOne());
 		EntitiesUtils.removeEntity(AUTOCORRECTION_NAME_ONE, autocorrectionService, sessionFactory);
 
+		// Autocomplete
+		unbindAutocompleteToBucket(getBucketOne());
+		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_ONE, autocompleteService, sessionFactory);
+
 		// Bucket
 		enableBucket(getBucketDefault());
 		var bucketOne = EntitiesUtils.getEntity(BUCKET_ONE, bucketService, sessionFactory);
@@ -565,6 +665,15 @@ public class SearcherGrpcTest {
 			ragConfigurationService,
 			sessionFactory
 		);
+
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_ONE, docTypeFieldService, sessionFactory);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_NAME_TWO, docTypeFieldService, sessionFactory);
+	}
+
+	private void bindAutocompleteToBucket(Bucket bucket, Autocomplete autocomplete) {
+		bucketService.bindAutocomplete(bucket.getId(), autocomplete.getId())
+			.await()
+			.indefinitely();
 	}
 
 	private void bindAutocorrectionToBucket(Bucket bucket, Autocorrection autocorrection) {
@@ -798,6 +907,12 @@ public class SearcherGrpcTest {
 
 	private void unbindAutocorrectionToBucket(Bucket bucket) {
 		bucketService.unbindAutocorrection(bucket.getId())
+			.await()
+			.indefinitely();
+	}
+
+	private void unbindAutocompleteToBucket(Bucket bucket) {
+		bucketService.unbindAutocomplete(bucket.getId())
 			.await()
 			.indefinitely();
 	}

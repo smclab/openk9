@@ -17,9 +17,9 @@
 
 SHELL := /bin/bash
 .PHONY: check_commands load_config \
-        build_base_pytorch_cpu build_base_pytorch_gpu build_sentence_transformer \
-        start_base start_sentence_transformer \
-        stop_base stop_sentence_transformer
+        build_pytorch_cpu build_pytorch_gpu \
+        start \
+        stop
 .DEFAULT_GOAL := help
 
 # Define variables
@@ -37,21 +37,17 @@ help:
 	@echo "Targets:"
 	@echo "  check_commands               Verify required tools (git, docker) and environment"
 	@echo "  load_config                  Load and validate configuration from $(CONFIG_FILE)"
-	@echo "  build_base_pytorch_cpu       Build Docker image for base module with configured settings, small image size installing only pytorch-cpu"
-	@echo "  build_base_pytorch_gpu       Build Docker image for base module with configured settings"
-	@echo "  build_sentence_transformer   Build Docker image for Sentence Transformer module"
-	@echo "  start_base                   Start base module service in detached mode"
-	@echo "  start_sentence_transformer   Start Sentence Transformer service in detached mode"
-	@echo "  stop_base                    Stop running base module service"
-	@echo "  stop_sentence_transformer    Stop running Sentence Transformer service"
+	@echo "  build_pytorch_cpu            Build Docker image for embedding module with configured settings, small image size installing only pytorch-cpu"
+	@echo "  build_pytorch_gpu            Build Docker image for embedding module with configured settings"
+	@echo "  start                        Start embedding module service in detached mode"
+	@echo "  stop                         Stop running embedding module service"
 	@echo "  help                         Show this help message"
 	@echo ""
-	@echo "Typical workflow for a module (e.g., base):"
-	@echo "  make build_base_pytorch_cpu  # Build the Docker image"
-	@echo "  make start_base              # Start the service"
-	@echo "  make stop_base               # Stop the service"
-	@echo ""
-	@echo "For Sentence Transformer module, replace 'base' with 'sentence_transformer' in the targets."
+	@echo "Typical workflow:"
+	@echo "  make build_pytorch_cpu       # Build the Docker image installing pytorch-cpu"
+	@echo "  make build_pytorch_gpu       # Build the Docker image"
+	@echo "  make start                   # Start the service"
+	@echo "  make stop                    # Stop the service"
 
 # Check for required commands and environment
 check_commands:
@@ -68,54 +64,37 @@ load_config: check_commands
 	test -n "$$PYTHON_BASE_DOCKER_IMAGE" || { echo "Error: PYTHON_BASE_DOCKER_IMAGE not set in config"; exit 1; }
 
 # Build Docker images
-build_base_pytorch_cpu: load_config
+build_pytorch_cpu: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		--build-arg MODE=cpu \
-		-t openk9-embedding-module-base:"$$OPENK9_VERSION" \
-		-f Dockerfile.base \
+		--pull \
+		-t openk9-embedding-module:"$$OPENK9_VERSION" \
+		-f Dockerfile \
 		.
 
-build_base_pytorch_gpu: load_config
+build_pytorch_gpu: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		--build-arg MODE=gpu \
-		-t openk9-embedding-module-base:"$$OPENK9_VERSION" \
-		-f Dockerfile.base \
-		.
-		
-build_sentence_transformer: load_config
-	@source "$(CONFIG_PATH)" && \
-	docker buildx build \
-		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
-		-t openk9-embedding-module-sentence-transformer:"$$OPENK9_VERSION" \
-		-f Dockerfile.sentence_transformer \
+		--pull \
+		-t openk9-embedding-module:"$$OPENK9_VERSION" \
+		-f Dockerfile \
 		.
 
 # Start services
-start_base: load_config
+start: load_config
 	@source "$(CONFIG_PATH)" && \
 	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.base.yml up -d && \
-	unset OPENK9_VERSION
-
-start_sentence_transformer: load_config
-	@source "$(CONFIG_PATH)" && \
-	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.sentence_transformer.yml up -d && \
+	docker compose -f docker-compose.yml up -d && \
 	unset OPENK9_VERSION
 
 # Stop services
-stop_base: load_config
+stop: load_config
 	@source "$(CONFIG_PATH)" && \
 	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.base.yml stop && \
+	docker compose -f docker-compose.yml stop && \
 	unset OPENK9_VERSION
 
-stop_sentence_transformer: load_config
-	@source "$(CONFIG_PATH)" && \
-	export OPENK9_VERSION="$$OPENK9_VERSION" && \
-	docker compose -f docker-compose.sentence_transformer.yml stop && \
-	unset OPENK9_VERSION

@@ -11,18 +11,17 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { isValidId, useDocTypes } from "../../utils/RelationOneToOne";
 import {
   useCreateOrUpdateSuggestionCategoryMutation,
   useDocTypeFieldsQuery,
   useSuggestionCategoryQuery,
 } from "../../graphql-generated";
+import { isValidId } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import useOptionsSuggestionCategory from "./useOptionsSuggestionCategory";
+import { DocTypeFieldAutocompleteDropdown } from "./DocTypeFieldAutocompleteDropdown";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -43,12 +42,14 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
     }
   };
   const isRecap = page === 1;
+
   const suggestionCategoryQuery = useSuggestionCategoryQuery({
     variables: { id: suggestionCategoryId as string },
     skip: !suggestionCategoryId || suggestionCategoryId === "new",
   });
+
   const toast = useToast();
-  const OptionDocType = useOptionsSuggestionCategory({ suggestionCategoryId: suggestionCategoryId });
+
   const [createOrUpdateSuggestionCategoryMutate, createOrUpdateSuggestionCategoryMutation] =
     useCreateOrUpdateSuggestionCategoryMutation({
       refetchQueries: ["SuggestionCategory", "SuggestionCategories"],
@@ -106,6 +107,9 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
       createOrUpdateSuggestionCategoryMutation.data?.suggestionCategoryWithDocTypeField?.fieldValidators,
     ),
   });
+
+  const docTypeField = form.inputProps("docTypeFieldId");
+  const numericSuggestionCategoryId = Number(suggestionCategoryId);
 
   const recapSections = mappingCardRecap({
     form: form as any,
@@ -167,32 +171,23 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
                       {...form.inputProps("multiSelect")}
                       description="If currente Filter is rendered as multi label filter or not"
                     />
-                    <AutocompleteDropdown
+                    <DocTypeFieldAutocompleteDropdown
                       label="Search Config"
-                      onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
+                      disabled={page === 1}
+                      suggestionCategoryId={
+                        Number.isNaN(numericSuggestionCategoryId) ? null : numericSuggestionCategoryId
+                      }
                       value={
-                        !form?.inputProps("docTypeFieldId")?.value?.id
+                        !docTypeField.value?.id
                           ? undefined
                           : {
-                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
-                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                              id: docTypeField.value.id || "",
+                              name: docTypeField.value.name || "",
                             }
                       }
-                      onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
-                      disabled={page === 1}
-                      useOptions={useDocTypes}
-                      extraVariables={{ suggestionCategoryId: Number(suggestionCategoryId) || 0 }}
+                      onChange={(val) => docTypeField.onChange({ id: val.id, name: val.name })}
+                      onClear={() => docTypeField.onChange(undefined)}
                     />
-                    {/* <CustomSelectRelationsOneToOne
-                      options={OptionDocType}
-                      label="Doc Type"
-                      onChange={(val) => form.inputProps("docTypeFieldId").onChange({ id: val.id, name: val.name })}
-                      value={{
-                        id: form.inputProps("docTypeFieldId").value.id,
-                        name: form.inputProps("docTypeFieldId").value.name || "",
-                      }}
-                      disabled={page === 1}
-                    /> */}
                   </div>
                 ),
                 page: 0,

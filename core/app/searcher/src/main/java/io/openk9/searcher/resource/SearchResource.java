@@ -35,18 +35,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
-import io.openk9.searcher.client.dto.ParserSearchToken;
-import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
-import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
-import io.openk9.searcher.grpc.SortType;
-import io.openk9.searcher.payload.response.AutocorrectionDTO;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.instrumentation.annotations.WithSpan;
+import java.util.stream.Collectors;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -57,8 +46,14 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
+import io.openk9.searcher.client.dto.AutocompleteRequestDTO;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
 import io.openk9.searcher.client.mapper.SearcherMapper;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsResponse;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
 import io.openk9.searcher.grpc.QueryAnalysisSearchToken;
@@ -67,24 +62,24 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.QueryParserResponse;
 import io.openk9.searcher.grpc.Searcher;
 import io.openk9.searcher.grpc.Sort;
+import io.openk9.searcher.grpc.SortType;
 import io.openk9.searcher.grpc.TokenType;
 import io.openk9.searcher.grpc.Value;
 import io.openk9.searcher.mapper.InternalSearcherMapper;
+import io.openk9.searcher.payload.response.AutocompleteHit;
+import io.openk9.searcher.payload.response.AutocorrectionDTO;
 import io.openk9.searcher.payload.response.Response;
 import io.openk9.searcher.payload.response.SuggestionsResponse;
 import io.openk9.searcher.queryanalysis.QueryAnalysisToken;
 
-import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
-import org.eclipse.microprofile.openapi.annotations.media.Schema;
-import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ProtocolStringList;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
@@ -96,15 +91,34 @@ import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.action.search.ShardSearchFailure;
 import org.opensearch.client.ResponseException;
 import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.json.PlainJsonSerializable;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.OpenSearchException;
+import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.SuggestMode;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Operator;
+import org.opensearch.client.opensearch._types.query_dsl.PrefixQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
+import org.opensearch.client.opensearch.core.search.Highlight;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.opensearch.client.opensearch.core.search.Suggest;
 import org.opensearch.client.opensearch.core.search.SuggestSort;
 import org.opensearch.client.opensearch.core.search.Suggester;
@@ -157,6 +171,83 @@ public class SearchResource {
 	Integer totalResultLimit;
 	@Inject
 	Tracer tracer;
+
+	/**
+	 * Builds an OpenSearch Highlight configuration for the given fields and query text.
+	 * <p>
+	 * This method constructs a highlight clause that creates a boolean query combining both prefix
+	 * and match queries for each field path. The highlighting is configured to return the entire
+	 * field content (numberOfFragments=0) with custom tags wrapping matched terms, and
+	 * disables field match requirement to allow highlighting across all specified fields.
+	 * </p>
+	 * <p>
+	 * The highlight clause uses a boolean "should" query that includes prefix queries
+	 * (matching terms that start with the query text) and match queries (matching terms
+	 * containing the query text using OR operator). This combination ensures that both
+	 * exact prefix matches and partial word matches are highlighted in the search results.
+	 * </p>
+	 * <p>
+	 * The highlighting is configured with number of fragments set to 0 (returns entire field
+	 * content), and require field match set to false (highlights across all fields regardless of
+	 * where match occurred).
+	 * </p>
+	 *
+	 * @param parentPathSet the list of fields to use for highlighting
+	 * @param queryText the text to search for and highlight in the results
+	 * @return a configured Highlight object ready to be used in an OpenSearch query
+	 */
+	private static Highlight _buildHighlight(Set<String> parentPathSet, String queryText) {
+
+		// used to collect all queries used in the bool query
+		List<Query> boolQueryList = new ArrayList<>();
+
+		// prefix queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new PrefixQuery.Builder().field(parent).value(queryText).build()
+			)
+			.map(prefixQuery ->
+				new Query.Builder().prefix(prefixQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// match queries used in the bool query
+		parentPathSet.stream()
+			.map(parent ->
+				new MatchQuery.Builder()
+					.field(parent)
+					.query(new FieldValue.Builder().stringValue(queryText).build())
+					.operator(Operator.Or)
+					.build()
+			)
+			.map(matchQuery ->
+				new Query.Builder().match(matchQuery).build()
+			)
+			.forEach(boolQueryList::add);
+
+		// highlight
+		var highlightBuilder = new Highlight.Builder()
+			.requireFieldMatch(false)
+			.preTags("")
+			.postTags("")
+			.numberOfFragments(0)
+			.highlightQuery(
+				new Query.Builder()
+					.bool(new BoolQuery.Builder().should(boolQueryList).build())
+					.build()
+			);
+
+		// fields
+		var highlightField = new org.opensearch.client.opensearch.core.search.HighlightField.Builder()
+			.numberOfFragments(0)
+			.build();
+
+		for (String parentPath : parentPathSet) {
+			highlightBuilder.fields(parentPath, highlightField);
+		}
+
+		return highlightBuilder.build();
+	}
 
 	/**
 	 * Generates the corrected text by applying autocorrection suggestions to the original text.
@@ -309,6 +400,104 @@ public class SearchResource {
 			return List.of();
 		}
 		return List.of(pos);
+	}
+
+	@Operation(operationId = "autocomplete")
+	@Tag(
+		name = "Autocomplete API",
+		description = "Return autocomplete suggestions based on indexed data according to the Autocomplete configurations."
+	)
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Ingestion successful",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = SearchRequestExamples.AUTOCOMPLETE_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = SearchRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "autocomplete",
+						value = SearchRequestExamples.AUTOCOMPLETE_SEARCH_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/autocomplete")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<Set<AutocompleteHit>> autocomplete(AutocompleteRequestDTO autocompleteRequest) {
+		return _buildAutocompleteContext(autocompleteRequest)
+			.flatMap(context ->
+				_getAutocompleteSuggest(context.query())
+					.map(response ->
+						_extractAutocompleteResponse(response, context.fields())
+					)
+			);
+	}
+
+	@Operation(operationId = "autocomplete-query")
+	@Tag(
+		name = "Autocomplete Query API",
+		description = "Transform Openk9 Autocomplete Request in equivalent OpenSearch query configured for autocomplete suggestions"
+	)
+	@APIResponses(value = {
+		@APIResponse(responseCode = "200", description = "success"),
+		@APIResponse(responseCode = "404", description = "not found"),
+		@APIResponse(responseCode = "400", description = "invalid"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Query generation successful",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = SearchRequestExamples.AUTOCOMPLETE_QUERY_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = SearchRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "autocomplete",
+						value = SearchRequestExamples.AUTOCOMPLETE_SEARCH_REQUEST
+					)
+				}
+			)
+		}
+	)
+	@POST
+	@Path("/autocomplete-query")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
+		return _buildAutocompleteContext(autocompleteRequest)
+			.map(AutocompleteContext::query)
+			.map(PlainJsonSerializable::toJsonString);
 	}
 
 	@Operation(operationId = "autocorrection-query")
@@ -599,6 +788,55 @@ public class SearchResource {
 	}
 
 	/**
+	 * Creates an OpenSearch autocomplete query based on the provided search request and
+	 * Autocomplete configurations.
+	 *
+	 * <p>This method retrieves autocomplete configurations for the current virtual host,
+	 * validates that autocomplete is enabled, extracts and validates the query text from
+	 * the search token, and creates an OpenSearch autocomplete request based on the
+	 * configurations.
+	 *
+	 * <p>The method operates asynchronously and chains multiple validation and transformation steps.
+	 * If any validation fails or configurations cannot be retrieved, the returned Uni will emit
+	 * the corresponding exception.
+	 *
+	 * @param autocompleteRequest the search request containing the search query and search tokens
+	 * @return a {@link Uni} that emits an OpenSearch SearchRequest configured for autocomplete.
+	 *         The Uni will emit an exception if validation fails or configurations are unavailable
+	 *
+	 * @throws AutocompleteException if autocomplete is disabled or if the query text is invalid
+	 *
+	 * @see AutocompleteRequestDTO
+	 * @see AutocompleteContext
+	 * @see AutocompleteConfigurationsRequest
+	 * @see ParserSearchToken
+	 */
+	private Uni<AutocompleteContext> _buildAutocompleteContext(
+		AutocompleteRequestDTO autocompleteRequest) {
+
+		var virtualHost = request.authority().toString();
+		var autocompleteConfigurationsRequest = AutocompleteConfigurationsRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.build();
+
+		// retrieve Autocomplete configurations
+		return _getAutocompleteConfigurations(autocompleteConfigurationsRequest)
+			.map(autocompleteConfig -> {
+
+				_validateAutocompleteConfig(autocompleteConfig);
+
+				var queryText = autocompleteRequest.getQueryText();
+
+				// Create the autocomplete request for OpenSearch according to the
+				// autocomplete configurations.
+				var query = _createAutocompleteRequest(autocompleteConfig, queryText);
+				var fields = autocompleteConfig.getFieldList();
+
+				return new AutocompleteContext(query, fields);
+			});
+	}
+
+	/**
 	 * Creates an OpenSearch autocorrection query based on the provided search request and
 	 * Autocorrection configurations.
 	 *
@@ -670,46 +908,50 @@ public class SearchResource {
 	}
 
 	/**
-	 * Parses the OpenSearch autocorrection response as an {@link AutocorrectionDTO}.
-	 * <p>
-	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
-	 * and constructs an {@link AutocorrectionDTO} containing the original text, correction details,
-	 * and a generated autocorrection text. Each suggestion includes the original term,
-	 * its position (offset and length), and the suggested correction.
+	 * Creates an OpenSearch search request for autocomplete based on the provided configurations.
+	 * Builds a multi-match query with bool_prefix type that searches the query text across
+	 * the configured fields, applying fuzziness, minimum should match, and operator settings.
 	 *
-	 * @param originalText the original query text entered by the user
-	 * @param response the OpenSearch search response containing autocorrection suggestions
-	 * @param enableSearchWithCorrection flag indicating whether the search was executed with the
-	 *                                   corrected text
-	 * @return an {@link AutocorrectionDTO} containing autocorrection data or {@code null} if no
-	 *         valid suggestions are found
+	 * @param configurations the autocomplete configurations containing fields, and indices.
+	 * @param queryText the text to get the autocorrection for
+	 * @return a configured search request sorted by relevance in descending order
 	 */
-	private AutocorrectionDTO _buildAutocorrectionResponse(
-			String originalText,
-			org.opensearch.client.opensearch.core.SearchResponse<Void> response,
-			Boolean enableSearchWithCorrection) {
+	private org.opensearch.client.opensearch.core.SearchRequest _createAutocompleteRequest(
+			AutocompleteConfigurationsResponse configurations, String queryText) {
 
-		var suggestions = response.suggest().get(AUTOCORRECTION_SUGGESTION);
+		var fieldList = configurations.getFieldList();
 
-		if (suggestions == null || suggestions.isEmpty()) {
-			return null;
-		}
+		var fieldPathList = fieldList.stream()
+			.map(field -> field.getFieldPath() + "^" + field.getBoost())
+			.toList();
+		var parentPathSet = fieldList.stream()
+			.map(io.openk9.searcher.grpc.Field::getParentPath)
+			.collect(Collectors.toSet());
 
-		List<AutocorrectionDTO.Suggestion> resultSuggestions = _extractSuggestions(suggestions);
+		Query mainQuery = Query.of(
+			q -> q
+				.multiMatch(m -> m
+					.query(queryText)
+					.fields(fieldPathList)
+					.type(TextQueryType.BoolPrefix)
+					.fuzziness(configurations.getFuzziness())
+					.minimumShouldMatch(configurations.getMinimumShouldMatch())
+					.operator(_grpcEnumToOperator(configurations.getOperator()))
+				)
+		);
 
-		if (resultSuggestions.isEmpty()) {
-			return null;
-		}
+		var highlight = _buildHighlight(parentPathSet, queryText);
 
-		String autocorrectionText =
-			_generateAutocorrectionText(originalText, resultSuggestions);
-
-		return AutocorrectionDTO.builder()
-			.originalText(originalText)
-			.autocorrectionText(autocorrectionText)
-			.searchedWithCorrectedText(enableSearchWithCorrection)
-			.suggestions(resultSuggestions)
-			.build();
+		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
+			.index(configurations.getIndexNameList())
+			.source(src -> src.fetch(false))
+			.query(mainQuery)
+			.size(configurations.getResultSize())
+			.highlight(highlight)
+			.sort(sort -> sort
+				.score(sc -> sc.order(SortOrder.Desc))
+			)
+		);
 	}
 
 	/**
@@ -874,6 +1116,87 @@ public class SearchResource {
 	}
 
 	/**
+	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
+	 * <p>
+	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
+	 * and constructs an {@link AutocompleteHit} containing autocomplete text, the doc type field
+	 * label and the score.
+	 *
+	 * @param response the OpenSearch search response containing autocomplete suggestions
+	 * @param fields the fields used to retrieve the autocomplete suggestions
+	 *
+	 * @return an {@link Set<AutocompleteHit>} containing autocomplete data
+	 */
+	private Set<AutocompleteHit> _extractAutocompleteResponse(
+			org.opensearch.client.opensearch.core.SearchResponse<Map> response,
+			List<io.openk9.searcher.grpc.Field> fields) {
+
+		Set<AutocompleteHit> autocompleteHits = new HashSet<>();
+
+		for (Hit<Map> hit : response.hits().hits()) {
+			var score = hit.score();
+			var highlight = hit.highlight();
+
+			if (highlight != null) {
+				for (io.openk9.searcher.grpc.Field field : fields) {
+					List<String> autocomplete = highlight.get(field.getParentPath());
+
+					if (autocomplete != null && !autocomplete.isEmpty()) {
+						autocompleteHits.add(
+							new AutocompleteHit(autocomplete.getFirst(), field.getLabel(), score)
+						);
+					}
+				}
+			}
+		}
+
+		return autocompleteHits;
+	}
+
+	/**
+	 * Parses the OpenSearch autocorrection response as an {@link AutocorrectionDTO}.
+	 * <p>
+	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
+	 * and constructs an {@link AutocorrectionDTO} containing the original text, correction details,
+	 * and a generated autocorrection text. Each suggestion includes the original term,
+	 * its position (offset and length), and the suggested correction.
+	 *
+	 * @param originalText the original query text entered by the user
+	 * @param response the OpenSearch search response containing autocorrection suggestions
+	 * @param enableSearchWithCorrection flag indicating whether the search was executed with the
+	 *                                   corrected text
+	 * @return an {@link AutocorrectionDTO} containing autocorrection data or {@code null} if no
+	 *         valid suggestions are found
+	 */
+	private AutocorrectionDTO _extractAutocorrectionResponse(
+		String originalText,
+		org.opensearch.client.opensearch.core.SearchResponse<Void> response,
+		Boolean enableSearchWithCorrection) {
+
+		var suggestions = response.suggest().get(AUTOCORRECTION_SUGGESTION);
+
+		if (suggestions == null || suggestions.isEmpty()) {
+			return null;
+		}
+
+		List<AutocorrectionDTO.Suggestion> resultSuggestions = _extractSuggestions(suggestions);
+
+		if (resultSuggestions.isEmpty()) {
+			return null;
+		}
+
+		String autocorrectionText =
+			_generateAutocorrectionText(originalText, resultSuggestions);
+
+		return AutocorrectionDTO.builder()
+			.originalText(originalText)
+			.autocorrectionText(autocorrectionText)
+			.searchedWithCorrectedText(enableSearchWithCorrection)
+			.suggestions(resultSuggestions)
+			.build();
+	}
+
+	/**
 	 * Extracts and transforms term suggestions from the OpenSearch suggest response.
 	 *
 	 * @param suggestions the OpenSearch suggestions list
@@ -893,6 +1216,84 @@ public class SearchResource {
 				)
 			)
 			.toList();
+	}
+
+	/**
+	 * Retrieves autocomplete configurations from the search service.
+	 *
+	 * <p>This method sends a request to datasource to fetch autocomplete configurations.
+	 * If the configurations are not found (404 response), the method returns null. For any other
+	 * failure, the method logs the error and propagates an AutocompleteException.
+	 *
+	 * <p>Error handling:
+	 * <ul>
+	 *   <li>404 Not Found: Returns null</li>
+	 *   <li>Other failures: Logs the error and throws AutocompleteException</li>
+	 * </ul>
+	 *
+	 * @param request the request containing parameters for fetching autocomplete configurations
+	 * @return a {@link Uni} that emits the autocomplete configurations if found, or null if not found.
+	 *         In case of unexpected errors, the Uni will emit an AutocompleteException
+	 *
+	 * @throws AutocompleteException if the retrieval fails for any reason other than 404 Not Found
+	 *
+	 * @see AutocompleteConfigurationsRequest
+	 * @see AutocompleteConfigurationsResponse
+	 * @see AutocompleteException
+	 */
+	private Uni<AutocompleteConfigurationsResponse> _getAutocompleteConfigurations(
+			AutocompleteConfigurationsRequest request) {
+
+		return searcherClient.getAutocompleteConfigurations(request)
+			.onFailure(this::_isNotFound)
+			.recoverWithNull()
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Retrieve autocomplete configurations failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocompleteException(
+						"Retrieve autocomplete configurations failed", throwable
+					)
+				);
+			});
+	}
+
+	/**
+	 * Retrieves autocomplete suggestions from OpenSearch.
+	 *
+	 * <p>This method executes an autocomplete query against OpenSearch using the provided query.
+	 * The method uses distributed tracing to track the OpenSearch request execution.
+	 *
+	 * @param autocompleteQuery the OpenSearch query configured according to the Autocomplete configurations.
+	 * @return a {@link Uni} that emits an {@link SearchResponse} containing autocomplete suggestions
+	 *         and metadata. If the OpenSearch request fails, the Uni emits an AutocompleteException.
+	 *
+	 * @throws AutocompleteException if the OpenSearch autocomplete request fails or returns an error.
+	 *
+	 * @see org.opensearch.client.opensearch.core.SearchRequest
+	 * @see SearchResponse
+	 * @see AutocompleteException
+	 */
+	@WithSpan
+	protected Uni<org.opensearch.client.opensearch.core.SearchResponse<Map>> _getAutocompleteSuggest(
+			org.opensearch.client.opensearch.core.SearchRequest autocompleteQuery) {
+
+		// retrieve autocomplete suggestions
+		return Uni.createFrom().completionStage(() -> {
+				try {
+					return client.search(autocompleteQuery, Map.class);
+				}
+				catch (IOException | OpenSearchException e) {
+					return CompletableFuture.failedFuture(e);
+				}
+			})
+			.onFailure()
+			.recoverWithUni(throwable -> {
+				_logMessage("Autocomplete failed", throwable);
+				return Uni.createFrom().failure(
+					new AutocompleteException("Autocomplete failed", throwable)
+				);
+			});
 	}
 
 	/**
@@ -991,12 +1392,26 @@ public class SearchResource {
 				);
 			})
 			.map(voidSearchResponse ->
-				_buildAutocorrectionResponse(
+				_extractAutocorrectionResponse(
 					queryText,
 					voidSearchResponse,
 					autocorrectionContext.doSearchWithCorrection()
 				)
 			);
+	}
+
+	/**
+	 * Converts a gRPC {@link io.openk9.searcher.grpc.Operator} enum
+	 * to the corresponding {@link org.opensearch.client.opensearch._types.query_dsl.Operator} enum.
+	 *
+	 * @param operator the gRPC Operator to convert
+	 * @return the corresponding Operator value (Or for OR/UNRECOGNIZED, And for AND)
+	 */
+	private Operator _grpcEnumToOperator(io.openk9.searcher.grpc.Operator operator) {
+		return switch (operator) {
+			case OR, UNRECOGNIZED -> Operator.Or;
+			case AND -> Operator.And;
+		};
 	}
 
 	/**
@@ -1052,6 +1467,17 @@ public class SearchResource {
 	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
 	 * Otherwise, logs only the message at WARN level.
 	 *
+	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
+	 */
+	private void _logMessage(Throwable throwable) {
+		_logMessage(throwable.getMessage(), throwable);
+	}
+
+	/**
+	 * Logs a message with optional throwable information based on debug level.
+	 * If debug logging is enabled, logs the message with throwable details at DEBUG level.
+	 * Otherwise, logs only the message at WARN level.
+	 *
 	 * @param message the message to log
 	 * @param throwable the throwable to include in debug logging, ignored if debug is disabled
 	 */
@@ -1099,6 +1525,29 @@ public class SearchResource {
 	}
 
 	/**
+	 * Validates that the autocomplete configuration is not null.
+	 *
+	 * <p>This method ensures that autocomplete is enabled by verifying the presence
+	 * of a valid autocomplete configuration. If the configuration is null, it indicates
+	 * that autocomplete is disabled.
+	 *
+	 * @param autocompleteConfig the autocomplete configuration to validate
+	 * @throws AutocompleteException if the configuration is null, indicating autocomplete is disabled
+	 *
+	 * @see AutocompleteConfigurationsResponse
+	 * @see AutocompleteException
+	 */
+	private void _validateAutocompleteConfig(
+		AutocompleteConfigurationsResponse autocompleteConfig) {
+
+		if (autocompleteConfig == null) {
+			var autocompleteException = new AutocompleteException("Autocomplete is disabled.");
+			_logMessage(autocompleteException);
+			throw autocompleteException;
+		}
+	}
+
+	/**
 	 * Validates that the autocorrection configuration is not null.
 	 *
 	 * <p>This method ensures that autocorrection is enabled by verifying the presence
@@ -1111,7 +1560,9 @@ public class SearchResource {
 	 * @see AutocorrectionConfigurationsResponse
 	 * @see AutocorrectionException
 	 */
-	private void _validateAutocorrectionConfig(AutocorrectionConfigurationsResponse autocorrectionConfig) {
+	private void _validateAutocorrectionConfig(
+		AutocorrectionConfigurationsResponse autocorrectionConfig) {
+
 		if (autocorrectionConfig == null) {
 			throw new AutocorrectionException("Autocorrection is disabled.");
 		}
@@ -1457,6 +1908,11 @@ public class SearchResource {
 
 		return new Response(result, totalResult, null);
 	}
+
+	protected record AutocompleteContext(
+		org.opensearch.client.opensearch.core.SearchRequest query,
+		List<io.openk9.searcher.grpc.Field> fields
+	) {}
 
 	protected record AutocorrectionContext(
 		org.opensearch.client.opensearch.core.SearchRequest query,

@@ -24,7 +24,7 @@ async def process_file(
     file: UploadFile,
     user_id: str,
     chat_id: str,
-    realm_name: str,
+    tenant_id: str,
     virtual_host: str,
     upload_file_extensions: list,
     upload_dir: str,
@@ -51,8 +51,8 @@ async def process_file(
     :type user_id: str
     :param chat_id: Unique identifier for the chat session
     :type chat_id: str
-    :param realm_name: Name of the realm/namespace for data isolation
-    :type realm_name: str
+    :param tenant_id: Name of the realm/namespace for data isolation
+    :type tenant_id: str
     :param virtual_host: Virtual host identifier for multi-tenancy
     :type virtual_host: str
     :param upload_file_extensions: List of allowed file extensions (e.g., ['.pdf', '.docx'])
@@ -193,7 +193,7 @@ async def process_file(
                 document=document,
             )
             save_uploaded_documents(
-                opensearch_host, realm_name, embedded_documents, vector_size
+                opensearch_host, tenant_id, embedded_documents, vector_size
             )
 
         return {"status": "success", "filename": file.filename}

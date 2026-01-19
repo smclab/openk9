@@ -19,6 +19,11 @@ package io.openk9.searcher.resource;
 
 public class SearchRequestExamples {
 
+    public static final String AUTOCOMPLETE_SEARCH_REQUEST =
+            """
+                {
+                \t"queryText": "testo da cercare"
+                }""";
     public static final String AUTOCORRECTION_SEARCH_REQUEST =
             """
                 {
@@ -301,6 +306,49 @@ public class SearchRequestExamples {
                  ],
                  "afterKey": "eyJuZXdzLnRvcGljLmkxOG4uaXRfSVQua2V5d29yZCI6IiBzdGlsZSBlIGJlbGxlenphIn0="
              }""";
+	public static final String AUTOCOMPLETE_RESPONSE =
+		"""
+			[
+				{
+					"autocomplete": "testo suggerito",
+					"labelDocType": "documento"
+				},
+				{
+					"autocomplete": "testo suggerito due",
+					"labelDocType": "Documento"
+				}
+			]""";
+	public static final String AUTOCOMPLETE_QUERY_RESPONSE =
+		"""
+			{
+			\t"_source": {
+			\t\t"includes": [
+			\t\t\t"web.title",
+			\t\t\t"web.productName"
+			\t\t]
+			\t},
+			\t"query": {
+			\t\t"multi_match": {
+			\t\t\t"fields": [
+			\t\t\t\t"web.title.searchasyou",
+			\t\t\t\t"web.productName.searchasyou"
+			\t\t\t],
+			\t\t\t"fuzziness": "AUTO",
+			\t\t\t"minimum_should_match": "70%",
+			\t\t\t"operator": "or",
+			\t\t\t"query": "testo da cercare",
+			\t\t\t"type": "bool_prefix"
+			\t\t}
+			\t},
+			\t"size": 5,
+			\t"sort": [
+			\t\t{
+			\t\t\t"_score": {
+			\t\t\t\t"order": "desc"
+			\t\t\t}
+			\t\t}
+			\t]
+			}""";
     public static final String AUTOCORRECTION_QUERY_RESPONSE =
         """
             {

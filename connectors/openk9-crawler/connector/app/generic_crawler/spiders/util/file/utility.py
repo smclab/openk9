@@ -9,12 +9,13 @@ from ..generic.utility import clean_extraction, get_as_base64, get_favicon, get_
 logger = logging.getLogger(__name__)
 
 
-def extension_from_mimetype(mimetype, mimetype_map=None):
+def extension_from_mimetype(mimetype, do_use_default_mimetype_map, mimetype_map=None):
     """
     Returns the file extension for a given MIME type.
 
     Args:
         mimetype (str): The MIME type string (e.g., 'image/jpeg').
+        do_use_default_mimetype_map (bool): Tells if ti should use `default_map`
         mimetype_map (dict, optional): A custom MIME to extension mapping.
 
     Returns:
@@ -41,8 +42,12 @@ def extension_from_mimetype(mimetype, mimetype_map=None):
         'audio/mpeg': 'mp3'
     }
 
-    # Use custom map if provided
-    lookup = mimetype_map if mimetype_map else default_map
+    # sets lookup as default_map if do_use_default_mimetype_map
+    lookup = default_map if do_use_default_mimetype_map else {}
+
+    # Adds custom map if provided
+    if mimetype_map:
+        lookup.update(mimetype_map)
 
     return lookup.get(mimetype.lower())
 

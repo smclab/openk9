@@ -49,7 +49,6 @@ public class SearchConfigResource {
 	SearchConfigService service;
 
 	@Operation(operationId = "configure-hybrid-search")
-	@Tag(name = "Configure Hybrid Search API", description = "Permits to configure behaviour of hybrid search for specific search config")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

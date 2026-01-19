@@ -17,21 +17,25 @@
 
 package io.openk9.datasource;
 
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
@@ -44,6 +48,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class EntitiesUtils {
 
@@ -195,6 +201,24 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
+	/**
+	 * Creates and persists a {@link DocTypeField} as a child of an existing parent field.
+	 *
+	 * @param parentDocTypeFieldId the ID of the parent {@link DocTypeField}
+	 * @param docTypeFieldDTO the DTO containing the field configuration
+	 * @param docTypeFieldService the service used to perform the creation
+	 * @return the newly created and persisted {@link DocTypeField}
+	 * @throws RuntimeException if the asynchronous operation fails or times out
+	 */
+	public static DocTypeField createSubField(
+			long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
+			DocTypeFieldService docTypeFieldService) {
+
+		return docTypeFieldService.createSubField(parentDocTypeFieldId, docTypeFieldDTO)
+			.await()
+			.indefinitely();
+	}
+
 	// Get methods
 	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
 		SERVICE extends BaseK9EntityService<ENTITY, DTO>> List<ENTITY> getAllEntities(
@@ -203,6 +227,19 @@ public class EntitiesUtils {
 
 		return sessionFactory.withTransaction(session ->
 				service.findAll()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
+			long id,
+			SERVICE service,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> service.findById(session, id)
 			)
 			.await()
 			.indefinitely();
@@ -222,6 +259,33 @@ public class EntitiesUtils {
 	}
 
 	// Custom retrieval methods for entities needing eager fetching
+	public static Set<DocTypeField> getAllSearchAsYouTypeDocTypeFieldWithParent(
+			DocTypeFieldService docTypeFieldService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		var docTypeFields = getAllEntities(docTypeFieldService, sessionFactory);
+
+		return docTypeFields.stream()
+			.filter(DocTypeField::isAutocomplete)
+			.filter(field -> field.getParentDocTypeField() != null)
+			.collect(Collectors.toSet());
+	}
+
+	public static Autocomplete getAutocomplete(
+			String name,
+			AutocompleteService autocompleteService,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> autocompleteService.findByName(session, name)
+					.call(autocorrection ->
+						Mutiny.fetch(autocorrection.getFields())
+					)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	public static Autocorrection getAutocorrection(
 			String name,
 			AutocorrectionService autocorrectionService,

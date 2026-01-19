@@ -74,18 +74,15 @@ public class FileManagerEmitter {
 
 						try {
 
-							String data = binaryDTO.getData();
+							byte[] data = binaryDTO.getData();
 
 							String fileId = binaryDTO.getId();
 
-							if (!data.isEmpty()) {
-
-								byte[] contentBytes =
-									Base64.getDecoder().decode(data);
+							if (data.length > 0) {
 
 								InputStream inputStream =
 									new BufferedInputStream(
-										new ByteArrayInputStream(contentBytes));
+										new ByteArrayInputStream(data));
 
 								var uploadUni = fileManagerClient.upload(
 									datasourceId,
@@ -146,6 +143,7 @@ public class FileManagerEmitter {
 
 								uploadUnis.add(uploadUni);
 							}
+
 						} catch (NoSuchQueueException e) {
 							throw e;
 						} catch (Exception e) {

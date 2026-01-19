@@ -44,8 +44,6 @@ import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.SearchConfig;
-import io.openk9.datasource.model.SortType;
-import io.openk9.datasource.model.SuggestMode;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
 import io.openk9.datasource.model.util.JWT;
@@ -64,14 +62,18 @@ import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.datasource.service.LargeLanguageModelService;
 import io.openk9.datasource.util.UniActionListener;
 import io.openk9.searcher.client.dto.ParserSearchToken;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocompleteConfigurationsResponse;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
 import io.openk9.searcher.grpc.AutocorrectionConfigurationsResponse;
+import io.openk9.searcher.grpc.Field;
 import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
 import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsResponse;
 import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
 import io.openk9.searcher.grpc.GetLLMConfigurationsResponse;
 import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
 import io.openk9.searcher.grpc.GetRAGConfigurationsResponse;
+import io.openk9.searcher.grpc.Operator;
 import io.openk9.searcher.grpc.ProviderModel;
 import io.openk9.searcher.grpc.QueryAnalysisRequest;
 import io.openk9.searcher.grpc.QueryAnalysisResponse;
@@ -491,6 +493,62 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			);
 	}
 
+	/**
+	 * Retrieves the current autocomplete configurations for the current enabled bucket.
+	 *
+	 * @param request the request containing the virtual host identifier
+	 * @return a {@link Uni} emitting the autocomplete configuration response
+	 * @throws StatusRuntimeException with {@link Status#NOT_FOUND} if no autocomplete exists
+	 *         for the current enabled bucket
+	 */
+	@Override
+	public Uni<AutocompleteConfigurationsResponse> getAutocompleteConfigurations(
+		AutocompleteConfigurationsRequest request) {
+
+		return Uni.createFrom().deferred(() ->
+			cache.getAsync(
+				new CompositeCacheKey(request.getVirtualHost(), "getTenantAndFetchRelations"),
+				key -> getTenantAndFetchRelations(request.getVirtualHost(), false, 0)
+			)
+			.map(tenantWithBucket -> {
+
+				if (tenantWithBucket == null) {
+					return AutocompleteConfigurationsResponse
+						.newBuilder()
+						.build();
+				}
+
+				var bucket = tenantWithBucket.getBucket();
+
+				var autocomplete = bucket.getAutocomplete();
+
+				if (autocomplete == null) {
+					throw new StatusRuntimeException(
+						Status.NOT_FOUND.withDescription(
+							"Missing active autocomplete."));
+				}
+
+				var grpcFields = autocomplete.getFields().stream()
+					.map(field -> Field.newBuilder()
+						.setFieldPath(DocTypeFieldUtils.fieldPath(field))
+						.setParentPath(DocTypeFieldUtils.fieldPath(field.getParentDocTypeField()))
+						.setLabel(DocTypeFieldUtils.generateLabel(field))
+						.setBoost(field.getBoost())
+						.build()
+					).toList();
+
+				return AutocompleteConfigurationsResponse.newBuilder()
+					.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
+					.addAllField(grpcFields)
+					.setResultSize(autocomplete.getResultSize())
+					.setFuzziness(autocomplete.getFuzziness())
+					.setMinimumShouldMatch(autocomplete.getMinimumShouldMatch())
+					.setOperator(
+						_enumToGrpcEnum(autocomplete.getOperator(), Operator.class)
+					)
+					.build();
+			}));
+	}
 
 	/**
 	 * Retrieves the current autocorrection configurations for the current enabled bucket.
@@ -534,9 +592,16 @@ public class SearcherService extends BaseSearchService implements Searcher {
 						.setField(DocTypeFieldUtils.fieldPath(
 							autocorrection.getAutocorrectionDocTypeField()
 						))
-						.setSort(_sortTypeToGrpcEnum(autocorrection.getSort()))
-						.setSuggestMode(_suggestModeToGrpcEnum(
-							autocorrection.getSuggestMode()))
+						.setSort(
+							_enumToGrpcEnum(
+								autocorrection.getSort(),
+								io.openk9.searcher.grpc.SortType.class)
+						)
+						.setSuggestMode(
+							_enumToGrpcEnum(
+								autocorrection.getSuggestMode(),
+								io.openk9.searcher.grpc.SuggestMode.class)
+						)
 						.setPrefixLength(autocorrection.getPrefixLength())
 						.setMinWordLength(autocorrection.getMinWordLength())
 						.setMaxEdit(autocorrection.getMaxEdit())
@@ -1284,6 +1349,36 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		});
 	}
 
+	/**
+	 * Converts an enum value to another enum type by matching constant names.
+	 *
+	 * @param <E> the source enum type
+	 * @param <G> the target enum type
+	 * @param sourceEnum the enum value to convert
+	 * @param targetEnumClass the target enum class
+	 * @return the corresponding enum constant in the target type
+	 * @throws IllegalArgumentException if no matching constant exists in target enum
+	 * @throws NullPointerException if {@code enumClass} or {@code name} is null
+	 */
+	private <E extends Enum<E>, G extends Enum<G>> G _enumToGrpcEnum(
+		E sourceEnum, Class<G> targetEnumClass){
+
+		try {
+			return Enum.valueOf(targetEnumClass, sourceEnum.name());
+		}
+		catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException(
+				String.format("Cannot convert %s.%s to %s",
+					sourceEnum.getClass().getSimpleName(),
+					sourceEnum.name(),
+					targetEnumClass.getSimpleName()),
+				e);
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private CompositeAggregation _getCompositeAggregation(
 		SearchResponse searchResponse) {
 		Aggregations aggregations = searchResponse.getAggregations();
@@ -1406,14 +1501,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			.emitter(sink -> client.searchAsync(
 				searchRequest, RequestOptions.DEFAULT,
 				UniActionListener.of(sink)));
-	}
-
-	private io.openk9.searcher.grpc.SortType _sortTypeToGrpcEnum(SortType sort) {
-		return io.openk9.searcher.grpc.SortType.valueOf(sort.name());
-	}
-
-	private io.openk9.searcher.grpc.SuggestMode _suggestModeToGrpcEnum(SuggestMode suggestMode) {
-		return io.openk9.searcher.grpc.SuggestMode.valueOf(suggestMode.name());
 	}
 
 	private List<QueryAnalysisSearchToken> _toAnalysisTokens(

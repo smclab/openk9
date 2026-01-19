@@ -9,9 +9,6 @@ data:
   ORIGINS: {{ .Values.cors.origins | quote }}
   LOGGING_LEVEL:  {{ .Values.log.level | quote }}
 
-  # Keycloak env variables
-  KEYCLOAK_URL: {{ .Values.keycloak.url | quote }}
-  
   # Opensearch env variables
   OPENSEARCH_HOST: "{{ .Values.opensearch.host }}:{{ .Values.opensearch.port }}"
   OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}

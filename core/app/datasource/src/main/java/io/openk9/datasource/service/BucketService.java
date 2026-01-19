@@ -22,6 +22,7 @@ import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.IndexService;
 import io.openk9.datasource.index.response.CatResponse;
 import io.openk9.datasource.mapper.BucketMapper;
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -67,6 +68,31 @@ import java.util.function.Function;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
+	@Inject
+	AutocompleteService autocompleteService;
+	@Inject
+	AutocorrectionService autocorrectionService;
+	@Inject
+	DatasourceService datasourceService;
+	@Inject
+	IndexService indexService;
+	 @Inject
+	 LanguageService languageService;
+	@Inject
+	Logger logger;
+	@Inject
+	QueryAnalysisService queryAnalysisService;
+	@Inject
+	RAGConfigurationService ragConfigurationService;
+	@Inject
+	SearchConfigService searchConfigService;
+	@Inject
+	SortingService sortingService;
+	@Inject
+	SuggestionCategoryService suggestionCategoryService;
+	@Inject
+	TabService tabService;
+
 	 BucketService(BucketMapper mapper) {
 		 this.mapper = mapper;
 	}
@@ -218,6 +244,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						})
 				)
 			));
+	}
+
+	public Uni<Tuple2<Bucket, Autocomplete>> bindAutocomplete(long bucketId, long autocompleteId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> autocompleteService.findById(s, autocompleteId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(autocomplete -> {
+					bucket.setAutocomplete(autocomplete);
+					return persist(s, bucket).map(t -> Tuple2.of(t, autocomplete));
+				})
+			)
+		);
 	}
 
 	public Uni<Tuple2<Bucket, Autocorrection>> bindAutocorrection(long bucketId, long autocorrectionId) {
@@ -452,6 +493,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setAutocorrection(autocorrection);
 						}
 
+						//Autocomplete
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							var autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+
+							bucket.setAutocomplete(autocomplete);
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -599,14 +651,14 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		});
 	}
 
+	public Uni<Autocomplete> getAutocomplete(Long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getAutocomplete())));
+	}
+
 	public Uni<Autocorrection> getAutocorrection(Long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getAutocorrection())));
-	}
-
-	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
-		return consumeExistedIndexNames(
-			bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
 	}
 
 	public Uni<Long> getCountIndexFromBucket(Long bucketId) {
@@ -756,11 +808,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> s.fetch(bucket.getSearchConfig())));
 	}
 
-	public Uni<Set<SuggestionCategory>> getSuggestionCategories(long bucketId) {
-		return sessionFactory.withTransaction(s -> findById(s, bucketId)
-			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
-
-	}
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Bucket_.NAME, Bucket_.DESCRIPTION};
@@ -776,14 +823,10 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			last, searchText, sortByList, notEqual);
 	}
 
+	public Uni<Set<SuggestionCategory>> getSuggestionCategories(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
 
-	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
-		return findJoinConnection(
-			id, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			suggestionCategoryService.getSearchFields(), after, before, first,
-			last, searchText, sortByList, notEqual);
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
@@ -804,6 +847,15 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			pageable.getBeforeId(), filter);
 	}
 
+	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+		return findJoinConnection(
+			id, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
+			suggestionCategoryService.getSearchFields(), after, before, first,
+			last, searchText, sortByList, notEqual);
+	}
+
 	public Uni<Connection<Tab>> getTabs(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
@@ -812,6 +864,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			id, Bucket_.TABS, Tab.class,
 			tabService.getSearchFields(), after, before, first,
 			last, searchText, sortByList, notEqual);
+	}
+
+	public Uni<List<CatResponse>> get_catIndices(Long bucketId){
+		return consumeExistedIndexNames(
+			bucketId, l -> consumeExistedIndexNames(indexService::get_catIndices, List.of(), l));
 	}
 
 	public Uni<Bucket> patch(long bucketId, BucketDTO bucketDTO) {
@@ -980,6 +1037,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//Autocomplete
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							var autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+
+							bucket.setAutocomplete(autocomplete);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1009,16 +1078,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				}))));
 	}
 
-	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(long id, long tabId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
+	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getTabs())
+			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
 				.onItem()
 				.ifNotNull()
-				.transformToUni(tabs -> {
+				.transformToUni(languages -> {
 
-					if (bucket.removeTab(tabs, tabId)) {
+					if (bucket.removeLanguage(
+						languages, languageId)) {
 
 						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -1070,17 +1140,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				})));
 	}
 
-	public Uni<Tuple2<Bucket, Language>> removeLanguage(long bucketId, long languageId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+	public Uni<Tuple2<Bucket, Tab>> removeTabFromBucket(long id, long tabId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(bucket -> s.fetch(bucket.getAvailableLanguages())
+			.transformToUni(bucket -> s.fetch(bucket.getTabs())
 				.onItem()
 				.ifNotNull()
-				.transformToUni(languages -> {
+				.transformToUni(tabs -> {
 
-					if (bucket.removeLanguage(
-						languages, languageId)) {
+					if (bucket.removeTab(tabs, tabId)) {
 
 						return persist(s, bucket)
 							.map(newSC -> Tuple2.of(newSC, null));
@@ -1089,6 +1158,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					return Uni.createFrom().nullItem();
 
 				})));
+	}
+
+	public Uni<Tuple2<Bucket, Autocomplete>> unbindAutocomplete(long bucketId) {
+		return sessionFactory.withTransaction(s -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setAutocomplete(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			})
+		);
 	}
 
 	public Uni<Tuple2<Bucket, Autocorrection>> unbindAutocorrection(long bucketId) {
@@ -1100,6 +1180,16 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 				return persist(s, bucket).map(t -> Tuple2.of(t, null));
 			})
 		);
+	}
+
+	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setDefaultLanguage(null);
+				return persist(s, bucket).map(t -> Tuple2.of(t, null));
+			}));
 	}
 
 	public Uni<Tuple2<Bucket, QueryAnalysis>> unbindQueryAnalysis(long bucketId) {
@@ -1149,16 +1239,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						.map(bucketUpdated -> Tuple2.of(bucketUpdated, null));
 				})
 		);
-	}
-
-	public Uni<Tuple2<Bucket, Language>> unbindLanguage(long bucketId) {
-		return sessionFactory.withTransaction((s, tr) -> findById(s, bucketId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(bucket -> {
-				bucket.setDefaultLanguage(null);
-				return persist(s, bucket).map(t -> Tuple2.of(t, null));
-			}));
 	}
 
 	public Uni<Tuple2<Bucket, SearchConfig>> unbindSearchConfig(long bucketId) {
@@ -1339,6 +1419,19 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						bucket.setAutocorrection(autocorrection);
 
+						//Autocomplete
+						Autocomplete autocomplete = null;
+
+						if (bucketWithListsDTO.getAutocompleteId() != null) {
+							autocomplete =
+								s.getReference(
+									Autocomplete.class,
+									bucketWithListsDTO.getAutocompleteId()
+								);
+						}
+
+						bucket.setAutocomplete(autocomplete);
+
 						builder.add(s.persist(bucket));
 
 						return builder.joinAll()
@@ -1385,38 +1478,5 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 		return s.createQuery(criteriaQuery).getResultList();
 	}
-
-	@Inject
-	AutocorrectionService autocorrectionService;
-
-	@Inject
-	DatasourceService datasourceService;
-
-	@Inject
-	IndexService indexService;
-
-	 @Inject
-	 LanguageService languageService;
-
-	@Inject
-	Logger logger;
-
-	@Inject
-	QueryAnalysisService queryAnalysisService;
-
-	@Inject
-	RAGConfigurationService ragConfigurationService;
-
-	@Inject
-	SearchConfigService searchConfigService;
-
-	@Inject
-	SortingService sortingService;
-
-	@Inject
-	SuggestionCategoryService suggestionCategoryService;
-
-	@Inject
-	TabService tabService;
 
 }

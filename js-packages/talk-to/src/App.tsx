@@ -8,7 +8,7 @@ import "./App.css";
 import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
 import { InitialConversation } from "./components/InitialConversation";
-import { keycloak } from "./components/keycloak";
+import { kc } from "./auth/kc";
 import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
 import Sidebar from "./components/Sidebar";
@@ -149,9 +149,7 @@ function App() {
 										sx={{ margin: "10px", borderRadius: "10px" }}
 										onClick={() => {
 											const timestamp = String(Date.now());
-											const newId = keycloak.authenticated
-												? `${userId}_${timestamp}`
-												: `anonymous_${uuidv4()}_${timestamp}`;
+											const newId = kc.authenticated ? `${userId}_${timestamp}` : `anonymous_${uuidv4()}_${timestamp}`;
 											setChatId({ id: newId, isNew: true });
 										}}
 									>
@@ -204,10 +202,10 @@ function App() {
 								cancelAllResponses={cancelAllResponses}
 								isChatting={isChatting}
 								onUploadFiles={async (files) => {
-									if (!keycloak.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
+									if (!kc.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
 									return client.uploadFiles(chatId.id, files);
 								}}
-								isAuthenticated={!!keycloak.authenticated}
+								isAuthenticated={!!kc.authenticated}
 								retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
 								onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
 							/>

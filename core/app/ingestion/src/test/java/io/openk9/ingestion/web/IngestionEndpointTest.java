@@ -83,7 +83,7 @@ class IngestionEndpointTest {
 				.resources(ResourcesDTO.builder()
 					.binaries(List.of(BinaryDTO.builder()
 						.data(
-							Base64.getEncoder().encodeToString(
+							Base64.getEncoder().encode(
 								"""
 									Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 									sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.

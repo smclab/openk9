@@ -21,6 +21,7 @@ import io.openk9.common.graphql.util.relay.Connection;
 import io.openk9.common.util.Response;
 import io.openk9.common.util.SortBy;
 import io.openk9.datasource.index.response.CatResponse;
+import io.openk9.datasource.model.Autocomplete;
 import io.openk9.datasource.model.Autocorrection;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Datasource;
@@ -97,8 +98,30 @@ public class BucketGraphqlResource {
 		return bucketService.addTabToBucket(id, tabId);
 	}
 
+	public Uni<Autocomplete> autocomplete(@Source Bucket bucket) {
+		return bucketService.getAutocomplete(bucket.getId());
+	}
+
 	public Uni<Autocorrection> autocorrection(@Source Bucket bucket) {
 		return bucketService.getAutocorrection(bucket.getId());
+	}
+
+	@Description("""
+		Binds an existing Autocomplete to a specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to bind the Autocomplete to.
+		- `autocompleteId` (ID!): The ID of the Autocomplete to be bound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket with the linked Autocomplete.
+		  - `autocomplete`: The linked Autocomplete.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Autocomplete>> bindAutocompleteToBucket(
+		@Id long bucketId, @Id long autocompleteId) {
+		return bucketService.bindAutocomplete(bucketId, autocompleteId);
 	}
 
 	@Description("""
@@ -400,6 +423,24 @@ public class BucketGraphqlResource {
 		return bucketService.getTabs(
 			bucket.getId(), after, before, first, last, searchText,
 			sortByList, notEqual);
+	}
+
+	@Description("""
+		Unbinds the Autocomplete from a specified Bucket.
+		
+		This mutation removes the link between a Autocomplete and a Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket from which the Autocomplete will be unbound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket after unbinding the Autocomplete.
+		  - `autocomplete`: Always null.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Autocomplete>> unbindAutocompleteFromBucket(@Id long bucketId) {
+		return bucketService.unbindAutocomplete(bucketId);
 	}
 
 	@Description("""

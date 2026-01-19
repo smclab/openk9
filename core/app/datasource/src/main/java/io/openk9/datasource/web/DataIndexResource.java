@@ -84,7 +84,6 @@ public class DataIndexResource {
 	}
 
 	@Operation(operationId = "auto-generate-doc-types")
-	@Tag(name = "Auto Generate DocumentTypes API", description = "Permits to generate document types starting from a specific datasource and data index")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -127,7 +126,6 @@ public class DataIndexResource {
 	}
 
 	@Operation(operationId = "get-mappings-from-doc-types")
-	@Tag(name = "Get Mappings from DocumentTypes API", description = "Get mappings generate from a list of document types.")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -170,7 +168,6 @@ public class DataIndexResource {
 	}
 
 	@Operation(operationId = "get-settings-from-doc-types")
-	@Tag(name = "Get Settings from DocumentTypes API", description = "Get settings generate from a list of document types.")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

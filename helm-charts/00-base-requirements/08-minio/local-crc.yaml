@@ -1,30 +1,86 @@
-# This scenario creates a single-instance standalone PostgreSQL
-# machine, with the most basic configuration and limited
-# resource to be fit in a local CodeReady Containers environment
+# MinIO CloudPirates - Configurazione Semplificata per OpenK9
 
-
+## Immagine MinIO
 image:
-  # We want latest PostgreSQL 13.x
-  tag: 2022.12.2-debian-11-r0
+  registry: docker.io
+  repository: minio/minio
+  tag: "RELEASE.2025-09-07T16-13-09Z"
+  imagePullPolicy: IfNotPresent
 
-persistence:
-    size: 10Gi
-
+## Autenticazione - USA SECRET
 auth:
-   existingSecret: minio-secret
-#   existingSecretPasswordKey: "password"  
-#    rootUser: "minio"
-#    rootPassword: "minio123"
+  existingSecret: "minio-secret"
+  ## @param auth.existingSecretUserKey Key in existing secret containing username
+  existingSecretUserKey: "user"
+  ## @param auth.existingSecretPasswordKey Key in existing secret containing password
+  existingSecretPasswordKey: "password"
+  
+## Configurazione
+config:
+  browserEnabled: true
 
-# OpenShift doesn't like initContainers with preconfigured uid
-volumePermissions:
+## Deployment
+deployment:
+  replicas: 1
+
+## Risorse
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+## Storage
+persistence:
+  enabled: true
+  storageClass: "ibmc-vpc-block-general-purpose"
+  size: 10Gi
+  accessModes:
+  - ReadWriteOnce
+
+## Service
+service:
+  type: ClusterIP
+  port: 9000
+  consolePort: 9001
+
+## Console (MinIO UI)
+console:
+  enabled: true
+  service:
+    type: ClusterIP
+    port: 9001
+
+## Ingress - DISABILITATO (non serve)
+ingress:
   enabled: false
 
-# OpenShift doesn't like static uid/gui
-podSecurityContext:
-  fsGroup: null
+## TLS - DISABILITATO (non serve)
+tls:
+  enabled: false
 
-# OpenShift doesn't like static uid/gui
-containerSecurityContext:
-  runAsUser: null
+
+## Monitoring
+metrics:
+  enabled: false
+
+## Security Context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+securityContext:
+  enabled: true
   runAsNonRoot: true
+  runAsUser: 1001
+
+## Node Selector (opzionale)
+nodeSelector: {}
+
+## Tolerations (opzionale)
+tolerations: []
+
+## Affinity (opzionale)
+affinity: {}

@@ -93,8 +93,8 @@ keycloak:
 
 ## Opensearch configuration
 opensearch:
-  host: "opensearch-cluster-master-headless"
-  port: 9200
+  host: 
+    - "opensearch-cluster-master-headless:9200"
   username: "opensearch"
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"

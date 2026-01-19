@@ -17,30 +17,35 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import jakarta.inject.Inject;
+
 import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.model.BaseDocTypeField;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
+
 import io.quarkus.test.junit.QuarkusTest;
-import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-
-import java.util.List;
-import java.util.Objects;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -51,8 +56,15 @@ public class UnboundDocTypeFieldTest {
 	private static final String DOC_TYPE_FIELD_TWO_NAME = ENTITY_NAME_PREFIX + "Doc type field 2";
 	private static final String DOC_TYPE_FIELD_THREE_NAME = ENTITY_NAME_PREFIX + "Doc type field 3";
 	private static final String DOC_TYPE_FIELD_FOUR_NAME = ENTITY_NAME_PREFIX + "Doc type field 4";
+	private static final String DOC_TYPE_FIELD_FIVE_NAME = ENTITY_NAME_PREFIX + "Doc type field 5";
+	private static final String DOC_TYPE_FIELD_SIX_NAME = ENTITY_NAME_PREFIX + "Doc type field 6";
+	private static final String DOC_TYPE_FIELD_SEVEN_NAME = ENTITY_NAME_PREFIX + "Doc type field 7";
 	private static final String SUGGESTION_CATEGORY_ONE_NAME = ENTITY_NAME_PREFIX + "Suggestion category 1";
 	private static final String AUTOCORRECTION_ONE_NAME = ENTITY_NAME_PREFIX + "Autocorrection 1";
+	private static final String AUTOCOMPLETE_ONE_NAME = ENTITY_NAME_PREFIX + "Autocomplete 1";
+
+	@Inject
+	AutocompleteService autocompleteService;
 
 	@Inject
 	AutocorrectionService autocorrectionService;
@@ -64,29 +76,51 @@ public class UnboundDocTypeFieldTest {
 	SuggestionCategoryService suggestionCategoryService;
 
 	@Inject
-	Mutiny.SessionFactory sessionFactory;
+	Mutiny.SessionFactory sf;
 
 	@BeforeEach
 	void setup() {
 		//1. docTypeField with "KEYWORD" to bound to the suggestionCategoryOne
-		createDocTypeFieldOne();
+		createDocTypeFieldKeyword(DOC_TYPE_FIELD_ONE_NAME);
 		//2. docTypeField with "KEYWORD" to leave unbound
-		createDocTypeFieldTwo();
+		createDocTypeFieldKeyword(DOC_TYPE_FIELD_TWO_NAME);
 		//3. docTypeField with "I18N" to leave unbound
-		createDocTypeFieldThree();
+		createDocTypeFieldI18N(DOC_TYPE_FIELD_THREE_NAME);
 		//4. docTypeField without either "KEYWORD" or "I18N" to leave unbound
-		createDocTypeFieldFour();
+		var docTypeFieldFour = createDocTypeFieldText(DOC_TYPE_FIELD_FOUR_NAME);
+		//5-6. two docTypeFields with "SEARCH_AS_YOU_TYPE" to bound to the AutocompleteOne
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_FIVE_NAME);
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SIX_NAME);
+		//7. docTypeField with "SEARCH_AS_YOU_TYPE" to leave unbound
+		createSubDocTypeFieldSearchAsYouType(docTypeFieldFour.getId(), DOC_TYPE_FIELD_SEVEN_NAME);
 
 		//create suggestion category and bound with docTypeFieldOne
 		createSuggestionCategoryOneWithDocTypeFieldOne();
 
 		//create Autocorrection and bound with docTypeFieldOne
-		AutocorrectionDTO dtoOne = AutocorrectionDTO.builder()
+		var docTypeFieldOne =
+			EntitiesUtils.getEntity(DOC_TYPE_FIELD_ONE_NAME, docTypeFieldService, sf);
+
+		AutocorrectionDTO autocorrectionDTO = AutocorrectionDTO.builder()
 			.name(AUTOCORRECTION_ONE_NAME)
-			.autocorrectionDocTypeFieldId(getDocTypeFieldOne().getId())
+			.autocorrectionDocTypeFieldId(docTypeFieldOne.getId())
 			.build();
 
-		EntitiesUtils.createEntity(dtoOne, autocorrectionService, sessionFactory);
+		EntitiesUtils.createEntity(autocorrectionDTO, autocorrectionService, sf);
+
+		// Create Autocomplete and bound with docTypeFieldFive and docTypeFieldSix.
+		// This two fields are child of the docTypeFieldFour.
+		var docTypeFieldFive =
+			EntitiesUtils.getEntity(DOC_TYPE_FIELD_FIVE_NAME, docTypeFieldService, sf);
+		var docTypeFieldSix =
+			EntitiesUtils.getEntity(DOC_TYPE_FIELD_SIX_NAME, docTypeFieldService, sf);
+
+		AutocompleteDTO autocompleteDTO = AutocompleteDTO.builder()
+			.name(AUTOCOMPLETE_ONE_NAME)
+			.fieldIds(Set.of(docTypeFieldFive.getId(), docTypeFieldSix.getId()))
+			.build();
+
+		EntitiesUtils.createEntity(autocompleteDTO, autocompleteService, sf);
 	}
 
 	// Unbound by SuggestionCategory
@@ -98,7 +132,8 @@ public class UnboundDocTypeFieldTest {
 		// Expected unbound DocTypeField are all filtered DocTypeField
 		// except the one bound to the given SuggestionCategory.
 		var expectedUnboundDocTypeFields = getAllFilteredDocTypeFields().stream()
-			.filter(docTypeField -> !Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
+			.filter(docTypeField ->
+				!Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
 			.toList();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
@@ -142,10 +177,10 @@ public class UnboundDocTypeFieldTest {
 	@Test
 	void should_retrieve_all_textual_unbound_doc_type_fields() {
 		var autocorrectionOne =
-			EntitiesUtils.getEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sessionFactory);
+			EntitiesUtils.getEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sf);
 
 		var actualUnboundDocTypeFields =
-			sessionFactory.withTransaction(s ->
+			sf.withTransaction(s ->
 					docTypeFieldService.findUnboundDocTypeFieldByAutocorrection(
 						autocorrectionOne.getId()
 					)
@@ -161,7 +196,8 @@ public class UnboundDocTypeFieldTest {
 		// Expected unbound DocTypeField are all textual DocTypeField
 		// except the one bound to the given Autocorrection.
 		var expectedUnboundDocTypeFields = getAllTextDocTypeFields().stream()
-			.filter(docTypeField -> !Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
+			.filter(docTypeField ->
+				!Objects.equals(docTypeField.getId(), boundDocTypeFieldId))
 			.toList();
 
 		assertFalse(actualUnboundDocTypeFields.isEmpty());
@@ -172,7 +208,7 @@ public class UnboundDocTypeFieldTest {
 
 	@Test
 	void should_retrieve_all_textual_doc_type_fields_from_missing_autocorrection() {
-		var actualUnboundDocTypeFields = sessionFactory.withTransaction(s ->
+		var actualUnboundDocTypeFields = sf.withTransaction(s ->
 			docTypeFieldService.findUnboundDocTypeFieldByAutocorrection(0L)
 		)
 		.await()
@@ -185,93 +221,150 @@ public class UnboundDocTypeFieldTest {
 		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
 	}
 
+	// Unbound by Autocomplete
+	@Test
+	void should_retrieve_all_searchAsYouType_unbound_doc_type_fields() {
+		var autocomplete =
+			EntitiesUtils.getAutocomplete(AUTOCOMPLETE_ONE_NAME, autocompleteService, sf);
+
+		var actualUnboundDocTypeFields =
+			sf.withTransaction(s ->
+					docTypeFieldService.findUnboundDocTypeFieldByAutocomplete(
+						autocomplete.getId()
+					)
+				)
+				.await()
+				.indefinitely();
+
+		var boundDocTypeFields = autocomplete.getFields();
+
+		assertNotNull(boundDocTypeFields);
+		var boundDocTypeFieldId = boundDocTypeFields.stream()
+			.map(DocTypeField::getId)
+			.collect(Collectors.toSet());
+
+		// Expected unbound DocTypeField are all search_as_you_type DocTypeField
+		// except the two bound to the given Autocomplete.
+		var expectedUnboundDocTypeFields = getAllSearchAsYouTypeDocTypeFields().stream()
+			.filter(docTypeField ->
+				!boundDocTypeFieldId.contains(docTypeField.getId()))
+			.toList();
+
+		assertFalse(actualUnboundDocTypeFields.isEmpty());
+		assertEquals(expectedUnboundDocTypeFields.size(), actualUnboundDocTypeFields.size());
+		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+
+	}
+
+	@Test
+	void should_retrieve_all_searchAsYouType_doc_type_fields_from_missing_autocomplete() {
+		var actualUnboundDocTypeFields = sf.withTransaction(s ->
+				docTypeFieldService.findUnboundDocTypeFieldByAutocomplete(0L)
+			)
+			.await()
+			.indefinitely();
+
+		// Expected unbound DocTypeField are all filtered DocTypeField
+		var expectedUnboundDocTypeFields = getAllSearchAsYouTypeDocTypeFields();
+
+		assertFalse(actualUnboundDocTypeFields.isEmpty());
+		assertEquals(expectedUnboundDocTypeFields, actualUnboundDocTypeFields);
+	}
+
 	@AfterEach
 	void tearDown() {
 		//remove suggestion
 		removeSuggestionCategory(getSuggestionCategoryOne().getId());
 
-		//remove all the four doc type fields
-		removeDocTypeField(getDocTypeFieldOne().getId());
-		removeDocTypeField(getDocTypeFieldTwo().getId());
-		removeDocTypeField(getDocTypeFieldThree().getId());
-		removeDocTypeField(getDocTypeFieldFour().getId());
+		//remove doc type fields
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_ONE_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_TWO_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_THREE_NAME, docTypeFieldService, sf);
 
-		EntitiesUtils.removeEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sessionFactory);
+		//removes autocorrection and autocomplete
+		EntitiesUtils.removeEntity(AUTOCORRECTION_ONE_NAME, autocorrectionService, sf);
+		EntitiesUtils.removeEntity(AUTOCOMPLETE_ONE_NAME, autocompleteService, sf);
+
+		//remove remaining doc type fields
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FIVE_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SIX_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_SEVEN_NAME, docTypeFieldService, sf);
+		EntitiesUtils.removeEntity(DOC_TYPE_FIELD_FOUR_NAME, docTypeFieldService, sf);
 	}
 
-	private void createDocTypeFieldOne() {
+	private void createDocTypeFieldKeyword(String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_ONE_NAME)
-			.fieldName(DOC_TYPE_FIELD_ONE_NAME)
+			.name(name)
+			.fieldName(name)
 			.searchable(false)
 			.sortable(false)
 			.fieldType(FieldType.KEYWORD)
 			.build();
 
-		sessionFactory.withTransaction(
+		sf.withTransaction(
 			s -> docTypeFieldService.create(dto)
 		)
 		.await()
 		.indefinitely();
 	}
 
-	private void createDocTypeFieldTwo() {
+	private void createDocTypeFieldI18N(String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_TWO_NAME)
-			.fieldName(DOC_TYPE_FIELD_TWO_NAME)
-			.searchable(false)
-			.sortable(false)
-			.fieldType(FieldType.KEYWORD)
-			.build();
-
-		sessionFactory.withTransaction(
-				s -> docTypeFieldService.create(dto)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private void createDocTypeFieldThree() {
-		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_THREE_NAME)
-			.fieldName(DOC_TYPE_FIELD_THREE_NAME)
+			.name(name)
+			.fieldName(name)
 			.searchable(false)
 			.sortable(false)
 			.fieldType(FieldType.I18N)
 			.build();
 
-		sessionFactory.withTransaction(
+		sf.withTransaction(
 				s -> docTypeFieldService.create(dto)
 			)
 			.await()
 			.indefinitely();
 	}
 
-	private void createDocTypeFieldFour() {
+	private DocTypeField createDocTypeFieldText(String name) {
 		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_FOUR_NAME)
-			.fieldName(DOC_TYPE_FIELD_FOUR_NAME)
+			.name(name)
+			.fieldName(name)
 			.searchable(false)
 			.sortable(false)
 			.fieldType(FieldType.TEXT)
 			.build();
 
-		sessionFactory.withTransaction(
+		return sf.withTransaction(
 				s -> docTypeFieldService.create(dto)
 			)
 			.await()
 			.indefinitely();
 	}
 
+	private void createSubDocTypeFieldSearchAsYouType(long parentId, String name) {
+		DocTypeFieldDTO dto = DocTypeFieldDTO.builder()
+			.name(name)
+			.fieldName(name)
+			.searchable(false)
+			.sortable(false)
+			.fieldType(FieldType.SEARCH_AS_YOU_TYPE)
+			.build();
+
+		EntitiesUtils.createSubField(parentId, dto, docTypeFieldService);
+	}
+
 	private void createSuggestionCategoryOneWithDocTypeFieldOne() {
+
+		var docTypeFieldOne =
+			EntitiesUtils.getEntity(DOC_TYPE_FIELD_ONE_NAME, docTypeFieldService, sf);
+
 		SuggestionCategoryWithDocTypeFieldDTO dto = SuggestionCategoryWithDocTypeFieldDTO.builder()
 			.name(SUGGESTION_CATEGORY_ONE_NAME)
 			.priority(100f)
 			.multiSelect(false)
-			.docTypeFieldId(getDocTypeFieldOne().getId())
+			.docTypeFieldId(docTypeFieldOne.getId())
 			.build();
 
-		sessionFactory.withTransaction(
+		sf.withTransaction(
 				s -> suggestionCategoryService.create(dto)
 			)
 			.await()
@@ -279,59 +372,38 @@ public class UnboundDocTypeFieldTest {
 	}
 
 	private List<DocTypeField> getAllFilteredDocTypeFields() {
-		return sessionFactory.withTransaction(
+		return sf.withTransaction(
 				s -> docTypeFieldService.findAll()
 			)
 			.await()
 			.indefinitely().stream()
-				.filter(docTypeField -> docTypeField.isI18N() || docTypeField.isKeyword())
+				.filter(docTypeField ->
+					docTypeField.isI18N() || docTypeField.isKeyword())
 				.toList();
 	}
 
-	private List<DocTypeField> getAllTextDocTypeFields() {
-		return sessionFactory.withTransaction(
+	private List<DocTypeField> getAllSearchAsYouTypeDocTypeFields() {
+		return sf.withTransaction(
 				s -> docTypeFieldService.findAll()
 			)
 			.await()
 			.indefinitely().stream()
-			.filter(docTypeField -> docTypeField.isText())
+			.filter(BaseDocTypeField::isAutocomplete)
 			.toList();
 	}
 
-	private DocTypeField getDocTypeFieldOne() {
-		return sessionFactory.withTransaction(
-				s -> docTypeFieldService.findByName(s, DOC_TYPE_FIELD_ONE_NAME)
+	private List<DocTypeField> getAllTextDocTypeFields() {
+		return sf.withTransaction(
+				s -> docTypeFieldService.findAll()
 			)
 			.await()
-			.indefinitely();
-	}
-
-	private DocTypeField getDocTypeFieldTwo() {
-		return sessionFactory.withTransaction(
-				s -> docTypeFieldService.findByName(s, DOC_TYPE_FIELD_TWO_NAME)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private DocTypeField getDocTypeFieldThree() {
-		return sessionFactory.withTransaction(
-				s -> docTypeFieldService.findByName(s, DOC_TYPE_FIELD_THREE_NAME)
-			)
-			.await()
-			.indefinitely();
-	}
-
-	private DocTypeField getDocTypeFieldFour() {
-		return sessionFactory.withTransaction(
-				s -> docTypeFieldService.findByName(s, DOC_TYPE_FIELD_FOUR_NAME)
-			)
-			.await()
-			.indefinitely();
+			.indefinitely().stream()
+			.filter(BaseDocTypeField::isText)
+			.toList();
 	}
 
 	private SuggestionCategory getSuggestionCategoryOne() {
-		return sessionFactory.withTransaction(
+		return sf.withTransaction(
 				s -> suggestionCategoryService.findByName(s, SUGGESTION_CATEGORY_ONE_NAME)
 			)
 			.await()
@@ -339,7 +411,7 @@ public class UnboundDocTypeFieldTest {
 	}
 
 	private List<DocTypeField> getUnboundDocTypeFieldForMissingSuggestionCategory() {
-		return sessionFactory.withTransaction(
+		return sf.withTransaction(
 			s ->
 				suggestionCategoryService.findUnboundDocTypeFieldsBySuggestionCategory(0L)
 		)
@@ -350,7 +422,7 @@ public class UnboundDocTypeFieldTest {
 	private List<DocTypeField> getUnboundDocTypeFieldForSuggestionCategoryOne() {
 		var id = getSuggestionCategoryOne().getId();
 
-		return sessionFactory.withTransaction(
+		return sf.withTransaction(
 				s ->
 					suggestionCategoryService.findUnboundDocTypeFieldsBySuggestionCategory(id)
 			)
@@ -358,16 +430,8 @@ public class UnboundDocTypeFieldTest {
 			.indefinitely();
 	}
 
-	private void removeDocTypeField(long id) {
-		sessionFactory.withTransaction(
-			session -> docTypeFieldService.deleteById(id)
-		)
-		.await()
-		.indefinitely();
-	}
-
 	private void removeSuggestionCategory(long id) {
-		sessionFactory.withTransaction(
+		sf.withTransaction(
 				session -> suggestionCategoryService.deleteById(id)
 			)
 			.await()
@@ -377,7 +441,7 @@ public class UnboundDocTypeFieldTest {
 	private void unsetDocTypeFieldFromSuggestionCategoryOne() {
 		var id = getSuggestionCategoryOne().getId();
 
-		sessionFactory.withTransaction(
+		sf.withTransaction(
 			s -> suggestionCategoryService.unsetDocTypeField(id)
 		)
 			.await()

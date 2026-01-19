@@ -1,67 +1,59 @@
-# This scenario creates a single-instance standalone RabbitMQ
-# machine, with the most basic configuration and limited
-# resource to be fit in a local K8s/K3s/Minukube environment
+# PostgreSQL Cloud Pirates - Essential Configuration
 
-
+# Official PostgreSQL 16.0 image from Docker Hub
 image:
-  # We want latest PostgreSQL 14.x
-  tag: 14
+  registry: docker.io
+  repository: postgres
+  tag: "16.0"
+  imagePullPolicy: IfNotPresent
 
+# References Kubernetes secret: postgres-password
 auth:
-  ## @param auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user
-  ##
-  enablePostgresUser: true
-  ## @param auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` is provided
-  ##
-  postgresPassword: "system"
-  ## @param auth.username Name for a custom user to create
-  ##
-  #username: openk9
-  ## @param auth.password Password for the custom user to create. Ignored if `auth.existingSecret` is provided
-  ##
-  #password: openk9
-  ## @param auth.database Name for a custom database to create
-  ##
-  #database: openk9
-  ## @param auth.replicationUsername Name of the replication user
-  ##
-  #replicationUsername: repl_user
-  ## @param auth.replicationPassword Password for the replication user. Ignored if `auth.existingSecret` is provided
-  ##
-  #replicationPassword: ""
-  
-  ## @param auth.existingSecret Name of existing secret to use for PostgreSQL credentials. `auth.postgresPassword`, `auth.password`, and `auth.replicationPassword` will be ignored and picked up from this secret. The secret might also contains the key `ldap-password` if LDAP is enabled. `ldap.bind_password` will be ignored and picked from this secret in this case.
-  ##
   existingSecret: "postgres-password"
-  ## @param auth.secretKeys.adminPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
-  ## @param auth.secretKeys.userPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
-  ## @param auth.secretKeys.replicationPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
-  ##
   secretKeys:
-    adminPasswordKey: postgres-password
-    userPasswordKey: user-password
-    replicationPasswordKey: replication-password
+    adminPasswordKey: "postgres-password"
 
-architecture: standalone
+# Required environment variables for official PostgreSQL image
+env:
+  - name: POSTGRES_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: postgres-password
+        key: postgres-password
+  - name: PGDATA
+    value: /var/lib/postgresql/data/pgdata
 
-primary:  
-  initdb:
-    args: "--no-locale --encoding=UTF8"
-  resources:
-    limits: 
-      memory: 2Gi
-      cpu: 1000m
-    requests:
-      memory: 1Gi
-      cpu: 100m
-  persistence:
-    size: 1Gi
-  livenessProbe:
-    enabled: false
-    initialDelaySeconds: 20
-  readinessProbe:
-    enabled: false 
-    initialDelaySeconds: 20
+service:
+  type: ClusterIP
+  port: 5432
 
-volumePermissions:
-    enabled: true
+# IBM Cloud VPC block storage
+persistence:
+  enabled: true
+  storageClass: "ibmc-vpc-block-general-purpose"
+  size: 10Gi
+  accessModes:
+  - ReadWriteOnce
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 100m
+    memory: 1Gi
+
+# Wait 30s before first liveness check to allow initialization
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6

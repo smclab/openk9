@@ -1,0 +1,15 @@
+[project]
+name = "embedding_module"
+version = "3.1.0-SNAPSHOT"
+description = "OpenK9 embedding module"
+authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
+keywords = ["OpenK9", "Generative AI", "embedding", "RAG"]
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://www.openk9.io/"
+Documentation = "https://www.openk9.io/docs/"
+Repository = "https://github.com/smclab/openk9.git"
+Issues = "https://github.com/smclab/openk9/issues"
+

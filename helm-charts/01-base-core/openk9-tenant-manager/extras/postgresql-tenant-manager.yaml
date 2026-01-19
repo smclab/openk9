@@ -1,17 +1,26 @@
+# Tenant Manager Database Setup Job
+# Creates tenantmanager database owned by openk9 user
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: tenant-manager-db
-#  namespace: openk9
 spec:
+  # Auto-delete job after 120 seconds of completion
   ttlSecondsAfterFinished: 120
   template:
     spec:
       containers:
       - name: tenant-manager-db
-        image: bitnami/postgresql:14
-        command: ["/bin/sh", "-c" ] 
-        args: ["psql -c \"CREATE ROLE openk9 WITH LOGIN ENCRYPTED PASSWORD 'openk9'\"; psql -c \"CREATE DATABASE tenantmanager OWNER openk9;\"" ]
+        image: postgres:18
+        command: [ "/bin/sh", "-c" ]
+        args:
+        - |
+          # Create openk9 role if not exists (shared with datasource)
+          psql -tc "SELECT 1 FROM pg_roles WHERE rolname='openk9'" | grep -q 1 || psql -c "CREATE ROLE openk9 WITH LOGIN ENCRYPTED PASSWORD 'openk9';"
+          # Create tenantmanager database if not exists
+          psql -lqt | cut -d \| -f 1 | grep -qw tenantmanager || psql -c "CREATE DATABASE tenantmanager OWNER openk9;"
+          # Grant schema permissions
+          psql -d tenantmanager -c "GRANT ALL ON SCHEMA public TO openk9;"
         env:
         - name: PGHOST
           value: "postgresql"

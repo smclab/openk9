@@ -11,88 +11,44 @@ export interface Message {
   sources?: Source[];
 }
 
+type UseArgs = {
+  initialMessages: Message[];
+  isMockEnabled?: boolean;
+  setIsRequestLoading?: (loading: boolean) => void;
+};
+
+type GenerateFn = (
+  query: string,
+  searchQuery: any[],
+  language: string,
+  sortAfterKey: string,
+  sort: any,
+  range: [number, number],
+) => Promise<void>;
+
+type Client = ReturnType<typeof useOpenK9Client>;
+
 const useGenerateResponse = ({
   initialMessages,
   isMockEnabled = false,
   setIsRequestLoading,
-}: {
-  initialMessages: Message[];
-  isMockEnabled?: boolean;
-  setIsRequestLoading?: any;
-}) => {
+}: UseArgs) => {
   const [message, setMessage] = useState<Message | null>(null);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [isChatting, setIsChatting] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const client = useOpenK9Client();
+  const client: Client = useOpenK9Client();
 
   useEffect(() => {
     if (initialMessages.length > 0) {
       setMessage(initialMessages[0]);
       setIsChatting(false);
-      setIsRequestLoading(false);
+      setIsRequestLoading?.(false);
     }
-  }, [initialMessages]);
+  }, [initialMessages, setIsRequestLoading]);
 
-  const generateMockResponse = async (query: string) => {
-    const mockChunks = [
-      `This is a mock chunk 1 for query: ${query}`,
-      `This is a mock chunk 2 for query: ${query}`,
-      `This is a mock chunk 3 for query: ${query}`,
-    ];
-
-    for (let i = 0; i < mockChunks.length; i++) {
-      if (abortController?.signal.aborted) {
-        setMessage((prev) =>
-          prev
-            ? {
-                ...prev,
-                status: "END",
-                answer: prev.answer + "... Response was cancelled",
-              }
-            : prev,
-        );
-        setIsChatting(false);
-        setIsRequestLoading(false);
-        return;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setMessage((prev) =>
-        prev
-          ? {
-              ...prev,
-              answer: prev.answer + mockChunks[i],
-              status: "CHUNK",
-            }
-          : prev,
-      );
-    }
-
-    setMessage((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: "END",
-            answer: prev.answer + " This is the end of the mock response.",
-          }
-        : prev,
-    );
-    setIsChatting(false);
-    setIsRequestLoading(false);
-  };
-
-  const generateResponse = useCallback(
-    async (
-      query: string,
-      searchQuery: any[],
-      language: string,
-      sortAfterKey: string,
-      sort: any,
-      range: [number, number],
-    ) => {
+  const generateResponse: GenerateFn = useCallback(
+    async (query, searchQuery, language, sortAfterKey, sort, range) => {
       const newMessage: Message = {
         question: query,
         answer: "",
@@ -100,18 +56,13 @@ const useGenerateResponse = ({
         status: "CHUNK",
         sources: [],
       };
+
       setMessage(newMessage);
       setIsChatting(true);
-      setIsRequestLoading(false);
+      setIsRequestLoading?.(true);
 
       const controller = new AbortController();
       setAbortController(controller);
-
-      if (isMockEnabled) {
-        await generateMockResponse(query);
-        return;
-      }
-      setIsLoading(true);
 
       const searchQueryT: GenerateRequest = {
         searchText: query,
@@ -125,111 +76,157 @@ const useGenerateResponse = ({
       try {
         const response = await client.getGenerateResponse({
           searchQuery: searchQueryT,
-          controller: controller,
+          controller,
         });
-        if (response.ok) {
-          const reader = response.body?.getReader();
-          setIsLoading(false);
-          const decoder = new TextDecoder("utf-8");
-          let done = false;
-          let buffer = "";
 
-          while (!done && reader) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-            buffer += decoder.decode(value, { stream: true });
-            let boundaryIndex;
+        const stream = response.body;
+        if (!stream) {
+          setIsChatting(false);
+          setIsRequestLoading?.(false);
+          setMessage((prev) =>
+            prev ? { ...prev, status: "ERROR", answer: "No stream" } : prev,
+          );
+          setAbortController(null);
+          return;
+        }
 
-            while ((boundaryIndex = buffer.indexOf("\n")) !== -1) {
-              const chunk = buffer.slice(0, boundaryIndex);
-              buffer = buffer.slice(boundaryIndex + 1);
-              if (chunk.trim().startsWith("data: ")) {
-                const dataStr = chunk.trim().slice(6);
-                try {
-                  const data = JSON.parse(dataStr);
-                  if (data.type === "ERROR") {
-                    setIsChatting(false);
-                    setIsRequestLoading(false);
-                    setMessage((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            answer: data.chunk || "ERROR",
-                            status: "ERROR",
-                          }
-                        : prev,
-                    );
-                  } else {
-                    setMessage((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            answer: prev.answer + data.chunk,
-                            status: data.type === "END" ? "END" : "CHUNK",
-                          }
-                        : prev,
-                    );
-                    if (data.type === "END") {
-                      setIsChatting(false);
-                      setIsRequestLoading(false);
-                    }
-                  }
-                } catch (e) {
-                  console.error("Error parsing JSON", e);
+        const reader = stream.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let buffer = "";
+        let sawAnyChunk = false;
+        let done = false;
+
+        const flushEvent = (raw: string) => {
+          const clean = raw.replace(/\r/g, "");
+          const lines = clean.split("\n");
+          const dataLines = lines
+            .filter((l) => l.startsWith("data: "))
+            .map((l) => l.slice(6));
+          if (dataLines.length === 0) return;
+          const dataStr = dataLines.join("");
+          try {
+            const data = JSON.parse(dataStr) as {
+              type?: string;
+              chunk?: string;
+              message?: string;
+            };
+            switch (data.type) {
+              case "START":
+                setIsRequestLoading?.(false);
+                break;
+              case "CHUNK":
+                if (!sawAnyChunk) {
+                  sawAnyChunk = true;
+                  setIsRequestLoading?.(false);
                 }
-              }
+                setMessage((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        answer: prev.answer + (data.chunk ?? ""),
+                        status: "CHUNK",
+                      }
+                    : prev,
+                );
+                break;
+              case "END":
+                setMessage((prev) =>
+                  prev ? { ...prev, status: "END" } : prev,
+                );
+                setIsChatting(false);
+                setIsRequestLoading?.(false);
+                break;
+              case "ERROR":
+                setMessage((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        status: "ERROR",
+                        answer: data.message || data.chunk || "ERROR",
+                      }
+                    : prev,
+                );
+                setIsChatting(false);
+                setIsRequestLoading?.(false);
+                break;
+              default:
+                if (typeof data.chunk === "string") {
+                  if (!sawAnyChunk) {
+                    sawAnyChunk = true;
+                    setIsRequestLoading?.(false);
+                  }
+                  setMessage((prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          answer: prev.answer + data.chunk,
+                          status: "CHUNK",
+                        }
+                      : prev,
+                  );
+                }
+                break;
+            }
+          } catch {}
+        };
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          buffer += decoder.decode(value || new Uint8Array(), {
+            stream: !done,
+          });
+
+          let idx: number;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            const line = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 1);
+
+            if (line.trim() === "") {
+              continue;
+            }
+
+            if (line.startsWith("data: ")) {
+              flushEvent(line);
+            } else {
+              const possible = line.split("\r").join("");
+              if (possible.startsWith("data: ")) flushEvent(possible);
+            }
+
+            let dblIdx: number;
+            while ((dblIdx = buffer.indexOf("\n\n")) !== -1) {
+              const rawEvent = buffer.slice(0, dblIdx);
+              buffer = buffer.slice(dblIdx + 2);
+              flushEvent(rawEvent);
             }
           }
-        } else {
-          console.error("Error generating response");
-          setIsChatting(false);
-          setIsRequestLoading(false);
-          setMessage((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  answer: response?.statusText || "Error",
-                  status: "ERROR",
-                }
-              : prev,
-          );
-          setIsChatting(false);
-          setIsRequestLoading(false);
+
+          let dblIdx: number;
+          while ((dblIdx = buffer.indexOf("\n\n")) !== -1) {
+            const rawEvent = buffer.slice(0, dblIdx);
+            buffer = buffer.slice(dblIdx + 2);
+            flushEvent(rawEvent);
+          }
         }
-      } catch (error) {
-        console.error("Error during response generation", error);
+
+        const tail = buffer.trim();
+        if (tail.length) flushEvent(tail);
+
+        setIsRequestLoading?.(false);
         setIsChatting(false);
-        setIsRequestLoading(false);
+      } catch {
+        setIsChatting(false);
+        setIsRequestLoading?.(false);
       }
 
       setAbortController(null);
     },
-    [isMockEnabled],
+    [client, setIsRequestLoading],
   );
 
-  const cancelResponse = () => {
+  const cancelAllResponses = useCallback(() => {
     if (abortController) {
-      setIsLoading(false);
-      abortController.abort();
-      setMessage((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: "END",
-              answer: "Response was cancelled",
-            }
-          : prev,
-      );
-      setAbortController(null);
-      setIsChatting(false);
-    } else {
-      console.warn("No AbortController found");
-    }
-  };
-
-  const cancelAllResponses = () => {
-    if (abortController) {
-      setIsLoading(false);
       abortController.abort();
       setMessage((prev) =>
         prev
@@ -242,18 +239,17 @@ const useGenerateResponse = ({
       );
       setAbortController(null);
       setIsChatting(false);
-      setIsRequestLoading(false);
+      setIsRequestLoading?.(false);
     }
-  };
+  }, [abortController, setIsRequestLoading]);
 
   return {
     message,
     generateResponse,
-    cancelResponse,
     cancelAllResponses,
     isChatting,
-    isLoading,
   };
 };
 
 export default useGenerateResponse;
+export type { GenerateFn };
