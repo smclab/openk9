@@ -25,3 +25,4 @@ data:
   # OpenK9 services URLs
   IO_OPENK9_APIGW_SEARCHER-URL: {{ include "helper.searcherURL" . | quote }}
   IO_OPENK9_APIGW_DATASOURCE-URL: {{ include "helper.datasourceURL" . | quote }}
+  IO_OPENK9_APIGW_RAG-URL: {{ include "helper.ragURL" . | quote }}
