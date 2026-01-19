@@ -152,9 +152,11 @@ openk9:
   ## Openk9 Datasource configuration
   datasource:
     host: "openk9-datasource"
+    port: 9000
   ## Openk9 K8s Client configuration
   k8sClient:
     host: "openk9-k8s-client"
+    port: 9000
 
 
 ## Opentelemetry configuration
