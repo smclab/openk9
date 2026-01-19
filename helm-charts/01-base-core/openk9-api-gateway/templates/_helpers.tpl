@@ -40,3 +40,12 @@ Create OpenK9 Datasource URL
 {{- printf "http://%s:%s" .host .port }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create OpenK9 Rag URL
+*/}}
+{{- define "helper.ragURL" -}}
+{{- with .Values.openk9.rag -}}
+{{- printf "http://%s:%s" .host .port }}
+{{- end }}
+{{- end }}

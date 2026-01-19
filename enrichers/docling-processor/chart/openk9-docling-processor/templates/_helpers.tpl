@@ -68,3 +68,13 @@ Create OpenK9 Searcher URL
 {{- end }}
 {{- end }}
 
+
+{{/*
+Create OpenK9 File Manager URL
+*/}}
+{{- define "helper.fileManagerURL" -}}
+{{- with .Values.openk9.fileManager -}}
+{{- $port := ( .port | toString ) -}}
+{{- printf "http://%s:%s" .host $port }}
+{{- end }}
+{{- end }}
