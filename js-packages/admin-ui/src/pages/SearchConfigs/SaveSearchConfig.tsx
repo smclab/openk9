@@ -112,6 +112,13 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   const queryParserConfig = useQuery(QueryParserConfig, { fetchPolicy: "cache-and-network" });
 
   const toast = useToast();
+  const initialConfigValue = {
+    combinationTechnique: undefined,
+    normalizationTechnique: undefined,
+    searchConfigId: searchConfigId,
+    weights: [0.5, 0.5],
+  };
+  const [config, setConfig] = useState<ConfigureHybridSearchInterface>(initialConfigValue);
   const [createOrUpdateSearchConfigMutate, createOrUpdateSearchConfigMutation] = useCreateOrUpdateSearchConfigMutation({
     refetchQueries: ["SearchConfig", "Buckets"],
     onCompleted(data) {
@@ -240,7 +247,6 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
 
   if (!searchConfigId && searchConfigQuery.loading) return null;
   const parsedQueryConfig = types.reduce((acc, type, i) => {
-    console.log(template?.template);
     const raw = jsonConfigs[i];
     if (!raw) return acc;
 
@@ -264,16 +270,26 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           { key: "minScore", label: "Min Score" },
           { key: "minScoreSuggestions", label: "Min Score Suggestions" },
           { key: "minScoreSearch", label: "Min Score Search" },
-          { key: "queryParserConfig", label: "Query Parser Config" },
-          { key: "jsonConfig", label: "JSON Config" },
-          // { key: "t", label: "prova" },
+          // { key: "jsonConfig", label: "JSON Config" },
         ],
-        label: "Recap Search Config",
+        label: "Search Config",
       },
+      {
+        cell: [{ key: "queryParserConfig", label: "Query Parser Config" }],
+        label: "Query Parser",
+      },
+      ...(searchConfigId !== "new"
+        ? [
+            {
+              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
+              label: "Hybrid Search",
+            },
+          ]
+        : []),
     ],
     valueOverride: {
       queryParserConfig: parsedQueryConfig || "",
-      // t: template?.template || "",
+      HybridSearch: config || "",
     },
   });
 
@@ -329,7 +345,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                         <Button
                           type="button"
                           color="primary"
-                          disabled={searchConfigId === "new" ? true : false}
+                          disabled={searchConfigId === "new"}
                           onClick={() => setIsHybridSearch(true)}
                           children={"Set Hybrid Search"}
                           variant="outlined"
@@ -407,28 +423,30 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           }}
         />
       </ContainerFluid>
-      <CustomizedDialogs isHybridSearch={isHybridSearch} searchConfigId={searchConfigId} onClose={handleCloseDialog} />
+      <CustomizedDialogs
+        isHybridSearch={isHybridSearch}
+        configuration={{ initialConfigValue, config, setConfig }}
+        onClose={handleCloseDialog}
+      />
     </>
   );
 }
 
 interface CustomizedDialogsProps {
   isHybridSearch: boolean;
-  searchConfigId: string;
+  configuration: {
+    initialConfigValue: ConfigureHybridSearchInterface;
+    config: ConfigureHybridSearchInterface;
+    setConfig: React.Dispatch<React.SetStateAction<ConfigureHybridSearchInterface>>;
+  };
   onClose: () => void; // Funzione per chiudere la modale
 }
 
-const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, searchConfigId, onClose }) => {
+const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, configuration, onClose }) => {
   const theme = useTheme();
   const color = theme.palette.primary.main;
+  const { initialConfigValue, config, setConfig } = configuration;
 
-  const initialConfigValue = {
-    combinationTechnique: undefined,
-    normalizationTechnique: undefined,
-    searchConfigId: searchConfigId,
-    weights: [0.5, 0.5],
-  };
-  const [config, setConfig] = useState<ConfigureHybridSearchInterface>(initialConfigValue);
   const [configValidation, setConfigValidation] = useState<{
     normalizationTechnique: string;
     combinationTechnique: string;
@@ -480,7 +498,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, s
   const { mutate: configureHybridSearch } = useConfigureHybridSearchMutation(config);
   const toast = useToast();
   const handleSettings = () => {
-    const isValid = config.combinationTechnique && config.normalizationTechnique && searchConfigId;
+    const isValid = config.combinationTechnique && config.normalizationTechnique && config.searchConfigId;
 
     if (isValid) {
       try {

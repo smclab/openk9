@@ -9,6 +9,7 @@ export type areaType = {
     value?: string | number | boolean | Record<string, any> | null | undefined;
     type?: "string" | "number" | "boolean" | "json" | "array";
     jsonView?: boolean;
+    divider?: boolean;
   }>;
 };
 
@@ -50,7 +51,7 @@ function RecapDatasource({
             sx={{
               width: forceFullScreen ? "100%" : 440,
               maxWidth: forceFullScreen ? "100%" : 440,
-              minWidth: forceFullScreen ? 0 : 200,
+              minWidth: forceFullScreen ? 0 : 274,
               minHeight: 297,
               height: isExpanded || forceFullScreen ? "auto" : 297,
               overflow: "auto",
@@ -226,6 +227,10 @@ function RecapDatasource({
                         <JsonFieldBox value={displayValue} />
                       </Box>
                     );
+                  }
+
+                  if (field.divider) {
+                    return <Divider />;
                   }
 
                   return (

@@ -16,6 +16,7 @@ export type RecapField = {
   type?: "string" | "number" | "boolean" | "json" | "array";
   isValid?: boolean;
   keyNotView?: string;
+  divider?: boolean;
 };
 
 export type RecapSingleSection = {
@@ -79,11 +80,13 @@ function normalizeValue(value: any, type?: RecapField["type"]) {
 
 export default function Recap({
   recapData,
+  recapTitle = "Recap",
   setExtraFab,
   forceFullScreen = false,
   actions,
 }: {
   recapData: RecapSingleSection[];
+  recapTitle?: string;
   setExtraFab: (fab: React.ReactNode | null) => void;
   forceFullScreen?: boolean;
   actions?: {
@@ -97,8 +100,7 @@ export default function Recap({
   const [panelPos, setPanelPos] = React.useState<{ bottom: number; right: number } | null>(null);
 
   const triggerRef = React.useRef<HTMLDivElement | null>(null);
-
-  const title = recapData[0]?.title ?? recapData[0].section.sectionLabel;
+  const title = recapTitle && recapData.length > 1 ? "Recap" : recapData[0]?.title || recapData[0].section.sectionLabel;
   const totalFields = recapData.reduce((acc, s) => acc + s.fields.length, 0);
 
   const areas: areaType[] = recapData.map((s) => ({
@@ -195,7 +197,7 @@ export default function Recap({
             zIndex: 1300,
           }}
         >
-          <Paper sx={{ width: 440, maxHeight: "70vh", overflow: "hidden" }}>
+          <Paper sx={{ minWidth: 440, maxWidth: 600, maxHeight: "70vh", overflow: "hidden" }}>
             <Box
               sx={{
                 px: 2,
@@ -211,8 +213,7 @@ export default function Recap({
                 <CloseRoundedIcon fontSize="small" />
               </IconButton>
             </Box>
-
-            <Box sx={{ p: 2, overflowY: "auto" }}>
+            <Box sx={{ p: 2, overflowY: "auto", marginRight: areas.length > 1 ? "16px" : "none" }}>
               <RecapDatasource area={areas} forceFullScreen={forceFullScreen} />
             </Box>
           </Paper>
@@ -326,7 +327,10 @@ export function mappingCardRecap({
   valueOverride,
 }: {
   form: formType;
-  sections: { label: string; cell: { key: string; label?: string; keyNotView?: string; jsonView?: boolean }[] }[];
+  sections: {
+    label: string;
+    cell: { key: string; label?: string; keyNotView?: string; jsonView?: boolean; divider?: boolean }[];
+  }[];
   valueOverride?: Record<string, any>;
 }): RecapSingleSection[] {
   return sections.map((sectionDef) => {
@@ -360,7 +364,8 @@ export function mappingCardRecap({
 
         const expanded: RecapField[] = [];
 
-        Object.entries(parentObj).forEach(([parentKey, childObj]) => {
+        Object.entries(parentObj).forEach(([parentKey, childObj], index) => {
+          if (index !== 0) expanded.push({ key: "", label: "", value: "", divider: true });
           expanded.push({
             key: `${key}.${parentKey}`,
             label: parentKey,
