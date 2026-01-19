@@ -17,6 +17,8 @@
 
 package io.openk9.apigw;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -78,9 +80,69 @@ class ApiGatewaySecurityTest {
 
 	// virtual hosts
     private static final String ALABASTA_HOST = "alabasta.localhost";
+	private static final String DRUM_HOST = "drum.localhost";
     private static final String SABAODY_HOST = "sabaody.localhost";
     private static final String LOGUETOWN_HOST = "loguetown.localhost";
     private static final String UNKNOWN_HOST = "unknown.localhost";
+
+	@Nested
+	@DisplayName("Oauth2 Tenant Settings Endpoints Tests")
+	class Oauth2SettingsTests {
+
+		@Test
+		@DisplayName("Should return Keycloak JS configuration when requested by 'drum' host")
+		void testDrumTenantSettingsJs() {
+			webTestClient.get()
+				.uri("/oauth2/settings.js")
+				.header(HttpHeaders.HOST, DRUM_HOST)
+				.exchange()
+				.expectStatus().isOk()
+				.expectHeader().contentTypeCompatibleWith("text/javascript")
+				.expectBody(String.class)
+				.value(content -> {
+					assertThat(content).contains("window.KEYCLOAK_URL ='http://drum.localhost:9090';");
+					assertThat(content).contains("window.KEYCLOAK_REALM ='drum';");
+					assertThat(content).contains("window.KEYCLOAK_CLIENT_ID ='openk9';");
+				});
+		}
+
+		@Test
+		@DisplayName("Should return JSON settings with Issuer URI for 'alabasta' tenant")
+		void testAlabastaTenantSettingsJson() {
+			webTestClient.get()
+				.uri("/oauth2/settings")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.exchange()
+				.expectStatus().isOk()
+				.expectHeader().contentType(MediaType.APPLICATION_JSON)
+				.expectBody()
+				.jsonPath("$.issuerUri").isEqualTo("http://alabasta.localhost:9090/realms/alabasta")
+				.jsonPath("$.clientId").isEqualTo("openk9");
+		}
+
+		@Test
+		@DisplayName("Should handle 'loguetown' host which has no OAuth2 configuration")
+		void testLoguetownNoOauth2() {
+			// This test is important because loguetown has no issuerUri in your events
+			webTestClient.get()
+				.uri("/oauth2/settings")
+				.header(HttpHeaders.HOST, LOGUETOWN_HOST)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody().isEmpty();
+		}
+
+		@Test
+		@DisplayName("Should return unauthorized when host does not match any tenant")
+		void testUnknownHost() {
+			webTestClient.get()
+				.uri("/oauth2/settings")
+				.header(HttpHeaders.HOST, UNKNOWN_HOST)
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+	}
 
     @Nested
     @DisplayName("Alabasta Tenant Security Tests")

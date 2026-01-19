@@ -166,7 +166,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 		}
 
 		return getTenantAggregate(tenantId)
-			.map(Tenant::oauth2Settings)
+			.mapNotNull(Tenant::oauth2Settings)
 			.filter(Objects::nonNull);
 	}
 

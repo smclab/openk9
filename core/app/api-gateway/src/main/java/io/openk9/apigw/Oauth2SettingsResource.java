@@ -28,6 +28,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -38,15 +39,9 @@ public class Oauth2SettingsResource {
 	TenantSecurityService tenantSecurityService;
 
     @GetMapping("/settings")
-	public Mono<OAuth2Settings> settings(ServerHttpRequest request) {
-		URI requestURI = request.getURI();
-		String requestHost = requestURI.getHost();
+	public Mono<OAuth2Settings> settings(ServerWebExchange exchange) {
 
-		return tenantSecurityService.getTenantId(requestHost)
-			.flatMap(tenantId -> tenantSecurityService
-				.getTenantAggregate(tenantId)
-				.map(Tenant::oauth2Settings)
-			);
+		return tenantSecurityService.getOAuth2Settings(exchange);
 	}
 
     @GetMapping(value = "/settings.js", produces = "text/javascript")
