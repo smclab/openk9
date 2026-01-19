@@ -170,7 +170,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
         refreshOnQuery: false,
         refreshOnSuggestionCategory: false,
         refreshOnTab: false,
-        retrieveType: RetrieveType.Hybrid,
+        retrieveType: RetrieveType.Text,
         datasourceIds: datasources?.associated || [],
         suggestionCategoryIds: suggestionCategories?.associated || [],
         tabIds: tabs?.associated || [],
