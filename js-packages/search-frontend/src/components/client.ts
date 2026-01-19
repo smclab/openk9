@@ -300,7 +300,7 @@ export function OpenK9Client({
     }: {
       searchText: string;
     }): Promise<AutocompleteResponse> {
-      const res = await authFetch(`/api/searcher/v1/autocomplete-query`, {
+      const res = await authFetch(`/api/searcher/v1/autocomplete`, {
         method: "POST",
         body: JSON.stringify({ queryText: searchText }),
         headers: {

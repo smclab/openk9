@@ -10,10 +10,9 @@ export function useAutocomplete(textOnChange: string) {
     ["autocomplete", debounced],
     async () => {
       const q = debounced.trim();
-      if (q.length < 2) return [];
+      if (q.length < 1) return [];
 
       const es = await client.getAutocompletes({ searchText: textOnChange });
-
       return es;
     },
     {

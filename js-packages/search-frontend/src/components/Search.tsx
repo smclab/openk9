@@ -52,11 +52,11 @@ export function Search({
     textPosition: number;
     optionPosition: number;
   } | null>({ textPosition: 0, optionPosition: 1 });
-  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(false);
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(true);
   const [highlightIndex, setHighlightIndex] = React.useState(-1);
 
   const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
-  // const suggestions = autocompleteQ.data ?? [];
+  const suggestions = autocompleteQ.data ?? [];
 
   // console.log("autocompleteQ", autocompleteQ);
 
@@ -155,6 +155,56 @@ export function Search({
                 }
               `}
             >
+              {suggestions.length > 0 && (
+                <div
+                  className="openk9--autocomplete-suggestions-container"
+                  css={css`
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    right: 0;
+                    background: white;
+                    border: 1px solid
+                      var(--openk9-embeddable-search--border-color);
+                    border-radius: 0 0 8px 8px;
+                    max-height: 200px;
+                    overflow-y: auto;
+                    z-index: 10;
+                  `}
+                >
+                  {suggestions.map((s, index) => (
+                    <div
+                      key={index}
+                      className={`openk9--autocomplete-suggestion-item ${
+                        highlightIndex === index
+                          ? "openk9--autocomplete-suggestion-item-highlighted"
+                          : ""
+                      }`}
+                      css={css`
+                        padding: 8px 16px;
+                        cursor: pointer;
+                        &:hover {
+                          background-color: var(
+                            --openk9-embeddable-search--border-color
+                          );
+                        }
+                        &.openk9--autocomplete-suggestion-item-highlighted {
+                          background-color: var(
+                            --openk9-embeddable-search--border-color
+                          );
+                        }
+                      `}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        applySuggestion(s);
+                      }}
+                      onMouseEnter={() => setHighlightIndex(index)}
+                    >
+                      {s.autocomplete}
+                    </div>
+                  ))}
+                </div>
+              )}
               {showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
