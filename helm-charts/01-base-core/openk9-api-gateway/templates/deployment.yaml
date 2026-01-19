@@ -19,7 +19,6 @@ spec:
       labels: {{- include "common.labels.matchLabels" . | nindent 8 }}
     spec:
       {{- include "common.images.renderPullSecrets" . | nindent 6 }}
-      serviceAccountName: {{ .Values.serviceAccount.name }}
       nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
       securityContext: {{ toYaml .Values.podSecurityContext | nindent 8 }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
