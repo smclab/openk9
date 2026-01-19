@@ -95,6 +95,9 @@ openk9:
   datasource:
     host: "openk9-datasource"
     port: "8080"
+  datasource:
+    host: "openk9-rag-module"
+    port: "5000"
 
 ## Spring Gateway configuration
 spring:
@@ -107,7 +110,7 @@ spring:
 serviceAccount:
   ## @param serviceAccount.create Enable creation of ServiceAccount for API Gateway pods
   ##
-  create: true
+  create: false
   ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
   ##
   annotations: {}
