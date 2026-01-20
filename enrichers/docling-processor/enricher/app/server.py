@@ -85,25 +85,50 @@ def operation(payload, configs, token):
     tenant = payload["tenantId"]
 
     print("Starting process")
-    for bin in binaries:
-        try:
-            resource_id = bin.get("resourceId")
-            resource = FMHelper.get_base64(tenant, resource_id)
-            bites = BytesIO(base64.b64decode(resource))
-            source = DocumentStream(name="doc.docx", stream=bites)
-            converter = DocumentConverter()
-            result = converter.convert(source)
-            markdown = result.document.export_to_markdown()
-            bin["markdown"] = markdown
-        except (base64.binascii.Error, ValueError) as e:
-            print(f"base64 error: {str(e)}")
-        except AttributeError as e:
-            print(f"export error: {str(e)}")
-        except Exception as e:
-            print(f"generic error: {str(e)}")
 
-    print("Process ended")
-    response = {"binaries": binaries}
+    if len(binaries) > 1:
+        for bin in binaries:
+            try:
+                resource_id = bin.get("resourceId")
+                resource = FMHelper.get_base64(tenant, resource_id)
+                bites = BytesIO(base64.b64decode(resource))
+                source = DocumentStream(name="doc.docx", stream=bites)
+                converter = DocumentConverter()
+                result = converter.convert(source)
+                markdown = result.document.export_to_markdown()
+                bin["markdown"] = markdown
+            except (base64.binascii.Error, ValueError) as e:
+                print(f"base64 error: {str(e)}")
+            except AttributeError as e:
+                print(f"export error: {str(e)}")
+            except Exception as e:
+                print(f"generic error: {str(e)}")
+
+        print("Process ended")
+        response = {"binaries": binaries}
+
+    elif len(binaries) == 1:
+        try:
+                resource_id = bin.get("resourceId")
+                resource = FMHelper.get_base64(tenant, resource_id)
+                bites = BytesIO(base64.b64decode(resource))
+                source = DocumentStream(name="doc.docx", stream=bites)
+                converter = DocumentConverter()
+                result = converter.convert(source)
+                markdown = result.document.export_to_markdown()
+            except (base64.binascii.Error, ValueError) as e:
+                print(f"base64 error: {str(e)}")
+            except AttributeError as e:
+                print(f"export error: {str(e)}")
+            except Exception as e:
+                print(f"generic error: {str(e)}")
+
+        print("Process ended")
+        response = {"document": markdown}
+        
+    else:
+        response = {}
+
     response = requests.post(
         f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/{token}", json=response
     )

@@ -327,9 +327,13 @@ Find more information about how to deal with common errors related to Openk9's H
 
 ## Upgrading
 
-### To 2.0.0
+### To 3.1.0
 
-### To 1.7.0
+No action necessary
+
+### Previous versions
+
+No details present
 
 ## License
 

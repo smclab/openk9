@@ -100,11 +100,14 @@ security:
   adminPasswordSecretName: "tenant-manager-admin-password"
   adminPasswordSecretKey: "password"
 
-## RabbitMQ configuration
+## Rabbitmq configuration
 rabbitmq:
   host: "rabbitmq-headless"
   port: "5672"
   username: "openk9"
+  passwordSecretName: "rabbitmq-password"
+  keyPasswordSecret: "rabbitmq-password"
+  keyPasswordEnvName: "RABBITMQ_PASSWORD"
 
 ## Keycloak configuration
 keycloak:

@@ -58,6 +58,18 @@ Openk9 Rag Module service handles retention mechanism to handle saved conversati
 | `retention.cronexpression`  | Cron expression to specify when retention job runs      | `0 0 * ? * *` |
 | `retention.interval`      | Interval in days to specify age of conversations to retain | `30`    |     
 
+### Retention configurations
+
+Openk9 Rag Module service handles possibility to load documents from external and use during chat. Following parameters allow to handle in better possible way.
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `uploadDocuments.uploadDir`    | Directory where upload documents     | `uploads`    |
+| `uploadDocuments.uploadFileExtensions`  | List of file extensions allowed      | `[".pdf",".md",".docx",".xlsx",".pptx",".csv"]` |
+| `uploadDocuments.maxUploadFileSize`      | Limit for documents to upload in MB | `10`    |     
+| `uploadDocuments.maxUploadFilesNumber`      | Max number of documents can be uploaded during chat | `5`    |     
+
+
 ### Configure Opensearch
 
 Openk9 Datasource needs Opensearch to work. 
@@ -297,11 +309,24 @@ Find more information about how to deal with common errors related to Openk9's H
 
 ## Upgrading
 
-### To 2.0.0
 
+### To 3.1.0
 
-### To 1.7.0
+- remove from values references to keycloak from your scenario values file
 
+- add to values configurations to control new feature about loading documents during chat
+
+```yaml
+uploadDocuments:
+  uploadDir: "uploads"
+  uploadFileExtensions: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
+  maxUploadFileSize: "10"
+  maxUploadFilesNumber: "5"
+```
+
+### Previous versions
+
+No details present
 
 
 ## License

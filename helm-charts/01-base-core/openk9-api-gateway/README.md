@@ -249,3 +249,41 @@ The production scenario includes:
 - Ingress with TLS enabled
 - Metrics collection enabled
 - Proper namespace configuration for dependencies
+
+## Advanced logging
+
+No settings are available to set up advanced configuration for logging.
+
+## Known issues
+
+No Known issues
+
+## Troubleshooting
+
+Find more information about how to deal with common errors related to Openk9's Helm charts in [this troubleshooting guide](https://staging-site.openk9.io/docs/monitoring/troubleshooting).
+
+### To 3.1.0
+
+No action necessary
+
+### Previous versions
+
+No details present
+
+## License
+
+
+Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
