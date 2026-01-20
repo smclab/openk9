@@ -48,7 +48,10 @@ The following table lists the configurable parameters of the chart and their def
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `replicaCount` | Number of replicas | `1` |
-| `resources` | CPU/Memory resource requests/limits | `{}` |
+| `resources.requests.cpu` | CPU request | `250m` |
+| `resources.requests.memory` | Memory request | `512Mi` |
+| `resources.limits.cpu` | CPU limit | `1000m` |
+| `resources.limits.memory` | Memory limit | `2Gi` |
 
 ### Service Parameters
 
@@ -61,10 +64,11 @@ The following table lists the configurable parameters of the chart and their def
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `rabbitmq.host` | RabbitMQ host | `rabbitmq` |
+| `rabbitmq.host` | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local) | `rabbitmq.k9-requirements.svc.cluster.local` |
 | `rabbitmq.port` | RabbitMQ port | `5672` |
 | `rabbitmq.user` | RabbitMQ username | `openk9` |
-| `rabbitmq.password` | RabbitMQ password | `openk9` |
+| `rabbitmq.password.secretName` | Secret name containing RabbitMQ password | `rabbitmq-password` |
+| `rabbitmq.password.secretKey` | Key in secret containing RabbitMQ password | `rabbitmq-password` |
 | `rabbitmq.retryDelayMs` | Retry delay in milliseconds | `5000` |
 | `rabbitmq.maxRetries` | Maximum number of retries | `10` |
 
@@ -72,7 +76,7 @@ The following table lists the configurable parameters of the chart and their def
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `phoenix.collectorEndpoint` | Phoenix collector endpoint | `""` |
+| `phoenix.collectorEndpoint` | Phoenix collector endpoint (supports cross-namespace format) | `http://phoenix.monitoring.svc.cluster.local:6006` |
 | `phoenix.projectName` | Phoenix project name | `openk9-chunk-evaluation` |
 | `phoenix.apiKey` | Phoenix API key | `""` |
 
@@ -106,12 +110,14 @@ image:
   tag: "latest"
 
 rabbitmq:
-  host: "rabbitmq.default.svc.cluster.local"
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
   user: "myuser"
-  password: "mypassword"
+  password:
+    secretName: "rabbitmq-password"
+    secretKey: "rabbitmq-password"
 
 phoenix:
-  collectorEndpoint: "http://phoenix:6006"
+  collectorEndpoint: "http://phoenix.monitoring.svc.cluster.local:6006"
   apiKey: "my-api-key"
 
 persistence:

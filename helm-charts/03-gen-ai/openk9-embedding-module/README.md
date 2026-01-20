@@ -52,13 +52,23 @@ The command deploys Openk9 Embedding Module on the Kubernetes cluster in the def
 ### Configure connections to other Openk9 services
 
 Openk9 Datasource needs to communicate with other components to work. 
-In particular Openk9 Embedding Module need to communicate with Datasource to perform tenant resolving.
+In particular Openk9 Embedding Module need to communicate with Datasource to perform tenant resolving and with RabbitMQ for message processing.
 
 To configure connection to Datasource following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `openk9.datasource.host`    | Datasource host                         | `openk9-datasource`            |
+
+To configure connection to RabbitMQ following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `rabbitmq.host`    | RabbitMQ host (supports cross-namespace format: service.namespace.svc.cluster.local)                         | `rabbitmq.k9-requirements.svc.cluster.local`            |
+| `rabbitmq.port`    | RabbitMQ port                         | `5672`            |
+| `rabbitmq.user`    | RabbitMQ username                         | `openk9`            |
+| `rabbitmq.password.secretName`    | Secret name containing RabbitMQ password                         | `rabbitmq-password`            |
+| `rabbitmq.password.secretKey`    | Key in secret containing RabbitMQ password                         | `rabbitmq-password`            |
 
 
 ### Service account and rbac
@@ -144,7 +154,14 @@ To configure probes appropriately you can use following parameters:
 
 Openk9 Embedding Module chart allow setting resource requests and limits for all containers inside the chart deployment. These are inside the `resources` value (check parameter table). Setting requests is essential for production workloads and these should be adapted to your specific use case.
 
-| `resources`                                         | Set container requests and limits for different resources like CPU or memory (essential for production workloads)                                                                                                 | `{}`             |
+Default resource configuration:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `resources.requests.cpu`    | CPU request                         | `500m`            |
+| `resources.requests.memory`    | Memory request                         | `1Gi`            |
+| `resources.limits.cpu`    | CPU limit                         | `2000m`            |
+| `resources.limits.memory`    | Memory limit                         | `4Gi`            |
 
 ### Security
 
