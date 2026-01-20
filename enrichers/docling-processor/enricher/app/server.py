@@ -13,6 +13,7 @@ from dotenv import dotenv_values, load_dotenv
 from fastapi import Body, FastAPI
 from pydantic import BaseModel
 
+from app.utils.exceptions import FormatError
 from app.utils.fm_helper import FileManagerHelper
 from app.utils.format_detect import extract_extension_base64
 
@@ -123,6 +124,8 @@ def operation(payload, configs, token):
             print(f"export error: {str(e)}")
         except Exception as e:
             print(f"generic error: {str(e)}")
+        except FormatError as e:
+            print(f"format error: {str(e)}")
 
         print("Process ended")
         response = {"document": markdown}

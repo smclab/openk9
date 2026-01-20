@@ -4,6 +4,8 @@ from io import BytesIO
 from docling.datamodel.base_models import FormatToExtensions
 from docling.datamodel.document import DocumentStream, _DocumentConversionInput
 
+from app.utils.exceptions import FormatError
+
 
 def extract_extension_base64(base64_content: str) -> str:
     """
@@ -22,7 +24,7 @@ def extract_extension_base64(base64_content: str) -> str:
         detected_format = dci._guess_format(stream)
         if detected_format and detected_format in FormatToExtensions:
             return FormatToExtensions[detected_format][0]
-        return ""
+        raise FormatError("File format could not be detected or file is corrupted")
 
     except Exception:
-        return ""
+        raise FormatError("File format could not be detected or file is corrupted")
