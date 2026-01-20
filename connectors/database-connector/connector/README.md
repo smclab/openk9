@@ -23,6 +23,7 @@ This endpoint takes different arguments in JSON raw body:
 - **host**: Database server address (IP or domain). (required)
 - **port**: Port number for database connection. (required)
 - **db**: Name of the database to connect to. (required)
+- **schema**: Name of the schema to extract table from. (optional, default None)
 - **table**: Name of the table to extract (required)
 - **columns**: Name of the columns to extract (optional, if not specified extract all columns)
 - **where**: Where condition used for extraction (optional, if not specified extract without conditions)

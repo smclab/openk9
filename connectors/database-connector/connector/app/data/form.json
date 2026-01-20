@@ -106,6 +106,21 @@
         }
       },
       {
+        "label": "Schema",
+        "field": "schema",
+        "type": "text",
+        "size": 4,
+        "required": false,
+        "values": [],
+        "info": "Name of the schema to extract table from.",
+        "placeholder": "Schema Name",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
         "label": "Table",
         "field": "table",
         "type": "text",

@@ -16,7 +16,7 @@ dictConfig(LogConfig().dict())
 class DataExtraction(threading.Thread):
 
     def __init__(self, dialect, driver, username, password, host,
-                 port, db, table, columns, where, timestamp, datasource_id, schedule_id, tenant_id, ingestion_url):
+                 port, db, schema, table, columns, where, timestamp, datasource_id, schedule_id, tenant_id, ingestion_url):
 
         super(DataExtraction, self).__init__()
         self.dialect = dialect
@@ -26,6 +26,7 @@ class DataExtraction(threading.Thread):
         self.host = host
         self.port = port
         self.db = db
+        self.schema = schema
         self.table = table
         self.columns = columns
         self.where = where
@@ -45,10 +46,9 @@ class DataExtraction(threading.Thread):
 
         self.status_logger.info("Posting rows")
 
-        for row in results:
+        for row in results.mappings():
             try:
-                model = validate_model(dict(row))
-                row_values = json.dumps(model)
+                row_values = validate_model(dict(row))
 
                 datasource_payload = {"row": row_values}
 
@@ -68,8 +68,8 @@ class DataExtraction(threading.Thread):
                 }
 
                 try:
-                    self.status_logger.info(datasource_payload)
-                    # post_message(self.ingestion_url, payload, self.timeout)
+                    self.status_logger.info(payload)
+                    post_message(self.ingestion_url, payload)
                     row_numbers = row_numbers + 1
                 except requests.RequestException:
                     self.status_logger.error("Problems during posting of row with id: ")
@@ -87,7 +87,7 @@ class DataExtraction(threading.Thread):
         try:
             engine = create_engine(self.url_extract)
             with Session(engine) as session:
-                metadata_obj = MetaData()
+                metadata_obj = MetaData(schema=self.schema)
                 table = Table(self.table, metadata_obj, autoload_with=engine)
 
                 query = session.query()
@@ -101,7 +101,7 @@ class DataExtraction(threading.Thread):
                     query = query.where(text(self.where))
 
                 results = session.execute(query)
-                primary_keys = [key.name for key in inspect(table).primary_key()]
+                primary_keys = [key.name for key in inspect(table).primary_key.columns]
                 self.manage_data(results, primary_keys)
 
         except requests.RequestException:

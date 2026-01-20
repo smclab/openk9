@@ -1,3 +1,7 @@
+import datetime
+import json
+import uuid
+
 import requests
 import logging
 from logging.config import dictConfig
@@ -12,6 +16,7 @@ logger = logging.getLogger("database-parser")
 def post_message(url, payload, timeout=20):
 
     try:
+        payload = json.dumps(payload, cls=PayloadEncoder)
         r = requests.post(url, json=payload, timeout=timeout)
         if r.status_code == 200:
             return
@@ -39,3 +44,16 @@ def check_field_element(field):
                 return field.lower()
         else:
             return field
+
+
+class PayloadEncoder(json.JSONEncoder):
+    """
+    Converts payload obj to json acceptable in requests
+    """
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            # if the obj is uuid, we simply return the value of uuid
+            return str(obj)
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)

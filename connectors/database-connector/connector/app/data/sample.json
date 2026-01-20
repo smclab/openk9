@@ -4,6 +4,9 @@
    "contentId":3062252989527342,
    "rawContent": "mysql username my_database table_name key_1 key_2 key_3",
    "datasourcePayload":{
+      "row": {
+
+      }
    },
    "resources":{
       "binaries":[

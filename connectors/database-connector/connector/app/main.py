@@ -1,11 +1,13 @@
 import logging
 import os
 import threading
+from enum import Enum
+
 import requests
 import json
-from fastapi import FastAPI, Request, status
-from pydantic import BaseModel
-from typing import List, Optional
+from fastapi import FastAPI, status
+from pydantic import BaseModel, model_validator
+from typing import List, Optional, Self
 from database_api.data_extraction import DataExtraction
 
 app = FastAPI()
@@ -17,14 +19,52 @@ if ingestion_url is None:
 logger = logging.getLogger("uvicorn.access")
 
 
+class Dialect(str, Enum):
+    postgresql = "postgresql"
+    mysql = "mysql"
+    mariadb = "mariadb"
+    oracle = "oracle"
+    mssql = "mssql"
+    firebird = "firebird"
+    ibm_db = "ibm_db"
+    snowflake = "snowflake"
+
+
+class Driver(str, Enum):
+    psycopg2 = "psycopg2"
+    pymysql = "pymysql"
+    mysqlconnector = "mysqlconnector"
+    pyodbc = "pyodbc"
+    pymssql = "pymssql"
+    oracledb = "oracledb"
+    fdb = "fdb"
+    ibm_db = "ibm_db"
+    snowflake = "snowflake"
+
+    @classmethod
+    def map(cls):
+        return {
+            Dialect.postgresql: [cls.psycopg2],
+            Dialect.mysql: [cls.mysqlconnector, cls.pymysql],
+            Dialect.mariadb: [cls.pymysql],
+            Dialect.oracle: [cls.oracledb],
+            Dialect.mssql: [cls.pyodbc, cls.pymssql],
+            Dialect.firebird: [cls.fdb],
+            Dialect.ibm_db: [cls.ibm_db],
+            Dialect.snowflake: [cls.snowflake],
+        }
+
+
 class DatabaseRequest(BaseModel):
-    dialect: str
-    driver: str
+    # TODO: Change in form.json Dialect and Driver to value selection (?)
+    dialect: Dialect
+    driver: Driver
     username: str
     password: str
     host: str
     port: str
     db: str
+    schema: Optional[str] = None
     table: str
     columns: Optional[List[str]] = None
     where: Optional[str] = None
@@ -32,6 +72,15 @@ class DatabaseRequest(BaseModel):
     datasourceId: int
     scheduleId: str
     tenantId: str
+
+    @model_validator(mode='after')
+    def verify_square(self) -> Self:
+        dialect_drive_map = Driver.map()
+        usable_drivers = dialect_drive_map[self.dialect]
+        if self.driver not in usable_drivers:
+            raise ValueError(f'Acceptable drivers for {self.dialect.value} are {[usable_driver.value for usable_driver in usable_drivers]}')
+        return self
+# TODO: Implement NoSql extraction
 
 
 @app.post("/execute")
@@ -45,6 +94,7 @@ def get_data(request: DatabaseRequest):
     host = request["host"]
     port = request["port"]
     db = request["db"]
+    schema = request["schema"]
     table = request["table"]
     columns = request["columns"]
     where = request["where"]
@@ -54,7 +104,7 @@ def get_data(request: DatabaseRequest):
     tenant_id = request["tenantId"]
 
     data_extraction = DataExtraction(dialect, driver, username, password,
-                                     host, port, db, table, columns, where,
+                                     host, port, db, schema, table, columns, where,
                                      timestamp, datasource_id, schedule_id, tenant_id, ingestion_url)
 
     thread = threading.Thread(target=data_extraction.extract_recent)
