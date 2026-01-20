@@ -90,6 +90,13 @@ export default function Autocomplete({
               color: #c22525;
               text-decoration: underline;
             }
+            @media (max-width: 600px) {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              max-width: 100%;
+              display: block;
+            }
           `}
           onMouseDown={(e) => {
             e.preventDefault();
