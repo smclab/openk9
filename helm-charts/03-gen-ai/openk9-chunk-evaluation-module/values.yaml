@@ -58,9 +58,8 @@ service:
   ## @param service.port Http service port
   port: 8080
 
-## RabbitMQ configuration
 rabbitmq:
-  host: "rabbitmq"
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
   port: 5672
   user: "openk9"
   password: "openk9"
@@ -69,7 +68,7 @@ rabbitmq:
 
 ## Phoenix configuration for observability
 phoenix:
-  collectorEndpoint: ""
+  collectorEndpoint: "http://phoenix.monitoring.svc.cluster.local:6006"
   projectName: "openk9-chunk-evaluation"
   apiKey: ""
 
@@ -135,7 +134,13 @@ hostAliases: []
 ##     cpu: 1000m
 ##     memory: 1024Mi
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
 
 autoscaling:
   enabled: false
