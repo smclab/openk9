@@ -37,6 +37,7 @@ Read more about compatibility matrix on Github.
     - [Embedding Module](#embedding-module)
     - [Rag Module](#rag-module)
     - [Talk To](#talk-to)
+    - [Chunk Evaluation Module](#chunk-evaluation-module)
 6. [Openk9 File Handling components installation](#file-handling-components)
     - [Minio](#minio)
     - [File Manager](#file-manager)
@@ -1270,6 +1271,47 @@ helm upgrade -i talk-to 03-gen-ai/openk9-talk-to -n openk9 -f 03-gen-ai/openk9-t
 #### Verify Installation
 
 Learn more on how to use and configure all needed to access and chat with your data using Talk To UI on [official documentation]().
+
+
+### Chunk Evaluation Module
+
+Chunk Evaluation Module is a module that evaluates and analyzes document chunks using various metrics. It communicates with RabbitMQ for message processing and integrates with Phoenix for observability.
+
+To learn more on Chunk Evaluation Module, read [official documentation]().
+
+For advanced configurations read [README.md](./03-gen-ai/openk9-chunk-evaluation-module/README.md) inside Chunk Evaluation Module chart folder.
+
+#### Installation
+
+For kubernetes/K3s execute:
+
+```bash
+helm upgrade -i chunk-evaluation-module 03-gen-ai/openk9-chunk-evaluation-module -n openk9 -f 03-gen-ai/openk9-chunk-evaluation-module/scenarios/local-runtime.yaml
+```
+
+For Openshift execute:
+
+```bash
+helm upgrade -i chunk-evaluation-module 03-gen-ai/openk9-chunk-evaluation-module -n openk9 -f 03-gen-ai/openk9-chunk-evaluation-module/scenarios/local-crc.yaml
+```
+
+#### Verify Installation
+
+Check that the pod is running correctly.
+
+For Kubernetes/K3s execute:
+
+```bash
+kubectl -n openk9 get pods -l app.kubernetes.io/name=openk9-chunk-evaluation-module
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 get pods -l app.kubernetes.io/name=openk9-chunk-evaluation-module
+```
+
+If the pod status is `Running`, the module is correctly installed and operational.
 
 
 ## File Handling Components
