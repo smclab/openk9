@@ -110,19 +110,6 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
     accessKey: "node",
   });
 
-  const { OptionQuery: ragChatConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRag,
-  });
-  const { OptionQuery: ragChatSimpleGenerateConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationSimpleGenerate,
-  });
-  const { OptionQuery: ragChatToolConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRagTool,
-  });
-
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
     refetchQueries: ["Buckets", "BucketDataSources"],

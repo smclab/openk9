@@ -1,5 +1,7 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { AutocompleteDropdown } from "@pages/SuggestionCategories/AutocompleateOptionList";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -7,7 +9,6 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
-  CustomSelectRelationsOneToOne,
   fromFieldValidators,
   NumberInput,
   TextInput,
@@ -17,13 +18,13 @@ import {
 import {
   SortType,
   SuggestMode,
-  useAllDocTypeFieldsQuery,
   useAutocorrectionValueQuery,
+  useDocTypeFieldsQuery,
   useSaveAutocorrectionMutation,
 } from "../../graphql-generated";
+import { makeUseOptionsHook, UseOptionsHook } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { autocorrectionsConfigOptions, autocorrectionValue } from "./gql";
-import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { autocorrectionId = "new", view } = useParams();
@@ -32,9 +33,6 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
   const autocorrectionQuery = useAutocorrectionValueQuery({
     variables: { id: autocorrectionId as string },
     skip: !autocorrectionId || autocorrectionId === "new",
-    fetchPolicy: "network-only",
-  });
-  const docTypes = useAllDocTypeFieldsQuery({
     fetchPolicy: "network-only",
   });
   const navigate = useNavigate();
@@ -193,20 +191,20 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       onChange={(e: SuggestMode) => form.inputProps("suggestMode").onChange(e)}
                     />
                     <BooleanInput label="Search with correction" {...form.inputProps("enableSearchWithCorrection")} />
-                    <CustomSelectRelationsOneToOne
-                      options={
-                        docTypes?.data?.docTypeFields?.edges?.map((aut) => ({
-                          value: aut?.node?.id || "",
-                          label: aut?.node?.name || "",
-                        })) || []
-                      }
+                    <AutocompleteDropdown
                       label="Doc type fields"
                       onChange={(val) => form.inputProps("docTypeFields").onChange({ id: val.id, name: val.name })}
-                      value={{
-                        id: form?.inputProps("docTypeFields")?.value?.id || "",
-                        name: form?.inputProps("docTypeFields")?.value?.name || "",
-                      }}
+                      value={
+                        !form?.inputProps("docTypeFields")?.value?.id
+                          ? undefined
+                          : {
+                              id: form?.inputProps("docTypeFields")?.value?.id || "",
+                              name: form?.inputProps("docTypeFields")?.value?.name || "",
+                            }
+                      }
+                      onClear={() => form.inputProps("docTypeFields").onChange({ id: undefined, name: undefined })}
                       disabled={page === 1}
+                      useOptions={useOptionAutocomplete}
                     />
                   </div>
                 ),
@@ -226,3 +224,9 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     </ContainerFluid>
   );
 }
+
+export const useOptionAutocomplete: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDocTypeFieldsQuery,
+  connectionKey: "docTypeFields",
+  first: 20,
+});
