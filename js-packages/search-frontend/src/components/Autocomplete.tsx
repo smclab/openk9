@@ -1,4 +1,5 @@
 import { css } from "styled-components";
+import React from "react";
 
 type AutocompleteProps = {
   suggestions: Array<{ autocomplete: string }>;
@@ -6,6 +7,7 @@ type AutocompleteProps = {
   applySuggestion(s: { autocomplete: string }): void;
   setIsAutocompleteOpen(open: boolean): void;
   setHighlightIndex(index: number): void;
+  callbackSelect?(): void;
 };
 export default function Autocomplete({
   suggestions,
@@ -13,7 +15,19 @@ export default function Autocomplete({
   applySuggestion,
   setIsAutocompleteOpen,
   setHighlightIndex,
+  callbackSelect,
 }: AutocompleteProps): React.ReactNode {
+  const itemRefs = React.useRef<(HTMLDivElement | null)[]>([]);
+
+  React.useEffect(() => {
+    if (highlightIndex >= 0 && itemRefs.current[highlightIndex]) {
+      itemRefs.current[highlightIndex]?.scrollIntoView({
+        block: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [highlightIndex, suggestions.length]);
+
   return (
     <div
       className="openk9--autocomplete-suggestions-container"
@@ -54,6 +68,7 @@ export default function Autocomplete({
       {suggestions.map((s, index) => (
         <div
           key={index}
+          ref={(el) => (itemRefs.current[index] = el)}
           className={`openk9--autocomplete-suggestion-item ${
             highlightIndex === index
               ? "openk9--autocomplete-suggestion-item-highlighted"
@@ -80,6 +95,7 @@ export default function Autocomplete({
             e.preventDefault();
             applySuggestion(s);
             setIsAutocompleteOpen(false);
+            callbackSelect && callbackSelect();
           }}
           onMouseEnter={() => setHighlightIndex(index)}
         >

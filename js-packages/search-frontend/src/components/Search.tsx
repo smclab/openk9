@@ -1,16 +1,16 @@
-import React from "react";
-import { css } from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { css } from "styled-components";
 import { TokenSelect } from "../components/TokenSelect";
 import { characterControlType, Configuration } from "../embeddable/entry";
-import { AnalysisResponseEntry, AnalysisToken } from "./client";
-import { SelectionsAction, SelectionsState } from "./useSelections";
-import { DeleteLogo } from "./DeleteLogo";
-import { useTranslation } from "react-i18next";
-import { useClickAway } from "./useClickAway";
-import { useAutocomplete } from "./useAutocomplete";
 import Autocomplete from "./Autocomplete";
+import { AnalysisResponseEntry, AnalysisToken } from "./client";
+import { DeleteLogo } from "./DeleteLogo";
+import { useAutocomplete } from "./useAutocomplete";
+import { useClickAway } from "./useClickAway";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 
 type SearchProps = {
   configuration: Configuration;
@@ -55,6 +55,7 @@ export function Search({
   } | null>({ textPosition: 0, optionPosition: 1 });
   const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(false);
   const [highlightIndex, setHighlightIndex] = React.useState(-1);
+  const [acceptSuggestion, setAcceptSuggestion] = React.useState(true);
 
   const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
   const suggestions = autocompleteQ.data ?? [];
@@ -101,6 +102,7 @@ export function Search({
     setIsAutocompleteOpen(false);
     setHighlightIndex(-1);
     setOpenedDropdown(null);
+    setAcceptSuggestion(true);
     inputRef.current?.focus();
   };
 
@@ -147,7 +149,8 @@ export function Search({
           />
           {isAutocompleteOpen &&
             suggestions.length > 0 &&
-            selectionsState.textOnChange && (
+            selectionsState.textOnChange &&
+            !acceptSuggestion && (
               <Autocomplete
                 applySuggestion={applySuggestion}
                 highlightIndex={highlightIndex}
@@ -268,11 +271,28 @@ export function Search({
               value={selectionsState.textOnChange}
               onClick={() => {
                 callbackClickSearch && callbackClickSearch();
-                setIsAutocompleteOpen(true);
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+              }}
+              onFocus={() => {
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+              }}
+              onBlur={(e) => {
+                const related = e.relatedTarget as HTMLElement | null;
+                if (
+                  !related ||
+                  !related.className?.includes(
+                    "openk9--autocomplete-suggestion-item",
+                  )
+                ) {
+                  setIsAutocompleteOpen(false);
+                }
               }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
-                setIsAutocompleteOpen(false);
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
                 callbackChangeSearch &&
                   callbackChangeSearch(event.currentTarget.value);
               }}
@@ -310,6 +330,7 @@ export function Search({
                 }
               }}
               onKeyDown={(event) => {
+                setAcceptSuggestion(false);
                 if (isAutocompleteOpen && suggestions.length > 0) {
                   if (event.key === "ArrowDown") {
                     event.preventDefault();
