@@ -420,6 +420,7 @@ export type translationGlobalType = {
   filtersLabel?: string;
   calendarLabel?: string;
   buttonResetFilters?: string;
+  buttonSaveFilters?: string;
 };
 
 type allFiltersConfigurableProps = {

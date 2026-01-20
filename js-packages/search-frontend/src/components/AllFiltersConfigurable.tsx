@@ -367,7 +367,7 @@ export default function AllFilters({
             }
           `}
         >
-          Save
+          {calendar.translationLabel?.buttonSaveFilters || "Save"}
         </button>
       </div>
     </>
