@@ -10,6 +10,7 @@ import { DeleteLogo } from "./DeleteLogo";
 import { useTranslation } from "react-i18next";
 import { useClickAway } from "./useClickAway";
 import { useAutocomplete } from "./useAutocomplete";
+import Autocomplete from "./Autocomplete";
 
 type SearchProps = {
   configuration: Configuration;
@@ -52,16 +53,25 @@ export function Search({
     textPosition: number;
     optionPosition: number;
   } | null>({ textPosition: 0, optionPosition: 1 });
-  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(true);
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(false);
   const [highlightIndex, setHighlightIndex] = React.useState(-1);
 
   const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
   const suggestions = autocompleteQ.data ?? [];
 
-  // console.log("autocompleteQ", autocompleteQ);
+  React.useEffect(() => {
+    if (suggestions.length > 0) {
+      setIsAutocompleteOpen(true);
+    } else {
+      setIsAutocompleteOpen(false);
+    }
+  }, [suggestions]);
 
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
-  useClickAway([clickAwayRef], () => setOpenedDropdown(null));
+  useClickAway([clickAwayRef], () => {
+    setOpenedDropdown(null);
+    setIsAutocompleteOpen(false);
+  });
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -88,10 +98,10 @@ export function Search({
       text: s.autocomplete,
       textOnchange: s.autocomplete,
     });
-
     setIsAutocompleteOpen(false);
     setHighlightIndex(-1);
     setOpenedDropdown(null);
+    inputRef.current?.focus();
   };
 
   return (
@@ -120,6 +130,7 @@ export function Search({
             border-radius: 8px;
             width: 100%;
             max-height: 50px;
+            position: relative;
             @media (max-width: 480px) {
               width: 100%;
             }
@@ -134,6 +145,17 @@ export function Search({
               color: var(--openk9-embeddable-search--secondary-text-color);
             `}
           />
+          {isAutocompleteOpen &&
+            suggestions.length > 0 &&
+            selectionsState.textOnChange && (
+              <Autocomplete
+                applySuggestion={applySuggestion}
+                highlightIndex={highlightIndex}
+                setHighlightIndex={setHighlightIndex}
+                setIsAutocompleteOpen={setIsAutocompleteOpen}
+                suggestions={suggestions}
+              />
+            )}
           <div
             className="openk9--search-container-show-syntax"
             css={css`
@@ -147,6 +169,7 @@ export function Search({
               css={css`
                 top: 0px;
                 left: 0px;
+                width: 100%;
                 padding: var(--openk9-embeddable-search--input-padding);
                 display: flex;
                 position: absolute;
@@ -155,56 +178,6 @@ export function Search({
                 }
               `}
             >
-              {suggestions.length > 0 && (
-                <div
-                  className="openk9--autocomplete-suggestions-container"
-                  css={css`
-                    position: absolute;
-                    top: 100%;
-                    left: 0;
-                    right: 0;
-                    background: white;
-                    border: 1px solid
-                      var(--openk9-embeddable-search--border-color);
-                    border-radius: 0 0 8px 8px;
-                    max-height: 200px;
-                    overflow-y: auto;
-                    z-index: 10;
-                  `}
-                >
-                  {suggestions.map((s, index) => (
-                    <div
-                      key={index}
-                      className={`openk9--autocomplete-suggestion-item ${
-                        highlightIndex === index
-                          ? "openk9--autocomplete-suggestion-item-highlighted"
-                          : ""
-                      }`}
-                      css={css`
-                        padding: 8px 16px;
-                        cursor: pointer;
-                        &:hover {
-                          background-color: var(
-                            --openk9-embeddable-search--border-color
-                          );
-                        }
-                        &.openk9--autocomplete-suggestion-item-highlighted {
-                          background-color: var(
-                            --openk9-embeddable-search--border-color
-                          );
-                        }
-                      `}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        applySuggestion(s);
-                      }}
-                      onMouseEnter={() => setHighlightIndex(index)}
-                    >
-                      {s.autocomplete}
-                    </div>
-                  ))}
-                </div>
-              )}
               {showSyntax &&
                 spans.map((span, index) => {
                   const isOpen =
@@ -230,6 +203,7 @@ export function Search({
                         isAuto: autoSelect,
                       },
                     });
+                    setIsAutocompleteOpen(false);
                     if (
                       inputRef.current?.selectionStart &&
                       inputRef.current?.selectionEnd
@@ -294,9 +268,11 @@ export function Search({
               value={selectionsState.textOnChange}
               onClick={() => {
                 callbackClickSearch && callbackClickSearch();
+                setIsAutocompleteOpen(true);
               }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
+                setIsAutocompleteOpen(false);
                 callbackChangeSearch &&
                   callbackChangeSearch(event.currentTarget.value);
               }}
@@ -334,76 +310,101 @@ export function Search({
                 }
               }}
               onKeyDown={(event) => {
-                const span =
-                  openedDropdown &&
-                  spans.find(
-                    (s) =>
-                      openedDropdown.textPosition > s.start &&
-                      openedDropdown.textPosition <= s.end,
-                  );
-                const option =
-                  openedDropdown &&
-                  span?.tokens[openedDropdown.optionPosition - 1];
-                if (event.key === "ArrowDown") {
-                  event.preventDefault();
-                  if (openedDropdown && span) {
-                    setOpenedDropdown({
-                      textPosition: openedDropdown.textPosition,
-                      optionPosition:
-                        openedDropdown.optionPosition < span.tokens.length
-                          ? openedDropdown.optionPosition + 1
-                          : 1,
-                    });
-                  }
-                } else if (event.key === "ArrowUp") {
-                  event.preventDefault();
-                  if (openedDropdown && openedDropdown.optionPosition > 0) {
-                    setOpenedDropdown({
-                      textPosition: openedDropdown.textPosition,
-                      optionPosition:
-                        openedDropdown.optionPosition === 1
-                          ? span?.tokens.length || 1
-                          : openedDropdown.optionPosition - 1,
-                    });
-                  }
-                } else if (event.key === "Enter") {
-                  event.preventDefault();
-                  inputRef &&
-                    inputRef.current &&
-                    search(inputRef?.current?.value || "");
-                  if (actionOnClick) actionOnClick();
-                  if (span && option) {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        textOnChange: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token: option ?? null,
-                        isAuto: false,
-                      },
-                    });
-                    if (replaceText && option) {
-                      const text =
-                        option &&
-                        (option.tokenType === "ENTITY"
-                          ? option.entityName
-                          : option.value);
-                      const cursorPosition = span.start + (text?.length ?? 0);
-                      setAdjustedSelection({
-                        selectionStart: cursorPosition,
-                        selectionEnd: cursorPosition,
-                      });
-                    } else if (
-                      event.currentTarget.selectionStart &&
-                      event.currentTarget.selectionEnd
+                if (isAutocompleteOpen && suggestions.length > 0) {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev < suggestions.length - 1 ? prev + 1 : 0,
+                    );
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev > 0 ? prev - 1 : suggestions.length - 1,
+                    );
+                  } else if (event.key === "Enter") {
+                    if (
+                      highlightIndex >= 0 &&
+                      highlightIndex < suggestions.length
                     ) {
-                      setAdjustedSelection({
-                        selectionStart: event.currentTarget.selectionStart,
-                        selectionEnd: event.currentTarget.selectionEnd,
+                      event.preventDefault();
+                      applySuggestion(suggestions[highlightIndex]);
+                    }
+                  } else if (event.key === "Escape") {
+                    setIsAutocompleteOpen(false);
+                    setHighlightIndex(-1);
+                  }
+                } else {
+                  const span =
+                    openedDropdown &&
+                    spans.find(
+                      (s) =>
+                        openedDropdown.textPosition > s.start &&
+                        openedDropdown.textPosition <= s.end,
+                    );
+                  const option =
+                    openedDropdown &&
+                    span?.tokens[openedDropdown.optionPosition - 1];
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (openedDropdown && span) {
+                      setOpenedDropdown({
+                        textPosition: openedDropdown.textPosition,
+                        optionPosition:
+                          openedDropdown.optionPosition < span.tokens.length
+                            ? openedDropdown.optionPosition + 1
+                            : 1,
                       });
+                    }
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (openedDropdown && openedDropdown.optionPosition > 0) {
+                      setOpenedDropdown({
+                        textPosition: openedDropdown.textPosition,
+                        optionPosition:
+                          openedDropdown.optionPosition === 1
+                            ? span?.tokens.length || 1
+                            : openedDropdown.optionPosition - 1,
+                      });
+                    }
+                  } else if (event.key === "Enter") {
+                    event.preventDefault();
+                    inputRef &&
+                      inputRef.current &&
+                      search(inputRef?.current?.value || "");
+                    if (actionOnClick) actionOnClick();
+                    if (span && option) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          textOnChange: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                      if (replaceText && option) {
+                        const text =
+                          option &&
+                          (option.tokenType === "ENTITY"
+                            ? option.entityName
+                            : option.value);
+                        const cursorPosition = span.start + (text?.length ?? 0);
+                        setAdjustedSelection({
+                          selectionStart: cursorPosition,
+                          selectionEnd: cursorPosition,
+                        });
+                      } else if (
+                        event.currentTarget.selectionStart &&
+                        event.currentTarget.selectionEnd
+                      ) {
+                        setAdjustedSelection({
+                          selectionStart: event.currentTarget.selectionStart,
+                          selectionEnd: event.currentTarget.selectionEnd,
+                        });
+                      }
                     }
                   }
                 }
@@ -449,9 +450,15 @@ export function Search({
               margin-right: 21px;
               background: inherit;
               border: none;
+              position: relative;
+              z-index: 1100;
             `}
-            onClick={() => {
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAutocompleteOpen(false);
               clearSearch();
+              inputRef.current?.focus();
             }}
           >
             <span

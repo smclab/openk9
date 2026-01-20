@@ -36,6 +36,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
+  showSyntax: false,
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
