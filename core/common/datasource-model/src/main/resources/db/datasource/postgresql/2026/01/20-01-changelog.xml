@@ -1,4 +1,4 @@
-<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
   ~
@@ -16,15 +16,17 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2026/01/20-01-changelog.xml">
 
-	<includeAll path="2022" relativeToChangelogFile="true"/>
-	<includeAll path="2023" relativeToChangelogFile="true"/>
-	<includeAll path="2024" relativeToChangelogFile="true"/>
-	<includeAll path="2025" relativeToChangelogFile="true"/>
-	<includeAll path="2026" relativeToChangelogFile="true"/>
+	<changeSet id="1768903587304-1" author="openk9">
+		<addColumn tableName="autocomplete">
+			<column name="perfect_match_included" type="BOOLEAN" valueBoolean="false"/>
+		</addColumn>
+	</changeSet>
 
 </databaseChangeLog>

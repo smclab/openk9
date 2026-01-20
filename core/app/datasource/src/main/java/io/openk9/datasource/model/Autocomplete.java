@@ -80,6 +80,8 @@ public class Autocomplete extends K9Entity {
 	@Enumerated(EnumType.STRING)
 	@Column(name = "operator")
 	private BooleanOperator operator = DEFAULT_OPERATOR;
+	@Column(name = "perfect_match_included")
+	private boolean perfectMatchIncluded = false;
 
 	public void setResultSize(Integer resultSize) {
 		this.resultSize =

@@ -80,6 +80,7 @@ public class AutocompleteGraphqlTest {
 	private static final String NAME = "name";
 	private static final String NODE = "node";
 	private static final String OPERATOR = "operator";
+	private static final String PERFECT_MATCH_INCLUDED = "perfectMatchIncluded";
 	private static final String RESULT_SIZE = "resultSize";
 	private static final int RESULT_SIZE_VALUE = 5;
 
@@ -136,6 +137,7 @@ public class AutocompleteGraphqlTest {
 		AutocompleteDTO autocompleteDTOTwo = AutocompleteDTO.builder()
 			.name(AUTOCOMPLETE_NAME_TWO)
 			.fieldIds(fieldIds)
+			.perfectMatchIncluded(true)
 			.build();
 
 		EntitiesUtils.createEntity(autocompleteDTOTwo, service, sf);
@@ -159,6 +161,7 @@ public class AutocompleteGraphqlTest {
 					field(FUZZINESS),
 					field(MINIMUM_SHOULD_MATCH),
 					field(OPERATOR),
+					field(PERFECT_MATCH_INCLUDED),
 					field(
 						FIELDS,
 						field(
@@ -188,6 +191,7 @@ public class AutocompleteGraphqlTest {
 			AUTOCOMPLETE_NAME_TWO,
 			autocompleteJson.getString(NAME)
 		);
+		assertTrue(autocompleteJson.getBoolean(PERFECT_MATCH_INCLUDED));
 	}
 
 	@Test

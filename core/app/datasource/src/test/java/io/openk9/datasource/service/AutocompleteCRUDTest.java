@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -150,6 +151,7 @@ public class AutocompleteCRUDTest {
 			Autocomplete.DEFAULT_MINIMUM_SHOULD_MATCH,
 			autocomplete.getMinimumShouldMatch());
 		assertEquals(Autocomplete.DEFAULT_OPERATOR, autocomplete.getOperator());
+		assertFalse(autocomplete.isPerfectMatchIncluded());
 
 		EntitiesUtils.removeEntity(AUTOCOMPLETE_NAME_ONE, service, sf);
 	}

@@ -64,5 +64,10 @@ public class AutocompleteDTO extends K9EntityDTO{
 		Boolean operator to combine query terms (AND or OR)
 	""")
 	private BooleanOperator operator;
+	@Nullable
+	@Description("""
+		When disabled, perfect matches with the searched text are removed from suggestions
+	""")
+	private Boolean perfectMatchIncluded;
 
 }
