@@ -360,6 +360,7 @@ type RemoveFiltersProps = {
   element: Element | string | null;
   itemsRemove?: resetFiltersType;
   label?: string | null | undefined;
+  ariaLabel?: string | null | undefined;
 };
 
 export type resetFiltersType = Array<
@@ -421,6 +422,8 @@ export type translationGlobalType = {
   calendarLabel?: string;
   buttonResetFilters?: string;
   buttonSaveFilters?: string;
+  ariaLabelSave?: string;
+  ariaLabelReset?: string;
 };
 
 type allFiltersConfigurableProps = {

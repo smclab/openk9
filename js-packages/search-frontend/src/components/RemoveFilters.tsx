@@ -29,9 +29,11 @@ export function RemoveFilters({
   itemsRemove,
   reset,
   configurableLabel,
+  removeAriaLabel,
 }: {
   itemsRemove?: resetFiltersType;
   configurableLabel?: string | null | undefined;
+  removeAriaLabel?: string | null | undefined;
   reset?: {
     calendar?(): void;
     filters?(): void;
@@ -43,7 +45,7 @@ export function RemoveFilters({
   return (
     <button
       className="openk9-remove-filters-button btn"
-      aria-label={t("removeFilters") ?? ""}
+      aria-label={removeAriaLabel ?? t("removeFilters") ?? ""}
       onClick={() => handleReset(itemsRemove, reset)}
       css={css`
         width: 100%;

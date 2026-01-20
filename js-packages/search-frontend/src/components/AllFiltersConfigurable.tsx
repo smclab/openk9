@@ -309,6 +309,9 @@ export default function AllFilters({
       <div className="container-openk9-all-filters">
         <button
           className="Openk9-all-filters-reset"
+          aria-label={
+            calendar.translationLabel?.ariaLabelReset || "Reset Filters"
+          }
           onClick={() => {
             setSearchToken([]);
             setLang(defaultLanguage);
@@ -330,6 +333,9 @@ export default function AllFilters({
         </button>
         <button
           className="Openk9-all-filters-save"
+          aria-label={
+            calendar.translationLabel?.ariaLabelSave || "Save Filters"
+          }
           onClick={() => {
             filterDefault.setAllFilters(searchToken || []);
             filterDefault.setLanguageSelected(lang || "it");

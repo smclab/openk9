@@ -409,6 +409,7 @@ export function Main({
           <RemoveFilters
             itemsRemove={configuration?.removeFiltersConfigurable?.itemsRemove}
             configurableLabel={configuration.removeFiltersConfigurable?.label}
+            removeAriaLabel={configuration.removeFiltersConfigurable?.ariaLabel}
             reset={{
               calendar: () => {
                 setDateRange({
