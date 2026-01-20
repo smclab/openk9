@@ -38,7 +38,7 @@ This module provides:
 ## Quickstart
 
 ### OpenK9 Setup
-```bach
+```bash
 rag-module:
     image: smclab/openk9-rag-module:3.1.0-SNAPSHOT
     container_name: rag-module
