@@ -7,7 +7,6 @@ metadata:
 data:
   RABBITMQ_HOST: {{ .Values.rabbitmq.host | quote }}
   RABBITMQ_USER: {{ .Values.rabbitmq.user | quote }}
-  RABBITMQ_PASS: {{ .Values.rabbitmq.password | quote }}
   RABBITMQ_RETRY_DELAY_MS: {{ .Values.rabbitmq.retryDelayMs | quote }}
   RABBITMQ_MAX_RETRIES: {{ .Values.rabbitmq.maxRetries | quote }}
   {{- if .Values.phoenix.collectorEndpoint }}

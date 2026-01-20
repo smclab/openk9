@@ -62,7 +62,9 @@ rabbitmq:
   host: "rabbitmq.k9-requirements.svc.cluster.local"
   port: 5672
   user: "openk9"
-  password: "openk9"
+  password:
+    secretName: "rabbitmq-password"
+    secretKey: "rabbitmq-password"
   retryDelayMs: "5000"
   maxRetries: "10"
 

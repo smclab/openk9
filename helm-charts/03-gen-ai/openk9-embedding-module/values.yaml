@@ -65,6 +65,15 @@ openk9:
     host: "openk9-datasource"
     port: 8080
 
+## RabbitMQ configuration
+rabbitmq:
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
+  port: 5672
+  user: "openk9"
+  password:
+    secretName: "rabbitmq-password"
+    secretKey: "rabbitmq-password"
+
 # One of Ingress or Route is mandatory
 ingress:
   enabled: false
@@ -131,7 +140,13 @@ hostAliases: []
 ##     cpu: 3
 ##     memory: 1024Mi
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 4Gi
 
 autoscaling:
   enabled: false

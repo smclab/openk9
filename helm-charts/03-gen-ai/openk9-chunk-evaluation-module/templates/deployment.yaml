@@ -33,6 +33,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config
+          env:
+            - name: RABBITMQ_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.rabbitmq.password.secretName }}
+                  key: {{ .Values.rabbitmq.password.secretKey }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
