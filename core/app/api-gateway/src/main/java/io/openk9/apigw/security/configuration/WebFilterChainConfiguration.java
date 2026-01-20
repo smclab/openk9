@@ -31,7 +31,6 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authorization.AuthorizationContext;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 
@@ -63,11 +62,8 @@ public class WebFilterChainConfiguration {
 			.addFilterBefore(
 				tenantResolverFilter,
 				SecurityWebFiltersOrder.CORS)
-			.cors(cors -> cors.configurationSource(exchange -> {
-				var corsConfiguration = new CorsConfiguration();
-				corsConfiguration.applyPermitDefaultValues();
-				return corsConfiguration;
-			}))
+			// CSRF is not required because we use Authorization header
+			// for authentication.
 			.csrf(ServerHttpSecurity.CsrfSpec::disable)
 			.addFilterAt(
 				new AuthorizationHeaderFilter(),
