@@ -4,7 +4,7 @@ apscheduler==3.11.0
 arize-phoenix-otel==0.9.1
 authlib==1.6.5
 cryptography==44.0.1
-fastapi==0.115.11
+fastapi==0.128.0
 filelock==3.20.1
 grpcio-tools==1.71.0
 grpcio==1.71.0
