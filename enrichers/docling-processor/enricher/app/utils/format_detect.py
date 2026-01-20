@@ -1,6 +1,6 @@
 import base64
+from io import BytesIO
 
-import BytesIO
 from docling.datamodel.base_models import FormatToExtensions
 from docling.datamodel.document import DocumentStream, _DocumentConversionInput
 
