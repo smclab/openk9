@@ -10,6 +10,9 @@ data:
 
   QUARKUS_OPENSEARCH_HOSTS: '{{- join "," .Values.opensearch.host }}'
   QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+  QUARKUS_OPENSEARCH_PROTOCOL: {{ .Values.opensearch.protocol | quote }}
+  QUARKUS_OPENSEARCH_SSL_VERIFY: {{ .Values.opensearch.sslVerify | quote }}
+
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
   QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
