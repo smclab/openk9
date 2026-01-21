@@ -158,7 +158,7 @@ export function SaveAutocomplete() {
                   <div>
                     <TextInput label="Name" {...form.inputProps("name")} />
                     <TextInput label="Fuzziness" {...form.inputProps("fuzziness")} />
-                    <TextInput label="Min Word Length" {...form.inputProps("minimumShouldMatch")} />
+                    <TextInput label="Min should Match" {...form.inputProps("minimumShouldMatch")} />
                     <NumberInput label="Result Size" {...form.inputProps("resultSize")} />
                     <CustomSelect
                       label={"Operator"}
