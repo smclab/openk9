@@ -17,14 +17,15 @@
 
 package io.openk9.k8s.crd;
 
+import java.util.HashMap;
+
+import io.openk9.common.util.Strings;
+
 import io.cattle.helm.v1.HelmChart;
 import io.cattle.helm.v1.HelmChartSpec;
 import io.cattle.helm.v1.helmchartspec.AuthSecret;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.openk9.common.util.StringUtils;
-
-import java.util.HashMap;
 
 class HelmManifest {
 
@@ -35,7 +36,7 @@ class HelmManifest {
 	static HelmChart createHelmChart(Manifest manifest) {
 
 		var metadata = new ObjectMeta();
-		metadata.setName(StringUtils.withSuffix(manifest.chart(), manifest.tenant()));
+		metadata.setName(Strings.withSuffix(manifest.chart(), manifest.tenant()));
 		metadata.setNamespace(CONTROLLER_NAMESPACE);
 
 		var spec = new HelmChartSpec();

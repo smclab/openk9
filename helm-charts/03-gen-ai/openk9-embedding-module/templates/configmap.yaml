@@ -6,3 +6,6 @@ metadata:
   labels: {{- include "common.labels.standard" . | nindent 4 }}
 data:
   PIPELINE_RESPONSE_URL: "{{ include "helper.datasourceURL" . }}/api/datasource/pipeline/callback/"
+  RABBITMQ_HOST: {{ .Values.rabbitmq.host | quote }}
+  RABBITMQ_PORT: {{ .Values.rabbitmq.port | quote }}
+  RABBITMQ_USER: {{ .Values.rabbitmq.user | quote }}

@@ -43,12 +43,11 @@ public class SinglePersistenceUnitCdiMutinySessionTest {
     @RunOnVertxContext
     public void test(UniAsserter asserter) {
         DefaultEntity entity = new DefaultEntity("default");
-		asserter.assertThat(
-			() -> sessionFactory.withTransaction((session, tx) -> session.persist(entity))
-				.chain(() -> sessionFactory.withSession(session -> session.find(
-					DefaultEntity.class,
-					entity.getId()
-				))),
+        asserter.assertThat(
+                () -> sessionFactory.withTransaction((session, tx) -> session.persist(entity))
+                        .chain(() -> sessionFactory.withSession(session -> session.find(
+                                DefaultEntity.class,
+                                entity.getId()))),
                 retrievedEntity -> assertThat(retrievedEntity)
                         .isNotSameAs(entity)
                         .returns(entity.getName(), DefaultEntity::getName));

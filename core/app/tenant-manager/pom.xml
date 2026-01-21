@@ -18,15 +18,37 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
     <groupId>io.openk9.app</groupId>
-    <artifactId>app</artifactId>
+    <artifactId>quarkus-app</artifactId>
 	  <version>3.1.0-SNAPSHOT</version>
+	  <relativePath>../quarkus-app/pom.xml</relativePath>
   </parent>
+
   <artifactId>tenant-manager</artifactId>
   <name>OpenK9 :: App :: Tenant Manager</name>
 
   <dependencies>
+
+	  <!-- tenant events producing -->
+	  <dependency>
+		  <groupId>io.openk9</groupId>
+		  <artifactId>events</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.smallrye.reactive</groupId>
+		  <artifactId>mutiny-reactor</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkiverse.rabbitmqclient</groupId>
+		  <artifactId>quarkus-rabbitmq-client</artifactId>
+	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-messaging-rabbitmq</artifactId>
+	  </dependency>
+	  <!-- tenant events producing -->
 
     <!-- // jpa -->
     <dependency>
@@ -57,16 +79,14 @@
       <artifactId>quarkus-cache</artifactId>
     </dependency>
 
-    <!-- realm management -->
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-reactive-routes</artifactId>
+	  </dependency>
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-keycloak-admin-rest-client</artifactId>
-    </dependency>
-
-    <!-- authetication -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-oidc</artifactId>
     </dependency>
 
     <!-- // API -->

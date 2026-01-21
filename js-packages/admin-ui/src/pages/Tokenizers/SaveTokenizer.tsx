@@ -17,8 +17,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenizerMutation, useTokenizerQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateTokenizer } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveTokenizer() {
+export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenizerId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -34,6 +35,8 @@ export function SaveTokenizer() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = tokenizerId === "new";
   const tokenizerQuery = useTokenizerQuery({
     variables: { id: tokenizerId as string },
     skip: !tokenizerId || tokenizerId === "new",
@@ -75,8 +78,6 @@ export function SaveTokenizer() {
     jsonConfig: tokenizerQuery.data?.tokenizer?.jsonConfig,
     type: tokenizerQuery.data?.tokenizer?.type,
   });
-  const isRecap = page === 1;
-
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
@@ -104,64 +105,105 @@ export function SaveTokenizer() {
     getValidationMessages: fromFieldValidators(createOrUpdateTokenizerMutation.data?.tokenizer?.fieldValidators),
   });
 
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+            ],
+            label: "Recap Tokenizer",
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (tokenizerQuery.loading) {
     return <div></div>;
   }
 
   return (
-    <>
-      <ContainerFluid>
-        <>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-            <TitleEntity
-              nameEntity="Tokenizers"
-              description="Create or Edit an Tokenizer to definire a specific token splitting logic to apply to fields. 
+    <ContainerFluid>
+      <>
+        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+          <TitleEntity
+            nameEntity="Tokenizers"
+            description="Create or Edit an Tokenizer to definire a specific token splitting logic to apply to fields. 
             You can choose between pre-built Tokenizers choosing prefer type."
-              id={tokenizerId}
-            />
-            {view === "view" && (
-              <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
-                Edit
-              </Button>
-            )}
-          </Box>
-          <form style={{ borderStyle: "unset", padding: "0 16px" }}>
-            <CreateDataEntity
-              form={form}
-              page={page}
-              id={tokenizerId}
-              pathBack="/tokenizers/"
-              setPage={setPage}
-              haveConfirmButton={view ? false : true}
-              informationSuggestion={[
-                {
-                  content: (
-                    <>
-                      <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
-                      <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
-                      <GenerateDynamicFieldsMemo
-                        templates={TemplateTokenizer}
-                        type={typeSelected}
-                        template={template}
-                        setType={changeType}
-                        isRecap={isRecap}
-                        changeValueKey={changeValueKey}
-                      />{" "}
-                    </>
-                  ),
-                  page: 0,
-                  validation: view ? true : false,
-                },
-                {
-                  validation: true,
-                },
-              ]}
-              fieldsControll={["name"]}
-            />
-          </form>
-          <ConfirmModal />
-        </>
-      </ContainerFluid>
-    </>
+            id={tokenizerId}
+          />
+          {view === "view" && (
+            <Button variant="contained" onClick={handleEditClick} sx={{ height: "fit-content" }}>
+              Edit
+            </Button>
+          )}
+        </Box>
+        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+          <CreateDataEntity
+            form={form}
+            page={page}
+            id={tokenizerId}
+            pathBack="/tokenizers/"
+            setPage={setPage}
+            haveConfirmButton={view ? false : true}
+            informationSuggestion={[
+              {
+                content: (
+                  <>
+                    <TextInput label="Name" {...form.inputProps("name")} disabled={isRecap} />
+                    <TextArea label="Description" {...form.inputProps("description")} disabled={isRecap} />
+                    <GenerateDynamicFieldsMemo
+                      templates={TemplateTokenizer}
+                      type={typeSelected}
+                      template={template}
+                      setType={changeType}
+                      isRecap={isRecap}
+                      changeValueKey={changeValueKey}
+                    />{" "}
+                  </>
+                ),
+                page: 0,
+                validation: view ? true : false,
+              },
+              {
+                validation: true,
+              },
+            ]}
+            fieldsControll={["name"]}
+          />
+        </form>
+        <ConfirmModal />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
+      </>
+    </ContainerFluid>
   );
 }

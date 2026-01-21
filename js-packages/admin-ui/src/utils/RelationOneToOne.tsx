@@ -198,7 +198,8 @@ export const useDocTypes: UseOptionsHook = makeUseOptionsHook({
 
 export function isValidId(
   input: { id?: string | null | undefined; name?: string | null | undefined } | undefined | null,
+  title?: string,
 ) {
   if (!input?.id) return undefined;
-  return { id: input.id, name: input.name || input.id };
+  return { ...(title ? { title: title } : null), id: input.id, name: input.name || input.id };
 }

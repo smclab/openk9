@@ -25,6 +25,7 @@ import {
 } from "../../graphql-generated";
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 type ReturnQueryAnalysis = {
   annotators: AssociatedUnassociated;
@@ -87,7 +88,7 @@ const useQueryAnalysisData = ({
   return { ...data };
 };
 
-export function SaveQueryAnalysis() {
+export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { queryAnalysisId = "new", view } = useParams();
   const navigate = useNavigate();
   const [selectedAssociationTabs, setSelectedAssociationTabs] = useState<string>(associationTabs[0].id);
@@ -104,6 +105,8 @@ export function SaveQueryAnalysis() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = queryAnalysisId === "new";
 
   const queryAnalysisQuery = useQueryAnalysisQuery({
     variables: { id: queryAnalysisId as string },
@@ -189,6 +192,25 @@ export function SaveQueryAnalysis() {
     getValidationMessages: fromFieldValidators(
       createOrUpdateQueryAnalysisMutation.data?.queryAnalysisWithLists?.fieldValidators,
     ),
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [{ key: "name" }, { key: "description" }, { key: "stopWords" }],
+        label: "Recap Query Analysis",
+      },
+      {
+        cell: [{ key: "annotatorsIds" }, { key: "rulesIds" }],
+        label: "Associations",
+      },
+    ],
+    valueOverride: {
+      annotatorsIds:
+        form.inputProps("annotatorsIds").value?.map((annotator, index) => ({ [index + 1]: annotator.label })) || [],
+      rulesIds: form.inputProps("rulesIds").value?.map((rule, index) => ({ [index + 1]: rule.label })) || [],
+    },
   });
 
   return (
@@ -289,6 +311,17 @@ export function SaveQueryAnalysis() {
         />
       </form>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

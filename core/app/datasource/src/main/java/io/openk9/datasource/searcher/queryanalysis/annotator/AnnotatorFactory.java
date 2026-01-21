@@ -21,9 +21,9 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.opensearch.client.RestHighLevelClient;
 
 @ApplicationScoped
@@ -32,7 +32,7 @@ public class AnnotatorFactory {
 	public Annotator getAnnotator(
 		TenantWithBucket tenantWithBucket,
 		io.openk9.datasource.model.Annotator annotator,
-		List<String> stopWords, JWT jwt) {
+		List<String> stopWords, JsonWebToken jwt) {
 
 		return switch (annotator.getType()) {
 			case TOKEN -> new TokenAnnotator(tenantWithBucket, annotator, stopWords);

@@ -446,6 +446,7 @@ def get_chat_chain_tool(
                     tenant_id,
                     timestamp,
                     chat_sequence_number,
+                    retrieve_from_uploaded_documents,
                 )
 
             yield json.dumps({"chunk": "", "type": "END"})

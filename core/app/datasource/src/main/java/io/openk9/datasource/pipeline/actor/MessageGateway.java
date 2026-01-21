@@ -23,7 +23,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Set;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.mapper.IngestionPayloadMapper;
 import io.openk9.datasource.pipeline.consumer.ErrorConsumer;

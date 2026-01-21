@@ -21,9 +21,9 @@ import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.Response;
-import io.openk9.common.util.SortBy;
+import io.openk9.common.util.web.Response;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.model.dto.base.RuleDTO;
 import io.openk9.datasource.service.RuleService;

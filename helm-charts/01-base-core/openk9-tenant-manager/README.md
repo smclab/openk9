@@ -112,6 +112,22 @@ Configure these when database type is oracle
 | `oracle.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `oracle-user-password`                    |
 | `oracle.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
 
+### Configure Rabbitmq
+
+Openk9 Tenant Manager needs Rabbitmq to work starting from 3.1.0 version.
+
+To configure connection to Rabbitmq following parameters are available:
+
+| Name                | Description                                                                                              | Value                      |
+| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `rabbitmq.host`    | Rabbitmq host                                                                                  | `rabbitmq-headless`            |
+| `rabbitmq.port`  | Port where Rabbitmq is exposed                                    | `5672` |
+| `rabbitmq.username`  | Rabbitmq user                                                                               | `openk9`             |
+| `rabbitmq.passwordSecretName` | Name of the secret where password is stored                            | `rabbitmq-password`                       |
+| `rabbitmq.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `rabbitmq-password`                    |
+| `rabbitmq.keyPasswordEnvName`       | Name of environment variable where password is set       | `RABBITMQ_PASSWORD`   |
+| `messaging.incoming.events.routingKeys`    | Routing keys for incoming events                             | `noop`            |
+
 ### Configure Keycloak
 
 Openk9 Tenant Manager needs Keycloak to work. 
@@ -180,7 +196,7 @@ But if you want for some reasons associate a pre-created Service Account to Open
 
 | Name                                          | Description                                                                                | Value   |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- |
-| `serviceAccount.create`                       | Enable creation of ServiceAccount for RabbitMQ pods                                        | `true`  |
+| `serviceAccount.create`                       | Enable creation of ServiceAccount for Tenant Manager pods                                        | `false`  |
 | `serviceAccount.name`                         | Name of the created serviceAccount                                                         | `""`    |
 | `serviceAccount.automountServiceAccountToken` | Auto-mount the service account token in the pod                                            | `false` |
 | `serviceAccount.annotations`                  | Annotations for service account. Evaluated as a template. Only used if `create` is `true`. | `{}`    |
@@ -352,11 +368,41 @@ Find more information about how to deal with common errors related to Openk9's H
 
 ## Upgrading
 
+### To 3.1.0
 
-### To 2.0.0
+- remove following values references to keycloak from your scenario values file
 
+```yaml
+## Keycloak configuration
+keycloak:
+  host: "keycloak.local"   #-TBMD
+  clientId: "tenant-manager"
+```
 
-### To 1.7.0
+- add following values references to keycloak to your scenario values file
+
+```yaml
+keycloak:
+  ### Base URI for Tenant Provisioning
+  baseIssuerUri: "https://keycloak.openk9.local/realms/"
+```
+
+- new configurations added to connect to Rabbitmq
+
+```yaml
+## Rabbitmq configuration
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+  username: "openk9"
+  passwordSecretName: "rabbitmq-password"
+  keyPasswordSecret: "rabbitmq-password"
+  keyPasswordEnvName: "RABBITMQ_PASSWORD"
+```
+
+### Previous versions
+
+No details present
 
 
 ## License

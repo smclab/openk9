@@ -20,6 +20,7 @@ import { isValidId, useDocTypeTokenTab } from "../../utils/RelationOneToOne";
 import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 enum fuzziness {
   ZERO = "ZERO",
@@ -123,7 +124,7 @@ function TokenTypeAutocomplete<TokenType extends string>({
   );
 }
 
-export function SaveTokenTab() {
+export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenTabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const navigate = useNavigate();
@@ -139,9 +140,9 @@ export function SaveTokenTab() {
       navigate(`/token-tab/${tokenTabId}`);
     }
   };
-
-  const disabled = page === 1 || view === "view";
-
+  const isRecap = page === 1;
+  const isNew = tokenTabId === "new";
+  const disabled = isRecap || view === "view";
   const tabTokenTabQuery = useTabTokenTabQuery({
     variables: { id: tokenTabId as string },
     skip: !tokenTabId || tokenTabId === "new",
@@ -243,6 +244,34 @@ export function SaveTokenTab() {
     getValidationMessages: fromFieldValidators(
       createOrUpdateTabTokenMutation.data?.tokenTabWithDocTypeField?.fieldValidators,
     ),
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "value" },
+          { key: "tokenType", label: "Token Type" },
+          { key: "docTypeFieldId", label: "Document Type Field" },
+          ...(form.inputProps("tokenType").value === "FILTER" || form.inputProps("tokenType").value === "TEXT"
+            ? [
+                { key: "boost" },
+                { key: "valuesQueryType", label: "Values Query Type" },
+                { key: "globalQueryType", label: "Global Query Type" },
+                { key: "fuzziness" },
+              ]
+            : []),
+          { key: "filter" },
+        ],
+        label: "Recap Token Tab",
+      },
+    ],
+    valueOverride: {
+      docTypeFieldId: form.inputProps("docTypeFieldId").value || "",
+    },
   });
 
   return (
@@ -369,6 +398,17 @@ export function SaveTokenTab() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

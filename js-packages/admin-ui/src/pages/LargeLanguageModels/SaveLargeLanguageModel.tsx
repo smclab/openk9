@@ -18,6 +18,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateLargeLanguageModelMutation, useLargeLanguageModelQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI" },
@@ -28,7 +29,7 @@ const PROVIDER_OPTIONS = [
   { value: "chat_vertex_ai_model_garden", label: "Chat Vertex AI Model Garden" },
 ];
 
-export function SaveLargeLanguageModel() {
+export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { LargeLanguageModelId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
@@ -45,6 +46,8 @@ export function SaveLargeLanguageModel() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = LargeLanguageModelId === "new";
   const embeddingModelQuery = useLargeLanguageModelQuery({
     variables: { id: LargeLanguageModelId as string },
     skip: !LargeLanguageModelId || LargeLanguageModelId === "new",
@@ -129,6 +132,26 @@ export function SaveLargeLanguageModel() {
   const viewMaskApiKey = React.useMemo(() => {
     return !!((view || LargeLanguageModelId !== "new") && form.inputProps("apiKey").value);
   }, [view, LargeLanguageModelId, form.inputProps("apiKey").value]);
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "apiKey", label: "API Key" },
+          { key: "apiUrl", label: "API URL" },
+          { key: "contextWindow", label: "Context Window" },
+          { key: "retrieveCitations", label: "Retrieve Citations" },
+          { key: "provider", label: "Provider" },
+          { key: "model", label: "Model" },
+          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+        ],
+        label: "Recap Large Language Model",
+      },
+    ],
+  });
 
   return (
     <>
@@ -241,6 +264,17 @@ export function SaveLargeLanguageModel() {
         />
       </form>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

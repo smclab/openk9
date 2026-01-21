@@ -21,10 +21,10 @@ import java.util.List;
 import java.util.Map;
 
 import io.openk9.datasource.model.Annotator;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.CategorySemantics;
 
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.opensearch.client.RestHighLevelClient;
 
 public class DocTypeAnnotator extends BaseAggregatorAnnotator {
@@ -34,12 +34,11 @@ public class DocTypeAnnotator extends BaseAggregatorAnnotator {
 		Annotator annotator,
 		List<String> stopWords,
 		RestHighLevelClient restHighLevelClient,
-		JWT jwt) {
+		JsonWebToken jwt) {
 
 		super(
 			tenantWithBucket, annotator, stopWords, restHighLevelClient, jwt,
-			"documentTypes.keyword"
-		);
+			"documentTypes.keyword");
 	}
 
 	@Override

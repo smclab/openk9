@@ -31,8 +31,7 @@ public final class PersisterNamesTest {
     private void assertClassExists(String clazz) {
         try {
             Thread.currentThread().getContextClassLoader().loadClass(clazz);
-		}
-		catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
     }

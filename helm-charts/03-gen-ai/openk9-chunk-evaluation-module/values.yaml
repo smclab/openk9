@@ -1,0 +1,227 @@
+# Copyright Smc Treviso, S.r.l All Rights Reserved.
+# SPDX-License-Identifier: APACHE-2.0
+
+# Default values for openk9-chunk-evaluation-module.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## @param replicaCount Number of Chunk Evaluation Module replicas to deploy
+##
+replicaCount: 1
+
+## @section Chunk Evaluation Module Image parameters
+## Docker Chunk Evaluation Module image version
+## ref: https://hub.docker.com/u/smclab
+## @param image.registry [default: REGISTRY_NAME] Chunk Evaluation Module image registry
+## @skip image.tag Chunk Evaluation Module image tag (immutable tags are recommended)
+## @param image.pullPolicy Chunk Evaluation Module image pull policy
+## @param image.pullSecrets Specify docker-registry secret names as an array
+image:
+  registry: ""
+  name: smclab/openk9-chunk-evaluation-module
+  ## Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+  ## Specify a imagePullPolicy
+  ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
+  ##
+  pullPolicy: Always
+
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ## Example:
+  ## pullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  pullSecrets:
+    - docker-registry-secret
+
+## Annotations to add to all deployed objects
+commonAnnotations: {}
+
+## @param nameOverride String to partially override fullname template (will maintain the release name)
+##
+nameOverride: ""
+
+## @param fullnameOverride String to fully override fullname template
+##
+fullnameOverride: ""
+
+## Kubernetes service type
+##
+service:
+  ## @param service.type Kubernetes Service type
+  ##
+  type: ClusterIP
+  ## Service ports
+  ## @param service.port Http service port
+  port: 8080
+
+rabbitmq:
+  host: "rabbitmq.k9-requirements.svc.cluster.local"
+  port: 5672
+  user: "openk9"
+  password:
+    secretName: "rabbitmq-password"
+    secretKey: "rabbitmq-password"
+  retryDelayMs: "5000"
+  maxRetries: "10"
+
+## Phoenix configuration for observability
+phoenix:
+  collectorEndpoint: "http://phoenix.monitoring.svc.cluster.local:6006"
+  projectName: "openk9-chunk-evaluation"
+  apiKey: ""
+
+# One of Ingress or Route is mandatory
+ingress:
+  enabled: false
+
+# In OpenShift use Route instead of Ingress
+route:
+  enabled: false
+
+## Chunk Evaluation Module pods ServiceAccount
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+##
+serviceAccount:
+  ## @param serviceAccount.create Enable creation of ServiceAccount for Chunk Evaluation Module pods
+  ##
+  create: false
+  ## @param serviceAccount.annotations Annotations for service account. Evaluated as a template. Only used if `create` is `true`.
+  ##
+  annotations: {}
+  ## @param serviceAccount.name Name of the created serviceAccount
+  ## If not set and create is true, a name is generated using the fullname template
+  ##
+  name: ""
+
+## @param podAnnotations Chunk Evaluation Module Pod annotations. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+##
+podAnnotations: {}
+
+## Chunk Evaluation Module pods' Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+## @param podSecurityContext.enabled Enable Chunk Evaluation Module pods' Security Context
+## @param podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+## @param podSecurityContext.sysctls Set kernel settings using the sysctl interface
+## @param podSecurityContext.supplementalGroups Set filesystem extra groups
+## @param podSecurityContext.fsGroup Set Chunk Evaluation Module pod's Security Context fsGroup
+##
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+## @param hostAliases Deployment pod host aliases
+## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+##
+hostAliases: []
+
+## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
+## Example:
+## resources:
+##   requests:
+##     cpu: 500m
+##     memory: 512Mi
+##   limits:
+##     cpu: 1000m
+##     memory: 1024Mi
+##
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilizationPercentage: 80
+  averageMemoryUtilizationPercentage: 80
+
+## @param nodeSelector Node labels for pod assignment. Evaluated as a template
+## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+##
+nodeSelector: {}
+
+## @param tolerations Tolerations for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+##
+tolerations: []
+
+## @param affinity Affinity for pod assignment. Evaluated as a template
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
+##
+affinity: {}
+
+## Configure Chunk Evaluation Module containers' extra options for startup probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param startupProbe.enabled Enable startupProbe
+## @param startupProbe.initialDelaySeconds Initial delay seconds for startupProbe
+## @param startupProbe.periodSeconds Period seconds for startupProbe
+## @param startupProbe.timeoutSeconds Timeout seconds for startupProbe
+## @param startupProbe.failureThreshold Failure threshold for startupProbe
+## @param startupProbe.successThreshold Success threshold for startupProbe
+##
+startupProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Chunk Evaluation Module containers' extra options for liveness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param livenessProbe.enabled Enable livenessProbe
+## @param livenessProbe.initialDelaySeconds Initial delay seconds for livenessProbe
+## @param livenessProbe.periodSeconds Period seconds for livenessProbe
+## @param livenessProbe.timeoutSeconds Timeout seconds for livenessProbe
+## @param livenessProbe.failureThreshold Failure threshold for livenessProbe
+## @param livenessProbe.successThreshold Success threshold for livenessProbe
+##
+livenessProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Configure Chunk Evaluation Module containers' extra options for readiness probe
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+## @param readinessProbe.enabled Enable readinessProbe
+## @param readinessProbe.initialDelaySeconds Initial delay seconds for readinessProbe
+## @param readinessProbe.periodSeconds Period seconds for readinessProbe
+## @param readinessProbe.timeoutSeconds Timeout seconds for readinessProbe
+## @param readinessProbe.failureThreshold Failure threshold for readinessProbe
+## @param readinessProbe.successThreshold Success threshold for readinessProbe
+##
+readinessProbe:
+  enabled: false
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 5
+
+## Persistent Volume for data storage
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  mountPath: /app/dati

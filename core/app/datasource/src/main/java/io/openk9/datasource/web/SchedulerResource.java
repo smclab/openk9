@@ -18,39 +18,31 @@
 package io.openk9.datasource.web;
 
 import java.util.List;
-
-import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
-import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
-import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.service.SchedulerService;
 import io.openk9.datasource.web.dto.StatusResponse;
+import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
-import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
-import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestResponse;
 
 @ApplicationScoped
 @Path("/schedulers")
-@RolesAllowed("k9-admin")
 public class SchedulerResource {
 
 	@Operation(operationId = "getDeletedContentIds")

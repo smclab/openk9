@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,12 +25,13 @@ import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.UserField;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.searcher.client.ExtraParamKeys;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.opensearch.index.query.BoolQueryBuilder;
 import org.opensearch.index.query.QueryBuilders;
 
@@ -39,13 +39,10 @@ import org.opensearch.index.query.QueryBuilders;
 public class AclQueryParser implements QueryParser {
 
 	@ConfigProperty(
-		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
+		name = "openk9.datasource.acl.query.extra.params.enabled",
+		defaultValue = "false"
 	)
-	String extraParamsKey;
-	@ConfigProperty(
-		name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false"
-	)
-	boolean extraParamsEnabled;
+	boolean extraRolesEnabled;
 
 	public static void apply(
 		DocTypeField docTypeField,
@@ -67,16 +64,15 @@ public class AclQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
-		var innerQuery = getAclFilterQuery(
-			parserContext, this.extraParamsKey, this.extraParamsEnabled);
+		var innerQuery = getBoolQuery(parserContext, this.extraRolesEnabled);
 
 		parserContext.getMutableQuery().filter(innerQuery);
 
 		return Uni.createFrom().voidItem();
 	}
 
-	protected static BoolQueryBuilder getAclFilterQuery(
-		ParserContext parserContext, String extraParamsKey, boolean extraParamsEnabled) {
+	protected static BoolQueryBuilder getBoolQuery(
+		ParserContext parserContext, boolean extraRolesEnabled) {
 
 		BoolQueryBuilder innerQuery =
 			QueryBuilders
@@ -84,58 +80,33 @@ public class AclQueryParser implements QueryParser {
 				.minimumShouldMatch(1)
 				.should(QueryBuilders.matchQuery("acl.public", true));
 
-		JWT jwt = parserContext.getJwt();
+		AclMapping[] aclMappings = parserContext.getTenantWithBucket().getAclMappings();
+		JsonWebToken jwt = parserContext.getJwt();
+		List<String> extraRoles = null;
 
-		if (!jwt.isEmpty()) {
+		if (extraRolesEnabled) {
+			Map<String, List<String>> extraParams = parserContext.getExtraParams();
 
-			Iterator<AclMapping> iterator =
-				parserContext
-					.getTenantWithBucket()
-					.getBucket()
-					.getDatasources()
-					.stream()
-					.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
-					.distinct()
-					.iterator();
+			if (extraParams != null && !extraParams.isEmpty()) {
+				extraRoles = extraParams.get(ExtraParamKeys.EXTRA_ROLES);
+			}
+		}
 
-			while (iterator.hasNext()) {
-				AclMapping aclMapping = iterator.next();
+		for (AclMapping aclMapping : aclMappings) {
 
-				DocTypeField docTypeField = aclMapping.getDocTypeField();
+			DocTypeField docTypeField = aclMapping.getDocTypeField();
+			UserField userField = aclMapping.getUserField();
 
-				UserField userField = aclMapping.getUserField();
-
+			if (jwt.getClaimNames() != null) {
 				apply(docTypeField, userField.getTerms(jwt), innerQuery);
+			}
 
+			if (extraRoles != null) {
+				apply(docTypeField, extraRoles, innerQuery);
 			}
 
 		}
-		else {
 
-			if (extraParamsEnabled) {
-
-				Map<String, List<String>> extraParams = parserContext.getExtraParams();
-
-				if (extraParams != null && !extraParams.isEmpty()) {
-					List<String> roles = extraParams.get(extraParamsKey);
-					if (roles != null && !roles.isEmpty()) {
-						parserContext
-							.getTenantWithBucket()
-							.getBucket()
-							.getDatasources()
-							.stream()
-							.flatMap(d -> d.getPluginDriver().getAclMappings().stream())
-							.filter(aclMapping -> aclMapping.getUserField() == UserField.ROLES)
-							.findFirst()
-							.ifPresent((aclMapping) -> apply(
-								aclMapping.getDocTypeField(),
-								roles,
-								innerQuery
-							));
-					}
-				}
-			}
-		}
 		return innerQuery;
 	}
 

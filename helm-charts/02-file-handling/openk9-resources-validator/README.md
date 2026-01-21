@@ -310,12 +310,27 @@ No Known issues
 Find more information about how to deal with common errors related to Openk9's Helm charts in [this troubleshooting guide](https://staging-site.openk9.io/docs/monitoring/troubleshooting).
 
 
+
 ## Upgrading
 
-### To 2.0.0
 
+### To 3.1.0
 
-### To 1.7.0
+- new configurations added or modified to control opensearch configurations
+
+```yaml
+## Opensearch configuration
+opensearch:
+  ## Modified to configure Opensearch cluster
+  host: 
+    - "opensearch-cluster-master-headless:9200"
+  sslVerify: false
+  protocol: "http"
+```
+
+### Previous versions
+
+No details present
 
 
 ## License

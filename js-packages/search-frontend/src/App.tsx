@@ -36,6 +36,7 @@ export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
+  showSyntax: false,
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
@@ -69,11 +70,6 @@ export function App() {
 
   const { t } = useTranslation();
 
-  const handleClick = () => {
-    if (window.innerWidth < 480) {
-      setIsVisibleSearchMobile(true);
-    }
-  };
   const debouncedUpdateSearch = debounce((search) => {
     const text = search?.[0]?.values?.[0] || undefined;
     setSearchText(text);
@@ -278,7 +274,6 @@ export function App() {
               align-items: flex-end;
               width: 100%;
             `}
-            onClick={handleClick}
             className="openk9-update-configuration-search"
             ref={(element) =>
               openk9.updateConfiguration({ searchWithButton: element })
@@ -890,19 +885,6 @@ export function App() {
           </div>
         }
       </div>
-
-      <div
-        className="openk9-results-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            searchMobile: {
-              search: element,
-              isVisible: isVisibleSearchMobile,
-              setIsVisible: setIsVisibleSearchMobile,
-            },
-          })
-        }
-      />
 
       <div
         className="openk9-results-container openk9-box"

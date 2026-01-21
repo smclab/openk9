@@ -22,10 +22,12 @@ import {
 import { isValidId } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { DocTypeFieldAutocompleteDropdown } from "./DocTypeFieldAutocompleteDropdown";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveSuggestionCategory() {
+export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { suggestionCategoryId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isNew = suggestionCategoryId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Filter",
@@ -39,6 +41,7 @@ export function SaveSuggestionCategory() {
       navigate(`/suggestion-category/${suggestionCategoryId}`);
     }
   };
+  const isRecap = page === 1;
 
   const suggestionCategoryQuery = useSuggestionCategoryQuery({
     variables: { id: suggestionCategoryId as string },
@@ -107,6 +110,25 @@ export function SaveSuggestionCategory() {
 
   const docTypeField = form.inputProps("docTypeFieldId");
   const numericSuggestionCategoryId = Number(suggestionCategoryId);
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "priority" },
+          { key: "multiSelect" },
+          { key: "docTypeFieldId", label: "Search Config" },
+        ],
+        label: "Recap Suggestion Category",
+      },
+    ],
+    valueOverride: {
+      docTypeFieldId: form.inputProps("docTypeFieldId").value?.name || "",
+    },
+  });
 
   return (
     <ContainerFluid>
@@ -180,6 +202,17 @@ export function SaveSuggestionCategory() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

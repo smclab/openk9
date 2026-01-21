@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>io.openk9.app</groupId>
+		<artifactId>app</artifactId>
+		<version>3.1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<name>OpenK9 :: App :: Quarkus</name>
+	<artifactId>quarkus-app</artifactId>
+	<packaging>pom</packaging>
+
+	<properties>
+		<junit-excluded-groups>io.quarkus.test.junit.QuarkusTest</junit-excluded-groups>
+	</properties>
+
+	<profiles>
+		<profile>
+			<!-- enable junit long-running tests -->
+			<id>long-running-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
+		</profile>
+	</profiles>
+
+	<modules>
+		<module>../datasource</module>
+		<module>../tenant-manager</module>
+		<module>../searcher</module>
+		<module>../entity-manager</module>
+		<module>../file-manager</module>
+		<module>../ingestion</module>
+		<module>../resources-validator</module>
+		<module>../tika</module>
+		<module>../k8s-client</module>
+	</modules>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.openk9.common</groupId>
+			<artifactId>quarkus-common</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.openk9.common</groupId>
+			<artifactId>resources</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-arc</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-container-image-jib</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.smallrye.config</groupId>
+			<artifactId>smallrye-config-crypto</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-rest-jackson</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-rest</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-smallrye-health</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-opentelemetry</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.opentelemetry</groupId>
+			<artifactId>opentelemetry-extension-trace-propagators</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-logging-json</artifactId>
+		</dependency>
+
+		<!-- Test dependencies -->
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-junit5</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-junit5-mockito</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-test-vertx</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-test-security</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.rest-assured</groupId>
+			<artifactId>rest-assured</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
+					<excludedGroups>${junit-excluded-groups}</excludedGroups>
+					<systemProperties>
+						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+					</systemProperties>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

@@ -17,19 +17,10 @@
 
 package io.openk9.datasource.index.model;
 
-import io.openk9.api.tenantmanager.TenantManager;
 import io.openk9.datasource.index.util.OpenSearchUtils;
 import io.openk9.datasource.model.DataIndex;
 
 public record IndexName(String value) {
-
-	public static IndexName from(TenantManager.Tenant tenant, String dataIndexName) {
-		return from(tenant.schemaName(), dataIndexName);
-	}
-
-	public static IndexName from(TenantManager.Tenant tenant, DataIndex dataIndex) {
-		return from(tenant.schemaName(), dataIndex.getName());
-	}
 
 	public static IndexName from(String tenantId, DataIndex dataIndex) {
 		return from(tenantId, dataIndex.getName());

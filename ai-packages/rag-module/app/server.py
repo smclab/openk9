@@ -21,7 +21,6 @@ from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
-from urllib.parse import urlparse
 
 import uvicorn
 from dotenv import load_dotenv
@@ -200,7 +199,15 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -319,7 +326,16 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -468,7 +484,16 @@ async def rag_chat_tool(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -582,7 +607,16 @@ async def get_user_chats(
     chat_sequence_number = user_chats.chatSequenceNumber
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -670,7 +704,15 @@ async def get_chat(
         - Only returns messages belonging to the authenticated user
         - Uses OpenSearch for data storage and retrieval
     """
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -778,7 +820,15 @@ async def delete_chat(
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -892,7 +942,15 @@ async def rename_chat(
         - Only affects chats belonging to the authenticated user
         - The chat must contain at least one message to be renamed
     """
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
@@ -1062,7 +1120,15 @@ async def upload_files(
             ]
         }
     """
-    virtual_host = headers.x_forwarded_host or urlparse(str(request.base_url)).hostname
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
     tenant_id = (
         headers.x_tenant_id
         or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[

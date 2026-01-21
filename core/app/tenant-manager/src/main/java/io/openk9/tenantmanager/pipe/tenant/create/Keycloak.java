@@ -42,7 +42,14 @@ public class Keycloak {
 	}
 
 	public sealed interface Response {}
-	public record Success(String clientId, String clientSecret, String virtualHost, String realmName, String username, String password) implements Response {}
+
+	public record Success(
+		String clientId,
+		String clientSecret,
+		String virtualHost,
+		String realmName,
+		String username,
+		String password) implements Response {}
 
 	private static Behavior<Command> rollback(
 		ActorContext<Command> context,

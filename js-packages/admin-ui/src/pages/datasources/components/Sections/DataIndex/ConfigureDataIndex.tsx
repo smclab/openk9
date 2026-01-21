@@ -341,9 +341,10 @@ export default function DataIndexFormsource({
       )}
       <Box
         sx={{
-          marginTop: "10px",
+          marginBlock: "10px",
           display: "flex",
           justifyContent: "space-between",
+          marginBottom: "80px",
         }}
       >
         <Button
@@ -361,7 +362,6 @@ export default function DataIndexFormsource({
           aria-label="Recap"
           onClick={() => {
             isCreated && setIsRecap(true);
-            setActiveTab("dataIndex");
           }}
         >
           Recap

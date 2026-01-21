@@ -5,6 +5,7 @@ import {
   CustomSelectRelationsOneToOne,
   NumberInput,
   TitleEntity,
+  useForm,
 } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import {
@@ -30,6 +31,7 @@ import { ChunkType, useDataSourcesQuery, useDocumentTypesQuery } from "../../../
 import { DataindexData } from "../SaveDataindex";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useDocTypeOptions } from "../../../utils/RelationOneToOne";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export function CreateDataindex({
   dataindexData,
@@ -37,13 +39,17 @@ export function CreateDataindex({
   verifyData,
   setVerifyData,
   isReadOnly,
+  setExtraFab,
 }: {
   dataindexData: DataindexData | null | undefined;
   setDataindexData: React.Dispatch<React.SetStateAction<DataindexData | null | undefined>>;
   verifyData: string;
   setVerifyData: React.Dispatch<React.SetStateAction<string | undefined>>;
   isReadOnly: boolean;
+  setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
+  const isRecap = verifyData === "editView" || verifyData === "view";
+
   const saveAndContinueDataindex = () => {
     setVerifyData("editView");
   };
@@ -121,44 +127,64 @@ export function CreateDataindex({
     }
   };
 
-  const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
-    if (!docTypesQuery.data?.docTypeFields?.pageInfo?.hasNextPage) return [];
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        name: dataindexData?.name || "",
+        description: dataindexData?.description || "",
+        datasourceId: dataindexData?.datasourceId?.id
+          ? { id: dataindexData.datasourceId.id, name: dataindexData.datasourceId.name }
+          : { id: "", name: "" },
+        docTypeIds: dataindexData?.docTypeIds || [],
+        knnIndex: dataindexData?.knnIndex || false,
+        chunkType: dataindexData?.chunkType || "",
+        chunkWindowSize: dataindexData?.chunkWindowSize || 0,
+        embeddingJsonConfig: dataindexData?.embeddingJsonConfig || "{}",
+        embeddingDocTypeFieldId: dataindexData?.embeddingDocTypeFieldId?.id
+          ? { id: dataindexData.embeddingDocTypeFieldId.id, name: dataindexData.embeddingDocTypeFieldId.name }
+          : { id: "", name: "" },
+        settings: dataindexData?.settings || "{}",
+      }),
+      [dataindexData],
+    ),
 
-    try {
-      const response = await docTypesQuery.fetchMore({
-        variables: {
-          after: docTypesQuery.data.docTypeFields.pageInfo.endCursor,
-        },
-      });
+    originalValues: dataindexData,
+    isLoading: false,
+    onSubmit(updatedData: any) {
+      setDataindexData((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...updatedData,
+            }
+          : updatedData,
+      );
+    },
+  });
 
-      const newEdges = response.data?.docTypeFields?.edges || [];
-      const newPageInfo = response.data?.docTypeFields?.pageInfo;
-
-      if (!newEdges.length || !newPageInfo) {
-        console.warn("No new data fetched or pageInfo is missing.");
-        return [];
-      }
-
-      docTypesQuery.updateQuery((prev) => ({
-        ...prev,
-        docTypeFields: {
-          ...prev.docTypeFields,
-          edges: [...(prev.docTypeFields?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
-
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Error loading more options:", error);
-      return [];
-    }
-  };
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "datasourceId", label: "Datasource" },
+          { key: "docTypeIds", label: "Document Types" },
+          { key: "knnIndex", label: "KNN Index" },
+          ...(form.inputProps("knnIndex").value ? [{ key: "chunkType" }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "chunkWindowSize" }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "embeddingJsonConfig", jsonView: true }] : []),
+          ...(form.inputProps("knnIndex").value ? [{ key: "embeddingDocTypeFieldId" }] : []),
+        ],
+        label: "Recap Data Index",
+      },
+    ],
+    valueOverride: {
+      datasourceId: form.inputProps("datasourceId").value?.name || "",
+      embeddingDocTypeFieldId: form.inputProps("embeddingDocTypeFieldId").value?.name || "",
+    },
+  });
 
   return (
     <ContainerFluid>
@@ -430,6 +456,7 @@ export function CreateDataindex({
                   display: "flex",
                   justifyContent: "space-between",
                   marginTop: "20px",
+                  marginBottom: "70px",
                 }}
               >
                 <Link to={"/dataindices"}>
@@ -462,6 +489,7 @@ export function CreateDataindex({
               dataIndex={dataindexData}
             />
           )}
+          <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
         </>
       )}
     </ContainerFluid>

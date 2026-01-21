@@ -11,6 +11,7 @@ import {
   createTheme,
   CssBaseline,
   Fab,
+  Fade,
   IconButton,
   InputAdornment,
   List,
@@ -63,7 +64,7 @@ import {
 import { SaveAutocomplete } from "@pages/Autocomplete/Autocomplete";
 import { Autocompletes } from "@pages/Autocomplete/Autocompletes";
 import Autocorrections from "@pages/Autocorrections/Autocorrections";
-import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrecion";
+import { SaveAutocorrection } from "@pages/Autocorrections/SaveAutocorrection";
 import { Buckets, SaveBucket } from "@pages/buckets";
 import DocumentTypes from "@pages/DocumentTypes/DocumentTypes";
 import { SaveDocumentType } from "@pages/DocumentTypes/SaveDocumentType";
@@ -107,7 +108,7 @@ const lightTheme = createTheme({
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: themeColor.light.secondary, // Colore di sfondo per l'intestazione
+          backgroundColor: themeColor.light.secondary,
         },
       },
     },
@@ -178,7 +179,7 @@ const lightTheme = createTheme({
     mode: "light",
   },
   typography: {
-    fontFamily: "Lato, sans-serif",
+    fontFamily: '"Inter", "Inter Fallback"',
     h1: {
       fontSize: "2.125rem",
     },
@@ -224,14 +225,14 @@ const darkTheme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid #555", // Colore grigio scuro per le righe della tabella
+          borderBottom: "1px solid #555",
         },
       },
     },
     MuiTableHead: {
       styleOverrides: {
         root: {
-          backgroundColor: themeColor.dark.secondary, // Colore di sfondo per l'intestazione
+          backgroundColor: themeColor.dark.secondary,
         },
       },
     },
@@ -329,7 +330,7 @@ const darkTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Lato, sans-serif",
+    fontFamily: '"Inter", "Inter Fallback"',
     subtitle1: {
       color: "#FFFFFF",
     },
@@ -356,74 +357,116 @@ const darkTheme = createTheme({
   },
 });
 
-const AppRoutes = () => (
+type AppRoutesProps = {
+  setExtraFab: (fab: React.ReactNode) => void;
+};
+
+const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
   <Routes>
     <Route path="" element={<DashBoard />} />
     <Route path="/buckets" element={<Buckets />} />
-    <Route path="/bucket/:bucketId" element={<SaveBucket />} />
-    <Route path="/bucket/:bucketId/:view" element={<SaveBucket />} />
+    <Route path="/bucket/:bucketId" element={<SaveBucket setExtraFab={setExtraFab} />} />
+    <Route path="/bucket/:bucketId/:view" element={<SaveBucket setExtraFab={setExtraFab} />} />
     <Route path="/analyzers" element={<Analyzers />} />
-    <Route path="/analyzer/:analyzerId" element={<SaveAnalyzer />} />
-    <Route path="/analyzer/:analyzerId/:view" element={<SaveAnalyzer />} />
+    <Route path="/analyzer/:analyzerId" element={<SaveAnalyzer setExtraFab={setExtraFab} />} />
+    <Route path="/analyzer/:analyzerId/:view" element={<SaveAnalyzer setExtraFab={setExtraFab} />} />
     <Route path="/suggestion-categories" element={<SuggestionCategories />} />
-    <Route path="/suggestion-category/:suggestionCategoryId" element={<SaveSuggestionCategory />} />
+    <Route
+      path="/suggestion-category/:suggestionCategoryId"
+      element={<SaveSuggestionCategory setExtraFab={setExtraFab} />}
+    />
+    <Route
+      path="/suggestion-category/:suggestionCategoryId/:view"
+      element={<SaveSuggestionCategory setExtraFab={setExtraFab} />}
+    />
     <Route path="/data-sources" element={<Datasources />} />
-    <Route path="/data-source/:datasourceId/mode/:mode/landingTab/:landingTabId" element={<SaveDatasource />} />
-    <Route path="/document-type/:documentTypeId/:view" element={<SaveDocumentType />} />
+    <Route
+      path="/data-source/:datasourceId/mode/:mode/landingTab/:landingTabId"
+      element={<SaveDatasource setExtraFab={setExtraFab} />}
+    />
     <Route path="/document-types" element={<DocumentTypes />} />
-    <Route path="/document-type/:documentTypeId" element={<SaveDocumentType />} />
-    <Route path="/sub-document-type/:documentTypeId" element={<SubDocTypes />} />
-    <Route path="/document-type-template/:documentTypeTemplateId/:view" element={<SaveDocumentTypeTemplate />} />
+    <Route path="/document-type/:documentTypeId" element={<SaveDocumentType setExtraFab={setExtraFab} />} />
+    <Route path="/document-type/:documentTypeId/:view" element={<SaveDocumentType setExtraFab={setExtraFab} />} />
+    <Route path="/sub-document-type/:documentTypeId" element={<SubDocTypes setExtraFab={setExtraFab} />} />
     <Route path="/document-type-templates" element={<DocumentTypeTemplates />} />
-    <Route path="/document-type-template/:documentTypeTemplateId" element={<SaveDocumentTypeTemplate />} />
-    <Route path="/suggestion-category/:suggestionCategoryId/:view" element={<SaveSuggestionCategory />} />
-    <Route path="/enrich-item/:enrichItemId" element={<SaveEnrichItem />} />
-    <Route path="/enrich-item/:enrichItemId/:view" element={<SaveEnrichItem />} />
+    <Route
+      path="/document-type-template/:documentTypeTemplateId"
+      element={<SaveDocumentTypeTemplate setExtraFab={setExtraFab} />}
+    />
+    <Route
+      path="/document-type-template/:documentTypeTemplateId/:view"
+      element={<SaveDocumentTypeTemplate setExtraFab={setExtraFab} />}
+    />
+
     <Route path="/enrich-items" element={<EnrichItems />} />
+    <Route path="/enrich-item/:enrichItemId" element={<SaveEnrichItem setExtraFab={setExtraFab} />} />
+    <Route path="/enrich-item/:enrichItemId/:view" element={<SaveEnrichItem setExtraFab={setExtraFab} />} />
+
     <Route path="/pipelines" element={<Pipelines />} />
-    <Route path="/pipeline/:pipelineId/mode/:mode" element={<SavePipeline />} />
+    <Route path="/pipeline/:pipelineId/mode/:mode" element={<SavePipeline setExtraFab={setExtraFab} />} />
+
     <Route path="/tabs" element={<Tabs />} />
-    <Route path="/tab/:tabId" element={<SaveTab />} />
-    <Route path="/tab/:tabId/:view" element={<SaveTab />} />
+    <Route path="/tab/:tabId" element={<SaveTab setExtraFab={setExtraFab} />} />
+    <Route path="/tab/:tabId/:view" element={<SaveTab setExtraFab={setExtraFab} />} />
+
     <Route path="/token-tabs" element={<TokenTabs />} />
-    <Route path="/token-tab/:tokenTabId" element={<SaveTokenTab />} />
-    <Route path="/token-tab/:tokenTabId/:view" element={<SaveTokenTab />} />
+    <Route path="/token-tab/:tokenTabId" element={<SaveTokenTab setExtraFab={setExtraFab} />} />
+    <Route path="/token-tab/:tokenTabId/:view" element={<SaveTokenTab setExtraFab={setExtraFab} />} />
+
     <Route path="/annotators" element={<Annotators />} />
-    <Route path="/annotator/:annotatorId" element={<SaveAnnotator />} />
-    <Route path="/annotator/:annotatorId/:view" element={<SaveAnnotator />} />
-    <Route path="/token-filter/:tokenFilterId" element={<SaveTokenFilter />} />
-    <Route path="/token-filter/:tokenFilterId/:view" element={<SaveTokenFilter />} />
+    <Route path="/annotator/:annotatorId" element={<SaveAnnotator setExtraFab={setExtraFab} />} />
+    <Route path="/annotator/:annotatorId/:view" element={<SaveAnnotator setExtraFab={setExtraFab} />} />
+
     <Route path="/token-filters" element={<TokenFilters />} />
-    <Route path="/query-analysis/:queryAnalysisId" element={<SaveQueryAnalysis />} />
-    <Route path="/query-analysis/:queryAnalysisId/:view" element={<SaveQueryAnalysis />} />
+    <Route path="/token-filter/:tokenFilterId" element={<SaveTokenFilter setExtraFab={setExtraFab} />} />
+    <Route path="/token-filter/:tokenFilterId/:view" element={<SaveTokenFilter setExtraFab={setExtraFab} />} />
+
     <Route path="/query-analyses" element={<QueryAnalyses />} />
-    <Route path="/char-filter/:charFilterId" element={<SaveCharFilter />} />
-    <Route path="/char-filter/:charFilterId/:view" element={<SaveCharFilter />} />
+    <Route path="/query-analysis/:queryAnalysisId" element={<SaveQueryAnalysis setExtraFab={setExtraFab} />} />
+    <Route path="/query-analysis/:queryAnalysisId/:view" element={<SaveQueryAnalysis setExtraFab={setExtraFab} />} />
+
+    <Route path="/char-filters" element={<CharFilters />} />
+    <Route path="/char-filter/:charFilterId" element={<SaveCharFilter setExtraFab={setExtraFab} />} />
+    <Route path="/char-filter/:charFilterId/:view" element={<SaveCharFilter setExtraFab={setExtraFab} />} />
+
     <Route path="/tokenizers" element={<Tokenizers />} />
-    <Route path="/tokenizer/:tokenizerId" element={<SaveTokenizer />} />
-    <Route path="/tokenizer/:tokenizerId/:view" element={<SaveTokenizer />} />
+    <Route path="/tokenizer/:tokenizerId" element={<SaveTokenizer setExtraFab={setExtraFab} />} />
+    <Route path="/tokenizer/:tokenizerId/:view" element={<SaveTokenizer setExtraFab={setExtraFab} />} />
     <Route path="/autocompletes" element={<Autocompletes />} />
     <Route path="/autocomplete/:autocompletId" element={<SaveAutocomplete />} />
     <Route path="/autocomplete/:autocompletId/:view" element={<SaveAutocomplete />} />
+
     <Route path="/plugin-drivers" element={<PluginDrivers />} />
-    <Route path="/plugin-driver/:pluginDriverId" element={<SavePluginnDriverModel />} />
-    <Route path="/plugin-driver/:pluginDriverId/:view" element={<SavePluginnDriverModel />} />
+    <Route path="/plugin-driver/:pluginDriverId" element={<SavePluginnDriverModel setExtraFab={setExtraFab} />} />
+    <Route path="/plugin-driver/:pluginDriverId/:view" element={<SavePluginnDriverModel setExtraFab={setExtraFab} />} />
+
     <Route path="/search-configs" element={<SearchConfigs />} />
-    <Route path="/search-config/:searchConfigId" element={<SaveSearchConfig />} />
-    <Route path="/search-config/:searchConfigId/:view" element={<SaveSearchConfig />} />
+    <Route path="/search-config/:searchConfigId" element={<SaveSearchConfig setExtraFab={setExtraFab} />} />
+    <Route path="/search-config/:searchConfigId/:view" element={<SaveSearchConfig setExtraFab={setExtraFab} />} />
+
     <Route path="/autocorrections" element={<Autocorrections />} />
-    <Route path="/autocorrection/:autocorrectionId" element={<SaveAutocorrection />} />
-    <Route path="/autocorrection/:autocorrectionId/:view" element={<SaveSearchConfig />} />
+    <Route path="/autocorrection/:autocorrectionId" element={<SaveAutocorrection setExtraFab={setExtraFab} />} />
+    <Route path="/autocorrection/:autocorrectionId/:view" element={<SaveSearchConfig setExtraFab={setExtraFab} />} />
+
     <Route path="/large-languages-model" element={<LargeLanguageModels />} />
-    <Route path="/large-language-model/:LargeLanguageModelId" element={<SaveLargeLanguageModel />} />
-    <Route path="large-language-model/:LargeLanguageModelId/:view" element={<SaveLargeLanguageModel />} />
+    <Route
+      path="/large-language-model/:LargeLanguageModelId"
+      element={<SaveLargeLanguageModel setExtraFab={setExtraFab} />}
+    />
+    <Route
+      path="large-language-model/:LargeLanguageModelId/:view"
+      element={<SaveLargeLanguageModel setExtraFab={setExtraFab} />}
+    />
+
     <Route path="/embedding-models" element={<EmbeddingModels />} />
-    <Route path="/embedding-model/:embeddingModelsId" element={<SaveEmbeddingModel />} />
-    <Route path="embedding-model/:embeddingModelsId/:view" element={<SaveEmbeddingModel />} />
-    <Route path="/char-filters" element={<CharFilters />} />
+    <Route path="/embedding-model/:embeddingModelsId" element={<SaveEmbeddingModel setExtraFab={setExtraFab} />} />
+    <Route path="embedding-model/:embeddingModelsId/:view" element={<SaveEmbeddingModel setExtraFab={setExtraFab} />} />
+
     <Route path="/dataindices" element={<Dataindices />} />
-    <Route path="/dataindex/:dataindexId/mode/:mode" element={<SaveDataindex />} />
+    <Route path="/dataindex/:dataindexId/mode/:mode" element={<SaveDataindex setExtraFab={setExtraFab} />} />
+
     <Route path="/notificationInfo/:notificationId" element={<InformationNotification />} />
+
     <Route path="rules">
       <Route path="" element={<Rules />} />
       <Route
@@ -435,9 +478,10 @@ const AppRoutes = () => (
         }
       />
     </Route>
+
     <Route path="/rag-configurations" element={<RagConfigurations />} />
-    <Route path="/rag-configuration/:ragConfigId" element={<SaveRagConfiguration />} />
-    <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration />} />
+    <Route path="/rag-configuration/:ragConfigId" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
+    <Route path="/rag-configuration/:ragConfigId/:view" element={<SaveRagConfiguration setExtraFab={setExtraFab} />} />
   </Routes>
 );
 
@@ -449,11 +493,12 @@ export const scrollToTop = () => {
 };
 
 export default function App() {
-  const [isSideMenuOpen, setIsSideMenuOpen] = React.useState(true);
-  const [isNotification, setIsNotification] = React.useState(false);
   const savedTheme = localStorage.getItem("isDarkMode");
   const [isDarkMode, setIsDarkMode] = React.useState(savedTheme === "true");
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);
+  const [extraFab, setExtraFab] = useState<React.ReactNode | null>(null);
+  const recapAnchorRef = React.useRef<HTMLElement | null>(null);
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
     setIsDarkMode(newTheme);
@@ -580,7 +625,7 @@ export default function App() {
                         <TextField
                           fullWidth
                           size="small"
-                          placeholder="Cerca sezione..."
+                          placeholder="Search section..."
                           value={searchTerm}
                           onChange={(e) => setSearchTerm(e.target.value)}
                           sx={{
@@ -649,26 +694,43 @@ export default function App() {
                         position: "relative",
                       }}
                     >
-                      <AppRoutes />
-                      <Fab
-                        color="primary"
-                        size="medium"
-                        aria-label="scroll back to top"
-                        onClick={scrollToTop}
+                      <AppRoutes setExtraFab={setExtraFab} />
+                      <Box
                         sx={{
                           position: "fixed",
                           bottom: 20,
                           right: 30,
-                          opacity: showScrollTop ? 0.9 : 0,
-                          visibility: showScrollTop ? "visible" : "hidden",
-                          transition: "opacity 0.3s, visibility 0.3s",
-                          "&:hover": {
-                            opacity: 1,
-                          },
+                          display: "flex",
+                          alignItems: "center",
+                          zIndex: (theme) => theme.zIndex.snackbar + 1,
+                          transition: "transform 0.3s ease, opacity 0.3s ease",
+                          transform: showScrollTop ? "translateX(0)" : "translateX(8px)",
+                          opacity: showScrollTop ? 1 : 0.95,
                         }}
                       >
-                        <KeyboardArrowUp fontSize="medium" />
-                      </Fab>
+                        {!showScrollTop && extraFab}
+                        {showScrollTop && (
+                          <>
+                            {extraFab}
+
+                            <Fade in timeout={250}>
+                              <Box sx={{ ml: extraFab ? 1 : 0 }}>
+                                <Fab
+                                  color="primary"
+                                  size="medium"
+                                  aria-label="scroll back to top"
+                                  onClick={scrollToTop}
+                                  sx={{
+                                    boxShadow: 6,
+                                  }}
+                                >
+                                  <KeyboardArrowUp fontSize="medium" />
+                                </Fab>
+                              </Box>
+                            </Fade>
+                          </>
+                        )}
+                      </Box>
                     </Box>
                   </Box>
                 </SideNavigationContextProvider>

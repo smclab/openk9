@@ -1,8 +1,9 @@
-import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useToast } from "@components/Form";
+import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useForm, useToast } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
+import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useDataSourceQuery } from "../../graphql-generated";
+import { Provisioning, useDataSourceQuery } from "../../graphql-generated";
 import { Section } from "./components/Sections/Connectors/ConfigureConnectors";
 import DynamicForm from "./components/Sections/DataSource/DynamicForm";
 import { defaultModal, useGenerateDocumentTypesMutation } from "./Function";
@@ -10,7 +11,8 @@ import { useDatasourceForm } from "./hooks/useDatasourceForm";
 import { useDatasourceMutations } from "./hooks/useDatasourceMutations";
 import { constructTabs, useRecoveryForm } from "./RecoveryData";
 import { FormSection, Header, TabsSection } from "./StructureDatasource";
-export function SaveDatasource() {
+
+export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { datasourceId = "new", mode = "view", landingTabId = "monitoring" } = useParams();
   const [areaEnabled, setAreaEnabled] = useState<Section>("card");
   const [isRecap, setIsRecap] = React.useState(false);
@@ -118,43 +120,6 @@ export function SaveDatasource() {
   };
 
   const handleDatasource = () => {
-    // Validation for DataIndex section
-    if (activeTab === "recap") {
-      // Check if name is present
-      if (!formValues.dataIndex?.name || formValues.dataIndex.name.trim() === "") {
-        toast({
-          title: "Validation Failed",
-          content: "The 'Name' field is required for DataIndex",
-          displayType: "error",
-        });
-        return; // Stop function execution
-      }
-
-      // Check if at least one datasource is selected
-      // const hasSelectedDatasource =
-      //   formValues.associatedDatasources &&
-      //   Object.values(formValues.associatedDatasources).some((value) => value === true);
-
-      // if (!hasSelectedDatasource) {
-      //   toast({
-      //     title: "Validation Failed",
-      //     content: "You must select at least one datasource in 'Associate Datasource'",
-      //     displayType: "error",
-      //   });
-      //   return;
-      // }
-
-      // // Check if a doc type is selected
-      // if (!formValues.selectedDocType) {
-      //   toast({
-      //     title: "Validation Failed",
-      //     content: "You must select a document type",
-      //     displayType: "error",
-      //   });
-      //   return;
-      // }
-    }
-
     const commonVariables = {
       name: formValues.name || "",
       schedulable: formValues.isCronSectionscheduling || false,
@@ -178,8 +143,8 @@ export function SaveDatasource() {
         },
       }),
     };
-
-    if (formValues.datasourceId !== "new") {
+    const isNewDatasource = formValues.datasourceId === "new";
+    if (!isNewDatasource) {
       updateDatasource({
         variables: {
           ...commonVariables,
@@ -217,6 +182,14 @@ export function SaveDatasource() {
           },
         },
         refetchQueries: ["DataSources"],
+        onCompleted: () => {
+          toast({
+            title: `Datasource ${isNewDatasource ? "Created" : "Updated"}`,
+            content: `The datasource has been ${isNewDatasource ? "created" : "updated"} successfully.`,
+            displayType: "success",
+          });
+          navigate(`/datasources/`, { replace: true });
+        },
         onError: (error) => {
           setActiveTab("recap");
           toast({
@@ -229,6 +202,199 @@ export function SaveDatasource() {
     }
     setIsRecap(false);
   };
+
+  const form = useForm({
+    initialValues: React.useMemo(
+      () => ({
+        // Datasource base
+        name: formValues.name || "",
+        description: formValues.description || "",
+
+        // Connector/PluginDriver
+        ...(formValues.pluginDriverSelect?.id && {
+          pluginDriverSelect: {
+            id: formValues.pluginDriverSelect?.id || null,
+            nameConnectors: formValues.pluginDriverSelect?.nameConnectors || "",
+            provisioning: formValues.pluginDriverSelect?.provisioning || Provisioning.System,
+            json: formValues.pluginDriverSelect?.json || "",
+          },
+        }),
+
+        // Cron sections
+        datasourceId: formValues.datasourceId,
+        isCronSectionreindex: formValues.isCronSectionreindex || false,
+        isCronSectionscheduling: formValues.isCronSectionscheduling || false,
+        isCronSectionpurge: formValues.isCronSectionpurge || false,
+        reindexing: formValues.reindexing || "",
+        scheduling: formValues.scheduling || "",
+        purging: formValues.purging || "",
+
+        // Pipeline
+        enrichPipeline: {
+          id: formValues.enrichPipeline?.id || "",
+          name: formValues.enrichPipeline?.name || "",
+        },
+        enrichPipelineCustom: {
+          id: formValues.enrichPipelineCustom?.id || "",
+          name: formValues.enrichPipelineCustom?.name || "",
+          linkedEnrichItems: formValues.enrichPipelineCustom?.linkedEnrichItems || [],
+        },
+
+        // Data Index
+        dataIndex: {
+          id: formValues.dataIndex?.id || "",
+          name: formValues.dataIndex?.name || "",
+          description: formValues.dataIndex?.description || "",
+        },
+        vectorIndex: {
+          chunkType: formValues.vectorIndex?.chunkType || null,
+          chunkWindowSize: formValues.vectorIndex?.chunkWindowSize || 0,
+          embeddingJsonConfig: formValues.vectorIndex?.embeddingJsonConfig || "",
+          knnIndex: formValues.vectorIndex?.knnIndex || false,
+          embeddingDocTypeFieldId: formValues.vectorIndex?.embeddingDocTypeFieldId || { id: "", name: "" },
+          docTypeIds: formValues.vectorIndex?.docTypeIds || [],
+        },
+        dataIndices: formValues.dataIndices || [],
+
+        // Dynamic JSON (se lo passi da fuori)
+        dynamicFormJson: dynamicFormJson || "",
+      }),
+      [formValues, dynamicFormJson],
+    ),
+
+    originalValues: {},
+    isLoading: datasourceQuery.loading,
+
+    onSubmit(updated: any) {
+      setFormValues((prev) => ({
+        ...prev,
+        ...updated,
+        // Ripopola nested objects preservando struttura
+        pluginDriverSelect: {
+          ...prev.pluginDriverSelect,
+          ...updated.pluginDriverSelect,
+        },
+        enrichPipeline: {
+          ...prev.enrichPipeline,
+          ...updated.enrichPipeline,
+        },
+        dataIndex: {
+          ...prev.dataIndex,
+          ...updated.dataIndex,
+        },
+        vectorIndex: {
+          ...prev.vectorIndex,
+          ...updated.vectorIndex,
+        },
+      }));
+    },
+  });
+
+  const connectorSection: RecapSingleSection = {
+    id: "Recap",
+    title: "Recap",
+    section: { sectionId: "Connector", sectionLabel: "Connector" },
+    fields: [
+      {
+        key: "pluginDriverSelect.nameConnectors",
+        label: "Name",
+        value: formValues.pluginDriverSelect?.nameConnectors ?? null,
+        type: typeof formValues.pluginDriverSelect?.nameConnectors === "number" ? "number" : "string",
+        isValid: true,
+      },
+      {
+        key: "pluginDriverSelect.provisioning",
+        label: "Provisioning",
+        value: formValues.pluginDriverSelect?.provisioning ?? null,
+        type: typeof formValues.pluginDriverSelect?.provisioning === "boolean" ? "boolean" : "string",
+        isValid: true,
+      },
+    ],
+  };
+
+  let pipelineSection: RecapSingleSection | null = null;
+  if (formValues.enrichPipeline?.name) {
+    pipelineSection = {
+      id: "Pipeline",
+      section: { sectionId: "Pipeline", sectionLabel: "Pipeline" },
+      fields: [
+        {
+          key: "enrichPipeline.name",
+          label: "Name",
+          value: formValues.enrichPipeline.name,
+          type: "string",
+          isValid: true,
+        },
+      ],
+    };
+  }
+
+  let pipelineCustomSection: RecapSingleSection | null = null;
+  if (
+    formValues.enrichPipelineCustom?.linkedEnrichItems &&
+    Array.isArray(formValues.enrichPipelineCustom.linkedEnrichItems) &&
+    formValues.enrichPipelineCustom.linkedEnrichItems.length > 0
+  ) {
+    pipelineCustomSection = {
+      id: "Pipeline Custom",
+      section: { sectionId: "Pipeline Custom", sectionLabel: "Pipeline Custom" },
+      fields: [
+        {
+          key: "enrichPipelineCustom.linkedEnrichItems",
+          label: "Enrich Item Custom",
+          value: formValues.enrichPipelineCustom.linkedEnrichItems,
+          type: "array",
+          isValid: true,
+        },
+      ],
+    };
+  }
+
+  const datasourceSection = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        label: "Datasource",
+        cell: [
+          { key: "name", label: "Name" },
+          { key: "isCronSectionreindex", label: "Reindexing" },
+          { key: "isCronSectionscheduling", label: "Scheduling" },
+          { key: "isCronSectionpurge", label: "Purging" },
+          { key: "reindexing", label: "Reindexing" },
+          { key: "scheduling", label: "Scheduling" },
+          { key: "purging", label: "Purging" },
+          { key: "dynamicFormJson", label: "Json" },
+        ],
+      },
+    ],
+  });
+
+  const dataIndexSection = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        label: "Data Index",
+        cell: [
+          { key: "dataIndex.name", label: "Name" },
+          { key: "dataIndex.description", label: "Description" },
+          { key: "vectorIndex.chunkType", label: "chunk Type" },
+          { key: "vectorIndex.chunkWindowSize", label: "chunk Window Size" },
+          { key: "vectorIndex.embeddingJsonConfig", label: "Embedding json Config" },
+          { key: "vectorIndex.knnIndex", label: "Embedding knn index" },
+          { key: "vectorIndex.embeddingDocTypeFieldId.name", label: "Doc Type" },
+          { key: "dataIndices", label: "dataIndices" },
+        ],
+      },
+    ],
+  });
+
+  const recapSections: RecapSingleSection[] = [
+    connectorSection,
+    ...datasourceSection,
+    ...(pipelineSection ? [pipelineSection] : []),
+    ...(pipelineCustomSection ? [pipelineCustomSection] : []),
+    ...dataIndexSection,
+  ];
 
   return (
     <ContainerFluid style={{ width: "100%" }}>
@@ -288,6 +454,21 @@ export function SaveDatasource() {
         setIsRecap={setIsRecap}
         handleDatasource={handleDatasource}
         isCreated={datasourceId === "new"}
+        setExtraFab={setExtraFab}
+      />
+      <Recap
+        actions={{
+          onBack: () => {
+            setActiveTab("dataIndex");
+            setIsRecap(false);
+          },
+          onSubmit: () => {
+            handleDatasource();
+          },
+        }}
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
       />
     </ContainerFluid>
   );

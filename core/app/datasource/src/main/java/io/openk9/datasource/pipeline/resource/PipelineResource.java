@@ -23,7 +23,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.pipeline.actor.enrichitem.Token;
 import io.openk9.datasource.pipeline.actor.enrichitem.TokenUtils;

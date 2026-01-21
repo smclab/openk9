@@ -29,26 +29,43 @@
 	<artifactId>util</artifactId>
 	<packaging>jar</packaging>
 
+	<properties>
+		<junit-excluded-groups>performance-test</junit-excluded-groups>
+	</properties>
+
+	<profiles>
+		<profile>
+			<!-- enable junit long-running tests -->
+			<id>long-running-test</id>
+			<properties>
+				<junit-excluded-groups/>
+			</properties>
+		</profile>
+	</profiles>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.smallrye.reactive</groupId>
-			<artifactId>mutiny</artifactId>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.vertx</groupId>
-			<artifactId>vertx-core</artifactId>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>jakarta.enterprise</groupId>
-			<artifactId>jakarta.enterprise.cdi-api</artifactId>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>io.quarkus</groupId>
-			<artifactId>quarkus-vertx</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -57,6 +74,13 @@
 			<plugin>
 				<groupId>io.smallrye</groupId>
 				<artifactId>jandex-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire-plugin.version}</version>
+				<configuration>
+					<excludedGroups>${junit-excluded-groups}</excludedGroups>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

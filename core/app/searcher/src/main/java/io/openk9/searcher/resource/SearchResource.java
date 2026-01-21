@@ -46,6 +46,8 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 
+import io.openk9.common.util.web.InternalHeaders;
+import io.openk9.searcher.client.ExtraParamKeys;
 import io.openk9.searcher.client.dto.AutocompleteRequestDTO;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.dto.SearchRequest;
@@ -89,8 +91,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
@@ -154,9 +154,6 @@ public class SearchResource {
 	HttpHeaders headers;
 	@Inject
 	InternalSearcherMapper internalSearcherMapper;
-	@Inject
-	@Claim(standard = Claims.raw_token)
-	String rawToken; // it is injected to force authentication.
 	@Context
 	HttpServerRequest request;
 	@Inject
@@ -165,8 +162,6 @@ public class SearchResource {
 	Searcher searcherClient;
 	@Inject
 	SearcherMapper searcherMapper;
-	@ConfigProperty(name = "openk9.searcher.supported.headers.name", defaultValue = "OPENK9_ACL")
-	List<String> supportedHeadersName;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
 	@Inject
@@ -1665,11 +1660,14 @@ public class SearchResource {
 
 		Map<String, Value> extra = new HashMap<>();
 
-		for (String headerName : supportedHeadersName) {
-			List<String> requestHeader = headers.getRequestHeader(headerName);
-			if (requestHeader != null && !requestHeader.isEmpty()) {
-				extra.put(headerName, Value.newBuilder().addAllValue(requestHeader).build());
-			}
+		List<String> requestHeader =
+			headers.getRequestHeader(InternalHeaders.ROLES);
+
+		if (requestHeader != null && !requestHeader.isEmpty()) {
+			extra.put(
+				ExtraParamKeys.EXTRA_ROLES,
+				Value.newBuilder().addAllValue(requestHeader).build()
+			);
 		}
 
 		var rawToken = getRawToken(headers);

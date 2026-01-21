@@ -38,6 +38,7 @@ export type tabsPropsConstructor = {
   setIsRecap: React.Dispatch<React.SetStateAction<boolean>>;
   handleDatasource: () => void;
   isCreated: boolean;
+  setExtraFab: (fab: React.ReactNode | null) => void;
 };
 
 export type tabsType = (

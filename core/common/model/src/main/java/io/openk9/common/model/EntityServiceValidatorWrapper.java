@@ -17,18 +17,19 @@
 
 package io.openk9.common.model;
 
-import io.openk9.common.util.FieldValidator;
-import io.openk9.common.util.Response;
-import io.smallrye.mutiny.Uni;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
-
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+
+import io.openk9.common.util.web.FieldValidator;
+import io.openk9.common.util.web.Response;
+import io.openk9.common.util.web.ResponseUtil;
+
+import io.smallrye.mutiny.Uni;
 
 public class EntityServiceValidatorWrapper<E, D> {
 
@@ -51,7 +52,7 @@ public class EntityServiceValidatorWrapper<E, D> {
 	}
 
 	public <T> List<FieldValidator> validate(T dto) {
-		return _toFieldValidators(validator.validate(dto));
+		return ResponseUtil.toFieldValidators(validator.validate(dto));
 	}
 
 	private Uni<Response<E>> _validate(D dto, Supplier<Uni<E>> supplier) {
@@ -82,7 +83,7 @@ public class EntityServiceValidatorWrapper<E, D> {
 			}
 
 			List<FieldValidator>
-				fieldValidatorList = _toFieldValidators(constraintViolationSet);
+				fieldValidatorList = ResponseUtil.toFieldValidators(constraintViolationSet);
 
 			return Uni.createFrom().item(Response.of(null, fieldValidatorList));
 
@@ -98,17 +99,6 @@ public class EntityServiceValidatorWrapper<E, D> {
 		}
 
 		return "";
-	}
-
-	private <T> List<FieldValidator> _toFieldValidators(
-		Set<ConstraintViolation<T>> constraintViolationSet) {
-		return constraintViolationSet.stream()
-			.map(constraintViolation -> {
-				String field = constraintViolation.getPropertyPath().toString();
-				String message = constraintViolation.getMessage();
-				return FieldValidator.of(field, message);
-			})
-			.collect(Collectors.toList());
 	}
 
 	private final EntityService<E, D> delegate;

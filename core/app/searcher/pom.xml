@@ -20,8 +20,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.openk9.app</groupId>
-    <artifactId>app</artifactId>
+    <artifactId>quarkus-app</artifactId>
 	  <version>3.1.0-SNAPSHOT</version>
+	  <relativePath>../quarkus-app/pom.xml</relativePath>
   </parent>
   <artifactId>searcher</artifactId>
   <name>OpenK9 :: App :: Searcher</name>
@@ -29,6 +30,11 @@
 	  <dependency>
 		  <groupId>io.quarkus</groupId>
 		  <artifactId>quarkus-smallrye-openapi</artifactId>
+	  </dependency>
+
+	  <dependency>
+		  <groupId>io.quarkus</groupId>
+		  <artifactId>quarkus-smallrye-jwt</artifactId>
 	  </dependency>
 
 	  <!-- // OpenSearch -->
@@ -41,13 +47,6 @@
 		  <artifactId>quarkus-opensearch-java-client</artifactId>
 	  </dependency>
 	  <!-- OpenSearch // -->
-
-	  <!-- // authentication -->
-	  <dependency>
-		  <groupId>io.openk9.service</groupId>
-		  <artifactId>auth-service</artifactId>
-	  </dependency>
-	  <!-- authentication // -->
 
 	  <!-- consumes -->
 	  <dependency>

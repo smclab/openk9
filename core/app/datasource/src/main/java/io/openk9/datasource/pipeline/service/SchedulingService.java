@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.actor.EventBusInstanceHolder;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;

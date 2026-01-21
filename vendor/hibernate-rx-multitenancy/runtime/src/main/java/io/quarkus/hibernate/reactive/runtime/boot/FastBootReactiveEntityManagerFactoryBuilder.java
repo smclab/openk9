@@ -30,44 +30,39 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.reactive.session.impl.ReactiveSessionFactoryImpl;
 
 public final class FastBootReactiveEntityManagerFactoryBuilder
-	extends FastBootEntityManagerFactoryBuilder {
+        extends FastBootEntityManagerFactoryBuilder {
 
     public FastBootReactiveEntityManagerFactoryBuilder(
-		PrevalidatedQuarkusMetadata metadata,
-		String persistenceUnitName,
-		StandardServiceRegistry standardServiceRegistry,
-		RuntimeSettings runtimeSettings,
-		Object validatorFactory,
+            PrevalidatedQuarkusMetadata metadata,
+            String persistenceUnitName,
+            StandardServiceRegistry standardServiceRegistry,
+            RuntimeSettings runtimeSettings,
+            Object validatorFactory,
             Object cdiBeanManager) {
         super(metadata,
-			persistenceUnitName,
-			standardServiceRegistry,
-			runtimeSettings,
-			validatorFactory,
-			cdiBeanManager,
-			MultiTenancyStrategy.SCHEMA
-		);
+                persistenceUnitName,
+                standardServiceRegistry,
+                runtimeSettings,
+                validatorFactory,
+                cdiBeanManager,
+                MultiTenancyStrategy.SCHEMA);
     }
 
     @Override
     public EntityManagerFactory build() {
         try {
-			final SessionFactoryOptionsBuilder optionsBuilder =
-				metadata.buildSessionFactoryOptionsBuilder();
+            final SessionFactoryOptionsBuilder optionsBuilder = metadata.buildSessionFactoryOptionsBuilder();
             optionsBuilder.enableCollectionInDefaultFetchGroup(true);
             populate(
-				PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME,
-				optionsBuilder,
-				standardServiceRegistry
-			);
+                    PersistenceUnitUtil.DEFAULT_PERSISTENCE_UNIT_NAME,
+                    optionsBuilder,
+                    standardServiceRegistry);
             SessionFactoryOptions options = optionsBuilder.buildOptions();
             return new ReactiveSessionFactoryImpl(
-				metadata,
-				options,
-				metadata.getBootstrapContext()
-			);
-		}
-		catch (Exception e) {
+                    metadata,
+                    options,
+                    metadata.getBootstrapContext());
+        } catch (Exception e) {
             throw persistenceException("Unable to build Hibernate Reactive SessionFactory", e);
         }
     }

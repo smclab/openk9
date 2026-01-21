@@ -35,13 +35,13 @@ public final class SchemaUtil {
     private SchemaUtil() {
     }
 
-	public static Set<String> getColumnNames(
-		EntityManagerFactory entityManagerFactory,
-		Class<?> entityType) {
+    public static Set<String> getColumnNames(
+            EntityManagerFactory entityManagerFactory,
+            Class<?> entityType) {
         Set<String> result = new HashSet<>();
         AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class)
-			.getMetamodel().entityPersister(entityType);
+                .unwrap(SessionFactoryImplementor.class)
+                .getMetamodel().entityPersister(entityType);
         if (persister == null) {
             return result;
         }
@@ -51,11 +51,11 @@ public final class SchemaUtil {
         return result;
     }
 
-	public static String getColumnTypeName(
-		EntityManagerFactory entityManagerFactory, Class<?> entityType,
-		String columnName) {
+    public static String getColumnTypeName(
+            EntityManagerFactory entityManagerFactory, Class<?> entityType,
+            String columnName) {
         MappingMetamodel domainModel = entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
+                .unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
         EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
         var columnFinder = new SelectableConsumer() {
             private SelectableMapping found;
@@ -71,11 +71,11 @@ public final class SchemaUtil {
         return columnFinder.found.getJdbcMapping().getJdbcType().getFriendlyName();
     }
 
-	public static Generator getGenerator(
-		EntityManagerFactory entityManagerFactory,
-		Class<?> entityType) {
+    public static Generator getGenerator(
+            EntityManagerFactory entityManagerFactory,
+            Class<?> entityType) {
         MappingMetamodel domainModel = entityManagerFactory
-			.unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
+                .unwrap(SessionFactoryImplementor.class).getRuntimeMetamodels().getMappingMetamodel();
         EntityPersister entityDescriptor = domainModel.findEntityDescriptor(entityType);
         return entityDescriptor.getGenerator();
     }

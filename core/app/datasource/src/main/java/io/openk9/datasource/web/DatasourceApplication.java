@@ -19,6 +19,8 @@ package io.openk9.datasource.web;
 
 import jakarta.ws.rs.core.Application;
 
+import io.openk9.common.model.dto.Problem;
+
 import org.eclipse.microprofile.openapi.annotations.Components;
 import org.eclipse.microprofile.openapi.annotations.ExternalDocumentation;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
@@ -28,7 +30,6 @@ import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import io.openk9.common.model.dto.Problem;
 
 @OpenAPIDefinition(
         info = @Info(
@@ -101,6 +102,5 @@ import io.openk9.common.model.dto.Problem;
                 }
         )
 )
-
-public class DatasourceApplication {
+public class DatasourceApplication extends Application {
 }

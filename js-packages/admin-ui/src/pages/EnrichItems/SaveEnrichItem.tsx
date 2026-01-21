@@ -23,8 +23,9 @@ import {
 } from "../../graphql-generated";
 import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveEnrichItem() {
+export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { enrichItemId = "new", name, view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -45,6 +46,8 @@ export function SaveEnrichItem() {
     fetchPolicy: "network-only",
   });
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = enrichItemId === "new";
   const toast = useToast();
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
     refetchQueries: ["EnrichItem", "EnrichItems"],
@@ -103,6 +106,27 @@ export function SaveEnrichItem() {
       });
     },
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichItemMutation.data?.enrichItem?.fieldValidators),
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "type" },
+          { key: "serviceName", label: "Service Name" },
+          { key: "jsonPath", label: "Json Path" },
+          { key: "requestTimeout", label: "Request Timeout" },
+          { key: "behaviorMergeType", label: "Behavior Merge Type" },
+          { key: "behaviorOnError", label: "Behavior On Error" },
+          { key: "jsonConfig", label: "Configuration JSON", jsonView: true },
+          { key: "script", label: "Script JSON", jsonView: true },
+        ],
+        label: "Recap Enrich Item",
+      },
+    ],
   });
 
   return (
@@ -206,6 +230,17 @@ export function SaveEnrichItem() {
         />
       </form>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </>
   );
 }

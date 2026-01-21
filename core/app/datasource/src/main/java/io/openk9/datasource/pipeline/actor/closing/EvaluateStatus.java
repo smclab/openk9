@@ -17,7 +17,7 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;

@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigureDatasource, MonitoringTab } from "./Function";
 import Reindex from "./Function/Reindex";
-import RecapDatasource from "./RecapDatasource";
 import { ConfigureConnectors } from "./components/Sections/Connectors/ConfigureConnectors";
 import DataIndex from "./components/Sections/DataIndex/ConfigureDataIndex";
 import ConfigurePipeline from "./components/Sections/Pipeline/ConfigurePipeline";
@@ -38,121 +37,10 @@ export const TabsSection = ({
   setIsRecap,
   handleDatasource,
   isCreated,
+  setExtraFab,
 }: tabsPropsConstructor) => {
   const isRecapTab = "recap";
   isRecap && handleTabChange(null, isRecapTab);
-  const navigate = useNavigate();
-  const area = [
-    formValues.pluginDriverSelect?.id && {
-      title: "Connector",
-      fields: [
-        {
-          label: "Name Connector",
-          value: formValues.pluginDriverSelect?.nameConnectors,
-          type: "string",
-        },
-
-        { label: "Provisioning", value: formValues.pluginDriverSelect?.provisioning, type: "string" },
-        { label: "Json", value: formValues.pluginDriverSelect.json, type: "json" },
-      ],
-    },
-    formValues.datasourceId
-      ? {
-          title: "Datasource",
-          fields: [
-            { label: "Name", value: formValues.name, type: "string" },
-            { label: "Reindexing", value: formValues.isCronSectionreindex, type: "boolean" },
-            { label: "Scheduling", value: formValues.isCronSectionscheduling, type: "boolean" },
-            { label: "Purging", value: formValues.isCronSectionpurge, type: "boolean" },
-            { label: "Reindexing", value: formValues.reindexing, type: "string" },
-            { label: "Scheduling", value: formValues.scheduling, type: "string" },
-            { label: "Purging", value: formValues.purging, type: "string" },
-            { label: "Json", value: dynamicFormJson, type: "json" },
-          ],
-        }
-      : null,
-    formValues.enrichPipeline?.id
-      ? {
-          title: "Pipeline",
-          fields: [{ label: "Name", type: "string", value: formValues.enrichPipeline?.name }],
-        }
-      : null,
-    !formValues.enrichPipeline?.id && (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) === 0
-      ? {
-          title: "Pipeline",
-          fields: [{ label: "Name", type: "string", value: "not selected" }],
-        }
-      : null,
-    (formValues?.enrichPipelineCustom?.linkedEnrichItems?.length || 0) > 0 && {
-      title: "Pipeline Custom",
-      fields: [
-        {
-          label: "Enrich Item Custom",
-          type: "array",
-          value: formValues.enrichPipelineCustom?.linkedEnrichItems?.map((form) => ({ name: form.name })) ?? [],
-        },
-      ],
-    },
-    formValues?.dataIndex?.name &&
-      (formValues.vectorIndex?.embeddingJsonConfig ||
-        formValues.vectorIndex?.knnIndex ||
-        formValues.vectorIndex?.chunkType ||
-        (formValues?.vectorIndex?.docTypeIds?.length || 0) > 0) && {
-        title: "Data Index",
-        fields: [
-          {
-            label: "Name",
-            type: "string",
-            value: formValues.dataIndex.name,
-          },
-          {
-            label: "Description",
-            type: "string",
-            value: formValues.dataIndex.description,
-          },
-          {
-            label: "chunk Type",
-            type: "string",
-            value: formValues.vectorIndex?.chunkType,
-          },
-          {
-            label: "chunk Window Size",
-            type: "number",
-            value: formValues.vectorIndex?.chunkWindowSize,
-          },
-          {
-            label: "Embedding json Config",
-            type: "json",
-            value: formValues.vectorIndex?.embeddingJsonConfig,
-          },
-          {
-            label: "Embedding knn index ",
-            type: "boolean",
-            value: formValues.vectorIndex?.knnIndex,
-          },
-          {
-            label: "Doc Type ",
-            type: "string",
-            value: formValues?.vectorIndex?.embeddingDocTypeFieldId?.name,
-          },
-          {
-            label: "dataIndices ",
-            type: "array",
-            value: formValues?.dataIndices || [],
-          },
-        ],
-      },
-    formValues.dataIndex?.id && {
-      title: "Data Index",
-      fields: [
-        {
-          label: "Name",
-          type: "string",
-          value: formValues.dataIndex.name,
-        },
-      ],
-    },
-  ].filter((section): section is { title: string; description: string; fields: any[] } => !!section);
 
   return (
     <>
@@ -200,6 +88,7 @@ export const TabsSection = ({
           setAreaEnabled={setAreaEnabled}
           setFormValues={setFormValues}
           setShowDialog={setShowDialog}
+          setExtraFab={setExtraFab}
         />
       )}
       {activeTab === "datasource" && (
@@ -315,59 +204,6 @@ export const TabsSection = ({
             setIsRecap={setIsRecap}
           />
         )
-      )}
-      {isRecap && activeTab === "recap" && (
-        <>
-          <Box sx={{ marginBlock: 2 }}>
-            {/* name: formValues.name || "",
-      schedulable: formValues.isCronSectionscheduling || false,
-      reindexable: formValues.isCronSectionreindex || false,
-      reindexing: formValues.reindexing || "0 0 1 * * ?",
-      scheduling: formValues.scheduling || "0 30 * ? * * *",
-      jsonConfig: dynamicFormJson,
-      description: formValues.description,
-      pluginDriverId: Number(formValues.pluginDriverSelect?.id),
-      pipelineId: formValues.enrichPipeline?.id || null,
-      purging: formValues.purging || "0 0 1 * * ?",
-      purgeable: formValues.isCronSectionpurge || false,
-      purgeMaxAge: formValues.purgeMaxAge || "2d",
-      ...(formValues.enrichPipelineCustom?.name && { */}
-            {/* pipeline: {
-          name: formValues.enrichPipelineCustom.name,
-          items: formValues?.enrichPipelineCustom.linkedEnrichItems?.map((forms) => ({
-            enrichItemId: forms.id || "",
-            weight: forms.weight || 0,
-          })) as [],
-        },
-      }), */}
-            <RecapDatasource area={area} />
-          </Box>
-          <Box display={"flex"} justifyContent={"space-between"}>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={() => {
-                setIsRecap(false);
-                setActiveTab("dataIndex");
-                const pipelineTab = tabs.find((tab) => tab.value === "dataIndex");
-                if (pipelineTab) {
-                  navigate(pipelineTab.path);
-                }
-              }}
-            >
-              Back
-            </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleDatasource();
-              }}
-            >
-              Confirm
-            </Button>
-          </Box>
-        </>
       )}
     </>
   );

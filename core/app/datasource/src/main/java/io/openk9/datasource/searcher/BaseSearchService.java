@@ -34,7 +34,6 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import io.openk9.auth.tenant.TenantRegistry;
 import io.openk9.datasource.model.Autocomplete_;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
@@ -55,10 +54,10 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.util.JWT;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.service.TenantRegistry;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
@@ -67,6 +66,7 @@ import com.google.protobuf.ByteString;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
@@ -152,7 +152,7 @@ public abstract class BaseSearchService {
 
 	protected Uni<BoolQueryBuilder> createBoolQuery(
 		Map<QueryParserType, List<ParserSearchToken>> tokenGroup, TenantWithBucket tenantWithBucket,
-		JWT jwt, Map<String, List<String>> extraParams, String language) {
+		JsonWebToken jwt, Map<String, List<String>> extraParams, String language) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -335,9 +335,9 @@ public abstract class BaseSearchService {
 	protected Uni<TenantWithBucket> getTenantAndFetchRelations(
 		String virtualHost, boolean suggestion, long suggestionCategoryId) {
 
-		return tenantRegistry.getTenantByVirtualHost(virtualHost)
-			.flatMap(tenant -> sf
-				.withTransaction(tenant.schemaName(), (s, t) -> {
+		return tenantRegistry.getTenantId(virtualHost)
+			.flatMap(tenantId -> sf
+				.withTransaction(tenantId, (s, t) -> {
 
 					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
@@ -369,7 +369,7 @@ public abstract class BaseSearchService {
 					if (bucket == null) {
 						log.warn("It's not possible to find a valid active bucket.");
 					}
-					return new TenantWithBucket(tenant, bucket);
+					return new TenantWithBucket(tenantId, bucket);
 				})
 			);
 

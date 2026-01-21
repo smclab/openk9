@@ -163,14 +163,13 @@ No Known issues
 
 Find more information about how to deal with common errors related to Openk9's Helm charts in [this troubleshooting guide](https://staging-site.openk9.io/docs/monitoring/troubleshooting).
 
-## Upgrading
+### To 3.1.0
 
-### To 2.0.0
+No action necessary
 
+### Previous versions
 
-### To 1.7.0
-
-
+No details present
 
 ## License
 

@@ -17,8 +17,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateTokenFilterMutation, useTokenFilterQuery } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { Filters } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveTokenFilter() {
+export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tokenFilterId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -35,6 +36,8 @@ export function SaveTokenFilter() {
   };
 
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = tokenFilterId === "new";
   const tokenFilterQuery = useTokenFilterQuery({
     variables: { id: tokenFilterId as string },
     skip: !tokenFilterId || tokenFilterId === "new",
@@ -100,10 +103,43 @@ export function SaveTokenFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
-  const isRecap = page === 1;
+
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            label: "Recap Char Filter",
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              { key: "jsonConfig", label: "JSON Config", keyNotView: "type" },
+            ],
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (tokenFilterQuery.loading) {
     return <div></div>;
   }
+
   return (
     <ContainerFluid>
       <>
@@ -156,6 +192,17 @@ export function SaveTokenFilter() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

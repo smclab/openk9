@@ -16,6 +16,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../../graphql-generated";
 import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const PROVIDER_OPTIONS = [
   { value: "openai", label: "OpenAI" },
@@ -24,7 +25,7 @@ const PROVIDER_OPTIONS = [
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
 ];
 
-export function SaveEmbeddingModel() {
+export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { embeddingModelsId = "new", view } = useParams();
   const navigate = useNavigate();
   const [isCleaning, setIsCleaning] = React.useState(false);
@@ -41,6 +42,8 @@ export function SaveEmbeddingModel() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = embeddingModelsId === "new";
   const [providerModel, setProviderModel] = React.useState<{
     provider: string | null | undefined;
     model: string | null | undefined;
@@ -126,6 +129,25 @@ export function SaveEmbeddingModel() {
   const viewMaskApiKey = React.useMemo(() => {
     return !!((view || embeddingModelsId !== "new") && form.inputProps("apiKey").value);
   }, [view, embeddingModelsId, form.inputProps("apiKey").value]);
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "vectorSize", label: "Vector Size" },
+          { key: "provider" },
+          { key: "model" },
+          { key: "apiKey", label: "API Key" },
+          { key: "apiUrl", label: "API URL" },
+          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+        ],
+        label: "Recap Embedding Model",
+      },
+    ],
+  });
 
   return (
     <ContainerFluid>
@@ -236,6 +258,17 @@ export function SaveEmbeddingModel() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

@@ -19,6 +19,6 @@ uvicorn==0.37.0
 uvloop==0.17.0; sys_platform != 'win32'
 watchfiles==1.1.0
 websockets==15.0.1
-numpy==2.3.3
+numpy==2.2.6
 pandas==2.3.3
 xlrd==2.0.2

@@ -17,29 +17,58 @@
 
 package io.openk9.tenantmanager.mapper;
 
-import io.openk9.tenantmanager.dto.TenantDTO;
+import io.openk9.tenantmanager.dto.TenantRequestDTO;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.grpc.TenantResponse;
 import io.openk9.tenantmanager.model.Tenant;
 
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
 import org.mapstruct.NullValueCheckStrategy;
 
-@Mapper(
-	componentModel = "cdi"
-)
+@Mapper(componentModel = "cdi")
 public interface TenantMapper {
 
 	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 	TenantResponse toTenantResponse(Tenant tenant);
 
-	Tenant map(TenantDTO tenantDTO);
 	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
-	Tenant patch(TenantDTO tenantDTO);
+	TenantResponse toTenantResponse(TenantResponseDTO tenant);
 
-	Tenant map(@MappingTarget Tenant tenant, TenantDTO tenantDTO);
 	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
-	Tenant patch(@MappingTarget Tenant tenant, TenantDTO tenantDTO);
+	TenantResponseDTO toTenantResponseDTO(Tenant tenant);
+
+	@Mappings({
+		@Mapping(target = "id", ignore = true),
+		@Mapping(target = "createDate", ignore = true),
+		@Mapping(target = "modifiedDate", ignore = true)
+	})
+	Tenant map(TenantRequestDTO tenantRequestDTO);
+
+	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+	@Mappings({
+		@Mapping(target = "id", ignore = true),
+		@Mapping(target = "createDate", ignore = true),
+		@Mapping(target = "modifiedDate", ignore = true)
+	})
+	Tenant patch(TenantRequestDTO tenantRequestDTO);
+
+	@Mappings({
+		@Mapping(target = "id", ignore = true),
+		@Mapping(target = "createDate", ignore = true),
+		@Mapping(target = "modifiedDate", ignore = true)
+	})
+	Tenant map(@MappingTarget Tenant tenant, TenantRequestDTO tenantRequestDTO);
+
+	@BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+	@Mappings({
+		@Mapping(target = "id", ignore = true),
+		@Mapping(target = "createDate", ignore = true),
+		@Mapping(target = "modifiedDate", ignore = true)
+	})
+	Tenant patch(@MappingTarget Tenant tenant, TenantRequestDTO tenantRequestDTO);
 
 }

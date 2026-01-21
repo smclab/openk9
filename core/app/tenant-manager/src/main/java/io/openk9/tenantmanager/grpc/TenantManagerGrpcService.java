@@ -17,20 +17,20 @@
 
 package io.openk9.tenantmanager.grpc;
 
-import com.google.protobuf.Empty;
-import io.openk9.tenantmanager.mapper.TenantMapper;
-import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.service.TenantService;
-import io.quarkus.grpc.GrpcService;
-import io.smallrye.mutiny.Uni;
+import java.util.stream.Collectors;
 import jakarta.enterprise.context.control.ActivateRequestContext;
 import jakarta.inject.Inject;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import io.openk9.tenantmanager.mapper.TenantMapper;
+import io.openk9.tenantmanager.service.TenantService;
+
+import com.google.protobuf.Empty;
+import io.quarkus.grpc.GrpcService;
+import io.smallrye.mutiny.Uni;
 
 @GrpcService
 public class TenantManagerGrpcService implements TenantManager {
+
 	@Inject
 	TenantService tenantService;
 	@Inject
@@ -40,10 +40,7 @@ public class TenantManagerGrpcService implements TenantManager {
 	@ActivateRequestContext
 	public Uni<TenantResponse> findTenant(TenantRequest request) {
 
-		Uni<Tenant> tenantUni = tenantService.findTenantByVirtualHost(
-			request.getVirtualHost());
-
-		return tenantUni
+		return tenantService.findTenantByVirtualHost(request.getVirtualHost())
 			.onItem()
 			.ifNotNull()
 			.transform(tenantMapper::toTenantResponse);
@@ -52,9 +49,8 @@ public class TenantManagerGrpcService implements TenantManager {
 
 	@Override
 	public Uni<TenantListResponse> findTenantList(Empty request) {
-		Uni<List<Tenant>> tenantUni = tenantService.findAllTenant();
 
-		return tenantUni
+		return tenantService.findAllTenant()
 			.onItem()
 			.ifNotNull()
 			.transform(list -> list

@@ -17,12 +17,15 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
+import java.util.Optional;
+
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
-import io.openk9.common.util.VertxUtil;
+import io.openk9.quarkus.common.VertxUtil;
+
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -30,8 +33,6 @@ import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.eclipse.microprofile.config.ConfigProvider;
-
-import java.util.Optional;
 
 public class Ingress extends AbstractBehavior<Ingress.Command> {
 

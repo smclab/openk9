@@ -35,9 +35,18 @@ interface ConfigureConnectorsProps {
       callbackClose: () => void;
     }>
   >;
+  setExtraFab: (fab: React.ReactNode | null) => void;
 }
 
-function ButtonAddPluginDrivers({ disabled, pluginDriverRefetch }: { disabled: boolean; pluginDriverRefetch: any }) {
+function ButtonAddPluginDrivers({
+  disabled,
+  pluginDriverRefetch,
+  setExtraFab,
+}: {
+  disabled: boolean;
+  pluginDriverRefetch: any;
+  setExtraFab: (fab: React.ReactNode | null) => void;
+}) {
   const [selected, setSelected] = useState(false);
   const theme = useTheme();
   const formRef = React.useRef<{ submit: () => void } | null>(null);
@@ -108,7 +117,12 @@ function ButtonAddPluginDrivers({ disabled, pluginDriverRefetch }: { disabled: b
           body=""
           close={() => setSelected(false)}
         >
-          <SavePluginnDriverModel isConnector onSubmitSuccess={() => setSelected(false)} ref={formRef} />
+          <SavePluginnDriverModel
+            isConnector
+            onSubmitSuccess={() => setSelected(false)}
+            ref={formRef}
+            setExtraFab={setExtraFab}
+          />
         </ModalConfirm>
       )}
     </>
@@ -126,6 +140,7 @@ export function ConfigureConnectors({
   setAreaEnabled,
   setFormValues,
   setShowDialog,
+  setExtraFab,
 }: ConfigureConnectorsProps) {
   const pluginDrivers = usePluginDriversQuery();
   const navigate = useNavigate();
@@ -237,7 +252,7 @@ export function ConfigureConnectors({
               <Divider sx={{ margin: "17.5px 0px" }} />
             </>
           )}
-          <ButtonAddPluginDrivers pluginDriverRefetch={pluginDrivers} disabled={disabled} />
+          <ButtonAddPluginDrivers pluginDriverRefetch={pluginDrivers} disabled={disabled} setExtraFab={setExtraFab} />
           <Divider sx={{ margin: "17.5px 0px" }} />
           {!disabled && <p>Test connector</p>}
           {!disabled && (
@@ -258,6 +273,7 @@ export function ConfigureConnectors({
         sx={{
           display: "flex",
           marginTop: "10px",
+          marginBottom: "70px",
           justifyContent: "space-between",
           width: "100%",
           paddingBlock: "20px",

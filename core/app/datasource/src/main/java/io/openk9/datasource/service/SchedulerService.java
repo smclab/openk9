@@ -24,7 +24,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.actor.ActorSystemProvider;
 import io.openk9.datasource.index.model.IndexName;
 import io.openk9.datasource.model.DataIndex;
@@ -150,12 +150,12 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 	public Uni<List<String>> getDeletedContentIds(long id) {
 		return sessionFactory.withTransaction(s -> getCurrentTenant(s)
-			.flatMap(tenant -> s
+			.flatMap(tenantId -> s
 				.createNamedQuery(Scheduler.FETCH_BY_ID, Scheduler.class)
 				.setPlan(s.getEntityGraph(Scheduler.class, Scheduler.DATA_INDEXES_ENTITY_GRAPH))
 				.setParameter("schedulerId", id)
 				.getSingleResultOrNull()
-				.flatMap(scheduler -> indexesDiff(tenant.schemaName(), scheduler))
+				.flatMap(scheduler -> indexesDiff(tenantId, scheduler))
 			)
 		);
 	}

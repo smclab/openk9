@@ -1,0 +1,293 @@
+# version: "3.5" # deprecated
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: openk9
+      RABBITMQ_DEFAULT_PASS: openk9
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/15672' || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  opensearch:
+    image: docker.io/opensearchproject/opensearch:2
+    container_name: opensearch
+    hostname: opensearch
+    environment:
+      - node.name=opensearch
+      - bootstrap.memory_lock=true
+      - discovery.type=single-node
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+      - "DISABLE_PERFORMANCE_ANALYZER_AGENT_CLI=true"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      # The environment variable below is necessary when you
+      # run the opensearch image with an ARM64 chip.
+      # More details at https://github.com/elastic/elasticsearch/issues/118583#issuecomment-2567270484
+      # - "_JAVA_OPTIONS=-XX:UseSVE=0"
+    ports:
+      - 9200:9200
+    healthcheck:
+      test: "curl --silent --fail http://localhost:9200/_cluster/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ulimits:
+      nofile:
+        soft: 65536 # Maximum number of open files for the opensearch user - set to at least 65536
+        hard: 65536
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+  postgresql:
+    image: postgres:17
+    container_name: postgresql
+    hostname: postgresql
+    environment:
+      - POSTGRES_MULTIPLE_DATABASES=keycloak,tenantmanager,apigateway,openk9
+      - POSTGRES_PASSWORD=openk9
+      - POSTGRES_USER=postgres
+      - OPENK9_USER=openk9
+      - OPENK9_PASSWORD=openk9
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/5432' || exit "
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - ./compose-utilities/postgresql:/docker-entrypoint-initdb.d
+      - postgres-data:/var/lib/postgresql/data
+  keycloak:
+    image: bitnamilegacy/keycloak:26.1.3-debian-12-r0
+    container_name: keycloak
+    hostname: keycloak.openk9.localhost
+    environment:
+      KEYCLOAK_CREATE_ADMIN_USER: 'true'
+      KEYCLOAK_ADMIN_USER: user
+      KEYCLOAK_ADMIN_PASSWORD: openk9
+      KEYCLOAK_DATABASE_VENDOR: postgresql
+      KEYCLOAK_DATABASE_HOST: postgresql
+      KEYCLOAK_DATABASE_PORT: 5432
+      KEYCLOAK_DATABASE_NAME: keycloak
+      KEYCLOAK_DATABASE_USER: postgres
+      KEYCLOAK_DATABASE_SCHEMA: public
+      KEYCLOAK_DATABASE_PASSWORD: openk9
+      KEYCLOAK_HTTP_PORT: 8081
+    healthcheck:
+      test: "curl --silent -fail http://localhost:8081"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - 8081:8081
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - keycloak.openk9.localhost
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./compose-utilities/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+    depends_on:
+      - api-gateway
+  tenant-manager:
+    image: smclab/openk9-tenant-manager:3.1.0-SNAPSHOT
+    container_name: openk9-tenant-manager
+    hostname: openk9-tenant-manager
+    environment:
+      RABBITMQ_HOST: 'rabbitmq'
+      RABBITMQ_PASSWORD: 'openk9'
+      RABBITMQ_USERNAME: 'openk9'
+      RABBITMQ_PORT: '5672'
+      QUARKUS_DATASOURCE_USERNAME: 'openk9'
+      QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+      QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/tenantmanager'
+      OPENK9_DATASOURCE_URL: 'postgresql://postgresql/openk9'
+      QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'none'
+      QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_CORS: 'true'
+      QUARKUS_HTTP_CORS_ORIGINS: /.*/
+      QUARKUS_LOG_LEVEL: 'INFO'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.localhost:8081'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      OPENK9_TENANT_MANAGER_KEYCLOAK_BASE_ISSUER_URI: 'http://keycloak.openk9.localhost:8081/realms/'
+      OPENK9_TENANT_MANAGER_SECURITY_ADMIN_PASSWORD: 'admin'
+    ports:
+      - 8186:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  api-gateway:
+    image: smclab/openk9-api-gateway:3.1.0-SNAPSHOT
+    container_name: openk9-api-gateway
+    hostname: openk-api-gateway
+    environment:
+      SPRING_CLOUD_GATEWAY_SERVER_WEBFLUX_TRUSTED_PROXIES: .*
+      SPRING_LIQUIBASE_URL: jdbc:postgresql://postgresql/apigateway
+      SPRING_LIQUIBASE_USER: openk9
+      SPRING_LIQUIBASE_PASSWORD: openk9
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgresql/apigateway
+      SPRING_R2DBC_USERNAME: openk9
+      SPRING_R2DBC_PASSWORD: openk9
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: openk9
+      SPRING_RABBITMQ_PASSWORD: openk9
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8081/actuator/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  datasource:
+    image: smclab/openk9-datasource:3.1.0-SNAPSHOT
+    container_name: openk9-datasource
+    hostname: openk9-datasource
+    environment:
+      PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: 'datasource'
+      PEKKO_CLUSTER_FILE: 'local'
+      IO_OPENK9_SCHEDULING_PURGE_CRON: '0 */10 * ? * *'
+      IO_OPENK9_SCHEDULING_PURGE_MAX_AGE: '2d'
+      IO_OPENK9_SCHEDULING_TIMEOUT: '100s'
+      JAVA_DEBUG: 'true'
+      MP_MESSAGING_INCOMING_EVENTS_ROUTING_KEYS: 'noop'
+      OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: 'true'
+      OPENK9_DATASOURCE_QUERY_PARSER_MAX_TEXT_QUERY_LENGTH: '0'
+      OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: '30'
+      QUARKUS_HTTP_AUTH_PERMISSION__ADMINISTRATOR__ENABLED: false
+      QUARKUS_DATASOURCE_PASSWORD: 'openk9'
+      QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'
+      QUARKUS_DATASOURCE_USERNAME: 'openk9'
+      QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
+      QUARKUS_OPENSEARCH_USERNAME: 'opensearch'
+      QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: 'openk9-tenant-manager'
+      QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: none
+      QUARKUS_HIBERNATE_ORM_LOG_SQL: 'false'
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_CORS: 'true'
+      QUARKUS_HTTP_CORS_ORIGINS: '/.*/'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+      QUARKUS_LOG_LEVEL: 'INFO'
+      QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'false'
+      RABBITMQ_HOST: 'rabbitmq'
+      RABBITMQ_PASSWORD: 'openk9'
+      RABBITMQ_PORT: '5672'
+      RABBITMQ_USERNAME: 'openk9'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  ingestion:
+    image: smclab/openk9-ingestion:3.1.0-SNAPSHOT
+    container_name: openk9-ingestion
+    hostname: openk9-ingestion
+    environment:
+      RABBITMQ_HOST: 'rabbitmq'
+      RABBITMQ_PASSWORD: 'openk9'
+      RABBITMQ_USERNAME: 'openk9'
+      RABBITMQ_PORT: '5672'
+      QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
+      QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://openk9-file-manager:8080
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  searcher:
+    image: smclab/openk9-searcher:3.1.0-SNAPSHOT
+    container_name: openk9-searcher
+    hostname: openk9-searcher
+    environment:
+      QUARKUS_OPENSEARCH_HOSTS: 'opensearch:9200'
+      QUARKUS_OPENSEARCH_USERNAME: 'opensearch'
+      QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: 'openk9-datasource'
+      QUARKUS_OTEL_SDK_DISABLED: 'true'
+      QUARKUS_LOG_CONSOLE_JSON: 'false'
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: "curl --silent --fail http://localhost:8080/q/health"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  web-connector:
+    image: smclab/openk9-web-connector:3.1.0-SNAPSHOT
+    container_name: openk9-web-connector
+    hostname: openk9-web-connector
+    ports:
+      - "5001:5000"
+      - "6800:6800"
+  search-frontend:
+    image: smclab/openk9-search-frontend:3.1.0-SNAPSHOT
+    container_name: openk9-search-frontend
+  admin-ui:
+    image: smclab/openk9-admin-ui:3.1.0-SNAPSHOT
+    container_name: openk9-admin-ui
+  initializer:
+    build: ./compose-utilities/initializer
+    container_name: openk9-initializer
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      tenant-manager:
+        condition: service_healthy
+      datasource:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+
+volumes:
+  opensearch-data:
+  postgres-data:
+  caddy-data:

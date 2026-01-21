@@ -29,26 +29,24 @@ export default function AssociationsLayout({
   return (
     <Box sx={{ width: "100%", maxWidth: "100%" }}>
       <Typography
-        variant="h6"
+        variant="subtitle1"
         sx={{
-          p: 2,
-          fontWeight: 600,
-          color: "#333",
+          margin: "8px 0",
         }}
       >
         {title}
       </Typography>
 
       <Paper
+        variant="outlined"
         elevation={0}
         sx={{
-          border: "1px solid #e0e0e0",
           borderRadius: "10px",
           width: "100%",
           overflow: "scroll",
         }}
       >
-        <Box sx={{ borderBottom: "1px solid #e0e0e0" }}>
+        <Box>
           <Tabs
             value={value}
             onChange={handleChange}

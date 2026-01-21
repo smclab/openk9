@@ -1,14 +1,16 @@
-import React from "react";
-import { css } from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { css } from "styled-components";
 import { TokenSelect } from "../components/TokenSelect";
 import { characterControlType, Configuration } from "../embeddable/entry";
+import Autocomplete from "./Autocomplete";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
-import { SelectionsAction, SelectionsState } from "./useSelections";
 import { DeleteLogo } from "./DeleteLogo";
-import { useTranslation } from "react-i18next";
+import { useAutocomplete } from "./useAutocomplete";
 import { useClickAway } from "./useClickAway";
+import { SelectionsAction, SelectionsState } from "./useSelections";
 
 type SearchProps = {
   configuration: Configuration;
@@ -51,9 +53,26 @@ export function Search({
     textPosition: number;
     optionPosition: number;
   } | null>({ textPosition: 0, optionPosition: 1 });
+  const [isAutocompleteOpen, setIsAutocompleteOpen] = React.useState(false);
+  const [highlightIndex, setHighlightIndex] = React.useState(-1);
+  const [acceptSuggestion, setAcceptSuggestion] = React.useState(true);
+
+  const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
+  const suggestions = autocompleteQ.data ?? [];
+
+  React.useEffect(() => {
+    if (suggestions.length > 0) {
+      setIsAutocompleteOpen(true);
+    } else {
+      setIsAutocompleteOpen(false);
+    }
+  }, [suggestions]);
 
   const clickAwayRef = React.useRef<HTMLDivElement | null>(null);
-  useClickAway([clickAwayRef], () => setOpenedDropdown(null));
+  useClickAway([clickAwayRef], () => {
+    setOpenedDropdown(null);
+    setIsAutocompleteOpen(false);
+  });
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [adjustedSelection, setAdjustedSelection] = React.useState<{
     selectionStart: number;
@@ -74,6 +93,18 @@ export function Search({
     actionSearch: characterControl?.actionCharacter,
   });
   const { t } = useTranslation();
+  const applySuggestion = (s: { autocomplete: string }) => {
+    selectionsDispatch({
+      type: "set-text",
+      text: s.autocomplete,
+      textOnchange: s.autocomplete,
+    });
+    setIsAutocompleteOpen(false);
+    setHighlightIndex(-1);
+    setOpenedDropdown(null);
+    setAcceptSuggestion(true);
+    inputRef.current?.focus();
+  };
 
   return (
     <React.Fragment>
@@ -101,6 +132,7 @@ export function Search({
             border-radius: 8px;
             width: 100%;
             max-height: 50px;
+            position: relative;
             @media (max-width: 480px) {
               width: 100%;
             }
@@ -115,6 +147,18 @@ export function Search({
               color: var(--openk9-embeddable-search--secondary-text-color);
             `}
           />
+          {isAutocompleteOpen &&
+            suggestions.length > 0 &&
+            selectionsState.textOnChange &&
+            !acceptSuggestion && (
+              <Autocomplete
+                applySuggestion={applySuggestion}
+                highlightIndex={highlightIndex}
+                setHighlightIndex={setHighlightIndex}
+                setIsAutocompleteOpen={setIsAutocompleteOpen}
+                suggestions={suggestions}
+              />
+            )}
           <div
             className="openk9--search-container-show-syntax"
             css={css`
@@ -128,6 +172,7 @@ export function Search({
               css={css`
                 top: 0px;
                 left: 0px;
+                width: 100%;
                 padding: var(--openk9-embeddable-search--input-padding);
                 display: flex;
                 position: absolute;
@@ -161,6 +206,7 @@ export function Search({
                         isAuto: autoSelect,
                       },
                     });
+                    setIsAutocompleteOpen(false);
                     if (
                       inputRef.current?.selectionStart &&
                       inputRef.current?.selectionEnd
@@ -225,9 +271,28 @@ export function Search({
               value={selectionsState.textOnChange}
               onClick={() => {
                 callbackClickSearch && callbackClickSearch();
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+              }}
+              onFocus={() => {
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+              }}
+              onBlur={(e) => {
+                const related = e.relatedTarget as HTMLElement | null;
+                if (
+                  !related ||
+                  !related.className?.includes(
+                    "openk9--autocomplete-suggestion-item",
+                  )
+                ) {
+                  setIsAutocompleteOpen(false);
+                }
               }}
               onChange={(event) => {
                 setText(event.currentTarget.value);
+                setAcceptSuggestion(false);
+                if (suggestions.length > 0) setIsAutocompleteOpen(true);
                 callbackChangeSearch &&
                   callbackChangeSearch(event.currentTarget.value);
               }}
@@ -265,76 +330,102 @@ export function Search({
                 }
               }}
               onKeyDown={(event) => {
-                const span =
-                  openedDropdown &&
-                  spans.find(
-                    (s) =>
-                      openedDropdown.textPosition > s.start &&
-                      openedDropdown.textPosition <= s.end,
-                  );
-                const option =
-                  openedDropdown &&
-                  span?.tokens[openedDropdown.optionPosition - 1];
-                if (event.key === "ArrowDown") {
-                  event.preventDefault();
-                  if (openedDropdown && span) {
-                    setOpenedDropdown({
-                      textPosition: openedDropdown.textPosition,
-                      optionPosition:
-                        openedDropdown.optionPosition < span.tokens.length
-                          ? openedDropdown.optionPosition + 1
-                          : 1,
-                    });
-                  }
-                } else if (event.key === "ArrowUp") {
-                  event.preventDefault();
-                  if (openedDropdown && openedDropdown.optionPosition > 0) {
-                    setOpenedDropdown({
-                      textPosition: openedDropdown.textPosition,
-                      optionPosition:
-                        openedDropdown.optionPosition === 1
-                          ? span?.tokens.length || 1
-                          : openedDropdown.optionPosition - 1,
-                    });
-                  }
-                } else if (event.key === "Enter") {
-                  event.preventDefault();
-                  inputRef &&
-                    inputRef.current &&
-                    search(inputRef?.current?.value || "");
-                  if (actionOnClick) actionOnClick();
-                  if (span && option) {
-                    selectionsDispatch({
-                      type: "set-selection",
-                      replaceText,
-                      selection: {
-                        text: span.text,
-                        textOnChange: span.text,
-                        start: span.start,
-                        end: span.end,
-                        token: option ?? null,
-                        isAuto: false,
-                      },
-                    });
-                    if (replaceText && option) {
-                      const text =
-                        option &&
-                        (option.tokenType === "ENTITY"
-                          ? option.entityName
-                          : option.value);
-                      const cursorPosition = span.start + (text?.length ?? 0);
-                      setAdjustedSelection({
-                        selectionStart: cursorPosition,
-                        selectionEnd: cursorPosition,
-                      });
-                    } else if (
-                      event.currentTarget.selectionStart &&
-                      event.currentTarget.selectionEnd
+                setAcceptSuggestion(false);
+                if (isAutocompleteOpen && suggestions.length > 0) {
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev < suggestions.length - 1 ? prev + 1 : 0,
+                    );
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    setHighlightIndex((prev) =>
+                      prev > 0 ? prev - 1 : suggestions.length - 1,
+                    );
+                  } else if (event.key === "Enter") {
+                    if (
+                      highlightIndex >= 0 &&
+                      highlightIndex < suggestions.length
                     ) {
-                      setAdjustedSelection({
-                        selectionStart: event.currentTarget.selectionStart,
-                        selectionEnd: event.currentTarget.selectionEnd,
+                      event.preventDefault();
+                      applySuggestion(suggestions[highlightIndex]);
+                    }
+                  } else if (event.key === "Escape") {
+                    setIsAutocompleteOpen(false);
+                    setHighlightIndex(-1);
+                  }
+                } else {
+                  const span =
+                    openedDropdown &&
+                    spans.find(
+                      (s) =>
+                        openedDropdown.textPosition > s.start &&
+                        openedDropdown.textPosition <= s.end,
+                    );
+                  const option =
+                    openedDropdown &&
+                    span?.tokens[openedDropdown.optionPosition - 1];
+                  if (event.key === "ArrowDown") {
+                    event.preventDefault();
+                    if (openedDropdown && span) {
+                      setOpenedDropdown({
+                        textPosition: openedDropdown.textPosition,
+                        optionPosition:
+                          openedDropdown.optionPosition < span.tokens.length
+                            ? openedDropdown.optionPosition + 1
+                            : 1,
                       });
+                    }
+                  } else if (event.key === "ArrowUp") {
+                    event.preventDefault();
+                    if (openedDropdown && openedDropdown.optionPosition > 0) {
+                      setOpenedDropdown({
+                        textPosition: openedDropdown.textPosition,
+                        optionPosition:
+                          openedDropdown.optionPosition === 1
+                            ? span?.tokens.length || 1
+                            : openedDropdown.optionPosition - 1,
+                      });
+                    }
+                  } else if (event.key === "Enter") {
+                    event.preventDefault();
+                    inputRef &&
+                      inputRef.current &&
+                      search(inputRef?.current?.value || "");
+                    if (actionOnClick) actionOnClick();
+                    if (span && option) {
+                      selectionsDispatch({
+                        type: "set-selection",
+                        replaceText,
+                        selection: {
+                          text: span.text,
+                          textOnChange: span.text,
+                          start: span.start,
+                          end: span.end,
+                          token: option ?? null,
+                          isAuto: false,
+                        },
+                      });
+                      if (replaceText && option) {
+                        const text =
+                          option &&
+                          (option.tokenType === "ENTITY"
+                            ? option.entityName
+                            : option.value);
+                        const cursorPosition = span.start + (text?.length ?? 0);
+                        setAdjustedSelection({
+                          selectionStart: cursorPosition,
+                          selectionEnd: cursorPosition,
+                        });
+                      } else if (
+                        event.currentTarget.selectionStart &&
+                        event.currentTarget.selectionEnd
+                      ) {
+                        setAdjustedSelection({
+                          selectionStart: event.currentTarget.selectionStart,
+                          selectionEnd: event.currentTarget.selectionEnd,
+                        });
+                      }
                     }
                   }
                 }
@@ -380,9 +471,15 @@ export function Search({
               margin-right: 21px;
               background: inherit;
               border: none;
+              position: relative;
+              z-index: 1100;
             `}
-            onClick={() => {
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsAutocompleteOpen(false);
               clearSearch();
+              inputRef.current?.focus();
             }}
           >
             <span

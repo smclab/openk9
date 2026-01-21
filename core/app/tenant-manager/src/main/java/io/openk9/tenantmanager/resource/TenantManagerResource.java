@@ -17,14 +17,7 @@
 
 package io.openk9.tenantmanager.resource;
 
-import io.openk9.common.util.RandomGenerator;
-import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
-import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
-import io.openk9.tenantmanager.service.TenantService;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.RolesAllowed;
+import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
@@ -35,15 +28,21 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import java.util.UUID;
+import io.openk9.common.util.RandomGenerator;
+import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
+import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
+import io.openk9.tenantmanager.service.TenantService;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.smallrye.mutiny.Uni;
 
 @Path("/tenant-manager/tenant")
-@RolesAllowed("admin")
 public class TenantManagerResource {
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<Tenant> createTenant(CreateTenantRequest createTenantRequest) {
+	public Uni<TenantResponseDTO> createTenant(CreateTenantRequest createTenantRequest) {
 
 		String virtualHost = createTenantRequest.virtualHost();
 
@@ -88,7 +87,7 @@ public class TenantManagerResource {
 			}
 			else {
 				return tenantManagerActorSystem
-					.populateSchema(t.getSchemaName(), t.getVirtualHost())
+					.populateSchema(t.schemaName(), t.virtualHost())
 					.onItemOrFailure()
 					.transformToUni((ignore, err) -> {
 						if (err != null) {
@@ -97,7 +96,7 @@ public class TenantManagerResource {
 						else {
 							return Uni.createFrom().item(
 								new CreateTablesResponse(
-									"Tables for schema " + t.getSchemaName() + " created"));
+									"Tables for schema " + t.schemaName() + " created"));
 						}
 					});
 			}

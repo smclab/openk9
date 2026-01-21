@@ -23,8 +23,9 @@ import {
   useCreateOrUpdateAnnotatorMutation,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveAnnotator() {
+export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { annotatorId = "new", view } = useParams();
   const annotatorQuery = useAnnotatorQuery({
     variables: { id: annotatorId as string },
@@ -33,6 +34,7 @@ export function SaveAnnotator() {
 
   const navigate = useNavigate();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const toast = useToast();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Annotator",
@@ -150,6 +152,37 @@ export function SaveAnnotator() {
   const isDisabled = (inputName: formInput): boolean => {
     return view === "view" || page === 1 || form.inputProps(inputName).disabled;
   };
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "fieldName" },
+          { key: "fuziness" },
+          { key: "type" },
+          { key: "description" },
+          { key: "size" },
+          { key: "boost" },
+          ...([
+            AnnotatorType.Autocomplete,
+            AnnotatorType.NerAutocomplete,
+            AnnotatorType.KeywordAutocomplete,
+            AnnotatorType.Ner,
+            AnnotatorType.Aggregator,
+          ].includes(form.inputProps("type").value)
+            ? [
+                { key: "valuesQueryType", label: "Values Query Type" },
+                { key: "globalQueryType", label: "Global Query Type" },
+                { key: "docTypeFieldId", label: "Document Type Field" },
+              ]
+            : []),
+        ],
+        label: "Recap Annotator",
+      },
+    ],
+  });
 
   return (
     <ContainerFluid>
@@ -292,6 +325,7 @@ export function SaveAnnotator() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </ContainerFluid>
   );
 }

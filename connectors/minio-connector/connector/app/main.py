@@ -32,7 +32,7 @@ app = FastAPI()
 
 ingestion_url = os.environ.get("INGESTION_URL")
 if ingestion_url is None:
-    ingestion_url = "http://openk9-ingestion:8080/api/ingestion/v1/ingestion/"
+    ingestion_url = "http://ingestion:8080/api/ingestion/v1/ingestion/"
 
 log_level = os.environ.get("INPUT_LOG_LEVEL")
 if log_level is None:
@@ -55,6 +55,7 @@ class MinioRequest(BaseModel):
     prefix: Optional[str] = None
     columns: Optional[list] = []
     additionalMetadata: Optional[dict] = {}
+    doTryExtractHeader: Optional[bool] = True
 
 
 @app.exception_handler(RequestValidationError)
@@ -108,9 +109,10 @@ def execute(request: MinioRequest):
     prefix = request["prefix"]
     datasource_payload_key = request["datasourcePayloadKey"]
     columns = request["columns"]
+    do_try_extract_header = request["doTryExtractHeader"]
 
     extractor = ExcelMinioExtractor(host, port, access_key, secret_key, bucket_name, columns, prefix, datasource_payload_key,
-                                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
+                                datasource_id, timestamp, schedule_id, tenant_id, ingestion_url, do_try_extract_header)
 
     thread = threading.Thread(target=extractor.extract_data)
     thread.start()

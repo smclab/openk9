@@ -27,14 +27,14 @@ public class TimezoneDefaultStorageNativeTest extends AbstractTimezoneDefaultSto
 
     @RegisterExtension
     static QuarkusUnitTest TEST = new QuarkusUnitTest()
-		.withApplicationRoot((jar) -> jar
-			.addClasses(EntityWithTimezones.class)
-			.addClasses(SchemaUtil.class))
-		.withConfigurationResource("application.properties")
-		.overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "native")
-		.assertException(t -> assertThat(t)
-			// NATIVE is not supported with PostgreSQL.
-			.rootCause()
-			.hasMessageContaining("NATIVE is not supported with the configured dialect"));
+            .withApplicationRoot((jar) -> jar
+                    .addClasses(EntityWithTimezones.class)
+                    .addClasses(SchemaUtil.class))
+            .withConfigurationResource("application.properties")
+            .overrideConfigKey("quarkus.hibernate-orm.mapping.timezone.default-storage", "native")
+            .assertException(t -> assertThat(t)
+                    // NATIVE is not supported with PostgreSQL.
+                    .rootCause()
+                    .hasMessageContaining("NATIVE is not supported with the configured dialect"));
 
 }

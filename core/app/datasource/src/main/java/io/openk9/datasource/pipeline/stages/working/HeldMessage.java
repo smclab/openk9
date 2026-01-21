@@ -19,7 +19,7 @@ package io.openk9.datasource.pipeline.stages.working;
 
 import java.util.Objects;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 
 public record HeldMessage(
 	ShardingKey processKey,

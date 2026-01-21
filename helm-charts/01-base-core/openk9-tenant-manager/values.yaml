@@ -91,22 +91,36 @@ quarkus:
     namespace: "openk9"
 
 timeoutDb:
-  # increse timeot tenant db creation
+  # Increase timeout tenant db creation
   CreateTenantTimeout: 45
 
 
+## Security configuration
+security:
+  adminPasswordSecretName: "tenant-manager-admin-password"
+  adminPasswordSecretKey: "password"
+
+## Rabbitmq configuration
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+  username: "openk9"
+  passwordSecretName: "rabbitmq-password"
+  keyPasswordSecret: "rabbitmq-password"
+  keyPasswordEnvName: "RABBITMQ_PASSWORD"
+
 ## Keycloak configuration
 keycloak:
-  host: "keycloak.local"   #-TBMD
-    ### Internal k8s URL for QUARQUS
+  ### Internal k8s URL for Quarkus
   svcport: 8080
   service: keycloak
-  ###
-  clientId: "tenant-manager"
+  ### Admin credentials
   username: "admin"
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
+  ### Base URI for Tenant Provisioning
+  baseIssuerUri: "https://keycloak.openk9.local/realms/"
 
 
 ## Database configuration
@@ -141,9 +155,11 @@ openk9:
   ## Openk9 Datasource configuration
   datasource:
     host: "openk9-datasource"
+    port: 9000
   ## Openk9 K8s Client configuration
   k8sClient:
     host: "openk9-k8s-client"
+    port: 9000
 
 
 ## Opentelemetry configuration

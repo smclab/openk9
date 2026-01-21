@@ -23,8 +23,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
-import io.openk9.common.util.ShardingKey;
-import io.openk9.common.util.collection.Collections;
+import io.openk9.common.util.Collections;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.actor.enrichitem.EnrichItemSupervisor;
 import io.openk9.datasource.pipeline.actor.enrichitem.HttpSupervisor;

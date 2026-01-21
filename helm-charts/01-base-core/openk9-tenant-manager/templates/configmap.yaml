@@ -37,8 +37,13 @@ data:
   QUARKUS_LOG_LEVEL: {{ .Values.quarkus.LogLevel | quote }}
   QUARKUS_HIBERNATE_ORM_LOG_SQL: "false"
 
-  QUARKUS_OIDC_AUTH_SERVER_URL: '{{ include "helper.keycloakURL" . }}/realms/tenant-manager'
-  QUARKUS_OIDC_CLIENT_ID: {{ .Values.keycloak.clientId | quote }}
+  # RabbitMQ env variables
+  RABBITMQ_HOST: {{ .Values.rabbitmq.host | quote }}
+  RABBITMQ_PORT: {{ .Values.rabbitmq.port | quote }}
+  RABBITMQ_USERNAME: {{ .Values.rabbitmq.username | quote }}
+
+  # Keycloak issuer URI configuration
+  OPENK9_TENANT_MANAGER_KEYCLOAK_BASE_ISSUER_URI: {{ .Values.keycloak.baseIssuerUri | quote }}
 
   #QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloakURL" . | quote }}
   QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: {{ include "helper.keycloak_svcURL" . | quote }}

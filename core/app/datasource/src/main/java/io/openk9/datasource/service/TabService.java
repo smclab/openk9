@@ -28,8 +28,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
 import io.openk9.datasource.mapper.TabMapper;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;

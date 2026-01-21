@@ -20,7 +20,6 @@ package io.openk9.datasource.grpc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.atLeast;
 
@@ -47,21 +46,16 @@ import io.openk9.datasource.service.LanguageService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.Searcher;
-import io.openk9.tenantmanager.grpc.TenantManager;
-import io.openk9.tenantmanager.grpc.TenantResponse;
 
 import io.quarkus.grpc.GrpcClient;
-import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
-import io.smallrye.mutiny.Uni;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.mockito.BDDMockito;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.indices.CreateIndexRequest;
@@ -108,10 +102,6 @@ public class SearcherSuggestionsGrpcTest {
 
 	@Inject
 	SuggestionCategoryService suggestionCategoryService;
-
-	@InjectMock
-	@GrpcClient("tenantmanager")
-	TenantManager tenantManager;
 
 	@Test
 	@Order(1)
@@ -162,11 +152,6 @@ public class SearcherSuggestionsGrpcTest {
 	@Test
 	@Order(2)
 	void should_aggregate_with_doc_type_field_one_only() {
-
-		BDDMockito.given(tenantManager.findTenant(notNull()))
-			.willReturn(Uni.createFrom().item(
-				TenantResponse.newBuilder().setSchemaName(SCHEMA_NAME)
-					.build()));
 
 		var suggestionCategoryOne = getSuggestionCategoryOne();
 		var docTypeField = suggestionCategoryOne.getDocTypeField();

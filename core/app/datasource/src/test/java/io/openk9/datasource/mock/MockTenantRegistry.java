@@ -17,24 +17,25 @@
 
 package io.openk9.datasource.mock;
 
-import io.openk9.api.tenantmanager.TenantManager;
-import io.openk9.auth.tenant.TenantRegistry;
+import java.util.List;
+import jakarta.enterprise.context.ApplicationScoped;
+
+import io.openk9.datasource.service.TenantRegistry;
+
 import io.quarkus.test.Mock;
 import io.smallrye.mutiny.Uni;
-import jakarta.enterprise.context.ApplicationScoped;
 
 @Mock
 @ApplicationScoped
-public class MockTenantRegistry extends TenantRegistry {
+public class MockTenantRegistry implements TenantRegistry {
 
 	@Override
-	public Uni<TenantManager.Tenant> getTenantByVirtualHost(String virtualHost) {
-
-		var tenant = new TenantManager.Tenant(
-			"test.openk9.local", "public", "openk9", "openk9", "public");
-
-		return Uni.createFrom().item(tenant);
-
+	public Uni<String> getTenantId(String virtualHost) {
+		return Uni.createFrom().item("public");
 	}
 
+	@Override
+	public Uni<List<String>> getTenantIdList() {
+		return Uni.createFrom().item(List.of("public"));
+	}
 }

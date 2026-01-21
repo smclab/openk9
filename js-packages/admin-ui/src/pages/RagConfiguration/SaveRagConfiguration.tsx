@@ -19,10 +19,13 @@ import {
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { RagConfigurationQuery } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveRagConfiguration() {
+export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { ragConfigId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
+  const isRecap = page === 1;
+  const isNew = ragConfigId === "new";
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -147,6 +150,31 @@ export function SaveRagConfiguration() {
 
   const selectedType = form.inputProps("type").value;
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "type" },
+          { key: "prompt" },
+          { key: "reformulate" },
+          { key: "rephrasePrompt", label: "Rephrase Prompt" },
+          { key: "chunkWindow" },
+          { key: "jsonConfig", label: "JSON Config", jsonView: true },
+          ...(form.inputProps("type").value === RagType.ChatRagTool
+            ? [
+                { key: "ragToolDescription", label: "RAG Tool Description" },
+                { key: "promptNoRag", label: "Prompt No RAG" },
+              ]
+            : []),
+        ],
+        label: "Recap RAG Configuration",
+      },
+    ],
+  });
+
   return (
     <ContainerFluid>
       <>
@@ -258,6 +286,17 @@ export function SaveRagConfiguration() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }

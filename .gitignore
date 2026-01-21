@@ -65,6 +65,7 @@ cmake-build-*/
 
 # IntelliJ
 out/
+*.ipr
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -200,3 +201,25 @@ nb-configuration.xml
 release.properties
 
 !js-packages/openk9-chatbot/lib/
+
+### Spring Boot ###
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/

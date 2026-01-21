@@ -15,7 +15,7 @@ import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamic
 import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   AnalyzersAssociationsQuery,
@@ -29,13 +29,14 @@ import {
 import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { TemplateAnalyzers } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
   { label: "Char Filters", id: "charFilters" },
   { label: "Token Filters", id: "tokenFilters" },
 ];
 
-export function SaveAnalyzer() {
+export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { analyzerId = "new", view } = useParams();
   const [page, setPage] = useState(0);
   const navigate = useNavigate();
@@ -157,9 +158,50 @@ export function SaveAnalyzer() {
     getValidationMessages: fromFieldValidators(createOrUpdateAnalyzerMutation.data?.analyzerWithLists?.fieldValidators),
   });
 
+  const computedJsonConfig = React.useMemo(
+    () =>
+      createJsonString({
+        template: template?.value,
+        type: typeSelected,
+      }),
+    [template, typeSelected],
+  );
+
+  const recapSections = React.useMemo(
+    () =>
+      mappingCardRecap({
+        form: form as any,
+        sections: [
+          {
+            cell: [
+              { key: "name" },
+              { key: "description" },
+              { key: "type" },
+              ...(typeSelected === "custom"
+                ? [
+                    { key: "charFilters", label: "Char Filters" },
+                    { key: "tokenFilters", label: "Token Filters" },
+                    { key: "tokenizerId", label: "Tokenizer" },
+                  ]
+                : []),
+              ...(typeSelected ? [{ key: "jsonConfig", label: "JSON Config", keyNotView: "type" }] : []),
+            ],
+            label: "Recap Analyzer",
+          },
+        ],
+        valueOverride: {
+          type: typeSelected,
+          jsonConfig: computedJsonConfig,
+          tokenizerId: form.inputProps("tokenizerId").value?.name || "",
+        },
+      }),
+    [form, typeSelected, computedJsonConfig],
+  );
+
   if (analyzerQuery.loading) return null;
 
   const isRecap = page === 1;
+  const isNew = analyzerId === "new";
 
   const handleAssociationSelect =
     (field: "charFilters" | "tokenFilters") =>
@@ -243,6 +285,17 @@ export function SaveAnalyzer() {
                         />
                       </>
                     )}
+                    <Recap
+                      recapData={recapSections}
+                      setExtraFab={setExtraFab}
+                      forceFullScreen={isRecap}
+                      actions={{
+                        onBack: () => setPage(0),
+                        onSubmit: () => form.submit(),
+                        submitLabel: isNew ? "Create entity" : "Update entity",
+                        backLabel: "Back",
+                      }}
+                    />
                   </>
                 ),
                 page: 0,

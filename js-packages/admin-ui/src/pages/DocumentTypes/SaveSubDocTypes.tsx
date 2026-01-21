@@ -26,6 +26,7 @@ export function SaveSubDocType({
   callback,
   parentId,
   isChild,
+  setExtraFab,
 }: {
   subDocTypesId: string;
   documentTypeId: string;
@@ -33,6 +34,7 @@ export function SaveSubDocType({
   callback(): void;
   parentId: string;
   isChild: boolean;
+  setExtraFab: (fab: React.ReactNode | null) => void;
 }) {
   const documentTypeFieldQuery = useDocumentTypeFieldQuery({
     variables: { id: subDocTypesId as string },

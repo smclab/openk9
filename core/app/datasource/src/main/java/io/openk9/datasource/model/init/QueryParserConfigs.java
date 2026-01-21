@@ -17,6 +17,9 @@
 
 package io.openk9.datasource.model.init;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
@@ -24,9 +27,6 @@ import io.openk9.datasource.model.form.FieldValue;
 import io.openk9.datasource.model.form.FormField;
 import io.openk9.datasource.model.form.FormFieldType;
 import io.openk9.datasource.model.form.FormTemplate;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 /**
  * Configuration registry for query parser types and their associated DTOs and form templates.
@@ -67,9 +67,8 @@ public class QueryParserConfigs {
 
 	static {
 		for (var type : QueryParserType.values()) {
-			switch (type) {
-				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> {
-				}
+			var enforcer = switch (type) {
+				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> null;
 				case DATE_ORDER -> DTOs.put(type, DateOrder.DTO);
 				case DATE -> DTOs.put(type, Date.DTO);
 				case ENTITY -> DTOs.put(type, Entity.DTO);
@@ -77,11 +76,11 @@ public class QueryParserConfigs {
 				case HYBRID -> DTOs.put(type, Hybrid.DTO);
 				case KNN -> DTOs.put(type, Knn.DTO);
 				case TEXT -> DTOs.put(type, Text.DTO);
-			}
+				// no default case to prevent accidental omissions at compile-time.
+			};
 
-			switch (type) {
-				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> {
-				}
+			var enforcer2 = switch (type) {
+				case ACL, AUTOCOMPLETE, DATASOURCE, DOCTYPE -> null;
 				case DATE_ORDER -> FORM_TEMPLATES.put(type, DateOrder.FORM_TEMPLATE);
 				case DATE -> FORM_TEMPLATES.put(type, Date.FORM_TEMPLATE);
 				case ENTITY -> FORM_TEMPLATES.put(type, Entity.FORM_TEMPLATE);
@@ -89,7 +88,8 @@ public class QueryParserConfigs {
 				case HYBRID -> FORM_TEMPLATES.put(type, Hybrid.FORM_TEMPLATE);
 				case KNN -> FORM_TEMPLATES.put(type, Knn.FORM_TEMPLATE);
 				case TEXT -> FORM_TEMPLATES.put(type, Text.FORM_TEMPLATE);
-			}
+				// no default case to prevent accidental omissions at compile-time.
+			};
 		}
 	}
 

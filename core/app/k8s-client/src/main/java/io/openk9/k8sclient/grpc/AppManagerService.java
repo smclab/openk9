@@ -17,8 +17,9 @@
 
 package io.openk9.k8sclient.grpc;
 
-import com.google.protobuf.Empty;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import java.util.List;
+import jakarta.inject.Inject;
+
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.AppManifestList;
@@ -30,18 +31,18 @@ import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
 import io.openk9.app.manager.grpc.DeleteResourceStatus;
 import io.openk9.app.manager.grpc.Status;
-import io.openk9.common.util.StringUtils;
+import io.openk9.common.util.Strings;
 import io.openk9.k8s.crd.Manifest;
 import io.openk9.k8sclient.service.IngressDef;
 import io.openk9.k8sclient.service.IngressService;
+
+import com.google.protobuf.Empty;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.quarkus.grpc.GrpcService;
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
-import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-import java.util.List;
 
 @GrpcService
 public class AppManagerService implements AppManager {
@@ -72,9 +73,9 @@ public class AppManagerService implements AppManager {
 			List.of(
 				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
 				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
-				IngressDef.Route.of("/api/datasource", "openk9-datasource", 8080),
-				IngressDef.Route.of("/api/searcher", "openk9-searcher", 8080),
-				IngressDef.Route.of("/api/rag", "openk9-rag-module", 5000),
+				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080),
+				IngressDef.Route.of("/api/searcher", "openk9-api-gateway", 8080),
+				IngressDef.Route.of("/api/rag", "openk9-api-gateway", 8080),
 				IngressDef.Route.of("/chat", "openk9-talk-to", 8080)
 			)
 		);
@@ -91,7 +92,7 @@ public class AppManagerService implements AppManager {
 			.tenant(request.getSchemaName())
 			.set(
 				"nameOverride",
-				StringUtils.withSuffix(request.getChart(), request.getSchemaName())
+				Strings.withSuffix(request.getChart(), request.getSchemaName())
 			)
 			.build();
 

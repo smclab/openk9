@@ -140,6 +140,7 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
       <Box
         sx={{
           marginTop: "10px",
+          marginBottom: "70px",
           display: "flex",
           justifyContent: "space-between",
         }}

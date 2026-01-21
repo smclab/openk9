@@ -17,17 +17,7 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.model.DocType;
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
-import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.service.PluginDriverService;
-import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
-import io.openk9.datasource.web.dto.HealthDTO;
-import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
-import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
-import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
-import io.smallrye.mutiny.Uni;
-import jakarta.annotation.security.RolesAllowed;
+import java.util.Set;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -36,6 +26,18 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.service.PluginDriverService;
+import io.openk9.datasource.web.dto.HealthDTO;
+import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
+import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
+import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
+import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
+
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
@@ -44,13 +46,9 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-
-import java.util.Set;
 
 @ApplicationScoped
 @Path("/pluginDrivers")
-@RolesAllowed("k9-admin")
 public class PluginDriverResource {
 
 	@Inject

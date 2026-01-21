@@ -16,6 +16,7 @@ import {
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { TooltipDescription } from "@components/Form/utils";
 import { Box, Button } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -39,6 +40,7 @@ import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@componen
 import { useLanguages, useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { sxCheckbox, sxControl } from "../../utils/styleConfig";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [
   { label: "datasource", id: "datasourceIds", tooltip: "Datasources associated to current bucket" },
@@ -50,27 +52,11 @@ const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = 
   { label: "tabs", id: "tabIds", tooltip: "Tabs associated to current bucket" },
 ];
 
-const sxCheckbox = {
-  p: 0.5,
-  "& .MuiSvgIcon-root": {
-    fontSize: 16,
-  },
-};
-
-const sxControl = {
-  m: 0,
-  mr: 0.5,
-  ml: 1,
-  cursor: "pointer",
-  "& .MuiFormControlLabel-label": {
-    fontSize: "0.875rem",
-  },
-};
-
-export function SaveBucket() {
+export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { bucketId = "new", view } = useParams();
   const [page, setPage] = React.useState<number>(0);
   const isRecap = page === 1;
+  const isNew = bucketId === "new";
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Bucket",
@@ -133,19 +119,6 @@ export function SaveBucket() {
     isNetworkOnly: true,
   });
 
-  const { OptionQuery: ragChatConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRag,
-  });
-  const { OptionQuery: ragChatSimpleGenerateConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationSimpleGenerate,
-  });
-  const { OptionQuery: ragChatToolConfigurationOption } = useOptions({
-    queryKeyPath: "unboundRAGConfigurationByBucket",
-    data: ragConfigurationChatRagTool,
-  });
-
   const toast = useToast();
   const [createOrUpdateBucketMutate, createOrUpdateBucketMutation] = useCreateOrUpdateBucketMutation({
     refetchQueries: ["Buckets", "BucketDataSources"],
@@ -193,7 +166,7 @@ export function SaveBucket() {
         refreshOnQuery: false,
         refreshOnSuggestionCategory: false,
         refreshOnTab: false,
-        retrieveType: RetrieveType.Hybrid,
+        retrieveType: RetrieveType.Text,
         datasourceIds: datasources?.associated || [],
         suggestionCategoryIds: suggestionCategories?.associated || [],
         tabIds: tabs?.associated || [],
@@ -280,6 +253,46 @@ export function SaveBucket() {
   });
 
   if (bucketQuery.loading) return null;
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "refreshOnDate", label: "Refresh On Date" },
+          { key: "refreshOnQuery", label: "Refresh On Query" },
+          { key: "refreshOnSuggestionCategory", label: "Refresh On Suggestion Category" },
+          { key: "refreshOnTab", label: "Refresh On Tab" },
+          { key: "retrieveType", label: "Retriever Type" },
+          { key: "datasourceIds", label: "Datasources" },
+          { key: "suggestionCategoryIds", label: "Suggestion Categories" },
+          { key: "tabIds", label: "Tabs" },
+          { key: "queryAnalysisId", label: "Query Analysis" },
+          { key: "defaultLanguageId", label: "Default Language" },
+          { key: "searchConfigId", label: "Search Configuration" },
+          { key: "ragConfigurationChatId", label: "RAG Configuration Chat" },
+          { key: "ragConfigurationChatToolId", label: "RAG Configuration Chat Tool" },
+          { key: "ragConfigurationSimpleGenerateId", label: "RAG Configuration Simple Generate" },
+        ],
+        label: "Recap Document Type",
+      },
+    ],
+    valueOverride: {
+      searchConfigId: form.inputProps("searchConfigId").value?.name || "",
+      defaultLanguageId: form.inputProps("defaultLanguageId").value?.name || "",
+      queryAnalysisId: form.inputProps("queryAnalysisId").value?.name || "",
+      ragConfigurationChatId: form.inputProps("ragConfigurationChatId").value?.name || "",
+      ragConfigurationChatToolId: form.inputProps("ragConfigurationChatToolId").value?.name || "",
+      autocorrectionId: form.inputProps("autocorrectionId").value?.name || "",
+      ragConfigurationSimpleGenerateId: form.inputProps("ragConfigurationSimpleGenerateId").value?.name || "",
+      datasourceIds: form.inputProps("datasourceIds").value?.map((ds, index) => ({ [index + 1]: ds.label })) || [],
+      suggestionCategoryIds:
+        form.inputProps("suggestionCategoryIds").value?.map((sc, index) => ({ [index + 1]: sc.label })) || [],
+      tabIds: form.inputProps("tabIds").value?.map((tab, index) => ({ [index + 1]: tab.label })) || [],
+    },
+  });
 
   return (
     <ContainerFluid style={{ width: "55%" }}>
@@ -562,6 +575,17 @@ export function SaveBucket() {
                         }
                       />
                     </Box>
+                    <Recap
+                      recapData={recapSections}
+                      setExtraFab={setExtraFab}
+                      forceFullScreen={isRecap}
+                      actions={{
+                        onBack: () => setPage(0),
+                        onSubmit: () => form.submit(),
+                        submitLabel: isNew ? "Create entity" : "Update entity",
+                        backLabel: "Back",
+                      }}
+                    />
                   </>
                 ),
                 page: 0,

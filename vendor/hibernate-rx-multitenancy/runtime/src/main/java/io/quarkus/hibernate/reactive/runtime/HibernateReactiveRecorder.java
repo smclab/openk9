@@ -36,13 +36,12 @@ public class HibernateReactiveRecorder {
         HibernateReactive.featureInit(enabled);
     }
 
-	public void initializePersistenceProvider(
-		HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
-		Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
-		ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(
-			hibernateOrmRuntimeConfig,
-			integrationRuntimeDescriptors
-		);
+    public void initializePersistenceProvider(
+            HibernateOrmRuntimeConfig hibernateOrmRuntimeConfig,
+            Map<String, List<HibernateOrmIntegrationRuntimeDescriptor>> integrationRuntimeDescriptors) {
+        ReactivePersistenceProviderSetup.registerRuntimePersistenceProvider(
+                hibernateOrmRuntimeConfig,
+                integrationRuntimeDescriptors);
     }
 
 }

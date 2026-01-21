@@ -19,7 +19,7 @@ package io.openk9.datasource.pipeline.actor.closing;
 
 import java.util.List;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.events.DatasourceEventBus;
 import io.openk9.datasource.events.DatasourceMessage;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;

@@ -26,9 +26,9 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.validation.constraints.NotNull;
 
+import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.common.util.SortBy;
-import io.openk9.common.util.StringUtils;
+import io.openk9.common.util.Strings;
 import io.openk9.datasource.mapper.QueryParserConfigMapper;
 import io.openk9.datasource.mapper.SearchConfigMapper;
 import io.openk9.datasource.model.QueryAnalysis_;
@@ -130,7 +130,7 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 					.executeAsync(Requests.builder()
 						.method("PUT")
 						.endpoint(
-							"_search/pipeline/" + StringUtils.retainsAlnum(searchConfig.getName()))
+							"_search/pipeline/" + Strings.retainsAlnum(searchConfig.getName()))
 						.json(getJsonBody(pipelineDTO)
 						)
 						.build()

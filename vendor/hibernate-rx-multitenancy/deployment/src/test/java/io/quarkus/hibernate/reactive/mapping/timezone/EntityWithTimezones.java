@@ -34,14 +34,14 @@ public class EntityWithTimezones {
     public EntityWithTimezones() {
     }
 
-	public ZonedDateTime zonedDateTime;
-	public OffsetDateTime offsetDateTime;
-	public OffsetTime offsetTime;
+    public ZonedDateTime zonedDateTime;
+    public OffsetDateTime offsetDateTime;
+    public OffsetTime offsetTime;
 
-	public EntityWithTimezones(
-		ZonedDateTime zonedDateTime,
-		OffsetDateTime offsetDateTime,
-		OffsetTime offsetTime) {
+    public EntityWithTimezones(
+            ZonedDateTime zonedDateTime,
+            OffsetDateTime offsetDateTime,
+            OffsetTime offsetTime) {
         this.zonedDateTime = zonedDateTime;
         this.offsetDateTime = offsetDateTime;
         this.offsetTime = offsetTime;

@@ -1,0 +1,44 @@
+CHART NAME: {{ .Chart.Name }}
+CHART VERSION: {{ .Chart.Version }}
+APP VERSION: {{ .Chart.AppVersion }}
+
+** Please be patient while the chart is being deployed **
+
+OpenK9 API Gateway has been installed successfully!
+
+{{- if .Values.ingress.enabled }}
+
+The API Gateway is accessible via Ingress at:
+{{- range .Values.ingress.paths }}
+  - {{ if $.Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ $.Values.ingress.host }}{{ . }}
+{{- end }}
+
+{{- else if .Values.route.enabled }}
+
+The API Gateway is accessible via OpenShift Route at:
+{{- range .Values.route.paths }}
+  - {{ if $.Values.route.tls.enabled }}https{{ else }}http{{ end }}://{{ $.Values.route.host }}{{ . }}
+{{- end }}
+
+{{- else }}
+
+To access the API Gateway from outside the cluster:
+
+1. Get the service name:
+   kubectl get svc -n {{ .Release.Namespace }} {{ template "common.names.name" . }}
+
+2. Port forward to access locally:
+   kubectl port-forward -n {{ .Release.Namespace }} svc/{{ template "common.names.name" . }} 8080:8080
+
+3. Access the API Gateway at:
+   http://localhost:8080
+
+{{- end }}
+
+Management endpoints are available at port {{ .Values.service.managementPort }}:
+  - Health: /actuator/health
+  - Liveness: /actuator/health/liveness
+  - Readiness: /actuator/health/readiness
+{{- if .Values.metrics.enabled }}
+  - Metrics: /actuator/prometheus
+{{- end }}

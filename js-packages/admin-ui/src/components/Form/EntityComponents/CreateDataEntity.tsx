@@ -182,6 +182,7 @@ function FooterButton({
         flexWrap: "wrap",
         justifyContent: "space-between",
         marginBlock: "32px",
+        marginBottom: "70px",
       }}
     >
       <Button

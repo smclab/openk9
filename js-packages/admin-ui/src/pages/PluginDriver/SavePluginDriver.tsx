@@ -36,6 +36,7 @@ import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-gener
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ConfigType } from "./gql";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
 export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
@@ -52,10 +53,12 @@ export const SavePluginnDriverModel = React.forwardRef(
       isConnector,
       customButtonModalStyle,
       onSubmitSuccess,
+      setExtraFab,
     }: {
       isConnector?: boolean;
       customButtonModalStyle?: any;
       onSubmitSuccess?: () => void;
+      setExtraFab: (fab: React.ReactNode | null) => void;
     },
     ref: React.Ref<{ submit: () => void }>,
   ) => {
@@ -87,6 +90,8 @@ export const SavePluginnDriverModel = React.forwardRef(
       }
     };
     const [page, setPage] = React.useState(0);
+    const isRecap = page === 1;
+    const isNew = pluginDriverId === "new";
     const pluginDriverQuery = usePluginDriverQuery({
       variables: { id: pluginDriverId as string },
       skip: !pluginDriverId || pluginDriverId === "new",
@@ -263,6 +268,34 @@ export const SavePluginnDriverModel = React.forwardRef(
         form.submit();
       },
     }));
+
+    const recapSections = mappingCardRecap({
+      form: form as any,
+      sections: [
+        {
+          cell: [
+            { key: "name" },
+            { key: "description" },
+            { key: "type" },
+            { key: "jsonConfig", label: "JSON Config" },
+            { key: "baseUri", label: "Base URI" },
+            { key: "secure" },
+            { key: "path" },
+            { key: "method" },
+            { key: "aclMapping", label: "ACL Mapping" },
+          ],
+          label: "Recap Connector",
+        },
+      ],
+      valueOverride: {
+        baseUri: config?.baseUri || "",
+        secure: config?.secure || "No",
+        path: config?.path || "",
+        method: config?.method || "",
+        aclMapping: fields?.map((e, index) => ({ [index + 1]: e.fieldName })) || [],
+      },
+    });
+
     return (
       <ContainerFluid size="md">
         <>
@@ -485,6 +518,19 @@ export const SavePluginnDriverModel = React.forwardRef(
             />
           </form>
           <ConfirmModal />
+          {!ref && (
+            <Recap
+              recapData={recapSections}
+              setExtraFab={setExtraFab}
+              forceFullScreen={isRecap}
+              actions={{
+                onBack: () => setPage(0),
+                onSubmit: () => form.submit(),
+                submitLabel: isNew ? "Create entity" : "Update entity",
+                backLabel: "Back",
+              }}
+            />
+          )}
         </>
         {viewDeleteModal.view && (
           <ModalConfirm

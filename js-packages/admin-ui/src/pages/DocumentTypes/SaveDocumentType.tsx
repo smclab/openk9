@@ -14,8 +14,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateDocTypeWithTemplateMutation, useDocumentTypeQuery } from "../../graphql-generated";
 import { isValidId, useDocTypesTemplates } from "../../utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveDocumentType() {
+export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { documentTypeId = "new", view } = useParams();
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
@@ -30,6 +31,8 @@ export function SaveDocumentType() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = documentTypeId === "new";
   const documentTypeQuery = useDocumentTypeQuery({
     variables: { id: documentTypeId as string },
     skip: !documentTypeId || documentTypeId === "new",
@@ -52,7 +55,7 @@ export function SaveDocumentType() {
       () => ({
         name: "",
         description: "",
-        docTypeTemplateId: isValidId(documentTypeQuery?.data?.docType?.docTypeTemplate),
+        docTypeTemplateId: isValidId(documentTypeQuery?.data?.docType?.docTypeTemplate, "doc Type Template"),
       }),
       [documentTypeQuery],
     ),
@@ -69,6 +72,18 @@ export function SaveDocumentType() {
           }),
         },
       });
+    },
+  });
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [{ key: "name" }, { key: "description" }, { key: "docTypeTemplateId", label: "Document Type Template" }],
+        label: "Recap Document Type",
+      },
+    ],
+    valueOverride: {
+      docTypeTemplateId: form.inputProps("docTypeTemplateId").value?.name || "",
     },
   });
 
@@ -104,7 +119,11 @@ export function SaveDocumentType() {
                     <TextArea label="Description" {...form.inputProps("description")} />
                     <AutocompleteDropdown
                       label="Document type template"
-                      onChange={(val) => form.inputProps("docTypeTemplateId").onChange({ id: val.id, name: val.name })}
+                      onChange={(val) =>
+                        form
+                          .inputProps("docTypeTemplateId")
+                          .onChange({ title: "doc Type Template", id: val.id, name: val.name })
+                      }
                       value={
                         !form?.inputProps("docTypeTemplateId")?.value?.id
                           ? undefined
@@ -129,6 +148,17 @@ export function SaveDocumentType() {
             fieldsControll={["name"]}
           />
         </form>
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
       <ConfirmModal />
     </ContainerFluid>

@@ -28,7 +28,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
-import io.openk9.common.util.ShardingKey;
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.model.DataIndex;
 import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocType;

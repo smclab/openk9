@@ -33,11 +33,13 @@ import {
   useEnrichPipelinesValueOptionsQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveDocumentTypeTemplate() {
+export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { documentTypeTemplateId = "new", name, view } = useParams();
 
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Document Type Template",
@@ -58,7 +60,7 @@ export function SaveDocumentTypeTemplate() {
   const toast = useToast();
   const [createOrUpdateDocumentTypeTemplateMutate, createOrUpdateDocumentTypeTempalteMutation] =
     useCreateOrUpdateDocumentTypeTemplateMutation({
-      refetchQueries: ["DocumentTypeTemplate", "DocumentTypeTemplates", "docTypeTemplateList"],
+      refetchQueries: ["DocumentTypeTemplate", "DocumentTypeTemplates"],
       onCompleted(data) {
         if (data.docTypeTemplate?.entity) {
           const isNew = documentTypeTemplateId === "new" ? "created" : "updated";
@@ -130,6 +132,27 @@ export function SaveDocumentTypeTemplate() {
     ),
   });
 
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "templateType", label: "Template Type" },
+          ...(form.inputProps("templateType").value === "JAVASCRIPT_SOURCE" ||
+          form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
+            ? [{ key: "source" }]
+            : [{ key: "compiled" }]),
+        ],
+        label: "Recap Document Type Template",
+      },
+    ],
+    // valueOverride: {
+    //   templateType: form.inputProps("templateType").value,
+    // },
+  });
+
   return (
     <Box sx={{ overflowX: "hidden" }}>
       <>
@@ -162,6 +185,7 @@ export function SaveDocumentTypeTemplate() {
                       display: "flex",
                       flexDirection: "column",
                       gap: "10px",
+                      width: "100%",
                     }}
                   >
                     <TextInput label="Name" {...form.inputProps("name")} />
@@ -241,6 +265,7 @@ export function SaveDocumentTypeTemplate() {
         </form>
       </>
       <ConfirmModal />
+      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
     </Box>
   );
 }

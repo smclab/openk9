@@ -74,8 +74,7 @@ public class HybridQueryParser implements QueryParser {
 		var jsonConfig = parserContext.getQueryParserConfig();
 		var parserSearchToken = parserContext.getTokenTypeGroup().iterator().next();
 
-		var tenant = parserContext.getTenantWithBucket().getTenant();
-		var tenantId = tenant.schemaName();
+		var tenantId = parserContext.getTenantWithBucket().getTenantId();
 
 		var kNeighbors = KnnQueryParser.getKNeighbors(parserSearchToken, jsonConfig);
 		var boost = TextQueryParser.getBoost(parserSearchToken, jsonConfig);
@@ -110,8 +109,8 @@ public class HybridQueryParser implements QueryParser {
 				.map(hybridQuery -> {
 					searchSourceBuilder.query(hybridQuery);
 
-					var aclFilterQuery = AclQueryParser.getAclFilterQuery(
-						parserContext, extraParamsKey, extraParamsEnabled);
+					var aclFilterQuery = AclQueryParser.getBoolQuery(
+						parserContext, extraParamsEnabled);
 
 					searchSourceBuilder.postFilter(aclFilterQuery);
 

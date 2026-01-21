@@ -4,30 +4,29 @@ import React from "react";
 
 interface RefreshOptionsLayoutProps {
   children: React.ReactNode;
+  title?: string;
 }
 
-const RefreshOptionsLayout: React.FC<RefreshOptionsLayoutProps> = ({ children }) => {
+const RefreshOptionsLayout: React.FC<RefreshOptionsLayoutProps> = ({ children, title }) => {
   return (
     <Paper
       variant="outlined"
       sx={{
         p: 2,
-        borderRadius: 2,
-        borderColor: "grey.300",
+        borderRadius: "10px",
         mb: "16px",
       }}
     >
       <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
         <Stack direction="row" spacing={1} alignItems="center">
-          <RefreshIcon sx={{ fontSize: 16, color: "grey.600" }} />
+          <RefreshIcon sx={{ fontSize: 16 }} />
           <Typography
             variant="body2"
             sx={{
               fontWeight: 500,
-              color: "grey.700",
             }}
           >
-            Refresh on:
+            {title || "Refresh on:"}
           </Typography>
         </Stack>
 

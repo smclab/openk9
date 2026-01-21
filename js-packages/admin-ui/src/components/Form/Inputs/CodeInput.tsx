@@ -3,7 +3,7 @@ import * as monaco from "monaco-editor";
 import { BaseInputProps } from "..";
 import prettier from "prettier/standalone";
 import parserTypeScript from "prettier/parser-typescript";
-import { Box, Theme, Typography, useTheme } from "@mui/material";
+import { Box, Paper, Theme, Typography, useTheme } from "@mui/material";
 
 // NICE TO HAVE: colorize JSX (see https://github.com/cancerberoSgx/jsx-alone/blob/master/jsx-explorer/HOWTO_JSX_MONACO.md)
 
@@ -195,7 +195,7 @@ export function CodeInput({
   const editorStyle = {
     height,
     width: "100%",
-    border: "2px solid #ccc",
+    // border: "2px solid #ccc",
     borderRadius: "4px",
     padding: "8px",
     boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
@@ -211,7 +211,7 @@ export function CodeInput({
         {tooltip}
       </Box>
       <Box style={{ width: "100%", position: "relative" }}>
-        <Box ref={editorElementRef} style={editorStyle} />
+        <Paper variant="outlined" ref={editorElementRef} style={editorStyle} />
       </Box>
       <Box className="form-feedback-group">
         {validationMessages.map((validationMessage, index) => {

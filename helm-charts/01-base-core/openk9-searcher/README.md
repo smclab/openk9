@@ -78,8 +78,7 @@ To configure connection to Opensearch following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `opensearch.host`    | Opensearch host                             | `opensearch-cluster-master-headless`            |
-| `opensearch.port`  | Port where Opensearch is exposed                                    | `9200` |
+| `opensearch.host`    | Opensearch host                             | `- opensearch-cluster-master-headless:9200`            |
 | `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
 | `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
 | `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
@@ -320,10 +319,26 @@ Find more information about how to deal with common errors related to Openk9's H
 
 ## Upgrading
 
-### To 2.0.0
 
+### To 3.1.0
 
-### To 1.7.0
+- remove from values references to keycloak from your scenario values file
+
+- new configurations added or modified to control opensearch configurations
+
+```yaml
+## Opensearch configuration
+opensearch:
+  ## Modified to configure Opensearch cluster
+  host: 
+    - "opensearch-cluster-master-headless:9200"
+  sslVerify: false
+  protocol: "http"
+```
+
+### Previous versions
+
+No details present
 
 
 ## License

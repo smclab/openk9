@@ -139,8 +139,7 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 	private Uni<Void> createComponentTemplate(Mutiny.Session session, EmbeddingModel entity) {
 
 		return getCurrentTenant(session)
-			.flatMap(tenant -> {
-				var tenantId = tenant.schemaName();
+			.flatMap(tenantId -> {
 
 				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
 					tenantId,

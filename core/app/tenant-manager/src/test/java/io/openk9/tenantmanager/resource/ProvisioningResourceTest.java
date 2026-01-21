@@ -17,34 +17,38 @@
 
 package io.openk9.tenantmanager.resource;
 
-import com.google.protobuf.Empty;
-import io.openk9.app.manager.grpc.AppManager;
-import io.openk9.app.manager.grpc.ApplyResponse;
-import io.openk9.datasource.grpc.CreatePluginDriverResponse;
-import io.openk9.datasource.grpc.Datasource;
-import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
-import io.quarkus.grpc.GrpcClient;
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.common.http.TestHTTPEndpoint;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.security.TestSecurity;
-import io.restassured.http.ContentType;
-import io.restassured.response.ValidatableResponse;
-import io.restassured.specification.RequestSpecification;
-import io.smallrye.mutiny.Uni;
-import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
-
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
+import io.openk9.app.manager.grpc.AppManager;
+import io.openk9.app.manager.grpc.ApplyResponse;
+import io.openk9.datasource.grpc.CreatePluginDriverResponse;
+import io.openk9.datasource.grpc.Datasource;
+import io.openk9.tenantmanager.provisioning.plugindriver.CreateConnectorSaga;
+
+import com.google.protobuf.Empty;
+import io.quarkus.grpc.GrpcClient;
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
+import io.restassured.specification.RequestSpecification;
+import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
+
 @QuarkusTest
 @TestHTTPEndpoint(ProvisioningResource.class)
-@TestSecurity(user = "k9-admin", roles = {"admin"})
 public class ProvisioningResourceTest {
+
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	@InjectMock
 	@GrpcClient("appmanager")
@@ -132,10 +136,14 @@ public class ProvisioningResourceTest {
 
 	private ValidatableResponse doPostAndExpect2xx(RequestSpecification requestSpecification) {
 		return requestSpecification
+			.header(Constants.AUTHORIZATION_HEADER, Constants.BASIC_CREDENTIALS)
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()
-			.statusCode(200);
+			.statusCode(Matchers.allOf(
+				Matchers.greaterThanOrEqualTo(200),
+				Matchers.lessThan(300))
+			);
 	}
 
 	private ValidatableResponse doPostAndExpect4xx(RequestSpecification requestSpecification) {
@@ -143,7 +151,10 @@ public class ProvisioningResourceTest {
 			.when()
 			.post(Constants.CREATE_CONNECTOR_PATH)
 			.then()
-			.statusCode(400);
+			.statusCode(Matchers.allOf(
+				Matchers.greaterThanOrEqualTo(400),
+				Matchers.lessThan(500))
+			);
 	}
 
 	private void givenSagaHappyPath() {
@@ -227,13 +238,13 @@ public class ProvisioningResourceTest {
 	private void applyResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.applyResource(eq(Constants.APP_MANIFEST));
+			.applyResource(eq(Constants.appManifest(applicationVersion)));
 	}
 
 	private void deleteResourceVerify() {
 		BDDMockito.then(appManager)
 			.should(times(1))
-			.deleteResource(eq(Constants.APP_MANIFEST));
+			.deleteResource(eq(Constants.appManifest(applicationVersion)));
 	}
 
 

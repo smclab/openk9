@@ -81,8 +81,7 @@ public class BaseNerAnnotator extends BaseAnnotator {
 			}
 		}
 
-		var tenant = tenantWithBucket.getTenant();
-		var tenantId = tenant.schemaName();
+		var tenantId = tenantWithBucket.getTenantId();
 
 		SearchRequest searchRequest = new SearchRequest(tenantId + "-entity");
 

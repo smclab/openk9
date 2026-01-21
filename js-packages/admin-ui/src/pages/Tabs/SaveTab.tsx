@@ -1,4 +1,6 @@
 import { useToast } from "@components/Form/Form/ToastProvider";
+import { Box, Button } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -14,14 +16,14 @@ import {
   useForm,
 } from "../../components/Form";
 import { TabQuery, useCreateOrUpdateTabMutation, useTabQuery, useTabTokensQuery } from "../../graphql-generated";
-import { ReturnUserTabData } from "./gql";
 import { formatQueryToBE, formatQueryToFE } from "../../utils";
-import { Box, Button } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { ReturnUserTabData } from "./gql";
 
-export function SaveTab() {
+export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { tabId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const tabQuery = useTabQuery({
     variables: { id: tabId as string },
     skip: !tabId || tabId === "new",
@@ -40,6 +42,7 @@ export function SaveTab() {
       navigate(`/tab/${tabId}`);
     }
   };
+  const isNew = tabId === "new";
   const toast = useToast();
   const [createOrUpdateTabMutate, createOrUpdateTabMutation] = useCreateOrUpdateTabMutation({
     refetchQueries: ["Tab", "Tabs"],
@@ -118,7 +121,24 @@ export function SaveTab() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTabMutation.data?.tabWithTokenTabs?.fieldValidators),
   });
-
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "priority" },
+          { key: "tokenTabIds", label: "Token Tabs" },
+        ],
+        label: "Recap Tab",
+      },
+    ],
+    valueOverride: {
+      tokenTabIds:
+        form.inputProps("tokenTabIds").value?.map((tokentab, index) => ({ [index + 1]: tokentab.label })) || [],
+    },
+  });
   return (
     <ContainerFluid>
       <>
@@ -192,6 +212,17 @@ export function SaveTab() {
             fieldsControll={["name"]}
           />
         </form>
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </>
       <ConfirmModal />
     </ContainerFluid>

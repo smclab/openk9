@@ -88,15 +88,17 @@ Openk9 Datasource service handles pipelines. Following parameters allow to handl
 | ------------------- |--------------------------------------------------|-------|
 | `pipeline.HttpTimeout`      | Timeout used by Http client calling enrich items | `10s` |
 
-### QueryParser configurations
+### QueryParser and search configurations
 
-Openk9 Datasource service handles query parser. Following parameters allow to handle the parsing of search query tokens.
+Openk9 Datasource service handles query parser and query construction. Following parameters allow to handle the parsing of search query tokens and search globally.
 
 | Name                             | Description                                                                                 | Value |
 |----------------------------------|---------------------------------------------------------------------------------------------|-------|
 | `queryParser.maxTextQueryLength` | Enforce a maximum text query length (disabled if set to 0 or a negative value)              | `0` |
 | `queryAnalysis.searchTextLength` | Enforce a maximum search text for query analysis (disabled if set to 0 or a negative value) | `0` |
- 
+| `search.page.from` | Enforce a maximum value for search from pagination parameter              | `10000` |
+| `search.page.size` | Enforce a maximum value for search size pagination parameter | `200` |
+
 ### Datasource specific configurations
 
 Openk9 Datasource service has specific configurations that can be customized to control its behavior.
@@ -160,8 +162,7 @@ To configure connection to Opensearch following parameters are available:
 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `opensearch.host`    | Opensearch host                             | `opensearch-cluster-master-headless`            |
-| `opensearch.port`  | Port where Opensearch is exposed                                    | `9200` |
+| `opensearch.host`    | Opensearch host                             | `- opensearch-cluster-master-headless:9200`            |
 | `opensearch.username`  | Opensearch user                                                                               | `opensearch`             |
 | `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
 | `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
@@ -410,10 +411,37 @@ Find more information about how to deal with common errors related to Openk9's H
 ## Upgrading
 
 
-### To 2.0.0
+### To 3.1.0
 
+- remove from values references to keycloak from your scenario values file
 
-### To 1.7.0
+- new configurations added to control search
+
+```yaml
+## QueryParser configuration
+queryParser:
+  maxTextQueryLength: 0
+
+## QueryParser configuration
+queryAnalysis:
+  searchTextLength: 30
+```
+
+- new configurations added or modified to control opensearch configurations
+
+```yaml
+## Opensearch configuration
+opensearch:
+  ## Modified to configure Opensearch cluster
+  host: 
+    - "opensearch-cluster-master-headless:9200"
+  sslVerify: false
+  protocol: "http"
+```
+
+### Previous versions
+
+No details present
 
 ## License
 

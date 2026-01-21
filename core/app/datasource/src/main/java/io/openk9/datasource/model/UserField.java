@@ -17,71 +17,43 @@
 
 package io.openk9.datasource.model;
 
-import io.openk9.datasource.model.util.JWT;
-
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+
+import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 public enum UserField {
-	NAME {
-		@Override
-		public List<String> getTerms(JWT jwt) {
 
-			String givenName = jwt.getGivenName();
-
-			return List.of(givenName);
-		}
-	},
-	SURNAME {
-		@Override
-		public List<String> getTerms(JWT jwt) {
-
-			String familyName = jwt.getFamilyName();
-
-			return List.of(familyName);
-		}
-	},
-	NAME_SURNAME {
-		@Override
-		public List<String> getTerms(JWT jwt) {
-
-			String name_surname =
-				jwt.getGivenName() + " " + jwt.getFamilyName();
-
-			return List.of(name_surname);
-		}
-	},
 	USERNAME {
 		@Override
-		public List<String> getTerms(JWT jwt) {
+		public List<String> getTerms(JsonWebToken jwt) {
 
-			String username = jwt.getPreferredUsername();
+			String username = jwt.getSubject();
 
-			return List.of(username);
-		}
-	},
-	EMAIL {
-		@Override
-		public List<String> getTerms(JWT jwt) {
-
-			String email = jwt.getEmail();
-
-			return List.of(email);
+			return username != null ? List.of(username) : List.of();
 		}
 	},
 	ROLES {
 		@Override
-		public List<String> getTerms(JWT jwt) {
+		public List<String> getTerms(JsonWebToken jwt) {
 
-			Map<String, List<String>> realmAccess = jwt.getRealmAccess();
+			Set<String> groups = jwt.getGroups();
 
-			if (realmAccess != null) {
-				return realmAccess.get("roles");
-			}
-			return List.of();
+			return groups != null ? new ArrayList<>(groups) : List.of();
+		}
+	},
+	EMAIL {
+		@Override
+		public List<String> getTerms(JsonWebToken jwt) {
+
+			String email = jwt.getClaim(Claims.email);
+
+			return email != null ? List.of(email) : List.of();
 		}
 	};
 
-	public abstract List<String> getTerms(JWT jwt);
+	public abstract List<String> getTerms(JsonWebToken jwt);
 
 }
