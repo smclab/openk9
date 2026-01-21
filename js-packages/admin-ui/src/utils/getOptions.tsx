@@ -1,12 +1,27 @@
 import { KeyValue } from "@components/Form";
 
-type Params = { useQuery?: any; data?: any; queryKeyPath: string; accessKey?: "node"; variables?: KeyValue };
+type Params = {
+  useQuery?: any;
+  data?: any;
+  queryKeyPath: string;
+  accessKey?: "node";
+  variables?: KeyValue;
+  isNetworkOnly?: boolean;
+};
 const pathObject = {
   node: "node",
 };
 
-export default function useOptions({ useQuery, data, queryKeyPath, accessKey = "node", variables }: Params) {
-  const queryData = useQuery?.({ variables: { ...variables } }) || {};
+export default function useOptions({
+  useQuery,
+  data,
+  queryKeyPath,
+  accessKey = "node",
+  variables,
+  isNetworkOnly = false,
+}: Params) {
+  const queryData =
+    useQuery?.({ variables: { ...variables }, fetchPolicy: isNetworkOnly ? "network-only" : "cache-first" }) || {};
   const sourceData = data?.data || queryData?.data;
 
   const value = extract({ object: sourceData, pathKey: queryKeyPath });

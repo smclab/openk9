@@ -123,12 +123,14 @@ export function SaveBucket() {
     queryKeyPath: "autocorrections.edges",
     useQuery: useAutocorrectionsOptionsQuery,
     accessKey: "node",
+    isNetworkOnly: true,
   });
 
   const { OptionQuery: autocompleteOption } = useOptions({
     queryKeyPath: "autocompletes.edges",
     useQuery: useAutocompletesOptionsQuery,
     accessKey: "node",
+    isNetworkOnly: true,
   });
 
   const { OptionQuery: ragChatConfigurationOption } = useOptions({
