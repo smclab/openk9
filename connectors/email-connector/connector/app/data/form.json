@@ -41,7 +41,7 @@
         "field": "useSsl",
         "type": "checkbox",
         "size": 1,
-        "required": true,
+        "required": false,
         "values": [
           {
             "value": true,
@@ -98,7 +98,7 @@
         "field": "indexAcl",
         "type": "checkbox",
         "size": 1,
-        "required": true,
+        "required": false,
         "values": [
           {
             "value": false,
@@ -113,7 +113,7 @@
         "field": "getAttachments",
         "type": "checkbox",
         "size": 1,
-        "required": true,
+        "required": false,
         "values": [
           {
             "value": false,
@@ -121,6 +121,16 @@
           }
         ],
         "info": "If index attachments"
+      },
+      {
+        "label": "Additional Metadata",
+        "name": "additionalMetadata",
+        "field": "additionalMetadata",
+        "type": "stringMap",
+        "size": 1,
+        "required": false,
+        "values": [],
+        "info": "Additional payload metadata"
       }
     ]
 }
