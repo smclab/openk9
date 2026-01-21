@@ -50,7 +50,7 @@ et-xmlfile==2.0.0
     # via openpyxl
 faker==37.8.0
     # via polyfactory
-fastapi==0.118.0
+fastapi==0.128.0
     # via -r requirements_cpu.in
 filelock==3.19.1
     # via
@@ -254,7 +254,7 @@ sniffio==1.3.1
     # via anyio
 soupsieve==2.8
     # via beautifulsoup4
-starlette==0.48.0
+starlette==0.49.1
     # via fastapi
 sympy==1.14.0
     # via torch
@@ -318,7 +318,7 @@ tzdata==2025.2
     # via
     #   faker
     #   pandas
-urllib3==2.5.0
+urllib3==2.6.3
     # via requests
 uvicorn==0.37.0
     # via -r requirements_cpu.in
