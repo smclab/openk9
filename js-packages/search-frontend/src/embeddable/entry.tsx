@@ -424,6 +424,8 @@ export type translationGlobalType = {
   buttonSaveFilters?: string;
   ariaLabelSave?: string;
   ariaLabelReset?: string;
+  labelContainerDateTitleStart?: string;
+  labelContainerDateTitleEnd?: string;
 };
 
 type allFiltersConfigurableProps = {

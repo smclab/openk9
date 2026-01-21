@@ -37,6 +37,8 @@ export function DataRangePickerVertical({
         placeholderEnd?: string;
         errorFormatData?: string;
         errorSelectData?: string;
+        labelContainerDateTitleStart?: string;
+        labelContainerDateTitleEnd?: string;
       }
     | undefined;
 }) {
@@ -167,7 +169,8 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          {t("from-date")} ({t("gg/mm/aaaa")}):
+          {translationLabel?.labelContainerDateTitleStart || t("from-date")} (
+          {t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-start-date"
@@ -256,18 +259,18 @@ export function DataRangePickerVertical({
             />
           </div>
         </div>
+        {validationStart !== "" && (
+          <p
+            id="error-message"
+            role="alert"
+            css={css`
+              color: red;
+            `}
+          >
+            {validationStart}
+          </p>
+        )}
       </div>
-      {validationStart !== "" && (
-        <p
-          id="error-message"
-          role="alert"
-          css={css`
-            color: red;
-          `}
-        >
-          {validationStart}
-        </p>
-      )}
       <div className="DateRangePickerVertical-endDate-container">
         <p
           className="DateRangePickerVertical-date-title"
@@ -278,7 +281,8 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          {t("to-date") || "To"} ({t("gg/mm/aaaa")}):
+          {translationLabel?.labelContainerDateTitleEnd || t("to-date")} (
+          {t("gg/mm/aaaa")}):
         </p>
         <div
           className="openk9-container-input-end-date"
