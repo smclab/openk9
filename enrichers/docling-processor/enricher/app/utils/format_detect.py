@@ -9,13 +9,15 @@ from app.utils.exceptions import FormatError
 
 def extract_extension_base64(base64_content: str) -> str:
     """
-    Estrae l'estensione del file da una stringa base64 usando le funzionalità di Docling.
+    Starting from a base64 string, extract the file's extension using Docling internal functions.
 
     Args:
-        base64_content: Stringa codificata in base64
+        base64_content: String in base64
 
     Returns:
-        Estensione del file (es. 'pdf', 'docx') o stringa vuota se non rilevato
+        File's extension (es. 'pdf', 'docx') or raise an error if 
+        -   the extension could not be found
+        -   the base64 string could not be decoded
     """
     try:
         decoded_content = base64.b64decode(base64_content)
