@@ -333,6 +333,7 @@ public class SearcherGrpcTest {
 			.fuzziness(FUZZINESS)
 			.minimumShouldMatch(MINIMUM_SHOULD_MATCH)
 			.operator(OPERATOR)
+			.perfectMatchIncluded(true)
 			.build();
 
 		EntitiesUtils.createEntity(autocompleteDTO,autocompleteService, sessionFactory);
@@ -500,6 +501,7 @@ public class SearcherGrpcTest {
 				assertEquals(FUZZINESS, response.getFuzziness());
 				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());
 				assertEquals(OPERATOR.name(), response.getOperator().name());
+				assertTrue(response.getPerfectMatchIncluded());
 			}
 		);
 	}

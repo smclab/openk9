@@ -554,6 +554,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					.setOperator(
 						_enumToGrpcEnum(autocomplete.getOperator(), Operator.class)
 					)
+					.setPerfectMatchIncluded(autocomplete.isPerfectMatchIncluded())
 					.build();
 			}));
 	}

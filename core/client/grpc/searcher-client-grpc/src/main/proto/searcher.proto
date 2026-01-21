@@ -51,6 +51,7 @@ message AutocompleteConfigurationsResponse {
   string fuzziness = 4;
   string minimumShouldMatch = 5;
   Operator operator = 6;
+  bool perfectMatchIncluded = 7;
 }
 
 message AutocorrectionConfigurationsResponse {

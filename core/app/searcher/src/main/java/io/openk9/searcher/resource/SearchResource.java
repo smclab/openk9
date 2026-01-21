@@ -441,9 +441,9 @@ public class SearchResource {
 	public Uni<Set<AutocompleteHit>> autocomplete(AutocompleteRequestDTO autocompleteRequest) {
 		return _buildAutocompleteContext(autocompleteRequest)
 			.flatMap(context ->
-				_getAutocompleteSuggest(context.query())
+				_getAutocompleteSuggest(context.queryOpenSearch())
 					.map(response ->
-						_extractAutocompleteResponse(response, context.fields())
+						_extractAutocompleteResponse(response, context)
 					)
 			);
 	}
@@ -491,7 +491,7 @@ public class SearchResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> autocompleteQuery(AutocompleteRequestDTO autocompleteRequest) {
 		return _buildAutocompleteContext(autocompleteRequest)
-			.map(AutocompleteContext::query)
+			.map(AutocompleteContext::queryOpenSearch)
 			.map(PlainJsonSerializable::toJsonString);
 	}
 
@@ -821,13 +821,15 @@ public class SearchResource {
 				_validateAutocompleteConfig(autocompleteConfig);
 
 				var queryText = autocompleteRequest.getQueryText();
+				var perfectMatchIncluded = autocompleteConfig.getPerfectMatchIncluded();
 
 				// Create the autocomplete request for OpenSearch according to the
 				// autocomplete configurations.
-				var query = _createAutocompleteRequest(autocompleteConfig, queryText);
+				var queryOpenSearch = _createAutocompleteRequest(autocompleteConfig, queryText);
 				var fields = autocompleteConfig.getFieldList();
 
-				return new AutocompleteContext(query, fields);
+				return new AutocompleteContext(
+					queryOpenSearch, queryText, perfectMatchIncluded, fields);
 			});
 	}
 
@@ -1113,18 +1115,23 @@ public class SearchResource {
 	/**
 	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
 	 * <p>
-	 * This method extracts term suggestions from the OpenSearch response, filters out empty results,
-	 * and constructs an {@link AutocompleteHit} containing autocomplete text, the doc type field
-	 * label and the score.
+	 * This method extracts term suggestions from the OpenSearch response.
+	 * It filters out empty results and suggestions that matches with the queryText according to
+	 * the perfectMatchIncluded configuration.
+	 * Then this method constructs an {@link AutocompleteHit} containing autocomplete text,
+	 * the doc type field label and the score.
 	 *
 	 * @param response the OpenSearch search response containing autocomplete suggestions
-	 * @param fields the fields used to retrieve the autocomplete suggestions
+	 * @param context the {@link AutocompleteContext} to retrieve fields, queryText and
+	 *                  perfectMatchIncluded.
 	 *
-	 * @return an {@link Set<AutocompleteHit>} containing autocomplete data
+	 * @return the autocomplete data set
 	 */
-	private Set<AutocompleteHit> _extractAutocompleteResponse(
+	protected static Set<AutocompleteHit> _extractAutocompleteResponse(
 			org.opensearch.client.opensearch.core.SearchResponse<Map> response,
-			List<io.openk9.searcher.grpc.Field> fields) {
+			AutocompleteContext context) {
+
+		List<io.openk9.searcher.grpc.Field> fields = context.fields();
 
 		Set<AutocompleteHit> autocompleteHits = new HashSet<>();
 
@@ -1137,9 +1144,20 @@ public class SearchResource {
 					List<String> autocomplete = highlight.get(field.getParentPath());
 
 					if (autocomplete != null && !autocomplete.isEmpty()) {
-						autocompleteHits.add(
-							new AutocompleteHit(autocomplete.getFirst(), field.getLabel(), score)
-						);
+
+						var firstAutocomplete = autocomplete.getFirst();
+
+						// perfectMatch is case-insensitive
+						var perfectMatch =
+							context.queryText().equalsIgnoreCase(firstAutocomplete);
+
+						// exclude only perfect matches when perfectMatchIncluded is false
+						if (!perfectMatch || context.perfectMatchIncluded()) {
+							autocompleteHits.add(
+								new AutocompleteHit(
+									firstAutocomplete, field.getLabel(), score)
+							);
+						}
 					}
 				}
 			}
@@ -1908,7 +1926,9 @@ public class SearchResource {
 	}
 
 	protected record AutocompleteContext(
-		org.opensearch.client.opensearch.core.SearchRequest query,
+		org.opensearch.client.opensearch.core.SearchRequest queryOpenSearch,
+		String queryText,
+		boolean perfectMatchIncluded,
 		List<io.openk9.searcher.grpc.Field> fields
 	) {}
 
