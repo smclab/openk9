@@ -87,7 +87,8 @@ To configure connection to Opensearch following parameters are available:
 | `opensearch.passwordSecretName` | Name of the secret where password is stored                            | `opensearch-password`                       |
 | `opensearch.keyPasswordSecret`       | Name of the key inside the secret where password is stored               | `OPENSEARCH_INITIAL_ADMIN_PASSWORD`                    |
 | `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
-
+| `opensearch.protocol`    | Opensearch Protocol                             | `http`            |
+| `opensearch.sslVerify`  | If verify certificate or no         | `false`             |
 
 ### Configure connections to other Openk9 services
 

@@ -93,6 +93,8 @@ opensearch:
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "password"
   keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
+  sslVerify: false
+  protocol: 'http'
 
 ## OpenK9 grpc services configuration
 openk9:

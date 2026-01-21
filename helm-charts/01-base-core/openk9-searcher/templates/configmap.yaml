@@ -7,6 +7,9 @@ metadata:
 data:
   QUARKUS_OPENSEARCH_HOSTS: '{{- join "," .Values.opensearch.host }}'
   QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+  QUARKUS_OPENSEARCH_PROTOCOL: {{ .Values.opensearch.protocol | quote }}
+  QUARKUS_OPENSEARCH_SSL_VERIFY: {{ .Values.opensearch.sslVerify | quote }}
+
   QUARKUS_GRPC_CLIENTS__SEARCHER__HOST: {{ include "helper.datasourceHost" . | quote }}
   QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
   OPENK9_DATASOURCE_MULTITENANCY_ENABLED: 'true'

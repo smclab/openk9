@@ -14,6 +14,8 @@ data:
   # Opensearch env variables
   QUARKUS_OPENSEARCH_HOSTS: '{{- join "," .Values.opensearch.host }}'
   QUARKUS_OPENSEARCH_USERNAME: {{ .Values.opensearch.username | quote }}
+  QUARKUS_OPENSEARCH_PROTOCOL: {{ .Values.opensearch.protocol | quote }}
+  QUARKUS_OPENSEARCH_SSL_VERIFY: {{ .Values.opensearch.sslVerify | quote }}
 
   # Database env variables
   QUARKUS_DATASOURCE_REACTIVE_URL: {{- if eq .Values.database.type "oracle" }}

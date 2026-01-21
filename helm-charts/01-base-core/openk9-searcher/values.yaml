@@ -93,7 +93,8 @@ opensearch:
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"
   keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
-
+  sslVerify: false
+  protocol: 'http'
 
 ## Openk9 Services configuration
 openk9:

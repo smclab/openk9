@@ -171,7 +171,9 @@ opensearch:
   passwordSecretName: "opensearch-password"
   keyPasswordSecret: "OPENSEARCH_INITIAL_ADMIN_PASSWORD"
   keyPasswordEnvName: "QUARKUS_OPENSEARCH_PASSWORD"
-
+  sslVerify: false
+  protocol: 'http'
+  
 ## Rabbitmq configuration
 rabbitmq:
   host: "rabbitmq-headless"
