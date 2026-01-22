@@ -97,7 +97,7 @@ Run the built Docker image:
 docker run -p 5000:5000 --name minio-connector-app minio-connector 
 ```
 
-Command parameters:
+**Command parameters**:
 - **-p**: Exposed port to make api calls
 - **-name**: Set docker container name
 

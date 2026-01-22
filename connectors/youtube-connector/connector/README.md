@@ -81,7 +81,7 @@ Build the Docker file:
 docker build -t youtube-connector .
 ```
 
-**Command parameters:
+**Command parameters**:
 - **-t**: Set built image name
 - **-f**: Specify the path to the Dockerfile**
 
@@ -90,7 +90,7 @@ Run the built Docker image:
 docker run -p 5000:5000 --name youtube-connector-app youtube-connector 
 ```
 
-Command parameters:
+**Command parameters**:
 - **-p**: Exposed port to make api calls
 - **-name**: Set docker container name
 
