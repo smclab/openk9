@@ -28,6 +28,7 @@ This endpoint takes different arguments in JSON raw body:
   - **Project Milestone**: extract milestones (requires **Project**)
   - **Project Merge Request**: extract merge requests (requires **Project**)
 - **itemsPerPage**: pagination items extracted per call (optional, if not specified get 100 items each call)
+- **projectList**: List of project ids to be extracted (optional, if not specified get every projects)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation

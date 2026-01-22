@@ -86,6 +86,19 @@
         "min": 0,
         "max": 100
       }
+    },
+    {
+      "label": "Projects",
+      "name": "projectList",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "List of project ids to be extracted",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
     }
   ]
 }
