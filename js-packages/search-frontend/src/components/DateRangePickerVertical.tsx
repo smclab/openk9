@@ -169,8 +169,8 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          {translationLabel?.labelContainerDateTitleStart || t("from-date")} (
-          <span className="openk9-start-data-after"> {t("gg/mm/aaaa")}):</span>
+          {translationLabel?.labelContainerDateTitleStart || t("from-date")}
+          <span className="openk9-start-data-after"> ({t("gg/mm/aaaa")}):</span>
         </p>
         <div
           className="openk9-container-input-start-date"
@@ -281,9 +281,9 @@ export function DataRangePickerVertical({
             font-weight: 700;
           `}
         >
-          {translationLabel?.labelContainerDateTitleEnd || t("to-date")} (
+          {translationLabel?.labelContainerDateTitleEnd || t("to-date")}
           <span className="openk9-end-calendar-after-label">
-            {t("gg/mm/aaaa")}):
+            ({t("gg/mm/aaaa")}):
           </span>
         </p>
         <div
