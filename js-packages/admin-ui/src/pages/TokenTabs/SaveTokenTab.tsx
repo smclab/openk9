@@ -222,10 +222,15 @@ export function SaveTokenTab() {
     onSubmit(data) {
       const isExtraParamsType = [TokenType.Text, TokenType.Filter].includes(data.tokenType);
 
+      const { docTypeFieldId, ...cleanData } = data;
+      const docTypeId = docTypeFieldId?.id;
+
       createOrUpdateTabTokenMutate({
         variables: {
           tokenTabId: tokenTabId !== "new" ? tokenTabId : undefined,
-          ...data,
+
+          ...cleanData,
+
           ...(isExtraParamsType
             ? {
                 extraParams: JSON.stringify({
@@ -236,7 +241,8 @@ export function SaveTokenTab() {
                 }),
               }
             : {}),
-          docTypeFieldId: data?.docTypeFieldId?.id ? data?.docTypeFieldId?.id : null,
+
+          ...(data.docTypeFieldId?.id !== "undefined" && data.docTypeFieldId?.id ? { docTypeFieldId: docTypeId } : {}),
         },
       });
     },
