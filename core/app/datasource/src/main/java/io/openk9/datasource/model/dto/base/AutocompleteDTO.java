@@ -38,11 +38,6 @@ import org.eclipse.microprofile.graphql.Description;
 @EqualsAndHashCode(callSuper = true)
 public class AutocompleteDTO extends K9EntityDTO{
 
-	@Nullable
-	@Description("""
-		Maximum number of results to return.
-	""")
-	private Integer resultSize;
 	@Description("""
 		The field list used in the autocomplete query,
 		must not be empty, all the docTypeField must be of type search_as_you_type
@@ -69,5 +64,10 @@ public class AutocompleteDTO extends K9EntityDTO{
 		When disabled, perfect matches with the searched text are removed from suggestions
 	""")
 	private Boolean perfectMatchIncluded;
+	@Nullable
+	@Description("""
+		Maximum number of results to return.
+	""")
+	private Integer resultSize;
 
 }

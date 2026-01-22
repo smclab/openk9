@@ -140,31 +140,23 @@ import org.opensearch.search.sort.SortOrder;
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
 
-	private static final Logger log = Logger.getLogger(SearcherService.class);
 	private static final JsonWebToken NULL_JWT = new NullJsonWebToken();
-
-	@Inject
-	DefaultJWTParser jwtParser;
-	
+	private static final Logger log = Logger.getLogger(SearcherService.class);
 	@Inject
 	BucketService bucketService;
-
 	@Inject
 	@CacheName("searcher-service")
 	Cache cache;
-
 	@Inject
 	RestHighLevelClient client;
-
 	@Inject
 	EmbeddingModelService embeddingModelService;
-
 	@Inject
 	GrammarProvider grammarProvider;
-
 	@Inject
 	HybridQueryParser hybridQueryParser;
-
+	@Inject
+	DefaultJWTParser jwtParser;
 	@Inject
 	LargeLanguageModelService largeLanguageModelService;
 
@@ -970,20 +962,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
-	private JsonWebToken getJwt(String jwtString) {
-		JsonWebToken jwt = null;
-		try {
-			jwt = jwtParser.parse(jwtString);
-		}
-		catch (ParseException e) {
-			if (log.isDebugEnabled()) {
-				log.debug("The jwt cannot be parsed.", e);
-			}
-			jwt = NULL_JWT;
-		}
-		return jwt;
-	}
-
 	@Override
 	@ActivateRequestContext
 	public Uni<QueryParserResponse> queryParser(QueryParserRequest request) {
@@ -1586,6 +1564,20 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		}
 
 		return result;
+	}
+
+	private JsonWebToken getJwt(String jwtString) {
+		JsonWebToken jwt = null;
+		try {
+			jwt = jwtParser.parse(jwtString);
+		}
+		catch (ParseException e) {
+			if (log.isDebugEnabled()) {
+				log.debug("The jwt cannot be parsed.", e);
+			}
+			jwt = NULL_JWT;
+		}
+		return jwt;
 	}
 
 	public static class ScoreComparator implements Comparator<SemanticsPos> {

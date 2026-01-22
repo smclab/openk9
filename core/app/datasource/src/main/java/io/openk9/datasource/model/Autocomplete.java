@@ -46,15 +46,12 @@ import lombok.ToString;
 @ToString
 public class Autocomplete extends K9Entity {
 
-	public static final int RESULT_SIZE = 10;
 	public static final String DEFAULT_FUZZINESS = "AUTO";
 	public static final String DEFAULT_MINIMUM_SHOULD_MATCH = "75%";
 	public static final BooleanOperator DEFAULT_OPERATOR = BooleanOperator.OR;
-
+	public static final int RESULT_SIZE = 10;
 	@Column(name = "description", length = 4096)
 	private String description;
-	@Column(name = "result_size")
-	private Integer resultSize = RESULT_SIZE;
 	@ManyToMany(cascade = {
 		jakarta.persistence.CascadeType.PERSIST,
 		jakarta.persistence.CascadeType.MERGE,
@@ -82,11 +79,8 @@ public class Autocomplete extends K9Entity {
 	private BooleanOperator operator = DEFAULT_OPERATOR;
 	@Column(name = "perfect_match_included")
 	private boolean perfectMatchIncluded = false;
-
-	public void setResultSize(Integer resultSize) {
-		this.resultSize =
-			Objects.requireNonNullElse(resultSize, RESULT_SIZE);
-	}
+	@Column(name = "result_size")
+	private Integer resultSize = RESULT_SIZE;
 
 	public void setFuzziness(String fuzziness) {
 		this.fuzziness = Objects.requireNonNullElse(fuzziness, DEFAULT_FUZZINESS);
@@ -99,5 +93,10 @@ public class Autocomplete extends K9Entity {
 
 	public void setOperator(BooleanOperator operator) {
 		this.operator = Objects.requireNonNullElse(operator, DEFAULT_OPERATOR);
+	}
+
+	public void setResultSize(Integer resultSize) {
+		this.resultSize =
+			Objects.requireNonNullElse(resultSize, RESULT_SIZE);
 	}
 }

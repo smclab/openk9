@@ -245,6 +245,60 @@ public class SearchResource {
 	}
 
 	/**
+	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
+	 * <p>
+	 * This method extracts term suggestions from the OpenSearch response.
+	 * It filters out empty results and suggestions that matches with the queryText according to
+	 * the perfectMatchIncluded configuration.
+	 * Then this method constructs an {@link AutocompleteHit} containing autocomplete text,
+	 * the doc type field label and the score.
+	 *
+	 * @param response the OpenSearch search response containing autocomplete suggestions
+	 * @param context the {@link AutocompleteContext} to retrieve fields, queryText and
+	 *                  perfectMatchIncluded.
+	 *
+	 * @return the autocomplete data set
+	 */
+	protected static Set<AutocompleteHit> _extractAutocompleteResponse(
+			org.opensearch.client.opensearch.core.SearchResponse<Map> response,
+			AutocompleteContext context) {
+
+		List<io.openk9.searcher.grpc.Field> fields = context.fields();
+
+		Set<AutocompleteHit> autocompleteHits = new HashSet<>();
+
+		for (Hit<Map> hit : response.hits().hits()) {
+			var score = hit.score();
+			var highlight = hit.highlight();
+
+			if (highlight != null) {
+				for (io.openk9.searcher.grpc.Field field : fields) {
+					List<String> autocomplete = highlight.get(field.getParentPath());
+
+					if (autocomplete != null && !autocomplete.isEmpty()) {
+
+						var firstAutocomplete = autocomplete.getFirst();
+
+						// perfectMatch is case-insensitive
+						var perfectMatch =
+							context.queryText().equalsIgnoreCase(firstAutocomplete);
+
+						// exclude only perfect matches when perfectMatchIncluded is false
+						if (!perfectMatch || context.perfectMatchIncluded()) {
+							autocompleteHits.add(
+								new AutocompleteHit(
+									firstAutocomplete, field.getLabel(), score)
+							);
+						}
+					}
+				}
+			}
+		}
+
+		return autocompleteHits;
+	}
+
+	/**
 	 * Generates the corrected text by applying autocorrection suggestions to the original text.
 	 * <p>
 	 * This method iterates through the suggestions sorted by offset and replaces each incorrect
@@ -1110,60 +1164,6 @@ public class SearchResource {
 		}
 
 		return queryText;
-	}
-
-	/**
-	 * Parses the OpenSearch autocomplete response as an {@link AutocompleteHit}.
-	 * <p>
-	 * This method extracts term suggestions from the OpenSearch response.
-	 * It filters out empty results and suggestions that matches with the queryText according to
-	 * the perfectMatchIncluded configuration.
-	 * Then this method constructs an {@link AutocompleteHit} containing autocomplete text,
-	 * the doc type field label and the score.
-	 *
-	 * @param response the OpenSearch search response containing autocomplete suggestions
-	 * @param context the {@link AutocompleteContext} to retrieve fields, queryText and
-	 *                  perfectMatchIncluded.
-	 *
-	 * @return the autocomplete data set
-	 */
-	protected static Set<AutocompleteHit> _extractAutocompleteResponse(
-			org.opensearch.client.opensearch.core.SearchResponse<Map> response,
-			AutocompleteContext context) {
-
-		List<io.openk9.searcher.grpc.Field> fields = context.fields();
-
-		Set<AutocompleteHit> autocompleteHits = new HashSet<>();
-
-		for (Hit<Map> hit : response.hits().hits()) {
-			var score = hit.score();
-			var highlight = hit.highlight();
-
-			if (highlight != null) {
-				for (io.openk9.searcher.grpc.Field field : fields) {
-					List<String> autocomplete = highlight.get(field.getParentPath());
-
-					if (autocomplete != null && !autocomplete.isEmpty()) {
-
-						var firstAutocomplete = autocomplete.getFirst();
-
-						// perfectMatch is case-insensitive
-						var perfectMatch =
-							context.queryText().equalsIgnoreCase(firstAutocomplete);
-
-						// exclude only perfect matches when perfectMatchIncluded is false
-						if (!perfectMatch || context.perfectMatchIncluded()) {
-							autocompleteHits.add(
-								new AutocompleteHit(
-									firstAutocomplete, field.getLabel(), score)
-							);
-						}
-					}
-				}
-			}
-		}
-
-		return autocompleteHits;
 	}
 
 	/**
