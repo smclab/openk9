@@ -132,7 +132,7 @@ Call this endpoint to get a sample of result.
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:500/sample'
+curl --location --request POST 'http://localhost:5000/sample'
 ```
 
 # Quickstart

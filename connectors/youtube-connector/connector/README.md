@@ -10,7 +10,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 This Rest service exposes one endpoint:
 
 
-### Execute Youtube enpoint
+### Execute Youtube endpoint
 
 Call this endpoint to execute a crawler that extract videos starting from Youtube urls
 
@@ -59,7 +59,7 @@ Call this endpoint to get a sample of result.
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:500/sample'
+curl --location --request POST 'http://localhost:5000/sample'
 ```
 
 # Quickstart
