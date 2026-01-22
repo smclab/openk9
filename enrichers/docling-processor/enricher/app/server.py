@@ -2,26 +2,18 @@ import asyncio
 import base64
 import os
 import threading
-import time
-from io import BytesIO
-from typing import Dict, List
 
 import requests
-from docling.document_converter import DocumentConverter
-from docling_core.types.io import DocumentStream
 from dotenv import dotenv_values, load_dotenv
 from fastapi import Body, FastAPI
 from pydantic import BaseModel
 
+from app.utils.converter import conversion
 from app.utils.exceptions import FormatError
-from app.utils.fm_helper import FileManagerHelper
-from app.utils.format_detect import extract_extension_base64
 
 load_dotenv()
 
-FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
-FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
 
 
 class Input(BaseModel):
@@ -90,13 +82,7 @@ def operation(payload, configs, token):
     if len(binaries) > 1:
         for bin in binaries:
             try:
-                resource_id = bin.get("resourceId")
-                resource = FMHelper.get_base64(tenant, resource_id)
-                bites = BytesIO(base64.b64decode(resource))
-                extension = extract_extension_base64(resource)
-                source = DocumentStream(name=f"doc.{extension}", stream=bites)
-                converter = DocumentConverter()
-                result = converter.convert(source)
+                result = conversion(bin, tenant)
                 markdown = result.document.export_to_markdown()
                 bin["markdown"] = markdown
             except (base64.binascii.Error, ValueError) as e:
@@ -105,18 +91,15 @@ def operation(payload, configs, token):
                 print(f"export error: {str(e)}")
             except Exception as e:
                 print(f"generic error: {str(e)}")
+            except FormatError as e:
+                print(f"format error: {str(e)}")
 
             print("Process ended")
             response = {"binaries": binaries}
 
     elif len(binaries) == 1:
         try:
-            resource_id = bin.get("resourceId")
-            resource = FMHelper.get_base64(tenant, resource_id)
-            bites = BytesIO(base64.b64decode(resource))
-            source = DocumentStream(name="doc.docx", stream=bites)
-            converter = DocumentConverter()
-            result = converter.convert(source)
+            result = conversion(bin, tenant)
             markdown = result.document.export_to_markdown()
         except (base64.binascii.Error, ValueError) as e:
             print(f"base64 error: {str(e)}")
