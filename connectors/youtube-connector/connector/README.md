@@ -70,11 +70,7 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-Using the command line go in the youtube-datasource parent folder\
 From this folder:
-```
-cd ..
-```
 
 Build the Docker file:
 ```
