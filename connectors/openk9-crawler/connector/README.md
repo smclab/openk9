@@ -11,7 +11,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 
 This Rest service exposes two different endpoints:
 
-### Execute Generic Web Crawler enpoint
+### Execute Generic Web Crawler endpoint
 
 Call this endpoint to execute a crawler that extract web pages starting from list of Urls
 
@@ -109,7 +109,7 @@ curl -X 'POST' \
 }'
 ```
 
-### Execute Sitemap Web Crawler enpoint
+### Execute Sitemap Web Crawler endpoint
 
 Call this endpoint to execute a crawler that extract web pages starting from sitemap's urls
 
@@ -256,7 +256,7 @@ Call this endpoint to get a sample of result.
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:500/sample'
+curl --location --request POST 'http://localhost:5000/sample'
 ```
 
 
