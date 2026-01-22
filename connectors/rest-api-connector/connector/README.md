@@ -143,7 +143,7 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-Start form the parent folder (`rest-api-connector`)
+Start form the parent folder [rest-api-connector](../)
 
 Build the Docker file:
 ```
