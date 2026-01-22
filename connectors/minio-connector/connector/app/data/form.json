@@ -65,7 +65,7 @@
         "regex": "/[[:alnum:]]+/"
       }
     },
-        {
+    {
       "label": "Prefix",
       "name": "prefix",
       "type": "text",
@@ -87,6 +87,32 @@
       "values": [],
       "placeholder": "minio",
       "info": "List of columns in case of extracting excel file",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Datasource Payload Key",
+      "name": "datasourcePayloadKey",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "Key for data in datasource payload",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Additional Metadata",
+      "name": "additionalMetadata",
+      "type": "stringMap",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "Map of additional metadata in datasource payload",
       "validator": {
         "regex": "/[[:alnum:]]+/"
       }
