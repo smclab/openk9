@@ -114,12 +114,13 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   const queryParserConfig = useQuery(QueryParserConfig, { fetchPolicy: "cache-and-network" });
 
   const toast = useToast();
-  const initialConfigValue = {
-    combinationTechnique: undefined,
-    normalizationTechnique: undefined,
-    searchConfigId: searchConfigId,
+  const initialConfigValue: ConfigureHybridSearchInterface = {
+    searchConfigId,
+    normalizationTechnique: NormalizationTechnique.MIN_MAX,
+    combinationTechnique: CombinationTechnique.ARITHMETIC_MEAN,
     weights: [0.5, 0.5],
   };
+
   const [config, setConfig] = useState<ConfigureHybridSearchInterface>(initialConfigValue);
   const [createOrUpdateSearchConfigMutate, createOrUpdateSearchConfigMutation] = useCreateOrUpdateSearchConfigMutation({
     refetchQueries: ["SearchConfig", "Buckets"],
@@ -465,7 +466,6 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
   };
 
   const handleSelectChange = (field: string, e: unknown) => {
-    // Aggiorna lo stato per NormalizationTechnique o CombinationTechnique
     setConfig((prevConfig) => ({
       ...prevConfig,
       [field]: e,
@@ -508,7 +508,23 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
 
     if (isValid) {
       try {
-        configureHybridSearch(config);
+        configureHybridSearch(config, {
+          onSuccess: () => {
+            toast({
+              title: "Hybrid Search",
+              content: "Hybrid Search configuration updated successfully",
+              displayType: "success",
+            });
+            handleClose();
+          },
+          onError: () => {
+            toast({
+              title: "Error",
+              content: "Impossible to update Hybrid Search configuration",
+              displayType: "error",
+            });
+          },
+        });
         handleClose();
       } catch (error) {
         showErrorToast("Impossible to set Hybrid Search Config");
@@ -567,13 +583,11 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
                 position: "absolute",
                 right: 8,
                 top: 8,
-                // color: "white",
               })}
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          {/* </Box> */}
           <DialogContent dividers>
             <Box display={"flex"} gap={3} flexDirection={"column"} minWidth={"400px"}>
               <CustomSelect
