@@ -34,13 +34,14 @@ const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
 
 export const openk9 = new OpenK9({
   enabled: true,
-  searchAutoselect: true,
-  searchReplaceText: true,
-  showSyntax: false,
+  searchAutoselect: false,
+  searchReplaceText: false,
   memoryResults: false,
   useGenerativeApi: true,
   useKeycloak: isKeycloakEnabled,
   queryStringMap: { filters: "filtri" },
+  useQueryAnalysis: false,
+  showSyntax: false,
 });
 
 export function App() {

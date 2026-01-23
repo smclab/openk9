@@ -85,11 +85,11 @@ export default function Autocomplete({
             &:last-child {
               border-bottom: none;
             }
-            &:hover,
-            &.openk9--autocomplete-suggestion-item-highlighted {
-              color: #c22525;
-              text-decoration: underline;
-            }
+       .openk9--autocomplete-suggestion-item:hover,
+        .openk9--autocomplete-suggestion-item.openk9--autocomplete-suggestion-item-highlighted {
+          color: #c22525;
+          text-decoration: underline;
+        }
             @media (max-width: 600px) {
               white-space: nowrap;
               overflow: hidden;

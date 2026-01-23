@@ -272,11 +272,17 @@ export function Search({
               onClick={() => {
                 callbackClickSearch && callbackClickSearch();
                 setAcceptSuggestion(false);
-                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+                if (suggestions.length > 0) {
+                  setIsAutocompleteOpen(true);
+                  setHighlightIndex(-1);
+                }
               }}
               onFocus={() => {
                 setAcceptSuggestion(false);
-                if (suggestions.length > 0) setIsAutocompleteOpen(true);
+                if (suggestions.length > 0) {
+                  setIsAutocompleteOpen(true);
+                  setHighlightIndex(-1);
+                }
               }}
               onBlur={(e) => {
                 const related = e.relatedTarget as HTMLElement | null;
@@ -349,6 +355,12 @@ export function Search({
                     ) {
                       event.preventDefault();
                       applySuggestion(suggestions[highlightIndex]);
+                    } else {
+                      event.preventDefault();
+                      inputRef &&
+                        inputRef.current &&
+                        search(inputRef.current.value || "");
+                      if (actionOnClick) actionOnClick();
                     }
                   } else if (event.key === "Escape") {
                     setIsAutocompleteOpen(false);
