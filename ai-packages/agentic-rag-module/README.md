@@ -97,15 +97,15 @@ The **Agentic RAG Module** is a Retrieval-Augmented Generation (RAG) system buil
 ORIGINS=*
 
 # Service Endpoints
-OPENSEARCH_HOST=localhost:9200
-GRPC_DATASOURCE_HOST=localhost:50051
-GRPC_TENANT_MANAGER_HOST=localhost:50052
-GRPC_EMBEDDING_MODULE_HOST=localhost:50053
+OPENSEARCH_HOST=opensearch_host:port
+GRPC_DATASOURCE_HOST=grpc_datasource_host:port
+GRPC_TENANT_MANAGER_HOST=grpc_tenant_manager_host:port
+GRPC_EMBEDDING_MODULE_HOST=grpc_embedding_module_host:port
 
 # Observability
 ARIZE_PHOENIX_ENABLED=true
-ARIZE_PHOENIX_PROJECT_NAME=agentic_rag
-ARIZE_PHOENIX_ENDPOINT=https://phoenix.openk9.io/v1/traces
+ARIZE_PHOENIX_PROJECT_NAME=arize_phoenix_project_name
+ARIZE_PHOENIX_ENDPOINT=arize_phoenix_endpoint
 
 # Security
 OPENK9_ACL_HEADER=OPENK9_ACL
