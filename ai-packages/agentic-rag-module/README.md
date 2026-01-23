@@ -1,93 +1,159 @@
-# agentic-rag-module
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://git.smc.it/openk9/genai/agentic-rag-module.git
-git branch -M master
-git push -uf origin master
-```
-
-## Integrate with your tools
-
-- [ ] [Set up project integrations](https://git.smc.it/openk9/genai/agentic-rag-module/-/settings/integrations)
-
-## Collaborate with your team
-
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
 ## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+The **Agentic RAG Module** is a Retrieval-Augmented Generation (RAG) system built on FastAPI that provides intelligent search, conversational AI, and document analysis capabilities. It combines traditional search techniques with modern LLM-powered generation in a modular, tenant-aware architecture.
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Features
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Multi-Mode RAG Operations
+- **Search Generation**: Complex search queries with faceted filtering, vector retrieval, and real-time streaming
+- **Conversational RAG**: Chat-based interactions with conversation history and context awareness
+- **Conversational RAG As Tool**: Chat-based interactions with conversation history and context awareness that implements a conditional RAG approach where the RAG system is used as a tool only when needed
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Tenant & User Management
+- Multi-tenant architecture with tenant isolation via ACL headers
+- JWT-based authentication and user session management
+- Tenant-specific configuration loading via gRPC services
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Persistent Storage & History
+- OpenSearch integration for chat history and document storage
+- Complete CRUD operations for chat conversations
+- Document upload and management capabilities
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+### Observability & Evaluation
+- Arize Phoenix integration for tracing and monitoring
+- Real-time evaluation of RAG performance
+- Configurable evaluation metrics for router, retriever, and response
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### Modular Architecture
+- gRPC-based service discovery for configurations
+- Pluggable embedding models and data sources
+- Environment-based configuration
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## API Endpoints
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Primary RAG Operations
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+#### 1. **`POST /api/rag/generate`**
+- **Purpose**: Process complex search queries with RAG
+- **Features**:
+  - Faceted search with range filters
+  - Vector-based retrieval
+  - Real-time streaming via Server-Sent Events (SSE)
+  - Multi-language support
+- **Input**: `SearchQuery` model with search parameters
+- **Output**: SSE stream of results
 
-## License
-For open source projects, say how it is licensed.
+#### 2. **`POST /api/rag/chat`**
+- **Purpose**: Conversational RAG with chat history
+- **Features**:
+  - Conversation context preservation
+  - User-specific chat storage
+  - Real-time response streaming
+- **Input**: `SearchQueryChat` with chat context
+- **Output**: SSE stream of chat responses
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+#### 3. **`POST /api/rag/chat-tool`**
+- **Purpose**: Conversational RAG AS TOOL with chat history
+- **Features**:
+  - conditional RAG approach where the RAG system is used as a tool only when needed 
+  - Conversation context preservation
+  - User-specific chat storage
+  - Real-time response streaming
+- **Input**: `SearchQueryChat` with chat context
+- **Output**: SSE stream with tool execution results
+
+### Chat Management
+
+#### 4. **`POST /api/rag/user-chats`**
+- Retrieve paginated chat history for a user
+- **Parameters**: `chatSequenceNumber`, pagination controls
+
+#### 5. **`GET /api/rag/chat/{chat_id}`**
+- Fetch complete conversation for a specific chat
+- Returns messages, sources, and metadata
+
+#### 6. **`DELETE /api/rag/chat/{chat_id}`**
+- Permanently delete a chat conversation
+- Also removes associated uploaded documents
+
+#### 7. **`PATCH /api/rag/chat/{chat_id}`**
+- Rename a chat conversation by updating its title
+
+### Evaluation & Monitoring
+
+#### 8. **`POST /api/rag/evaluate`**
+- Evaluate RAG performance using trace data
+- **Metrics**: Router accuracy, retriever relevance, response quality
+- **Data Source**: Arize Phoenix traces
+
+#### 9. **`GET /health`**
+- Health check endpoint for monitoring
+
+## Configuration
+
+### Environment Variables
+```bash
+# CORS Configuration
+ORIGINS=*
+
+# Service Endpoints
+OPENSEARCH_HOST=localhost:9200
+GRPC_DATASOURCE_HOST=localhost:50051
+GRPC_TENANT_MANAGER_HOST=localhost:50052
+GRPC_EMBEDDING_MODULE_HOST=localhost:50053
+
+# Observability
+ARIZE_PHOENIX_ENABLED=true
+ARIZE_PHOENIX_PROJECT_NAME=agentic_rag
+ARIZE_PHOENIX_ENDPOINT=https://phoenix.openk9.io/v1/traces
+
+# Security
+OPENK9_ACL_HEADER=OPENK9_ACL
+```
+
+### Headers
+| Header | Purpose | Required |
+|--------|---------|----------|
+| `Authorization` | JWT Bearer token | Conditional |
+| `X-Forwarded-Host` | Tenant identification | Yes |
+| `OPENK9_ACL` | Access control list | Conditional |
+| `X-Tenant-ID` | Tenant override | Optional |
+
+## Local Development
+```bash
+# 1. Clone and setup
+git clone <repo>
+cd agentic-rag-module
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# 2. Start development server
+uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
+```
+
+## Deployment with Docker
+
+### Using Makefile Commands
+
+The module includes a comprehensive Makefile for easy Docker management:
+
+```bash
+# Check environment and dependencies
+make check_commands
+
+# Load and validate configuration
+make load_config
+
+# Build Docker image with configured version
+make build
+
+# Start all services (detached mode)
+make start
+
+# Stop services
+make stop
+
+# Show help
+make help
+```
