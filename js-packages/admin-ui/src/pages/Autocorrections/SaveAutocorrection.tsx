@@ -91,7 +91,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     initialValues: React.useMemo(
       () => ({
         name: "",
-        suggestMode: SuggestMode.Always,
+        suggestMode: SuggestMode.Missing,
         sort: SortType.Score,
         prefixLength: 1,
         minWordLength: 4,
