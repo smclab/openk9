@@ -1,8 +1,6 @@
 import base64
 import os
-import time
 from io import BytesIO
-from typing import Dict, List
 
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream

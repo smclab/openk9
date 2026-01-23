@@ -1,15 +1,13 @@
-import asyncio
-import base64
 import os
 import threading
 
 import requests
-from dotenv import dotenv_values, load_dotenv
-from fastapi import Body, FastAPI
+from dotenv import load_dotenv
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 from app.utils.converter import conversion
-from app.utils.exceptions import FormatError, handle_exception
+from app.utils.exceptions import handle_exception
 
 load_dotenv()
 
