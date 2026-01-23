@@ -12,7 +12,9 @@ import {
   TitleEntity,
   useForm,
 } from "@components/Form";
+import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 import { useToast } from "@components/Form/Form/ToastProvider";
+import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { TooltipDescription } from "@components/Form/utils";
 import { useRestClient } from "@components/queryClient";
 import CloseIcon from "@mui/icons-material/Close";
@@ -35,14 +37,15 @@ import {
   GenerateDynamicForm,
   Template,
 } from "@pages/datasources/components/Sections/DataSource/DynamicForm";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
 import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique } from "../../openapi-generated";
+import { sxControl } from "../../utils/styleConfig";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { QueryParserConfig } from "./gql";
-import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 
 interface ConfigureHybridSearchInterface {
   searchConfigId: string;
@@ -79,7 +82,7 @@ export function useConfigureHybridSearchMutation({
   );
 }
 
-export function SaveSearchConfig() {
+export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
@@ -98,6 +101,8 @@ export function SaveSearchConfig() {
     }
   };
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
+  const isNew = searchConfigId === "new";
   const [isHybridSearch, setIsHybridSearch] = React.useState<boolean>(false);
   const [jsonConfigs, setJsonConfigs] = React.useState<string[]>([]);
 
@@ -109,6 +114,14 @@ export function SaveSearchConfig() {
   const queryParserConfig = useQuery(QueryParserConfig, { fetchPolicy: "cache-and-network" });
 
   const toast = useToast();
+  const initialConfigValue: ConfigureHybridSearchInterface = {
+    searchConfigId,
+    normalizationTechnique: NormalizationTechnique.MIN_MAX,
+    combinationTechnique: CombinationTechnique.ARITHMETIC_MEAN,
+    weights: [0.5, 0.5],
+  };
+
+  const [config, setConfig] = useState<ConfigureHybridSearchInterface>(initialConfigValue);
   const [createOrUpdateSearchConfigMutate, createOrUpdateSearchConfigMutation] = useCreateOrUpdateSearchConfigMutation({
     refetchQueries: ["SearchConfig", "Buckets"],
     onCompleted(data) {
@@ -236,6 +249,53 @@ export function SaveSearchConfig() {
   });
 
   if (!searchConfigId && searchConfigQuery.loading) return null;
+  const parsedQueryConfig = types.reduce((acc, type, i) => {
+    const raw = jsonConfigs[i];
+    if (!raw) return acc;
+
+    try {
+      const obj = JSON.parse(raw);
+      acc[type.itemLabel] = obj;
+    } catch {
+      acc[type.itemLabel] = raw;
+    }
+
+    return acc;
+  }, {} as Record<string, any>);
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "description" },
+          { key: "minScore", label: "Min Score" },
+          { key: "minScoreSuggestions", label: "Min Score Suggestions" },
+          { key: "minScoreSearch", label: "Min Score Search" },
+          // { key: "jsonConfig", label: "JSON Config" },
+        ],
+        label: "Search Config",
+      },
+      {
+        cell: [{ key: "queryParserConfig", label: "Query Parser Config" }],
+        label: "Query Parser",
+      },
+      ...(searchConfigId !== "new"
+        ? [
+            {
+              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
+              label: "Hybrid Search",
+            },
+          ]
+        : []),
+    ],
+    valueOverride: {
+      queryParserConfig: parsedQueryConfig || "",
+      HybridSearch: config || "",
+    },
+  });
+
   return (
     <>
       <ContainerFluid size="md">
@@ -243,7 +303,7 @@ export function SaveSearchConfig() {
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
             <TitleEntity
               nameEntity="Search config "
-              description="Create or Edit a Search Config and define search behavior. 
+              description="Create or Edit a Search Config and define search behavior.
           Configure specific search terms or how scores are handled and customize how search engine returns results."
               id={searchConfigId}
             />
@@ -267,28 +327,32 @@ export function SaveSearchConfig() {
                     <div>
                       <TextInput label="Name" {...form.inputProps("name")} />
                       <TextArea label="Description" {...form.inputProps("description")} />
-                      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}>
-                        <NumberInput
-                          label="minScore"
-                          {...form.inputProps("minScore")}
-                          description="Define score threshold used to filter results after query has been done"
-                        />
+                      {/* <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}> */}
+                      <NumberInput
+                        label="minScore"
+                        {...form.inputProps("minScore")}
+                        description="Define score threshold used to filter results after query has been done"
+                      />
+                      <RefreshOptionsLayout title="Min Score">
                         <BooleanInput
-                          label="min Score Suggestions"
+                          label="Suggestions"
+                          sxControl={sxControl}
                           {...form.inputProps("minScoreSuggestions")}
                           description="If use configured min score to filter search results"
                         />
                         <BooleanInput
-                          label="min Score Search"
+                          label="Search"
+                          sxControl={sxControl}
                           {...form.inputProps("minScoreSearch")}
                           description="If use configured min score to filter suggestions"
                         />
-                      </Box>
+                      </RefreshOptionsLayout>
+                      {/* </Box> */}
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
                           type="button"
                           color="primary"
-                          disabled={searchConfigId === "new" ? true : false}
+                          disabled={searchConfigId === "new"}
                           onClick={() => setIsHybridSearch(true)}
                           children={"Set Hybrid Search"}
                           variant="outlined"
@@ -354,29 +418,42 @@ export function SaveSearchConfig() {
           </form>
         </>
         <ConfirmModal />
+        <Recap
+          recapData={recapSections}
+          setExtraFab={setExtraFab}
+          forceFullScreen={isRecap}
+          actions={{
+            onBack: () => setPage(0),
+            onSubmit: () => form.submit(),
+            submitLabel: isNew ? "Create entity" : "Update entity",
+            backLabel: "Back",
+          }}
+        />
       </ContainerFluid>
-      <CustomizedDialogs isHybridSearch={isHybridSearch} searchConfigId={searchConfigId} onClose={handleCloseDialog} />
+      <CustomizedDialogs
+        isHybridSearch={isHybridSearch}
+        configuration={{ initialConfigValue, config, setConfig }}
+        onClose={handleCloseDialog}
+      />
     </>
   );
 }
 
 interface CustomizedDialogsProps {
   isHybridSearch: boolean;
-  searchConfigId: string;
+  configuration: {
+    initialConfigValue: ConfigureHybridSearchInterface;
+    config: ConfigureHybridSearchInterface;
+    setConfig: React.Dispatch<React.SetStateAction<ConfigureHybridSearchInterface>>;
+  };
   onClose: () => void; // Funzione per chiudere la modale
 }
 
-const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, searchConfigId, onClose }) => {
+const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, configuration, onClose }) => {
   const theme = useTheme();
   const color = theme.palette.primary.main;
+  const { initialConfigValue, config, setConfig } = configuration;
 
-  const initialConfigValue = {
-    combinationTechnique: undefined,
-    normalizationTechnique: undefined,
-    searchConfigId: searchConfigId,
-    weights: [0.5, 0.5],
-  };
-  const [config, setConfig] = useState<ConfigureHybridSearchInterface>(initialConfigValue);
   const [configValidation, setConfigValidation] = useState<{
     normalizationTechnique: string;
     combinationTechnique: string;
@@ -389,7 +466,6 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, s
   };
 
   const handleSelectChange = (field: string, e: unknown) => {
-    // Aggiorna lo stato per NormalizationTechnique o CombinationTechnique
     setConfig((prevConfig) => ({
       ...prevConfig,
       [field]: e,
@@ -428,11 +504,27 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, s
   const { mutate: configureHybridSearch } = useConfigureHybridSearchMutation(config);
   const toast = useToast();
   const handleSettings = () => {
-    const isValid = config.combinationTechnique && config.normalizationTechnique && searchConfigId;
+    const isValid = config.combinationTechnique && config.normalizationTechnique && config.searchConfigId;
 
     if (isValid) {
       try {
-        configureHybridSearch(config);
+        configureHybridSearch(config, {
+          onSuccess: () => {
+            toast({
+              title: "Hybrid Search",
+              content: "Hybrid Search configuration updated successfully",
+              displayType: "success",
+            });
+            handleClose();
+          },
+          onError: () => {
+            toast({
+              title: "Error",
+              content: "Impossible to update Hybrid Search configuration",
+              displayType: "error",
+            });
+          },
+        });
         handleClose();
       } catch (error) {
         showErrorToast("Impossible to set Hybrid Search Config");
@@ -491,13 +583,11 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, s
                 position: "absolute",
                 right: 8,
                 top: 8,
-                // color: "white",
               })}
             >
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-          {/* </Box> */}
           <DialogContent dividers>
             <Box display={"flex"} gap={3} flexDirection={"column"} minWidth={"400px"}>
               <CustomSelect
