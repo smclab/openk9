@@ -60,7 +60,7 @@ The **Agentic RAG Module** is a Retrieval-Augmented Generation (RAG) system buil
   - User-specific chat storage
   - Real-time response streaming
 - **Input**: `SearchQueryChat` with chat context
-- **Output**: SSE stream with tool execution results
+- **Output**: SSE stream of chat responses
 
 ### Chat Management
 
