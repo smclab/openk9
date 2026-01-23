@@ -139,19 +139,19 @@ uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
 The module includes a comprehensive Makefile for easy Docker management:
 
 ```bash
-# Check environment and dependencies
+# Verify required tools (git, docker) and environment
 make check_commands
 
-# Load and validate configuration
+# Load and validate configurations
 make load_config
 
-# Build Docker image with configured version
+# Build Docker image with configured base image and version
 make build
 
-# Start all services (detached mode)
+# Start Docker Compose services in detached mode
 make start
 
-# Stop services
+# Stop running Docker Compose services
 make stop
 
 # Show help
