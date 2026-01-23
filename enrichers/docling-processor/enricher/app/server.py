@@ -73,10 +73,13 @@ def form():
 
 
 def operation(payload, configs, token):
-    binaries = [
-        b for b in payload["resources"].get("binaries", []) if "resourceId" in b
-    ]
-    tenant = payload["tenantId"]
+    try:
+        binaries = [
+            b for b in payload["resources"].get("binaries", []) if "resourceId" in b
+        ]
+        tenant = payload["tenantId"]
+    except Exception as e:
+        handle_exception(e)
 
     print("Starting process")
     if len(binaries) > 1:
