@@ -9,7 +9,7 @@ from fastapi import Body, FastAPI
 from pydantic import BaseModel
 
 from app.utils.converter import conversion
-from app.utils.exceptions import FormatError
+from app.utils.exceptions import FormatError, handle_exception
 
 load_dotenv()
 
@@ -85,14 +85,8 @@ def operation(payload, configs, token):
                 result = conversion(bin, tenant)
                 markdown = result.document.export_to_markdown()
                 bin["markdown"] = markdown
-            except (base64.binascii.Error, ValueError) as e:
-                print(f"base64 error: {str(e)}")
-            except AttributeError as e:
-                print(f"export error: {str(e)}")
             except Exception as e:
-                print(f"generic error: {str(e)}")
-            except FormatError as e:
-                print(f"format error: {str(e)}")
+                handle_exception(e)
 
             print("Process ended")
             response = {"binaries": binaries}
@@ -101,14 +95,8 @@ def operation(payload, configs, token):
         try:
             result = conversion(bin, tenant)
             markdown = result.document.export_to_markdown()
-        except (base64.binascii.Error, ValueError) as e:
-            print(f"base64 error: {str(e)}")
-        except AttributeError as e:
-            print(f"export error: {str(e)}")
         except Exception as e:
-            print(f"generic error: {str(e)}")
-        except FormatError as e:
-            print(f"format error: {str(e)}")
+            handle_exception(e)
 
         print("Process ended")
         response = {"document": markdown}
