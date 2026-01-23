@@ -114,9 +114,9 @@ OPENK9_ACL_HEADER=OPENK9_ACL
 ### Headers
 | Header | Purpose | Required |
 |--------|---------|----------|
-| `Authorization` | JWT Bearer token | Conditional |
-| `X-Forwarded-Host` | Tenant identification | Yes |
-| `OPENK9_ACL` | Access control list | Conditional |
+| `Authorization` | JWT Bearer token | Optional |
+| `X-Forwarded-Host` | Tenant identification | Optional |
+| `OPENK9_ACL` | Access control list | Optional |
 | `X-Tenant-ID` | Tenant override | Optional |
 
 ## Local Development
