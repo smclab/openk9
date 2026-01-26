@@ -17,7 +17,6 @@
 
 package io.openk9.k8sclient.grpc;
 
-import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.grpc.StatusRuntimeException;
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.AppManifest;
@@ -27,12 +26,12 @@ import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.Status;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.kubernetes.client.KubernetesServer;
 import io.quarkus.test.kubernetes.client.KubernetesTestServer;
 import io.quarkus.test.kubernetes.client.WithKubernetesTestServer;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

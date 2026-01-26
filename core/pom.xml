@@ -90,11 +90,11 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.20.2</quarkus-plugin.version>
+		<quarkus-plugin.version>3.20.5</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.20.2</quarkus.platform.version>
-		<quarkus.version>3.20.2</quarkus.version>
+		<quarkus.platform.version>3.20.5</quarkus.platform.version>
+		<quarkus.version>3.20.5</quarkus.version>
 		<quarkiverse.opensearch.version>1.17.2</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.7.7</quarkus-minio.version>
