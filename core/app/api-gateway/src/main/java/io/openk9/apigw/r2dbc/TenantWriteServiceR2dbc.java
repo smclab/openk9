@@ -44,9 +44,14 @@ public class TenantWriteServiceR2dbc {
 		DELETE FROM tenant
 		WHERE tenant_id = :tenantId
 		""";
-	private static final String DELETE_API_KEY_SQL = """
+	private static final String DELETE_API_KEY_BY_ID_SQL = """
 		DELETE FROM api_key
 		WHERE id = :id
+		""";
+	private static final String DELETE_API_KEY_BY_HASH_SQL = """
+		DELETE FROM api_key
+		WHERE tenant_id = :tenantId
+		AND api_key_hash = :apiKeyHash
 		""";
 	private static final String DELETE_ROUTE_SECURITY_SQL = """
 		DELETE FROM route_security
@@ -291,11 +296,34 @@ public class TenantWriteServiceR2dbc {
 	public Mono<Void> deleteApiKey(Long id) {
 		log.debug("Deleting API key: id={}", id);
 
-		return dbClient.sql(DELETE_API_KEY_SQL)
+		return dbClient.sql(DELETE_API_KEY_BY_ID_SQL)
 			.bind("id", id)
 			.then()
 			.doOnSuccess(v -> log.info("Successfully deleted API key: {}", id))
 			.doOnError(e -> log.error("Failed to delete API key: {}", id, e));
+	}
+
+	/**
+	 * Delete an API key by its ID.
+	 *
+	 * @param tenantId the tenant identifier
+	 * @param hash the SHA256 hash of the API Key
+	 * @return Mono that completes when deletion is done
+	 */
+	public Mono<Void> deleteApiKey(String tenantId, String hash) {
+		log.debug("Deleting API key: tenantId={}, hash={}", tenantId, hash);
+
+		return dbClient.sql(DELETE_API_KEY_BY_HASH_SQL)
+			.bind("tenantId", tenantId)
+			.bind("apiKeyHash", hash)
+			.then()
+			.doOnSuccess(v -> log.info(
+				"Successfully deleted API key: tenantId={}, hash={}",
+				tenantId, hash
+			))
+			.doOnError(e -> log.error(
+				"Failed to delete API key: tenantId={}, hash={}",
+				tenantId, hash, e));
 	}
 
 	/**

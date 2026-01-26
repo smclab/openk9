@@ -171,7 +171,7 @@ public class TenantDbService {
 			.onFailure().recoverWithNull();
 	}
 
-	public Uni<List<TenantResponseDTO>> findAllTenant() {
+	public Uni<List<TenantResponseDTO>> findAll() {
 		return pool.preparedQuery(FETCH_ALL_SQL)
 			.execute()
 			.map(RowSet::getDelegate)
@@ -185,16 +185,16 @@ public class TenantDbService {
 			});
 	}
 
-	public Uni<TenantResponseDTO> findTenantByVirtualHost(String virtualHost) {
-		return pool.preparedQuery(FETCH_BY_VIRTUAL_HOST)
+	public Uni<TenantResponseDTO> findByVirtualHost(String virtualHost) {
+		return pool.preparedQuery(FETCH_BY_VIRTUAL_HOST_SQL)
 			.execute(Tuple.of(virtualHost))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
 			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row)it.next()) : null);
 	}
 
-	public Uni<TenantResponseDTO> findTenantByTenantId(String tenantId) {
-		return pool.preparedQuery(FETCH_BY_TENANT_ID)
+	public Uni<TenantResponseDTO> findByTenantName(String tenantId) {
+		return pool.preparedQuery(FETCH_BY_SCHEMA_NAME_SQL)
 			.execute(Tuple.of(tenantId))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
@@ -216,7 +216,7 @@ public class TenantDbService {
 			});
 	}
 
-	public Uni<List<SchemaTuple>> findAllSchemaNameAndLiquibaseSchemaName() {
+	public Uni<List<SchemaTuple>> findAllDatasourceSchemaTuples() {
 		return pool.preparedQuery(FETCH_ALL_SCHEMA_NAMES_SQL)
 			.execute()
 			.map(RowSet::getDelegate)
@@ -271,8 +271,8 @@ public class TenantDbService {
 
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
-	private static final String FETCH_BY_VIRTUAL_HOST = "SELECT * FROM tenant WHERE virtual_host = $1";
-	private static final String FETCH_BY_TENANT_ID = "SELECT * FROM tenant WHERE schema_name = $1";
+	private static final String FETCH_BY_VIRTUAL_HOST_SQL = "SELECT * FROM tenant WHERE virtual_host = $1";
+	private static final String FETCH_BY_SCHEMA_NAME_SQL = "SELECT * FROM tenant WHERE schema_name = $1";
 	private static final String FETCH_ALL_SCHEMA_NAME_SQL = "SELECT schema_name FROM tenant";
 	private static final String FETCH_ALL_SCHEMA_NAMES_SQL = "SELECT schema_name, liquibase_schema_name FROM tenant";
 	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";

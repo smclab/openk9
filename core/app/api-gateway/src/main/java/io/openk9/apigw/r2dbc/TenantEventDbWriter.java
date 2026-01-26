@@ -42,6 +42,11 @@ public class TenantEventDbWriter implements TenantEventConsumer {
 	}
 
 	@Override
+	public void handleApiKeyRevokedEvent(TenantEvent.ApiKeyRevoked event) {
+		((Mono<Void>) reactiveTenantEventConsumer.handleApiKeyRevokedEvent(event)).block();
+	}
+
+	@Override
 	public void handleTenantUpdatedEvent(TenantEvent.TenantUpdated event) {
 		((Mono<Void>) reactiveTenantEventConsumer.handleTenantUpdatedEvent(event)).block();
 	}

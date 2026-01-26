@@ -48,7 +48,7 @@ public class TenantDbServiceTest {
 	@DisplayName("Tenant should be fetched from database.")
 	void should_fetch_existing_tenants() {
 
-		List<TenantResponseDTO> tenants = tenantDbService.findAllTenant().await().indefinitely();
+		List<TenantResponseDTO> tenants = tenantDbService.findAll().await().indefinitely();
 		// tenants must be equals or greater than 2 because there are
 		// at least 2 tenants created from liquibase.
 		Assertions.assertTrue(tenants.size() >= 2);

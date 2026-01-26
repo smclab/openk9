@@ -65,7 +65,7 @@ public class TenantManagerInitializer {
 
 		try {
 			VertxContextSupport.subscribeAndAwait(() -> tenantDbService
-				.findAllSchemaNameAndLiquibaseSchemaName()
+				.findAllDatasourceSchemaTuples()
 				.flatMap((schemas) -> {
 						LinkedList<Params> schemaParamList = new LinkedList<>();
 

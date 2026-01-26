@@ -40,7 +40,7 @@ public class TenantManagerGrpcService implements TenantManager {
 	@ActivateRequestContext
 	public Uni<TenantResponse> findTenant(TenantRequest request) {
 
-		return tenantDbService.findTenantByVirtualHost(request.getVirtualHost())
+		return tenantDbService.findByVirtualHost(request.getVirtualHost())
 			.onItem()
 			.ifNotNull()
 			.transform(tenantMapper::toTenantResponse);
@@ -50,7 +50,7 @@ public class TenantManagerGrpcService implements TenantManager {
 	@Override
 	public Uni<TenantListResponse> findTenantList(Empty request) {
 
-		return tenantDbService.findAllTenant()
+		return tenantDbService.findAll()
 			.onItem()
 			.ifNotNull()
 			.transform(list -> list

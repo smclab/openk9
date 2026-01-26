@@ -17,4 +17,4 @@
 
 package io.openk9.tenantmanager.service.dto;
 
-public record CreateApiKeyResponse(String apiKey) {}
+public record CreateApiKeyResponse(String id, String apiKey) {}

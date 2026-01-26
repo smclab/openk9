@@ -47,7 +47,7 @@ public class TenantManagerResource {
 		String virtualHost = createTenantRequest.virtualHost();
 
 		return tenantDbService
-			.findTenantByVirtualHost(virtualHost)
+			.findByVirtualHost(virtualHost)
 			.flatMap(tenant -> {
 				if (tenant == null) {
 					return tenantDbService
@@ -111,7 +111,7 @@ public class TenantManagerResource {
 		String virtualHost = deleteTenantRequest.virtualHost();
 
 		return tenantDbService
-			.findTenantByVirtualHost(virtualHost)
+			.findByVirtualHost(virtualHost)
 			.flatMap(tenant -> {
 				if (tenant == null) {
 					return Uni

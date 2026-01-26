@@ -19,23 +19,16 @@ package io.openk9.tenantmanager.service.dto;
 
 import java.time.OffsetDateTime;
 
-import io.openk9.event.tenant.ApiGroup;
 
-import org.eclipse.microprofile.graphql.NonNull;
-
-public record CreateApiKeyRequest(
-	@NonNull String tenantName,
-	@NonNull String name,
-	@NonNull ApiGroup apiGroup,
-	@NonNull OffsetDateTime expirationDate
-) {
-
-	public static CreateApiKeyRequest of(
-		String tenantName,
-		String name,
-		ApiGroup apiGroup,
-		OffsetDateTime expirationDate) {
-
-		return new CreateApiKeyRequest(tenantName, name, apiGroup, expirationDate);
-	}
-}
+public record ApiKeyResponse(
+	String id,
+	String tenantId,
+	String hash,
+	String name,
+	String status,
+	String prefix,
+	String suffix,
+	String apiGroup,
+	OffsetDateTime createDate,
+	OffsetDateTime expirationDate
+) {}

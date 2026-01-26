@@ -89,6 +89,15 @@ public class ReactiveTenantEventDbWriter
 			.doOnSuccess(v -> log.info("Processed API key created event for tenant: {}", event.tenantId()));
 	}
 
+	@Override
+	public Publisher<Void> handleApiKeyRevokedEvent(TenantEvent.ApiKeyRevoked event) {
+
+		var tenantId = event.tenantId();
+		var hash = event.apiKeyHash();
+
+		return writeService.deleteApiKey(tenantId, hash);
+	}
+
 	/**
 	 * Handle tenant update events.
 	 */

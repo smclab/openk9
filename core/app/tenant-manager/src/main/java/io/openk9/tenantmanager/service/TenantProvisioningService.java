@@ -174,7 +174,7 @@ public class TenantProvisioningService {
 
 	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
 	Uni<TenantResponseDTO> findTenant(FindTenantRequest request) {
-		return dbService.findTenantByVirtualHost(request.virtualHost());
+		return dbService.findByVirtualHost(request.virtualHost());
 	}
 
 	@ConsumeEvent(DELETE_REALM)

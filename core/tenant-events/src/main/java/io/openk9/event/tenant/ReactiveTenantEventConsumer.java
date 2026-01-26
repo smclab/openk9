@@ -50,6 +50,14 @@ public interface ReactiveTenantEventConsumer {
 	Publisher<Void> handleApiKeyCreatedEvent(TenantEvent.ApiKeyCreated event);
 
 	/**
+	 * Handle an API Key Revoked.
+	 *
+	 * @param event the {@link TenantEvent.ApiKeyRevoked} containing API key information
+	 * @return a {@link Publisher} that completes when the event has been processed
+	 */
+	Publisher<Void> handleApiKeyRevokedEvent(TenantEvent.ApiKeyRevoked event);
+
+	/**
 	 * Handles an event indicating that an existing tenant has been updated.
 	 *
 	 * @param event the {@link TenantEvent.TenantUpdated} containing updated tenant details

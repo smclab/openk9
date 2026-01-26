@@ -44,6 +44,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 		try {
 			String eventType = switch (object) {
 				case TenantEvent.ApiKeyCreated e -> "ApiKeyCreated";
+				case TenantEvent.ApiKeyRevoked e -> "ApiKeyRevoked";
 				case TenantEvent.TenantCreated e -> "TenantCreated";
 				case TenantEvent.TenantDeleted e -> "TenantDeleted";
 				case TenantEvent.TenantUpdated e -> "TenantUpdated";
@@ -78,6 +79,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			String eventType = messageProperties.getHeader(X_EVENT_TYPE);
 			Object event = switch (eventType) {
 				case "ApiKeyCreated" -> mapper.readValue(body, TenantEvent.ApiKeyCreated.class);
+				case "ApiKeyRevoked" -> mapper.readValue(body, TenantEvent.ApiKeyRevoked.class);
 				case "TenantCreated" -> mapper.readValue(body, TenantEvent.TenantCreated.class);
 				case "TenantDeleted" -> mapper.readValue(body, TenantEvent.TenantDeleted.class);
 				case "TenantUpdated" -> mapper.readValue(body, TenantEvent.TenantUpdated.class);

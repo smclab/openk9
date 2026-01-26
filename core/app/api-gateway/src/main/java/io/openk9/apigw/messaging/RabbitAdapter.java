@@ -43,6 +43,7 @@ public class RabbitAdapter {
 
 		switch (payload) {
 			case TenantEvent.ApiKeyCreated e -> consumer.handleApiKeyCreatedEvent(e);
+			case TenantEvent.ApiKeyRevoked e -> consumer.handleApiKeyRevokedEvent(e);
 			case TenantEvent.TenantCreated e -> consumer.handleTenantCreatedEvent(e);
 			case TenantEvent.TenantDeleted e -> consumer.handleTenantDeletedEvent(e);
 			case TenantEvent.TenantUpdated e -> consumer.handleTenantUpdatedEvent(e);

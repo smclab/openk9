@@ -45,6 +45,13 @@ public interface TenantEventConsumer {
 	void handleApiKeyCreatedEvent(TenantEvent.ApiKeyCreated event);
 
 	/**
+	 * Handles an API Key revoked event.
+	 *
+	 * @param event the {@link TenantEvent.ApiKeyRevoked} containing the API Key information
+	 */
+	void handleApiKeyRevokedEvent(TenantEvent.ApiKeyRevoked event);
+
+	/**
 	 * Handles an event indicating that an existing tenant has been updated.
 	 *
 	 * @param event the {@link TenantEvent.TenantUpdated} containing updated tenant details
@@ -57,5 +64,6 @@ public interface TenantEventConsumer {
 	 * @param event the {@link TenantEvent.TenantDeleted} identifying the deleted tenant
 	 */
 	void handleTenantDeletedEvent(TenantEvent.TenantDeleted event);
+
 
 }

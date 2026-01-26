@@ -69,10 +69,12 @@ sealed public interface TenantEvent {
 	/**
 	 * Published when an Api Key is deleted or revoked.
 	 *
+	 * @param tenantId  the unique identifier of the tenant
 	 * @param apiKeyHash the digest of the apiKey already stored in the database.
 	 */
 	@Builder
-	record ApiKeyRevoked(String apiKeyHash) {}
+	record ApiKeyRevoked(String tenantId, String apiKeyHash)
+		implements TenantEvent {}
 
 	/**
 	 * Event published when an existing tenant’s information is updated.
