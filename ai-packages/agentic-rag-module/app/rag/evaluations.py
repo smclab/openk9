@@ -332,19 +332,16 @@ def evaluations(
 
             if evaluate_response and query and response:
                 response_evaluation(llm, client, span_id, query, response)
-                if span_id not in evaluated_spans:
-                    evaluated_spans.add(span_id)
+                evaluated_spans.add(span_id)
 
             if evaluate_rag_router:
                 rag_router_evaluation(
                     llm, client, span_id, query, use_rag, rag_tool_description
                 )
-                if span_id not in evaluated_spans:
-                    evaluated_spans.add(span_id)
+                evaluated_spans.add(span_id)
 
             if evaluate_retriever and context:
                 retriever_evaluation(llm, client, span_id, query, context)
-                if span_id not in evaluated_spans:
-                    evaluated_spans.add(span_id)
+                evaluated_spans.add(span_id)
 
     return evaluated_spans
