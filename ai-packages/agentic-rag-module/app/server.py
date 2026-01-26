@@ -162,7 +162,6 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
-    enable_real_time_evaluation = search_query_request.enableRealTimeEvaluation
     rag_type = RagType.SIMPLE_GENERATE.value
 
     if headers.x_forwarded_host:
@@ -221,7 +220,6 @@ async def rag_generate(
         chat_history,
         timestamp,
         chat_sequence_number,
-        enable_real_time_evaluation,
         rag_configuration,
         llm_configuration,
         OPENSEARCH_HOST,
@@ -307,7 +305,6 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    enable_real_time_evaluation = search_query_chat.enableRealTimeEvaluation
     rag_type = RagType.CHAT_RAG.value
 
     if headers.x_forwarded_host:
@@ -372,7 +369,6 @@ async def rag_chat(
         chat_history,
         timestamp,
         chat_sequence_number,
-        enable_real_time_evaluation,
         rag_configuration,
         llm_configuration,
         OPENSEARCH_HOST,
@@ -459,7 +455,6 @@ async def rag_chat_tool(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
-    enable_real_time_evaluation = search_query_chat.enableRealTimeEvaluation
     rag_type = RagType.CHAT_RAG_TOOL.value
 
     if headers.x_forwarded_host:
@@ -524,7 +519,6 @@ async def rag_chat_tool(
         chat_history,
         timestamp,
         chat_sequence_number,
-        enable_real_time_evaluation,
         rag_configuration,
         llm_configuration,
         OPENSEARCH_HOST,

@@ -86,9 +86,6 @@ class SearchQuery(BaseModel):
     reformulate: Optional[bool] = Field(
         True, description="Enable query reformulation", example=True
     )
-    enableRealTimeEvaluation: Optional[bool] = Field(
-        False, description="Enable real time evaluation", example=True
-    )
 
 
 class SearchQueryChat(BaseModel):
@@ -168,9 +165,6 @@ class SearchQueryChat(BaseModel):
     )
     chatSequenceNumber: int = Field(
         ..., description="Incremental conversation turn number", example=3
-    )
-    enableRealTimeEvaluation: Optional[bool] = Field(
-        False, description="Enable real time evaluation", example=True
     )
 
 

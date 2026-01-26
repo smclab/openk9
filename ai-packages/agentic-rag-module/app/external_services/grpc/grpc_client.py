@@ -117,6 +117,9 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         rerank = json_config.get("rerank")
         metadata = json_config.get("metadata")
         analyze_query_prompt = json_config.get("analyze_query_prompt", "")
+        enable_real_time_evaluation = json_config.get(
+            "enable_real_time_evaluation", False
+        )
 
         configuration = {
             "prompt": prompt,
@@ -124,6 +127,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "rephrase_prompt": rephrase_prompt,
             "rag_tool_description": rag_tool_description,
             "analyze_query_prompt": analyze_query_prompt,
+            "enable_real_time_evaluation": enable_real_time_evaluation,
             "chunk_window": chunk_window,
             "reformulate": reformulate,
             "rerank": rerank,

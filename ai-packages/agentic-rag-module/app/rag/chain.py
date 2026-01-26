@@ -63,7 +63,6 @@ def get_agentic_rag(
     chat_history,
     timestamp,
     chat_sequence_number,
-    enable_real_time_evaluation,
     rag_configuration,
     llm_configuration,
     opensearch_host,
@@ -84,6 +83,9 @@ def get_agentic_rag(
         chunk_window = rag_configuration.get("chunk_window")
         metadata = rag_configuration.get("metadata")
         rag_tool_description = rag_configuration.get("rag_tool_description")
+        enable_real_time_evaluation = rag_configuration.get(
+            "enable_real_time_evaluation"
+        )
 
         no_rag = False
 
