@@ -135,6 +135,126 @@ def response_evaluation(
         logger.error(f"{e}")
 
 
+class RetrieverEvaluationEnum(str, Enum):
+    relevant = "RELEVANT"
+    not_relevant = "NOT_RELEVANT"
+
+
+class RetrieverEvaluationResponse(BaseModel):
+    chunk_id: str = Field(
+        ...,
+        description="Unique identifier chunk",
+        example="9460035979983399",
+    )
+    judgment: RetrieverEvaluationEnum = Field(
+        RetrieverEvaluationEnum.relevant,
+        description="The eference text contains information relevant or not relevant to answering the question.",
+    )
+    explanation: str = Field(
+        ...,
+        description="detailed explanation of your reasoning to justify your choice between relevant or not relevant",
+    )
+    vote: int = Field(
+        ...,
+        ge=0,
+        le=10,
+        description="rating from 0 to 10 that identifies relevance",
+    )
+
+
+class RetrieverEvaluationResponseList(BaseModel):
+    evaluations: list[RetrieverEvaluationResponse] = Field(
+        ..., description="List of evaluations"
+    )
+
+
+def retriever_evaluation(
+    llm,
+    client,
+    span_id,
+    query,
+    context,
+):
+    try:
+        chunks = []
+
+        for chunk_number, document in enumerate(context, start=1):
+            chunk = {
+                "chunk_number": chunk_number,
+                "chunk_id": document.get("metadata").get("document_id"),
+                "chunk_content": document.get("page_content"),
+            }
+
+            chunks.append(chunk)
+
+        retriever_evaluation_prompt = """
+                    Sei un valutatore che confronta una domanda con una lista di segmenti di testo (chunks) per determinare se ogni chunk contiene informazioni rilevanti per rispondere alla domanda.
+                    Dati da analizzare:
+
+                    [BEGIN DATA]
+                    [Domanda]: {query}
+                    Testo di riferimento - {chunks}
+                    [END DATA]
+
+                    Istruzioni precise:
+                    1. Valuta **OGNI CHUNK IN MODO INDIPENDENTE** dagli altri. Non usare informazioni presenti in altri chunk per giudicare questo chunk.
+                    2. Per ciascun chunk restituisci un oggetto con quattro campi nell'ordine esatto: "chunk_id", "judgment", "vote", "explanation".
+                    - "chunk_id": identificativo del chunk, presente in ogni elemento della lista.
+                    - "judgment": una stringa, **solo** "RELEVANT" o "NOT_RELEVANT".
+                    - "vote": **solo** un intero tra 0 e 10 (0 = per niente rilevante, 10 = risponde completamente e direttamente alla domanda da solo).
+                    - "explanation": una spiegazione autonoma e dettagliata che motiva il voto per **questo singolo chunk**. Deve:
+                        - riferirsi esplicitamente al contenuto di `chunk_content`;
+                        - spiegare quali elementi del chunk sono (o non sono) collegati alla domanda;
+                        - indicare eventuali informazioni mancanti o punti di contatto parziali;
+                        - **non** iniziare riportando il giudizio o il voto e **non** usare le parole "GIUDIZIO" o "VOTO" dentro l'explanation;
+                        - essere autosufficiente (chi legge solo questa explanation deve capire perché quel voto è stato dato).
+                    3. Mantieni output **valid JSON** che sia una lista (array) con un oggetto per ogni chunk, nello **stesso ordine** dei chunk in input.
+                    4. Non aggiungere testo, commenti o metadati extra: **OUTPUT SOLO IL JSON**.
+
+                    Requisiti formali ricapitolati:
+                    - "vote" deve essere un intero 0-10.
+                    - "judgment" deve essere esattamente "RELEVANT" o "NOT_RELEVANT".
+                    - L'array restituito deve contenere esattamente un elemento per chunk, nello stesso ordine.
+                    - Nessun testo fuori dal JSON.
+
+                    Adesso valuta i chunk forniti usando queste regole.
+
+                    """
+
+        retriever_evaluation_prompt_template = PromptTemplate.from_template(
+            retriever_evaluation_prompt
+        )
+
+        with suppress_tracing():
+            retriever_evaluation_chain = (
+                retriever_evaluation_prompt_template
+                | llm.with_structured_output(
+                    schema=RetrieverEvaluationResponseList,
+                    include_raw=False,
+                    method="function_calling",
+                )
+            )
+
+            classification_response = retriever_evaluation_chain.invoke(
+                {
+                    "query": query,
+                    "chunks": chunks,
+                }
+            )
+
+            for response in classification_response.evaluations:
+                annotation = client.annotations.add_span_annotation(
+                    annotation_name=f"evaluation for chunk {response.chunk_id}",
+                    span_id=span_id,
+                    label=response.judgment.value,
+                    score=response.vote,
+                    explanation=response.explanation,
+                )
+
+    except Exception as e:
+        logger.error(f"{e}")
+
+
 def evaluations(
     rag_configuration,
     llm_configuration,
@@ -212,12 +332,18 @@ def evaluations(
 
             if evaluate_response and query and response:
                 response_evaluation(llm, client, span_id, query, response)
-                evaluated_spans.add(span_id)
+                if span_id not in evaluated_spans:
+                    evaluated_spans.add(span_id)
 
             if evaluate_rag_router:
                 rag_router_evaluation(
                     llm, client, span_id, query, use_rag, rag_tool_description
                 )
+                if span_id not in evaluated_spans:
+                    evaluated_spans.add(span_id)
+
+            if evaluate_retriever and context:
+                retriever_evaluation(llm, client, span_id, query, context)
                 if span_id not in evaluated_spans:
                     evaluated_spans.add(span_id)
 
