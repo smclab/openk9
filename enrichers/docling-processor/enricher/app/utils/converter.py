@@ -7,6 +7,7 @@ from docling_core.types.io import DocumentStream
 
 from app.utils.fm_helper import FileManagerHelper
 from app.utils.format_detect import extract_extension_base64
+from app.utils.logger import logger
 
 FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
