@@ -257,12 +257,12 @@
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java</artifactId>
-				<version>3.25.6</version>
+				<version>3.25.8</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java-util</artifactId>
-				<version>3.25.6</version>
+				<version>3.25.8</version>
 			</dependency>
 			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
 			<dependency>
