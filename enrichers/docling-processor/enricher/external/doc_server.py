@@ -2,7 +2,7 @@ import asyncio
 import base64
 import random
 from io import BytesIO
-from typing import Any, Dict
+from typing import Any, Dict, List, Literal, Union
 
 import requests
 from fastapi import FastAPI
@@ -11,6 +11,17 @@ from pydantic import BaseModel
 
 class Response(BaseModel):
     resources: Dict[str, Any]
+
+
+class ResponseMulti(BaseModel):
+    binaries: List[Dict[str, Any]]
+
+
+class ResponseSingle(BaseModel):
+    document: Dict[Literal["markdown"], Any]
+
+
+ResponseModel = Union[ResponseMulti, ResponseSingle]
 
 
 app = FastAPI()
@@ -23,13 +34,16 @@ def get_random_string():
             "tenantId": "mrossi",
             "resources": {
                 "binaries": [
-                    {"resourceId": "doc_error", "metadata_vari": "metadato_error"},
-                    {"resourceId": "doc_2", "metadata_vari": "metadato_2"},
+                    # {"resourceId": "doc_error", "metadata_vari": "metadato_error"},
+                    # {"resourceId": "doc_2", "metadata_vari": "metadato_2"},
                     {"resourceId": "doc_1", "metadata_vari": "metadato_1"},
                 ]
             },
         },
-        "enrichItemConfig": {"configs": "Config passata"},
+        "enrichItemConfig": {
+            "configs": "Config passata",
+            "error_strategy": "fail-soft",
+        },
         "replyTo": "fake-token",
     }
     response = requests.post("http://127.0.0.1:8002/start-task/", json=input)
@@ -38,5 +52,5 @@ def get_random_string():
 
 
 @app.post("/api/datasource/pipeline/callback/{token}")
-def cose(response: Response):
+def cose(response: ResponseModel):
     print("Response: \n", response)
