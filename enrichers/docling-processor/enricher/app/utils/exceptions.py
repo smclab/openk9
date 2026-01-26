@@ -7,13 +7,13 @@ class FormatError(Exception):
 
 def handle_exception(e: Exception):
     if isinstance(e, (base64.binascii.Error, ValueError)):
-        print(f"base64 error: {e}")
+        return f"base64 error: {e}"
 
     elif isinstance(e, AttributeError):
-        print(f"export error: {e}")
+        return f"export error: {e}"
 
     elif isinstance(e, FormatError):
-        print(f"format error: {e}")
+        return f"format error: {e}"
 
     else:
-        print(f"generic error: {e}")
+        return f"generic error: {e}"
