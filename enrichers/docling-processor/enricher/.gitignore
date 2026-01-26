@@ -172,6 +172,7 @@ cython_debug/
 # Other
 .directory
 application_default_credentials.json
+Test_Docling/
 
 # grpc
 app/external_services/grpc/searcher/searcher_pb2_grpc.py
