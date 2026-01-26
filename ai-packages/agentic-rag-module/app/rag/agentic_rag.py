@@ -167,9 +167,6 @@ class RagGraph:
         self.chat_sequence_number = configuration.get("chat_sequence_number")
         self.chat_history = configuration.get("chat_history")
         self.opensearch_host = configuration.get("opensearch_host")
-        self.enable_real_time_evaluation = configuration.get(
-            "enable_real_time_evaluation", False
-        )
         self.open_search_client = OpenSearch(
             hosts=[self.opensearch_host],
         )
@@ -270,9 +267,10 @@ class RagGraph:
         Rewrites user query, using previous messages.
         """
 
-        # rephrase_prompt_template = self.configuration.get("rephrase_prompt_template")
-
-        rephrase_prompt_template = """
+        rephrase_prompt_template = (
+            self.configuration.get("rephrase_prompt_template")
+            if self.configuration.get("rephrase_prompt_template")
+            else """
         Analizza la query corrente in relazione alla query precedente e alla risposta precedente, e riscrivila in una forma ottimizzata per il retrieval informativo.
 
         **PROTOCOLLO DI RISCITTURA:**
@@ -297,6 +295,7 @@ class RagGraph:
         - Mantieni la forma interrogativa.
         - Preserva l’intento informativo primario.
         """
+        )
 
         rewrite_query_prompt = (
             rephrase_prompt_template
@@ -352,11 +351,10 @@ class RagGraph:
 
             conversation_context = self._get_conversation_context(messages)
 
-            # analyze_query_prompt_template = self.configuration.get(
-            #     "analyze_query_prompt_template"
-            # )
-
-            analyze_query_prompt_template = """
+            analyze_query_prompt_template = (
+                self.configuration.get("analyze_query_prompt_template")
+                if self.configuration.get("analyze_query_prompt_template")
+                else """
             Analizza la relazione tra la domanda corrente e la conversazione precedente.
 
             **Criteri di classificazione:**
@@ -370,6 +368,7 @@ class RagGraph:
             - Non contiene riferimenti diretti o indiretti a ciò che è stato detto in precedenza
             - Rappresenta un cambio di tema chiaro e netto
             """
+            )
 
             analyze_query_prompt = (
                 analyze_query_prompt_template
@@ -850,7 +849,7 @@ class RagGraph:
     def build_graph(self):
         workflow = StateGraph(GraphState)
 
-        if self.enable_real_time_evaluation:
+        if self.configuration.get("enable_real_time_evaluation"):
             workflow.add_node("history_handler", self.history_handler_node)
             workflow.add_node(
                 "analyze_and_rewrite_query", self.analyze_and_rewrite_query_node
