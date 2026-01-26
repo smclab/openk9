@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 from app.utils.converter import conversion
 from app.utils.exceptions import handle_exception
+from app.utils.logger import logger
 
 load_dotenv()
 
@@ -71,6 +72,7 @@ def form():
 
 
 def operation(payload, configs, token):
+    response = {}
     try:
         binaries = [
             b for b in payload["resources"].get("binaries", []) if "resourceId" in b
@@ -79,33 +81,50 @@ def operation(payload, configs, token):
     except Exception as e:
         handle_exception(e)
 
-    print("Starting process")
+    error_strategy = configs.get("error_strategy", "fail_fast")
+    logger.info(f"Error strategy: {error_strategy}")
+
+    logger.info("Starting process")
     if len(binaries) > 1:
+        logger.info("Multiple binary")
         for bin in binaries:
             try:
                 result = conversion(bin, tenant)
                 markdown = result.document.export_to_markdown()
                 bin["markdown"] = markdown
             except Exception as e:
-                handle_exception(e)
+                error = handle_exception(e)
+                logger.error(error)
+                if error_strategy == "fail-soft":
+                    # fail-soft: isola l’errore
+                    bin["error"] = str(error)
+                    continue
 
-            print("Process ended")
-            response = {"binaries": binaries}
+                elif error_strategy == "fail-fast":
+                    # invalida tutto e interrompe
+                    response = {"error": "conversion failed"}
+                    break
+
+                else:
+                    # invalida tutto e interrompe
+                    response = {"error": "conversion failed"}
+                    break
+        response = {"binaries": binaries}
+        logger.info("Process ended")
 
     elif len(binaries) == 1:
+        logger.info("Single binary")
         try:
-            result = conversion(bin, tenant)
+            result = conversion(binaries[0], tenant)
             markdown = result.document.export_to_markdown()
+            response = {"document": {"markdown": markdown}}
         except Exception as e:
-            handle_exception(e)
+            error = handle_exception(e)
+            logger.error(error)
 
-        print("Process ended")
-        response = {"document": markdown}
+        logger.info("Process ended")
 
-    else:
-        response = {}
-
-    response = requests.post(
+    request_response = requests.post(
         f"{DATASOURCE_HOST}/api/datasource/pipeline/callback/{token}", json=response
     )
-    print("Status:", response.status_code)
+    logger.info(f"Status: {request_response.status_code}")
