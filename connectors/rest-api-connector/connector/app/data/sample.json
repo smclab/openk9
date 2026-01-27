@@ -1,1 +1,21 @@
-{}
+{
+   "parsingDate":1705326198961,
+   "datasourceId":"1",
+   "contentId":3062252989527342,
+   "rawContent":"application/json 1000 01/01/2025 server",
+   "datasourcePayload":{
+      "requestUrl": "http://request-url/",
+      "contentType": "application/json"
+   },
+   "resources":{
+      "binaries":[
+        {
+          "id": 123971923678,
+          "name": "http://request-url/",
+          "contentType": "application/json",
+          "data": "<base64-string>"
+        }
+      ]
+   },
+   "scheduleId":"1"
+}

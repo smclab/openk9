@@ -10,7 +10,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 This Rest service exposes one endpoint:
 
 
-### Execute Youtube enpoint
+### Execute Youtube endpoint
 
 Call this endpoint to execute a crawler that extract videos starting from Youtube urls
 
@@ -59,7 +59,7 @@ Call this endpoint to get a sample of result.
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:500/sample'
+curl --location --request POST 'http://localhost:5000/sample'
 ```
 
 # Quickstart
@@ -70,18 +70,14 @@ curl --location --request POST 'http://localhost:500/sample'
 
 ### Using Dockerfile
 
-Using the command line go in the youtube-datasource parent folder\
 From this folder:
-```
-cd ..
-```
 
 Build the Docker file:
 ```
 docker build -t youtube-connector .
 ```
 
-**Command parameters:
+**Command parameters**:
 - **-t**: Set built image name
 - **-f**: Specify the path to the Dockerfile**
 
@@ -90,7 +86,7 @@ Run the built Docker image:
 docker run -p 5000:5000 --name youtube-connector-app youtube-connector 
 ```
 
-Command parameters:
+**Command parameters**:
 - **-p**: Exposed port to make api calls
 - **-name**: Set docker container name
 

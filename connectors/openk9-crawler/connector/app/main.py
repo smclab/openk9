@@ -45,6 +45,9 @@ if ingestion_url is None:
     ingestion_url = "http://ingestion:8080/api/ingestion/v1/ingestion/"
 
 
+scrapyd_url = os.environ.get("SCRAPYD_URL", "localhost:6800")
+
+
 class BaseRequest(ABC, BaseModel):
     bodyTag: Optional[str] = "body"
     titleTag: Optional[str] = "title::text"
@@ -229,7 +232,7 @@ def set_up_crawl_endpoint(request):
           )
 def execute_sitemap_request(request: SitemapRequest):
     payload = set_up_sitemap_endpoint(request)
-    response = post_message("http://localhost:6800/schedule.json", payload)
+    response = post_message(f"http://{scrapyd_url}/schedule.json", payload)
 
     if response and response["status"] == 'ok':
         logging.info("Crawling process started")
@@ -246,7 +249,7 @@ def execute_sitemap_request(request: SitemapRequest):
           )
 def execute_crawl_request(request: CrawlRequest):
     payload = set_up_crawl_endpoint(request)
-    response = post_message("http://localhost:6800/schedule.json", payload)
+    response = post_message(f"http://{scrapyd_url}/schedule.json", payload)
 
     if response and response["status"] == 'ok':
         logging.info("Crawling process started")
@@ -270,7 +273,7 @@ def cancel_job(project: str, job_id: str):
         "job": str(job_id)
     }
 
-    response = post_message("http://localhost:6800/cancel.json", payload, 10)
+    response = post_message(f"http://{scrapyd_url}/cancel.json", payload, 10)
 
     if response and response["status"] == 'ok':
         return "Cancelled job with id " + str(job_id)
@@ -305,7 +308,7 @@ def get_health() -> HealthCheck:
 
     try:
         fastapi_response = requests.get("http://localhost:5000/docs")
-        scrapyd_response = requests.get("http://localhost:6800")
+        scrapyd_response = requests.get(f"http://{scrapyd_url}")
         if fastapi_response.status_code == 200 and scrapyd_response.status_code == 200:
             return HealthCheck(status="UP")
         else:

@@ -2,6 +2,11 @@ version: "3.9"
 
 services:
   web-connector:
+    build:
+      context: .
+      dockerfile: /Dockerfile
+      args:
+        WITH_SCRAPYDWEB: 1
     image: web-connector:latest
     ports:
       - "5000:5000"

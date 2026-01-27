@@ -130,7 +130,7 @@ def get_sample():
         summary="Get form structure of Sitemap request",
         response_description="Return json form structure", )
 def get_sitemap_form():
-    f = open('data/sitemap-form.json')
+    f = open('data/form.json')
 
     # returns JSON object as
     # a dictionary

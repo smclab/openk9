@@ -1,34 +1,30 @@
-# Gitlab Connector
+# Minio Connector
 
-Gitlab connector is a service for extracting data from specific domains.\
+Minio connector is a service for extracting data from specific minio buckets.\
 Run container from built image and configure appropriate plugin to call it.
 
 The container takes via environment variable INGESTION_URL, which must match the url of the Ingestion Api.
 
-## Gitlab Api
+## Minio Api
 
 This Rest service exposes one endpoint:
 
 
-### Execute Gitlab endpoint
+### Execute Minio endpoint
 
-Call this endpoint to execute a crawler that extract repos starting from gitlab domain
+Call this endpoint to execute a crawler that extract buckets starting from minio domain
 
 This endpoint takes different arguments in JSON raw body:
 
-- **domain**: Gitlab domain to extract from (required)
-- **accessToken**: access token connecting to Gitlab domain (required)
-- **types**: list of data to extract (required)
-  - **User**: extract users
-  - **Project**: extract projects
-  - **Project Issue**: extract issues (requires **Project**)
-  - **Project Commit**: extract commits (requires **Project**)
-  - **Project Branch**: extract branches (requires **Project**)
-  - **Project Labels**: extract labels (requires **Project**)
-  - **Project Milestone**: extract milestones (requires **Project**)
-  - **Project Merge Request**: extract merge requests (requires **Project**)
-- **itemsPerPage**: pagination items extracted per call (optional, if not specified get 100 items each call)
-- **projectList**: List of project ids to be extracted (optional, if not specified get every projects)
+- **host**: Minio domain host name to extract from (required)
+- **port**: Minio domain port to extract from (required)
+- **accessKey**: access key connecting to Minio domain (required)
+- **secretKey**: secret key connecting to Minio domain (required)
+- **bucketName**: bucket name to extract from (required)
+- **datasourcePayloadKey**: key used for datasource payload (optional, default None)
+- **prefix**: bucket object prefix (optional, default None)
+- **columns**: list of columns to extract (optional, default [])
+- **additionalMetadata**: dictionary of metadata added to datasource payload (optional, default {})
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -40,10 +36,15 @@ Follows an example of Curl call:
 curl --location --request POST 'http://localhost:5000/getData' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-    "domain": "https://git.smc.it",
-    "accessToken": "123abc",
-    "types": ["User", "Project", "Project Issue", "Project Commit"],
-    "itemsPerPage": 20,
+    "host": "localhost",
+    "port": "9000",
+    "accessKey": "my_access_key",
+    "secretKey": "my_secret_key",
+    "bucketName": "bucket_name",
+    "datasourcePayloadKey": "key",
+    "prefix": "test",
+    "columns": ["column 1", column 2"],
+    "additionalMetadata": {"key": "value"},
     "datasourceId": 1,
     "tenantId": "1",
     "scheduleId": "1",
@@ -79,15 +80,12 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-Using the command line go in the gitlab-datasource folder\
+
 From this folder:
-```
-cd ..
-```
 
 Build the Docker file:
 ```
-docker build -t gitlab-connector .
+docker build -t minio-connector .
 ```
 
 **Command parameters**:
@@ -96,7 +94,7 @@ docker build -t gitlab-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name gitlab-connector-app gitlab-connector 
+docker run -p 5000:5000 --name minio-connector-app minio-connector 
 ```
 
 **Command parameters**:

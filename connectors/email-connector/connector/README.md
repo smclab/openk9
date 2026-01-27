@@ -30,7 +30,7 @@ email-connector:
 The service exposes APIs through Swagger on root url.
 This Rest service exposes two different endpoints:
 
-### Execute enpoint
+### Execute endpoint
 
 This endpoint allows you to execute and start extraction of emails from specific Imap server.
 

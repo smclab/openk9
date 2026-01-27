@@ -10,7 +10,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 This Rest service exposes one endpoint:
 
 
-### Execute Database enpoint
+### Execute Database endpoint
 
 Call this endpoint to execute a crawler that extract tables from Database
 
@@ -23,6 +23,7 @@ This endpoint takes different arguments in JSON raw body:
 - **host**: Database server address (IP or domain). (required)
 - **port**: Port number for database connection. (required)
 - **db**: Name of the database to connect to. (required)
+- **schema**: Name of the schema to extract table from. (optional, default None)
 - **table**: Name of the table to extract (required)
 - **columns**: Name of the columns to extract (optional, if not specified extract all columns)
 - **where**: Where condition used for extraction (optional, if not specified extract without conditions)
@@ -71,7 +72,7 @@ Call this endpoint to get a sample of result.
 Follows an example of Curl call:
 
 ```
-curl --location --request POST 'http://localhost:500/sample'
+curl --location --request POST 'http://localhost:5000/sample'
 ```
 
 # Quickstart
@@ -93,7 +94,7 @@ Build the Docker file:
 docker build -t database-connector .
 ```
 
-**Command parameters:
+**Command parameters**:
 - **-t**: Set built image name
 - **-f**: Specify the path to the Dockerfile**
 
@@ -102,7 +103,7 @@ Run the built Docker image:
 docker run -p 5000:5000 --name database-parser-app Database-parser 
 ```
 
-Command parameters:
+**Command parameters**:
 - **-p**: Exposed port to make api calls
 - **-name**: Set docker container name
 

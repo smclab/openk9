@@ -446,7 +446,7 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
 
     <Route path="/autocorrections" element={<Autocorrections />} />
     <Route path="/autocorrection/:autocorrectionId" element={<SaveAutocorrection setExtraFab={setExtraFab} />} />
-    <Route path="/autocorrection/:autocorrectionId/:view" element={<SaveSearchConfig setExtraFab={setExtraFab} />} />
+    <Route path="/autocorrection/:autocorrectionId/:view" element={<SaveAutocorrection setExtraFab={setExtraFab} />} />
 
     <Route path="/large-languages-model" element={<LargeLanguageModels />} />
     <Route

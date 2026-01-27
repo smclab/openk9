@@ -121,8 +121,7 @@ def handle_response_content(response: requests.Response) -> HandleResponseConten
                         "id": content_id,
                         "name": response.url,
                         "contentType": content_type,
-                        "data": base64.b64encode(response.content),
-                        "resourceId": None
+                        "data": base64.b64encode(response.content)
                     }
                     dict_item = {}
                 else:
