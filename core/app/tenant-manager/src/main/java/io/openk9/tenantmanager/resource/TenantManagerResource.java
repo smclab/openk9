@@ -63,8 +63,7 @@ public class TenantManagerResource {
 						});
 				}
 				else {
-					return Uni
-						.createFrom()
+					return Uni.createFrom()
 						.failure(
 							new WebApplicationException(
 								"Tenant exist with virtualHost: " + virtualHost,

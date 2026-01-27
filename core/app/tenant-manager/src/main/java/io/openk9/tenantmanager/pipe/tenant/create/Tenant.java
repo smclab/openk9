@@ -106,7 +106,7 @@ public class Tenant {
 		tenant.setLiquibaseSchemaName(liquibaseSchemaName);
 		tenant.setSchemaName(schemaName);
 		tenant.setVirtualHost(virtualHost);
-		tenant.setRealmName(realmName);
+		tenant.setIssuerUri(realmName);
 		tenant.setClientId(clientId);
 		tenant.setClientSecret(clientSecret);
 

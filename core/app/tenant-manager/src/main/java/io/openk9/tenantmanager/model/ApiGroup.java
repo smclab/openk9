@@ -15,30 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-syntax = "proto3";
+package io.openk9.tenantmanager.model;
 
-option java_multiple_files = true;
-option java_package = "io.openk9.tenantmanager.grpc";
-option java_outer_classname = "TenantManagerProto";
-import "google/protobuf/empty.proto";
-
-package grpc;
-
-service TenantManager {
-  rpc FindTenant(TenantRequest) returns (TenantResponse) {}
-  rpc FindTenantList(google.protobuf.Empty) returns (TenantListResponse) {}
-}
-
-message TenantRequest {
-  string virtualHost = 1;
-}
-
-message TenantListResponse {
-  repeated TenantResponse tenantResponse = 1;
-}
-
-message TenantResponse {
-  reserved 2, 3, 4, 5;
-  reserved "virtualHost", "clientId", "clientSecret", "realmName";
-  string schemaName = 1;
+public enum ApiGroup {
+	ADMINISTRATION,
+	SEARCH,
+	INGESTION,
+	PUBLIC,
 }

@@ -73,11 +73,4 @@ public class ApiKey {
 		REVOKED
 	}
 
-	public enum ApiGroup {
-		ADMINISTRATION,
-		SEARCH,
-		INGESTION,
-		PUBLIC,
-	}
-
 }

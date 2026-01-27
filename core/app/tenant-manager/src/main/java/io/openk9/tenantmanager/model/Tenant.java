@@ -21,6 +21,8 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -82,8 +84,12 @@ public class Tenant implements GraphqlId {
 	@Column(name = "client_secret")
 	private String clientSecret;
 
-	@Column(name = "realm_name", nullable = false)
-	private String realmName;
+	@Column(name = "issuer_uri", nullable = false)
+	private String issuerUri;
+
+	@Column(name = "security_configuration", nullable = false)
+	@Enumerated(EnumType.STRING)
+	private PreconfigurationType securityConfiguration;
 
 	@Override
 	public boolean equals(Object o) {

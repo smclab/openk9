@@ -20,6 +20,8 @@ package io.openk9.tenantmanager.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import io.openk9.tenantmanager.model.PreconfigurationType;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,5 +47,7 @@ public class TenantRequestDTO {
 	private String clientSecret;
 	@NotBlank
 	@NotNull
-	private String realmName;
+	private String issuerUri;
+	@NotNull
+	private PreconfigurationType securityConfiguration;
 }

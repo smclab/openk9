@@ -40,7 +40,6 @@ public class TenantGraphQLRelayService extends GraphQLRelayService<Tenant> {
 	protected String[] getSearchFields() {
 		return new String[] {
 			Tenant_.VIRTUAL_HOST,
-			Tenant_.REALM_NAME,
 			Tenant_.CLIENT_ID,
 			Tenant_.SCHEMA_NAME
 		};

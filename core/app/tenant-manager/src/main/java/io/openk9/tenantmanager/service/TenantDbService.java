@@ -46,7 +46,6 @@ import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.SqlResult;
 import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.sqlclient.Row;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -67,10 +66,8 @@ public class TenantDbService {
 
 	public Uni<TenantResponseDTO> persist(
 		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String realmName, String clientId, String clientSecret,
+		String issuerUri, String clientId, String clientSecret,
 		OffsetDateTime createDate, OffsetDateTime modifiedDate) {
-
-		String issuerUri = baseIssuerUri + realmName;
 
 		long id = idGenerator.nextId();
 
@@ -81,7 +78,7 @@ public class TenantDbService {
 					virtualHost,
 					schemaName,
 					liquibaseSchemaName,
-					realmName,
+					issuerUri,
 					clientId,
 					clientSecret,
 					createDate != null ? createDate : OffsetDateTime.now(),
@@ -111,7 +108,7 @@ public class TenantDbService {
 				.virtualHost(virtualHost)
 				.schemaName(schemaName)
 				.liquibaseSchemaName(liquibaseSchemaName)
-				.realmName(realmName)
+				.issuerUri(issuerUri)
 				.clientId(clientId)
 				.clientSecret(clientSecret)
 				.build()
@@ -128,7 +125,7 @@ public class TenantDbService {
 			tenant.getVirtualHost(),
 			tenant.getSchemaName(),
 			tenant.getLiquibaseSchemaName(),
-			tenant.getRealmName(),
+			tenant.getIssuerUri(),
 			tenant.getClientId(),
 			tenant.getClientSecret(),
 			tenant.getCreateDate(),
@@ -160,7 +157,7 @@ public class TenantDbService {
 							rowCount,
 							TenantEvent.TenantDeleted
 								.builder()
-								.tenantId(tenant.realmName())
+								.tenantId(tenant.schemaName())
 								.build()
 						)
 					)
@@ -241,7 +238,7 @@ public class TenantDbService {
 			.virtualHost(row.getString("virtual_host"))
 			.clientId(row.getString("client_id"))
 			.clientSecret(row.getString("client_secret"))
-			.realmName(row.getString("realm_name"))
+			.issuerUri(row.getString("issuer_uri"))
 			.build();
 	}
 
@@ -253,8 +250,6 @@ public class TenantDbService {
 	Validator validator;
 	@Inject
 	TenantEventProducer producer;
-	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
-	String baseIssuerUri;
 
 	private static final CompactSnowflakeIdGenerator idGenerator =
 		new CompactSnowflakeIdGenerator();
@@ -263,7 +258,7 @@ public class TenantDbService {
 		INSERT INTO tenant (
 			id, virtual_host,
 			schema_name, liquibase_schema_name,
-			realm_name, client_id, client_secret,
+			issuer_uri, client_id, client_secret,
 			create_date, modified_date
 		)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)

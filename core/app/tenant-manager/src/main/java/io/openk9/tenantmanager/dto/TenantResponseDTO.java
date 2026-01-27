@@ -29,5 +29,5 @@ public record TenantResponseDTO(
 	String virtualHost,
 	String clientId,
 	String clientSecret,
-	String realmName) {
+	String issuerUri) {
 }

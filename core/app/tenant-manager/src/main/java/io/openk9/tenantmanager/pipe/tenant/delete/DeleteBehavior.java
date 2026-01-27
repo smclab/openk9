@@ -98,10 +98,10 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 						var deleteRealm =
 							Uni.createFrom().completionStage(
-								TenantProvisioningService.deleteRealm(tenant.realmName())
+								TenantProvisioningService.deleteRealm(tenant.schemaName())
 									.thenAccept(unused -> LOGGER.infof(
 										"Realm for %s virtualHost %s deleted.",
-										tenant.realmName(),
+										tenant.schemaName(),
 										virtualHost
 									))
 							);
