@@ -361,6 +361,7 @@ type RemoveFiltersProps = {
   itemsRemove?: resetFiltersType;
   label?: string | null | undefined;
   ariaLabel?: string | null | undefined;
+  callback?: () => void;
 };
 
 export type resetFiltersType = Array<

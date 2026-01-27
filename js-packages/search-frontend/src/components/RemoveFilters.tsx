@@ -30,6 +30,7 @@ export function RemoveFilters({
   reset,
   configurableLabel,
   removeAriaLabel,
+  callback,
 }: {
   itemsRemove?: resetFiltersType;
   configurableLabel?: string | null | undefined;
@@ -41,12 +42,16 @@ export function RemoveFilters({
     search?(): void;
     language?(): void;
   };
+  callback?: () => void;
 }) {
   return (
     <button
       className="openk9-remove-filters-button btn"
       aria-label={removeAriaLabel ?? t("removeFilters") ?? ""}
-      onClick={() => handleReset(itemsRemove, reset)}
+      onClick={() => {
+        handleReset(itemsRemove, reset);
+        if (callback) callback();
+      }}
       css={css`
         width: 100%;
         display: flex;

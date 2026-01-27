@@ -435,6 +435,7 @@ export function Main({
                 setLanguageSelect(activeLanguage);
               },
             }}
+            callback={configuration?.removeFiltersConfigurable?.callback}
           />
         </I18nextProvider>,
         configuration.removeFiltersConfigurable
