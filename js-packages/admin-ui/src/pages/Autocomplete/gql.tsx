@@ -51,6 +51,7 @@ export const AUTOCOMPLETE = gql`
       name
       operator
       resultSize
+      perfectMatchIncluded
       fields {
         edges {
           node {

@@ -19,6 +19,7 @@ import { Box, Button } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  BooleanInput,
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
@@ -36,6 +37,7 @@ import {
   useUnboundDocTypeFieldByAutocompleteQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import { sxCheckbox, sxControl } from "utils/styleConfig";
 
 export function SaveAutocomplete() {
   const { autocompletId = "new", view } = useParams();
@@ -121,6 +123,7 @@ export function SaveAutocomplete() {
         name: "",
         operator: "AND" as BooleanOperator,
         resultSize: 10,
+        perfectMatchIncluded: false,
         fieldIds:
           autocompleteQuery?.data?.autocomplete?.fields?.edges?.flatMap((field) => ({
             id: Number(field?.node?.id),
@@ -176,6 +179,12 @@ export function SaveAutocomplete() {
                     <TextInput label="Fuzziness" {...form.inputProps("fuzziness")} />
                     <TextInput label="Min should Match" {...form.inputProps("minimumShouldMatch")} />
                     <NumberInput label="Result Size" {...form.inputProps("resultSize")} />
+                    <BooleanInput
+                      sxCheckbox={sxCheckbox}
+                      sxControl={sxControl}
+                      label="Perfect Match Included"
+                      {...form.inputProps("perfectMatchIncluded")}
+                    />
                     <CustomSelect
                       label={"Operator"}
                       value={form.inputProps("operator").value}
