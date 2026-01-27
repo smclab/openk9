@@ -219,6 +219,7 @@ function FactoryFilter(
           </span>
           <FiltersMemo
             {...filterDefault}
+            numberItems={filterDefault.numberResultOfFilters}
             searchQuery={filtersSelect || []}
             onAddFilterToken={(token) => onSelect((t) => [...(t ?? []), token])}
             onRemoveFilterToken={(token) =>
@@ -256,6 +257,7 @@ export default function AllFilters({
     setSortSelected(sort: { field: string; type: "asc" | "desc" } | null): void;
     languages: LanguageItem[] | undefined;
     defaultFilter: SearchToken[] | null | undefined;
+    numberResultOfFilters?: number | undefined;
   };
   calendar: {
     calendarDate: SearchDateRange;

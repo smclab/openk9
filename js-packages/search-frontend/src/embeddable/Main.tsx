@@ -1141,6 +1141,7 @@ export function Main({
               defaultFilter: selectionsState.filters,
               setOverrideSearchWithCorrection: setOverrideSearchWithCorrection,
               overrideSearchWithCorrection: overrideSearchWithCorrection,
+              numberResultOfFilters: numberResultOfFilters,
             }}
             callback={{
               save: configuration?.allFilters?.callbackSave ?? (() => {}),

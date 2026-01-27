@@ -37,6 +37,7 @@ export type FiltersProps = {
   overrideSearchWithCorrection?: RangeContextProviderProps;
   setOverrideSearchWithCorrection: setterConnection;
   isOpenFilter?: boolean;
+  numberResultOfFilters?: number | undefined;
 };
 function Filters({
   searchQuery,
