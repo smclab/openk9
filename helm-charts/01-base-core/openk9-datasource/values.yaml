@@ -124,6 +124,7 @@ hibernate:
   orm:
     databaseGeneration: "none"
     logSql: false
+    logLevel: 'ERROR'
 
 ## Scheduling configuration
 scheduling:

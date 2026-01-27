@@ -36,6 +36,7 @@ data:
 
   QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: {{ .Values.hibernate.orm.databaseGeneration | quote }}
   QUARKUS_HIBERNATE_ORM_LOG_SQL: {{ .Values.hibernate.orm.logSql | quote }}
+  QUARKUS_LOG_CATEGORY__ORG_HIBERNATE__LEVEL: {{ .Values.hibernate.orm.logLevel | quote }}
 
   # Quarkus env generic variables
   QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}

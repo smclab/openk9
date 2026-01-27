@@ -55,6 +55,10 @@ data:
 
   QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
 
+  {{- if .Values.quarkus.kubernetes.namespace }}
+  QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
+  {{- end }}
+
   # Opentelemetry env
   QUARKUS_OTEL_SDK_DISABLED: {{ .Values.otel.disabled | quote }}
   QUARKUS_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: {{ .Values.otel.endpoint | quote }}

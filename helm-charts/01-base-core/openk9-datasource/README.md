@@ -129,6 +129,7 @@ To configure connection to Postgresql or Oracle following parameters are availab
 | `database.type`    | Database to use. Default is postgresql         | `postgresql`            |
 | `hibernate.orm.databaseGeneration`    | Database generation strategy for Hibernate                             | `none`            |
 | `hibernate.orm.logSql`    | Enable SQL logging in Hibernate                             | `false`            |
+| `hibernate.orm.logLevel`    | Set log level for hibernate                            | `ERROR`            |
 
 Configure these when database type is postgresql
 

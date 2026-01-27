@@ -28,7 +28,7 @@ localhost, *.localhost, *.*.localhost {
 		path /chat /chat/*
 	}
     handle @chatPaths {
-        reverse_proxy talk-to:8081
+        reverse_proxy talk-to:8080
     }
 
     handle {
