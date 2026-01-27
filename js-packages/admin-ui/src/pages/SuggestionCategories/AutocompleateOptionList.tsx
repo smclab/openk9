@@ -246,7 +246,7 @@ export function AutocompleteDropdown({
           onClick={openWithReset}
           onBlur={validateAndClose}
           onKeyDown={handleKeyDown}
-          placeholder="Seleziona..."
+          placeholder="Select..."
           inputProps={{
             autoComplete: "off",
             role: "combobox",

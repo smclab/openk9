@@ -70,9 +70,7 @@ const FieldItem = ({
                   ItemId: newValue?.value || "",
                 });
               }}
-              renderInput={(params) => (
-                <TextField {...params} label="User Field" placeholder="Seleziona user field..." />
-              )}
+              renderInput={(params) => <TextField {...params} label="User Field" placeholder="Select user field..." />}
             />
           </FormControl>
 
@@ -94,7 +92,7 @@ const FieldItem = ({
                 });
               }}
               renderInput={(params) => (
-                <TextField {...params} label="Document Type Field" placeholder="Seleziona document type..." />
+                <TextField {...params} label="Document Type Field" placeholder="Select document type..." />
               )}
             />
           </FormControl>

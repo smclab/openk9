@@ -276,7 +276,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
           { key: "ragConfigurationChatToolId", label: "RAG Configuration Chat Tool" },
           { key: "ragConfigurationSimpleGenerateId", label: "RAG Configuration Simple Generate" },
         ],
-        label: "Recap Document Type",
+        label: "Recap Bucket",
       },
     ],
     valueOverride: {

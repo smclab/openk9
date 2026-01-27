@@ -50,7 +50,7 @@ export function CustomSelectRelationsOneToOne({
     if (selectedOption) {
       onChange({ id: selectedOption.value, name: selectedOption.label });
     } else {
-      onChange({ id: "-1", name: "Nessuna selezione" });
+      onChange({ id: "-1", name: "No selection" });
     }
   };
 
@@ -91,7 +91,7 @@ export function CustomSelectRelationsOneToOne({
         }}
       >
         <MenuItem key="-1" value="-1">
-          Nessuna selezione
+          No selection
         </MenuItem>
         {selectedOptionNotInOptions && Number(value.id) > 0 && (
           <MenuItem key={value.id} value={value.id}>

@@ -30,6 +30,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
   const { autocorrectionId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
+  const isNew = autocorrectionId === "new" ? "create" : "update";
   const autocorrectionQuery = useAutocorrectionValueQuery({
     variables: { id: autocorrectionId as string },
     skip: !autocorrectionId || autocorrectionId === "new",
@@ -78,7 +79,6 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     },
     onError(error) {
       console.error("Mutation error:", error);
-      const isNew = autocorrectionId === "new" ? "create" : "update";
       toast({
         title: `Error ${isNew}`,
         content: `Impossible to ${isNew} Autocorrection`,
@@ -220,7 +220,17 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
         </form>
       </>
       <ConfirmModal />
-      <Recap recapData={recapSections} setExtraFab={setExtraFab} forceFullScreen={isRecap} />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: isNew ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }
