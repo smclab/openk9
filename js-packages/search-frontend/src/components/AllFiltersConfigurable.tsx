@@ -318,7 +318,7 @@ export default function AllFilters({
           { sort, setSort },
           filterDefault,
           {
-            calendarDate: calendar.calendarDate,
+            calendarDate: calendarToken,
             setCalendarSelected: setCalendarToken,
             translationLabel: calendar.translationLabel,
           },

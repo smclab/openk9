@@ -62,14 +62,43 @@ export function DataRangePickerVertical({
   moment.locale(languageCalendar);
   const { t } = useTranslation();
 
-  const [startDate, setStartDate] = React.useState<any | null>(null);
+  const [startDate, setStartDate] = React.useState<any | null>(
+    calendarDate?.startDate ? moment(calendarDate.startDate) : null,
+  );
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
-  const [endDate, setEndDate] = React.useState<any | null>(null);
+  const [endDate, setEndDate] = React.useState<any | null>(
+    calendarDate?.endDate ? moment(calendarDate.endDate) : null,
+  );
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
-  const [dataEnd, setDataEnd] = React.useState("");
-  const [dataStart, setDataStart] = React.useState("");
+  const [dataEnd, setDataEnd] = React.useState(
+    calendarDate?.endDate
+      ? moment(calendarDate.endDate).format("DD/MM/YYYY")
+      : "",
+  );
+  const [dataStart, setDataStart] = React.useState(
+    calendarDate?.startDate
+      ? moment(calendarDate.startDate).format("DD/MM/YYYY")
+      : "",
+  );
   const [validationStart, setValidationStart] = React.useState("");
   const [validationEnd, setValidationEnd] = React.useState("");
+
+  React.useEffect(() => {
+    setStartDate(
+      calendarDate?.startDate ? moment(calendarDate.startDate) : null,
+    );
+    setEndDate(calendarDate?.endDate ? moment(calendarDate.endDate) : null);
+    setDataStart(
+      calendarDate?.startDate
+        ? moment(calendarDate.startDate).format("DD/MM/YYYY")
+        : "",
+    );
+    setDataEnd(
+      calendarDate?.endDate
+        ? moment(calendarDate.endDate).format("DD/MM/YYYY")
+        : "",
+    );
+  }, [calendarDate?.startDate, calendarDate?.endDate]);
   React.useEffect(() => {
     if (startDate) {
       startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
