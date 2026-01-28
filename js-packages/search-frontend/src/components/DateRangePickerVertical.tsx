@@ -62,61 +62,29 @@ export function DataRangePickerVertical({
   moment.locale(languageCalendar);
   const { t } = useTranslation();
 
-  const [startDate, setStartDate] = React.useState<any | null>(
-    calendarDate?.startDate ? moment(calendarDate.startDate) : null,
-  );
+  const [startDate, setStartDate] = React.useState<any | null>(null);
   const [focusedStartInput, setFocusedStartInput] = React.useState(false);
-  const [endDate, setEndDate] = React.useState<any | null>(
-    calendarDate?.endDate ? moment(calendarDate.endDate) : null,
-  );
+  const [endDate, setEndDate] = React.useState<any | null>(null);
   const [focusedEndInput, setFocusedEndInput] = React.useState(false);
-  const [dataEnd, setDataEnd] = React.useState(
-    calendarDate?.endDate
-      ? moment(calendarDate.endDate).format("DD/MM/YYYY")
-      : "",
-  );
-  const [dataStart, setDataStart] = React.useState(
-    calendarDate?.startDate
-      ? moment(calendarDate.startDate).format("DD/MM/YYYY")
-      : "",
-  );
+  const [dataEnd, setDataEnd] = React.useState("");
+  const [dataStart, setDataStart] = React.useState("");
   const [validationStart, setValidationStart] = React.useState("");
   const [validationEnd, setValidationEnd] = React.useState("");
-
-  React.useEffect(() => {
-    setStartDate(
-      calendarDate?.startDate ? moment(calendarDate.startDate) : null,
-    );
-    setEndDate(calendarDate?.endDate ? moment(calendarDate.endDate) : null);
-    setDataStart(
-      calendarDate?.startDate
-        ? moment(calendarDate.startDate).format("DD/MM/YYYY")
-        : "",
-    );
-    setDataEnd(
-      calendarDate?.endDate
-        ? moment(calendarDate.endDate).format("DD/MM/YYYY")
-        : "",
-    );
-  }, [calendarDate?.startDate, calendarDate?.endDate]);
   React.useEffect(() => {
     if (startDate) {
       startDate.set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     }
     if (endDate) {
-      endDate.set({ hour: 23, minute: 59, second: 59, millisecond: 59 });
+      endDate.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
     }
-    onChange({
-      startDate: startDate?._d || undefined,
-      endDate: endDate?._d || undefined,
-      keywordKey: undefined,
-    });
+
     if (endDate) {
       setDataEnd(endDate.format("DD/MM/YYYY"));
       setValidationEnd("");
     } else {
       setDataEnd("");
     }
+
     if (startDate) {
       setDataStart(startDate.format("DD/MM/YYYY"));
       setValidationStart("");
@@ -124,6 +92,22 @@ export function DataRangePickerVertical({
       setDataStart("");
     }
   }, [endDate, startDate]);
+
+  React.useEffect(() => {
+    const nextStart = calendarDate?.startDate
+      ? moment(calendarDate.startDate)
+      : null;
+    const nextEnd = calendarDate?.endDate ? moment(calendarDate.endDate) : null;
+
+    setStartDate(nextStart);
+    setEndDate(nextEnd);
+
+    setDataStart(nextStart ? nextStart.format("DD/MM/YYYY") : "");
+    setDataEnd(nextEnd ? nextEnd.format("DD/MM/YYYY") : "");
+
+    setValidationStart("");
+    setValidationEnd("");
+  }, [calendarDate?.startDate, calendarDate?.endDate]);
 
   const customPhrasesStart = {
     ...DateRangePickerPhrases,
@@ -280,9 +264,18 @@ export function DataRangePickerVertical({
               date={start || startDate}
               numberOfMonths={1}
               readOnly={readOnly}
-              onDateChange={setStartDate}
+              onDateChange={(d) => {
+                setStartDate(d);
+                onChange({
+                  startDate: (d as any)?._d || undefined,
+                  endDate: endDate?._d || undefined,
+                  keywordKey: undefined,
+                });
+              }}
               focused={focusedStartInput}
-              onFocusChange={(focus) => setFocusedStartInput(focus.focused)}
+              onFocusChange={({ focused } = { focused: false }) =>
+                setFocusedStartInput(!!focused)
+              }
               hideKeyboardShortcutsPanel
               id="startDate"
               showClearDate
@@ -400,9 +393,18 @@ export function DataRangePickerVertical({
               date={end || endDate}
               numberOfMonths={1}
               readOnly={readOnly}
-              onDateChange={setEndDate}
+              onDateChange={(d) => {
+                setEndDate(d);
+                onChange({
+                  startDate: startDate?._d || undefined,
+                  endDate: (d as any)?._d || undefined,
+                  keywordKey: undefined,
+                });
+              }}
               focused={focusedEndInput}
-              onFocusChange={(focus) => setFocusedEndInput(focus.focused)}
+              onFocusChange={({ focused } = { focused: false }) =>
+                setFocusedEndInput(!!focused)
+              }
               hideKeyboardShortcutsPanel
               id="endDate"
               showClearDate
