@@ -1,219 +1,313 @@
 {
-	"fields": [
-      {
-        "label": "Sitemap Urls",
-        "name": "sitemapUrls",
-        "field": "sitemapUrls",
-        "type": "list",
-        "size": 4,
-        "required": true,
-        "values": [
-          {
-            "value": "sitemapUrl1",
-            "label": "sitemapUrl1",
-            "isDefault": false
-          },
-          {
-            "value": "sitemapUrl2",
-            "label": "sitemapUrl2",
-            "isDefault": false
-          }
-        ],
-        "info": "Sitemap Urls to read to extract pages",
-        "placeholder": "string",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
+  "fields": [
+    {
+      "label": "Sitemap Urls",
+      "name": "sitemapUrls",
+      "field": "sitemapUrls",
+      "type": "list",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "sitemapUrl1",
+          "label": "sitemapUrl1",
+          "isDefault": false
+        },
+        {
+          "value": "sitemapUrl2",
+          "label": "sitemapUrl2",
+          "isDefault": false
         }
-      },
-      {
-        "label": "Allowed Domains",
-        "name": "allowedDomains",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "values": [],
-        "info": "Allowed domain for crawling",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-      {
-        "label": "Allowed Paths",
-        "name": "allowedPaths",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "values": [],
-        "info": "Allowed paths for crawling",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-      {
-        "label": "Excluded Paths",
-        "name": "excludedPaths",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "values": [],
-        "info": "Excluded paths for crawling",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-      {
-        "label": "Body Tag",
-        "name": "bodyTag",
-        "type": "text",
-        "size": 4,
-        "required": true,
-        "values": [
-          {
-            "value": "body",
-            "isDefault": true
-          }
-        ],
-        "info": "Tag to use to extract main web content",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-            {
-        "label": "Excuded Body Tags",
-        "name": "excludedBodyTags",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "values": [],
-        "info": "Excluded body from tags",
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-      {
-        "label": "Title tag",
-        "name": "titleTag",
-        "type": "text",
-        "size": 4,
-        "required": true,
-        "info": "Tag to use to extract title",
-        "values": [
-          {
-            "value": "title::text",
-            "isDefault": true
-          }
-        ],
-        "validator": {
-          "regex": "^[a-zA-Z0-9 ]+$"
-        }
-      },
-      {
-        "label": "Max Length",
-        "name": "maxLength",
-        "type": "number",
-        "size": 4,
-        "required": true,
-        "info": "Max length for main content. If negative all text is extracted",
-        "values": [
-          {
-            "value": -1,
-            "isDefault": true
-          }
-        ],
-        "validator": {
-          "min": 0,
-          "max": 10000
-        }
-      },
-      {
-        "label": "Page Count",
-        "name": "pageCount",
-        "type": "number",
-        "size": 4,
-        "required": true,
-        "info": "Number of pages extracted. If 0 all pages founded in sitemap are scraped",
-        "values": [
-          {
-            "value": 0,
-            "isDefault": true
-          }
-        ],
-        "validator": {
-          "min": 0,
-          "max": 10000
-        }
-      },
-      {
-        "label": "Extract Docs",
-        "name": "doExtractDocs",
-        "type": "checkbox",
-        "size": 4,
-        "required": false,
-        "info": "If extract documents",
-        "values": [
-          {
-            "value": false,
-            "isDefault": true
-          }
-        ]
-      },
-      {
-        "label": "Document File Extensions",
-        "name": "documentFileExtensions",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "info": "File extensions allowed",
-        "values": [],
-        "validator": {
-          "regex": "^[a-zA-Z0-9]+$"
-        }
-      },
-      {
-        "label": "Do Use Default Mimetype Map",
-        "name": "doUseDefaultMimetypeMap",
-        "type": "boolean",
-        "size": 4,
-        "required": false,
-        "info": "Should use the default mimetype map. If used with mimetypeMap updates the default map with the custom one.",
-        "values": [
-          {
-            "value": true,
-            "isDefault": true
-          }
-        ]
-      },
-      {
-        "label": "Mimetype Map",
-        "name": "mimetypeMap",
-        "type": "stringMap",
-        "size": 4,
-        "required": false,
-        "info": "Custom mimetype map. If not set doUseDefaultMimetypeMap must be True",
-        "values": []
-      },
-      {
-        "label": "Custom Metadata",
-        "name": "customMetadata",
-        "type": "stringMap",
-        "size": 4,
-        "required": false,
-        "info": "Custom metadata using xpath expression",
-        "values": []
-      },
-      {
-        "label": "Links to follow",
-        "name": "linksToFollow",
-        "type": "list",
-        "size": 4,
-        "required": false,
-        "info": "Formato xpath",
-        "values": [],
-        "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
-        }
+      ],
+      "info": "Sitemap Urls to read to extract pages",
+      "placeholder": "string",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
       }
-    ]
+    },
+    {
+      "label": "Allowed Domains",
+      "name": "allowedDomains",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "info": "Allowed domain for crawling",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+    {
+      "label": "Allowed Paths",
+      "name": "allowedPaths",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "info": "Allowed paths for crawling",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+    {
+      "label": "Excluded Paths",
+      "name": "excludedPaths",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "info": "Excluded paths for crawling",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+    {
+      "label": "Body Tag",
+      "name": "bodyTag",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": "body",
+          "isDefault": true
+        }
+      ],
+      "info": "Tag to use to extract main web content",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+    {
+      "label": "Excuded Body Tags",
+      "name": "excludedBodyTags",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "info": "Excluded body from tags",
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+    {
+      "label": "Title tag",
+      "name": "titleTag",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "info": "Tag to use to extract title",
+      "values": [
+        {
+          "value": "title::text",
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "regex": "^[a-zA-Z0-9 ]+$"
+      }
+    },
+        {
+      "label": "Depth",
+      "name": "depth",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "info": "Max length for main content. If negative all text is extracted",
+      "values": [
+        {
+          "value": 0,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": 0,
+        "max": 10000
+      }
+    },
+    {
+      "label": "Max Length",
+      "name": "maxLength",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "info": "Max length for main content. If negative all text is extracted",
+      "values": [
+        {
+          "value": -1,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": 0,
+        "max": 10000
+      }
+    },
+    {
+      "label": "Page Count",
+      "name": "pageCount",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "info": "Number of pages extracted. If 0 all pages founded in sitemap are scraped",
+      "values": [
+        {
+          "value": 0,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": 0,
+        "max": 10000
+      }
+    },
+    {
+      "label": "Extract Docs",
+      "name": "doExtractDocs",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "If extract documents",
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "label": "Document File Extensions",
+      "name": "documentFileExtensions",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "info": "File extensions allowed",
+      "values": [],
+      "validator": {
+        "regex": "^[a-zA-Z0-9]+$"
+      }
+    },
+    {
+      "label": "Do Use Default Mimetype Map",
+      "name": "doUseDefaultMimetypeMap",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "info": "Should use the default mimetype map. If used with mimetypeMap updates the default map with the custom one.",
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "label": "Mimetype Map",
+      "name": "mimetypeMap",
+      "type": "stringMap",
+      "size": 4,
+      "required": false,
+      "info": "Custom mimetype map. If not set doUseDefaultMimetypeMap must be True",
+      "values": []
+    },
+    {
+      "label": "Custom Metadata",
+      "name": "customMetadata",
+      "type": "stringMap",
+      "size": 4,
+      "required": false,
+      "info": "Custom metadata using xpath expression",
+      "values": []
+    },
+    {
+      "label": "Links to follow",
+      "name": "linksToFollow",
+      "type": "list",
+      "size": 4,
+      "required": false,
+      "info": "Formato xpath",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Use Playwright",
+      "name": "usePlaywright",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Playwright Selector",
+      "name": "playwrightSelector",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "info": "Formato css/xpath",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Playwright Timeout",
+      "name": "playwrightTimeout",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "info": "",
+      "values": [],
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "info": "If verify certificates",
+      "label": "Certificate Verification",
+      "name": "certVerification",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "validator": null
+    },
+    {
+      "info": "Max sites for bytes for documents",
+      "label": "Max Size in Byes",
+      "name": "maxSizeBytes",
+      "type": "number",
+      "size": 4,
+      "required": true,
+      "values": [
+        {
+          "value": 20000000,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": 0,
+        "max": 100000000,
+        "regex": null
+      }
+    }
+  ]
 }
