@@ -1,3 +1,19 @@
+﻿/*
+* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 import { useLanguage } from "./useLanguage";
 
 export function Translate({ label }: { label: TranslationKey }): string {
@@ -15,14 +31,14 @@ const translations: {
     en_US: "Close the chatbot",
     fr_FR: "Fermez le chatbot",
     es_ES: "Cerrar el chatbot",
-    de_DE: "Schließen Sie den Chatbot",
+    de_DE: "SchlieÃŸen Sie den Chatbot",
   },
   openChatbot: {
     it_IT: "Apri il chatbot",
     en_US: "Open the chatbot",
     fr_FR: "Ouvrir le chatbot",
     es_ES: "Abrir el chatbot",
-    de_DE: "Öffnen Sie den Chatbot",
+    de_DE: "Ã–ffnen Sie den Chatbot",
   },
   clearChat: {
     it_IT: "Svuota la chat",
@@ -41,21 +57,21 @@ const translations: {
   youSendMessage: {
     it_IT: "tu hai mandato un messaggio alle ",
     en_US: "you sent a message at ",
-    fr_FR: "vous avez envoyé un message à ",
-    es_ES: "tú enviaste un mensaje a las ",
+    fr_FR: "vous avez envoyÃ© un message Ã  ",
+    es_ES: "tÃº enviaste un mensaje a las ",
     de_DE: "du hast eine Nachricht um ",
   },
   sendMessage: {
     it_IT: "ha mandato un messaggio alle ",
     en_US: "sent a message at ",
-    fr_FR: "a envoyé un message à ",
-    es_ES: "envió un mensaje a las ",
+    fr_FR: "a envoyÃ© un message Ã  ",
+    es_ES: "enviÃ³ un mensaje a las ",
     de_DE: "hat eine Nachricht um ",
   },
   customPlaceholder: {
     it_IT: "scrivi il tuo messaggio...",
     en_US: "write your message...",
-    fr_FR: "écris ton message...",
+    fr_FR: "Ã©cris ton message...",
     es_ES: "escribe tu mensaje...",
     de_DE: "Schreiben Sie Ihre Nachricht...",
   },
@@ -79,3 +95,4 @@ type TranslationKey =
   | "sendMessage"
   | "customPlaceholder"
   | "searchLabel";
+

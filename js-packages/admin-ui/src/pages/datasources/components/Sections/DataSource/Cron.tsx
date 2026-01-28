@@ -1,3 +1,19 @@
+﻿/*
+* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import EventIcon from "@mui/icons-material/Event";
@@ -65,7 +81,7 @@ const fieldLimits: Record<CronFieldType, { min: number; max: number }> = {
 };
 
 const getDaysInMonth = (month: number, year: number = new Date().getFullYear()): number => {
-  // Per febbraio, controlliamo se è un anno bisestile
+  // Per febbraio, controlliamo se Ã¨ un anno bisestile
   if (month === 2) {
     return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 29 : 28;
   }
@@ -456,7 +472,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
 
   const validateCronExpression = (cronExp: string): boolean => {
     try {
-      // Verifica se l'espressione cron è valida usando cronstrue
+      // Verifica se l'espressione cron Ã¨ valida usando cronstrue
       cronstrue.toString(cronExp);
       return true;
     } catch (error) {
@@ -701,3 +717,4 @@ const CronEditor: React.FC<CronEditorProps> = ({
 };
 
 export default CronEditor;
+
