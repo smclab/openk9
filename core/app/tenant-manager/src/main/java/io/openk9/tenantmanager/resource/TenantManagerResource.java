@@ -17,7 +17,6 @@
 
 package io.openk9.tenantmanager.resource;
 
-import java.util.UUID;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
@@ -33,8 +32,13 @@ import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
 import io.openk9.tenantmanager.service.TenantDbService;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
+import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
+import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
+import io.openk9.tenantmanager.service.dto.DeleteTenantRequest;
+import io.openk9.tenantmanager.service.dto.DeleteTenantResponse;
+import io.openk9.tenantmanager.service.dto.EffectiveDeleteTenantRequest;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.smallrye.mutiny.Uni;
 
 @Path("/tenant-manager/tenant")
@@ -42,93 +46,23 @@ public class TenantManagerResource {
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<TenantResponseDTO> createTenant(CreateTenantRequest createTenantRequest) {
+	public Uni<TenantResponseDTO> createTenant(
+		CreateTenantRequest createTenantRequest) {
 
-		String virtualHost = createTenantRequest.virtualHost();
-
-		return tenantDbService
-			.findByVirtualHost(virtualHost)
-			.flatMap(tenant -> {
-				if (tenant == null) {
-					return tenantDbService
-						.findAllSchemaName()
-						.flatMap(schemaNames -> {
-
-							String newSchemaName = RandomGenerator.generate(
-								schemaNames.toArray(String[]::new));
-
-							return tenantManagerActorSystem
-								.startCreateTenant(virtualHost, newSchemaName);
-
-						});
-				}
-				else {
-					return Uni.createFrom()
-						.failure(
-							new WebApplicationException(
-								"Tenant exist with virtualHost: " + virtualHost,
-								Response.Status.CONFLICT)
-						);
-				}
-			});
+		return provisioningService.create(createTenantRequest);
 	}
 
 	@POST
 	@Path("/{id}/tables")
 	public Uni<CreateTablesResponse> createTables(@PathParam("id") Long id) {
-		return tenantDbService.findById(id).flatMap(t -> {
-			if (t == null) {
-				return Uni.createFrom().failure(
-					new WebApplicationException(
-						"Tenant not found with id: " + id,
-						Response.Status.NOT_FOUND)
-				);
-			}
-			else {
-				return tenantManagerActorSystem
-					.populateSchema(t.schemaName(), t.virtualHost())
-					.onItemOrFailure()
-					.transformToUni((ignore, err) -> {
-						if (err != null) {
-							return Uni.createFrom().failure(new WebApplicationException(err));
-						}
-						else {
-							return Uni.createFrom().item(
-								new CreateTablesResponse(
-									"Tables for schema " + t.schemaName() + " created"));
-						}
-					});
-			}
-		});
+		return provisioningService.populateSchema(id);
 	}
 
 	@POST
 	@Path("/delete")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<DeleteTenantResponse> deleteTenant(DeleteTenantRequest deleteTenantRequest) {
-
-		String virtualHost = deleteTenantRequest.virtualHost();
-
-		return tenantDbService
-			.findByVirtualHost(virtualHost)
-			.flatMap(tenant -> {
-				if (tenant == null) {
-					return Uni
-						.createFrom()
-						.failure(
-							new WebApplicationException(
-								"Tenant not exist with virtualHost: " + virtualHost,
-								Response.Status.NOT_FOUND)
-						);
-				}
-				else {
-					deleteTenantActorSystem.startDeleteTenant(virtualHost);
-					return Uni
-						.createFrom()
-						.item(new DeleteTenantResponse("delete tenant started...read logs"));
-				}
-			});
-
+		return provisioningService.requestDeletion(deleteTenantRequest);
 	}
 
 	@DELETE
@@ -136,43 +70,10 @@ public class TenantManagerResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<DeleteTenantResponse> deleteTenant(
 		EffectiveDeleteTenantRequest effectiveDeleteTenantRequest) {
-
-		deleteTenantActorSystem.runDelete(
-			effectiveDeleteTenantRequest.virtualHost(),
-			effectiveDeleteTenantRequest.token()
-		);
-
-		return Uni
-			.createFrom()
-			.item(new DeleteTenantResponse("delete tenant started"));
-
+		return provisioningService.delete(effectiveDeleteTenantRequest);
 	}
 
 	@Inject
-	TenantDbService tenantDbService;
-
-	@Inject
-	TenantManagerActorSystem tenantManagerActorSystem;
-
-	@Inject
-	DeleteTenantActorSystem deleteTenantActorSystem;
-
-	@RegisterForReflection
-	public record RequestId(UUID requestId) {}
-
-	@RegisterForReflection
-	public record CreateTenantRequest(String virtualHost) {}
-
-	@RegisterForReflection
-	public record DeleteTenantRequest(String virtualHost) {}
-
-	@RegisterForReflection
-	public record EffectiveDeleteTenantRequest(String virtualHost, String token) {}
-
-	@RegisterForReflection
-	public record DeleteTenantResponse(String message) {}
-
-	@RegisterForReflection
-	public record CreateTablesResponse(String message) {}
+	TenantProvisioningService provisioningService;
 
 }

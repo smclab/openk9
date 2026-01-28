@@ -89,7 +89,7 @@ public class Tenant implements GraphqlId {
 
 	@Column(name = "security_configuration", nullable = false)
 	@Enumerated(EnumType.STRING)
-	private PreconfigurationType securityConfiguration;
+	private SecurityConfiguration securityConfiguration;
 
 	@Override
 	public boolean equals(Object o) {

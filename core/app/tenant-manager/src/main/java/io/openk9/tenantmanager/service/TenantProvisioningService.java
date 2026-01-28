@@ -20,18 +20,28 @@ package io.openk9.tenantmanager.service;
 import java.util.concurrent.CompletionStage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
+import io.openk9.common.util.RandomGenerator;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
+import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
+import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
+import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
+import io.openk9.tenantmanager.service.dto.DeleteTenantRequest;
+import io.openk9.tenantmanager.service.dto.DeleteTenantResponse;
+import io.openk9.tenantmanager.service.dto.EffectiveDeleteTenantRequest;
 
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
@@ -74,6 +84,17 @@ public class TenantProvisioningService {
 	AppManager appManagerService;
 	@GrpcClient("datasource")
 	Datasource datasourceService;
+
+	// ========================================================================
+	// Actor systems.
+	// These are the components that create the Actor systems whose handle
+	// the provisioning/deprovisioning of a Tenant.
+	// ========================================================================
+
+	@Inject
+	TenantManagerActorSystem tenantManagerActorSystem;
+	@Inject
+	DeleteTenantActorSystem deleteTenantActorSystem;
 
 	// ========================================================================
 	// Event Bus requests.
@@ -167,6 +188,109 @@ public class TenantProvisioningService {
 			.subscribeAsCompletionStage();
 	}
 
+	// ========================================================================
+	// Provisioning / Deprovisioning.
+	// ========================================================================
+
+	public Uni<TenantResponseDTO> create(CreateTenantRequest request) {
+
+		var virtualHost = request.virtualHost();
+
+		return dbService
+			.findByVirtualHost(virtualHost)
+			.flatMap(tenant -> {
+				if (tenant == null) {
+					return dbService
+						.findAllSchemaName()
+						.flatMap(schemaNames -> {
+
+							String newSchemaName = RandomGenerator.generate(
+								schemaNames.toArray(String[]::new));
+
+							return tenantManagerActorSystem
+								.startCreateTenant(virtualHost, newSchemaName);
+
+						});
+				}
+				else {
+					return Uni.createFrom()
+						.failure(
+							new WebApplicationException(
+								"Tenant exist with virtualHost: " + virtualHost,
+								Response.Status.CONFLICT)
+						);
+				}
+			});
+	}
+
+	public Uni<CreateTablesResponse> populateSchema(long tenantId) {
+
+		return dbService.findById(tenantId).flatMap(t -> {
+			if (t == null) {
+				return Uni.createFrom().failure(
+					new WebApplicationException(
+						"Tenant not found with id: " + tenantId,
+						Response.Status.NOT_FOUND)
+				);
+			}
+			else {
+				return tenantManagerActorSystem
+					.populateSchema(t.schemaName(), t.virtualHost())
+					.onItemOrFailure()
+					.transformToUni((ignore, err) -> {
+						if (err != null) {
+							return Uni.createFrom().failure(new WebApplicationException(err));
+						}
+						else {
+							return Uni.createFrom().item(
+								new CreateTablesResponse(
+									"Tables for schema " + t.schemaName() + " created"));
+						}
+					});
+			}
+		});
+
+	}
+
+	public Uni<DeleteTenantResponse> requestDeletion(
+		DeleteTenantRequest request) {
+
+		String virtualHost = request.virtualHost();
+
+		return dbService
+			.findByVirtualHost(virtualHost)
+			.flatMap(tenant -> {
+				if (tenant == null) {
+					return Uni
+						.createFrom()
+						.failure(
+							new WebApplicationException(
+								"Tenant not exist with virtualHost: " + virtualHost,
+								Response.Status.NOT_FOUND)
+						);
+				}
+				else {
+					deleteTenantActorSystem.startDeleteTenant(virtualHost);
+					return Uni
+						.createFrom()
+						.item(new DeleteTenantResponse("delete tenant started...read logs"));
+				}
+			});
+
+	}
+
+	public Uni<DeleteTenantResponse> delete(
+		EffectiveDeleteTenantRequest request) {
+
+		deleteTenantActorSystem.runDelete(
+			request.virtualHost(),
+			request.token()
+		);
+
+		return Uni
+			.createFrom()
+			.item(new DeleteTenantResponse("delete tenant started"));
+	}
 
 	// ========================================================================
 	// Event Bus Consumers.

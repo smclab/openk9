@@ -15,14 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.model;
+package io.openk9.tenantmanager.service.dto;
 
-public enum PreconfigurationType {
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
-	LEGACY,
-	PROFILED_LEGACY,
-	PROFILED,
-	PUBLIC_USAGE,
-	API_KEY_ONLY
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 
-}
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
+public record CreateTenantRequest(
+	@Nonnull String virtualHost,
+	@Nonnull SecurityConfiguration securityConfiguration,
+	@Nullable OAuth2Settings oAuth2Settings
+) {}

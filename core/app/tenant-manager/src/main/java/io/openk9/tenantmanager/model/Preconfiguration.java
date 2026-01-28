@@ -24,10 +24,10 @@ import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.AuthorizationScheme;
 
 public record Preconfiguration(
-	PreconfigurationType name, List<Config> configs) {
+	SecurityConfiguration name, List<Config> configs) {
 
 	public static Preconfiguration of(
-		PreconfigurationType name, List<Config> configs) {
+		SecurityConfiguration name, List<Config> configs) {
 
 		return new Preconfiguration(name, configs);
 	}
@@ -42,7 +42,7 @@ public record Preconfiguration(
 	public static final Set<Preconfiguration> PRECONFIGURATIONS =
 			Set.of(
 				Preconfiguration.of(
-					PreconfigurationType.LEGACY,
+					SecurityConfiguration.LEGACY,
 					List.of(
 						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
@@ -51,7 +51,7 @@ public record Preconfiguration(
 					)
 				),
 				Preconfiguration.of(
-					PreconfigurationType.PROFILED_LEGACY,
+					SecurityConfiguration.PROFILED_LEGACY,
 					List.of(
 						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
@@ -60,7 +60,7 @@ public record Preconfiguration(
 					)
 				),
 				Preconfiguration.of(
-					PreconfigurationType.PROFILED,
+					SecurityConfiguration.PROFILED,
 					List.of(
 						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
@@ -69,7 +69,7 @@ public record Preconfiguration(
 					)
 				),
 				Preconfiguration.of(
-					PreconfigurationType.PUBLIC_USAGE,
+					SecurityConfiguration.PUBLIC_USAGE,
 					List.of(
 						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
@@ -78,7 +78,7 @@ public record Preconfiguration(
 					)
 				),
 				Preconfiguration.of(
-					PreconfigurationType.API_KEY_ONLY,
+					SecurityConfiguration.API_KEY_ONLY,
 					List.of(
 						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY),
 						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
