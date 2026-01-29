@@ -48,7 +48,7 @@ public class Realm {
 		String clientId,
 		String clientSecret,
 		String virtualHost,
-		String realmName,
+		String issuerUri,
 		String username,
 		String password
 	) implements Response {}
@@ -122,7 +122,7 @@ public class Realm {
 					createdRealm.clientId(),
 					createdRealm.clientSecret(),
 					createdRealm.virtualHost(),
-					createdRealm.realmName(),
+					createdRealm.issuerUri(),
 					createdRealm.username(),
 					createdRealm.password()
 				)

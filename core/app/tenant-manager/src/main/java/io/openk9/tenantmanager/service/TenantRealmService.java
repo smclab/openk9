@@ -28,6 +28,7 @@ import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfig
 import io.quarkus.keycloak.admin.client.common.runtime.KeycloakAdminClientConfigUtil;
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -43,6 +44,8 @@ public class TenantRealmService {
 	KeycloakDefaultRealmRepresentationFactory defaultRepresentationFactory;
 	@Inject
 	KeycloakAdminClientConfig keycloakAdminClientConfig;
+	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
+	String baseIssuerUri;
 
 	private Keycloak keycloakClient;
 
@@ -74,8 +77,7 @@ public class TenantRealmService {
 
 	}
 
-	public Uni<CreatedRealm> createRealm(
-		String realmName, String virtualHost) {
+	public Uni<CreatedRealm> createRealm(String realmName, String virtualHost) {
 
 		RealmRepresentation realmRepresentation =
 			RealmRepresentationFactory.createRealmRepresentation(
@@ -97,11 +99,13 @@ public class TenantRealmService {
 			var password = userRepresentation.getCredentials()
 				.get(0).getValue();
 
+			String issuerUri = baseIssuerUri + realmName;
+
 			return new CreatedRealm(
 				clientId,
 				clientSecret,
 				virtualHost,
-				realmName,
+				issuerUri,
 				username,
 				password
 			);
@@ -126,7 +130,7 @@ public class TenantRealmService {
 
 	public record CreatedRealm(
 		String clientId, String clientSecret,
-		String virtualHost, String realmName,
+		String virtualHost, String issuerUri,
 		String username, String password
 	) {}
 

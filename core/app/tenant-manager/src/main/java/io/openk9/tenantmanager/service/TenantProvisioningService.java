@@ -196,8 +196,7 @@ public class TenantProvisioningService {
 
 		var virtualHost = request.virtualHost();
 
-		return dbService
-			.findByVirtualHost(virtualHost)
+		return dbService.findByVirtualHost(virtualHost)
 			.flatMap(tenant -> {
 				if (tenant == null) {
 					return dbService

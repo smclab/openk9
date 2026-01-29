@@ -34,7 +34,7 @@ public class Tenant {
 	private static Behavior<Command> initial(
 		ActorContext<Command> context, ActorRef<Response> replyTo,
 		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String realmName, String clientId, String clientSecret) {
+		String issuerUri, String clientId, String clientSecret) {
 
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
@@ -44,7 +44,7 @@ public class Tenant {
 					virtualHost,
 					schemaName,
 					liquibaseSchemaName,
-					realmName,
+					issuerUri,
 					clientId,
 					clientSecret
 				)
@@ -66,7 +66,7 @@ public class Tenant {
 
 	public static Behavior<Command> create(
 		ActorRef<Response> replyTo, String virtualHost,
-		String schemaName, String liquibaseSchemaName, String realmName,
+		String schemaName, String liquibaseSchemaName, String issuerUri,
 		String clientId, String clientSecret) {
 
 		return Behaviors.setup(
@@ -76,7 +76,7 @@ public class Tenant {
 				virtualHost,
 				schemaName,
 				liquibaseSchemaName,
-				realmName,
+				issuerUri,
 				clientId,
 				clientSecret
 			)
@@ -98,7 +98,7 @@ public class Tenant {
 	private static Behavior<Command> onStart(
 		ActorContext<Command> context,
 		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String realmName, String clientId, String clientSecret) {
+		String issuerUri, String clientId, String clientSecret) {
 
 		io.openk9.tenantmanager.model.Tenant tenant =
 			new io.openk9.tenantmanager.model.Tenant();
@@ -106,7 +106,7 @@ public class Tenant {
 		tenant.setLiquibaseSchemaName(liquibaseSchemaName);
 		tenant.setSchemaName(schemaName);
 		tenant.setVirtualHost(virtualHost);
-		tenant.setIssuerUri(realmName);
+		tenant.setIssuerUri(issuerUri);
 		tenant.setClientId(clientId);
 		tenant.setClientSecret(clientSecret);
 

@@ -138,13 +138,13 @@ public class Manager {
 
 		if (!errorOccurred) {
 			List<Object> successList = responsePartitioned.get(true);
-			String realmName = null;
+			String issuerUri = null;
 			String clientId = null;
 			String clientSecret = null;
 			String liquibaseSchemaName = null;
 			for (Object o : successList) {
 				if (o instanceof Realm.Success success) {
-					realmName = success.realmName();
+					issuerUri = success.issuerUri();
 					clientId = success.clientId();
 					clientSecret = success.clientSecret();
 					context.getLog().info("Realm: {}", success);
@@ -169,7 +169,7 @@ public class Manager {
 						virtualHost,
 						schemaName,
 						liquibaseSchemaName,
-						realmName,
+						issuerUri,
 						clientId,
 						clientSecret
 					),
