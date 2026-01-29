@@ -37,7 +37,6 @@ import {
   useUnboundDocTypeFieldByAutocompleteQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { sxCheckbox, sxControl } from "utils/styleConfig";
 
 export function SaveAutocomplete() {
   const { autocompletId = "new", view } = useParams();
@@ -179,12 +178,6 @@ export function SaveAutocomplete() {
                     <TextInput label="Fuzziness" {...form.inputProps("fuzziness")} />
                     <TextInput label="Min should Match" {...form.inputProps("minimumShouldMatch")} />
                     <NumberInput label="Result Size" {...form.inputProps("resultSize")} />
-                    <BooleanInput
-                      sxCheckbox={sxCheckbox}
-                      sxControl={sxControl}
-                      label="Perfect Match Included"
-                      {...form.inputProps("perfectMatchIncluded")}
-                    />
                     <CustomSelect
                       label={"Operator"}
                       value={form.inputProps("operator").value}
@@ -194,6 +187,9 @@ export function SaveAutocomplete() {
                       id={"HybridSearch"}
                       onChange={(e: BooleanOperator) => form.inputProps("operator").onChange(e)}
                     />
+                    <Box paddingBlock={2}>
+                      <BooleanInput label="Perfect Match Included" {...form.inputProps("perfectMatchIncluded")} />
+                    </Box>
                     <MultiAssociationCustomQuery
                       {...form.inputProps("fieldIds")}
                       list={{
