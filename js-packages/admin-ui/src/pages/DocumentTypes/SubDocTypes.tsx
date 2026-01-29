@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
@@ -271,7 +271,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               />
             </div>
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-              <Breadcrumbs aria-label="breadcrumb" separator="â€º" sx={{ overflow: "auto", width: "100%" }}>
+              <Breadcrumbs aria-label="breadcrumb" separator=">" sx={{ overflow: "auto", width: "100%" }}>
                 <LinkRRD
                   to="/document-types"
                   color="inherit"
@@ -467,4 +467,3 @@ const pulseAnimation = keyframes`
     opacity: 0.5;
   }
 `;
-
