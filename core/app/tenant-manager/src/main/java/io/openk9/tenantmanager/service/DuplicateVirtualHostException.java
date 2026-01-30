@@ -15,19 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.service.dto;
+package io.openk9.tenantmanager.service;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+public class DuplicateVirtualHostException extends RuntimeException {
 
-import io.openk9.tenantmanager.model.SecurityConfiguration;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-@RegisterForReflection
-public record CreateTenantRequest(
-	@Nonnull String virtualHost,
-	@Nonnull SecurityConfiguration securityConfiguration,
-	@Nullable OAuth2Settings oAuth2Settings,
-	@Nullable String tenantName
-) {}
+	public DuplicateVirtualHostException(String virtualHost) {
+		super(String.format("A tenant already exist for virtualHost %s", virtualHost));
+	}
+}

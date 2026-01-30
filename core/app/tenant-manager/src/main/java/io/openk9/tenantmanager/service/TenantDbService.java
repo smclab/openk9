@@ -28,6 +28,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
+import io.openk9.common.util.RandomGenerator;
 import io.openk9.common.util.web.Response;
 import io.openk9.common.util.web.ResponseUtil;
 import io.openk9.event.tenant.ApiGroup;
@@ -211,6 +212,12 @@ public class TenantDbService {
 				}
 				return schemas;
 			});
+	}
+
+	public Uni<String> generateRandomTenantName() {
+
+		return findAllSchemaName()
+			.map(schemas -> RandomGenerator.generate(schemas.toArray(String[]::new)));
 	}
 
 	public Uni<List<SchemaTuple>> findAllDatasourceSchemaTuples() {

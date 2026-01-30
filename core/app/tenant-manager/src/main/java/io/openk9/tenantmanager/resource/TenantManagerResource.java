@@ -31,6 +31,7 @@ import io.openk9.common.util.RandomGenerator;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
+import io.openk9.tenantmanager.service.DuplicateVirtualHostException;
 import io.openk9.tenantmanager.service.TenantDbService;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
@@ -49,7 +50,9 @@ public class TenantManagerResource {
 	public Uni<TenantResponseDTO> createTenant(
 		CreateTenantRequest createTenantRequest) {
 
-		return provisioningService.create(createTenantRequest);
+		return provisioningService.create(createTenantRequest)
+			.onFailure(DuplicateVirtualHostException.class)
+			.transform(cause -> new WebApplicationException(cause, Response.Status.CONFLICT));
 	}
 
 	@POST

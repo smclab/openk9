@@ -25,7 +25,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.service.TenantSchemaService;
+import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
+import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -50,14 +53,20 @@ public class TenantManagerActorSystem {
 		);
 	}
 
-	public Uni<TenantResponseDTO> startCreateTenant(
-		String virtualHost, String realmName) {
+	public Uni<TenantResponseDTO> startCreateTenant(CreateTenantRequest request) {
 
-		CompletionStage<Supervisor.Response> ask =
-			AskPattern.ask(
+		String virtualHost = request.virtualHost();
+		String tenantName = request.tenantName();
+		SecurityConfiguration securityConfiguration = request.securityConfiguration();
+		OAuth2Settings oAuth2Settings = request.oAuth2Settings();
+
+		CompletionStage<Supervisor.Response> ask = AskPattern.ask(
 				actorSystem,
 				(ActorRef<Supervisor.Response> actorRef) ->
-					new Supervisor.Start(virtualHost, realmName, actorRef),
+					new Supervisor.Start(
+						virtualHost, tenantName, securityConfiguration,
+						oAuth2Settings, actorRef
+					),
 				requestTimeout,
 				actorSystem.scheduler()
 			);

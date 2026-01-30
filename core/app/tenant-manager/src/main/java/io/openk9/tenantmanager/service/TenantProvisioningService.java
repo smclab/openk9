@@ -28,7 +28,6 @@ import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
-import io.openk9.common.util.RandomGenerator;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
@@ -194,32 +193,25 @@ public class TenantProvisioningService {
 
 	public Uni<TenantResponseDTO> create(CreateTenantRequest request) {
 
-		var virtualHost = request.virtualHost();
+		String virtualHost = request.virtualHost();
+		// move to actor system
+		String tenantName = request.tenantName();
 
 		return dbService.findByVirtualHost(virtualHost)
-			.flatMap(tenant -> {
-				if (tenant == null) {
-					return dbService
-						.findAllSchemaName()
-						.flatMap(schemaNames -> {
-
-							String newSchemaName = RandomGenerator.generate(
-								schemaNames.toArray(String[]::new));
-
-							return tenantManagerActorSystem
-								.startCreateTenant(virtualHost, newSchemaName);
-
-						});
-				}
-				else {
-					return Uni.createFrom()
-						.failure(
-							new WebApplicationException(
-								"Tenant exist with virtualHost: " + virtualHost,
-								Response.Status.CONFLICT)
-						);
-				}
-			});
+			.onItem().ifNotNull()
+			.failWith(() -> new DuplicateVirtualHostException(virtualHost))
+			// move into actor system
+			.flatMap(n -> tenantName == null
+				? dbService.generateRandomTenantName()
+				.map(newName -> new CreateTenantRequest(
+					request.virtualHost(),
+					request.securityConfiguration(),
+					request.oAuth2Settings(),
+					newName
+				))
+				: Uni.createFrom().item(request)
+			)
+			.flatMap(req -> tenantManagerActorSystem.startCreateTenant(req));
 	}
 
 	public Uni<CreateTablesResponse> populateSchema(long tenantId) {

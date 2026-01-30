@@ -18,6 +18,8 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
+import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -28,7 +30,9 @@ public class Supervisor {
 	public sealed interface Command {}
 
 	public record Start(
-		String virtualHost, String schemaName,
+		String virtualHost, String tenantName,
+		SecurityConfiguration securityConfiguration,
+		OAuth2Settings settings,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public record ResponseWrapper(
@@ -52,10 +56,10 @@ public class Supervisor {
 				context.spawn(
 					Manager.create(
 						start.virtualHost(),
-						start.schemaName(),
+						start.tenantName(),
 						responseActorRef
 					),
-					"manager-" + start.schemaName()
+					"manager-" + start.tenantName()
 				);
 				return Behaviors.same();
 			})
