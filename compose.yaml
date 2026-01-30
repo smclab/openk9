@@ -109,7 +109,7 @@ services:
     depends_on:
       - api-gateway
   tenant-manager:
-    image: smclab/openk9-tenant-manager:3.1.0-SNAPSHOT
+    image: smclab/openk9-tenant-manager:3.1.0
     container_name: openk9-tenant-manager
     hostname: openk9-tenant-manager
     environment:
@@ -150,7 +150,7 @@ services:
       timeout: 10s
       retries: 10
   api-gateway:
-    image: smclab/openk9-api-gateway:3.1.0-SNAPSHOT
+    image: smclab/openk9-api-gateway:3.1.0
     container_name: openk9-api-gateway
     hostname: openk-api-gateway
     environment:
@@ -170,7 +170,7 @@ services:
       timeout: 10s
       retries: 10
   datasource:
-    image: smclab/openk9-datasource:3.1.0-SNAPSHOT
+    image: smclab/openk9-datasource:3.1.0
     container_name: openk9-datasource
     hostname: openk9-datasource
     environment:
@@ -222,7 +222,7 @@ services:
       timeout: 10s
       retries: 10
   ingestion:
-    image: smclab/openk9-ingestion:3.1.0-SNAPSHOT
+    image: smclab/openk9-ingestion:3.1.0
     container_name: openk9-ingestion
     hostname: openk9-ingestion
     environment:
@@ -245,7 +245,7 @@ services:
       timeout: 10s
       retries: 10
   searcher:
-    image: smclab/openk9-searcher:3.1.0-SNAPSHOT
+    image: smclab/openk9-searcher:3.1.0
     container_name: openk9-searcher
     hostname: openk9-searcher
     environment:
@@ -263,17 +263,17 @@ services:
       timeout: 10s
       retries: 10
   web-connector:
-    image: smclab/openk9-web-connector:3.1.0-SNAPSHOT
+    image: smclab/openk9-web-connector:3.1.0
     container_name: openk9-web-connector
     hostname: openk9-web-connector
     ports:
       - "5001:5000"
       - "6800:6800"
   search-frontend:
-    image: smclab/openk9-search-frontend:3.1.0-SNAPSHOT-chatbot
+    image: smclab/openk9-search-frontend:3.1.0-chatbot
     container_name: openk9-search-frontend
   admin-ui:
-    image: smclab/openk9-admin-ui:3.1.0-SNAPSHOT
+    image: smclab/openk9-admin-ui:3.1.0
     container_name: openk9-admin-ui
   initializer:
     build: ./compose-utilities/initializer

@@ -395,7 +395,7 @@ sequenceDiagram
     
     Dev->>Git: Merge to main
     Git->>Pipeline: Trigger on main
-    Pipeline->>Build: Build with VERSION=3.1.0-SNAPSHOT
+    Pipeline->>Build: Build with VERSION=3.1.0
     Build->>Build: Push image
     Build->>External: curl POST
     
@@ -403,10 +403,10 @@ sequenceDiagram
     
     par Deploy to k9-ai
         External->>ArgoCD: Update datasource-ai
-        ArgoCD->>AI: Restart with 3.1.0-SNAPSHOT
+        ArgoCD->>AI: Restart with 3.1.0
     and Deploy to k9-frontend
         External->>ArgoCD: Update datasource-frontend
-        ArgoCD->>FE: Restart with 3.1.0-SNAPSHOT
+        ArgoCD->>FE: Restart with 3.1.0
     end
     
     ArgoCD-->>Dev: ✅ Deployed to all except k9-backend

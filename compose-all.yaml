@@ -16,7 +16,7 @@ services:
     volumes:
       - minio-data:/data
   file-manager:
-    image: smclab/openk9-file-manager:3.1.0-SNAPSHOT
+    image: smclab/openk9-file-manager:3.1.0
     container_name: openk9-file-manager
     hostname: openk9-file-manager
     environment:
@@ -36,7 +36,7 @@ services:
       timeout: 10s
       retries: 10
   tika:
-    image: smclab/openk9-tika:3.1.0-SNAPSHOT
+    image: smclab/openk9-tika:3.1.0
     container_name: openk9-tika
     hostname: openk9-tika
     environment:
@@ -56,13 +56,13 @@ services:
       timeout: 10s
       retries: 10
   minio-connector:
-    image: smclab/openk9-minio-connector:3.1.0-SNAPSHOT
+    image: smclab/openk9-minio-connector:3.1.0
     container_name: openk9-minio-connector
     hostname: openk9-minio-connector
     ports:
       - "5002:5000"
   rag-module:
-    image: smclab/openk9-rag-module:3.1.0-SNAPSHOT
+    image: smclab/openk9-rag-module:3.1.0
     container_name: openk9-rag-module
     hostname: openk9-rag-module
     environment:
@@ -78,13 +78,13 @@ services:
       MAX_UPLOAD_FILE_SIZE: '10'
       MAX_UPLOAD_FILES_NUMBER: '5'
   embedding-module:
-    image: smclab/openk9-embedding-module-base:3.1.0-SNAPSHOT
+    image: smclab/openk9-embedding-module-base:3.1.0
     container_name: openk9-embedding-module
     hostname: openk9-embedding-module
     environment:
       ORIGINS: '*'
   talk-to:
-    image: smclab/openk9-talk-to:3.1.0-SNAPSHOT
+    image: smclab/openk9-talk-to:3.1.0
     container_name: openk9-talk-to
 
 volumes:

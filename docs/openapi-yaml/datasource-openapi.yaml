@@ -5164,4 +5164,4 @@ tags:
   description: Permits to trigger an ingestion schedule for a specific datasource
 info:
   title: datasource API
-  version: 3.1.0-SNAPSHOT
+  version: 3.1.0

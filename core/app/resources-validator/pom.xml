@@ -21,7 +21,7 @@
   <parent>
     <groupId>io.openk9.app</groupId>
     <artifactId>quarkus-app</artifactId>
-	  <version>3.1.0-SNAPSHOT</version>
+	  <version>3.1.0</version>
 	  <relativePath>../quarkus-app/pom.xml</relativePath>
   </parent>
 	<name>OpenK9 :: App :: Enrich Items :: Resources Validator</name>
