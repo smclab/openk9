@@ -20,7 +20,7 @@ image:
   registry: ""
   name: smclab/openk9-docling-processor
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "3.1.0-SNAPSHOT"
+  tag: "2026.1-SNAPSHOT"
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images

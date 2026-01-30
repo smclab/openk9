@@ -40,7 +40,7 @@ This module provides:
 ### OpenK9 Setup
 ```bash
 rag-module:
-    image: smclab/openk9-rag-module:3.1.0-SNAPSHOT
+    image: smclab/openk9-rag-module:2026.1-SNAPSHOT
     container_name: rag-module
     environment:
         ORIGINS: '*'
@@ -56,7 +56,7 @@ rag-module:
         MAX_UPLOAD_FILES_NUMBER: '5'
 
 embedding-module:
-    image: smclab/openk9-embedding-module-base:3.1.0-SNAPSHOT
+    image: smclab/openk9-embedding-module-base:2026.1-SNAPSHOT
     container_name: embedding-module
     environment:
         ORIGINS: '*'

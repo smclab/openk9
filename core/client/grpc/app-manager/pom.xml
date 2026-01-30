@@ -23,7 +23,7 @@
 	<parent>
 		<groupId>io.openk9.client.grpc</groupId>
 		<artifactId>grpc</artifactId>
-		<version>3.1.0-SNAPSHOT</version>
+		<version>2026.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>app-manager</artifactId>
