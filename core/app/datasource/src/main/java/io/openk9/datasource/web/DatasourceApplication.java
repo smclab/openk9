@@ -34,7 +34,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 @OpenAPIDefinition(
         info = @Info(
                 title = "Datasource Service",
-                version = "3.1.0",
+                version = "3.1.1-SNAPSHOT",
                 description = "API to get configurations and interact with schedules",
                 license = @License(
                         name = "GNU Affero General Public License v3.0",
