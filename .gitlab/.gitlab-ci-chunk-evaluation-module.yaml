@@ -1,0 +1,81 @@
+################################################################################
+#                           STAGES, VARIABLES & INCLUDE                         #
+################################################################################
+
+stages:
+- build
+
+variables:
+  # Placeholder for future use if needed
+  PYTHON_IMAGE_VERSION: "3.11"
+
+include:
+- local: '/.gitlab/.gitlab-templates.yaml'
+
+################################################################################
+#                                   JOBS                                        #
+################################################################################
+
+Fetch config:
+  stage: build
+  image: alpine:3.16
+  script:
+  - apk add --no-cache grep
+  - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
+  # Extract PYTHON_BASE_DOCKER_IMAGE value from config file
+  - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
+  # Write results to .env file
+  - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
+  - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
+  artifacts:
+    paths:
+    - config.env
+    expire_in: 1 day
+
+######################## BUILD CHUNK EVALUATION IMAGE (KANIKO) ########################
+Build Chunk Evaluation Image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [ "" ]
+  needs:
+  - job: Fetch config
+    artifacts: true
+  script:
+  - source $CI_PROJECT_DIR/config.env
+  - echo "=== Configuring Kaniko credentials ==="
+  - mkdir -p /kaniko/.docker
+  - |
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+  - |
+    if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
+      echo "[CHUNK-EVAL] Build & push as :$VERSION"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+    elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+      echo "[CHUNK-EVAL] Build & push as :merge-request"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+    elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
+      echo "[CHUNK-EVAL] Feature branch => build & push :997-SNAPSHOT"
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
+        --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:997-SNAPSHOT" \
+        --cache=true \
+        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+    fi
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_TAG'
+  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

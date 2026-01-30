@@ -578,7 +578,50 @@ Trigger Embedding Module:
 
 
 
-Trigger Connectors Build:
+
+################################################################################
+#                              TRIGGER ENRICHERS                               #
+################################################################################
+
+Trigger Docling Processor:
+  stage: trigger
+  # Does not block the pipeline if it fails
+  allow_failure: true
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - enrichers/docling-processor/**/*
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - enrichers/docling-processor/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/.gitlab-ci-docling-processor.yaml"
+
+################################################################################
+#                          TRIGGER CHUNK EVALUATION                            #
+################################################################################
+
+Trigger Chunk Evaluation Module:
+  stage: trigger
+  # Does not block the pipeline if it fails
+  allow_failure: true
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - ai-packages/chunk-evaluation-module/**/*
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - ai-packages/chunk-evaluation-module/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  trigger:
+    include: "/.gitlab/.gitlab-ci-chunk-evaluation-module.yaml"
+
+ Trigger Connectors Build:
   stage: trigger
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
