@@ -1,19 +1,20 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 import { gql } from "@apollo/client";
 import { TemplateType } from "@pages/Analyzer/gql";
 
@@ -118,7 +119,7 @@ export const Filters: TemplateType[] = [
   {
     title: "trim",
     description:
-      "Removes leading and trailing whitespace from each token in a stream. While this can change the length of a token, the trim filter does not change a tokenâ€™s offsets.",
+      "Removes leading and trailing whitespace from each token in a stream. While this can change the length of a token, the trim filter does not change a token’s offsets.",
     type: "trim",
     value: [],
   },
@@ -317,7 +318,7 @@ export const Filters: TemplateType[] = [
         value: "",
         type: "string",
         description:
-          "Regular expression, written in Javaâ€™s regular expression syntax. The filter replaces token substrings matching this pattern with the substring in the replacement parameter.",
+          "Regular expression, written in Java’s regular expression syntax. The filter replaces token substrings matching this pattern with the substring in the replacement parameter.",
       },
       {
         name: "replacement",
@@ -330,7 +331,7 @@ export const Filters: TemplateType[] = [
         value: true,
         type: "boolean",
         description:
-          "If true, all substrings matching the pattern parameterâ€™s regular expression are replaced. If false, the filter replaces only the first matching substring in each token. Defaults to true.",
+          "If true, all substrings matching the pattern parameter’s regular expression are replaced. If false, the filter replaces only the first matching substring in each token. Defaults to true.",
       },
     ],
   },
@@ -345,7 +346,7 @@ export const Filters: TemplateType[] = [
         value: 10,
         type: "number",
         description:
-          "Regular expression, written in Javaâ€™s regular expression syntax. The filter replaces token substrings matching this pattern with the substring in the replacement parameter.",
+          "Regular expression, written in Java’s regular expression syntax. The filter replaces token substrings matching this pattern with the substring in the replacement parameter.",
       },
       { name: "consume_all_tokens", value: false, type: "boolean" },
     ],
@@ -387,4 +388,3 @@ export const Filters: TemplateType[] = [
     ],
   },
 ];
-
