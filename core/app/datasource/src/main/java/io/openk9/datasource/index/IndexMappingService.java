@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.index;
 
+import io.openk9.datasource.index.exception.SampleEndpointException;
 import io.openk9.datasource.index.model.DataIndexTemplate;
 import io.openk9.datasource.index.model.EmbeddingComponentTemplate;
 import io.openk9.datasource.index.model.IndexName;
@@ -698,8 +699,12 @@ public class IndexMappingService {
 			);
 	}
 
-	private Uni<Set<DocType>> generateDocTypeUni(HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
+	private Uni<Set<DocType>> generateDocTypeUni(
+			HttpPluginDriverInfo httpPluginDriverInfo, Mutiny.Session session) {
+
 		return httpPluginDriverClient.getSample(httpPluginDriverInfo)
+			.onFailure()
+			.transform(failure -> new SampleEndpointException(failure.getMessage()))
 			.flatMap(ingestionPayload -> {
 
 				var documentTypes =
