@@ -289,9 +289,21 @@ type ResulListPaginationProps = {
   noResultsCustom?: React.ReactNode | null | undefined;
 };
 
+export type TabsCallbackProps = ({
+  callbackSelectTab,
+  callbackUnselectTab,
+  tabs,
+  selectedTabIndex,
+}: {
+  callbackSelectTab: (tabSelect: { index: number }) => void;
+  callbackUnselectTab: (index: number) => void;
+  tabs: Tab[];
+  selectedTabIndex: number;
+}) => React.ReactNode;
+
 type TabsProps = {
   element: Element | string | null;
-  onAction(): void;
+  onAction?(): void;
   scrollMode?: boolean;
   speed?: number;
   distance?: number;
@@ -305,6 +317,8 @@ type TabsProps = {
   };
   readMessageScreenReader?: boolean;
   textLabelScreenReader?: string;
+  tabs?: TabsCallbackProps;
+  isUnselectTab: boolean;
 };
 
 type SelectProps = {

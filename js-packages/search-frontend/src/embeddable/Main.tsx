@@ -486,6 +486,10 @@ export function Main({
             textLabelScreenReader={
               configuration.tabsConfigurable?.textLabelScreenReader
             }
+            tabsCallbackProps={configuration.tabsConfigurable?.tabs}
+            isUnselectTab={
+              configuration.tabsConfigurable?.isUnselectTab ?? false
+            }
           />
         </I18nextProvider>,
         configuration.tabsConfigurable

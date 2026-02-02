@@ -24,6 +24,7 @@ import { resetFilterCalendar } from "./DateRangePicker";
 import { SelectionsAction } from "./useSelections";
 import { Options } from "./SortResults";
 import CustomSkeleton from "./Skeleton";
+import { TabsCallbackProps } from "../embeddable/entry";
 
 type TabsProps = {
   tabs: Array<Tab>;
@@ -46,6 +47,8 @@ type TabsProps = {
   resetFilter: () => void;
   resetSort: () => void;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
+  tabsCallbackProps?: TabsCallbackProps;
+  isUnselectTab?: boolean;
 };
 function Tabs({
   tabs,
@@ -63,6 +66,8 @@ function Tabs({
   selectionsDispatch,
   readMessageScreenReader,
   textLabelScreenReader,
+  isUnselectTab = false,
+  tabsCallbackProps,
 }: TabsProps) {
   const elementRef = React.useRef(null);
   const [arrowDisable, setArrowDisable] = React.useState(true);
@@ -84,6 +89,20 @@ function Tabs({
     } else {
       setArrowDisable(false);
     }
+  };
+
+  const submitTab = (index: number) => {
+    onSelectedTabIndexChange(index);
+    if (reset) {
+      if (reset.filters) resetFilter();
+      if (reset?.calendar) resetFilterCalendar();
+      if (reset?.search)
+        selectionsDispatch({
+          type: "reset-search",
+        });
+      if (reset?.sort) resetSort();
+    }
+    if (onAction) onAction();
   };
 
   return !scrollMode ? (
@@ -310,71 +329,74 @@ function Tabs({
           }
         `}
       >
-        {tabs.map((tab, index) => {
-          const isSelected = index === selectedTabIndex;
-          const tabTraslation = translationTab({
-            language: language,
-            tabLanguages: tab.translationMap,
-            defaultValue: tab.label,
-          });
-          return (
-            <li
-              role="listitem"
-              aria-labelledby="title-tabs-openk9"
-              key={"tabs" + index}
-            >
-              <button
-                className={
-                  "openk9-single-tab-container" +
-                  "openk9-single-tab " +
-                  (isSelected ? "openk9-active-tab" : "openk9-not-active")
-                }
-                key={index}
-                tabIndex={0}
-                css={css`
-                  border: none;
-                  background: none;
-                  padding: 0;
-                  white-space: nowrap;
-                  padding: 8px 12px;
-                  background: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-tab-color)"
-                    : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
-                  border-radius: 8px;
-                  font: Helvetica Neue LT Std;
-                  font-style: normal;
-                  display: block;
-                  color: ${isSelected
-                    ? "var(--openk9-embeddable-search--primary-background-color)"
-                    : "var(--openk9-embeddable-tabs--primary-color)"};
-                  ${isSelected
-                    ? "var(--openk9-embeddable-search--active-color)"
-                    : "transparent"};
-                  cursor: ${isSelected ? "" : "pointer"};
-                  user-select: none;
-                  :hover {
-                    ${isSelected ? "" : "text-decoration: underline;"}
-                  }
-                `}
-                onClick={() => {
-                  onSelectedTabIndexChange(index);
-                  if (reset) {
-                    if (reset.filters) resetFilter();
-                    if (reset?.calendar) resetFilterCalendar();
-                    if (reset?.search)
-                      selectionsDispatch({
-                        type: "reset-search",
-                      });
-                    if (reset?.sort) resetSort();
-                  }
-                  if (onAction) onAction();
-                }}
-              >
-                {tabTraslation.toUpperCase()}
-              </button>
-            </li>
-          );
-        })}
+        {tabsCallbackProps
+          ? tabsCallbackProps({
+              callbackSelectTab: ({ index }) => {
+                submitTab(index);
+              },
+              callbackUnselectTab: (index: number) => {
+                submitTab(index);
+              },
+              tabs,
+              selectedTabIndex: selectedTabIndex,
+            })
+          : tabs.map((tab, index) => {
+              const isSelected = index === selectedTabIndex;
+              const tabTraslation = translationTab({
+                language: language,
+                tabLanguages: tab.translationMap,
+                defaultValue: tab.label,
+              });
+              return (
+                <li
+                  role="listitem"
+                  aria-labelledby="title-tabs-openk9"
+                  key={"tabs" + index}
+                >
+                  <button
+                    className={
+                      "openk9-single-tab-container" +
+                      "openk9-single-tab " +
+                      (isSelected ? "openk9-active-tab" : "openk9-not-active")
+                    }
+                    key={index}
+                    tabIndex={0}
+                    css={css`
+                      border: none;
+                      background: none;
+                      padding: 0;
+                      white-space: nowrap;
+                      padding: 8px 12px;
+                      background: ${isSelected
+                        ? "var(--openk9-embeddable-search--primary-background-tab-color)"
+                        : "var(--openk9-embeddable-search--secondary-background-tab-color)"};
+                      border-radius: 8px;
+                      font: Helvetica Neue LT Std;
+                      font-style: normal;
+                      display: block;
+                      color: ${isSelected
+                        ? "var(--openk9-embeddable-search--primary-background-color)"
+                        : "var(--openk9-embeddable-tabs--primary-color)"};
+                      ${isSelected
+                        ? "var(--openk9-embeddable-search--active-color)"
+                        : "transparent"};
+                      cursor: ${isSelected ? "" : "pointer"};
+                      user-select: none;
+                      :hover {
+                        ${isSelected ? "" : "text-decoration: underline;"}
+                      }
+                    `}
+                    onClick={() => {
+                      isSelected
+                        ? isUnselectTab && submitTab(-1)
+                        : submitTab(index);
+                    }}
+                  >
+                    {tabTraslation.toUpperCase()}
+                  </button>
+                </li>
+              );
+            })}
       </ul>
     </React.Fragment>
   );
