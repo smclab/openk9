@@ -178,8 +178,8 @@ public class SearchResource {
 	 * <p>
 	 * The highlight clause uses a boolean "should" query that includes prefix queries
 	 * (matching terms that start with the query text) and match queries (matching terms
-	 * containing the query text using OR operator). This combination ensures that both
-	 * exact prefix matches and partial word matches are highlighted in the search results.
+	 * containing the query text). This combination ensures that both exact prefix matches
+	 * and partial word matches are highlighted in the search results.
 	 * </p>
 	 * <p>
 	 * The highlighting is configured with number of fragments set to 0 (returns entire field
@@ -189,9 +189,11 @@ public class SearchResource {
 	 *
 	 * @param parentPathSet the list of fields to use for highlighting
 	 * @param queryText the text to search for and highlight in the results
+	 * @param fuzziness the fuzziness value for the match query
 	 * @return a configured Highlight object ready to be used in an OpenSearch query
 	 */
-	private static Highlight _buildHighlight(Set<String> parentPathSet, String queryText) {
+	private static Highlight _buildHighlight(
+			Set<String> parentPathSet, String queryText, String fuzziness) {
 
 		// used to collect all queries used in the bool query
 		List<Query> boolQueryList = new ArrayList<>();
@@ -212,7 +214,7 @@ public class SearchResource {
 				new MatchQuery.Builder()
 					.field(parent)
 					.query(new FieldValue.Builder().stringValue(queryText).build())
-					.operator(Operator.Or)
+					.fuzziness(fuzziness)
 					.build()
 			)
 			.map(matchQuery ->
@@ -991,7 +993,7 @@ public class SearchResource {
 				)
 		);
 
-		var highlight = _buildHighlight(parentPathSet, queryText);
+		var highlight = _buildHighlight(parentPathSet, queryText, configurations.getFuzziness());
 
 		return org.opensearch.client.opensearch.core.SearchRequest.of(s -> s
 			.index(configurations.getIndexNameList())
