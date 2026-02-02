@@ -160,7 +160,11 @@ export function Main({
     sortList,
     setSort,
     isLoadingTab,
-  } = useTabs(configuration.overrideTabs, languageSelect);
+  } = useTabs(
+    configuration.overrideTabs,
+    languageSelect,
+    configuration.autoselectTab ?? true,
+  );
 
   const { resetSort, setSelectedSort } = useSortResult({
     configuration,
@@ -1535,8 +1539,11 @@ function useQueryAnalysisWithoutSearch({
 function useTabs(
   overrideTabs: (tabs: Array<Tab>) => Array<Tab>,
   language: string,
+  autoSelectFirstTab = true,
 ) {
-  const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
+  const [selectedTabIndex, setSelectedTabIndex] = React.useState(
+    autoSelectFirstTab ? 0 : -1,
+  );
   const tenantTabs = useTabTokens();
 
   const tabs = React.useMemo(

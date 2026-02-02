@@ -439,6 +439,7 @@ type allFiltersConfigurableProps = {
 
 export type Configuration = {
   // simple types
+  autoselectTab?: boolean | null | undefined;
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
   defaultString: string | null | undefined;

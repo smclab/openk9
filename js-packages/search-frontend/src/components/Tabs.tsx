@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { useQuery } from "react-query";
 import { css } from "styled-components";
@@ -200,17 +200,17 @@ function Tabs({
           )}
         </div>
         {tabs.map((tab, index) => {
-          const isSelected = index === selectedTabIndex;
+          const isSelected =
+            selectedTabIndex !== -1 && index === selectedTabIndex;
           const tabTraslation = translationTab({
             language: language,
             tabLanguages: tab.translationMap,
             defaultValue: tab.label,
           });
           return (
-            <li role="listitem" aria-labelledby="title-tabs-openk9">
+            <li role="listitem" aria-labelledby="title-tabs-openk9" key={index}>
               <button
                 className={`openk9-single-tab-container`}
-                key={index}
                 tabIndex={0}
                 css={css`
                   border: none;
@@ -218,7 +218,6 @@ function Tabs({
                 `}
               >
                 <span
-                  key={index}
                   className={
                     "openk9-single-tab " +
                     (isSelected ? "openk9-active-tab" : "openk9-not-active")
@@ -462,4 +461,3 @@ export default function TabsSkeleton() {
     </div>
   );
 }
-
