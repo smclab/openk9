@@ -17,10 +17,17 @@
 
 package io.openk9.datasource.model.util;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public enum Fuzziness {
-	ZERO,
-	ONE,
-	TWO,
-	AUTO
+	ZERO("0"),
+	ONE("1"),
+	TWO("2"),
+	AUTO("AUTO");
+
+	private final String value;
 
 }

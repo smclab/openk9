@@ -559,7 +559,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					.addAllIndexName(List.of(tenantWithBucket.getIndexNames()))
 					.addAllField(grpcFields)
 					.setResultSize(autocomplete.getResultSize())
-					.setFuzziness(autocomplete.getFuzziness())
+					.setFuzziness(autocomplete.getFuzziness().getValue())
 					.setMinimumShouldMatch(autocomplete.getMinimumShouldMatch())
 					.setOperator(
 						_enumToGrpcEnum(autocomplete.getOperator(), Operator.class)

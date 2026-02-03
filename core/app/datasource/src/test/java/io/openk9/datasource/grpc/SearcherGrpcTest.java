@@ -48,6 +48,7 @@ import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.AutocorrectionService;
 import io.openk9.datasource.service.BucketService;
@@ -95,7 +96,6 @@ public class SearcherGrpcTest {
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
 	private static final int EM_VECTOR_SIZE = 1330;
-	private static final String FUZZINESS = "2";
 	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
 		"    \"id\": 1,\n" +
@@ -330,7 +330,7 @@ public class SearcherGrpcTest {
 			.name(AUTOCOMPLETE_NAME_ONE)
 			.fieldIds(autocompleteFieldIds)
 			.resultSize(RESULT_SIZE)
-			.fuzziness(FUZZINESS)
+			.fuzziness(Fuzziness.TWO)
 			.minimumShouldMatch(MINIMUM_SHOULD_MATCH)
 			.operator(OPERATOR)
 			.perfectMatchIncluded(true)
@@ -498,7 +498,7 @@ public class SearcherGrpcTest {
 				assertFalse(response.getAllFields().isEmpty());
 				assertEquals(2, response.getFieldList().size());
 				assertEquals(RESULT_SIZE, response.getResultSize());
-				assertEquals(FUZZINESS, response.getFuzziness());
+				assertEquals(Fuzziness.TWO.getValue(), response.getFuzziness());
 				assertEquals(MINIMUM_SHOULD_MATCH, response.getMinimumShouldMatch());
 				assertEquals(OPERATOR.name(), response.getOperator().name());
 				assertTrue(response.getPerfectMatchIncluded());

@@ -20,6 +20,7 @@ package io.openk9.datasource.model.dto.base;
 import java.util.Set;
 
 import io.openk9.datasource.model.BooleanOperator;
+import io.openk9.datasource.model.util.Fuzziness;
 
 import io.smallrye.graphql.api.Nullable;
 import lombok.EqualsAndHashCode;
@@ -48,7 +49,7 @@ public class AutocompleteDTO extends K9EntityDTO{
 	@Description("""
 		Edit distance allowed for fuzzy matching (e.g., "0", "1", "2", or "AUTO")
 	""")
-	private String fuzziness;
+	private Fuzziness fuzziness;
 	@Nullable
 	@Description("""
 		Minimum number of optional clauses that must match for a document to be returned

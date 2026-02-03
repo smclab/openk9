@@ -39,6 +39,7 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.BooleanOperator;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.service.AutocompleteService;
 import io.openk9.datasource.service.DocTypeFieldService;
 
@@ -213,7 +214,7 @@ public class AutocompleteGraphqlTest {
 							inputObject(
 								prop(NAME, AUTOCOMPLETE_NAME_ONE),
 								prop(RESULT_SIZE, RESULT_SIZE_VALUE),
-								prop(FUZZINESS, FUZZINESS_VALUE),
+								prop(FUZZINESS, Fuzziness.TWO),
 								prop(MINIMUM_SHOULD_MATCH, MINIMUM_SHOULD_MATCH_VALUE),
 								prop(OPERATOR, BooleanOperator.AND),
 								prop(FIELD_IDS, fieldIds)
@@ -264,7 +265,7 @@ public class AutocompleteGraphqlTest {
 
 		assertEquals(AUTOCOMPLETE_NAME_ONE, autocomplete.getName());
 		assertEquals(RESULT_SIZE_VALUE, autocomplete.getResultSize());
-		assertEquals(FUZZINESS_VALUE, autocomplete.getFuzziness());
+		assertEquals(FUZZINESS_VALUE, autocomplete.getFuzziness().getValue());
 		assertEquals(MINIMUM_SHOULD_MATCH_VALUE, autocomplete.getMinimumShouldMatch());
 		assertEquals(BooleanOperator.AND, autocomplete.getOperator());
 		assertNotNull(autocomplete.getFields());

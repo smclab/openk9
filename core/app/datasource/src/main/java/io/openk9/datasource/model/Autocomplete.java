@@ -31,6 +31,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.validation.ValidAutocompleteFields;
 
@@ -46,7 +47,7 @@ import lombok.ToString;
 @ToString
 public class Autocomplete extends K9Entity {
 
-	public static final String DEFAULT_FUZZINESS = "AUTO";
+	public static final Fuzziness DEFAULT_FUZZINESS = Fuzziness.AUTO;
 	public static final String DEFAULT_MINIMUM_SHOULD_MATCH = "75%";
 	public static final BooleanOperator DEFAULT_OPERATOR = BooleanOperator.OR;
 	public static final int RESULT_SIZE = 10;
@@ -68,8 +69,9 @@ public class Autocomplete extends K9Entity {
 	@NotNull
 	@NotEmpty
 	private Set<DocTypeField> fields = new LinkedHashSet<>();
+	@Enumerated(EnumType.STRING)
 	@Column(name = "fuzziness")
-	private String fuzziness = DEFAULT_FUZZINESS;
+	private Fuzziness fuzziness = Fuzziness.AUTO;
 	@Column(name = "minimum_should_match")
 	private String minimumShouldMatch = DEFAULT_MINIMUM_SHOULD_MATCH;
 	@Column(name = "name", nullable = false, unique = true)
@@ -82,8 +84,8 @@ public class Autocomplete extends K9Entity {
 	@Column(name = "result_size")
 	private Integer resultSize = RESULT_SIZE;
 
-	public void setFuzziness(String fuzziness) {
-		this.fuzziness = Objects.requireNonNullElse(fuzziness, DEFAULT_FUZZINESS);
+	public void setFuzziness(Fuzziness fuzziness) {
+		this.fuzziness = Objects.requireNonNullElse(fuzziness, Fuzziness.AUTO);
 	}
 
 	public void setMinimumShouldMatch(String minimumShouldMatch) {
