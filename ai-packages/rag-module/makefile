@@ -63,6 +63,7 @@ build: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--pull \
 		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
 		.
 
