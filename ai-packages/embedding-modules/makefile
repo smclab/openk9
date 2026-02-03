@@ -70,6 +70,7 @@ build_base: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--pull \
 		-t openk9-embedding-module-base:"$$OPENK9_VERSION" \
 		-f Dockerfile.base \
 		.
@@ -78,6 +79,7 @@ build_sentence_transformer: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--pull \
 		-t openk9-embedding-module-sentence-transformer:"$$OPENK9_VERSION" \
 		-f Dockerfile.sentence_transformer \
 		.
