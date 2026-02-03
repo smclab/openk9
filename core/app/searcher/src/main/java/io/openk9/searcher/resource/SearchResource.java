@@ -523,7 +523,7 @@ public class SearchResource {
 
 		var rawToken = getRawToken(headers);
 		builder.setSearchText(searchRequest.getSearchText());
-		builder.setVirtualHost(request.authority().host());
+		builder.setVirtualHost(request.authority().toString());
 		builder.setJwt(rawToken);
 		builder.setMode(mode);
 
@@ -707,7 +707,7 @@ public class SearchResource {
 		String language = searchRequest.getLanguage();
 
 		return requestBuilder
-			.setVirtualHost(request.authority().host())
+			.setVirtualHost(request.authority().toString())
 			.setJwt(rawToken)
 			.putAllExtra(extra)
 			.addAllSort(mapToGrpc(searchRequest.getSort()))
