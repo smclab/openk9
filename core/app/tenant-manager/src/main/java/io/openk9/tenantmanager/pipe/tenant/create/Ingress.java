@@ -40,10 +40,10 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 	public Ingress(
 		ActorContext<Command> context,
-		String schemaName,
 		String virtualHost,
+		String schemaName,
 		boolean defaultBehavior,
-		ActorRef<Ingress.Response> replyTo
+		ActorRef<Response> replyTo
 	) {
 
 		super(context);
@@ -54,19 +54,19 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 	}
 
 	public static Behavior<Command> create(
-		String schemaName,
 		String virtualHost,
-		ActorRef<Ingress.Response> replyTo) {
+		String schemaName,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, schemaName, virtualHost, true, replyTo));
+			new Ingress(ctx, virtualHost, schemaName, true, replyTo));
 	}
 
 	public static Behavior<Command> rollback(
-		String schemaName, String virtualHost, ActorRef<Response> replyTo) {
+		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, schemaName, virtualHost, false, replyTo));
+			new Ingress(ctx, virtualHost, schemaName, false, replyTo));
 	}
 
 	@Override

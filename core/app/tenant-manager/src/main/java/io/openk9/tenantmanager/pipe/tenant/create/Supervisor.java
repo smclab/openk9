@@ -36,7 +36,7 @@ public class Supervisor {
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public record ResponseWrapper(
-		Manager.Response response,
+		TenantProvisioningSaga.Response response,
 		ActorRef<Supervisor.Response> replyTo) implements Command {}
 
 	public sealed interface Response {}
@@ -48,13 +48,13 @@ public class Supervisor {
 			.receive(Command.class)
 			.onMessage(Start.class, start -> {
 
-				ActorRef<Manager.Response> responseActorRef =
+				ActorRef<TenantProvisioningSaga.Response> responseActorRef =
 					context.messageAdapter(
-						Manager.Response.class,
+						TenantProvisioningSaga.Response.class,
 						param -> new ResponseWrapper(param, start.replyTo));
 
 				context.spawn(
-					Manager.create(
+					TenantProvisioningSaga.create(
 						start.virtualHost(),
 						start.tenantName(),
 						responseActorRef
@@ -64,11 +64,11 @@ public class Supervisor {
 				return Behaviors.same();
 			})
 			.onMessage(ResponseWrapper.class, responseWrapper -> {
-				if (responseWrapper.response() instanceof Manager.Success) {
-					Manager.Success response = (Manager.Success) responseWrapper.response;
+				if (responseWrapper.response() instanceof TenantProvisioningSaga.Success) {
+					TenantProvisioningSaga.Success response = (TenantProvisioningSaga.Success) responseWrapper.response;
 					responseWrapper.replyTo.tell(new Success(response.tenant()));
 				}
-				else if (responseWrapper.response() == Manager.Error.INSTANCE) {
+				else if (responseWrapper.response() == TenantProvisioningSaga.Error.INSTANCE) {
 					responseWrapper.replyTo.tell(Error.INSTANCE);
 				}
 				return Behaviors.same();

@@ -51,7 +51,7 @@ public class Schema {
 	}
 
 	public static Behavior<Command> createRollback(
-		ActorRef<Response> replyTo, String schemaName) {
+		String schemaName, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(context ->
 			rollback(context, replyTo, schemaName));

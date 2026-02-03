@@ -67,7 +67,7 @@ public class Realm {
 	}
 
 	public static Behavior<Command> createRollback(
-		ActorRef<Response> replyTo, String realmName) {
+		String realmName, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(context -> rollback(context, replyTo, realmName));
 	}

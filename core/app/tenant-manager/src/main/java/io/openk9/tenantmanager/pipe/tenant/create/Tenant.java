@@ -32,9 +32,10 @@ public class Tenant {
 	private record TenantCreated(TenantResponseDTO tenant) implements Command {}
 
 	private static Behavior<Command> initial(
-		ActorContext<Command> context, ActorRef<Response> replyTo,
+		ActorContext<Command> context,
 		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String issuerUri, String clientId, String clientSecret) {
+		String issuerUri, String clientId, String clientSecret,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
@@ -65,20 +66,21 @@ public class Tenant {
 	public record Error(String message) implements Response {}
 
 	public static Behavior<Command> create(
-		ActorRef<Response> replyTo, String virtualHost,
+		String virtualHost,
 		String schemaName, String liquibaseSchemaName, String issuerUri,
-		String clientId, String clientSecret) {
+		String clientId, String clientSecret,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(
 			context -> initial(
 				context,
-				replyTo,
 				virtualHost,
 				schemaName,
 				liquibaseSchemaName,
 				issuerUri,
 				clientId,
-				clientSecret
+				clientSecret,
+				replyTo
 			)
 		);
 	}
