@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import {
   Box,
   Button,
@@ -53,6 +53,7 @@ type ChatbotProps = {
   language?: string;
   tenant?: string;
   callbackAuthorization?: () => string | undefined | null;
+  useSource?: boolean;
 };
 
 const Chatbot: React.FC<ChatbotProps> = ({
@@ -64,6 +65,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
   language,
   tenant,
   callbackAuthorization,
+  useSource = true,
 }) => {
   return (
     <React.Fragment>
@@ -76,6 +78,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             nameChatbot={nameChatbot}
             tenant={tenant}
             callbackAuthorization={callbackAuthorization}
+            useSource={useSource}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -90,6 +93,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   nameChatbot,
   tenant = "",
   callbackAuthorization,
+  useSource,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
@@ -182,6 +186,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             isGenerateMessage={isGenerateMessage}
             messagesEndRef={messagesEndRef}
             nameChatbot={nameChatbot}
+            useSource={useSource}
           />
           <Search
             handleSearch={generateResponse}
@@ -312,6 +317,7 @@ const MessageList: React.FC<{
   messagesEndRef: React.RefObject<HTMLDivElement>;
   nameChatbot?: string;
   welcomeMessageTime?: string;
+  useSource?: boolean;
 }> = ({
   messages,
   icon,
@@ -320,6 +326,7 @@ const MessageList: React.FC<{
   messagesEndRef,
   nameChatbot,
   welcomeMessageTime = "",
+  useSource,
 }) => (
   <Box
     className="openk9-message-list-container"
@@ -378,7 +385,7 @@ const MessageList: React.FC<{
               <SingleMessage
                 contentMessage={message.answer}
                 status={message.status}
-                sources={message?.sources}
+                sources={useSource ? message?.sources : []}
                 isChatbot={true}
                 timeMessage={responseTime}
                 icon={icon.chatbotIcon}
@@ -397,4 +404,3 @@ const MessageList: React.FC<{
 );
 
 export default Chatbot;
-
