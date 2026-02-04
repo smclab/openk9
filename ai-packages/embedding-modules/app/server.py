@@ -27,9 +27,7 @@ from typing import get_type_hints
 import grpc
 import pika
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
-from app.text_splitters.character_text_splitter import CharacterTextChunker
 from app.text_splitters.derived_text_splitter import DerivedTextSplitter
-from app.text_splitters.token_text_splitter import TokenTextChunker
 from app.utils.text_cleaner import clean_text
 from chonkie import (
     LateChunker,
@@ -75,8 +73,8 @@ DEFAULT_MODEL = "text-embedding-3-small"
 chunk_types = {
     0: RecursiveChunker,
     1: DerivedTextSplitter,
-    2: TokenTextChunker,
-    3: CharacterTextChunker,
+    2: TokenChunker,
+    3: TokenChunker,
     4: SemanticChunker,
     5: SentenceChunker,
     6: RecursiveChunker,
