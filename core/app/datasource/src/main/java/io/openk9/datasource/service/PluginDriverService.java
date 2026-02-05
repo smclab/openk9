@@ -61,7 +61,7 @@ import io.openk9.datasource.model.dto.request.PluginWithDocTypeDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.model.util.K9Entity_;
-import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
+import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
