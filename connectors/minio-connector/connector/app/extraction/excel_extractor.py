@@ -24,7 +24,7 @@ from xlrd import XLRDError
 
 from .base_extractor import BaseMinioExtractor
 from .log_config import LogConfig
-from .utility import has_valid_header
+from .utility import FileExtractor
 
 dictConfig(LogConfig().dict())
 
@@ -42,19 +42,18 @@ class ExcelMinioExtractor(BaseMinioExtractor):
         self.columns = columns
         self.datasource_payload_key = datasource_payload_key
         self.do_try_extract_header = do_try_extract_header
+        self.file_extractor = FileExtractor(self.do_try_extract_header)
 
     def manage_data(self, client, obj, end_timestamp):
         y = client.get_object(self.bucket_name, obj.object_name)
+        if y.status != 200:
+            self.status_logger.warning(f"Could not extract file {obj.object_name}.")
+            return
 
         data = y.data
 
-        try:
-            df = pd.read_excel(BytesIO(data), engine='xlrd', header=0 if self.do_try_extract_header else None)
-            if self.do_try_extract_header and not has_valid_header(df):
-                df = pd.read_excel(BytesIO(data), engine='xlrd', header=None)
-        except XLRDError:
-            # Is not file excel
-            self.status_logger.warning(f"Skipped file {obj.object_name}. This is not an Excel File.")
+        df = self.file_extractor.extract_file(obj.object_name, data)
+        if df is None:
             return
 
         df = df.astype(str)
