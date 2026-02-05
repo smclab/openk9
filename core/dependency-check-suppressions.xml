@@ -178,4 +178,14 @@
 		<filePath regex="true">.*quarkus-neo4j-5\.0\.0\.jar.*</filePath>
 		<cve>CVE-2024-34517</cve>
 	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			This vulnerability affects Vert.x StaticHandler component used to serve static files (HTML, CSS,
+			JavaScript, images, etc.). Our application does not use StaticHandler or serve any static
+			content through Vert.x. We only expose REST API endpoints, therefore we are not affected by
+			this cache poisoning vulnerability.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.vertx/vertx-web(-client|-common)?@.*$</packageUrl>
+		<cve>CVE-2026-1002</cve>
+	</suppress>
 </suppressions>
