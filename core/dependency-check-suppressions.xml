@@ -19,10 +19,10 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 	<suppress>
 		<notes><![CDATA[
-      FP: quarkus-minio 3.7.7 is identified as the vulnerable 'minio:minio:3.7.7'.
-      Our dependency tree confirms
-      we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
-      ]]></notes>
+			FP: quarkus-minio 3.7.7 is identified as the vulnerable 'minio:minio:3.7.7'.
+			Our dependency tree confirms
+			we use the non-vulnerable transitive dependency 'minio:minio:8.5.*'.
+			]]></notes>
 		<filePath regex="true">.*quarkus-minio(\-.*)?-3\.7\.7\.jar.*</filePath>
 		<cve>CVE-2021-43858</cve>
 		<cve>CVE-2023-28433</cve>
@@ -36,145 +36,72 @@
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-	   FP: CVE-2022-2403 is a server-side vulnerability in the OpenShift Container Platform,
-	   not a client-side flaw in the Fabric8 client or openshift-model JARs.
-	   The vulnerability is a misconfiguration on the cluster itself.
-	   The scanner has incorrectly attributed a platform CVE to a client library.
-	   The only fix is to upgrade the OCP cluster.
-	   ]]></notes>
+			FP: CVE-2022-2403 is a server-side vulnerability in the OpenShift Container Platform,
+			not a client-side flaw in the Fabric8 client or openshift-model JARs.
+			The vulnerability is a misconfiguration on the cluster itself.
+			The scanner has incorrectly attributed a platform CVE to a client library.
+			The only fix is to upgrade the OCP cluster.
+		]]></notes>
 		<filePath regex="true">.*openshift-model(\-.*)?-7\.1\.0\.jar.*</filePath>
 		<cve>CVE-2022-2403</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-	   Downgrading severity from Medium to Low. This finding applies to the Pekko Management port.
-	   Mitigating Control: The port is only exposed internally
-	   within our Kubernetes cluster network and is not accessible from the public internet.
-	   The attack vector requires a prior breach of another service within the network.
-	   The fix will be scheduled as a low-priority technical debt item.
-	   ]]></notes>
+			Downgrading severity from Medium to Low. This finding applies to the Pekko Management port.
+			Mitigating Control: The port is only exposed internally
+			within our Kubernetes cluster network and is not accessible from the public internet.
+			The attack vector requires a prior breach of another service within the network.
+			The fix will be scheduled as a low-priority technical debt item.
+		]]></notes>
 		<filePath regex="true">.*pekko-management(\-.*)?_2\.13\-1\.1\.1\.jar.*</filePath>
 		<cve>CVE-2025-46548</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-     Suppressed - Not applicable. This SSRF vulnerability affects Nu Html Checker (validator.nu).
-     Our application uses Hibernate Validator for bean validation only and does not include or
-     depend on Nu Html Checker. Dependency analysis confirms nu.validator is not present in our project.
-   ]]></notes>
-		<filePath regex="true">.*quarkus-hibernate-validator-3\.20\.5\.jar.*</filePath>
-		<cve>CVE-2025-15104</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-     Suppressed - Not applicable. This SSRF vulnerability affects Nu Html Checker (validator.nu).
-     Our application uses Hibernate Validator for bean validation only and does not include or
-     depend on Nu Html Checker. Dependency analysis confirms nu.validator is not present in our project.
-   ]]></notes>
-		<filePath regex="true">.*quarkus-hibernate-validator-spi-3\.20\.5\.jar.*</filePath>
-		<cve>CVE-2025-15104</cve>
+			Suppressed - Not applicable. This SSRF vulnerability affects Nu Html Checker (validator.nu).
+			Our application uses Hibernate Validator for bean validation only and does not include or
+			depend on Nu Html Checker. Dependency analysis confirms nu.validator is not present in our project.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.quarkus/quarkus-hibernate-validator-spi@.*$</packageUrl>
 		<cve>CVE-2023-1932</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-     Suppressed - Not applicable. This SSRF vulnerability affects Nu Html Checker (validator.nu).
-     Our application uses Hibernate Validator for bean validation only and does not include or
-     depend on Nu Html Checker. Dependency analysis confirms nu.validator is not present in our project.
-   ]]></notes>
-		<filePath regex="true">.*smallrye-config-validator-3\.11\.4\.jar.*</filePath>
-		<cve>CVE-2025-15104</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-	   Suppressed - Not applicable. This vulnerability affects Element iOS, a Matrix protocol client
-	   for mobile devices. Our application is a Java/Quarkus backend that does not integrate
-	   Matrix protocol, use Matrix client libraries, or implement Matrix messaging functionality.
-	   This is a mobile app-specific vulnerability that does not apply to backend services.
-   ]]></notes>
+			Suppressed - Not applicable. This vulnerability affects Element iOS, a Matrix protocol client
+			for mobile devices. Our application is a Java/Quarkus backend that does not integrate
+			Matrix protocol, use Matrix client libraries, or implement Matrix messaging functionality.
+			This is a mobile app-specific vulnerability that does not apply to backend services.
+		]]></notes>
 		<filePath regex="true">.*lit-element-state-1\.7\.0\.jar.*</filePath>
 		<cve>CVE-2022-41904</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-	    Suppressed - Not applicable. This TLS hostname verification vulnerability affects Log4j's
-	    Socket Appender for network log transmission. Our application does not use Socket Appender -
-	    logs are written only to local files and stdout. The vulnerable component is not configured in
-	    our deployment.
-	   ]]></notes>
-		<filePath regex="true">.*log4j-api-2\.24\.3\.jar.*</filePath>
+			Suppressed - Not applicable. This TLS hostname verification vulnerability affects Log4j's
+			Socket Appender for network log transmission. Our application does not use Socket Appender -
+			logs are written only to local files and stdout. The vulnerable component is not configured in
+			our deployment.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j-(jul|api)@.*$</packageUrl>
 		<cve>CVE-2025-68161</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-	    Suppressed - Not applicable. This TLS hostname verification vulnerability affects Log4j's
-	    Socket Appender for network log transmission. Our application does not use Socket Appender -
-	    logs are written only to local files and stdout. The vulnerable component is not configured in
-	    our deployment.
-	   ]]></notes>
-		<filePath regex="true">.*log4j-jul-2\.21\.0\.jar.*</filePath>
-		<cve>CVE-2025-68161</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-      CVE-2025-67735 is not applicable to our application context. The service does not expose
-      public HTTP endpoints based on Netty and only provides headless/internal endpoints.
-      No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
-      HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
-      smuggling attacks are not feasible in the current architecture.
-   ]]></notes>
-		<filePath regex="true">.*netty-transport-4\.1\.128\.Final\.jar.*</filePath>
+			CVE-2025-67735 is not applicable to our application context. The service does not expose
+			public HTTP endpoints based on Netty and only provides headless/internal endpoints.
+			No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
+			HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
+			smuggling attacks are not feasible in the current architecture.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.netty/netty-(buffer.*|codec.*|common.*|handler.*|transport.*|resolver.*)@.*$</packageUrl>
 		<cve>CVE-2025-67735</cve>
 	</suppress>
 	<suppress>
 		<notes><![CDATA[
-      CVE-2025-67735 is not applicable to our application context. The service does not expose
-      public HTTP endpoints based on Netty and only provides headless/internal endpoints.
-      No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
-      HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
-      smuggling attacks are not feasible in the current architecture.
-   ]]></notes>
-		<filePath regex="true">.*netty-transport-native-epoll-4\.1\.128\.Final-linux-x86_64\.jar.*</filePath>
-		<cve>CVE-2025-67735</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-      CVE-2025-67735 is not applicable to our application context. The service does not expose
-      public HTTP endpoints based on Netty and only provides headless/internal endpoints.
-      No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
-      HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
-      smuggling attacks are not feasible in the current architecture.
-   ]]></notes>
-		<filePath regex="true">.*netty-codec-4\.1\.128\.Final\.jar.*</filePath>
-		<cve>CVE-2025-67735</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-      CVE-2025-67735 is not applicable to our application context. The service does not expose
-      public HTTP endpoints based on Netty and only provides headless/internal endpoints.
-      No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
-      HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
-      smuggling attacks are not feasible in the current architecture.
-   ]]></notes>
-		<filePath regex="true">.*netty-.*4\.1\.128\.Final.*\.jar.*</filePath>
-		<cve>CVE-2025-67735</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-      CVE-2025-67735 is not applicable to our application context. The service does not expose
-      public HTTP endpoints based on Netty and only provides headless/internal endpoints.
-      No attacker-controlled HTTP request URIs are processed, and the vulnerable Netty
-      HttpRequestEncoder code path cannot be reached. As a result, CRLF injection and HTTP request
-      smuggling attacks are not feasible in the current architecture.
-   ]]></notes>
-		<filePath regex="true">.*netty-transport-.*-4\.1\.128\.Final\.*.jar.*</filePath>
-		<cve>CVE-2025-67735</cve>
-	</suppress>
-	<suppress>
-		<notes><![CDATA[
-      Suppressed - Unused module. The module containing this vulnerability is no longer used in our
-      application. The affected dependency has been removed from our project and is not included in
-      any deployment artifacts.
-   ]]></notes>
+			Suppressed - Unused module. The module containing this vulnerability is no longer used in our
+			application. The affected dependency has been removed from our project and is not included in
+			any deployment artifacts.
+		]]></notes>
 		<filePath regex="true">.*quarkus-neo4j-5\.0\.0\.jar.*</filePath>
 		<cve>CVE-2024-34517</cve>
 	</suppress>
