@@ -56,4 +56,52 @@
 		<filePath regex="true">.*pekko-management(\-.*)?_2\.13\-1\.1\.1\.jar.*</filePath>
 		<cve>CVE-2025-46548</cve>
 	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			Suppressed - Not applicable. This vulnerability affects Element iOS, a Matrix protocol client
+			for mobile devices. Our application is a Java/Quarkus backend that does not integrate
+			Matrix protocol, use Matrix client libraries, or implement Matrix messaging functionality.
+			This is a mobile app-specific vulnerability that does not apply to backend services.
+	  ]]></notes>
+		<packageUrl regex="true">^pkg:maven/org\.mvnpm/lit-element-state@.*$</packageUrl>
+		<cve>CVE-2022-41904</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			Suppressed - Not applicable. This TLS hostname verification vulnerability affects Log4j's
+			Socket Appender for network log transmission. Our application does not use Socket Appender -
+			logs are written only to local files and stdout. The vulnerable component is not configured in
+			our deployment.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/org\.apache\.logging\.log4j/log4j-(jul|api)@.*$</packageUrl>
+		<cve>CVE-2025-68161</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			Suppressed - Not applicable. This SSRF vulnerability affects Nu Html Checker (validator.nu).
+			Our application uses Hibernate Validator for bean validation only and does not include or
+			depend on Nu Html Checker. Dependency analysis confirms nu.validator is not present in our project.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.quarkus/quarkus-hibernate-validator-spi@.*$</packageUrl>
+		<cve>CVE-2023-1932</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			Suppressed - Unused module. The module containing this vulnerability is no longer used in our
+			application. The affected dependency has been removed from our project and is not included in
+			any deployment artifacts.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.quarkiverse\.neo4j/quarkus-neo4j@.*$</packageUrl>
+		<cve>CVE-2024-34517</cve>
+	</suppress>
+	<suppress>
+		<notes><![CDATA[
+			This vulnerability affects Vert.x StaticHandler component used to serve static files (HTML, CSS,
+			JavaScript, images, etc.). Our application does not use StaticHandler or serve any static
+			content through Vert.x. We only expose REST API endpoints, therefore we are not affected by
+			this cache poisoning vulnerability.
+		]]></notes>
+		<packageUrl regex="true">^pkg:maven/io\.vertx/vertx-web(-client|-common)?@.*$</packageUrl>
+		<cve>CVE-2026-1002</cve>
+	</suppress>
 </suppressions>
