@@ -190,7 +190,7 @@
     {
       "label": "Do Use Default Mimetype Map",
       "name": "doUseDefaultMimetypeMap",
-      "type": "boolean",
+      "type": "checkbox",
       "size": 4,
       "required": false,
       "info": "Should use the default mimetype map. If used with mimetypeMap updates the default map with the custom one.",
