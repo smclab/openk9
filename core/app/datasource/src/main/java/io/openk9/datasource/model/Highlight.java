@@ -22,7 +22,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -48,12 +53,20 @@ public class Highlight extends K9Entity {
 	@Column(name = "description", length = 4096)
 	private String description;
 
+	@NotNull
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
 	private HighlightType type;
 
+	@JoinTable(
+		name = "highlight_fields",
+		joinColumns = @JoinColumn(name = "highlight_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_type_field_id", referencedColumnName = "id")
+	)
+	@ManyToMany
 	@ToString.Exclude
-	@Column(name = "fields")
+	@NotNull
+	@NotEmpty
 	private Set<DocTypeField> fields = new LinkedHashSet<>();
 
 	@Enumerated(EnumType.STRING)
@@ -61,7 +74,7 @@ public class Highlight extends K9Entity {
 	private BoundaryScannerType boundaryScanner;
 
 	@Column(name = "boundary_chars")
-	private char[] boundaryChars;
+	private String boundaryChars;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragmenter")
@@ -74,11 +87,16 @@ public class Highlight extends K9Entity {
 	private int numberOfFragments;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "order")
+	@Column(name = "fragments_order")
 	private OrderType order;
 
+	@JoinTable(
+		name = "highlight_matched_fields",
+		joinColumns = @JoinColumn(name = "highlight_id", referencedColumnName = "id"),
+		inverseJoinColumns = @JoinColumn(name = "doc_type_field_id", referencedColumnName = "id")
+	)
+	@ManyToMany
 	@ToString.Exclude
-	@Column(name = "matched_fields")
 	private Set<DocTypeField> matchedFields = new LinkedHashSet<>();
 
 

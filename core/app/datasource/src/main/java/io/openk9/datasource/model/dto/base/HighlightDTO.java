@@ -17,7 +17,8 @@
 
 package io.openk9.datasource.model.dto.base;
 
-import io.smallrye.graphql.api.Nullable;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,11 +37,15 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class HighlightDTO extends K9EntityDTO{
 
+	@NotNull
+	@NotEmpty
 	@Description("""
 		The field used to chose the highlighter.
 		""")
 	private String type;
 
+	@NotNull
+	@NotEmpty
 	@Description("""
 		Set of unique DocTypeField IDs, it's used to add the fields to highlight.
 		""")
@@ -51,11 +56,10 @@ public class HighlightDTO extends K9EntityDTO{
 		""")
 	private String boundaryScanner;
 
-	@Nullable
 	@Description("""
-		The array of chars allowed to split fragments of text, only for fvh highlighter.
+		Chars allowed to split fragments of text, only for fvh highlighter.
 		""")
-	private char[] boundaryChars;
+	private String boundaryChars;
 
 	@Description("""
 		Specifies how to split fragments of text, only for plain highlighter.
@@ -65,19 +69,18 @@ public class HighlightDTO extends K9EntityDTO{
 	@Description("""
 		Maximum length of each fragment.
 		""")
-	private int fragmentSize;
+	private Integer fragmentSize;
 
 	@Description("""
 		Maximum number of fragments to return.
 		""")
-	private int numberOfFragments;
+	private Integer numberOfFragments;
 
 	@Description("""
 		Field that decides how to order fragments of text.
 		""")
 	private String order;
 
-	@Nullable
 	@Description("""
 		Set of unique DocTypeField IDs, it's used to highlighting fields indexed with different analyzers.
 		""")
