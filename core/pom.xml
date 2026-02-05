@@ -99,7 +99,7 @@
 		<quarkiverse.opensearch.version>1.17.2</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.7.7</quarkus-minio.version>
-		<quarkus-tika.version>2.0.5</quarkus-tika.version>
+		<quarkus-tika.version>2.2.1</quarkus-tika.version>
 		<hibernate.version>6.6.23.Final</hibernate.version>
 		<surefire-plugin.version>3.5.2</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
@@ -247,12 +247,12 @@
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java</artifactId>
-				<version>3.25.6</version>
+				<version>3.25.8</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java-util</artifactId>
-				<version>3.25.6</version>
+				<version>3.25.8</version>
 			</dependency>
 			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
 			<dependency>
