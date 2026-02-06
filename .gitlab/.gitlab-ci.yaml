@@ -621,7 +621,7 @@ Trigger Chunk Evaluation Module:
   trigger:
     include: "/.gitlab/.gitlab-ci-chunk-evaluation-module.yaml"
 
- Trigger Connectors Build:
+Trigger Connectors Build:
   stage: trigger
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
