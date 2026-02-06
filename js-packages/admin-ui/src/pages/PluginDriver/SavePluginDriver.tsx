@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import {
   BooleanInput,
   combineErrorMessages,
@@ -219,7 +219,7 @@ export const SavePluginnDriverModel = React.forwardRef(
 
     React.useEffect(() => {
       setTestResult(null);
-    }, [config?.baseUri, config?.path, config?.method, config?.secure]);
+    }, [config?.baseUri, config?.path]);
 
     const form = useForm({
       initialValues: React.useMemo(
@@ -305,9 +305,7 @@ export const SavePluginnDriverModel = React.forwardRef(
       ],
       valueOverride: {
         baseUri: config?.baseUri || "",
-        secure: config?.secure || "No",
         path: config?.path || "",
-        method: config?.method || "",
         aclMapping: fields?.map((e, index) => ({ [index + 1]: e.fieldName })) || [],
       },
     });
@@ -364,17 +362,6 @@ export const SavePluginnDriverModel = React.forwardRef(
                         id={pluginDriverId}
                         disabled={false}
                       />
-                      <BooleanInput
-                        label="Secure"
-                        description="If the host is exposed is secure way or not"
-                        id={pluginDriverId}
-                        value={config?.secure ? true : false}
-                        onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, secure: e } : ({ secure: e } as ConfigType)))
-                        }
-                        disabled={false}
-                        validationMessages={[]}
-                      />
                       <TextInput
                         label="Path"
                         description="Api call used to trigger data extraction"
@@ -386,33 +373,14 @@ export const SavePluginnDriverModel = React.forwardRef(
                         disabled={false}
                         validationMessages={[]}
                       />
-                      <Typography variant="subtitle1" component="label" htmlFor={pluginDriverId + "method"}>
-                        {"Method"}
-                      </Typography>
-                      <Select
-                        value={config?.method || ""}
-                        onChange={(e) =>
-                          setConfig((config) =>
-                            config ? { ...config, method: e.target.value } : ({ method: e.target.value } as ConfigType),
-                          )
-                        }
-                        id={pluginDriverId + "method"}
-                        displayEmpty
-                        fullWidth
-                      >
-                        <MenuItem value="GET">GET</MenuItem>
-                        <MenuItem value="POST">POST</MenuItem>
-                        <MenuItem value="PUT">PUT</MenuItem>
-                        <MenuItem value="DELETE">DELETE</MenuItem>
-                        <MenuItem value="PATCH">PATCH</MenuItem>
-                      </Select>
                       <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center" }}>
                         <Button
                           onClick={async () => {
                             try {
+                              console.log("prova", form.inputProps("type").value);
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
-                                type: OpenApiPluginDriverType.HTTP,
+                                type: form.inputProps("type").value as PluginDriverType,
                                 jsonConfig: JSON.stringify(config),
                               });
                               setTestResult(res ? "success" : "error");
@@ -581,11 +549,10 @@ export const SavePluginnDriverModel = React.forwardRef(
 
 function DesctructuringJsonConfig(data: string) {
   try {
-    const { baseUri, secure, path, method } = JSON.parse(data);
-    return { baseUri, secure, path, method };
+    const { baseUri, path } = JSON.parse(data);
+    return { baseUri, path };
   } catch (error) {
     console.error("Invalid JSON string:", error);
     return null;
   }
 }
-
