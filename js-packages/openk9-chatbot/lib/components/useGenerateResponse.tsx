@@ -100,7 +100,7 @@ const useGenerateResponse = ({
 
       const controller = new AbortController();
       setAbortControllers((prev) => new Map(prev).set(id, controller));
-      const url = `${tenant}/api/rag/chat`;
+      const url = `${tenant}/api/rag/chat-tool`;
       // const url = "/api/rag/chat-tool";
 
       const searchQuery =
