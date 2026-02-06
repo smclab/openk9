@@ -380,7 +380,9 @@ export const SavePluginnDriverModel = React.forwardRef(
                               console.log("prova", form.inputProps("type").value);
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
-                                type: form.inputProps("type").value as PluginDriverType,
+                                type: form.inputProps("type").value as PluginDriverType.Http 
+                                  ? OpenApiPluginDriverType.HTTP 
+                                  : OpenApiPluginDriverType.HTTP,
                                 jsonConfig: JSON.stringify(config),
                               });
                               setTestResult(res ? "success" : "error");
