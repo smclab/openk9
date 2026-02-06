@@ -175,7 +175,12 @@ def initialize_language_model(configuration):
     model = configuration["model"] if configuration["model"] else DEFAULT_MODEL
     match model_type:
         case ModelType.OPENAI.value:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key, openai_api_base=api_url, stream_usage=True)
+            llm = ChatOpenAI(
+                model=model,
+                openai_api_key=api_key,
+                openai_api_base=api_url,
+                stream_usage=True,
+            )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
             llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
@@ -554,12 +559,22 @@ def stream_rag_conversation(
     conversation_title = ""
     citations_response = []
     parsing_error = ""
+    thinking_chunk = True
+    start_chunk = True
 
     for chunk in result:
-        if chunk and "answer" in chunk.keys() and result_answer == "":
-            result_answer += chunk
-            yield json.dumps({"chunk": "", "type": "START"})
+        if (
+            chunk
+            and "answer" in chunk.keys()
+            and chunk["answer"] == ""
+            and thinking_chunk
+        ):
+            continue
         elif chunk and "answer" in chunk.keys():
+            if start_chunk:
+                yield json.dumps({"chunk": "", "type": "START"})
+                thinking_chunk = False
+                start_chunk = False
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
         elif chunk and "context" in chunk.keys():

@@ -136,10 +136,18 @@ def get_chain(
             | parser
         )
 
-        yield json.dumps({"chunk": "", "type": "START"})
+        thinking_chunk = True
+        start_chunk = True
 
         for chunk in chain.stream({"question": question}):
-            yield json.dumps({"chunk": chunk, "type": "CHUNK"})
+            if chunk == "" and thinking_chunk:
+                continue
+            else:
+                if start_chunk:
+                    yield json.dumps({"chunk": "", "type": "START"})
+                    thinking_chunk = False
+                    start_chunk = False
+                yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
         yield json.dumps({"chunk": "", "type": "END"})
 
