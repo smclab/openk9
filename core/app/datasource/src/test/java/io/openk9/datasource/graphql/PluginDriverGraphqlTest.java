@@ -57,19 +57,23 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 public class PluginDriverGraphqlTest {
 
+	private static final String BASE_URI = "baseUri";
+	private static final String BASE_URI_VALUE = "http://openk9-liferay-connector.k9-test:5000";
+	private static final String ENTITY = "entity";
 	private static final String ENTITY_NAME_PREFIX = "PluginDriverGraphqlTest - ";
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
-	private static final String JSON_CONFIG = "jsonConfig";
-	private static final String JSON_CONFIG_VALUE =
-		"{\"baseUri\":\"openk9-liferay-connector.k9-test:5000\",\"path\":\"/getDocuments\",\"method\":\"POST\"}";
+	private static final String ID = "id";
 	private static final Logger log = Logger.getLogger(PluginDriverGraphqlTest.class);
 	private static final String MESSAGE = "message";
 	private static final String NAME = "name";
+	private static final String PATH = "path";
+	private static final String PATH_VALUE = "/getDocuments";
 	private static final String PLUGIN_DRIVER_NAME_ONE = ENTITY_NAME_PREFIX + "Plugin driver 1";
 	private static final String PLUGIN_DRIVER_WITH_DOC_TYPE = "pluginDriverWithDocType";
 	private static final String PLUGIN_WITH_DOC_TYPE_DTO = "pluginWithDocTypeDTO";
 	private static final String PROVISIONING = "provisioning";
+	private static final String RESOURCE_URI = "resourceUri";
 	private static final String TYPE = "type";
 
 	@Inject
@@ -117,14 +121,20 @@ public class PluginDriverGraphqlTest {
 							inputObject(
 								prop(NAME,PLUGIN_DRIVER_NAME_ONE),
 								prop(TYPE, PluginDriver.PluginDriverType.HTTP),
-								prop(JSON_CONFIG, JSON_CONFIG_VALUE),
+								prop(
+									RESOURCE_URI,
+									inputObject(
+										prop(BASE_URI, BASE_URI_VALUE),
+										prop(PATH, PATH_VALUE)
+									)
+								),
 								prop(PROVISIONING, PluginDriver.Provisioning.USER)
 							)
 						)
 					),
 					field(
-						"entity",
-						field("id"),
+						ENTITY,
+						field(ID),
 						field(NAME)
 					),
 					field(
