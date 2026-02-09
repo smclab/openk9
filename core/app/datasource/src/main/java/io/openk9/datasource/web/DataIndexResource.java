@@ -78,7 +78,6 @@ public class DataIndexResource {
 
 	}
 
-	@Operation(operationId = "auto-generate-doc-types")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -120,7 +119,6 @@ public class DataIndexResource {
 
 	}
 
-	@Operation(operationId = "get-mappings-from-doc-types")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -162,7 +160,6 @@ public class DataIndexResource {
 		return indexMappingService.getMappingsFromDocTypes(request.getDocTypeIds());
 	}
 
-	@Operation(operationId = "get-settings-from-doc-types")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

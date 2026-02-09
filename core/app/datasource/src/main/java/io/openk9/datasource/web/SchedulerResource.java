@@ -45,7 +45,6 @@ import org.jboss.resteasy.reactive.RestResponse;
 @Path("/schedulers")
 public class SchedulerResource {
 
-	@Operation(operationId = "getDeletedContentIds")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -71,7 +70,6 @@ public class SchedulerResource {
 		return schedulerService.getDeletedContentIds(schedulerId);
 	}
 
-	@Operation(operationId = "closeScheduling")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -99,7 +97,6 @@ public class SchedulerResource {
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
-	@Operation(operationId = "cancelScheduling")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -127,7 +124,6 @@ public class SchedulerResource {
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
-	@Operation(operationId = "rerouteScheduling")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "204", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -155,7 +151,6 @@ public class SchedulerResource {
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
-	@Operation(operationId = "status")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

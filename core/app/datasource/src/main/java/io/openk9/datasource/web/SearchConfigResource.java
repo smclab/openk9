@@ -46,7 +46,6 @@ public class SearchConfigResource {
 	@Inject
 	SearchConfigService service;
 
-	@Operation(operationId = "configure-hybrid-search")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

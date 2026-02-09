@@ -68,7 +68,6 @@ public class TriggerWithDateResource {
 	 * @return A {@link Uni} representing the status of the triggered job and type of running jobs
 	 *         if present as a {@link SchedulerService.TriggerResponse}.
 	 */
-	@Operation(operationId = "v2-trigger")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),

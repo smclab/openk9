@@ -61,7 +61,6 @@ public class PluginDriverResource {
 		return service.createPluginDriverDocTypes(id);
 	}
 
-	@Operation(operationId = "document-types-plugin-driver")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -89,7 +88,6 @@ public class PluginDriverResource {
 		return service.getDocTypes(id);
 	}
 
-	@Operation(operationId = "form")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -117,7 +115,6 @@ public class PluginDriverResource {
 		return service.getForm(id);
 	}
 
-	@Operation(operationId = "health")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
@@ -143,7 +140,6 @@ public class PluginDriverResource {
 		return service.getHealth(id);
 	}
 
-	@Operation(operationId = "health-dto")
 	@APIResponses(value = {
 			@APIResponse(responseCode = "200", description = "success"),
 			@APIResponse(responseCode = "404", description = "not found"),
