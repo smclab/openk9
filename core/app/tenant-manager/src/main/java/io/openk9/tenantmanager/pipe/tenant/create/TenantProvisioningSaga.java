@@ -64,23 +64,14 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		var schemaAdapter = context.messageAdapter(Schema.Response.class, ResponseWrapper::new);
 		var ingressAdapter = context.messageAdapter(Ingress.Response.class, ResponseWrapper::new);
 
-		ActorRef<Realm.Command> realm = context.spawnAnonymous(factory.realm(
-			virtualHost,
-			schemaName,
-			realmAdapter
-		));
+		ActorRef<Realm.Command> realm = context.spawnAnonymous(factory
+			.realm(virtualHost, schemaName, realmAdapter));
 
-		ActorRef<Schema.Command> schema = context.spawnAnonymous(factory.schema(
-			virtualHost,
-			schemaName,
-			schemaAdapter
-		));
+		ActorRef<Schema.Command> schema = context.spawnAnonymous(factory
+			.schema(virtualHost, schemaName, schemaAdapter));
 
-		ActorRef<Ingress.Command> ingress = context.spawnAnonymous(factory.ingress(
-			virtualHost,
-			schemaName,
-			ingressAdapter
-		));
+		ActorRef<Ingress.Command> ingress = context.spawnAnonymous(factory
+			.ingress(virtualHost, schemaName, ingressAdapter));
 
 		schema.tell(Schema.Start.INSTANCE);
 		realm.tell(Realm.Start.INSTANCE);
@@ -88,37 +79,26 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	}
 
 	public static Behavior<Command> create(
-		String virtualHost,
-		String schemaName,
-		ActorRef<Response> replyTo) {
+		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx,
-			virtualHost,
-			schemaName,
-			replyTo,
+			ctx, virtualHost, schemaName, replyTo,
 			new DefaultProvisioningFactory()
 		));
 	}
 
 	public static Behavior<Command> create(
-		String virtualHost,
-		String schemaName,
-		ActorRef<Response> replyTo,
+		String virtualHost, String schemaName, ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx,
-			virtualHost,
-			schemaName,
-			replyTo,
-			factory
-		));
+			ctx, virtualHost, schemaName, replyTo, factory));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
-		return newReceiveBuilder().onMessage(ResponseWrapper.class, this::onParallelResponse)
+		return newReceiveBuilder()
+			.onMessage(ResponseWrapper.class, this::onParallelResponse)
 			.build();
 	}
 
@@ -201,7 +181,8 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		);
 		tenantRef.tell(Tenant.Start.INSTANCE);
 
-		return newReceiveBuilder().onMessage(TenantResponseWrapper.class, this::onTenantResponse)
+		return newReceiveBuilder()
+			.onMessage(TenantResponseWrapper.class, this::onTenantResponse)
 			.build();
 	}
 
@@ -231,8 +212,10 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	private Behavior<Command> processParallelResults() {
 		Map<Boolean, List<Object>> partitioned =
 			collectedResponses.stream().collect(Collectors.partitioningBy(r ->
-				r instanceof Realm.Success || r instanceof Schema.Success ||
-				r instanceof Ingress.Success));
+					r instanceof Realm.Success
+					|| r instanceof Schema.Success
+					|| r instanceof Ingress.Success)
+			);
 
 		List<Object> errors = partitioned.get(false);
 
@@ -248,6 +231,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 
 	private Behavior<Command> startCompensations(EnumSet<Operations> compensations) {
 		this.compensationCounter = compensations.size();
+
+		getContext().getLog().info(
+			"Starting compensation for {} operations.", compensationCounter);
 
 		if (compensationCounter == 0) {
 			replyTo.tell(Error.INSTANCE);
@@ -360,47 +346,52 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 
 	private static class DefaultProvisioningFactory implements ProvisioningFactory {
 		@Override
-		public Behavior<Ingress.Command> ingress(String v, String s, ActorRef<Ingress.Response> r) {
+		public Behavior<Ingress.Command> ingress(
+			String v, String s, ActorRef<Ingress.Response> r) {
+
 			return Ingress.create(v, s, r);
 		}
 
 		@Override
 		public Behavior<Ingress.Command> ingressRollback(
-			String s,
-			String v,
-			ActorRef<Ingress.Response> r) {
+			String s, String v, ActorRef<Ingress.Response> r) {
+
 			return Ingress.rollback(v, s, r);
 		}
 
 		@Override
-		public Behavior<Realm.Command> realm(String v, String s, ActorRef<Realm.Response> r) {
+		public Behavior<Realm.Command> realm(
+			String v, String s, ActorRef<Realm.Response> r) {
+
 			return Realm.create(v, s, r);
 		}
 
 		@Override
-		public Behavior<Realm.Command> realmRollback(String s, ActorRef<Realm.Response> r) {
+		public Behavior<Realm.Command> realmRollback(
+			String s, ActorRef<Realm.Response> r) {
+
 			return Realm.createRollback(s, r);
 		}
 
 		@Override
-		public Behavior<Schema.Command> schema(String v, String s, ActorRef<Schema.Response> r) {
+		public Behavior<Schema.Command> schema(
+			String v, String s, ActorRef<Schema.Response> r) {
+
 			return Schema.create(v, s, r);
 		}
 
 		@Override
-		public Behavior<Schema.Command> schemaRollback(String s, ActorRef<Schema.Response> r) {
+		public Behavior<Schema.Command> schemaRollback(
+			String s, ActorRef<Schema.Response> r) {
+
 			return Schema.createRollback(s, r);
 		}
 
 		@Override
 		public Behavior<Tenant.Command> tenant(
-			String v,
-			String s,
-			String l,
-			String i,
-			String c,
-			String sc,
+			String v, String s, String l, String i, String c, String sc,
 			ActorRef<Tenant.Response> r) {
+
 			return Tenant.create(v, s, l, i, c, sc, r);
 		}
 	}
