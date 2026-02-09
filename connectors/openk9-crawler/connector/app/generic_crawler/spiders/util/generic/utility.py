@@ -21,7 +21,7 @@ def get_title(response, title_tag):
     return title
 
 
-def get_content(response, max_length=None, body_tag=None, excluded_bodyTags=None):
+def get_content(response, max_length=None, body_tag=None, excluded_body_tags=None):
     content = ''
 
     if body_tag is None:
@@ -32,8 +32,8 @@ def get_content(response, max_length=None, body_tag=None, excluded_bodyTags=None
     try:
         soupObj = BeautifulSoup(body, 'lxml')
         # Tags removing
-        if excluded_bodyTags is not None:
-            for tag_name in excluded_bodyTags:
+        if excluded_body_tags is not None:
+            for tag_name in excluded_body_tags:
                 for tag in soupObj.select(tag_name):
                     tag.decompose()
         soup = soupObj.get_text(separator=' ')
