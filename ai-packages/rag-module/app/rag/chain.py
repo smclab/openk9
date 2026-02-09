@@ -418,7 +418,7 @@ def get_chat_chain_tool(
                 result_answer += chunk
                 yield json.dumps({"chunk": chunk, "type": "CHUNK"})
 
-            if chat_sequence_number == 1:
+            if enable_conversation_title and chat_sequence_number == 1:
                 conversation_title = generate_conversation_title(
                     llm, search_text, result_answer
                 )
