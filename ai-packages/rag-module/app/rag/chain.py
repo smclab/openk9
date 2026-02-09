@@ -189,6 +189,7 @@ def get_chat_chain(
         reformulate = rag_configuration.get("reformulate")
         rerank = rag_configuration.get("rerank")
         chunk_window = rag_configuration.get("chunk_window")
+        enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
 
         api_url = llm_configuration.get("api_url")
@@ -215,6 +216,7 @@ def get_chat_chain(
             "retrieve_citations": retrieve_citations,
             "rerank": rerank,
             "chunk_window": chunk_window,
+            "enable_conversation_title": enable_conversation_title,
             "metadata": metadata,
             "retrieve_type": retrieve_type,
             "watsonx_project_id": watsonx_project_id,
@@ -293,6 +295,7 @@ def get_chat_chain_tool(
         reformulate = rag_configuration.get("reformulate")
         rerank = rag_configuration.get("rerank")
         chunk_window = rag_configuration.get("chunk_window")
+        enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
         rag_tool_description = rag_configuration.get("rag_tool_description")
 
@@ -320,6 +323,7 @@ def get_chat_chain_tool(
             "retrieve_citations": retrieve_citations,
             "rerank": rerank,
             "chunk_window": chunk_window,
+            "enable_conversation_title": enable_conversation_title,
             "metadata": metadata,
             "retrieve_type": retrieve_type,
             "watsonx_project_id": watsonx_project_id,
