@@ -249,6 +249,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         * **rag_tool_description** (str): Description of the RAG tool for RAG as tool
         * **chunk_window** (int): Size of text chunks for document processing and retrieval
         * **reformulate** (bool): Whether to enable query reformulation for better retrieval
+        * **enable_conversation_title** (bool): Whether to enable conversation title
         * **rerank** (bool): Whether to enable re-ranking of retrieved results
         * **metadata** (dict): Additional metadata
     """
@@ -267,6 +268,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         rag_tool_description = response.ragToolDescription
         chunk_window = response.chunkWindow
         reformulate = response.reformulate
+        enable_conversation_title = response.enableConversationTitle
         json_config = json_format.MessageToDict(response.jsonConfig)
         rerank = json_config.get("rerank")
         metadata = json_config.get("metadata")
@@ -278,6 +280,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "rag_tool_description": rag_tool_description,
             "chunk_window": chunk_window,
             "reformulate": reformulate,
+            "enable_conversation_title": enable_conversation_title,
             "rerank": rerank,
             "metadata": metadata,
         }
