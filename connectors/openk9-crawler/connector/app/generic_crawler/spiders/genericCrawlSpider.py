@@ -32,11 +32,11 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     allowed_types = []
     type_mapping = []
 
-    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_bodyTags, title_tag, follow,
-                 max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions,
+    def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_body_tags, title_tag, follow,
+                 max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions, do_use_default_mimetype_map, mimetype_map,
                  custom_metadata, additional_metadata, do_extract_docs, cert_verification, timestamp, *a, **kw):
-        super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains, excluded_paths,
-                                                 allowed_paths, max_length, max_size_bytes, document_file_extensions, custom_metadata,
+        super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
+                                                 allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_default_mimetype_map, mimetype_map, custom_metadata,
                                                  additional_metadata, do_extract_docs, cert_verification, datasource_id, schedule_id,
                                                  timestamp, tenant_id, *a, **kw)
 
@@ -83,7 +83,7 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
             url = response.url
             title = get_title(response, self.title_tag)
-            content = get_content(response, self.max_length, self.body_tag, self.excluded_bodyTags)
+            content = get_content(response, self.max_length, self.body_tag, self.excluded_body_tags)
 
             web_item_fields = ['url', 'title', 'content', 'favicon']
 
