@@ -65,7 +65,7 @@ class BaseRequest(ABC, BaseModel):
     timestamp: int
     tenantId: str = ""
     doUseDefaultMimetypeMap: Optional[bool] = True
-    mimetypeMap: Optional[dict] = None
+    mimetypeMap: Optional[dict] = {}
 
     @model_validator(mode='after')
     def log_failed_validation(self) -> Self:
@@ -126,7 +126,7 @@ def get_base_request_payload(request):
     payload = {
         "allowed_domains": json.dumps(allowed_domains),
         "body_tag": body_tag,
-        "excluded_bodyTags": json.dumps(excluded_body_tags),
+        "excluded_body_tags": json.dumps(excluded_body_tags),
         "title_tag": title_tag,
         "datasource_id": datasource_id,
         "schedule_id": schedule_id,

@@ -41,13 +41,13 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
     payload = {}
 
-    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_bodyTags, title_tag, replace_rule, links_to_follow,
+    def __init__(self, sitemap_urls, allowed_domains, body_tag, excluded_body_tags, title_tag, replace_rule, links_to_follow,
                  use_playwright, playwright_selector, playwright_timeout, datasource_id, schedule_id, ingestion_url, timestamp,
                  additional_metadata, max_length, max_size_bytes, tenant_id, excluded_paths, allowed_paths,
-                 document_file_extensions, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
+                 document_file_extensions, do_use_default_mimetype_map, mimetype_map, custom_metadata, do_extract_docs, cert_verification, *a, **kw):
 
-        super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_bodyTags, title_tag, allowed_domains,
-                                                   excluded_paths, allowed_paths, max_length, max_size_bytes, document_file_extensions,
+        super(GenericSitemapSpider, self).__init__(ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains,
+                                                   excluded_paths, allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_default_mimetype_map, mimetype_map,
                                                    custom_metadata, additional_metadata, do_extract_docs, cert_verification, datasource_id,
                                                    schedule_id, timestamp, tenant_id, *a, **kw)
 
@@ -188,7 +188,7 @@ class GenericSitemapSpider(AbstractBaseCrawlSpider, SitemapSpider):
 
         url = response.url
         title = get_title(response, self.title_tag)
-        content = get_content(response, self.max_length, self.body_tag, self.excluded_bodyTags)
+        content = get_content(response, self.max_length, self.body_tag, self.excluded_body_tags)
 
         web_item_fields = ['url', 'title', 'content', 'favicon']
 
