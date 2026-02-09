@@ -145,12 +145,17 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	}
 
 	private Behavior<Command> onCompensationComplete() {
+		getContext().getLog().info(
+			"Compensation #{} done.",
+			Operations.values().length - compensationCounter);
+
 		compensationCounter--;
 		if (compensationCounter <= 0) {
 			replyTo.tell(Error.INSTANCE);
 			return Behaviors.stopped();
 		}
-		return this;
+
+		return handleCompensations();
 	}
 
 	private Behavior<Command> onOperationsFailure(List<Object> errorList) {
@@ -231,8 +236,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 
 		List<Object> errors = partitioned.get(false);
 
+		extractContextData(partitioned.get(true));
+
 		if (errors == null || errors.isEmpty()) {
-			extractContextData(partitioned.get(true));
 			return onOperationsSuccess();
 		}
 		else {
@@ -253,7 +259,10 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 				case INGRESS -> {
 					var replyTo = getContext().messageAdapter(
 						Ingress.Response.class,
-						r -> CompensationResponse.INSTANCE
+						r -> {
+							getContext().getLog().debug("Ingress Rolled Back");
+							return CompensationResponse.INSTANCE;
+						}
 					);
 					getContext().spawnAnonymous(factory.ingressRollback(
 						schemaName, virtualHost, replyTo))
@@ -262,28 +271,40 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 				case REALM -> {
 					var replyTo = getContext().messageAdapter(
 						Realm.Response.class,
-						r -> CompensationResponse.INSTANCE
+						r -> {
+							getContext().getLog().debug("Realm Rolled Back");
+							return CompensationResponse.INSTANCE;
+						}
 					);
-					getContext().spawnAnonymous(factory.realmRollback(schemaName, replyTo))
+					getContext().spawnAnonymous(factory.realmRollback(
+						schemaName, replyTo))
 						.tell(Realm.Rollback.INSTANCE);
 				}
 				case SCHEMA -> {
 					var replyTo = getContext().messageAdapter(
 						Schema.Response.class,
-						r -> CompensationResponse.INSTANCE
+						r -> {
+							getContext().getLog().debug("Schema Rolled Back");
+							return CompensationResponse.INSTANCE;
+						}
 					);
-					getContext().spawnAnonymous(factory.schemaRollback(schemaName, replyTo))
+					getContext().spawnAnonymous(
+						factory.schemaRollback(schemaName, replyTo))
 						.tell(Schema.Rollback.INSTANCE);
 				}
 			}
 		}
+
+		return handleCompensations();
+	}
+
+	private Receive<Command> handleCompensations() {
 
 		return newReceiveBuilder().onMessageEquals(
 			CompensationResponse.INSTANCE,
 			this::onCompensationComplete
 		).build();
 	}
-
 
 	public sealed interface Command {}
 	record ResponseWrapper(Object response) implements Command {}
