@@ -97,7 +97,78 @@ def query_parser(
 
 
 def get_rag_configuration(grpc_host, virtual_host, rag_type):
-    """Get rag configuration from grpc."""
+    """
+    Retrieve RAG (Retrieval-Augmented Generation) configuration from gRPC service.
+
+    This function communicates with a gRPC service to fetch RAG-specific configuration
+    for a particular virtual host/tenant and RAG type, including prompts, chunking settings,
+    and retrieval parameters.
+
+    :param grpc_host: gRPC server host address for the configuration service
+    :type grpc_host: str
+    :param virtual_host: Virtual host identifier for tenant-specific configuration
+    :type virtual_host: str
+    :param rag_type: Type of RAG configuration to retrieve (e.g., "CHAT_RAG", "DOCUMENT_RAG")
+    :type rag_type: str
+
+    :return: Dictionary containing complete RAG configuration for the specified type and tenant
+    :rtype: dict
+
+    :raises HTTPException 500: If gRPC communication fails or unexpected error occurs
+
+    :Example:
+
+    .. code-block:: python
+
+        config = get_rag_configuration(
+            grpc_host="localhost:50051",
+            virtual_host="tenant1.example.com",
+            rag_type="CHAT_RAG"
+        )
+
+        # Returns:
+        # {
+        #     "prompt": "You are a helpful assistant...",
+        #     "prompt_no_rag": "Answer based on your knowledge...",
+        #     "rephrase_prompt": "Rephrase the following question...",
+        #     "rag_tool_description": "Searches through documents...",
+        #     "chunk_window": 512,
+        #     "reformulate": True,
+        #     "rerank": False,
+        #     "metadata": {}
+        # }
+
+    .. note::
+        - Supports different RAG types for various use cases
+        - Configuration is tenant-specific based on virtual_host
+        - Includes multiple prompt templates for different scenarios
+        - Handles document chunking and retrieval optimization
+        - Converts protobuf JSON configuration to Python dictionary
+        - Supports metadata for extended configuration options
+
+    .. warning::
+        - gRPC communication failures will result in HTTP 500 errors
+        - Ensure gRPC server is running and accessible at grpc_host
+        - Virtual host must correspond to a configured tenant with RAG settings
+        - RAG type must match available configurations on the server
+
+    .. seealso::
+        - :class:`searcher_pb2.GetRAGConfigurationsRequest` gRPC request message
+        - :class:`searcher_pb2_grpc.SearcherStub` gRPC service stub
+        - :func:`json_format.MessageToDict` for protobuf to dictionary conversion
+        - :func:`get_llm_configuration` For retrieving LLM-specific configurations
+
+    Configuration Dictionary Fields:
+        * **prompt** (str): Primary prompt template for RAG-enhanced responses
+        * **prompt_no_rag** (str): Prompt template for when the RAG tool is not called
+        * **rephrase_prompt** (str): Prompt template for query rephrasing
+        * **rag_tool_description** (str): Description of the RAG tool for RAG as tool
+        * **chunk_window** (int): Size of text chunks for document processing and retrieval
+        * **reformulate** (bool): Whether to enable query reformulation for better retrieval
+        * **enable_conversation_title** (bool): Whether to enable conversation title
+        * **rerank** (bool): Whether to enable re-ranking of retrieved results
+        * **metadata** (dict): Additional metadata
+    """
     try:
         with grpc.insecure_channel(grpc_host) as channel:
             stub = searcher_pb2_grpc.SearcherStub(channel)
@@ -113,6 +184,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         rag_tool_description = response.ragToolDescription
         chunk_window = response.chunkWindow
         reformulate = response.reformulate
+        enable_conversation_title = response.enableConversationTitle
         json_config = json_format.MessageToDict(response.jsonConfig)
         rerank = json_config.get("rerank")
         metadata = json_config.get("metadata")
@@ -124,6 +196,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "rag_tool_description": rag_tool_description,
             "chunk_window": chunk_window,
             "reformulate": reformulate,
+            "enable_conversation_title": enable_conversation_title,
             "rerank": rerank,
             "metadata": metadata,
         }
