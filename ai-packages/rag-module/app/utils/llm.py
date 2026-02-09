@@ -663,12 +663,22 @@ def stream_rag_conversation(
     conversation_title = ""
     citations_response = []
     parsing_error = ""
+    thinking_chunk = True
+    start_chunk = True
 
     for chunk in result:
-        if chunk and "answer" in chunk.keys() and result_answer == "":
-            result_answer += chunk
-            yield json.dumps({"chunk": "", "type": "START"})
+        if (
+            chunk
+            and "answer" in chunk.keys()
+            and chunk["answer"] == ""
+            and thinking_chunk
+        ):
+            continue
         elif chunk and "answer" in chunk.keys():
+            if start_chunk:
+                yield json.dumps({"chunk": "", "type": "START"})
+                thinking_chunk = False
+                start_chunk = False
             result_answer += chunk
             yield json.dumps({"chunk": chunk["answer"], "type": "CHUNK"})
         elif chunk and "context" in chunk.keys():
