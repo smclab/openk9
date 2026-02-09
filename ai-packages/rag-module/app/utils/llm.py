@@ -390,6 +390,44 @@ def stream_rag_conversation(
         - Maintains conversation history through OpenSearch integrations
         - Response streaming implemented using generator pattern
         - Document processing includes deduplication and citation mapping
+        - Automatically generates conversation titles for new chat sessions
+        - Supports multiple LLM providers with different capabilities
+
+    .. warning::
+        - Unauthorized users cannot access uploaded documents
+        - Ensure all gRPC services are running and accessible
+        - OpenSearch cluster must be properly configured with KNN support
+
+    .. seealso::
+        - :class:`OpenSearchRetriever` For general document retrieval
+        - :class:`OpenSearchUploadedDocumentsRetriever` For user-uploaded document retrieval
+        - :func:`initialize_language_model` For LLM initialization
+        - :func:`save_chat_message` For storing conversation history
+
+    Stream Event Types:
+        * **START**: Stream initialization signal
+        * **CHUNK**: Partial response text chunks
+        * **TITLE**: Generated conversation title (only for new chats)
+        * **DOCUMENT**: Retrieved documents with metadata and citations
+        * **END**: Stream termination signal
+
+    Configuration Parameters:
+        The configuration dictionary should contain:
+
+        * **model_type** (str): Type of LLM to use (default: DEFAULT_MODEL_TYPE)
+        * **model** (str): Name of the model to use (default: DEFAULT_MODEL)
+        * **prompt_template** (str): Main prompt template for response generation
+        * **rephrase_prompt_template** (str): Contextualization prompt template
+        * **context_window** (int): Model context window size in tokens
+        * **retrieve_citations** (bool): Flag to enable citation extraction
+        * **enable_conversation_title** (bool): Flag to enable conversation title
+        * **retrieve_type** (str): Document retrieval strategy
+        * **rerank** (bool): Whether to enable document reranking
+        * **chunk_window** (int): Context window merging configuration (0=disabled, >0=enabled)
+        * **metadata** (dict): Metadata for document fields extraction
+        * **watsonx_project_id** (str): Project ID for IBM WatsonX
+        * **chat_vertex_ai_credentials** (dict): Credentials for Google Vertex AI
+        * **chat_vertex_ai_model_garden** (dict): Configurations for Vertex AI Model Garden
     """
     model_type = configuration.get("model_type", DEFAULT_MODEL_TYPE)
     model = configuration.get("model", DEFAULT_MODEL)
@@ -397,6 +435,7 @@ def stream_rag_conversation(
     rephrase_prompt_template = configuration.get("rephrase_prompt_template")
     context_window = configuration.get("context_window")
     retrieve_citations = configuration.get("retrieve_citations")
+    enable_conversation_title = configuration.get("enable_conversation_title")
     retrieve_type = configuration.get("retrieve_type")
     rerank = configuration.get("rerank")
     chunk_window = configuration.get("chunk_window")
@@ -635,7 +674,7 @@ def stream_rag_conversation(
             }
         )
 
-    if chat_sequence_number == 1 and user_id:
+    if enable_conversation_title and chat_sequence_number == 1 and user_id:
         conversation_title = generate_conversation_title(
             llm, search_text, result_answer
         )
