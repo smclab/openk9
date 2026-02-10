@@ -34,11 +34,7 @@ Fetch version:
   rules:
   # Run on merge requests and main branch only
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
   - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
@@ -71,11 +67,7 @@ Build Verifier:
   rules:
   # Run on merge requests and main branch only
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
   - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
 
 ######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
 Build OpenK9-Chatbot:

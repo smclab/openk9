@@ -107,8 +107,6 @@ Build Verifier:
   - yarn build
   rules:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/admin-ui/**/*
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
