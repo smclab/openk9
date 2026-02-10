@@ -56,121 +56,116 @@ public class PluginDriverResource {
 
 	@POST
 	@Path("/documentTypes/{id}")
-	public Uni<Set<DocType>> createDocTypes(@PathParam("id") long id) {
+	public Uni<Set<DocType>> createDocTypes(
+		@Parameter(description = "Plugin Driver's id")
+		@PathParam("id") long id) {
+
 		return service.createPluginDriverDocTypes(id);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "List of templates returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.TEMPLATES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "The list of the Document Types created from this Plugin Driver",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = PluginDriverDocTypesDTO.class),
+					example = BucketDtoExamples.TEMPLATES_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@GET
 	@Path("/documentTypes/{id}")
 	public Uni<PluginDriverDocTypesDTO> getDocTypes(
-			@Parameter(description = "Id of Plugin Driver")
-			@PathParam("id") long id) {
+		@Parameter(description = "Plugin Driver's id")
+		@PathParam("id") long id) {
+
 		return service.getDocTypes(id);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Form returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.TEMPLATES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Form returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = FormTemplate.class)
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@GET
 	@Path("/form/{id}")
 	public Uni<FormTemplate> getForm(
-			@Parameter(description = "Id of Plugin Driver")
-			@PathParam("id") long id) {
+		@Parameter(description = "Plugin Driver's id")
+		@PathParam("id") long id) {
+
 		return service.getForm(id);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Health Check Ok",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.TEMPLATES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Plugin Driver Health Status",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = HealthDTO.class),
+					example = PluginDriverDtoExamples.HEALTH_STATUS
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@GET
 	@Path("/health/{id}")
-	public Uni<HealthDTO> getHealth(@PathParam("id") long id) {
+	public Uni<HealthDTO> getHealth(
+		@Parameter(description = "Plugin Driver's id")
+		@PathParam("id") long id) {
+
 		return service.getHealth(id);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Health Check Ok",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = PluginDriverDtoExamples.HEALTH_STATUS
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Plugin Driver Health Status",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = HealthDTO.class),
+					example = PluginDriverDtoExamples.HEALTH_STATUS
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@RequestBody(
-			content = {
-					@Content(
-							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = PluginDriverDTO.class),
-							examples = {
-									@ExampleObject(
-											name = "Health DTO",
-											value = SchedulerDtoExamples.TRIGGER_V2_RESOURCE_DTO_SAMPLE
-									)
-							}
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = PluginDriverDTO.class),
+				examples = {
+					@ExampleObject(
+						name = "PluginDriver DTO",
+						value = PluginDriverDtoExamples.PLUGIN_DRIVER_DTO
 					)
-			}
+				}
+			)
+		}
 	)
 	@POST
 	@Path("/health")
