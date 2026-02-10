@@ -39,14 +39,17 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RAGConfiguration extends K9Entity {
 
-	private static final Integer DEFAULT_CHUNK_WINDOW = 0;
-	private static final Boolean DEFAULT_REFORMULATE = false;
-	private static final String EMPTY_STRING = "";
+	public static final Integer DEFAULT_CHUNK_WINDOW = 0;
+	public static final Boolean DEFAULT_ENABLE_CONVERSATION_TITLE = false;
+	public static final Boolean DEFAULT_REFORMULATE = false;
+	public static final String EMPTY_STRING = "";
 
 	@Column(name = "chunk_window")
 	private Integer chunkWindow = DEFAULT_CHUNK_WINDOW;
 	@Column(name = "description", length = 4096)
 	private String description;
+	@Column(name = "enable_conversation_title")
+	private Boolean enableConversationTitle = DEFAULT_ENABLE_CONVERSATION_TITLE;
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "json_config")
 	private String jsonConfig;
@@ -73,6 +76,11 @@ public class RAGConfiguration extends K9Entity {
 
 	public void setChunkWindow(Integer chunkWindow) {
 		this.chunkWindow = Objects.requireNonNullElse(chunkWindow, DEFAULT_CHUNK_WINDOW);
+	}
+
+	public void setEnableConversationTitle(Boolean enableConversationTitle) {
+		this.enableConversationTitle =
+			Objects.requireNonNullElse(enableConversationTitle, DEFAULT_ENABLE_CONVERSATION_TITLE);
 	}
 
 	public void setPrompt(String prompt) {
