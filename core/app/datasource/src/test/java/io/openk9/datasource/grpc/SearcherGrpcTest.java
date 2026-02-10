@@ -95,6 +95,7 @@ public class SearcherGrpcTest {
 	private static final String EM_API_KEY = "EMST.asdfkaslf01432kl4l1";
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
 	private static final int EM_VECTOR_SIZE = 1330;
+	private static final boolean ENABLE_CONVERSATION_TITLE = true;
 	private static final String FUZZINESS = "2";
 	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
@@ -224,6 +225,7 @@ public class SearcherGrpcTest {
 				.ragToolDescription(PROMPT_TEST)
 				.rephrasePrompt(PROMPT_TEST)
 				.reformulate(REFORMULATE)
+				.enableConversationTitle(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
 				.build()
 		);
@@ -238,6 +240,7 @@ public class SearcherGrpcTest {
 				.ragToolDescription(PROMPT_TEST)
 				.rephrasePrompt(PROMPT_TEST)
 				.reformulate(REFORMULATE)
+				.reformulate(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
 				.build()
 		);
@@ -252,6 +255,7 @@ public class SearcherGrpcTest {
 				.ragToolDescription(PROMPT_TEST)
 				.rephrasePrompt(PROMPT_TEST)
 				.reformulate(REFORMULATE)
+				.reformulate(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
 				.build()
 		);
@@ -422,6 +426,7 @@ public class SearcherGrpcTest {
 				assertEquals(PROMPT_TEST, response.getRagToolDescription());
 				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
 				assertEquals(REFORMULATE, response.getReformulate());
+				assertEquals(ENABLE_CONVERSATION_TITLE, response.getEnableConversationTitle());
 				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 			}
 		);
