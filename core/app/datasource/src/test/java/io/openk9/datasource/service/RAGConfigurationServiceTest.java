@@ -40,8 +40,6 @@ public class RAGConfigurationServiceTest {
 
 	private static final String ENTITY_NAME_PREFIX = "RAGConfigurationServiceTest - ";
 	private static final int CHUNK_WINDOW = 1500;
-	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
-	private static final Boolean DEFAULT_REFORMULATE = false;
 	private static final int DEFAULT_VALUE_CHUNK_WINDOW = 0;
 	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String PROMPT_EXAMPLE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sit" +
@@ -96,6 +94,7 @@ public class RAGConfigurationServiceTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW)
 			.reformulate(true)
+			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
@@ -110,6 +109,7 @@ public class RAGConfigurationServiceTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
 		assertTrue(ragConfigurationOne.getReformulate());
+		assertTrue(ragConfigurationOne.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
@@ -131,12 +131,16 @@ public class RAGConfigurationServiceTest {
 		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
 
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
-		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
-		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(RAGConfiguration.DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(RAGConfiguration.DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(
+			RAGConfiguration.DEFAULT_ENABLE_CONVERSATION_TITLE,
+			ragConfigurationOne.getEnableConversationTitle()
+		);
 		assertNull(ragConfigurationOne.getJsonConfig());
 
 		removeRAGConfigurationOne();
@@ -160,12 +164,16 @@ public class RAGConfigurationServiceTest {
 		log.info(String.format("Rag configuration created: %s", ragConfigurationOne));
 
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
-		assertEquals(DEFAULT_VALUE_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
-		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(RAGConfiguration.DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(RAGConfiguration.DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(
+			RAGConfiguration.DEFAULT_ENABLE_CONVERSATION_TITLE,
+			ragConfigurationOne.getEnableConversationTitle()
+		);
 
 		// patch the ragConfigurationOne
 		var dtoWithPatch = RAGConfigurationDTO.builder()
@@ -196,6 +204,7 @@ public class RAGConfigurationServiceTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW)
 			.reformulate(true)
+			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
@@ -212,6 +221,7 @@ public class RAGConfigurationServiceTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW)
 			.reformulate(true)
+			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.build();
 
