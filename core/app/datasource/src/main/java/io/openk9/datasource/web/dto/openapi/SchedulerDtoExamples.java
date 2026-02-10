@@ -20,45 +20,50 @@ package io.openk9.datasource.web.dto.openapi;
 
 public class SchedulerDtoExamples {
 
-    public static final String GET_DELETED_CONTENT_IDS_RESPONSE =
-            """
-            ["121321321, "432342343"]""";
-    public static final String STATUS_RESPONSE =
-            """
-            {
-                "datasources": [
-                    {
-                        "id": 209,
-                        "name": "test",
-                        "status": "IDLE"
-                    },
-                    {
-                        "id": 237,
-                        "name": "test2",
-                        "status": "ERROR"
-                    }
-                ],
-                "total": 1,
-                "errors": 1
-             }""";
-    public static final String TRIGGER_V2_RESOURCE_DTO_SAMPLE =
-            """
-            {
-                "datasourceId": 209,
-                "reindex": false,
-                "startIngestionDate": "2025-07-28T12:47:00+02:00"
-              }""";
-    public static final String TRIGGER_RESPONSE =
-            """
-            {
-                "id":209,
-                "oldSchedulerType":"NO_RUNNING_SCHEDULER",
-                "triggerStatus":"STARTED"
-            }""";
-    public static final String RESOURCE_URI_REQUEST =
-			"""
-			{
-				"base_uri": "https://example.com",
-				"path": "/test"
-			}""";
+	public static final String GET_DELETED_CONTENT_IDS_RESPONSE =
+		"""
+		["121321321, "432342343"]
+		""";
+	public static final String STATUS_RESPONSE =
+		"""
+		{
+			"datasources": [
+				{
+					"id": 209,
+					"name": "test",
+					"status": "IDLE"
+				},
+				{
+					"id": 237,
+					"name": "test2",
+					"status": "ERROR"
+				}
+			],
+			"total": 1,
+			"errors": 1
+		}
+		""";
+	public static final String TRIGGER_V2_RESOURCE_DTO_SAMPLE =
+		"""
+		{
+			"datasourceId": 209,
+			"reindex": false,
+			"startIngestionDate": "2025-07-28T12:47:00+02:00"
+		}
+		""";
+	public static final String TRIGGER_RESPONSE =
+		"""
+		{
+			"id":209,
+			"oldSchedulerType":"NO_RUNNING_SCHEDULER",
+			"triggerStatus":"STARTED"
+		}
+		""";
+	public static final String RESOURCE_URI_REQUEST =
+		"""
+		{
+			"base_uri": "https://example.com",
+			"path": "/test"
+		}
+		""";
 }

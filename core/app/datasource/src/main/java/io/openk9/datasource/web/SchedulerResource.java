@@ -46,23 +46,20 @@ import org.jboss.resteasy.reactive.RestResponse;
 public class SchedulerResource {
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "List of deleted content ids returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = SchedulerDtoExamples.GET_DELETED_CONTENT_IDS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of deleted content ids returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = List.class),
+					example = SchedulerDtoExamples.GET_DELETED_CONTENT_IDS_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/{schedulerId}/getDeletedContentIds")
 	@GET
@@ -71,104 +68,76 @@ public class SchedulerResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "204",
-					description = "Scheduling closed",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class)
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "204",
+			description = "Scheduling closed"
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/{schedulerId}/closeScheduling")
 	@POST
 	public Uni<Void> closeScheduling(
-			@Parameter(description = "Id of scheduling")
-			@PathParam("schedulerId") long schedulerId) {
+		@Parameter(description = "Scheduler entity ID")
+		@PathParam("schedulerId") long schedulerId) {
+
 		return schedulerService.closeScheduling(
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "204",
-					description = "Scheduling cancelled",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class)
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "204",
+			description = "Scheduling cancelled"
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/{schedulerId}/cancelScheduling")
 	@POST
 	public Uni<Void> cancelScheduling(
-			@Parameter(description = "Id of scheduling")
-			@PathParam("schedulerId") long schedulerId) {
+		@Parameter(description = "Scheduler entity ID")
+		@PathParam("schedulerId") long schedulerId) {
+
 		return schedulerService.cancelScheduling(
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "204", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "204",
-					description = "Scheduling rerouted successfully",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class)
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "204",
+			description = "Scheduling rerouted successfully"
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/{schedulerId}/rerouteScheduling")
 	@POST
 	public Uni<Void> rerouteScheduling(
-			@Parameter(description = "Id of scheduling")
-			@PathParam("schedulerId") long schedulerId) {
+		@Parameter(description = "Scheduler entity ID")
+		@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.rereouteScheduling(
 			routingContext.get("_tenantId"), schedulerId);
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Status of scheduling system up",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = SchedulerDtoExamples.STATUS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Health statud for each scheduled Datasource Indexing Job.",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = SchedulerDtoExamples.STATUS_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/status")
 	@GET
