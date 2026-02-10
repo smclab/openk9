@@ -38,7 +38,6 @@ import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
 import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 
 import io.smallrye.mutiny.Uni;
-import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -167,7 +166,7 @@ public class PluginDriverResource {
 							examples = {
 									@ExampleObject(
 											name = "Health DTO",
-											value = SchedulerDtoExamples.TRIGGER_REQUEST
+											value = SchedulerDtoExamples.TRIGGER_V2_RESOURCE_DTO_SAMPLE
 									)
 							}
 					)

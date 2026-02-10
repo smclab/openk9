@@ -41,7 +41,7 @@ public class SchedulerDtoExamples {
                 "total": 1,
                 "errors": 1
              }""";
-    public static final String TRIGGER_REQUEST =
+    public static final String TRIGGER_V2_RESOURCE_DTO_SAMPLE =
             """
             {
                 "datasourceId": 209,
