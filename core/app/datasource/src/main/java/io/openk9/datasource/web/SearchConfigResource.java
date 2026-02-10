@@ -47,37 +47,34 @@ public class SearchConfigResource {
 	SearchConfigService service;
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Hybrid search configure successfully",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Hybrid search configure successfully",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = SearchPipelineResponseDTO.class),
+					example = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@RequestBody(
-			content = {
-					@Content(
-							mediaType = MediaType.APPLICATION_JSON,
-							schema = @Schema(implementation = HybridSearchPipelineDTO.class),
-							examples = {
-									@ExampleObject(
-											name = "Configure Hybrid Search DTO",
-											value = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_REQUEST
-									)
-							}
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = HybridSearchPipelineDTO.class),
+				examples = {
+					@ExampleObject(
+						name = "Configure Hybrid Search DTO",
+						value = SearchConfigDtoExamples.CONFIGURE_HYBRID_SEARCH_REQUEST
 					)
-			}
+				}
+			)
+		}
 	)
 	@Path("/{id}/configure-hybrid-search")
 	@POST
