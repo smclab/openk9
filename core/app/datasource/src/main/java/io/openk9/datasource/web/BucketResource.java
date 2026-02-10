@@ -95,23 +95,19 @@ public class BucketResource {
 	HttpServerRequest request;
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "List of templates returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.TEMPLATES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of Templates returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					example = BucketDtoExamples.TEMPLATES_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/templates")
 	@GET
@@ -123,23 +119,19 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.TABS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of Tabs returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					example = BucketDtoExamples.TABS_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/tabs")
 	@GET
@@ -154,23 +146,19 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.SUGGESTION_CATEGORIES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of Suggestion Categories returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					example = BucketDtoExamples.SUGGESTION_CATEGORIES_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/suggestionCategories")
 	@GET
@@ -185,23 +173,19 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.SORTABLE_DOCTYPE_FIELDS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of Sortable DocTypeFields returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					example = BucketDtoExamples.SORTABLE_DOCTYPE_FIELDS_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/doc-type-fields-sortable")
 	@GET
@@ -215,23 +199,19 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.SORTING_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of Sortings returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					example = BucketDtoExamples.SORTING_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/sortings")
 	@GET
@@ -245,23 +225,20 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.DEFAULT_LANGUAGE_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Default Language returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = BucketDtoExamples.DEFAULT_LANGUAGE_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/defaultLanguage")
 	@GET
@@ -273,23 +250,20 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Tabs returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.AVAILABLE_LANGUAGES_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "List of available Languages returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = BucketDtoExamples.AVAILABLE_LANGUAGES_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current/availableLanguage")
 	@GET
@@ -301,23 +275,20 @@ public class BucketResource {
 	}
 
 	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Current bucket configuration returned",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = BucketDtoExamples.CURRENT_BUCKET_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
+		@APIResponse(
+			responseCode = "200",
+			description = "Current Bucket configuration returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = BucketDtoExamples.CURRENT_BUCKET_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
 	@Path("/current")
 	@GET
