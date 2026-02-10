@@ -241,6 +241,7 @@ message GetRAGConfigurationsResponse{
   string ragToolDescription = 6;
   string rephrasePrompt = 7;
   .google.protobuf.Struct jsonConfig = 8;
+  bool enableConversationTitle = 9;
 }
 
 message GetEmbeddingModelConfigurationsResponse {

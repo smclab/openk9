@@ -780,6 +780,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.setName(ragConfiguration.getName())
 							.setChunkWindow(ragConfiguration.getChunkWindow())
 							.setReformulate(ragConfiguration.getReformulate())
+							.setEnableConversationTitle(
+								ragConfiguration.getEnableConversationTitle()
+							)
 							.setPrompt(ragConfiguration.getPrompt())
 							.setPromptNoRag(ragConfiguration.getPromptNoRag())
 							.setRagToolDescription(ragConfiguration.getRagToolDescription())
