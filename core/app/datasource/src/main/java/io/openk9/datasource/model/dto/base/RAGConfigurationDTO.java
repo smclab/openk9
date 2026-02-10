@@ -36,6 +36,8 @@ public class RAGConfigurationDTO extends K9EntityDTO {
 			"""
 	)
 	private Integer chunkWindow;
+	@Description("Boolean flag to show conversations title.")
+	private Boolean enableConversationTitle;
 	@Json
 	@Description("A JSON that can be used to add additional configurations to the EmbeddingModel.")
 	private String jsonConfig;
