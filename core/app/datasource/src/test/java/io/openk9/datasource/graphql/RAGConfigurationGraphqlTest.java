@@ -18,6 +18,7 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.datasource.EntitiesUtils;
+import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
@@ -57,9 +58,7 @@ public class RAGConfigurationGraphqlTest {
 	private static final int CHUNK_WINDOW_VALUE_UPDATED = 3000;
 	private static final String CREATE_RAG_CONFIGURATION = "createRAGConfiguration";
 	private static final String CREATE_RAG_CONFIGURATION_DTO = "createRAGConfigurationDTO";
-	private static final Integer DEFAULT_CHUNK_WINDOW = 0;
-	private static final String DEFAULT_PROMPT_EMPTY_STRING = "";
-	private static final Boolean DEFAULT_REFORMULATE = false;
+	private static final String ENABLE_CONVERSATION_TITLE = "enableConversationTitle";
 	private static final String ENTITY = "entity";
 	private static final String FIELD = "field";
 	private static final String FIELD_VALIDATORS = "fieldValidators";
@@ -136,6 +135,7 @@ public class RAGConfigurationGraphqlTest {
 			.ragToolDescription(PROMPT_EXAMPLE)
 			.chunkWindow(CHUNK_WINDOW_VALUE)
 			.reformulate(true)
+			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_SHORT)
 			.build();
 
@@ -162,6 +162,7 @@ public class RAGConfigurationGraphqlTest {
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EXAMPLE),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE),
 								prop(REFORMULATE, true),
+								prop(ENABLE_CONVERSATION_TITLE, true),
 								prop(JSON_CONFIG, JSON_CONFIG_SHORT)
 							)
 						)
@@ -176,6 +177,7 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE),
 						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
@@ -213,6 +215,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationOne.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationOne.getChunkWindow());
 		assertTrue(ragConfigurationOne.getReformulate());
+		assertTrue(ragConfigurationOne.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationOne.getJsonConfig());
 
 		EntitiesUtils.removeRAGConfiguration(
@@ -248,7 +251,8 @@ public class RAGConfigurationGraphqlTest {
 						field(PROMPT_NO_RAG),
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
-						field(REFORMULATE)
+						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -279,12 +283,16 @@ public class RAGConfigurationGraphqlTest {
 
 		assertEquals(RAG_CONFIGURATION_ONE_NAME, ragConfigurationOne.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationOne.getType());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
-		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
-		assertEquals(DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRephrasePrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getPromptNoRag());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationOne.getRagToolDescription());
+		assertEquals(RAGConfiguration.DEFAULT_CHUNK_WINDOW, ragConfigurationOne.getChunkWindow());
+		assertEquals(RAGConfiguration.DEFAULT_REFORMULATE, ragConfigurationOne.getReformulate());
+		assertEquals(
+			RAGConfiguration.DEFAULT_ENABLE_CONVERSATION_TITLE,
+			ragConfigurationOne.getEnableConversationTitle()
+		);
 		assertNull(ragConfigurationOne.getJsonConfig());
 
 		EntitiesUtils.removeRAGConfiguration(
@@ -313,6 +321,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
@@ -333,6 +342,7 @@ public class RAGConfigurationGraphqlTest {
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EMPTY),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
 								prop(REFORMULATE, false),
+								prop(ENABLE_CONVERSATION_TITLE, false),
 								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
 							)
 						)
@@ -347,6 +357,7 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE),
 						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
@@ -385,6 +396,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
 		assertFalse(ragConfigurationTwo.getReformulate());
+		assertFalse(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
 	}
 
@@ -407,6 +419,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
@@ -434,6 +447,7 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE),
 						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
@@ -471,6 +485,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, ragConfigurationTwo.getChunkWindow());
 		assertTrue(ragConfigurationTwo.getReformulate());
+		assertTrue(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationTwo.getJsonConfig());
 	}
 
@@ -493,6 +508,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
@@ -513,6 +529,7 @@ public class RAGConfigurationGraphqlTest {
 								prop(RAG_TOOL_DESCRIPTION, PROMPT_EMPTY),
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
 								prop(REFORMULATE, false),
+								prop(ENABLE_CONVERSATION_TITLE, false),
 								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
 							)
 						)
@@ -527,6 +544,7 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE),
 						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
@@ -565,6 +583,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EMPTY, ragConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE_UPDATED, ragConfigurationTwo.getChunkWindow());
 		assertFalse(ragConfigurationTwo.getReformulate());
+		assertFalse(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
 	}
 
@@ -587,6 +606,7 @@ public class RAGConfigurationGraphqlTest {
 		assertEquals(PROMPT_EXAMPLE, initialRagConfigurationTwo.getRagToolDescription());
 		assertEquals(CHUNK_WINDOW_VALUE, initialRagConfigurationTwo.getChunkWindow());
 		assertTrue(initialRagConfigurationTwo.getReformulate());
+		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
 
 		var mutation = document(
@@ -614,6 +634,7 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
+						field(ENABLE_CONVERSATION_TITLE),
 						field(JSON_CONFIG)
 					),
 					field(FIELD_VALIDATORS,
@@ -645,12 +666,16 @@ public class RAGConfigurationGraphqlTest {
 
 		assertEquals(RAG_CONFIGURATION_TWO_NAME, ragConfigurationTwo.getName());
 		assertEquals(RAGType.CHAT_RAG, ragConfigurationTwo.getType());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRephrasePrompt());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getPromptNoRag());
-		assertEquals(DEFAULT_PROMPT_EMPTY_STRING, ragConfigurationTwo.getRagToolDescription());
-		assertEquals(DEFAULT_CHUNK_WINDOW, ragConfigurationTwo.getChunkWindow());
-		assertEquals(DEFAULT_REFORMULATE, ragConfigurationTwo.getReformulate());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationTwo.getPrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationTwo.getRephrasePrompt());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationTwo.getPromptNoRag());
+		assertEquals(RAGConfiguration.EMPTY_STRING, ragConfigurationTwo.getRagToolDescription());
+		assertEquals(RAGConfiguration.DEFAULT_CHUNK_WINDOW, ragConfigurationTwo.getChunkWindow());
+		assertEquals(RAGConfiguration.DEFAULT_REFORMULATE, ragConfigurationTwo.getReformulate());
+		assertEquals(
+			RAGConfiguration.DEFAULT_ENABLE_CONVERSATION_TITLE,
+			ragConfigurationTwo.getEnableConversationTitle()
+		);
 		assertNull(ragConfigurationTwo.getJsonConfig());
 	}
 
