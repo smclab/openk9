@@ -124,84 +124,19 @@
         export IMAGE_TAG="dev-SNAPSHOT"
       fi
 
-      # ✅ NEW LOGIC: Restart based on component type with updated namespace mapping
-      if [ "$COMPONENT_TYPE" = "backend" ]; then
-        echo "🔁 Restarting backend on ALL namespaces EXCEPT backend namespaces (main branch deployment)"
-        for ns in k9-ai k9-frontend; do
-          curl -X POST \
-            -F "token=${RESTART_TRIGGER_TOKEN}" \
-            -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-            -F "variables[NAMESPACE]=$ns" \
-            -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-            -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-            -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-            -F "ref=master" \
-            "${RESTART_TRIGGER_URL}"
-        done
-
-      elif [ "$COMPONENT_TYPE" = "backend-oracle" ]; then
-        echo "🔁 Restarting backend-oracle on k9-backend-oracle"
-        curl -X POST \
-          -F "token=${RESTART_TRIGGER_TOKEN}" \
-          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-          -F "variables[NAMESPACE]=k9-backend-oracle" \
-          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-          -F "ref=master" \
-          "${RESTART_TRIGGER_URL}"
-
-      elif [ "$COMPONENT_TYPE" = "ai" ]; then
-        echo "🔁 Restarting AI on ALL namespaces EXCEPT k9-ai (main branch deployment)"
-        for ns in k9-backend k9-backend01 k9-test k9-frontend; do
-          curl -X POST \
-            -F "token=${RESTART_TRIGGER_TOKEN}" \
-            -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-            -F "variables[NAMESPACE]=$ns" \
-            -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-            -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-            -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-            -F "ref=master" \
-            "${RESTART_TRIGGER_URL}"
-        done
-
-      elif [ "$COMPONENT_TYPE" = "frontend" ]; then
-        echo "🔁 Restarting frontend on ALL namespaces EXCEPT k9-frontend (main branch deployment)"
-        for ns in k9-backend k9-backend01 k9-test k9-ai; do
-          curl -X POST \
-            -F "token=${RESTART_TRIGGER_TOKEN}" \
-            -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-            -F "variables[NAMESPACE]=$ns" \
-            -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-            -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-            -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-            -F "ref=master" \
-            "${RESTART_TRIGGER_URL}"
-        done
-
-      elif [ "$COMPONENT_TYPE" = "test" ]; then
-        echo "🔁 Restarting test component on k9-test"
-        curl -X POST \
-          -F "token=${RESTART_TRIGGER_TOKEN}" \
-          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-          -F "variables[NAMESPACE]=k9-test" \
-          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-          -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-          -F "ref=master" \
-          "${RESTART_TRIGGER_URL}"
-
-
-      else
-        echo "🔍 Component type not specified or unknown, letting target pipeline auto-detect"
-        curl -X POST \
-          -F "token=${RESTART_TRIGGER_TOKEN}" \
-          -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-          -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-          -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-          -F "ref=master" \
-          "${RESTART_TRIGGER_URL}"
-      fi
+      # ✅ SIMPLIFIED LOGIC: Single call to external pipeline
+      # The external pipeline already calculates target namespaces based on COMPONENT_TYPE
+      echo "🔁 Triggering external restart pipeline for component: $COMPONENT_NAME ($COMPONENT_TYPE)"
+      
+      curl -X POST \
+        -F "token=${RESTART_TRIGGER_TOKEN}" \
+        -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+        -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+        -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+        -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+        -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
+        -F "ref=master" \
+        "${RESTART_TRIGGER_URL}"
 
     elif echo "$CI_COMMIT_BRANCH" | grep -qE "^[0-9]+-.*$"; then
       # 🔁 Feature branch: pass user info to target pipeline for namespace determination
@@ -210,7 +145,11 @@
       # Determine IMAGE_TAG based on component type
       case "$COMPONENT_TYPE" in
         "backend")
-          IMAGE_TAG="999-SNAPSHOT"
+          if [ "$GITLAB_USER_LOGIN" = "michele.bastianelli" ]; then
+            IMAGE_TAG="998-SNAPSHOT"
+          else
+            IMAGE_TAG="999-SNAPSHOT"
+          fi
           ;;
         "backend-oracle")
           IMAGE_TAG="999-SNAPSHOT"

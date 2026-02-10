@@ -4,6 +4,8 @@ RUN mkdir -p /app/js-packages/admin-ui
 
 COPY ./js-packages/admin-ui /app/js-packages/admin-ui
 WORKDIR /app/js-packages/admin-ui
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 RUN yarn install
 RUN NODE_ENV=production yarn build
 

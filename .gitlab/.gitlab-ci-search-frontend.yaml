@@ -88,10 +88,22 @@ Build Verifier:
     key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
     paths:
     - js-packages/search-frontend/node_modules
+    - .yarn-cache
     policy: pull-push
   script:
   - cd js-packages/search-frontend
-  - yarn install
+  # Set Node memory limit to 8GB to prevent OOM
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  # Yarn configuration for resilience:
+  # - registry: Use reliable npmjs.org registry as fallback
+  # - network-timeout: Increase timeout to 10m (600000ms) for slow networks
+  # - cache-folder: Store cache in .yarn-cache to reuse between jobs
+  # - prefer-offline: Use cached packages if available to reduce network calls
+  # - frozen-lockfile: Ensure dependencies match yarn.lock exactly (reproducibility)
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder ../../.yarn-cache
+  - yarn install --prefer-offline --frozen-lockfile
   - yarn build
   rules:
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -138,7 +150,16 @@ Publish Search Frontend:
   - cd js-packages/search-frontend
   - pwd
   - whoami
-  - yarn install
+  # Set Node memory limit to 8GB
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  # Yarn configuration for resilience (registry omitted to use publish target):
+  # - network-timeout: Increase timeout to 10m (600000ms)
+  # - cache-folder: Store cache in .yarn-cache
+  # - prefer-offline: Use cached packages if available
+  # - frozen-lockfile: Exact versions
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder ../../.yarn-cache
+  - yarn install --prefer-offline --frozen-lockfile
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:

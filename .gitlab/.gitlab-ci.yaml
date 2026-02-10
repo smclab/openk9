@@ -69,7 +69,7 @@ Trigger Datasource:
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/datasource/**/*
@@ -103,7 +103,7 @@ Trigger Searcher:
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/common/resources-common/**/*
@@ -134,7 +134,7 @@ Trigger Ingestion:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/ingestion/**/*
@@ -162,7 +162,7 @@ Trigger K8S-Client:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/k8s-client/**/*
@@ -284,7 +284,7 @@ Trigger Tika:
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
 
-  # Case 4: feature branch matching ^\d+-.*$ + dmytro or michele
+  # Case 4: feature branch matching ^\d+-.*$ + mirko or michele
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/ && ($GITLAB_USER_LOGIN == 'mirko.zizzari' || $GITLAB_USER_LOGIN == 'michele.bastianelli')"
     changes:
     - core/app/tika/**/*
@@ -355,6 +355,9 @@ Trigger Resources-Validator:
 Trigger Search Frontend:
   stage: trigger
   rules:
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/search-frontend/**/*
@@ -365,9 +368,6 @@ Trigger Search Frontend:
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/search-frontend/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-search-frontend.yaml"
     strategy: depend
@@ -376,6 +376,9 @@ Trigger Search Frontend:
 Trigger Admin Frontend:
   stage: trigger
   rules:
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/admin-ui/**/*
@@ -386,9 +389,6 @@ Trigger Admin Frontend:
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/admin-ui/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-admin-frontend.yaml"
     strategy: depend
@@ -397,6 +397,9 @@ Trigger Admin Frontend:
 Trigger Tenant Frontend:
   stage: trigger
   rules:
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/tenant-ui/**/*
@@ -407,9 +410,6 @@ Trigger Tenant Frontend:
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/tenant-ui/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-frontend.yaml"
     strategy: depend
@@ -418,6 +418,9 @@ Trigger Tenant Frontend:
 Trigger Talk-To Frontend:
   stage: trigger
   rules:
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - js-packages/talk-to/**/*
@@ -428,9 +431,6 @@ Trigger Talk-To Frontend:
   - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
     changes:
     - js-packages/talk-to/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-talk-to.yaml"
     strategy: depend
@@ -439,6 +439,9 @@ Trigger Talk-To Frontend:
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   # Feature branch: no pipeline triggered
   # Merge request: fetch version -> build verifier
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
@@ -448,9 +451,6 @@ Trigger OpenK9-Chatbot:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - js-packages/openk9-chatbot/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
   trigger:
     include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
     strategy: depend

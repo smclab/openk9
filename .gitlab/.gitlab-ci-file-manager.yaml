@@ -25,6 +25,9 @@ Build File-Manager Image:
   stage: build
   script:
   - cd core
+  # Clean Maven cache to fix protobuf missing file error
+  - mvn dependency:purge-local-repository -DmanualInclude="io.openk9" -DactOnly=false -DreResolve=false
+  - mvn clean
   - |
     # Extract the version from pom.xml and set it as an environment variable
     VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
