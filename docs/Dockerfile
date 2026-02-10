@@ -9,7 +9,7 @@ RUN yarn install
 RUN yarn build
 
 # Stage 2 - the production environment
-FROM nginx:alpine
+FROM nginx:1.28.2-alpine
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/build /usr/share/nginx/html/

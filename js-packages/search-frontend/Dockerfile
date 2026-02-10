@@ -45,7 +45,7 @@ RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
     fi
 
 # Stage 2 - the production environment
-FROM nginx:1.25.3
+FROM nginx:1.28.2-alpine
 COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
