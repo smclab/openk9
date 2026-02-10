@@ -1,6 +1,6 @@
 [project]
 name = "rag-module"
-version = "2026.1.dev"
+version = "2026.1"
 description = "OpenK9 module for Retrieval-Augmented Generation (RAG) operations"
 authors = [{ name = "SMC", email = "smc.roma@smc.it" }]
 keywords = ["OpenK9", "Generative AI", "RAG"]
