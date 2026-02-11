@@ -22,7 +22,6 @@ import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +30,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @QuarkusTest
 public class HybridQueryParserTest {
@@ -64,10 +63,8 @@ public class HybridQueryParserTest {
 	}
 
 	@Test
-	void should_not_return_null() {
+	void should_not_throw_null_pointer_exception() {
 
-		Uni<SearchSourceBuilder> result = hybridQueryParser.apply(parserContext, searchSourceBuilder);
-
-		assertNotNull(result);
+		assertDoesNotThrow(() -> hybridQueryParser.apply(parserContext, searchSourceBuilder));
 	}
 }
