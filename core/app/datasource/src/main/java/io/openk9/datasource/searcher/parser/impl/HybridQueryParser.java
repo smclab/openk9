@@ -93,12 +93,11 @@ public class HybridQueryParser implements QueryParser {
 
 		var values = parserSearchToken.getValues().iterator();
 
+		var searchConfig = parserContext.getTenantWithBucket().getBucket().getSearchConfig();
+
 		var maxTextQueryLength =
-			(parserContext.getTenantWithBucket().getBucket().getSearchConfig() != null)
-				&& (parserContext.getTenantWithBucket().getBucket()
-				.getSearchConfig().getMaxTextQueryLength() != null)
-			? parserContext.getTenantWithBucket().getBucket().getSearchConfig()
-			.getMaxTextQueryLength()
+			(searchConfig != null) && (searchConfig.getMaxTextQueryLength() != null)
+			? searchConfig.getMaxTextQueryLength()
 			: defaultMaxTextQueryLength;
 
 		if (values.hasNext()) {
