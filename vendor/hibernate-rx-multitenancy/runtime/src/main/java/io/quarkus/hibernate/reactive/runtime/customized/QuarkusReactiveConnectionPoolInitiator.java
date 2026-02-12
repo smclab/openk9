@@ -3,6 +3,7 @@ package io.quarkus.hibernate.reactive.runtime.customized;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.reactive.pool.ReactiveConnectionPool;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -24,14 +25,11 @@ public final class QuarkusReactiveConnectionPoolInitiator
     }
 
     @Override
-    public ReactiveConnectionPool initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-        //First, check that this setup won't need to deal with multi-tenancy at the connection pool level:
-        final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(configurationValues);
-        if (strategy == MultiTenancyStrategy.DATABASE || strategy == MultiTenancyStrategy.SCHEMA) {
-            // nothing to do, but given the separate hierarchies have to handle this here.
-            return null;
-        }
-        return new QuarkusSqlClientPool(pool);
+    public ReactiveConnectionPool initiateService(
+            Map configurationValues,
+            ServiceRegistryImplementor registry) {
+
+        return new MultiSchemaSqlClientPool(pool);
     }
 
 }
