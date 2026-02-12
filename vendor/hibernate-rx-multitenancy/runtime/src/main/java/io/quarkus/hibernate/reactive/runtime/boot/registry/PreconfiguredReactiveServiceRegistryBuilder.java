@@ -1,20 +1,3 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.runtime.boot.registry;
 
 import java.util.ArrayList;
@@ -23,28 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfigPersistenceUnit;
-import io.quarkus.hibernate.orm.runtime.boot.registry.MirroringIntegratorService;
-import io.quarkus.hibernate.orm.runtime.cdi.QuarkusManagedBeanRegistryInitiator;
-import io.quarkus.hibernate.orm.runtime.customized.QuarkusJndiServiceInitiator;
-import io.quarkus.hibernate.orm.runtime.customized.QuarkusRuntimeProxyFactoryFactory;
-import io.quarkus.hibernate.orm.runtime.customized.QuarkusRuntimeProxyFactoryFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.recording.RecordedState;
-import io.quarkus.hibernate.orm.runtime.service.CfgXmlAccessServiceInitiatorQuarkus;
-import io.quarkus.hibernate.orm.runtime.service.FlatClassLoaderService;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusImportSqlCommandExtractorInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusRegionFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusRuntimeInitDialectFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusRuntimeInitDialectResolverInitiator;
-import io.quarkus.hibernate.orm.runtime.service.bytecodeprovider.QuarkusRuntimeBytecodeProviderInitiator;
-import io.quarkus.hibernate.reactive.runtime.customized.CheckingVertxContextInitiator;
-import io.quarkus.hibernate.reactive.runtime.customized.QuarkusNoJdbcConnectionProviderInitiator;
-import io.quarkus.hibernate.reactive.runtime.customized.QuarkusNoJdbcEnvironmentInitiator;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
@@ -56,9 +22,9 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
 import org.hibernate.reactive.engine.jdbc.mutation.internal.ReactiveMutationExecutorServiceInitiator;
-import org.hibernate.reactive.id.factory.spi.ReactiveIdentifierGeneratorFactoryInitiator;
 import org.hibernate.reactive.loader.ast.internal.ReactiveBatchLoaderFactoryInitiator;
 import org.hibernate.reactive.provider.service.NativeParametersHandling;
+import org.hibernate.reactive.provider.service.NoJdbcEnvironmentInitiator;
 import org.hibernate.reactive.provider.service.NoJtaPlatformInitiator;
 import org.hibernate.reactive.provider.service.ReactiveMarkerServiceInitiator;
 import org.hibernate.reactive.provider.service.ReactivePersisterClassResolverInitiator;
@@ -70,6 +36,25 @@ import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilder
 import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
+
+import io.quarkus.hibernate.orm.runtime.HibernateOrmRuntimeConfigPersistenceUnit;
+import io.quarkus.hibernate.orm.runtime.boot.registry.MirroringIntegratorService;
+import io.quarkus.hibernate.orm.runtime.cdi.QuarkusManagedBeanRegistryInitiator;
+import io.quarkus.hibernate.orm.runtime.customized.QuarkusJndiServiceInitiator;
+import io.quarkus.hibernate.orm.runtime.customized.QuarkusRuntimeProxyFactoryFactory;
+import io.quarkus.hibernate.orm.runtime.customized.QuarkusRuntimeProxyFactoryFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.customized.QuarkusStrategySelectorBuilder;
+import io.quarkus.hibernate.orm.runtime.recording.RecordedState;
+import io.quarkus.hibernate.orm.runtime.service.CfgXmlAccessServiceInitiatorQuarkus;
+import io.quarkus.hibernate.orm.runtime.service.FlatClassLoaderService;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusImportSqlCommandExtractorInitiator;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusRegionFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusRuntimeInitDialectFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusRuntimeInitDialectResolverInitiator;
+import io.quarkus.hibernate.orm.runtime.service.bytecodeprovider.QuarkusRuntimeBytecodeProviderInitiator;
+import io.quarkus.hibernate.orm.runtime.service.internalcache.QuarkusInternalCacheFactoryInitiator;
+import io.quarkus.hibernate.reactive.runtime.customized.CheckingVertxContextInitiator;
+import io.quarkus.hibernate.reactive.runtime.customized.QuarkusNoJdbcConnectionProviderInitiator;
 
 /**
  * Helps to instantiate a ServiceRegistryBuilder from a previous state. This
@@ -88,22 +73,33 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
     private final Collection<Integrator> integrators;
     private final StandardServiceRegistryImpl destroyedRegistry;
 
-    public PreconfiguredReactiveServiceRegistryBuilder(
-            String puName, RecordedState rs,
+    public PreconfiguredReactiveServiceRegistryBuilder(String puConfigName, RecordedState rs,
             HibernateOrmRuntimeConfigPersistenceUnit puConfig) {
-
         checkIsReactive(rs);
-        this.initiators = buildQuarkusServiceInitiatorList(puName, rs, puConfig);
+        this.initiators = buildQuarkusServiceInitiatorList(puConfigName, rs, puConfig);
         this.integrators = rs.getIntegrators();
         this.destroyedRegistry = (StandardServiceRegistryImpl) rs.getMetadata()
                 .getMetadataBuildingOptions()
                 .getServiceRegistry();
     }
 
-    public PreconfiguredReactiveServiceRegistryBuilder applySetting(
-            String settingName,
-            Object value) {
+    private static void checkIsReactive(RecordedState rs) {
+        if (rs.isReactive() == false)
+            throw new IllegalStateException("Booting an Hibernate Reactive serviceregistry on a non-reactive RecordedState!");
+    }
+
+    public PreconfiguredReactiveServiceRegistryBuilder applySetting(String settingName, Object value) {
         configurationValues.put(settingName, value);
+        return this;
+    }
+
+    public PreconfiguredReactiveServiceRegistryBuilder addInitiator(StandardServiceInitiator initiator) {
+        initiators.add(initiator);
+        return this;
+    }
+
+    public PreconfiguredReactiveServiceRegistryBuilder addService(ProvidedService providedService) {
+        providedServices.add(providedService);
         return this;
     }
 
@@ -120,22 +116,25 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         final Map settingsCopy = new HashMap();
         settingsCopy.putAll(configurationValues);
 
-        destroyedRegistry.resetAndReactivate(
-                bootstrapServiceRegistry,
-                initiators,
-                providedServices,
-                settingsCopy);
+        destroyedRegistry.resetAndReactivate(bootstrapServiceRegistry, initiators, providedServices, settingsCopy);
         return destroyedRegistry;
     }
 
-    public PreconfiguredReactiveServiceRegistryBuilder addInitiator(StandardServiceInitiator initiator) {
-        initiators.add(initiator);
-        return this;
-    }
+    private BootstrapServiceRegistry buildEmptyBootstrapServiceRegistry() {
+        final ClassLoaderService providedClassLoaderService = FlatClassLoaderService.INSTANCE;
 
-    public PreconfiguredReactiveServiceRegistryBuilder addService(ProvidedService providedService) {
-        providedServices.add(providedService);
-        return this;
+        // N.B. support for custom IntegratorProvider injected via Properties (as
+        // instance) removed
+
+        // N.B. support for custom StrategySelector is not implemented yet
+
+        // A non-empty selector is needed in order to support ID generators that retrieve a naming strategy -- at runtime!
+        var strategySelector = QuarkusStrategySelectorBuilder.buildRuntimeSelector(providedClassLoaderService);
+
+        return new BootstrapServiceRegistryImpl(true,
+                providedClassLoaderService,
+                strategySelector, // new MirroringStrategySelector(),
+                new MirroringIntegratorService(integrators));
     }
 
     /**
@@ -147,9 +146,7 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
      *
      * @return
      */
-    private static List<StandardServiceInitiator<?>> buildQuarkusServiceInitiatorList(
-            String puName,
-            RecordedState rs,
+    private static List<StandardServiceInitiator<?>> buildQuarkusServiceInitiatorList(String puConfigName, RecordedState rs,
             HibernateOrmRuntimeConfigPersistenceUnit puConfig) {
         final ArrayList<StandardServiceInitiator<?>> serviceInitiators = new ArrayList<>();
 
@@ -193,8 +190,7 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         // TODO disable?
         serviceInitiators.add(SchemaManagementToolInitiator.INSTANCE);
 
-        // Replaces JdbcEnvironmentInitiator.INSTANCE :
-        serviceInitiators.add(new QuarkusNoJdbcEnvironmentInitiator(rs.getDialect()));
+        serviceInitiators.add(NoJdbcEnvironmentInitiator.INSTANCE);
 
         // Custom one!
         serviceInitiators.add(QuarkusJndiServiceInitiator.INSTANCE);
@@ -211,12 +207,8 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         serviceInitiators.add(new QuarkusRuntimeInitDialectResolverInitiator(rs.getDialect()));
 
         // Custom one: Dialect is injected explicitly
-        serviceInitiators.add(new QuarkusRuntimeInitDialectFactoryInitiator(
-                puName,
-                rs.isFromPersistenceXml(),
-                rs.getDialect(),
-                rs.getBuildTimeSettings().getSource(),
-                puConfig));
+        serviceInitiators.add(new QuarkusRuntimeInitDialectFactoryInitiator(puConfigName, rs.isFromPersistenceXml(),
+                rs.getDialect(), rs.getBuildTimeSettings().getSource(), puConfig));
 
         // Default implementation
         serviceInitiators.add(BatchBuilderInitiator.INSTANCE);
@@ -244,9 +236,6 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
 
         serviceInitiators.add(EntityCopyObserverFactoryInitiator.INSTANCE);
 
-        // Custom for Hibernate Reactive:
-        serviceInitiators.add(ReactiveIdentifierGeneratorFactoryInitiator.INSTANCE);
-
         //Custom for Hibernate Reactive:
         serviceInitiators.add(ReactiveValuesMappingProducerProviderInitiator.INSTANCE);
 
@@ -262,32 +251,11 @@ public class PreconfiguredReactiveServiceRegistryBuilder {
         // Custom for Hibernate Reactive: BatchLoaderFactory
         serviceInitiators.add(ReactiveBatchLoaderFactoryInitiator.INSTANCE);
 
+        // Custom Quarkus implementation: overrides the internal cache to leverage Caffeine
+        serviceInitiators.add(QuarkusInternalCacheFactoryInitiator.INSTANCE);
+
         serviceInitiators.trimToSize();
         return serviceInitiators;
-    }
-
-    private static void checkIsReactive(RecordedState rs) {
-        if (rs.isReactive() == false) {
-            throw new IllegalStateException(
-                    "Booting an Hibernate Reactive serviceregistry on a non-reactive RecordedState!");
-        }
-    }
-
-    private BootstrapServiceRegistry buildEmptyBootstrapServiceRegistry() {
-
-        // N.B. support for custom IntegratorProvider injected via Properties (as
-        // instance) removed
-
-        // N.B. support for custom StrategySelector is not implemented yet
-
-        final StrategySelectorImpl strategySelector = new StrategySelectorImpl(
-                FlatClassLoaderService.INSTANCE);
-
-        return new BootstrapServiceRegistryImpl(
-                true,
-                FlatClassLoaderService.INSTANCE,
-                strategySelector, // new MirroringStrategySelector(),
-                new MirroringIntegratorService(integrators));
     }
 
 }

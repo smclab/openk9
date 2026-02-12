@@ -1,35 +1,8 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.runtime.boot.registry;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.quarkus.hibernate.orm.runtime.cdi.QuarkusManagedBeanRegistryInitiator;
-import io.quarkus.hibernate.orm.runtime.customized.BootstrapOnlyProxyFactoryFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.customized.QuarkusJndiServiceInitiator;
-import io.quarkus.hibernate.orm.runtime.service.InitialInitiatorListProvider;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusIdentifierGeneratorFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusImportSqlCommandExtractorInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusRegionFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.service.QuarkusStaticInitDialectFactoryInitiator;
-import io.quarkus.hibernate.orm.runtime.service.StandardHibernateORMInitiatorListProvider;
-import io.quarkus.hibernate.reactive.runtime.customized.QuarkusNoJdbcConnectionProviderInitiator;
 import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
@@ -43,7 +16,6 @@ import org.hibernate.engine.jdbc.internal.SqlStatementLoggerInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
 import org.hibernate.property.access.internal.PropertyAccessStrategyResolverInitiator;
-import org.hibernate.reactive.id.factory.spi.ReactiveIdentifierGeneratorFactoryInitiator;
 import org.hibernate.reactive.loader.ast.internal.ReactiveBatchLoaderFactoryInitiator;
 import org.hibernate.reactive.provider.service.NativeParametersHandling;
 import org.hibernate.reactive.provider.service.NoJtaPlatformInitiator;
@@ -55,6 +27,17 @@ import org.hibernate.reactive.provider.service.ReactiveSqmMultiTableMutationStra
 import org.hibernate.reactive.provider.service.ReactiveValuesMappingProducerProviderInitiator;
 import org.hibernate.resource.transaction.internal.TransactionCoordinatorBuilderInitiator;
 import org.hibernate.service.internal.SessionFactoryServiceRegistryFactoryInitiator;
+
+import io.quarkus.hibernate.orm.runtime.cdi.QuarkusManagedBeanRegistryInitiator;
+import io.quarkus.hibernate.orm.runtime.customized.BootstrapOnlyProxyFactoryFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.customized.QuarkusJndiServiceInitiator;
+import io.quarkus.hibernate.orm.runtime.service.InitialInitiatorListProvider;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusImportSqlCommandExtractorInitiator;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusRegionFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.service.QuarkusStaticInitDialectFactoryInitiator;
+import io.quarkus.hibernate.orm.runtime.service.StandardHibernateORMInitiatorListProvider;
+import io.quarkus.hibernate.orm.runtime.service.internalcache.QuarkusInternalCacheFactoryInitiator;
+import io.quarkus.hibernate.reactive.runtime.customized.QuarkusNoJdbcConnectionProviderInitiator;
 
 /**
  * Defines the initial list of StandardServiceInitiator instances used to initialize the
@@ -112,9 +95,6 @@ public final class ReactiveHibernateInitiatorListProvider implements InitialInit
         serviceInitiators.add(JdbcServicesInitiator.INSTANCE);
         serviceInitiators.add(RefCursorSupportInitiator.INSTANCE);
 
-        // Custom one!
-        serviceInitiators.add(new QuarkusIdentifierGeneratorFactoryInitiator());
-
         // Custom for Hibernate Reactive:
         serviceInitiators.add(NoJtaPlatformInitiator.INSTANCE);
 
@@ -128,9 +108,6 @@ public final class ReactiveHibernateInitiatorListProvider implements InitialInit
         serviceInitiators.add(QuarkusManagedBeanRegistryInitiator.INSTANCE);
 
         serviceInitiators.add(EntityCopyObserverFactoryInitiator.INSTANCE);
-
-        // Custom for Hibernate Reactive:
-        serviceInitiators.add(ReactiveIdentifierGeneratorFactoryInitiator.INSTANCE);
 
         //Custom for Hibernate Reactive:
         serviceInitiators.add(ReactiveValuesMappingProducerProviderInitiator.INSTANCE);
@@ -146,6 +123,9 @@ public final class ReactiveHibernateInitiatorListProvider implements InitialInit
 
         // Custom for Hibernate Reactive: BatchLoaderFactory
         serviceInitiators.add(ReactiveBatchLoaderFactoryInitiator.INSTANCE);
+
+        // Custom Quarkus implementation: overrides the internal cache to leverage Caffeine
+        serviceInitiators.add(QuarkusInternalCacheFactoryInitiator.INSTANCE);
 
         serviceInitiators.trimToSize();
         return serviceInitiators;

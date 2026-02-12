@@ -1,24 +1,8 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.runtime.customized;
 
-import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import org.hibernate.reactive.context.impl.VertxContext;
+
+import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 
 /**
  * The {@link VertxContext} in Hibernate Reactive is accessing the
@@ -53,25 +37,19 @@ public final class CheckingVertxContext extends VertxContext {
 
     @Override
     public <T> void put(Key<T> key, T instance) {
-        VertxContextSafetyToggle.validateContextIfExists(
-                ERROR_MSG_ON_PROHIBITED_CONTEXT,
-                ERROR_MSG_ON_UNKNOWN_CONTEXT);
+        VertxContextSafetyToggle.validateContextIfExists(ERROR_MSG_ON_PROHIBITED_CONTEXT, ERROR_MSG_ON_UNKNOWN_CONTEXT);
         super.put(key, instance);
     }
 
     @Override
     public <T> T get(Key<T> key) {
-        VertxContextSafetyToggle.validateContextIfExists(
-                ERROR_MSG_ON_PROHIBITED_CONTEXT,
-                ERROR_MSG_ON_UNKNOWN_CONTEXT);
+        VertxContextSafetyToggle.validateContextIfExists(ERROR_MSG_ON_PROHIBITED_CONTEXT, ERROR_MSG_ON_UNKNOWN_CONTEXT);
         return super.get(key);
     }
 
     @Override
     public void remove(Key<?> key) {
-        VertxContextSafetyToggle.validateContextIfExists(
-                ERROR_MSG_ON_PROHIBITED_CONTEXT,
-                ERROR_MSG_ON_UNKNOWN_CONTEXT);
+        VertxContextSafetyToggle.validateContextIfExists(ERROR_MSG_ON_PROHIBITED_CONTEXT, ERROR_MSG_ON_UNKNOWN_CONTEXT);
         super.remove(key);
     }
 

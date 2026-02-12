@@ -1,36 +1,21 @@
-/*
- * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package io.quarkus.hibernate.reactive.publicfields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+
 import jakarta.inject.Inject;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import io.quarkus.test.QuarkusUnitTest;
-import io.quarkus.test.vertx.RunOnVertxContext;
-import io.quarkus.test.vertx.UniAsserter;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import io.quarkus.test.QuarkusUnitTest;
+import io.quarkus.test.vertx.RunOnVertxContext;
+import io.quarkus.test.vertx.UniAsserter;
 
 /**
  * Checks that public field access is correctly replaced with getter/setter calls,
@@ -58,34 +43,24 @@ public class PublicFieldAccessFieldTypesTest {
         }
     }
 
-    private void doTestFieldAccess(
-            final FieldAccessEnhancedDelegate delegate,
-            final UniAsserter asserter) {
+    private void doTestFieldAccess(final FieldAccessEnhancedDelegate delegate, final UniAsserter asserter) {
         //First verify we don't pass the assertion when not modifying the entity:
-        asserter.assertThat(
-                () -> sessionFactory.withTransaction((session, tx) -> {
-                    MyEntity entity = new MyEntity();
-                    return session.persist(entity).replaceWith(() -> entity.id);
-                })
-                        .chain(id -> sessionFactory.withTransaction((session, tx) -> session.find(
-                                MyEntity.class,
-                                id))),
+        asserter.assertThat(() -> sessionFactory.withTransaction((session, tx) -> {
+            MyEntity entity = new MyEntity();
+            return session.persist(entity).replaceWith(() -> entity.id);
+        })
+                .chain(id -> sessionFactory.withTransaction((session, tx) -> session.find(MyEntity.class, id))),
                 loadedEntity -> notPassingAssertion(loadedEntity, delegate));
 
         // Now again, but modify the entity and assert dirtiness was detected:
-        asserter.assertThat(
-                () -> sessionFactory.withTransaction((session, tx) -> {
-                    MyEntity entity = new MyEntity();
-                    return session.persist(entity).replaceWith(() -> entity.id);
-                })
-                        .chain(id -> sessionFactory
-                                .withTransaction((session, tx) -> session
-                                        .find(MyEntity.class, id)
-                                        .invoke(delegate::setValue))
-                                .replaceWith(id))
-                        .chain(id -> sessionFactory.withTransaction((session, tx) -> session.find(
-                                MyEntity.class,
-                                id))),
+        asserter.assertThat(() -> sessionFactory.withTransaction((session, tx) -> {
+            MyEntity entity = new MyEntity();
+            return session.persist(entity).replaceWith(() -> entity.id);
+        })
+                .chain(id -> sessionFactory
+                        .withTransaction((session, tx) -> session.find(MyEntity.class, id).invoke(delegate::setValue))
+                        .replaceWith(id))
+                .chain(id -> sessionFactory.withTransaction((session, tx) -> session.find(MyEntity.class, id))),
                 delegate::assertValue);
     }
 
@@ -99,8 +74,7 @@ public class PublicFieldAccessFieldTypesTest {
             expected = e;
         }
         if (expected == null) {
-            throw new IllegalStateException(
-                    "This test is buggy: assertions should not pass at this point.");
+            throw new IllegalStateException("This test is buggy: assertions should not pass at this point.");
         }
     }
 
@@ -118,8 +92,7 @@ public class PublicFieldAccessFieldTypesTest {
         public float float_;
         public double double_;
         public short short_;
-        public char char_ = '\n';
-        // The Reactive postgresql driver doesn't like the zero char, for some reason
+        public char char_ = '\n'; // The Reactive postgresql driver doesn't like the zero char, for some reason
         public byte byte_;
 
     }

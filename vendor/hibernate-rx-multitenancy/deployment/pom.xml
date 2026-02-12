@@ -16,13 +16,13 @@
   ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>hibernate-rx-multitenancy-parent</artifactId>
         <groupId>io.openk9</groupId>
-		<version>3.20.5</version>
+        <version>3.27.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>io.openk9</groupId>
             <artifactId>hibernate-rx-multitenancy</artifactId>
-			<version>3.20.5</version>
+            <version>3.27.2</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -105,12 +105,12 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jdbc-h2-deployment</artifactId>
+            <artifactId>quarkus-jackson-deployment</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-jackson-deployment</artifactId>
+            <artifactId>quarkus-hibernate-validator-deployment</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -159,6 +159,13 @@
                         <phase>none</phase>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>de.thetaphi</groupId>
+                <artifactId>forbiddenapis</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
