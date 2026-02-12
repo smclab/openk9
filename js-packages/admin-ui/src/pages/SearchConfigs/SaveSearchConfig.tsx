@@ -12,9 +12,7 @@ import {
   TitleEntity,
   useForm,
 } from "@components/Form";
-import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 import { useToast } from "@components/Form/Form/ToastProvider";
-import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { TooltipDescription } from "@components/Form/utils";
 import { useRestClient } from "@components/queryClient";
 import CloseIcon from "@mui/icons-material/Close";
@@ -37,15 +35,14 @@ import {
   GenerateDynamicForm,
   Template,
 } from "@pages/datasources/components/Sections/DataSource/DynamicForm";
-import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
 import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique } from "../../openapi-generated";
-import { sxControl } from "../../utils/styleConfig";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { QueryParserConfig } from "./gql";
+import DataCardManager from "@components/Form/Association/MultiLinkedAssociation/DataCardManager";
 
 interface ConfigureHybridSearchInterface {
   searchConfigId: string;
@@ -82,7 +79,7 @@ export function useConfigureHybridSearchMutation({
   );
 }
 
-export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
+export function SaveSearchConfig() {
   const { searchConfigId = "new", view } = useParams();
   const navigate = useNavigate();
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
@@ -249,53 +246,6 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   });
 
   if (!searchConfigId && searchConfigQuery.loading) return null;
-  const parsedQueryConfig = types.reduce((acc, type, i) => {
-    const raw = jsonConfigs[i];
-    if (!raw) return acc;
-
-    try {
-      const obj = JSON.parse(raw);
-      acc[type.itemLabel] = obj;
-    } catch {
-      acc[type.itemLabel] = raw;
-    }
-
-    return acc;
-  }, {} as Record<string, any>);
-
-  const recapSections = mappingCardRecap({
-    form: form as any,
-    sections: [
-      {
-        cell: [
-          { key: "name" },
-          { key: "description" },
-          { key: "minScore", label: "Min Score" },
-          { key: "minScoreSuggestions", label: "Min Score Suggestions" },
-          { key: "minScoreSearch", label: "Min Score Search" },
-          // { key: "jsonConfig", label: "JSON Config" },
-        ],
-        label: "Search Config",
-      },
-      {
-        cell: [{ key: "queryParserConfig", label: "Query Parser Config" }],
-        label: "Query Parser",
-      },
-      ...(searchConfigId !== "new"
-        ? [
-            {
-              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
-              label: "Hybrid Search",
-            },
-          ]
-        : []),
-    ],
-    valueOverride: {
-      queryParserConfig: parsedQueryConfig || "",
-      HybridSearch: config || "",
-    },
-  });
-
   return (
     <>
       <ContainerFluid size="md">
@@ -327,27 +277,21 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                     <div>
                       <TextInput label="Name" {...form.inputProps("name")} />
                       <TextArea label="Description" {...form.inputProps("description")} />
-                      {/* <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 2 }}> */}
                       <NumberInput
                         label="minScore"
                         {...form.inputProps("minScore")}
                         description="Define score threshold used to filter results after query has been done"
                       />
-                      <RefreshOptionsLayout title="Min Score">
-                        <BooleanInput
-                          label="Suggestions"
-                          sxControl={sxControl}
-                          {...form.inputProps("minScoreSuggestions")}
-                          description="If use configured min score to filter search results"
-                        />
-                        <BooleanInput
-                          label="Search"
-                          sxControl={sxControl}
-                          {...form.inputProps("minScoreSearch")}
-                          description="If use configured min score to filter suggestions"
-                        />
-                      </RefreshOptionsLayout>
-                      {/* </Box> */}
+                      <BooleanInput
+                        label="min Score Suggestions"
+                        {...form.inputProps("minScoreSuggestions")}
+                        description="If use configured min score to filter search results"
+                      />
+                      <BooleanInput
+                        label="min Score Search"
+                        {...form.inputProps("minScoreSearch")}
+                        description="If use configured min score to filter suggestions"
+                      />
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
                           type="button"
@@ -418,17 +362,6 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           </form>
         </>
         <ConfirmModal />
-        <Recap
-          recapData={recapSections}
-          setExtraFab={setExtraFab}
-          forceFullScreen={isRecap}
-          actions={{
-            onBack: () => setPage(0),
-            onSubmit: () => form.submit(),
-            submitLabel: isNew ? "Create entity" : "Update entity",
-            backLabel: "Back",
-          }}
-        />
       </ContainerFluid>
       <CustomizedDialogs
         isHybridSearch={isHybridSearch}
