@@ -1,21 +1,15 @@
-################################################################################
-#                                   STAGES                                     #
-################################################################################
+###################### OPENK9-CHATBOT PIPELINE ######################
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
 - build
 - build-verifier
 - container-scanning
-- dependency-check
-- restart
 - publish
-
-include:
-- local: "/.gitlab/.gitlab-templates.yaml"
-
-################################################################################
-#                                    JOBS                                       #
-################################################################################
+- dependency-check
 
 #################
 # Fetch Version #
@@ -32,9 +26,8 @@ Fetch version:
     - version.env
     expire_in: 1 day
   rules:
-  # Run on merge requests and main branch only
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-  - if: '$CI_COMMIT_BRANCH == "main"'
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
@@ -54,20 +47,20 @@ Build Verifier:
   # Set Node memory limit to 8GB to prevent OOM
   - export NODE_OPTIONS="--max-old-space-size=8192"
   # Yarn configuration for resilience:
-  # - registry: Use reliable npmjs.org registry as fallback
-  # - network-timeout: Increase timeout to 10m (600000ms) for slow networks
-  # - cache-folder: Store cache in .yarn-cache to reuse between jobs
-  # - prefer-offline: Use cached packages if available to reduce network calls
-  # - frozen-lockfile: Ensure dependencies match yarn.lock exactly (reproducibility)
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - yarn build
   rules:
+<<<<<<< HEAD
   # Run on merge requests and main branch only
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   - if: '$CI_COMMIT_BRANCH == "main"'
+=======
+    # Run on MR and Main
+    - !reference [.rules:child-verify, rules]
+>>>>>>> c48225194 (Issue 1807: Complete CI/CD Refactoring: Modularize pipelines, fix Helm/Connectors, standardize rules, and update documentation)
 
 ######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
 Build OpenK9-Chatbot:
@@ -88,7 +81,7 @@ Build OpenK9-Chatbot:
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
-  # Use version from package.json for main branch
+  # Use version from package.json for main branch (Only runs on main)
   - source $CI_PROJECT_DIR/version.env
   - echo "=== Building OpenK9-Chatbot with VERSION=$VERSION ==="
 
@@ -100,10 +93,8 @@ Build OpenK9-Chatbot:
       --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-  # Only run on main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
+    # Only run on main branch
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -117,7 +108,8 @@ Container Scanning:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION"
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
+    # Run only on Main
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ####################### PUBLISH OPENK9-CHATBOT #######################
 Publish OpenK9-Chatbot:
@@ -130,22 +122,15 @@ Publish OpenK9-Chatbot:
   - cd js-packages/openk9-chatbot
   - pwd
   - whoami
-  # Set Node memory limit to 8GB
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience (registry omitted to use publish target):
-  # - network-timeout: Increase timeout to 10m (600000ms)
-  # - cache-folder: Store cache in .yarn-cache
-  # - prefer-offline: Use cached packages if available
-  # - frozen-lockfile: Exact versions
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/openk9-chatbot/**/*
+    # Run only on Main
+    - !reference [.rules:child-publish, rules]
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check OpenK9-Chatbot:
@@ -158,4 +143,4 @@ Dependency Check OpenK9-Chatbot:
   - cd js-packages/openk9-chatbot
   - /analyzer run
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
+  - !reference [.rules:child-publish, rules]

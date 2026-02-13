@@ -1,6 +1,8 @@
 # Stage 1 - build environment
 FROM node:20-alpine AS react-build
 ARG BUILD_ENV=keycloak
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 RUN mkdir -p /app/js-packages/search-frontend
 

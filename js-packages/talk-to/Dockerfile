@@ -1,4 +1,6 @@
 FROM node:18.18-alpine as react-build
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 RUN mkdir -p /app/js-packages/talk-to
 

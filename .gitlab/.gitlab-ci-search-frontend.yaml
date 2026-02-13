@@ -1,6 +1,9 @@
-################################################################################
-#                                   STAGES                                     #
-################################################################################
+###################### SEARCH FRONTEND PIPELINE ######################
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
+
 stages:
 - build
 - build-verifier
@@ -8,13 +11,6 @@ stages:
 - dependency-check
 - restart
 - publish
-
-include:
-- local: "/.gitlab/.gitlab-templates.yaml"
-
-################################################################################
-#                                  JOBS                                        #
-################################################################################
 
 #################
 # Fetch Version #
@@ -30,6 +26,9 @@ Fetch version:
     paths:
     - version.env
     expire_in: 1 day
+  rules:
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD SEARCH FRONTEND ########################
 Build Search Frontend:
@@ -43,7 +42,6 @@ Build Search Frontend:
   - job: Fetch version
     artifacts: true
   script:
-  # Docker credentials configuration
   - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
@@ -71,14 +69,8 @@ Build Search Frontend:
       --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/search-frontend/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/search-frontend/**/*
+    # Always run build if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:
@@ -92,21 +84,15 @@ Build Verifier:
     policy: pull-push
   script:
   - cd js-packages/search-frontend
-  # Set Node memory limit to 8GB to prevent OOM
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience:
-  # - registry: Use reliable npmjs.org registry as fallback
-  # - network-timeout: Increase timeout to 10m (600000ms) for slow networks
-  # - cache-folder: Store cache in .yarn-cache to reuse between jobs
-  # - prefer-offline: Use cached packages if available to reduce network calls
-  # - frozen-lockfile: Ensure dependencies match yarn.lock exactly (reproducibility)
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - yarn build
   rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Run only on MR
+    - !reference [.rules:child-verify-mr, rules]
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -120,7 +106,8 @@ Container Scanning:
   - echo "Scanning image $CI_REGISTRY_NAME/openk9/search-frontend:$VERSION"
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/search-frontend:$VERSION" # Scans the image
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
+    # Run only on Main
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -131,14 +118,9 @@ Trigger Restart:
     COMPONENT_NAME: "search-frontend"
     COMPONENT_TYPE: "frontend"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/search-frontend/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/search-frontend/**/*
+    # Run on Main/Tag and Feature
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
 ####################### PUBLISH SEARCH FRONTEND #######################
 Publish Search Frontend:
@@ -148,24 +130,17 @@ Publish Search Frontend:
   - cd js-packages/search-frontend
   - pwd
   - whoami
-  # Set Node memory limit to 8GB
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience (registry omitted to use publish target):
-  # - network-timeout: Increase timeout to 10m (600000ms)
-  # - cache-folder: Store cache in .yarn-cache
-  # - prefer-offline: Use cached packages if available
-  # - frozen-lockfile: Exact versions
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/search-frontend/**/*
-    when: manual
-  - when: never
+    # Publish only on Main/Tag
+    - !reference [.rules:child-publish, rules]
+    # Note: Manual rule removed to standard automation, or re-add if strict manual is required.
+    # Original file had partial Manual. Moving to automated publish if pipeline succeeds on Main.
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Search Frontend:

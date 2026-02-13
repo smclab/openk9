@@ -1,0 +1,186 @@
+# ================================
+# Backend Modules Triggers
+# ================================
+# NOTE: YAML Anchors (&name) are used to define change lists once,
+# and Aliases (*name) are used to reuse them in subsequent rules.
+
+Trigger Datasource:
+  stage: trigger
+  rules:
+    # 1. Main Branch Rule - DEFINES the changes list (&datasource_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &datasource_changes
+        - core/app/datasource/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # 2. Tag Rule - REUSES changes list (*datasource_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *datasource_changes
+    # 3. Feature Branch Rule - REUSES changes list (*datasource_changes)
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *datasource_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-datasource.yaml"
+    strategy: depend
+
+Trigger Searcher:
+  stage: trigger
+  rules:
+    # Define changes (&searcher_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &searcher_changes
+        - core/app/searcher/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*searcher_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *searcher_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *searcher_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-searcher.yaml"
+    strategy: depend
+
+Trigger Ingestion:
+  stage: trigger
+  rules:
+    # Define changes (&ingestion_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &ingestion_changes
+        - core/app/ingestion/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*ingestion_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *ingestion_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *ingestion_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-ingestion.yaml"
+    strategy: depend
+
+Trigger K8S-Client:
+  stage: trigger
+  rules:
+    # Define changes (&k8s_client_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &k8s_client_changes
+        - core/app/k8s-client/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*k8s_client_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *k8s_client_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *k8s_client_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-k8s-client.yaml"
+    strategy: depend
+
+Trigger File-Manager:
+  stage: trigger
+  rules:
+    # Define changes (&file_manager_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &file_manager_changes
+        - core/app/file-manager/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*file_manager_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *file_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *file_manager_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-file-manager.yaml"
+    strategy: depend
+
+Trigger Tenant-Manager:
+  stage: trigger
+  rules:
+    # Define changes (&tenant_manager_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &tenant_manager_changes
+        - core/app/tenant-manager/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*tenant_manager_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *tenant_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *tenant_manager_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
+    strategy: depend
+
+Trigger API-Gateway:
+  stage: trigger
+  rules:
+    # Define changes (&api_gateway_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &api_gateway_changes
+        - core/app/api-gateway/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*api_gateway_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *api_gateway_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *api_gateway_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
+    strategy: depend
+
+Trigger Tika:
+  stage: trigger
+  rules:
+    # Define changes (&tika_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &tika_changes
+        - core/app/tika/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*tika_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *tika_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *tika_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-tika.yaml"
+    strategy: depend
+
+Trigger Entity-Manager:
+  stage: trigger
+  rules:
+    # Define changes (&entity_manager_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &entity_manager_changes
+        - core/app/entity-manager/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*entity_manager_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *entity_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *entity_manager_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
+    strategy: depend
+
+Trigger Resources-Validator:
+  stage: trigger
+  rules:
+    # Define changes (&resources_validator_changes)
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &resources_validator_changes
+        - core/app/resources-validator/**/*
+        - core/common/resources-common/**/*
+        - core/common/common-utils/**/*
+    # Reuse changes (*resources_validator_changes)
+    - if: '$CI_COMMIT_TAG'
+      changes: *resources_validator_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *resources_validator_changes
+  trigger:
+    include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
+    strategy: depend

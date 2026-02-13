@@ -71,6 +71,83 @@ To install Openk9 in production is advisable to deploy it in Kubernetes or Opens
 
 You can find a complete guide to do it [here](./helm-charts/README.md) using Helm Charts.
 
+## CI/CD Architecture
+
+OpenK9 uses a **Modularized GitLab CI/CD** system designed for scalability, maintainability, and rapid development. The architecture follows a **Parent-Child Pipeline** pattern to optimize resource usage and isolate component builds.
+
+### 🧩 Modular Structure
+
+| Component | Logic File | Description |
+|-----------|------------|-------------|
+| **Orchestrator** | `.gitlab/.gitlab-ci.yaml` | Main entry point. Loads shared templates and triggers domain pipelines. |
+| **Common Logic** | `.gitlab/.gitlab-templates.yaml` | Centralized build scripts (Maven/Yarn), rules, and variables. |
+| **Backend** | `.gitlab/ci/backend.yaml` | Triggers for Java/Quarkus modules (Datasource, Ingestion, Searcher...). |
+| **Frontend** | `.gitlab/ci/frontend.yaml` | Triggers for React/JS modules (Admin UI, Search Frontend...). |
+| **AI Modules** | `.gitlab/ci/ai.yaml` | Triggers for AI/ML python components (RAG, Embeddings...). |
+| **Helm & Conn.** | `.gitlab/ci/common.yaml` | Triggers for Helm Charts and Connectors (Main branch only). |
+
+### 🔄 Pipeline Flow
+
+The pipeline automatically detects changes in specific directories and triggers only the relevant child pipelines.
+
+```mermaid
+graph TD
+    A[Push / Merge Request] --> B{Global Rules}
+    B -- Valid --> C[Parent Pipeline Orchestrator]
+    
+    C --> D{Change Detection}
+    
+    D -- "core/app/..." --> E[Backend Trigger]
+    D -- "js-packages/..." --> F[Frontend Trigger]
+    D -- "ai-packages/..." --> G[AI Trigger]
+    D -- "helm-charts/..." --> H[Helm Trigger]
+    
+    E --> E1[Child Pipeline: Backend]
+    F --> F1[Child Pipeline: Frontend]
+    G --> G1[Child Pipeline: AI]
+    H --> H1[Child Pipeline: Helm Package]
+    
+    style C fill:#f9f,stroke:#333
+    style E fill:#bbf,stroke:#333
+    style F fill:#bfb,stroke:#333
+    style G fill:#fbf,stroke:#333
+```
+
+### 🚀 Build & Restart Strategy
+
+We use a sophisticated build strategy that adapts to the branch type:
+
+- **Main / Tag**: Builds **OFFICIAL** images and pushes them. Triggers deployment on **Production/Staging**.
+- **Feature Branch**: Builds **SNAPSHOT** images (e.g., `999-SNAPSHOT`) for developer testing. Triggers restart on personal developer namespaces.
+- **Merge Request**: Runs builds and tests **WITHOUT** pushing images, ensuring code quality before merge.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant GL as GitLab CI
+    participant Reg as Container Registry
+    participant Argo as ArgoCD (External)
+    
+    Dev->>GL: Push Code (Feature Branch)
+    GL->>GL: Detect Changes & Trigger Child
+    
+    rect rgb(240, 248, 255)
+    Note over GL: Child Pipeline Execution
+    GL->>GL: Extract Version
+    GL->>GL: Calculate Snapshot Tag (e.g. 999-SNAPSHOT)
+    GL->>Reg: Build & Push Docker Image
+    end
+    
+    rect rgb(255, 240, 245)
+    Note over GL, Argo: Restart Trigger
+    GL->>Argo: CURL Trigger (Token + User Info)
+    Argo->>Argo: Validate User & Determine Namespace
+    Argo->>Argo: Restart Pods in Target Namespace
+    end
+    
+    Argo-->>GL: 200 OK (Deployment Started)
+```
+
 ## Docs and Resources
 
 - [Official Documentation](https://www.openk9.io/)

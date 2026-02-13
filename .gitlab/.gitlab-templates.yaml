@@ -18,6 +18,66 @@
     - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
     expire_in: 2 days
 
+# ========================================
+# TEMPLATE: .maven-build-logic (NEW)
+# ========================================
+# Standardized Maven build script for all Backend components.
+# Usage in child pipeline:
+# script:
+#   - cd core (optional if path is correct)
+#   - !reference [.maven-build-logic, script]
+#
+# Requires variable: $COMPONENT (e.g. "datasource")
+
+.maven-build-logic:
+  script:
+  - |
+    echo "🏗️ Starting Standard Maven Build for: $COMPONENT"
+    
+    # 1. Extract Version
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    echo "VERSION=$VERSION"
+    echo "$VERSION" > $CI_PROJECT_DIR/.version
+    
+    # 2. Determine Build Command and Tags
+    BASE_CMD="mvn package $MAVEN_OPTS -pl app/$COMPONENT -am"
+    
+    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
+      # ✅ Main/Tag: Official Build & Push
+      echo "🚀 Build type: OFFICIAL (Main/Tag)"
+      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true"
+      
+    elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+      # 🧪 MR: Build Only (No Push)
+      echo "🧪 Build type: TEST (Merge Request)"
+      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false"
+      
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # 🌿 Feature: Build & Push Snapshot
+      TAG="999-SNAPSHOT" # Default catch-all & Mirko
+      
+      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then 
+        TAG="998-SNAPSHOT"
+        echo "👤 User: Michele ($TAG)"
+      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then 
+        TAG="999-SNAPSHOT"
+        echo "👤 User: Mirko ($TAG)"
+      else
+        echo "👤 User: Generic ($TAG)"
+      fi
+      
+      echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
+      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG -P 'exclude-quarkus-test'"
+    else
+      echo "⚠️ Unknown branch type, skipping build command construction"
+      FINAL_CMD="echo 'Skipping build'"
+    fi
+    
+    # 3. Execute
+    echo "▶️ Executing: $FINAL_CMD"
+    eval "$FINAL_CMD"
+
+
 .container-scanning-template:
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE

@@ -1,6 +1,8 @@
-################################################################################
-#                                   STAGES                                     #
-################################################################################
+###################### TENANT FRONTEND PIPELINE ######################
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
 - build
@@ -9,13 +11,6 @@ stages:
 - dependency-check
 - restart
 - publish
-
-include:
-- local: "/.gitlab/.gitlab-templates.yaml"
-
-################################################################################
-#                                    JOBS                                       #
-################################################################################
 
 #################
 # Fetch Version #
@@ -31,6 +26,9 @@ Fetch version:
     paths:
     - version.env
     expire_in: 1 day
+  rules:
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD TENANT FRONTEND ########################
 Build Tenant Frontend:
@@ -72,14 +70,8 @@ Build Tenant Frontend:
       --destination "$CI_REGISTRY_NAME/openk9/tenant-ui:$DOCKER_TAG" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/tenant-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/tenant-ui/**/*
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
@@ -93,21 +85,15 @@ Build Verifier:
     policy: pull-push
   script:
   - cd js-packages/tenant-ui
-  # Set Node memory limit to 8GB to prevent OOM
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience:
-  # - registry: Use reliable npmjs.org registry as fallback
-  # - network-timeout: Increase timeout to 10m (600000ms) for slow networks
-  # - cache-folder: Store cache in .yarn-cache to reuse between jobs
-  # - prefer-offline: Use cached packages if available to reduce network calls
-  # - frozen-lockfile: Ensure dependencies match yarn.lock exactly (reproducibility)
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - yarn build
   rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Run only on MR
+    - !reference [.rules:child-verify-mr, rules]
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
@@ -121,7 +107,8 @@ Container Scanning:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/tenant-ui:$VERSION"
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
+    # Run only on Main/Tag
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -132,16 +119,9 @@ Trigger Restart:
     COMPONENT_NAME: "tenant-ui"
     COMPONENT_TYPE: "frontend"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/tenant-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/tenant-ui/**/*
-
-# PUBLISH JOB REMOVED - Not needed for tenant frontend
+    # Run on Main/Tag and Feature
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Tenant UI:

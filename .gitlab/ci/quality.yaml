@@ -1,0 +1,81 @@
+# ================================
+# Quality & Security Checks
+# ================================
+
+# Define Anchor for Java files list
+.java_files_list: &java_files_list
+  - core/**/*
+  - vendor/**/*
+  - pom.xml
+
+# Define Anchor for Java + JS files list
+.java_and_js_files_list: &java_and_js_files_list
+  - core/**/*
+  - vendor/**/*
+  - js-packages/**/*
+  - pom.xml
+  - "*.json"
+  - "*.js"
+  - "*.ts"
+  - "*.tsx"
+
+# Maven Dependency Check
+Maven Dependency Check:
+  stage: dependency-check
+  image: eclipse-temurin:21-jdk
+  variables:
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  before_script:
+  - cd core
+  - ./mvnw install
+  script:
+  - ./mvnw -pl '!../vendor/hibernate-rx-multitenancy, !../vendor/hibernate-rx-multitenancy/runtime, !../vendor/hibernate-rx-multitenancy/deployment'  dependency-check:aggregate
+  allow_failure: true
+  artifacts:
+    paths:
+    - core/target/dependency-check-report.html
+    expire_in: 1 week
+  cache:
+    key: "${CI_COMMIT_BRANCH}-dependency-check"
+    paths:
+    - $CI_PROJECT_DIR/.m2/repository
+    policy: pull-push
+  rules:
+    # 1. Main Branch
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: *java_files_list
+    # 2. Merge Request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *java_files_list
+    # 3. Tag
+    - if: "$CI_COMMIT_TAG"
+      changes: *java_files_list
+
+# SonarQube Check
+SonarQube Check:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [ "" ]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+    - .sonar/cache
+  before_script:
+  - mkdir /tmp/empty
+  script:
+  - sonar-scanner -Dsonar.qualitygate.wait=true
+  allow_failure: true
+  rules:
+    # 1. Main Branch
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: *java_and_js_files_list
+    # 2. Merge Request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *java_and_js_files_list
+    # 3. Tag
+    - if: "$CI_COMMIT_TAG"
+      changes: *java_and_js_files_list

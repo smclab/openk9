@@ -1,0 +1,25 @@
+# Standard rules for Child Pipelines
+# These rules assume the parent pipeline has already decided "IF" to run.
+# These rules decide "WHICH JOBS" to run within the child pipeline.
+
+.rules:child-build-always:
+  rules:
+    - when: on_success
+
+.rules:child-deploy-main-tag:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'
+
+.rules:child-restart-feature:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+
+.rules:child-verify-mr:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+.rules:child-publish:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_TAG'

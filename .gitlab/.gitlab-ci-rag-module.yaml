@@ -1,6 +1,8 @@
-################################################################################
-#                           STAGES, VARIABLES & INCLUDE                         #
-################################################################################
+###################### RAG MODULE CHILD PIPELINE ######################
+include:
+  - local: '/.gitlab/.gitlab-templates.yaml'
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
 - build
@@ -11,14 +13,9 @@ variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
-include:
-- local: '/.gitlab/.gitlab-templates.yaml'
-
-################################################################################
-#                                   JOBS                                        #
-################################################################################
-
-
+#################
+# Fetch Config  #
+#################
 Fetch config:
   stage: build
   image: alpine:3.16
@@ -34,6 +31,9 @@ Fetch config:
     paths:
     - config.env
     expire_in: 1 day
+  rules:
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD RAG IMAGE (KANIKO) ########################
 Build Rag Image:
@@ -86,9 +86,8 @@ Build Rag Image:
         --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
     fi
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    # Always run build if parent triggered us
+    - !reference [.rules:child-build-always, rules]
 
 ######################## CONTAINER SCANNING RAG #########################
 Container Scanning Rag:
@@ -120,8 +119,11 @@ Container Scanning Rag:
   script:
   - gtcs scan
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    # Run only on Main and Feature Branches (as per original logic, seemingly scanning feature too?)
+    # Original rule was: - if: '$CI_COMMIT_BRANCH == "main"' OR feature regex.
+    # So yes, scan on feature branch too.
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
 ######################## TRIGGER RESTART RAG #########################
 Trigger Restart:
@@ -135,7 +137,6 @@ Trigger Restart:
   - job: Build Rag Image
     artifacts: false
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-  # Rule for feature branch
-  - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    # Run on Main and Feature Branches
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]

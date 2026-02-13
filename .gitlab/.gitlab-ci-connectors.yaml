@@ -1,13 +1,15 @@
+######################### CONNECTORS PIPELINE #########################
+include:
+  - local: '/.gitlab/.gitlab-templates.yaml'
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
+
 stages:
 - build
 - container-scanning
 
 variables:
-  # Image used for container scanning
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
-
-include:
-- local: '/.gitlab/.gitlab-templates.yaml'
 
 ###############################################################
 #                    BUILD WEB CONNECTOR                      #
@@ -40,12 +42,10 @@ Build Web Connector image:
     echo "latest" > $CI_PROJECT_DIR/.version-web-connector
     echo "VERSION=latest" > version-web-connector.env
   rules:
+  # Main Branch ONLY
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/openk9-crawler/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
 
 ###############################################################
 #                   BUILD EMAIL CONNECTOR                     #
@@ -81,9 +81,6 @@ Build Email Connector image:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/email-connector/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
 
 ###############################################################
 #                  BUILD DATABASE CONNECTOR                   #
@@ -119,9 +116,6 @@ Build Database Connector image:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/database-connector/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
 
 ###############################################################
 #                  BUILD YOUTUBE CONNECTOR                    #
@@ -157,9 +151,6 @@ Build YouTube Connector image:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/youtube-connector/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
 
 ###############################################################
 #                  BUILD GITLAB CONNECTOR                     #
@@ -195,9 +186,6 @@ Build GitLab Connector image:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
     - connectors/gitlab-connector/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
 
 ###############################################################
 #               CONTAINER SCANNING WEB CONNECTOR              #

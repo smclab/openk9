@@ -1,4 +1,6 @@
 FROM node:18-alpine as react-build
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 COPY ./js-packages/tenant-ui /app
 COPY ./yarn.lock /app

@@ -1,0 +1,86 @@
+# ================================
+# Common & Helm Triggers
+# ================================
+
+# CONNECTORS (Docker Build)
+Trigger Connectors Build:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/**/*
+        - .gitlab/.gitlab-ci-connectors.yaml
+    - if: '$CI_COMMIT_TAG'
+      changes:
+        - connectors/**/*
+        - .gitlab/.gitlab-ci-connectors.yaml
+  trigger:
+    include: "/.gitlab/.gitlab-ci-connectors.yaml"
+    strategy: depend
+
+# ================================
+# Helm Charts Triggers
+# ================================
+# Consolidating triggers based on Helm Chart Pipeline files structure.
+# Each trigger points to a specific group file in .gitlab/helm-charts-pipeline/
+
+# 1. Base Core (Ingestion, Datasource, Searcher, etc.)
+Trigger Helm Base Core:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/01-base-core/**/*
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml"
+
+# 2. File Handling (File Manager, Tika)
+Trigger Helm File Handling:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/02-file-handling/**/*
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml"
+
+# 3. Gen AI (RAG, Chatbot, etc.)
+Trigger Helm Gen AI:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/03-gen-ai/**/* 
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
+
+# 4. Connectors (Helm Charts)
+Trigger Helm Connectors:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/05-connectors/**/* 
+        - helm-charts/**/*connectors/**/*
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-05-connectors.yaml"
+
+# 5. Utilities
+Trigger Helm Utilities:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/06-utilities/**/*
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
+
+# 6. Knowledge Handling
+Trigger Helm Knowledge Handling:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - helm-charts/04-knowledge-handling/**/*
+  trigger:
+    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
