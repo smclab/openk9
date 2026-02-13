@@ -50,7 +50,6 @@
 		<module>../datasource</module>
 		<module>../tenant-manager</module>
 		<module>../searcher</module>
-		<module>../entity-manager</module>
 		<module>../file-manager</module>
 		<module>../ingestion</module>
 		<module>../resources-validator</module>
@@ -160,9 +159,9 @@
 				<configuration>
 					<argLine>-javaagent:${org.mockito:mockito-core:jar}</argLine>
 					<excludedGroups>${junit-excluded-groups}</excludedGroups>
-					<systemProperties>
+					<systemPropertyVariables>
 						<java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-					</systemProperties>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 		</plugins>
