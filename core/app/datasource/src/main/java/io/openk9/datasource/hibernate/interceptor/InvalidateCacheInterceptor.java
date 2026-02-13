@@ -24,15 +24,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.hibernate.CallbackException;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
-import java.io.Serializable;
-
 @PersistenceUnitExtension
 @ApplicationScoped
-public class InvalidateCacheInterceptor extends EmptyInterceptor {
+public class InvalidateCacheInterceptor implements Interceptor {
 
 	@Inject
 	ActorSystemProvider actorSystemProvider;
@@ -40,9 +38,8 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 	@Inject
 	Logger log;
 
-	@Override
-	public void onDelete(
-		Object entity, Serializable id, Object[] state, String[] propertyNames,
+	public void onRemove(
+		Object entity, Object id, Object[] state, String[] propertyNames,
 		Type[] types) {
 
 		if (log.isTraceEnabled()) {
@@ -50,13 +47,10 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		}
 
 		invalidateLocalCache();
-
-		super.onDelete(entity, id, state, propertyNames, types);
 	}
 
-	@Override
-	public boolean onSave(
-		Object entity, Serializable id, Object[] state, String[] propertyNames,
+	public boolean onPersist(
+		Object entity, Object id, Object[] state, String[] propertyNames,
 		Type[] types) {
 
 		if (log.isTraceEnabled()) {
@@ -64,14 +58,12 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		}
 
 		invalidateLocalCache();
-
-		return super.onSave(entity, id, state, propertyNames, types);
+		return false;
 	}
 
 
-	@Override
 	public boolean onFlushDirty(
-		Object entity, Serializable id, Object[] currentState,
+		Object entity, Object id, Object[] currentState,
 		Object[] previousState, String[] propertyNames, Type[] types) {
 
 		if (log.isTraceEnabled()) {
@@ -79,12 +71,10 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		}
 
 		invalidateLocalCache();
-
-		return super.onFlushDirty(entity, id, currentState, previousState, propertyNames, types);
+		return false;
 	}
 
-	@Override
-	public void onCollectionUpdate(Object collection, Serializable key)
+	public void onCollectionUpdate(Object collection, Object key)
 	throws CallbackException {
 
 		if (log.isTraceEnabled()) {
@@ -92,8 +82,6 @@ public class InvalidateCacheInterceptor extends EmptyInterceptor {
 		}
 
 		invalidateLocalCache();
-
-		super.onCollectionUpdate(collection, key);
 	}
 
 	private void invalidateLocalCache() {
