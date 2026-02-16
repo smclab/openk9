@@ -25,5 +25,6 @@
 	<includeAll path="2023" relativeToChangelogFile="true"/>
 	<includeAll path="2024" relativeToChangelogFile="true"/>
 	<includeAll path="2025" relativeToChangelogFile="true"/>
+	<includeAll path="2026" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
