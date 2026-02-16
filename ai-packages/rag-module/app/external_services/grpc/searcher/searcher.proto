@@ -190,11 +190,11 @@ message GetRAGConfigurationsResponse{
     string name = 1;
     int32 chunkWindow = 2;
     bool reformulate = 3;
-    bool enableConversationTitle = 4;
-    string prompt = 5;
-    string promptNoRag = 6;
-    string ragToolDescription = 7;
-    string rephrasePrompt = 8;
-    .google.protobuf.Struct jsonConfig = 9;
+    string prompt = 4;
+    string promptNoRag = 5;
+    string ragToolDescription = 6;
+    string rephrasePrompt = 7;
+    .google.protobuf.Struct jsonConfig = 8;
+    bool enableConversationTitle = 9;
 }
 
