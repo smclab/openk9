@@ -72,11 +72,15 @@ public class TenantSchemaService {
 		return changeLogTableName;
 	}
 
-	public void runInitialization(String schemaName, String virtualHost) throws LiquibaseException {
+	public void runInitialization(String schemaName, String virtualHost)
+		throws LiquibaseException {
+
 		runInitialization(schemaName, virtualHost, true);
 	}
 
-	public void runInitialization(String schemaName, String virtualHost, boolean createSchema) throws LiquibaseException {
+	public void runInitialization(
+		String schemaName, String virtualHost, boolean createSchema)
+		throws LiquibaseException {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
@@ -88,14 +92,19 @@ public class TenantSchemaService {
 			liquibaseSchema += "_liquibase";
 		}
 
-		DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
-			toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
-			null, resourceAccessor);
+		DatabaseConnection connection = DatabaseFactory.getInstance()
+			.openConnection(
+				toJdbcUrl(openk9DatasourceUrl),
+				datasourceUsername,
+				datasourcePassword,
+				null,
+				resourceAccessor);
 
-		Database database = _createDatabase(connection, schemaName, liquibaseSchema);
+		Database database = _createDatabase(
+			connection, schemaName, liquibaseSchema);
 
-		try(Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database)) {
-
+		try(Liquibase liquibase = new Liquibase(
+			changeLogLocation, resourceAccessor, database)) {
 
 			if (createSchema) {
 				_createSchemas(connection, schemaName, liquibaseSchema);
@@ -105,7 +114,6 @@ public class TenantSchemaService {
 			liquibase.update(new Contexts(), new LabelExpression());
 
 			_insertIntoTenantBinding(connection, schemaName, virtualHost);
-
 
 		} catch (Exception ex) {
 			if (ex instanceof LiquibaseException) {

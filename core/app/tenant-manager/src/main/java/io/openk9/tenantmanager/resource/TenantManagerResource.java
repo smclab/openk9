@@ -17,6 +17,7 @@
 
 package io.openk9.tenantmanager.resource;
 
+import java.util.NoSuchElementException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
@@ -58,7 +59,12 @@ public class TenantManagerResource {
 	@POST
 	@Path("/{id}/tables")
 	public Uni<CreateTablesResponse> createTables(@PathParam("id") Long id) {
-		return provisioningService.populateSchema(id);
+
+		return provisioningService.populateSchema(id)
+			.onFailure(NoSuchElementException.class)
+			.transform(cause -> new WebApplicationException(cause, Response.Status.NOT_FOUND))
+			.onFailure()
+			.transform(WebApplicationException::new);
 	}
 
 	@POST

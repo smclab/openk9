@@ -17,22 +17,19 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
-import io.openk9.tenantmanager.service.TenantSchemaService;
 import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import io.smallrye.mutiny.unchecked.Unchecked;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.SupervisorStrategy;
@@ -43,28 +40,44 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class TenantManagerActorSystem {
 
+	@ConfigProperty(name = "openk9.tenant-manager.create-tenant-timeout", defaultValue = "45s")
+	Duration requestTimeout;
+
+	private ActorSystem<TenantProvisioningManager.Command> actorSystem;
+
+	@PreDestroy
+	public void close() {
+
+		if (actorSystem != null) {
+			actorSystem.terminate();
+		}
+	}
+
 	@PostConstruct
 	public void init() {
+
 		actorSystem = ActorSystem.create(
 			Behaviors
-				.supervise(Supervisor.create())
+				.supervise(TenantProvisioningManager.create())
 				.onFailure(SupervisorStrategy.resume()),
-			"tenant-manager-creator"
+			"tenant-provisioning-manager"
 		);
 	}
 
-	public Uni<TenantResponseDTO> startCreateTenant(CreateTenantRequest request) {
+	public Uni<TenantResponseDTO> startCreateTenant(
+		CreateTenantRequest request) {
 
-		String virtualHost = request.virtualHost();
+		String vHost = request.virtualHost();
 		String tenantName = request.tenantName();
-		SecurityConfiguration securityConfiguration = request.securityConfiguration();
+		SecurityConfiguration secConfiguration = request.securityConfiguration();
 		OAuth2Settings oAuth2Settings = request.oAuth2Settings();
 
-		CompletionStage<Supervisor.Response> ask = AskPattern.ask(
+		CompletionStage<TenantProvisioningManager.Response> ask =
+			AskPattern.ask(
 				actorSystem,
-				(ActorRef<Supervisor.Response> actorRef) ->
-					new Supervisor.Start(
-						virtualHost, tenantName, securityConfiguration,
+				(ActorRef<TenantProvisioningManager.Response> actorRef) ->
+					new TenantProvisioningManager.CreateTenant(
+						vHost, tenantName, secConfiguration,
 						oAuth2Settings, actorRef
 					),
 				requestTimeout,
@@ -75,49 +88,19 @@ public class TenantManagerActorSystem {
 			.createFrom()
 			.completionStage(ask)
 			.runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-			.onItem()
-			.transform(Unchecked.function((res) -> {
-
-				if (res instanceof Supervisor.Success success) {
-					return success.tenant();
-				}
-				else if (res == Supervisor.Error.INSTANCE) {
-					throw new RuntimeException(
-						"Tenant Creation Failed for virtualHost: " + virtualHost);
-				}
-				else {
-					throw new IllegalStateException("unknown response");
-				}
-
-			}));
-
+			.map((res) -> getTenantResponseDTO(res, vHost));
 	}
 
-	public Uni<Void> populateSchema(String schemaName, String virtualHost) {
-		return Uni
-			.createFrom()
-			.<Void>emitter(sink -> {
+	private static TenantResponseDTO getTenantResponseDTO(
+		TenantProvisioningManager.Response res, String vHost) {
 
-			try {
-				schemaService.runInitialization(schemaName, virtualHost, false);
-				sink.complete(null);
-			}
-			catch (Exception e) {
-				sink.fail(e);
-			}
-
-		}).runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+		return switch (res) {
+			case TenantProvisioningManager.Error ignore ->
+				throw new RuntimeException(
+					"Tenant Creation Failed for virtualHost: " + vHost);
+			case TenantProvisioningManager.Success(
+				TenantResponseDTO tenant) -> tenant;
+		};
 	}
-
-	private ActorSystem<Supervisor.Command> actorSystem;
-
-	@Inject
-	TenantSchemaService schemaService;
-
-	@ConfigProperty(
-		name = "openk9.tenant-manager.create-tenant-timeout",
-		defaultValue = "45s"
-	)
-	Duration requestTimeout;
 
 }

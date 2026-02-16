@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
+import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
@@ -35,11 +37,12 @@ import org.apache.pekko.actor.typed.javadsl.Receive;
 public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningSaga.Command> {
 
 	private final String virtualHost;
-	private final String schemaName;
 	private final ActorRef<Response> replyTo;
 	private final ProvisioningFactory factory;
 	// Accumulators
 	private final List<Object> collectedResponses = new ArrayList<>();
+	private final OAuth2Settings oAuth2Settings;
+	private String schemaName;
 	// Context Data
 	private String issuerUri;
 	private String clientId;
@@ -51,54 +54,68 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		ActorContext<Command> context,
 		String virtualHost,
 		String schemaName,
+		OAuth2Settings oAuth2Settings,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
 
 		super(context);
 		this.virtualHost = virtualHost;
 		this.schemaName = schemaName;
+		this.oAuth2Settings = oAuth2Settings;
 		this.replyTo = replyTo;
 		this.factory = factory;
 
-		var realmAdapter = context.messageAdapter(Realm.Response.class, ResponseWrapper::new);
-		var schemaAdapter = context.messageAdapter(Schema.Response.class, ResponseWrapper::new);
-		var ingressAdapter = context.messageAdapter(Ingress.Response.class, ResponseWrapper::new);
-
-		ActorRef<Realm.Command> realm = context.spawnAnonymous(factory
-			.realm(virtualHost, schemaName, realmAdapter));
-
-		ActorRef<Schema.Command> schema = context.spawnAnonymous(factory
-			.schema(virtualHost, schemaName, schemaAdapter));
-
-		ActorRef<Ingress.Command> ingress = context.spawnAnonymous(factory
-			.ingress(virtualHost, schemaName, ingressAdapter));
-
-		schema.tell(Schema.Start.INSTANCE);
-		realm.tell(Realm.Start.INSTANCE);
-		ingress.tell(Ingress.Start.INSTANCE);
+		if (schemaName == null) {
+			context.pipeToSelf(
+				TenantProvisioningService.generateRandomSchemaName(), (res, exc) -> {
+					if (res != null) {
+						return new NameResolved(res);
+					}
+					else {
+						return new OperationResponse(Error.INSTANCE);
+					}
+				}
+			);
+		}
+		else {
+			startProvisioning(context);
+		}
 	}
 
 	public static Behavior<Command> create(
-		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
+		String virtualHost,
+		String schemaName,
+		OAuth2Settings oAuth2Settings,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName, replyTo,
+			ctx, virtualHost, schemaName, oAuth2Settings, replyTo,
 			new DefaultProvisioningFactory()
 		));
 	}
 
 	public static Behavior<Command> create(
-		String virtualHost, String schemaName, ActorRef<Response> replyTo,
+		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
+
+		return create(virtualHost, schemaName, null, replyTo);
+	}
+
+	public static Behavior<Command> create(
+		String virtualHost,
+		String schemaName,
+		OAuth2Settings oAuth2Settings,
+		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName, replyTo, factory));
+			ctx, virtualHost, schemaName, oAuth2Settings, replyTo, factory));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(ResponseWrapper.class, this::onParallelResponse)
+			.onMessage(OperationResponse.class, this::onParallelResponse)
+			.onMessage(NameResolved.class, this::onNameResolved)
 			.build();
 	}
 
@@ -124,10 +141,19 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		}
 	}
 
+	private Receive<Command> handleCompensations() {
+
+		return newReceiveBuilder().onMessageEquals(
+			CompensationResponse.INSTANCE,
+			this::onCompensationComplete
+		).build();
+	}
+
 	private Behavior<Command> onCompensationComplete() {
 		getContext().getLog().info(
 			"Compensation #{} done.",
-			Operations.values().length - compensationCounter);
+			Operations.values().length - compensationCounter
+		);
 
 		compensationCounter--;
 		if (compensationCounter <= 0) {
@@ -136,6 +162,12 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		}
 
 		return handleCompensations();
+	}
+
+	private Behavior<Command> onNameResolved(NameResolved msg) {
+		this.schemaName = msg.name();
+		startProvisioning(getContext());
+		return this;
 	}
 
 	private Behavior<Command> onOperationsFailure(List<Object> errorList) {
@@ -160,33 +192,27 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	}
 
 	private Behavior<Command> onOperationsSuccess() {
-		var tenantAdapter = getContext().messageAdapter(
-			Tenant.Response.class,
-			TenantResponseWrapper::new
-		);
+		io.openk9.tenantmanager.model.Tenant tenant =
+			new io.openk9.tenantmanager.model.Tenant();
 
-		Behavior<Tenant.Command> tenantBehavior = factory.tenant(
-			virtualHost,
-			schemaName,
-			liquibaseSchemaName,
-			issuerUri,
-			clientId,
-			clientSecret,
-			tenantAdapter
-		);
+		tenant.setLiquibaseSchemaName(liquibaseSchemaName);
+		tenant.setSchemaName(schemaName);
+		tenant.setVirtualHost(virtualHost);
+		tenant.setIssuerUri(issuerUri);
+		tenant.setClientId(clientId);
+		tenant.setClientSecret(clientSecret);
 
-		ActorRef<Tenant.Command> tenantRef = getContext().spawn(
-			tenantBehavior,
-			"tenant-" + schemaName
+		getContext().pipeToSelf(
+			TenantProvisioningService.createEntity(tenant),
+			PersistResponse::new
 		);
-		tenantRef.tell(Tenant.Start.INSTANCE);
 
 		return newReceiveBuilder()
-			.onMessage(TenantResponseWrapper.class, this::onTenantResponse)
+			.onMessage(PersistResponse.class, this::onTenantResponse)
 			.build();
 	}
 
-	private Behavior<Command> onParallelResponse(ResponseWrapper wrapper) {
+	private Behavior<Command> onParallelResponse(OperationResponse wrapper) {
 		collectedResponses.add(wrapper.response());
 
 		if (collectedResponses.size() == 3) {
@@ -196,25 +222,33 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		return this;
 	}
 
-	private Behavior<Command> onTenantResponse(TenantResponseWrapper wrapper) {
-		if (wrapper.response() instanceof Tenant.Success(TenantResponseDTO tenant)) {
-			replyTo.tell(new Success(tenant));
-			return Behaviors.stopped();
-		}
-		else {
-			Tenant.Error error = (Tenant.Error) wrapper.response();
-			getContext().getLog().error("Tenant creation failed: {}", error);
+	private Behavior<Command> onTenantResponse(PersistResponse response) {
+		if (response.tenantException() != null) {
+			Throwable error = response.tenantException();
+			getContext().getLog().error("Tenant creation failed.", error);
 
 			return compensateAll();
+		}
+		else if (response.tenant() == null) {
+			getContext().getLog().error(
+				"Tenant creation failed with unknown issue.");
+
+			return compensateAll();
+		}
+		else {
+			TenantResponseDTO tenant = response.tenant();
+			replyTo.tell(new Success(tenant));
+
+			return Behaviors.stopped();
 		}
 	}
 
 	private Behavior<Command> processParallelResults() {
-		Map<Boolean, List<Object>> partitioned =
-			collectedResponses.stream().collect(Collectors.partitioningBy(r ->
-					r instanceof Realm.Success
-					|| r instanceof Schema.Success
-					|| r instanceof Ingress.Success)
+		Map<Boolean, List<Object>> partitioned = collectedResponses.stream()
+			.collect(Collectors.partitioningBy(r ->
+				r instanceof Realm.Success
+				|| r instanceof Schema.Success
+				|| r instanceof Ingress.Success)
 			);
 
 		List<Object> errors = partitioned.get(false);
@@ -251,7 +285,7 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 						}
 					);
 					getContext().spawnAnonymous(factory.ingressRollback(
-						schemaName, virtualHost, replyTo))
+							schemaName, virtualHost, replyTo))
 						.tell(Ingress.Start.INSTANCE);
 				}
 				case REALM -> {
@@ -263,7 +297,7 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 						}
 					);
 					getContext().spawnAnonymous(factory.realmRollback(
-						schemaName, replyTo))
+							schemaName, replyTo))
 						.tell(Realm.Rollback.INSTANCE);
 				}
 				case SCHEMA -> {
@@ -275,7 +309,7 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 						}
 					);
 					getContext().spawnAnonymous(
-						factory.schemaRollback(schemaName, replyTo))
+							factory.schemaRollback(schemaName, replyTo))
 						.tell(Schema.Rollback.INSTANCE);
 				}
 			}
@@ -284,22 +318,53 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		return handleCompensations();
 	}
 
-	private Receive<Command> handleCompensations() {
+	private void startProvisioning(ActorContext<Command> context) {
+		var schemaAdapter = context.messageAdapter(Schema.Response.class, OperationResponse::new);
+		var ingressAdapter = context.messageAdapter(Ingress.Response.class, OperationResponse::new);
 
-		return newReceiveBuilder().onMessageEquals(
-			CompensationResponse.INSTANCE,
-			this::onCompensationComplete
-		).build();
+		if (oAuth2Settings != null) {
+			// Skip Realm creation, simulate success
+			context.getSelf().tell(new OperationResponse(new Realm.Success(
+				oAuth2Settings.clientId(),
+				oAuth2Settings.clientSecret(),
+				virtualHost,
+				oAuth2Settings.issuerUri(),
+				null, null // username/password not needed if we have settings
+			)));
+		}
+		else {
+			var realmAdapter = context.messageAdapter(Realm.Response.class, OperationResponse::new);
+			ActorRef<Realm.Command> realm = context.spawnAnonymous(factory
+				.realm(virtualHost, schemaName, realmAdapter));
+			realm.tell(Realm.Start.INSTANCE);
+		}
+
+		ActorRef<Schema.Command> schema = context.spawnAnonymous(factory
+			.schema(virtualHost, schemaName, schemaAdapter));
+
+		ActorRef<Ingress.Command> ingress = context.spawnAnonymous(factory
+			.ingress(virtualHost, schemaName, ingressAdapter));
+
+		schema.tell(Schema.Start.INSTANCE);
+		ingress.tell(Ingress.Start.INSTANCE);
 	}
 
-	public sealed interface Command {}
-	record ResponseWrapper(Object response) implements Command {}
-	record TenantResponseWrapper(Tenant.Response response) implements Command {}
-	enum CompensationResponse implements Command { INSTANCE }
+	private enum CompensationResponse implements Command {
+		INSTANCE
+	}
 
-	public sealed interface Response {}
-	public enum Error implements Response { INSTANCE }
-	public record Success(TenantResponseDTO tenant) implements Response {}
+	public enum Error implements Response {
+		INSTANCE
+	}
+
+	private enum Operations {
+		INGRESS,
+		REALM,
+		SCHEMA
+	}
+
+	public sealed interface Command {
+	}
 
 	public interface ProvisioningFactory {
 
@@ -320,15 +385,6 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 			String schemaName,
 			ActorRef<Schema.Response> replyTo);
 
-		Behavior<Tenant.Command> tenant(
-			String virtualHost,
-			String schemaName,
-			String liquibaseSchemaName,
-			String issuerUri,
-			String clientId,
-			String clientSecret,
-			ActorRef<Tenant.Response> replyTo);
-
 		// Compensation Behaviors
 
 		Behavior<Ingress.Command> ingressRollback(
@@ -341,7 +397,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		Behavior<Schema.Command> schemaRollback(
 			String schemaName,
 			ActorRef<Schema.Response> replyTo);
+	}
 
+	public sealed interface Response {
 	}
 
 	private static class DefaultProvisioningFactory implements ProvisioningFactory {
@@ -387,19 +445,20 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 			return Schema.createRollback(s, r);
 		}
 
-		@Override
-		public Behavior<Tenant.Command> tenant(
-			String v, String s, String l, String i, String c, String sc,
-			ActorRef<Tenant.Response> r) {
-
-			return Tenant.create(v, s, l, i, c, sc, r);
-		}
 	}
 
-	private enum Operations {
-		INGRESS,
-		REALM,
-		SCHEMA
+	private record NameResolved(String name) implements Command {
+	}
+
+	private record OperationResponse(Object response) implements Command {
+	}
+
+	public record Success(TenantResponseDTO tenant) implements Response {
+	}
+
+	private record PersistResponse(
+		TenantResponseDTO tenant, Throwable tenantException)
+		implements Command {
 	}
 
 }

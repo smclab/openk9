@@ -17,6 +17,7 @@
 
 package io.openk9.tenantmanager.service;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.CompletionStage;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,12 +29,14 @@ import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
+import io.openk9.common.util.RandomGenerator;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.Tenant;
+import io.openk9.tenantmanager.pipe.tenant.create.TenantException;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
@@ -45,6 +48,7 @@ import io.openk9.tenantmanager.service.dto.EffectiveDeleteTenantRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.VertxContextSupport;
+import io.smallrye.faulttolerance.mutiny.impl.UniSupport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.Message;
 import org.jboss.logging.Logger;
@@ -66,7 +70,10 @@ public class TenantProvisioningService {
 	private static final String DELETE_SCHEMA = "TenantProvisioningService#deleteSchema";
 	private static final String DELETE_INGRESS = "TenantProvisioningService#deleteIngress";
 	private static final String DELETE_ENTITY = "TenantProvisioningService#deleteEntity";
-	private static final String FIND_TENANT_BY_VIRTUAL_HOST = "TenantProvisioningService#findTenantByVirtualHost";
+	private static final String FIND_TENANT_BY_VIRTUAL_HOST =
+		"TenantProvisioningService#findTenantByVirtualHost";
+	private static final String GENERATE_RANDOM_TENANT_NAME =
+		"TenantProvisioningService#generateRandomTenantName";
 
 	// ========================================================================
 	// Aggregated services.
@@ -101,11 +108,26 @@ public class TenantProvisioningService {
 	// provisioning/deprovisioning of a Tenant.
 	// ========================================================================
 
-	public static CompletionStage<TenantResponseDTO> findTenant(
-		String virtualHost) {
+	public static CompletionStage<TenantResponseDTO> createEntity(Tenant tenant) {
 
-		return EventBusInstanceHolder.<TenantResponseDTO>request(
-				FIND_TENANT_BY_VIRTUAL_HOST, FindTenantRequest.of(virtualHost))
+		return EventBusInstanceHolder
+			.<TenantResponseDTO>request(
+				CREATE_ENTITY, CreateEntityRequest.of(tenant))
+			.map(Message::body)
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletionStage<CreateIngressResponse> createIngress(
+		String virtualHost,
+		String tenantId) {
+
+		return EventBusInstanceHolder
+			.<CreateIngressResponse>request(
+				CREATE_INGRESS, CreateIngressRequest.newBuilder()
+					.setVirtualHost(virtualHost)
+					.setSchemaName(tenantId) // todo rename to tenantId
+					.build()
+			)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -130,23 +152,24 @@ public class TenantProvisioningService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<CreateIngressResponse> createIngress(String virtualHost, String tenantId) {
+	public static CompletionStage<Void> deleteEntity(String tenantId) {
 
-		return EventBusInstanceHolder
-			.<CreateIngressResponse>request(
-				CREATE_INGRESS, CreateIngressRequest.newBuilder()
-					.setVirtualHost(virtualHost)
-					.setSchemaName(tenantId) // todo rename to tenantId
-					.build())
-			.map(Message::body)
+		return EventBusInstanceHolder.request(
+				DELETE_ENTITY, DeleteEntityRequest.of(tenantId))
+			.replaceWithVoid()
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<TenantResponseDTO> createEntity(Tenant tenant) {
+	public static CompletionStage<DeleteIngressResponse> deleteIngress(
+		String virtualHost, String tenantId) {
 
 		return EventBusInstanceHolder
-			.<TenantResponseDTO>request(
-				CREATE_ENTITY, CreateEntityRequest.of(tenant))
+			.<DeleteIngressResponse>request(
+				DELETE_INGRESS, DeleteIngressRequest.newBuilder()
+					.setVirtualHost(virtualHost)
+					.setSchemaName(tenantId)
+					.build()
+			)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -166,24 +189,19 @@ public class TenantProvisioningService {
 			.replaceWithVoid().subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<DeleteIngressResponse> deleteIngress(
-		String virtualHost, String tenantId) {
+	public static CompletionStage<TenantResponseDTO> findTenant(
+		String virtualHost) {
 
-		return EventBusInstanceHolder
-			.<DeleteIngressResponse>request(
-				DELETE_INGRESS, DeleteIngressRequest.newBuilder()
-					.setVirtualHost(virtualHost)
-					.setSchemaName(tenantId)
-					.build())
+		return EventBusInstanceHolder.<TenantResponseDTO>request(
+				FIND_TENANT_BY_VIRTUAL_HOST, FindTenantRequest.of(virtualHost))
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<Void> deleteEntity(String tenantId) {
-
-		return EventBusInstanceHolder.request(
-			DELETE_ENTITY, DeleteEntityRequest.of(tenantId))
-			.replaceWithVoid()
+	public static CompletionStage<String> generateRandomSchemaName() {
+		return EventBusInstanceHolder.getEventBus()
+			.<String>request(GENERATE_RANDOM_TENANT_NAME, null)
+			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
 
@@ -194,52 +212,47 @@ public class TenantProvisioningService {
 	public Uni<TenantResponseDTO> create(CreateTenantRequest request) {
 
 		String virtualHost = request.virtualHost();
-		// move to actor system
-		String tenantName = request.tenantName();
 
 		return dbService.findByVirtualHost(virtualHost)
 			.onItem().ifNotNull()
 			.failWith(() -> new DuplicateVirtualHostException(virtualHost))
-			// move into actor system
-			.flatMap(n -> tenantName == null
-				? dbService.generateRandomTenantName()
-				.map(newName -> new CreateTenantRequest(
-					request.virtualHost(),
-					request.securityConfiguration(),
-					request.oAuth2Settings(),
-					newName
-				))
-				: Uni.createFrom().item(request)
-			)
-			.flatMap(req -> tenantManagerActorSystem.startCreateTenant(req));
+			.flatMap(n -> tenantManagerActorSystem.startCreateTenant(request));
+	}
+
+	public Uni<DeleteTenantResponse> delete(
+		EffectiveDeleteTenantRequest request) {
+
+		deleteTenantActorSystem.runDelete(
+			request.virtualHost(),
+			request.token()
+		);
+
+		return Uni
+			.createFrom()
+			.item(new DeleteTenantResponse("delete tenant started"));
 	}
 
 	public Uni<CreateTablesResponse> populateSchema(long tenantId) {
 
-		return dbService.findById(tenantId).flatMap(t -> {
-			if (t == null) {
-				return Uni.createFrom().failure(
-					new WebApplicationException(
-						"Tenant not found with id: " + tenantId,
-						Response.Status.NOT_FOUND)
-				);
-			}
-			else {
-				return tenantManagerActorSystem
-					.populateSchema(t.schemaName(), t.virtualHost())
-					.onItemOrFailure()
-					.transformToUni((ignore, err) -> {
-						if (err != null) {
-							return Uni.createFrom().failure(new WebApplicationException(err));
-						}
-						else {
-							return Uni.createFrom().item(
-								new CreateTablesResponse(
-									"Tables for schema " + t.schemaName() + " created"));
-						}
+		return dbService.findById(tenantId)
+			.flatMap(t -> {
+				if (t == null) {
+					String message = String.format(
+						"Tenant not found with id: %s", tenantId);
+
+					throw new NoSuchElementException(message);
+				}
+				else {
+					return VertxContextSupport.executeBlocking(() -> {
+						schemaService.runInitialization(
+							t.schemaName(), t.virtualHost(), false);
+						String message = String.format(
+							"Tables for schema %s created", t.schemaName());
+
+						return new CreateTablesResponse(message);
 					});
-			}
-		});
+				}
+			});
 
 	}
 
@@ -257,7 +270,8 @@ public class TenantProvisioningService {
 						.failure(
 							new WebApplicationException(
 								"Tenant not exist with virtualHost: " + virtualHost,
-								Response.Status.NOT_FOUND)
+								Response.Status.NOT_FOUND
+							)
 						);
 				}
 				else {
@@ -270,26 +284,63 @@ public class TenantProvisioningService {
 
 	}
 
-	public Uni<DeleteTenantResponse> delete(
-		EffectiveDeleteTenantRequest request) {
-
-		deleteTenantActorSystem.runDelete(
-			request.virtualHost(),
-			request.token()
-		);
-
-		return Uni
-			.createFrom()
-			.item(new DeleteTenantResponse("delete tenant started"));
-	}
-
 	// ========================================================================
 	// Event Bus Consumers.
 	// ========================================================================
 
-	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
-	Uni<TenantResponseDTO> findTenant(FindTenantRequest request) {
-		return dbService.findByVirtualHost(request.virtualHost());
+
+	@ConsumeEvent(CREATE_ENTITY)
+	Uni<TenantResponseDTO> createEntity(CreateEntityRequest request) {
+
+		var tenant = request.tenant();
+		return dbService.persist(tenant);
+	}
+
+	@ConsumeEvent(CREATE_REALM)
+	Uni<TenantRealmService.CreatedRealm> createRealm(
+		CreateRealmRequest request) {
+
+		var realmName = request.realmName();
+		var virtualHost = request.virtualHost();
+
+		return realmService.createRealm(realmName, virtualHost);
+	}
+
+	@ConsumeEvent(CREATE_SCHEMA)
+	Uni<Void> createSchema(CreateSchemaRequest request) {
+
+		var schemaName = request.schemaName();
+		var virtualHost = request.virtualHost();
+
+		return VertxContextSupport.executeBlocking(() -> {
+			try {
+				schemaService.runInitialization(schemaName, virtualHost, true);
+			}
+			catch (Exception e) {
+				log.errorf(
+					e, "An error occurred while deleting schema %s", schemaName);
+			}
+
+			return null;
+		});
+	}
+
+	@ConsumeEvent(CREATE_INGRESS)
+	Uni<CreateIngressResponse> createingress(CreateIngressRequest request) {
+
+		return appManagerService.createIngress(request);
+	}
+
+	@ConsumeEvent(DELETE_ENTITY)
+	Uni<Void> deleteEntity(DeleteEntityRequest request) {
+
+		return dbService.deleteTenant(Long.parseLong(request.tenantId));
+	}
+
+	@ConsumeEvent(DELETE_INGRESS)
+	Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
+
+		return appManagerService.deleteIngress(request);
 	}
 
 	@ConsumeEvent(DELETE_REALM)
@@ -316,58 +367,16 @@ public class TenantProvisioningService {
 		});
 	}
 
-	@ConsumeEvent(DELETE_INGRESS)
-	Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
-
-		return appManagerService.deleteIngress(request);
+	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
+	Uni<TenantResponseDTO> findTenant(FindTenantRequest request) {
+		return dbService.findByVirtualHost(request.virtualHost());
 	}
 
-	@ConsumeEvent(DELETE_ENTITY)
-	Uni<Void> deleteEntity(DeleteEntityRequest request) {
+	@ConsumeEvent(GENERATE_RANDOM_TENANT_NAME)
+	Uni<String> generateRandomTenantName(Object none) {
 
-		return dbService.deleteTenant(Long.parseLong(request.tenantId));
-	}
-
-	@ConsumeEvent(CREATE_SCHEMA)
-	Uni<Void> createSchema(CreateSchemaRequest request) {
-
-		var schemaName = request.schemaName();
-		var virtualHost = request.virtualHost();
-
-		return VertxContextSupport.executeBlocking(() -> {
-			try {
-				schemaService.runInitialization(schemaName, virtualHost, true);
-			}
-			catch (Exception e) {
-				log.errorf(
-					e, "An error occurred while deleting schema %s", schemaName);
-			}
-
-			return null;
-		});
-	}
-
-	@ConsumeEvent(CREATE_REALM)
-	Uni<TenantRealmService.CreatedRealm> createRealm(
-		CreateRealmRequest request) {
-
-		var realmName = request.realmName();
-		var virtualHost = request.virtualHost();
-
-		return realmService.createRealm(realmName, virtualHost);
-	}
-
-	@ConsumeEvent(CREATE_INGRESS)
-	Uni<CreateIngressResponse> createingress(CreateIngressRequest request) {
-
-		return appManagerService.createIngress(request);
-	}
-
-	@ConsumeEvent(CREATE_ENTITY)
-	Uni<TenantResponseDTO> createEntity(CreateEntityRequest request) {
-
-		var tenant = request.tenant();
-		return dbService.persist(tenant);
+		return dbService.findAllSchemaName()
+			.map(schemas -> RandomGenerator.generate(schemas.toArray(String[]::new)));
 	}
 
 	// ========================================================================
@@ -388,10 +397,10 @@ public class TenantProvisioningService {
 	// Event Bus Request Messages.
 	// =======================================================================
 
-	private record FindTenantRequest(String virtualHost) {
+	private record CreateEntityRequest(Tenant tenant) {
 
-		public static FindTenantRequest of(String virtualHost) {
-			return new FindTenantRequest(virtualHost);
+		public static CreateEntityRequest of(Tenant tenant) {
+			return new CreateEntityRequest(tenant);
 		}
 	}
 
@@ -399,6 +408,20 @@ public class TenantProvisioningService {
 
 		public static CreateRealmRequest of(String virtualHost, String realmName) {
 			return new CreateRealmRequest(virtualHost, realmName);
+		}
+	}
+
+	private record CreateSchemaRequest(String virtualHost, String schemaName) {
+
+		public static CreateSchemaRequest of(String virtualHost, String schemaName) {
+			return new CreateSchemaRequest(virtualHost, schemaName);
+		}
+	}
+
+	private record DeleteEntityRequest(String tenantId) {
+
+		public static DeleteEntityRequest of(String tenantId) {
+			return new DeleteEntityRequest(tenantId);
 		}
 	}
 
@@ -416,25 +439,10 @@ public class TenantProvisioningService {
 		}
 	}
 
-	private record CreateSchemaRequest(String virtualHost, String schemaName) {
+	private record FindTenantRequest(String virtualHost) {
 
-		public static CreateSchemaRequest of(String virtualHost, String schemaName) {
-			return new CreateSchemaRequest(virtualHost, schemaName);
-		}
-	}
-
-	private record CreateEntityRequest(Tenant tenant) {
-
-		public static CreateEntityRequest of(Tenant tenant) {
-			return new CreateEntityRequest(tenant);
-		}
-	}
-
-
-	private record DeleteEntityRequest(String tenantId) {
-
-		public static DeleteEntityRequest of(String tenantId) {
-			return new DeleteEntityRequest(tenantId);
+		public static FindTenantRequest of(String virtualHost) {
+			return new FindTenantRequest(virtualHost);
 		}
 	}
 }
