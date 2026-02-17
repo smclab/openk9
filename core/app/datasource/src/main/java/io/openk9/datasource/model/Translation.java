@@ -18,6 +18,7 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -36,14 +37,15 @@ import java.util.Objects;
 	indexes = {
 		@Index(
 			name = "idx_translation_key",
-			columnList = "language, class_name, class_pk, key",
+			columnList = "translation_language, class_name, class_pk, translation_key",
 			unique = true
 		),
 		@Index(
 			name = "idx_translation_entities",
 			columnList = "class_name, class_pk"
 		)
-	}
+	},
+	name = "translation_table"
 )
 @Getter
 @Setter
@@ -54,6 +56,7 @@ public class Translation extends K9Entity {
 	private TranslationKey pk;
 
 	@Nationalized
+	@Column(name = "translation_value")
 	private String value;
 
 	@Transient
