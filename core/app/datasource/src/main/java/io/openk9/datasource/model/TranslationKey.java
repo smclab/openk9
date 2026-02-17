@@ -31,11 +31,13 @@ import java.util.Objects;
 @Setter
 public class TranslationKey implements Serializable {
 
+	@Column(name = "translation_language")
 	private String language;
 	@Column(name = "class_name")
 	private String className;
 	@Column(name = "class_pk")
 	private Long classPK;
+	@Column(name = "translation_key")
 	private String key;
 
 	public TranslationKey() {
