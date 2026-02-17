@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type FieldValue = {
-    value?: any;
-    isDefault?: boolean;
+export type ResourceUri = {
+    baseUri?: string;
+    path?: string;
 };

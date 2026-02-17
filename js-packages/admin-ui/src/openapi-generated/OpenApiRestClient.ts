@@ -1,19 +1,3 @@
-﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -29,7 +13,8 @@ import { DateFilterResourceService } from './services/DateFilterResourceService'
 import { DocTypeResourceService } from './services/DocTypeResourceService';
 import { EnrichItemResourceService } from './services/EnrichItemResourceService';
 import { EnrichPipelineResourceService } from './services/EnrichPipelineResourceService';
-import { KeycloakSettingsResourceService } from './services/KeycloakSettingsResourceService';
+import { FormApiService } from './services/FormApiService';
+import { HealthApiService } from './services/HealthApiService';
 import { PipelineResourceService } from './services/PipelineResourceService';
 import { PluginDriverFieldResourceService } from './services/PluginDriverFieldResourceService';
 import { PluginDriverResourceService } from './services/PluginDriverResourceService';
@@ -53,7 +38,8 @@ export class OpenApiRestClient {
     public readonly docTypeResource: DocTypeResourceService;
     public readonly enrichItemResource: EnrichItemResourceService;
     public readonly enrichPipelineResource: EnrichPipelineResourceService;
-    public readonly keycloakSettingsResource: KeycloakSettingsResourceService;
+    public readonly formApi: FormApiService;
+    public readonly healthApi: HealthApiService;
     public readonly pipelineResource: PipelineResourceService;
     public readonly pluginDriverFieldResource: PluginDriverFieldResourceService;
     public readonly pluginDriverResource: PluginDriverResourceService;
@@ -70,7 +56,7 @@ export class OpenApiRestClient {
     constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = FetchHttpRequest) {
         this.request = new HttpRequest({
             BASE: config?.BASE ?? '',
-            VERSION: config?.VERSION ?? '3.1.0-SNAPSHOT',
+            VERSION: config?.VERSION ?? '2026.1-SNAPSHOT',
             WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
             CREDENTIALS: config?.CREDENTIALS ?? 'include',
             TOKEN: config?.TOKEN,
@@ -88,7 +74,8 @@ export class OpenApiRestClient {
         this.docTypeResource = new DocTypeResourceService(this.request);
         this.enrichItemResource = new EnrichItemResourceService(this.request);
         this.enrichPipelineResource = new EnrichPipelineResourceService(this.request);
-        this.keycloakSettingsResource = new KeycloakSettingsResourceService(this.request);
+        this.formApi = new FormApiService(this.request);
+        this.healthApi = new HealthApiService(this.request);
         this.pipelineResource = new PipelineResourceService(this.request);
         this.pluginDriverFieldResource = new PluginDriverFieldResourceService(this.request);
         this.pluginDriverResource = new PluginDriverResourceService(this.request);
@@ -101,4 +88,3 @@ export class OpenApiRestClient {
         this.triggerWithDateResource = new TriggerWithDateResourceService(this.request);
     }
 }
-

@@ -1,36 +1,13 @@
-﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { Bucket } from '../models/Bucket';
 import type { BucketDTO } from '../models/BucketDTO';
-import type { CurrentBucket } from '../models/CurrentBucket';
-import type { DocTypeFieldResponseDTO } from '../models/DocTypeFieldResponseDTO';
 import type { K9Column } from '../models/K9Column';
 import type { K9EntityEventBucket } from '../models/K9EntityEventBucket';
-import type { Language } from '../models/Language';
 import type { PageBucket } from '../models/PageBucket';
 import type { PageDatasource } from '../models/PageDatasource';
 import type { PageSuggestionCategory } from '../models/PageSuggestionCategory';
-import type { SortingResponseDTO } from '../models/SortingResponseDTO';
-import type { SuggestionCategory } from '../models/SuggestionCategory';
-import type { TabResponseDTO } from '../models/TabResponseDTO';
-import type { TemplateResponseDTO } from '../models/TemplateResponseDTO';
 import type { Tuple2BucketDatasource } from '../models/Tuple2BucketDatasource';
 import type { Tuple2BucketSuggestionCategory } from '../models/Tuple2BucketSuggestionCategory';
 
@@ -118,121 +95,161 @@ sortBy?: K9Column,
 
     /**
      * Get Current Bucket
-     * @returns CurrentBucket OK
+     * @returns any Current Bucket configuration returned
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrent(): CancelablePromise<CurrentBucket> {
+    public getApiDatasourceBucketsCurrent(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current',
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Available Language
-     * @returns Language OK
+     * @returns any List of available Languages returned
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrentAvailableLanguage(): CancelablePromise<Array<Language>> {
+    public getApiDatasourceBucketsCurrentAvailableLanguage(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/availableLanguage',
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Default Language
-     * @returns Language OK
+     * @returns any Default Language returned
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrentDefaultLanguage(): CancelablePromise<Language> {
+    public getApiDatasourceBucketsCurrentDefaultLanguage(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/defaultLanguage',
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Doc Type Fields Sortable
-     * @param translated 
-     * @returns DocTypeFieldResponseDTO OK
+     * @param translated If return translations
+     * @returns any List of Sortable DocTypeFields returned
      * @throws ApiError
      */
     public getApiDatasourceBucketsCurrentDocTypeFieldsSortable(
 translated: boolean = true,
-): CancelablePromise<Array<DocTypeFieldResponseDTO>> {
+): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/doc-type-fields-sortable',
             query: {
                 'translated': translated,
             },
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Sortings
-     * @param translated 
-     * @returns SortingResponseDTO OK
+     * @param translated If return translations
+     * @returns any List of Sortings returned
      * @throws ApiError
      */
     public getApiDatasourceBucketsCurrentSortings(
 translated: boolean = true,
-): CancelablePromise<Array<SortingResponseDTO>> {
+): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/sortings',
             query: {
                 'translated': translated,
             },
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Suggestion Categories
-     * @param translated 
-     * @returns SuggestionCategory OK
+     * @param translated If return translations
+     * @returns any List of Suggestion Categories returned
      * @throws ApiError
      */
     public getApiDatasourceBucketsCurrentSuggestionCategories(
 translated: boolean = true,
-): CancelablePromise<Array<SuggestionCategory>> {
+): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/suggestionCategories',
             query: {
                 'translated': translated,
             },
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Tabs
-     * @param translated 
-     * @returns TabResponseDTO OK
+     * @param translated If return translations
+     * @returns any List of Tabs returned
      * @throws ApiError
      */
     public getApiDatasourceBucketsCurrentTabs(
 translated: boolean = true,
-): CancelablePromise<Array<TabResponseDTO>> {
+): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/tabs',
             query: {
                 'translated': translated,
             },
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
     /**
      * Get Templates
-     * @returns TemplateResponseDTO OK
+     * @returns any List of Templates returned
      * @throws ApiError
      */
-    public getApiDatasourceBucketsCurrentTemplates(): CancelablePromise<Array<TemplateResponseDTO>> {
+    public getApiDatasourceBucketsCurrentTemplates(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/buckets/current/templates',
+            errors: {
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
+            },
         });
     }
 
@@ -539,4 +556,3 @@ suggestionCategoryId: number,
     }
 
 }
-

@@ -1,28 +1,27 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TriggerResponse } from '../models/TriggerResponse';
-import type { TriggerV2ResourceDTO } from '../models/TriggerV2ResourceDTO';
+import type { ResourceUri } from '../models/ResourceUri';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
-export class TriggerWithDateResourceService {
+export class HealthApiService {
 
     constructor(public readonly httpRequest: BaseHttpRequest) {}
 
     /**
-     * Trigger
+     * Get Health
      * @param requestBody 
-     * @returns TriggerResponse Auto Generate successful
+     * @returns any Health Check Ok
      * @throws ApiError
      */
-    public postApiDatasourceV2Trigger(
-requestBody: TriggerV2ResourceDTO,
-): CancelablePromise<TriggerResponse> {
+    public health(
+requestBody: ResourceUri,
+): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'POST',
-            url: '/api/datasource/v2/trigger',
+            url: '/api/datasource/enrichers/health',
             body: requestBody,
             mediaType: 'application/json',
             errors: {

@@ -37,11 +37,6 @@ gql`
   }
 `;
 
-export type ConfigType = {
-  baseUri: string;
-  path: string;
-};
-
 gql`
   mutation CreateOrUpdatePluginDriverMutation(
     $id: ID

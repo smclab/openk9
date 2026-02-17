@@ -1,24 +1,6 @@
-﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StatusResponse } from '../models/StatusResponse';
-
 import type { CancelablePromise } from '../core/CancelablePromise';
 import type { BaseHttpRequest } from '../core/BaseHttpRequest';
 
@@ -28,29 +10,30 @@ export class SchedulerResourceService {
 
     /**
      * Status
-     * @returns StatusResponse OK
+     * @returns any Health statud for each scheduled Datasource Indexing Job.
      * @throws ApiError
      */
-    public getApiDatasourceSchedulersStatus(): CancelablePromise<StatusResponse> {
+    public getApiDatasourceSchedulersStatus(): CancelablePromise<any> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/schedulers/status',
             errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
 
     /**
      * Cancel Scheduling
-     * @param schedulerId 
-     * @returns any Created
+     * @param schedulerId Scheduler entity ID
+     * @returns void 
      * @throws ApiError
      */
     public postApiDatasourceSchedulersCancelScheduling(
 schedulerId: number,
-): CancelablePromise<any> {
+): CancelablePromise<void> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/schedulers/{schedulerId}/cancelScheduling',
@@ -58,21 +41,22 @@ schedulerId: number,
                 'schedulerId': schedulerId,
             },
             errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
 
     /**
      * Close Scheduling
-     * @param schedulerId 
-     * @returns any Created
+     * @param schedulerId Scheduler entity ID
+     * @returns void 
      * @throws ApiError
      */
     public postApiDatasourceSchedulersCloseScheduling(
 schedulerId: number,
-): CancelablePromise<any> {
+): CancelablePromise<void> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/schedulers/{schedulerId}/closeScheduling',
@@ -80,8 +64,9 @@ schedulerId: number,
                 'schedulerId': schedulerId,
             },
             errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
@@ -89,12 +74,12 @@ schedulerId: number,
     /**
      * Get Deleted Content Ids
      * @param schedulerId 
-     * @returns string OK
+     * @returns any List of deleted content ids returned
      * @throws ApiError
      */
     public getApiDatasourceSchedulersGetDeletedContentIds(
 schedulerId: number,
-): CancelablePromise<Array<string>> {
+): CancelablePromise<Array<any>> {
         return this.httpRequest.request({
             method: 'GET',
             url: '/api/datasource/schedulers/{schedulerId}/getDeletedContentIds',
@@ -102,21 +87,22 @@ schedulerId: number,
                 'schedulerId': schedulerId,
             },
             errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
 
     /**
      * Reroute Scheduling
-     * @param schedulerId 
-     * @returns any Created
+     * @param schedulerId Scheduler entity ID
+     * @returns void 
      * @throws ApiError
      */
     public postApiDatasourceSchedulersRerouteScheduling(
 schedulerId: number,
-): CancelablePromise<any> {
+): CancelablePromise<void> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/schedulers/{schedulerId}/rerouteScheduling',
@@ -124,11 +110,11 @@ schedulerId: number,
                 'schedulerId': schedulerId,
             },
             errors: {
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                400: `Bad Request`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
 
 }
-

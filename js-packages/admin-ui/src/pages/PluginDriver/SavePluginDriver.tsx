@@ -51,8 +51,8 @@ import {
 import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-generated/models/PluginDriverType";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { ConfigType } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { ResourceUri } from "openapi-generated";
 
 export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
@@ -208,11 +208,11 @@ export const SavePluginnDriverModel = React.forwardRef(
       },
     });
 
-    const [config, setConfig] = React.useState<ConfigType | null>(null);
-
+    const [config, setConfig] = React.useState<ResourceUri | undefined>(undefined);
+    console.log(config);
     React.useEffect(() => {
       if (pluginDriverQuery.data?.pluginDriver?.jsonConfig) {
-        const parsedConfig = DesctructuringJsonConfig(pluginDriverQuery.data?.pluginDriver?.jsonConfig);
+        const parsedConfig = DesctructuringJsonConfig(pluginDriverQuery.data?.pluginDriver?.jsonConfig) || undefined;
         setConfig(parsedConfig);
       }
     }, [pluginDriverQuery.data?.pluginDriver?.jsonConfig]);
@@ -357,7 +357,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                         value={config?.baseUri || ""}
                         validationMessages={[]}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, baseUri: e } : ({ baseUri: e } as ConfigType)))
+                          setConfig((config) => (config ? { ...config, baseUri: e } : ({ baseUri: e } as ResourceUri)))
                         }
                         id={pluginDriverId}
                         disabled={false}
@@ -368,7 +368,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                         id={pluginDriverId}
                         value={config?.path || ""}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, path: e } : ({ path: e } as ConfigType)))
+                          setConfig((config) => (config ? { ...config, path: e } : ({ path: e } as ResourceUri)))
                         }
                         disabled={false}
                         validationMessages={[]}
@@ -380,10 +380,10 @@ export const SavePluginnDriverModel = React.forwardRef(
                               console.log("prova", form.inputProps("type").value);
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
-                                type: form.inputProps("type").value as PluginDriverType.Http 
-                                  ? OpenApiPluginDriverType.HTTP 
+                                type: (form.inputProps("type").value as PluginDriverType.Http)
+                                  ? OpenApiPluginDriverType.HTTP
                                   : OpenApiPluginDriverType.HTTP,
-                                jsonConfig: JSON.stringify(config),
+                                resourceUri: config,
                               });
                               setTestResult(res ? "success" : "error");
                             } catch {
