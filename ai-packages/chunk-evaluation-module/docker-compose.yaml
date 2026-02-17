@@ -28,4 +28,18 @@ services:
     volumes:
       - ./dati:/app/dati
 
+  evaluator-offline:
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    build: ./evaluator
+    container_name: evaluator-offline
+    env_file: .env
+    restart: always
+    volumes:
+      - ./dati:/app/dati
+    ports:
+    - "8000:8000"
+    environment:
+      DATASET_PREFIX: "offline-dataset"
+      EXPERIMENT_PREFIX: "offline-experiment"
+
       
