@@ -42,6 +42,7 @@ import {
   InputMaybe,
   PluginDriverType,
   Provisioning,
+  ResourceUriInput,
   useDocumentTypeFieldsForPluginQuery,
   usePluginDriverQuery,
   usePluginDriversQuery,
@@ -62,6 +63,16 @@ export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "SURNAME" as UserField, label: "SURNAME" as UserField },
   { value: "USERNAME" as UserField, label: "USERNAME" as UserField },
 ];
+
+function convertGraphQLResourceUriToOpenAPI(
+  graphqlUri: { __typename?: "ResourceUri"; baseUri?: string | null; path?: string | null } | null | undefined,
+): ResourceUri | undefined {
+  if (!graphqlUri) return undefined;
+  return {
+    baseUri: graphqlUri.baseUri ?? undefined,
+    path: graphqlUri.path ?? undefined,
+  };
+}
 
 export const SavePluginnDriverModel = React.forwardRef(
   (
@@ -211,11 +222,10 @@ export const SavePluginnDriverModel = React.forwardRef(
     const [config, setConfig] = React.useState<ResourceUri | undefined>(undefined);
     console.log(config);
     React.useEffect(() => {
-      if (pluginDriverQuery.data?.pluginDriver?.jsonConfig) {
-        const parsedConfig = DesctructuringJsonConfig(pluginDriverQuery.data?.pluginDriver?.jsonConfig) || undefined;
-        setConfig(parsedConfig);
+      if (pluginDriverQuery.data?.pluginDriver?.resourceUri) {
+        setConfig(convertGraphQLResourceUriToOpenAPI(pluginDriverQuery.data.pluginDriver.resourceUri));
       }
-    }, [pluginDriverQuery.data?.pluginDriver?.jsonConfig]);
+    }, [pluginDriverQuery.data?.pluginDriver?.resourceUri]);
 
     React.useEffect(() => {
       setTestResult(null);
@@ -227,7 +237,7 @@ export const SavePluginnDriverModel = React.forwardRef(
           name: "",
           description: "",
           type: PluginDriverType.Http,
-          jsonConfig: "{}",
+          resourceUri: undefined as ResourceUri | undefined,
           provisioning: Provisioning.User,
           userFieldsSelectedOptions: { id: "", name: "" },
           docTypeFieldsSelectedOptions: { id: "", name: "" },
@@ -239,8 +249,13 @@ export const SavePluginnDriverModel = React.forwardRef(
         name: pluginDriverQuery.data?.pluginDriver?.name || "",
         type: pluginDriverQuery.data?.pluginDriver?.type,
         provisioning: Provisioning.User,
-        description: pluginDriverQuery.data?.pluginDriver?.type || "",
-        jsonConfig: pluginDriverQuery.data?.pluginDriver?.jsonConfig || "{}",
+        description: pluginDriverQuery.data?.pluginDriver?.description || "",
+        resourceUri: pluginDriverQuery.data?.pluginDriver?.resourceUri
+          ? {
+              baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
+              path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
+            }
+          : undefined,
         docTypeUserDTOSet:
           pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
             docTypeId: Number(field?.docTypeField?.id),
@@ -256,7 +271,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             name: data.name,
             type: PluginDriverType.Http,
             provisioning: Provisioning.User,
-            jsonConfig: JSON.stringify(config),
+            resourceUri: config as ResourceUriInput,
             docTypeUserDTOSet:
               fields?.map((field) => ({
                 docTypeId: Number(field.docTypeId),
@@ -357,7 +372,9 @@ export const SavePluginnDriverModel = React.forwardRef(
                         value={config?.baseUri || ""}
                         validationMessages={[]}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, baseUri: e } : ({ baseUri: e } as ResourceUri)))
+                          setConfig((config: any) =>
+                            config ? { ...config, baseUri: e } : ({ baseUri: e } as ResourceUriInput),
+                          )
                         }
                         id={pluginDriverId}
                         disabled={false}
@@ -368,7 +385,9 @@ export const SavePluginnDriverModel = React.forwardRef(
                         id={pluginDriverId}
                         value={config?.path || ""}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, path: e } : ({ path: e } as ResourceUri)))
+                          setConfig((config: any) =>
+                            config ? { ...config, path: e } : ({ path: e } as ResourceUriInput),
+                          )
                         }
                         disabled={false}
                         validationMessages={[]}

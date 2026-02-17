@@ -160,7 +160,7 @@ export type Autocomplete = {
    *
    */
   fields?: Maybe<Connection_DocTypeField>;
-  fuzziness?: Maybe<Scalars['String']>;
+  fuzziness?: Maybe<Fuzziness>;
   id?: Maybe<Scalars['ID']>;
   minimumShouldMatch?: Maybe<Scalars['String']>;
   /** ISO-8601 */
@@ -195,7 +195,7 @@ export type AutocompleteDtoInput = {
    * 	Edit distance allowed for fuzzy matching (e.g., "0", "1", "2", or "AUTO")
    *
    */
-  fuzziness?: InputMaybe<Scalars['String']>;
+  fuzziness?: InputMaybe<Fuzziness>;
   /**
    * 	Minimum number of optional clauses that must match for a document to be returned
    *
@@ -756,6 +756,8 @@ export type CreateRagConfigurationDtoInput = {
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
+  /** Boolean to enable/disable the generation of the conversation title. */
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -1748,8 +1750,8 @@ export type EnrichItem = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   requestTimeout?: Maybe<Scalars['BigInteger']>;
+  resourceUri?: Maybe<ResourceUri>;
   script?: Maybe<Scalars['String']>;
-  serviceName?: Maybe<Scalars['String']>;
   type?: Maybe<EnrichItemType>;
 };
 
@@ -1761,8 +1763,8 @@ export type EnrichItemDtoInput = {
   jsonPath: Scalars['String'];
   name: Scalars['String'];
   requestTimeout: Scalars['BigInteger'];
+  resourceUri: ResourceUriInput;
   script?: InputMaybe<Scalars['String']>;
-  serviceName: Scalars['String'];
   type: EnrichItemType;
 };
 
@@ -3405,11 +3407,11 @@ export type PluginDriver = {
   description?: Maybe<Scalars['String']>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
   id?: Maybe<Scalars['ID']>;
-  jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   provisioning?: Maybe<Provisioning>;
+  resourceUri?: Maybe<ResourceUri>;
   type?: Maybe<PluginDriverType>;
 };
 
@@ -3432,9 +3434,9 @@ export type PluginDriverAclMapping = {
 
 export type PluginDriverDtoInput = {
   description?: InputMaybe<Scalars['String']>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   provisioning?: InputMaybe<Provisioning>;
+  resourceUri?: InputMaybe<ResourceUriInput>;
   type: PluginDriverType;
 };
 
@@ -3451,9 +3453,9 @@ export enum PluginDriverType {
 export type PluginWithDocTypeDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   docTypeUserDTOSet?: InputMaybe<Array<InputMaybe<DocTypeUserDtoInput>>>;
-  jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   provisioning?: InputMaybe<Provisioning>;
+  resourceUri?: InputMaybe<ResourceUriInput>;
   type: PluginDriverType;
 };
 
@@ -4502,6 +4504,7 @@ export type RagConfiguration = {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
+  enableConversationTitle?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
@@ -4524,6 +4527,8 @@ export type RagConfigurationDtoInput = {
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
+  /** Boolean to enable/disable the generation of the conversation title. */
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -4556,6 +4561,17 @@ export enum RagType {
   ChatRagTool = 'CHAT_RAG_TOOL',
   SimpleGenerate = 'SIMPLE_GENERATE'
 }
+
+export type ResourceUri = {
+  __typename?: 'ResourceUri';
+  baseUri?: Maybe<Scalars['String']>;
+  path?: Maybe<Scalars['String']>;
+};
+
+export type ResourceUriInput = {
+  baseUri?: InputMaybe<Scalars['String']>;
+  path?: InputMaybe<Scalars['String']>;
+};
 
 export type Response_Analyzer = {
   __typename?: 'Response_Analyzer';
@@ -4785,6 +4801,9 @@ export type SearchConfig = {
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
   id?: Maybe<Scalars['ID']>;
+  maxSearchPageFrom?: Maybe<Scalars['Int']>;
+  maxSearchPageSize?: Maybe<Scalars['Int']>;
+  maxTextQueryLength?: Maybe<Scalars['Int']>;
   minScore?: Maybe<Scalars['Float']>;
   minScoreSearch: Scalars['Boolean'];
   minScoreSuggestions: Scalars['Boolean'];
@@ -4807,6 +4826,9 @@ export type SearchConfigQueryParserConfigsArgs = {
 
 export type SearchConfigDtoInput = {
   description?: InputMaybe<Scalars['String']>;
+  maxSearchPageFrom?: InputMaybe<Scalars['Int']>;
+  maxSearchPageSize?: InputMaybe<Scalars['Int']>;
+  maxTextQueryLength?: InputMaybe<Scalars['Int']>;
   minScore: Scalars['Float'];
   minScoreSearch: Scalars['Boolean'];
   minScoreSuggestions: Scalars['Boolean'];
@@ -4815,6 +4837,9 @@ export type SearchConfigDtoInput = {
 
 export type SearchConfigWithQueryParsersDtoInput = {
   description?: InputMaybe<Scalars['String']>;
+  maxSearchPageFrom?: InputMaybe<Scalars['Int']>;
+  maxSearchPageSize?: InputMaybe<Scalars['Int']>;
+  maxTextQueryLength?: InputMaybe<Scalars['Int']>;
   minScore: Scalars['Float'];
   minScoreSearch: Scalars['Boolean'];
   minScoreSuggestions: Scalars['Boolean'];
@@ -5540,7 +5565,7 @@ export type AutocompleteQueryVariables = Exact<{
 }>;
 
 
-export type AutocompleteQuery = { __typename?: 'Query', autocomplete?: { __typename?: 'Autocomplete', id?: string | null, fuzziness?: string | null, minimumShouldMatch?: string | null, name?: string | null, operator?: BooleanOperator | null, resultSize?: number | null, perfectMatchIncluded: boolean, fields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type AutocompleteQuery = { __typename?: 'Query', autocomplete?: { __typename?: 'Autocomplete', id?: string | null, fuzziness?: Fuzziness | null, minimumShouldMatch?: string | null, name?: string | null, operator?: BooleanOperator | null, resultSize?: number | null, perfectMatchIncluded: boolean, fields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateAutocompleteMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -5866,15 +5891,14 @@ export type EnrichItemQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null };
+export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null };
 
 export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   type: EnrichItemType;
-  serviceName: Scalars['String'];
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  resourceUri: ResourceUriInput;
   script?: InputMaybe<Scalars['String']>;
   behaviorMergeType: BehaviorMergeType;
   jsonPath: Scalars['String'];
@@ -5951,14 +5975,14 @@ export type PluginDriverQueryVariables = Exact<{
 }>;
 
 
-export type PluginDriverQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, jsonConfig?: string | null, provisioning?: Provisioning | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', name?: string | null, id?: string | null, fieldName?: string | null } | null } | null> | null } | null };
+export type PluginDriverQuery = { __typename?: 'Query', pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, type?: PluginDriverType | null, provisioning?: Provisioning | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null, aclMappings?: Array<{ __typename?: 'PluginDriverAclMapping', userField?: UserField | null, docTypeField?: { __typename?: 'DocTypeField', name?: string | null, id?: string | null, fieldName?: string | null } | null } | null> | null } | null };
 
 export type CreateOrUpdatePluginDriverMutationMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   type: PluginDriverType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  resourceUri?: InputMaybe<ResourceUriInput>;
   provisioning: Provisioning;
 }>;
 
@@ -5992,7 +6016,7 @@ export type PluginDriverWithDocTypeMutationVariables = Exact<{
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   type: PluginDriverType;
-  jsonConfig: Scalars['String'];
+  resourceUri: ResourceUriInput;
   provisioning: Provisioning;
   docTypeUserDTOSet?: InputMaybe<Array<InputMaybe<DocTypeUserDtoInput>> | InputMaybe<DocTypeUserDtoInput>>;
 }>;
@@ -6940,7 +6964,7 @@ export type DataSourceQueryVariables = Exact<{
 }>;
 
 
-export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexable?: boolean | null, reindexing?: string | null, purgeable?: boolean | null, purging?: string | null, purgeMaxAge?: string | null, lastIngestionDate?: any | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, provisioning?: Provisioning | null, jsonConfig?: string | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, knnIndex?: boolean | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
+export type DataSourceQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null, description?: string | null, schedulable?: boolean | null, scheduling?: string | null, jsonConfig?: string | null, reindexable?: boolean | null, reindexing?: string | null, purgeable?: boolean | null, purging?: string | null, purgeMaxAge?: string | null, lastIngestionDate?: any | null, pluginDriver?: { __typename?: 'PluginDriver', id?: string | null, name?: string | null, provisioning?: Provisioning | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null, dataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null, description?: string | null, knnIndex?: boolean | null } | null, enrichPipeline?: { __typename?: 'EnrichPipeline', id?: string | null, name?: string | null } | null, dataIndexes?: { __typename?: 'DefaultConnection_DataIndex', edges?: Array<{ __typename?: 'DefaultEdge_DataIndex', node?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateDatasourceConnectionMutationVariables = Exact<{
   name: Scalars['String'];
@@ -7012,19 +7036,19 @@ export type EnrichItemsQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, serviceName?: string | null, jsonConfig?: string | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type EnrichItemsQuery = { __typename?: 'Query', enrichItems?: { __typename?: 'DefaultConnection_EnrichItem', edges?: Array<{ __typename?: 'DefaultEdge_EnrichItem', node?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type PluginDriversQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PluginDriversQuery = { __typename?: 'Query', pluginDriversPageFilter?: { __typename?: 'Page_PluginDriver', content?: Array<{ __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, jsonConfig?: string | null, provisioning?: Provisioning | null, type?: PluginDriverType | null } | null> | null } | null };
+export type PluginDriversQuery = { __typename?: 'Query', pluginDriversPageFilter?: { __typename?: 'Page_PluginDriver', content?: Array<{ __typename?: 'PluginDriver', id?: string | null, name?: string | null, description?: string | null, provisioning?: Provisioning | null, type?: PluginDriverType | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null> | null } | null };
 
 export type CreateOrUpdatePluginDriverMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   type: PluginDriverType;
-  jsonConfig?: InputMaybe<Scalars['String']>;
+  resourceUri?: InputMaybe<ResourceUriInput>;
   provisioning?: InputMaybe<Provisioning>;
 }>;
 
@@ -9553,8 +9577,10 @@ export const EnrichItemDocument = gql`
     name
     description
     type
-    serviceName
-    jsonConfig
+    resourceUri {
+      baseUri
+      path
+    }
     script
     behaviorMergeType
     jsonPath
@@ -9592,10 +9618,10 @@ export type EnrichItemQueryHookResult = ReturnType<typeof useEnrichItemQuery>;
 export type EnrichItemLazyQueryHookResult = ReturnType<typeof useEnrichItemLazyQuery>;
 export type EnrichItemQueryResult = Apollo.QueryResult<EnrichItemQuery, EnrichItemQueryVariables>;
 export const CreateOrUpdateEnrichItemDocument = gql`
-    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $serviceName: String!, $jsonConfig: String, $script: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
+    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $resourceUri: ResourceUriInput!, $script: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
   enrichItem(
     id: $id
-    enrichItemDTO: {name: $name, description: $description, type: $type, serviceName: $serviceName, jsonConfig: $jsonConfig, script: $script, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
+    enrichItemDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, script: $script, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
   ) {
     entity {
       id
@@ -9627,8 +9653,7 @@ export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateO
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      type: // value for 'type'
- *      serviceName: // value for 'serviceName'
- *      jsonConfig: // value for 'jsonConfig'
+ *      resourceUri: // value for 'resourceUri'
  *      script: // value for 'script'
  *      behaviorMergeType: // value for 'behaviorMergeType'
  *      jsonPath: // value for 'jsonPath'
@@ -9993,7 +10018,10 @@ export const PluginDriverDocument = gql`
     name
     description
     type
-    jsonConfig
+    resourceUri {
+      baseUri
+      path
+    }
     provisioning
     aclMappings {
       userField
@@ -10035,10 +10063,10 @@ export type PluginDriverQueryHookResult = ReturnType<typeof usePluginDriverQuery
 export type PluginDriverLazyQueryHookResult = ReturnType<typeof usePluginDriverLazyQuery>;
 export type PluginDriverQueryResult = Apollo.QueryResult<PluginDriverQuery, PluginDriverQueryVariables>;
 export const CreateOrUpdatePluginDriverMutationDocument = gql`
-    mutation CreateOrUpdatePluginDriverMutation($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String, $provisioning: Provisioning!) {
+    mutation CreateOrUpdatePluginDriverMutation($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $resourceUri: ResourceUriInput, $provisioning: Provisioning!) {
   pluginDriver(
     id: $id
-    pluginDriverDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning}
+    pluginDriverDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, provisioning: $provisioning}
   ) {
     entity {
       id
@@ -10070,7 +10098,7 @@ export type CreateOrUpdatePluginDriverMutationMutationFn = Apollo.MutationFuncti
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      type: // value for 'type'
- *      jsonConfig: // value for 'jsonConfig'
+ *      resourceUri: // value for 'resourceUri'
  *      provisioning: // value for 'provisioning'
  *   },
  * });
@@ -10209,10 +10237,10 @@ export type DeletePluginDriverMutationHookResult = ReturnType<typeof useDeletePl
 export type DeletePluginDriverMutationResult = Apollo.MutationResult<DeletePluginDriverMutation>;
 export type DeletePluginDriverMutationOptions = Apollo.BaseMutationOptions<DeletePluginDriverMutation, DeletePluginDriverMutationVariables>;
 export const PluginDriverWithDocTypeDocument = gql`
-    mutation PluginDriverWithDocType($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String!, $provisioning: Provisioning!, $docTypeUserDTOSet: [DocTypeUserDTOInput]) {
+    mutation PluginDriverWithDocType($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $resourceUri: ResourceUriInput!, $provisioning: Provisioning!, $docTypeUserDTOSet: [DocTypeUserDTOInput]) {
   pluginDriverWithDocType(
     id: $id
-    pluginWithDocTypeDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning, docTypeUserDTOSet: $docTypeUserDTOSet}
+    pluginWithDocTypeDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, provisioning: $provisioning, docTypeUserDTOSet: $docTypeUserDTOSet}
   ) {
     entity {
       id
@@ -10244,7 +10272,7 @@ export type PluginDriverWithDocTypeMutationFn = Apollo.MutationFunction<PluginDr
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      type: // value for 'type'
- *      jsonConfig: // value for 'jsonConfig'
+ *      resourceUri: // value for 'resourceUri'
  *      provisioning: // value for 'provisioning'
  *      docTypeUserDTOSet: // value for 'docTypeUserDTOSet'
  *   },
@@ -15082,7 +15110,10 @@ export const DataSourceDocument = gql`
       id
       name
       provisioning
-      jsonConfig
+      resourceUri {
+        baseUri
+        path
+      }
     }
     dataIndex {
       id
@@ -15402,8 +15433,10 @@ export const EnrichItemsDocument = gql`
         name
         description
         type
-        serviceName
-        jsonConfig
+        resourceUri {
+          baseUri
+          path
+        }
         script
         behaviorMergeType
         jsonPath
@@ -15454,7 +15487,10 @@ export const PluginDriversDocument = gql`
       id
       name
       description
-      jsonConfig
+      resourceUri {
+        baseUri
+        path
+      }
       provisioning
       type
     }
@@ -15489,10 +15525,10 @@ export type PluginDriversQueryHookResult = ReturnType<typeof usePluginDriversQue
 export type PluginDriversLazyQueryHookResult = ReturnType<typeof usePluginDriversLazyQuery>;
 export type PluginDriversQueryResult = Apollo.QueryResult<PluginDriversQuery, PluginDriversQueryVariables>;
 export const CreateOrUpdatePluginDriverDocument = gql`
-    mutation CreateOrUpdatePluginDriver($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $jsonConfig: String, $provisioning: Provisioning) {
+    mutation CreateOrUpdatePluginDriver($id: ID, $name: String!, $description: String, $type: PluginDriverType!, $resourceUri: ResourceUriInput, $provisioning: Provisioning) {
   pluginDriver(
     id: $id
-    pluginDriverDTO: {name: $name, description: $description, type: $type, jsonConfig: $jsonConfig, provisioning: $provisioning}
+    pluginDriverDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, provisioning: $provisioning}
   ) {
     entity {
       id
@@ -15524,7 +15560,7 @@ export type CreateOrUpdatePluginDriverMutationFn = Apollo.MutationFunction<Creat
  *      name: // value for 'name'
  *      description: // value for 'description'
  *      type: // value for 'type'
- *      jsonConfig: // value for 'jsonConfig'
+ *      resourceUri: // value for 'resourceUri'
  *      provisioning: // value for 'provisioning'
  *   },
  * });
@@ -16006,4 +16042,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-02-06T15:15:36+01:00
+// Generated on 2026-02-17T11:00:27+01:00

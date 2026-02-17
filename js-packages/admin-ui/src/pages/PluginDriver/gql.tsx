@@ -23,7 +23,10 @@ gql`
       name
       description
       type
-      jsonConfig
+      resourceUri {
+        baseUri
+        path
+      }
       provisioning
       aclMappings {
         userField
@@ -43,7 +46,7 @@ gql`
     $name: String!
     $description: String
     $type: PluginDriverType!
-    $jsonConfig: String
+    $resourceUri: ResourceUriInput
     $provisioning: Provisioning!
   ) {
     pluginDriver(
@@ -52,7 +55,7 @@ gql`
         name: $name
         description: $description
         type: $type
-        jsonConfig: $jsonConfig
+        resourceUri: $resourceUri
         provisioning: $provisioning
       }
     ) {
@@ -120,7 +123,7 @@ export const PLUGIN_DRIVER_WITH_DOC_TYPE = gql`
     $name: String!
     $description: String
     $type: PluginDriverType!
-    $jsonConfig: String!
+    $resourceUri: ResourceUriInput!
     $provisioning: Provisioning!
     $docTypeUserDTOSet: [DocTypeUserDTOInput]
   ) {
@@ -130,7 +133,7 @@ export const PLUGIN_DRIVER_WITH_DOC_TYPE = gql`
         name: $name
         description: $description
         type: $type
-        jsonConfig: $jsonConfig
+        resourceUri: $resourceUri
         provisioning: $provisioning
         docTypeUserDTOSet: $docTypeUserDTOSet
       }
