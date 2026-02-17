@@ -145,6 +145,12 @@
 				<artifactId>quarkus-opensearch-java-client</artifactId>
 				<version>${quarkiverse.opensearch.version}</version>
 			</dependency>
+			<!-- Transport provider -->
+			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-transport-apache</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
 			<dependency>
 				<groupId>io.quarkiverse.rabbitmqclient</groupId>
 				<artifactId>quarkus-rabbitmq-client</artifactId>

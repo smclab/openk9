@@ -119,6 +119,10 @@
       <artifactId>quarkus-opensearch-java-client</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkiverse.opensearch</groupId>
+      <artifactId>quarkus-opensearch-transport-apache</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-suggest</artifactId>
       <version>${lucene.version}</version>
