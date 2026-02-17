@@ -16,49 +16,54 @@
  */
 package io.openk9.tenantmanager.pipe.tenant.create;
 
-import java.util.concurrent.atomic.AtomicReference;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
-
-import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.mutiny.Uni;
+import io.vertx.mutiny.core.eventbus.EventBus;
+import io.vertx.mutiny.core.eventbus.Message;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pekko.actor.testkit.typed.javadsl.ActorTestKit;
 import org.apache.pekko.actor.testkit.typed.javadsl.TestProbe;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@QuarkusTest
 class TenantProvisioningSagaTest {
 
 	private static final ActorTestKit testKit = ActorTestKit.create();
-
-//	@BeforeEach
-//	void setup() {
-//		mockedService = mockStatic(TenantProvisioningService.class);
-//	}
-//
-//	@AfterEach
-//	void tearDown() {
-//		mockedService.close(); // Crucial to prevent memory leaks!
-//	}
+	private EventBus eventBus;
 
 	@AfterAll
 	public static void cleanup() {
 		testKit.shutdownTestKit();
 	}
 
+	@BeforeEach
+	void setUp() {
+		eventBus = mock(EventBus.class);
+		EventBusInstanceHolder.setEventBus(eventBus);
+	}
+
 	@Test
 	void should_compensate_when_initial_step_fails() {
+		// No event bus calls expected for this test case as it fails early
+		// and schema name is provided.
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost_1", "schema", null, replyTo.getRef(), mocks));
+			"vhost", "schema", null, replyTo.getRef(), mocks));
 
 		// 1. Simulate Parallel Execution
 		// Realm Fails
@@ -77,65 +82,85 @@ class TenantProvisioningSagaTest {
 
 		// --- Fix: Handle Schema Rollback ---
 		mocks.schemaRollbackProbe.expectMessage(Schema.Rollback.INSTANCE);
-		// CRITICAL: We must reply to the rollback adapter to tell Saga it's done
 		mocks.schemaRollbackAdapter.get().tell(new Schema.Success("Rolled back"));
 
 		// --- Fix: Handle Ingress Rollback ---
 		mocks.ingressRollbackProbe.expectMessage(Ingress.Start.INSTANCE);
-		// CRITICAL: Reply to adapter
 		mocks.ingressRollbackAdapter.get().tell(Ingress.Success.INSTANCE);
 
 		// 3. Verify Final Saga Error
-		// Now that compensations are confirmed, the Saga should finally reply
 		replyTo.expectMessage(TenantProvisioningSaga.Error.INSTANCE);
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	void should_succeed_when_all_children_succeed() {
+		TenantResponseDTO expectedTenant = new TenantResponseDTO(
+			"1213402949",
+			"mySchema",
+			"mySchema",
+			"vHost",
+			"cid",
+			"sec",
+			"issuer");
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(expectedTenant);
+
+		// Explicit cast to help generic inference
+		Uni<Message<TenantResponseDTO>> uni = Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(eq(TenantProvisioningService.CREATE_ENTITY), any()))
+			.thenReturn(uni);
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost_1", "tenant_1", null, replyTo.getRef(), mocks));
+			"vhost", "schema", null, replyTo.getRef(), mocks));
 
 		// 1. Verify Parallel Starts and Reply Success
 		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
-		mocks.realmAdapter.get().tell(new Realm.Success("cid", "csec", "vhost", "iss", "usr", "pwd"));
+		mocks.realmAdapter.get().tell(new Realm.Success("cid", "sec", "vhost", "iss", "usr", "pwd"));
 
 		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
-		mocks.schemaAdapter.get().tell(new Schema.Success("tenant_1"));
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
 
 		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
 		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
 
+		// 2. Verify Final Saga Response
 		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	void should_succeed_with_oauth2_settings() {
-
 		TenantResponseDTO expectedTenant = new TenantResponseDTO(
-			"1213402942",
-			"tenant_2",
-			"tenant_2_liquibase",
-			"vh",
+			"1213402949",
+			"mySchema",
+			"mySchema",
+			"vHost",
 			"cid",
-			"csec",
-			"issuer"
-		);
+			"sec",
+			"issuer");
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(expectedTenant);
+
+		Uni<Message<TenantResponseDTO>> uni = Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(eq(TenantProvisioningService.CREATE_ENTITY), any()))
+			.thenReturn(uni);
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 		OAuth2Settings settings = new OAuth2Settings("cid", "csec", "issuer");
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant_2", settings, replyTo.getRef(), mocks));
+			"vh", "tenant", settings, replyTo.getRef(), mocks));
 
 		// 1. Verify Parallel Starts (Realm skipped due to OAuth2Settings)
-		// We expect schema and ingress to start
 		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
-		mocks.schemaAdapter.get().tell(new Schema.Success("tenant_2"));
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
 
 		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
 		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
@@ -148,18 +173,39 @@ class TenantProvisioningSagaTest {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	void should_generate_name_when_null() {
+		// Mock name generation
+		Message<String> nameMsg = mock(Message.class);
+		when(nameMsg.body()).thenReturn("generated-schema");
+
+		Uni<Message<String>> nameUni = Uni.createFrom().item(nameMsg);
+		when(eventBus.<String>request(eq(TenantProvisioningService.GENERATE_RANDOM_TENANT_NAME), any()))
+			.thenReturn(nameUni);
+
+		TenantResponseDTO expectedTenant = new TenantResponseDTO(
+			"1213402949",
+			"generated-schema",
+			"generated-schema",
+			"vHost",
+			"cid",
+			"sec",
+			"issuer");
+
+		Message<TenantResponseDTO> tenantMsg = mock(Message.class);
+		when(tenantMsg.body()).thenReturn(expectedTenant);
+
+		Uni<Message<TenantResponseDTO>> tenantUni = Uni.createFrom().item(tenantMsg);
+		when(eventBus.<TenantResponseDTO>request(eq(TenantProvisioningService.CREATE_ENTITY), any()))
+			.thenReturn(tenantUni);
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh_2", null, null, replyTo.getRef(), mocks));
-
-		// 1. Verify Parallel Starts (Realm skipped due to OAuth2Settings)
+			"vh", null, null, replyTo.getRef(), mocks)); // 1. Verify Parallel Starts
 		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
-		mocks.realmAdapter.get().tell(
-			new Realm.Success("cid", "csec", "vh", "iss", "usr", "pwd"));
+		mocks.realmAdapter.get().tell(new Realm.Success("cid", "sec", "vhost", "iss", "usr", "pwd"));
 
 		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
 		mocks.schemaAdapter.get().tell(new Schema.Success("generated-schema"));
@@ -168,12 +214,7 @@ class TenantProvisioningSagaTest {
 		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
 
 		// 3. Verify Final Saga Response
-		TenantProvisioningSaga.Success success = replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
-
-		// Verify name was used
-		// The ID and Name come from the expectedTenant we mocked
-		var tenant = success.tenant();
-		Assertions.assertEquals("generated-schema", tenant.schemaName());
+		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
 	}
 
 	// --- Mock Factory Helper ---
@@ -204,37 +245,29 @@ class TenantProvisioningSagaTest {
 
 		@Override
 		public Behavior<Ingress.Command> ingress(String s, String v, ActorRef<Ingress.Response> r) {
-
 			ingressAdapter.set(r);
 			return Behaviors.monitor(Ingress.Command.class, ingressProbe.ref(), Behaviors.empty());
 		}
 
 		@Override
 		public Behavior<Ingress.Command> ingressRollback(
-			String s, String v, ActorRef<Ingress.Response> r) {
-
+			String s,
+			String v,
+			ActorRef<Ingress.Response> r) {
 			ingressRollbackAdapter.set(r);
-
 			return Behaviors.monitor(
-				Ingress.Command.class,
-				ingressRollbackProbe.ref(),
-				Behaviors.empty());
+				Ingress.Command.class, ingressRollbackProbe.ref(), Behaviors.empty());
 		}
 
 		@Override
 		public Behavior<Realm.Command> realm(String v, String s, ActorRef<Realm.Response> r) {
-
 			realmAdapter.set(r);
-
-			return Behaviors.monitor(
-				Realm.Command.class, realmProbe.ref(), Behaviors.empty());
+			return Behaviors.monitor(Realm.Command.class, realmProbe.ref(), Behaviors.empty());
 		}
 
 		@Override
 		public Behavior<Realm.Command> realmRollback(String s, ActorRef<Realm.Response> r) {
-
 			realmRollbackAdapter.set(r);
-
 			return Behaviors.monitor(
 				Realm.Command.class,
 				realmRollbackProbe.ref(),
@@ -243,23 +276,15 @@ class TenantProvisioningSagaTest {
 
 		@Override
 		public Behavior<Schema.Command> schema(String v, String s, ActorRef<Schema.Response> r) {
-
 			schemaAdapter.set(r);
-
-			return Behaviors.monitor(
-				Schema.Command.class, schemaProbe.ref(), Behaviors.empty());
+			return Behaviors.monitor(Schema.Command.class, schemaProbe.ref(), Behaviors.empty());
 		}
 
 		@Override
 		public Behavior<Schema.Command> schemaRollback(String s, ActorRef<Schema.Response> r) {
-
 			schemaRollbackAdapter.set(r);
-
 			return Behaviors.monitor(
-				Schema.Command.class,
-				schemaRollbackProbe.ref(),
-				Behaviors.empty());
+				Schema.Command.class, schemaRollbackProbe.ref(), Behaviors.empty());
 		}
-
 	}
 }

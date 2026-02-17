@@ -36,7 +36,6 @@ import io.openk9.datasource.grpc.InitTenantResponse;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.Tenant;
-import io.openk9.tenantmanager.pipe.tenant.create.TenantException;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
 import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
@@ -48,7 +47,6 @@ import io.openk9.tenantmanager.service.dto.EffectiveDeleteTenantRequest;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.VertxContextSupport;
-import io.smallrye.faulttolerance.mutiny.impl.UniSupport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.Message;
 import org.jboss.logging.Logger;
@@ -56,24 +54,24 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class TenantProvisioningService {
 
-	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
-
 	// ========================================================================
 	// Event Bus addresses.
 	// ========================================================================
 
-	private static final String CREATE_REALM = "TenantProvisioningService#createRealm";
-	private static final String CREATE_SCHEMA = "TenantProvisioningService#createSchema";
-	private static final String CREATE_INGRESS = "TenantProvisioningService#createIngress";
-	private static final String CREATE_ENTITY = "TenantProvisioningService#createEntity";
-	private static final String DELETE_REALM = "TenantProvisioningService#deleteRealm";
-	private static final String DELETE_SCHEMA = "TenantProvisioningService#deleteSchema";
-	private static final String DELETE_INGRESS = "TenantProvisioningService#deleteIngress";
-	private static final String DELETE_ENTITY = "TenantProvisioningService#deleteEntity";
-	private static final String FIND_TENANT_BY_VIRTUAL_HOST =
+	public static final String CREATE_REALM = "TenantProvisioningService#createRealm";
+	public static final String CREATE_SCHEMA = "TenantProvisioningService#createSchema";
+	public static final String CREATE_INGRESS = "TenantProvisioningService#createIngress";
+	public static final String CREATE_ENTITY = "TenantProvisioningService#createEntity";
+	public static final String DELETE_REALM = "TenantProvisioningService#deleteRealm";
+	public static final String DELETE_SCHEMA = "TenantProvisioningService#deleteSchema";
+	public static final String DELETE_INGRESS = "TenantProvisioningService#deleteIngress";
+	public static final String DELETE_ENTITY = "TenantProvisioningService#deleteEntity";
+	public static final String FIND_TENANT_BY_VIRTUAL_HOST =
 		"TenantProvisioningService#findTenantByVirtualHost";
-	private static final String GENERATE_RANDOM_TENANT_NAME =
+	public static final String GENERATE_RANDOM_TENANT_NAME =
 		"TenantProvisioningService#generateRandomTenantName";
+
+	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
 
 	// ========================================================================
 	// Aggregated services.
