@@ -57,9 +57,12 @@ import org.hibernate.type.SqlTypes;
 @AllArgsConstructor(staticName = "of")
 @NamedQuery(
 	name = DataIndex.DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE,
-	query = "from DataIndex di " +
-			"join di.datasource d " +
-			"left join fetch di.docTypes where d.id = :datasourceId"
+	query = """
+		select di from DataIndex di
+		join di.datasource d
+		left join fetch di.docTypes
+		where d.id = :datasourceId
+		"""
 )
 public class DataIndex extends K9Entity {
 
