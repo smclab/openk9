@@ -44,12 +44,14 @@
     "react-scripts": "5.0.1",
     "react-virtuoso": "^2.16.4",
     "recharts": "^2.13.3",
+    "source-map-explorer": "^2.5.3",
     "styled-components": "^6.1.13",
     "typescript": "^4.4.2",
     "web-vitals": "^2.1.0",
     "webpack-bundle-analyzer": "^4.7.0"
   },
   "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js' --no-border-checks --only-mapped",
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
@@ -77,6 +79,7 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
-    "@graphql-codegen/time": "^3.2.3"
+    "@graphql-codegen/time": "^3.2.3",
+    "compression-webpack-plugin": "^11.1.0"
   }
 }
