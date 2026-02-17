@@ -111,9 +111,7 @@ public class SuggestionCategoryGraphqlResource {
 
 	public Uni<DocTypeField> docTypeField(
 			@Source SuggestionCategory suggestionCategory) {
-
-		return suggestionCategoryService.getDocTypeField(
-			suggestionCategory.getId());
+		return Uni.createFrom().item(suggestionCategory.getDocTypeField());
 	}
 
 	@Query
