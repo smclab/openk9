@@ -162,6 +162,8 @@ def initialize_language_model(configuration):
                 Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI).
             - "chat_vertex_ai_model_garden": dict
                 Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
+            - "aws_bedrock": dict
+                Configurations for AWS Bedrock (required if using AWS_BEDROCK).
 
     Returns:
     -------
@@ -240,7 +242,8 @@ def initialize_language_model(configuration):
             llm = ChatOpenAI(model=model, api_key=api_key, base_url=base_url)
         case ModelType.AWS_BEDROCK.value:
             os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
-            region_name = configuration["region_name"]
+            aws_bedrock = configuration["aws_bedrock"]
+            region_name = aws_bedrock["region_name"]
 
             llm = ChatBedrockConverse(
                 model=model,
