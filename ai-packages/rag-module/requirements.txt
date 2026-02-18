@@ -10,6 +10,7 @@ grpcio-tools==1.71.0
 grpcio==1.71.0
 h11==0.16.0
 langchain_ibm==0.3.8
+langchain-aws==0.2.35
 langchain-cli==0.0.36
 langchain-community==0.3.27
 langchain-core==0.3.81
