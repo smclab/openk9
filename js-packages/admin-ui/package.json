@@ -35,6 +35,7 @@
     "http-proxy-middleware": "^2.0.6",
     "jsonpath-plus": "^10.3.0",
     "keycloak-js": "25.0.6",
+    "source-map-explorer": "^2.5.3",
     "monaco-editor": "^0.49.0",
     "monaco-editor-webpack-plugin": "^7.0.1",
     "openapi-typescript-codegen": "^0.23.0",
@@ -53,6 +54,7 @@
     "webpack-bundle-analyzer": "^4.7.0"
   },
   "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js' --no-border-checks --only-mapped",
     "start": "craco start",
     "build": "craco build",
     "test": "craco test",
@@ -79,6 +81,7 @@
     ]
   },
   "devDependencies": {
-    "@graphql-codegen/time": "^3.2.3"
+    "@graphql-codegen/time": "^3.2.3",
+    "compression-webpack-plugin": "^11.1.0"
   }
 }
