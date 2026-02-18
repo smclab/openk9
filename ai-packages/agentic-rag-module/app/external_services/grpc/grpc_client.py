@@ -15,11 +15,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import time
+
 import grpc
 from fastapi import HTTPException, status
 from google.protobuf import json_format
 from google.protobuf.json_format import ParseDict
 
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
 from app.external_services.grpc.tenant_manager import (
@@ -260,6 +263,132 @@ def get_tenant_manager_configuration(grpc_host, virtual_host):
             }
 
             return configuration
+
+    except grpc.RpcError as e:
+        error_message = f"gRPC communication failed: {e.details()}"
+        logger.error(error_message)
+    except Exception as e:
+        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail=UNEXPECTED_ERROR_MESSAGE,
+    )
+
+
+def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
+    """
+    Generate embeddings for uploaded documents using gRPC embedding service.
+
+    This function sends document text to a gRPC embedding service which processes the text
+    into chunks and generates vector embeddings for each chunk. The embeddings are used
+    for semantic search and similarity matching in vector databases.
+
+    :param grpc_host: gRPC server host address for the embedding service
+    :type grpc_host: str
+    :param chunk: Chunking configuration parameters for text segmentation
+    :type chunk: dict
+    :param embedding_model: Embedding model configuration to use for vector generation
+    :type embedding_model: dict
+    :param document: Document dictionary containing text content and metadata
+    :type document: dict
+
+    :return: List of document chunks with generated vector embeddings and metadata
+    :rtype: list[dict]
+
+    :raises HTTPException 500: If gRPC communication fails or unexpected error occurs
+
+    :Example:
+
+    .. code-block:: python
+
+        embedded_docs = generate_documents_embeddings(
+            grpc_host="localhost:50053",
+            chunk={"type": 1, "jsonConfig": json_config},
+            embedding_model={
+                "apiKey": api_key,
+                "providerModel": provider_model,
+                "jsonConfig": json_config,
+            },
+            document={
+                "filename": "report.pdf",
+                "file_extension": ".pdf",
+                "user_id": "user_123",
+                "chat_id": "chat_456",
+                "text": "This is the document content..."
+            }
+        )
+
+        # Returns:
+        # [
+        #     {
+        #         "filename": "report.pdf",
+        #         "file_extension": ".pdf",
+        #         "user_id": "user_123",
+        #         "chat_id": "chat_456",
+        #         "chunk_number": 1,
+        #         "total_chunks": 3,
+        #         "chunkText": "This is the first chunk...",
+        #         "vector": [0.1, 0.2, 0.3, ...]
+        #     },
+        #     ...
+        # ]
+
+    .. note::
+        - Automatically chunks large documents into smaller segments for processing
+        - Preserves document metadata across all generated chunks
+        - Each chunk includes positional information (chunk_number, total_chunks)
+        - Vectors are typically high-dimensional arrays (e.g., 768, 1536 dimensions)
+        - Used for storing documents in vector databases for semantic search
+
+    .. warning::
+        - gRPC communication failures will result in HTTP 500 errors
+        - Ensure embedding gRPC server is running and accessible at grpc_host
+        - Large documents may generate many chunks, impacting storage and performance
+        - Vector dimensions must match the expected size in the target vector database
+
+    .. seealso::
+        - :class:`embedding_pb2.EmbeddingRequest` gRPC request message
+        - :class:`embedding_pb2_grpc.EmbeddingStub` gRPC service stub
+        - :func:`get_embedding_model_configuration` For retrieving embedding model settings
+        - :func:`save_uploaded_documents` For storing embedded documents in OpenSearch
+
+    Return List Structure:
+        Each item in the returned list contains:
+
+        * **filename** (str): Original filename of the source document
+        * **file_extension** (str): File extension indicating document type
+        * **document_id** (str): Document identifier
+        * **user_id** (str): User identifier who uploaded the document
+        * **chat_id** (str): Chat session identifier for document association
+        * **chunk_number** (int): Sequential position of this chunk in the document
+        * **total_chunks** (int): Total number of chunks generated from the document
+        * **chunkText** (str): The actual text content of this specific chunk
+        * **vector** (list[float]): Embedding vector representation of the chunk text
+    """
+    try:
+        with grpc.insecure_channel(grpc_host) as channel:
+            stub = embedding_pb2_grpc.EmbeddingStub(channel)
+            response = stub.GetMessages(
+                embedding_pb2.EmbeddingRequest(
+                    chunk=chunk, embeddingModel=embedding_model, text=document["text"]
+                )
+            )
+
+            documents = []
+            chunks = response.chunks
+            for chunk in chunks:
+                timestamp = int(time.time() * 1000)
+                document = {
+                    "timestamp": timestamp,
+                    "document_id": document.get("document_id"),
+                    "chunk_number": chunk.number,
+                    "total_chunks": chunk.total,
+                    "chunkText": chunk.text,
+                    "vector": list(chunk.vectors),
+                }
+                documents.append(document)
+
+            return documents
 
     except grpc.RpcError as e:
         error_message = f"gRPC communication failed: {e.details()}"
