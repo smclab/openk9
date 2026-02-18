@@ -24,3 +24,4 @@ RUN chmod a+x /etc/docker-entrypoint.sh
 ENTRYPOINT ["/bin/bash"]
 
 CMD ["/etc/docker-entrypoint.sh"]
+
