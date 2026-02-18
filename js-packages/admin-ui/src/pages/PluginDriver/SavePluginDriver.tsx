@@ -134,7 +134,7 @@ export const SavePluginnDriverModel = React.forwardRef(
       const mappings = pluginDriverQuery.data?.pluginDriver?.aclMappings;
       if (!mappings) return;
 
-      const initialFields: FieldDocType[] = mappings.map((field) => ({
+      const initialFields: FieldDocType[] = mappings.map((field: any) => ({
         docTypeId: field?.docTypeField?.id ?? "",
         userField: field?.userField ?? "",
         userFieldId: field?.userField ?? "",
@@ -210,7 +210,7 @@ export const SavePluginnDriverModel = React.forwardRef(
     const toast = useToast();
     const [pluginDriverWithDocType, pluginDriverWithDocTypeMutation] = usePluginDriverWithDocTypeMutation({
       refetchQueries: ["PluginDriver", "PluginDrivers", "DataSource"],
-      onCompleted(data) {
+      onCompleted(data: any) {
         if (data.pluginDriverWithDocType?.entity) {
           const isNew = pluginDriverId === "new" ? "created" : "updated";
           toast({
@@ -228,11 +228,22 @@ export const SavePluginnDriverModel = React.forwardRef(
         }
       },
       onError(error) {
-        console.log(error);
         const isNew = pluginDriverId === "new" ? "create" : "update";
+        setPage(0);
+        const extracted = extractSampleEndpointGraphQLError(error);
+
+        if (extracted.isSampleEndpointError) {
+          toast({
+            title: extracted.title,
+            content: extracted.content,
+            displayType: "error",
+          });
+          return;
+        }
+
         toast({
-          title: `Error ${isNew}`,
-          content: `Impossible to ${isNew} Connector`,
+          title: `Error during ${isNew}`,
+          content: `Unable to ${isNew} Connector`,
           displayType: "error",
         });
       },
@@ -272,12 +283,12 @@ export const SavePluginnDriverModel = React.forwardRef(
         description: pluginDriverQuery.data?.pluginDriver?.description || "",
         resourceUri: pluginDriverQuery.data?.pluginDriver?.resourceUri
           ? {
-            baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
-            path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
-          }
+              baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
+              path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
+            }
           : undefined,
         docTypeUserDTOSet:
-          pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
+          pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field: any) => ({
             docTypeId: Number(field?.docTypeField?.id),
             userField: field?.userField as InputMaybe<UserField> | undefined,
           })) || [],
@@ -526,12 +537,12 @@ export const SavePluginnDriverModel = React.forwardRef(
                                   prev.map((field, i) => {
                                     return i === index
                                       ? {
-                                        ...field,
-                                        ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
-                                        ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
-                                        ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
-                                        ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
-                                      }
+                                          ...field,
+                                          ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
+                                          ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
+                                          ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
+                                          ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
+                                        }
                                       : field;
                                   }),
                                 );
@@ -633,4 +644,28 @@ function DesctructuringJsonConfig(data: string) {
     console.error("Invalid JSON string:", error);
     return null;
   }
+}
+
+function extractSampleEndpointGraphQLError(error: any): {
+  isSampleEndpointError: boolean;
+  title: string;
+  content: string;
+} {
+  const gqlErr = error?.graphQLErrors?.[0];
+  const extensions = gqlErr?.extensions ?? {};
+  const code = extensions?.code;
+
+  if (!code) {
+    return {
+      isSampleEndpointError: false,
+      title: "Error",
+      content: extensions?.description,
+    };
+  }
+
+  return {
+    isSampleEndpointError: true,
+    title: "Sample endpoint error",
+    content: extensions.exception,
+  };
 }
