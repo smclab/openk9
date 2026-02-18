@@ -6,7 +6,7 @@ from logging.config import dictConfig
 from minio import Minio
 from minio.datatypes import Object
 from minio.error import MinioException
-from requests import RequestException
+from requests import HTTPError
 
 from .log_config import LogConfig
 from .utility import IngestionHandler, log_error_location
@@ -57,12 +57,27 @@ class BaseMinioExtractor(abc.ABC):
 
 			self.ingestion_handler.post_last(end_timestamp=end_timestamp)
 
-		except (RequestException, Exception) as e:
+		except (HTTPError, Exception) as e:
 			self.status_logger.error("Something went wrong")
 
-			# if e is RequestException means it failed to post to ingestion_url
-			if not isinstance(e, RequestException):
-				self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
-			else:
-				self.status_logger.warning("Could not post HALT request. Failed posting to ingestion_url.")
-				self.status_logger.error(e)
+			# Checks for generic error
+			if not isinstance(e, HTTPError):
+				try:
+					# Try to post HALT Request
+					self.status_logger.error("Generic Error: Posting HALT")
+					self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
+				except HTTPError as ex:
+					# post_halt raise HTTPError
+					e = ex
+
+			# Checks for HTTPError
+			if isinstance(e, HTTPError):
+				# Checks status code
+				status_code = e.response.status_code
+				# if status_code > 500 means it failed to post to ingestion_url (Server Failure)
+				if 500 <= status_code < 600:
+					self.status_logger.warning(f"HTTPError ({status_code}): Server Error.\nCould not post HALT request. Failed posting to ingestion_url.")
+					self.status_logger.error(e)
+				else:
+					self.status_logger.error(f"HTTPError ({status_code}): Posting HALT")
+					self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
