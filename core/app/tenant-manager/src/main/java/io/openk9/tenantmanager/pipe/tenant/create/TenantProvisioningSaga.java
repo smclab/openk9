@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 
@@ -34,16 +35,20 @@ import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 
-public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningSaga.Command> {
+public class TenantProvisioningSaga
+	extends AbstractBehavior<TenantProvisioningSaga.Command> {
 
 	private final String virtualHost;
+	private final SecurityConfiguration securityConfiguration;
 	private final ActorRef<Response> replyTo;
 	private final ProvisioningFactory factory;
+
 	// Accumulators
 	private final List<Object> collectedResponses = new ArrayList<>();
 	private final OAuth2Settings oAuth2Settings;
-	private String schemaName;
+
 	// Context Data
+	private String schemaName;
 	private String issuerUri;
 	private String clientId;
 	private String clientSecret;
@@ -55,6 +60,7 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
 
@@ -62,12 +68,14 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		this.virtualHost = virtualHost;
 		this.schemaName = schemaName;
 		this.oAuth2Settings = oAuth2Settings;
+		this.securityConfiguration = securityConfiguration;
 		this.replyTo = replyTo;
 		this.factory = factory;
 
 		if (schemaName == null) {
 			context.pipeToSelf(
-				TenantProvisioningService.generateRandomSchemaName(), (res, exc) -> {
+				TenantProvisioningService.generateRandomSchemaName(),
+				(res, exc) -> {
 					if (res != null) {
 						return new NameResolved(res);
 					}
@@ -86,33 +94,37 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName, oAuth2Settings, replyTo,
+			ctx, virtualHost, schemaName,
+			oAuth2Settings,
+			securityConfiguration, replyTo,
 			new DefaultProvisioningFactory()
 		));
-	}
-
-	public static Behavior<Command> create(
-		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
-
-		return create(virtualHost, schemaName, null, replyTo);
 	}
 
 	public static Behavior<Command> create(
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
-		ProvisioningFactory factory) {
+		ProvisioningFactory provisioningFactory) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName, oAuth2Settings, replyTo, factory));
+			ctx, virtualHost, schemaName,
+			oAuth2Settings,
+			securityConfiguration,
+			replyTo,
+			provisioningFactory
+		));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
+
 		return newReceiveBuilder()
 			.onMessage(OperationResponse.class, this::onParallelResponse)
 			.onMessage(NameResolved.class, this::onNameResolved)
@@ -201,6 +213,7 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		tenant.setIssuerUri(issuerUri);
 		tenant.setClientId(clientId);
 		tenant.setClientSecret(clientSecret);
+		tenant.setSecurityConfiguration(securityConfiguration);
 
 		getContext().pipeToSelf(
 			TenantProvisioningService.createEntity(tenant),
@@ -263,7 +276,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 		}
 	}
 
-	private Behavior<Command> startCompensations(EnumSet<Operations> compensations) {
+	private Behavior<Command> startCompensations(
+		EnumSet<Operations> compensations) {
+
 		this.compensationCounter = compensations.size();
 
 		getContext().getLog().info(
@@ -319,8 +334,10 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	}
 
 	private void startProvisioning(ActorContext<Command> context) {
-		var schemaAdapter = context.messageAdapter(Schema.Response.class, OperationResponse::new);
-		var ingressAdapter = context.messageAdapter(Ingress.Response.class, OperationResponse::new);
+		var schemaAdapter = context.messageAdapter(
+			Schema.Response.class, OperationResponse::new);
+		var ingressAdapter = context.messageAdapter(
+			Ingress.Response.class, OperationResponse::new);
 
 		if (oAuth2Settings != null) {
 			// Skip Realm creation, simulate success
@@ -333,7 +350,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 			)));
 		}
 		else {
-			var realmAdapter = context.messageAdapter(Realm.Response.class, OperationResponse::new);
+			var realmAdapter = context.messageAdapter(
+				Realm.Response.class, OperationResponse::new);
+
 			ActorRef<Realm.Command> realm = context.spawnAnonymous(factory
 				.realm(virtualHost, schemaName, realmAdapter));
 			realm.tell(Realm.Start.INSTANCE);
@@ -392,7 +411,8 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 			String virtualHost,
 			ActorRef<Ingress.Response> replyTo);
 
-		Behavior<Realm.Command> realmRollback(String schemaName, ActorRef<Realm.Response> replyTo);
+		Behavior<Realm.Command> realmRollback(
+			String schemaName, ActorRef<Realm.Response> replyTo);
 
 		Behavior<Schema.Command> schemaRollback(
 			String schemaName,
@@ -402,7 +422,9 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 	public sealed interface Response {
 	}
 
-	private static class DefaultProvisioningFactory implements ProvisioningFactory {
+	private static class DefaultProvisioningFactory
+		implements ProvisioningFactory {
+
 		@Override
 		public Behavior<Ingress.Command> ingress(
 			String v, String s, ActorRef<Ingress.Response> r) {
@@ -447,18 +469,14 @@ public class TenantProvisioningSaga extends AbstractBehavior<TenantProvisioningS
 
 	}
 
-	private record NameResolved(String name) implements Command {
-	}
+	private record NameResolved(String name) implements Command {}
 
-	private record OperationResponse(Object response) implements Command {
-	}
+	private record OperationResponse(Object response) implements Command {}
 
-	public record Success(TenantResponseDTO tenant) implements Response {
-	}
+	public record Success(TenantResponseDTO tenant) implements Response {}
 
 	private record PersistResponse(
 		TenantResponseDTO tenant, Throwable tenantException)
-		implements Command {
-	}
+		implements Command {}
 
 }

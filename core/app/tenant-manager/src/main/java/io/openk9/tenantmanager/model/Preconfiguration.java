@@ -17,7 +17,10 @@
 
 package io.openk9.tenantmanager.model;
 
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.openk9.event.tenant.ApiGroup;
@@ -39,53 +42,58 @@ public record Preconfiguration(
 		}
 	}
 
-	public static final Set<Preconfiguration> PRECONFIGURATIONS =
-			Set.of(
-				Preconfiguration.of(
-					SecurityConfiguration.LEGACY,
-					List.of(
-						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
-						Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
-						Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
-					)
+	public static final Map<SecurityConfiguration, List<Config>> PRECONFIGURATION_MAP =
+			Map.of(
+				SecurityConfiguration.LEGACY,
+				List.of(
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 				),
-				Preconfiguration.of(
-					SecurityConfiguration.PROFILED_LEGACY,
-					List.of(
-						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
-						Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
-					)
+				SecurityConfiguration.PROFILED_LEGACY,
+				List.of(
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 				),
-				Preconfiguration.of(
-					SecurityConfiguration.PROFILED,
-					List.of(
-						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
-					)
+				SecurityConfiguration.PROFILED,
+				List.of(
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
-				Preconfiguration.of(
-					SecurityConfiguration.PUBLIC_USAGE,
-					List.of(
-						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
-						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
-					)
+				SecurityConfiguration.PUBLIC_USAGE,
+				List.of(
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
-				Preconfiguration.of(
-					SecurityConfiguration.API_KEY_ONLY,
-					List.of(
-						Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
-						Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
-					)
+				SecurityConfiguration.API_KEY_ONLY,
+				List.of(
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				)
-			)
-		;
+			);
+
+	public static final Set<Preconfiguration> PRECONFIGURATION_SET = fromMap();
+
+	private static Set<Preconfiguration> fromMap() {
+
+		List<Preconfiguration> result = new LinkedList<>();
+
+		for (Map.Entry<SecurityConfiguration, List<Config>> entry
+			: PRECONFIGURATION_MAP.entrySet()) {
+
+			result.add(Preconfiguration.of(entry.getKey(), entry.getValue()));
+		}
+
+		return new LinkedHashSet<>(result);
+	}
+
 }

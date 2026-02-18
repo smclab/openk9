@@ -65,7 +65,7 @@ public class TenantGraphqlResource {
 	@Query
 	public Uni<Set<Preconfiguration>> getPreconfigurations() {
 
-		return Uni.createFrom().item(Preconfiguration.PRECONFIGURATIONS);
+		return Uni.createFrom().item(Preconfiguration.PRECONFIGURATION_SET);
 	}
 
 	@Mutation

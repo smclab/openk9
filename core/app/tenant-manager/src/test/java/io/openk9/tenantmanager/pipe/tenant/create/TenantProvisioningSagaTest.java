@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 import io.smallrye.mutiny.Uni;
@@ -63,7 +64,11 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null, replyTo.getRef(), mocks));
+			"vhost", "schema", null,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks
+		));
 
 		// 1. Simulate Parallel Execution
 		// Realm Fails
@@ -116,7 +121,10 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null, replyTo.getRef(), mocks));
+			"vhost", "schema", null,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks));
 
 		// 1. Verify Parallel Starts and Reply Success
 		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
@@ -148,7 +156,8 @@ class TenantProvisioningSagaTest {
 		when(mockMsg.body()).thenReturn(expectedTenant);
 
 		Uni<Message<TenantResponseDTO>> uni = Uni.createFrom().item(mockMsg);
-		when(eventBus.<TenantResponseDTO>request(eq(TenantProvisioningService.CREATE_ENTITY), any()))
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY), any()))
 			.thenReturn(uni);
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
@@ -156,7 +165,11 @@ class TenantProvisioningSagaTest {
 		OAuth2Settings settings = new OAuth2Settings("cid", "csec", "issuer");
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant", settings, replyTo.getRef(), mocks));
+			"vh", "tenant", settings,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks)
+		);
 
 		// 1. Verify Parallel Starts (Realm skipped due to OAuth2Settings)
 		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
@@ -180,8 +193,10 @@ class TenantProvisioningSagaTest {
 		when(nameMsg.body()).thenReturn("generated-schema");
 
 		Uni<Message<String>> nameUni = Uni.createFrom().item(nameMsg);
-		when(eventBus.<String>request(eq(TenantProvisioningService.GENERATE_RANDOM_TENANT_NAME), any()))
-			.thenReturn(nameUni);
+		when(eventBus.<String>request(
+			eq(TenantProvisioningService.GENERATE_RANDOM_TENANT_NAME),
+			any())
+		).thenReturn(nameUni);
 
 		TenantResponseDTO expectedTenant = new TenantResponseDTO(
 			"1213402949",
@@ -196,16 +211,21 @@ class TenantProvisioningSagaTest {
 		when(tenantMsg.body()).thenReturn(expectedTenant);
 
 		Uni<Message<TenantResponseDTO>> tenantUni = Uni.createFrom().item(tenantMsg);
-		when(eventBus.<TenantResponseDTO>request(eq(TenantProvisioningService.CREATE_ENTITY), any()))
-			.thenReturn(tenantUni);
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY),
+			any()))
+		.thenReturn(tenantUni);
 
 		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", null, null, replyTo.getRef(), mocks)); // 1. Verify Parallel Starts
+			"vh", null, null,
+			SecurityConfiguration.LEGACY, replyTo.getRef(), mocks));
+
 		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
-		mocks.realmAdapter.get().tell(new Realm.Success("cid", "sec", "vhost", "iss", "usr", "pwd"));
+		mocks.realmAdapter.get().tell(
+			new Realm.Success("cid", "sec", "vhost", "iss", "usr", "pwd"));
 
 		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
 		mocks.schemaAdapter.get().tell(new Schema.Success("generated-schema"));

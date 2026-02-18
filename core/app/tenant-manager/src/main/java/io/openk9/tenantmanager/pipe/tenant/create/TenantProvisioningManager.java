@@ -43,6 +43,7 @@ public class TenantProvisioningManager
 				message.virtualHost(),
 				message.tenantName(),
 				message.settings(),
+				message.securityConfiguration(),
 				adapter
 			)
 		);

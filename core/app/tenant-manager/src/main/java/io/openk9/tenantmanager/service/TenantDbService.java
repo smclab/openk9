@@ -19,6 +19,7 @@ package io.openk9.tenantmanager.service;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +39,8 @@ import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.dto.TenantRequestDTO;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
+import io.openk9.tenantmanager.model.Preconfiguration;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.model.Tenant;
 
 import io.smallrye.mutiny.Uni;
@@ -53,14 +56,15 @@ public class TenantDbService {
 
 	private static final CompactSnowflakeIdGenerator idGenerator =
 		new CompactSnowflakeIdGenerator();
+
 	private static final String INSERT_SQL = """
 		INSERT INTO tenant (
 			id, virtual_host,
 			schema_name, liquibase_schema_name,
-			issuer_uri, client_id, client_secret,
+			issuer_uri, client_id, client_secret, security_configuration,
 			create_date, modified_date
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		""";
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
@@ -196,9 +200,15 @@ public class TenantDbService {
 	}
 
 	public Uni<TenantResponseDTO> persist(
-		String virtualHost, String schemaName, String liquibaseSchemaName,
-		String issuerUri, String clientId, String clientSecret,
-		OffsetDateTime createDate, OffsetDateTime modifiedDate) {
+		String virtualHost,
+		String schemaName,
+		String liquibaseSchemaName,
+		String issuerUri,
+		String clientId,
+		String clientSecret,
+		SecurityConfiguration securityConfiguration,
+		OffsetDateTime createDate,
+		OffsetDateTime modifiedDate) {
 
 		long id = idGenerator.nextId();
 
@@ -212,6 +222,7 @@ public class TenantDbService {
 					issuerUri,
 					clientId,
 					clientSecret,
+					securityConfiguration.name(),
 					createDate != null ? createDate : OffsetDateTime.now(),
 					modifiedDate != null ? modifiedDate : OffsetDateTime.now()
 				}))
@@ -224,12 +235,9 @@ public class TenantDbService {
 							.schemaName(schemaName)
 							.hostName(virtualHost)
 							.clientId(clientId)
+							.clientSecret(clientSecret)
 							.issuerUri(issuerUri)
-							.routeAuthorizationMap(Map.of(
-								ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2,
-								ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH,
-								ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH
-							))
+							.routeAuthorizationMap(fromSecurityConfiguration(securityConfiguration))
 							.build()
 					)
 				)
@@ -259,9 +267,22 @@ public class TenantDbService {
 			tenant.getIssuerUri(),
 			tenant.getClientId(),
 			tenant.getClientSecret(),
+			tenant.getSecurityConfiguration(),
 			tenant.getCreateDate(),
 			tenant.getModifiedDate()
 		);
+	}
+
+	private static Map<ApiGroup, AuthorizationScheme> fromSecurityConfiguration(SecurityConfiguration securityConfiguration) {
+
+		Map<ApiGroup, AuthorizationScheme> map = new HashMap<>();
+		for (Preconfiguration.Config config :
+			Preconfiguration.PRECONFIGURATION_MAP.get(securityConfiguration)) {
+
+			map.put(config.apiGroup(), config.authScheme());
+		}
+
+		return map;
 	}
 
 	private static TenantResponseDTO mapTenantResponseDTO(Row row) {

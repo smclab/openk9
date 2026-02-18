@@ -28,6 +28,7 @@ import jakarta.inject.Inject;
 import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
@@ -48,7 +49,8 @@ public class TenantDbServiceTest {
 	@DisplayName("Tenant should be fetched from database.")
 	void should_fetch_existing_tenants() {
 
-		List<TenantResponseDTO> tenants = tenantDbService.findAll().await().indefinitely();
+		List<TenantResponseDTO> tenants = tenantDbService.findAll()
+			.await().indefinitely();
 		// tenants must be equals or greater than 2 because there are
 		// at least 2 tenants created from liquibase.
 		Assertions.assertTrue(tenants.size() >= 2);
@@ -69,6 +71,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
+				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now()
 			)
@@ -76,11 +79,11 @@ public class TenantDbServiceTest {
 			.indefinitely();
 
 		// verify that creation is committed
-
 		Assertions.assertNotNull(tenantCreated);
 
 		// get the last event persisted
-		var createEvent = outboxService.lastEvents(1).await().indefinitely().getFirst();
+		var createEvent = outboxService.lastEvents(1)
+			.await().indefinitely().getFirst();
 
 		// verify that the last event is of the right type
 		var createEventType = createEvent.getEventType();
@@ -113,6 +116,7 @@ public class TenantDbServiceTest {
 	@Test
 	@DisplayName("Persist have to rollback if outboxService throws an error.")
 	void should_rollback_persist_tx_on_outboxService_error() {
+
 		// makes outboxService throw an error on persist
 		doThrow(new RuntimeException())
 			.when(outboxService)
@@ -131,6 +135,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
+				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now()
 			)
@@ -158,6 +163,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
+				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now()
 			)
