@@ -34,6 +34,12 @@ from phoenix.evals import (
 )
 from pydantic import BaseModel, Field
 
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
+from app.rag.retrievers.guardrail_documents_retriever import (
+    OpenSearchGuardrailDocumentsRetriever,
+)
 from app.rag.retrievers.retriever import OpenSearchRetriever
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
@@ -73,6 +79,12 @@ class GraphState(BaseModel):
     )
     retriever_chunks_evaluation: Optional[list[dict]] = Field(
         default=None, description="Retriever chunks evaluation"
+    )
+    guardrail_check: Optional[bool] = Field(
+        default=False, description="Whether to check guardrail"
+    )
+    guardrail_category: Optional[str] = Field(
+        default=None, description="guardrail check category"
     )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
@@ -331,6 +343,79 @@ class RagGraph:
 
         return response
 
+    def _llm_input_guardrail(self, query):
+        guardrail_prompt = """
+            Sei un sistema di guardrail specializzato nella classificazione di testo.
+            Il tuo compito è analizzare la frase fornita dall'utente e classificarla
+            esclusivamente in una delle seguenti categorie.
+
+            CATEGORIE:
+            1. SELF-HARM/SUICIDE - SELF-HARM/SUICIDE - Contenuti che descrivono, incoraggiano, istruiscono o fanno riferimento ad atti di autolesionismo, tagli, disturbi alimentari, pensieri suicidi, metodi per suicidarsi, istigazione al suicidio, o richieste di aiuto implicite/esplicite legate a questi temi
+            2. VIOLENCE/WEAPONS - Contenuti che descrivono, glorificano, istruiscono o minacciano atti di violenza fisica contro persone o animali, uso improprio di armi da fuoco, armi bianche, oggetti contundenti, combattimenti, torture, omicidi, aggressioni, o istruzioni per costruire/ottenere armi
+            3. EXPLOSIVES - Contenuti che descrivono, istruiscono o forniscono informazioni dettagliate sulla produzione, assemblaggio, detonazione o utilizzo di ordigni esplosivi, bombe, materiali esplodenti, incendiari, o componenti per la fabbricazione di esplosivi
+            4. HATE/HARASSMENT - Contenuti che esprimono incitamento all'odio, discriminazione, molestie, bullismo o linguaggio denigratorio basato su razza, etnia, nazionalità, religione, genere, identità di genere, orientamento sessuale, disabilità, età o status socioeconomico; include insulti mirati, stereotipi negativi, deumanizzazione, apologia di genocidio, superiorità razziale, attacchi personali ripetuti, doxxing, molestie sessuali verbali, o richieste di esclusione/danno verso individui o gruppi protetti
+            5. SEXUAL_CONTENT - Contenuti a sfondo sessuale esplicito, descrizioni dettagliate di atti sessuali, linguaggio osceno o volgare a connotazione sessuale, materiale pornografico, richieste di interazioni sessuali, sexting, o contenuti che sessualizzano minori (con priorità massima)
+
+            REGOLE:
+            - Se la frase NON RICADE in nessuna delle categorie sopra elencate, restituisci esattamente: NESSUNA
+            - Se la frase rientra in una delle categorie, restituisci SOLO il nome della categoria in MAIUSCOLO
+            - Se la frase rientra in più categorie, scegli quella predominante o più grave
+            - Non aggiungere spiegazioni, commenti o punteggiatura
+
+            FRASE DA CLASSIFICARE:
+            {query}
+
+            CATEGORIA:
+            """
+
+        guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
+
+        guardrail_chain = guardrail_prompt_template | self.llm
+
+        guardrail_response = guardrail_chain.invoke({"query": query})
+
+        return guardrail_response.content
+
+    def input_guardrail_node(self, state: GraphState) -> GraphState:
+        query = state.current_query
+
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=self.configuration.get("grpc_host_datasource"),
+            virtual_host=self.configuration.get("virtual_host"),
+        )
+
+        retriever = OpenSearchGuardrailDocumentsRetriever(
+            opensearch_host=self.opensearch_host,
+            grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
+            embedding_model_configuration=embedding_model_configuration,
+            uploaded_documents_index="guardrails-documents-index",
+            retrieve_type="HYBRID",
+            search_text=query,
+        )
+
+        retrieved_docs = retriever.invoke(query)
+
+        for doc in retrieved_docs:
+            document_id = doc.metadata["document_id"]
+            score = doc.metadata["score"]
+            if score >= 0.5:
+                llm_guardrail = self._llm_input_guardrail(query)
+                if llm_guardrail != "NESSUNA":
+                    state.guardrail_check = True
+                    state.guardrail_category = llm_guardrail
+                break
+
+        return state
+
+    def input_guardrail_route_decision(
+        self, state: GraphState
+    ) -> Literal["guardrail_violation_response", "history_handler"]:
+        """Separate function for conditional routing decision"""
+        if state.guardrail_check:
+            return "guardrail_violation_response"
+        else:
+            return "history_handler"
+
     def history_handler_node(self, state: GraphState) -> GraphState:
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             state.messages = (
@@ -521,7 +606,7 @@ class RagGraph:
             metadata=self.configuration.get("metadata"),
             retrieve_type=self.configuration.get("retrieve_type"),
             opensearch_host=self.configuration.get("opensearch_host"),
-            grpc_host=self.configuration.get("grpc_host"),
+            grpc_host=self.configuration.get("grpc_host_datasource"),
         )
 
         retrieved_docs = retriever.invoke(query)
@@ -727,6 +812,12 @@ class RagGraph:
 
         return state
 
+    def guardrail_violation_response_node(self, state: GraphState) -> GraphState:
+        """Guardrail response node"""
+        state.response = "Guardrail violation"
+
+        return state
+
     def llm_response_node(self, state: GraphState) -> GraphState:
         """LLM response node"""
         query = state.current_query
@@ -885,6 +976,10 @@ class RagGraph:
             workflow.add_edge("history_saver", "response_evaluation")
             workflow.add_edge("response_evaluation", END)
         else:
+            workflow.add_node("input_guardrail", self.input_guardrail_node)
+            workflow.add_node(
+                "guardrail_violation_response", self.guardrail_violation_response_node
+            )
             workflow.add_node("history_handler", self.history_handler_node)
             workflow.add_node(
                 "analyze_and_rewrite_query", self.analyze_and_rewrite_query_node
@@ -894,7 +989,16 @@ class RagGraph:
             workflow.add_node("llm_response", self.llm_response_node)
             workflow.add_node("history_saver", self.history_saver_node)
 
-            workflow.set_entry_point("history_handler")
+            workflow.set_entry_point("input_guardrail")
+
+            workflow.add_conditional_edges(
+                "input_guardrail",
+                self.input_guardrail_route_decision,
+                {
+                    "guardrail_violation_response": "guardrail_violation_response",
+                    "history_handler": "history_handler",
+                },
+            )
 
             workflow.add_conditional_edges(
                 "rag_router",
@@ -905,6 +1009,7 @@ class RagGraph:
                 },
             )
 
+            workflow.add_edge("guardrail_violation_response", END)
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
             workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "llm_response")
@@ -1007,5 +1112,13 @@ class RagGraph:
             "answer": result_answer[:200] + "...",
         }
         logger.info(json.dumps(info))
+
+        if last_state.values.get("guardrail_check"):
+            yield json.dumps(
+                {
+                    "chunk": f"{last_state.values.get('response')} - ({last_state.values.get('guardrail_category')})",
+                    "type": "GUARDRAIL",
+                }
+            )
 
         yield json.dumps({"chunk": "", "type": "END"})
