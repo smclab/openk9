@@ -81,6 +81,7 @@ def get_chain(
         chat_vertex_ai_model_garden = llm_configuration.get(
             "chat_vertex_ai_model_garden"
         )
+        aws_bedrock = llm_configuration.get("aws_bedrock")
 
         configuration = {
             "api_url": api_url,
@@ -95,6 +96,7 @@ def get_chain(
             "watsonx_project_id": watsonx_project_id,
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+            "aws_bedrock": aws_bedrock,
         }
 
         llm = initialize_language_model(configuration)
@@ -208,6 +210,7 @@ def get_chat_chain(
         chat_vertex_ai_model_garden = llm_configuration.get(
             "chat_vertex_ai_model_garden"
         )
+        aws_bedrock = llm_configuration.get("aws_bedrock")
 
         configuration = {
             "api_url": api_url,
@@ -226,6 +229,7 @@ def get_chat_chain(
             "watsonx_project_id": watsonx_project_id,
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+            "aws_bedrock": aws_bedrock,
         }
 
         yield from stream_rag_conversation(
@@ -323,6 +327,7 @@ def get_chat_chain_tool(
         chat_vertex_ai_model_garden = llm_configuration.get(
             "chat_vertex_ai_model_garden"
         )
+        aws_bedrock = llm_configuration.get("aws_bedrock")
 
         configuration = {
             "api_url": api_url,
@@ -341,6 +346,7 @@ def get_chat_chain_tool(
             "watsonx_project_id": watsonx_project_id,
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+            "aws_bedrock": aws_bedrock,
         }
 
         llm = initialize_language_model(configuration)

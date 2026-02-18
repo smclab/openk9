@@ -392,6 +392,7 @@ def get_llm_configuration(grpc_host, virtual_host):
         watsonx_project_id = json_config.get("watsonx_project_id")
         chat_vertex_ai_credentials = json_config.get("credentials")
         chat_vertex_ai_model_garden = json_config.get("chat_vertex_ai_model_garden")
+        aws_bedrock = json_config.get("aws_bedrock")
 
         configuration = {
             "api_url": api_url,
@@ -405,6 +406,7 @@ def get_llm_configuration(grpc_host, virtual_host):
             "watsonx_project_id": watsonx_project_id,
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+            "aws_bedrock": aws_bedrock,
         }
 
         return configuration
