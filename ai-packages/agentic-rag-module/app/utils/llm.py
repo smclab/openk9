@@ -20,11 +20,11 @@ import os
 from enum import Enum
 from typing import List
 
-from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from google.auth import default, transport
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
+from langchain_aws import ChatBedrockConverse
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import ConfigurableFieldSpec
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -39,6 +39,7 @@ from app.external_services.grpc.grpc_client import (
     get_llm_configuration,
     get_rag_configuration,
 )
+from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from app.rag.retrievers.retriever import OpenSearchRetriever
 from app.utils.logger import logger
 
@@ -53,6 +54,7 @@ class ModelType(Enum):
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
     CHAT_VERTEX_AI_MODEL_GARDEN = "chat_vertex_ai_model_garden"
+    AWS_BEDROCK = "aws_bedrock"
 
 
 def save_google_application_credentials(credentials):
@@ -151,6 +153,8 @@ def initialize_language_model(configuration):
                 Credentials for Google Vertex AI (required if using CHAT_VERTEX_AI).
             - "chat_vertex_ai_model_garden": dict
                 Configurations for Google Vertex AI Model Garden (required if using CHAT_VERTEX_AI_MODEL_GARDEN).
+            - "aws_bedrock": dict
+                Configurations for AWS Bedrock (required if using AWS_BEDROCK).
 
     Returns:
     -------
@@ -227,6 +231,15 @@ def initialize_language_model(configuration):
             base_url = f"https://{endpoint_id}/v1/projects/{project_id}/locations/{location}/endpoints/openapi"
 
             llm = ChatOpenAI(model=model, api_key=api_key, base_url=base_url)
+        case ModelType.AWS_BEDROCK.value:
+            os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
+            aws_bedrock = configuration["aws_bedrock"]
+            region_name = aws_bedrock["region_name"]
+
+            llm = ChatBedrockConverse(
+                model=model,
+                region_name=region_name,
+            )
         case _:
             llm = ChatOpenAI(model=model, openai_api_key=api_key)
 
