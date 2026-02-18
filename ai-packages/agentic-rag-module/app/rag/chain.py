@@ -101,6 +101,7 @@ def get_agentic_rag(
         chat_vertex_ai_model_garden = llm_configuration.get(
             "chat_vertex_ai_model_garden"
         )
+        aws_bedrock = llm_configuration.get("aws_bedrock")
 
         llm_configuration = {
             "api_url": api_url,
@@ -118,6 +119,7 @@ def get_agentic_rag(
             "watsonx_project_id": watsonx_project_id,
             "chat_vertex_ai_credentials": chat_vertex_ai_credentials,
             "chat_vertex_ai_model_garden": chat_vertex_ai_model_garden,
+            "aws_bedrock": aws_bedrock,
         }
 
         llm = initialize_language_model(llm_configuration)
