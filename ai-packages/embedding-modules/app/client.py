@@ -51,6 +51,7 @@ if __name__ == "__main__":
             "api_url": "api_url",
             "watsonx_project_id": "watsonx_project_id",
             "chat_vertex_ai_model_garden": "chat_vertex_ai_model_garden",
+            "aws_bedrock": {"region_name": "region_name"},
         }
     )
     providerModel = {
