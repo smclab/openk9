@@ -26,9 +26,6 @@ from typing import get_type_hints
 
 import grpc
 import pika
-from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
-from app.text_splitters.derived_text_splitter import DerivedTextSplitter
-from app.utils.text_cleaner import clean_text
 from chonkie import (
     LateChunker,
     NeuralChunker,
@@ -44,11 +41,16 @@ from grpc_health.v1 import health_pb2, health_pb2_grpc
 from grpc_health.v1.health import HealthServicer
 from grpc_reflection.v1alpha import reflection
 from ibm_watsonx_ai.metanames import EmbedTextParamsMetaNames
+from langchain_aws import BedrockEmbeddings
 from langchain_google_vertexai import VertexAIEmbeddings
 from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
+
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
+from app.text_splitters.derived_text_splitter import DerivedTextSplitter
+from app.utils.text_cleaner import clean_text
 
 load_dotenv()
 
@@ -90,6 +92,7 @@ class ModelType(Enum):
     IBM_WATSONX = "watsonx"
     CHAT_VERTEX_AI = "chat_vertex_ai"
     HUGGING_FACE = "hugging_face"
+    AWS_BEDROCK = "aws_bedrock"
 
 
 def save_google_application_credentials(credentials, credentials_file_path="./"):
@@ -162,6 +165,8 @@ def initialize_embedding_model(configuration):
                 Project ID for IBM WatsonX (required if using WatsonX).
             - "chat_vertex_ai_credentials": dict
                 Credentials for Google Vertex AI (required if using Vertexai).
+            - "aws_bedrock": dict
+                Configurations for AWS Bedrock (required if using AWS_BEDROCK).
 
     Returns:
     -------
@@ -208,6 +213,15 @@ def initialize_embedding_model(configuration):
             logger.info(
                 "Hugging face model %s loaded.",
                 model,
+            )
+        case ModelType.AWS_BEDROCK.value:
+            os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
+            aws_bedrock = configuration["aws_bedrock"]
+            region_name = aws_bedrock["region_name"]
+
+            embeddings = BedrockEmbeddings(
+                model_id=model,
+                region_name=region_name,
             )
         case _:
             embeddings = OpenAIEmbeddings(model=model)
