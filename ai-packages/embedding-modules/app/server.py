@@ -253,6 +253,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             "chat_vertex_ai_model_garden": embedding_model_json_config.get(
                 "chat_vertex_ai_model_garden"
             ),
+            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
         }
         embeddings = initialize_embedding_model(configuration)
 
