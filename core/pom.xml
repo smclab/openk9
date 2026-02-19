@@ -99,7 +99,7 @@
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.8.6</quarkus-minio.version>
 		<quarkus-tika.version>2.2.1</quarkus-tika.version>
-		<hibernate.version>6.6.23.Final</hibernate.version>
+		<hibernate.version>7.1.14.Final</hibernate.version>
 		<surefire-plugin.version>3.5.2</surefire-plugin.version>
 		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
 		<gpg-plugin.version>3.2.7</gpg-plugin.version>
@@ -333,7 +333,7 @@
 							</path>
 							<path>
 								<groupId>org.hibernate.orm</groupId>
-								<artifactId>hibernate-jpamodelgen</artifactId>
+								<artifactId>hibernate-processor</artifactId>
 								<version>${hibernate.version}</version>
 							</path>
 							<path>
