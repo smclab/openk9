@@ -23,7 +23,7 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	logicalFilePath="db/tenant-manager/2026/01/09-changelog.xml">
 
-	<changeSet id="1761208170-1" author="openk9">
+	<changeSet id="1771514819-1" author="openk9">
 		<createTable tableName="api_key">
 			<column name="id" type="BIGINT">
 				<constraints nullable="false"
