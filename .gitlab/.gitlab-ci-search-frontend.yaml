@@ -69,8 +69,9 @@ Build Search Frontend:
       --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-    # Always run build if triggered
-    - !reference [.rules:child-build-always, rules]
+    # Run build only on push (main, tag, feature branch) - NO MR
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:

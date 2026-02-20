@@ -7,9 +7,6 @@ include:
 stages:
 - build
 
-variables:
-  # Placeholder
-  PYTHON_IMAGE_VERSION: "3.11"
 
 #################
 # Fetch Config  #
@@ -58,7 +55,7 @@ Build Chunk Evaluation Image:
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
-    elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+    elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[CHUNK-EVAL] Build & push as :merge-request"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \

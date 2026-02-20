@@ -71,7 +71,8 @@ Build Tenant Frontend:
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Always run if triggered
-    - !reference [.rules:child-build-always, rules]
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:

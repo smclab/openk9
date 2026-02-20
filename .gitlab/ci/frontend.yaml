@@ -7,6 +7,9 @@
 Trigger Search Frontend:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # 1. Main Branch Rule - DEFINES the changes list (&search_frontend_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &search_frontend_changes
@@ -26,6 +29,9 @@ Trigger Search Frontend:
 Trigger Admin Frontend:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&admin_ui_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &admin_ui_changes
@@ -44,6 +50,9 @@ Trigger Admin Frontend:
 Trigger Tenant Frontend:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&tenant_ui_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_ui_changes
@@ -62,6 +71,9 @@ Trigger Tenant Frontend:
 Trigger Talk-To Frontend:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&talk_to_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &talk_to_changes
@@ -80,6 +92,9 @@ Trigger Talk-To Frontend:
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&chatbot_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chatbot_changes

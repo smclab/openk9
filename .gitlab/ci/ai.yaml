@@ -7,6 +7,9 @@
 Trigger Rag Module:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # 1. Main Branch Rule - DEFINES the changes list (&rag_module_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &rag_module_changes
@@ -26,6 +29,9 @@ Trigger Rag Module:
 Trigger Embedding Modules:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&embedding_modules_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &embedding_modules_changes
@@ -45,6 +51,9 @@ Trigger Embedding Modules:
 Trigger Docling Processor:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&docling_processor_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &docling_processor_changes
@@ -63,6 +72,9 @@ Trigger Docling Processor:
 Trigger Chunk Evaluation Module:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&chunk_eval_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chunk_eval_changes

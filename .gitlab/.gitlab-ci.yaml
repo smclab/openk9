@@ -21,9 +21,7 @@ cache:
     - .m2/repository
   policy: pull-push
 
-variables:
   # Image used for container scanning
-  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'

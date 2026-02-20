@@ -8,12 +8,8 @@ stages:
 - build
 - container-scanning
 - restart
-
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
-  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
-
-#################
 # Fetch Config  #
 #################
 Fetch config:
@@ -68,7 +64,7 @@ Build Rag Image:
         --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
-    elif [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
+    elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[RAG] Build & push as :merge-request"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \

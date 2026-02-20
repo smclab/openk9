@@ -47,7 +47,7 @@
       echo "🚀 Build type: OFFICIAL (Main/Tag)"
       FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true"
       
-    elif [[ "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
+    elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" ]]; then
       # 🧪 MR: Build Only (No Push)
       echo "🧪 Build type: TEST (Merge Request)"
       FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false"

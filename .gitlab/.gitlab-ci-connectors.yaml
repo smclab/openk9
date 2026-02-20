@@ -8,12 +8,6 @@ stages:
 - build
 - container-scanning
 
-variables:
-  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
-
-###############################################################
-#                    BUILD WEB CONNECTOR                      #
-###############################################################
 Build Web Connector image:
   stage: build
   image:

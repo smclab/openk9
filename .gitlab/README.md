@@ -36,9 +36,11 @@ Complete technical documentation for OpenK9's GitLab CI/CD pipeline architecture
 ## Pipeline Layers
 
 The pipeline follows a **Parent-Child architecture**: 
-1.  **Orchestrator (`.gitlab-ci.yaml`)**: Entry point. Detects changes and triggers child pipelines. **Blocks execution** on initial branch creation (SHA `0000...`) to save resources.
-2.  **Component Pipelines**: Build, verify, and trigger component-specific restart logic.
-3.  **Shared Templates**: Reusable logic for builds and deployments.
+1.  **Orchestrator & Smart Triggers**: The entry point routes logic into domain-specific trigger files (`backend.yaml`, `frontend.yaml`, etc.).
+    - **Anti-Spam Filter**: Automatically blocks execution globally on initial branch creation (SHA `0000000...`) to prevent massive "pipeline storms".
+    - **Merge Request Validation**: Triggers downstream pipelines specifically to run unit tests and offline compilations (e.g. `yarn build` or `mvn package --no-push`). This strictly isolates the Docker registry from untested or incomplete code.
+2.  **Component Pipelines**: Independent child pipelines that isolate builds, container scanning, and component-specific restart logic via ArgoCD.
+3.  **Shared Templates (`.gitlab-templates.yaml`)**: A strictly **DRY (Don't Repeat Yourself)** repository for reusable logic (Maven/Kaniko builds, security scans) and global variables (e.g. `CS_ANALYZER_IMAGE`).
 
 ---
 
@@ -53,17 +55,20 @@ The pipeline follows a **Parent-Child architecture**:
 - **No Duplicate Restarts**: Main branch deployments now trigger a **single** external call.
 - **Child Pipeline Fix**: Removed redundant `changes:` filters in downstream jobs to prevent "empty pipeline" errors.
 
+
+
 ---
 
 # Deployment Workflow
 
 ## Branch Strategy
 
-| Branch Pattern | Type | Trigger | Deployment Target | Tag Strategy |
-|----------------|------|---------|-------------------|--------------|
-| `^[0-9]+-.*` | Feature | Push | **Developer Namespace** (Personal) | `99x-SNAPSHOT` (Static) |
-| `main` | Integration | Merge | **ALL Integration Envs** (Shared) | `x.y.z-SNAPSHOT` (Dynamic) |
-| `v*` | Release | Tag | **Production/Stable** | `v1.2.3` (Git Tag) |
+| Branch Pattern | Type | Trigger | Deployment Target | Pipeline Behavior / Tag Strategy |
+|----------------|------|---------|-------------------|----------------------------------|
+| `^[0-9]+-.*` | Feature | Push | **Developer Namespace** (Personal) | Pushes static `99x-SNAPSHOT` tags based on user ID |
+| `*` (Any MR) | Pull Request | Merge Request | **None** (Test Phase Only) | Compiles code (`yarn build` / `mvn package`) to validate logic. **Docker push is skipped**. |
+| `main` | Integration | Merge | **ALL Integration Envs** (Shared) | Deploys `x.y.z-SNAPSHOT` only for components triggering the `changes` filter. |
+| `v*` | Release | Tag | **Production/Stable** | Bypasses `changes` filters to force a **Full System Rebuild** of all containers with tag `v1.2.3`. |
 
 ## Namespace Matrix
 

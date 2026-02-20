@@ -8,10 +8,6 @@ stages:
 - container-scanning
 - restart
 
-variables:
-  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
-
-# BUILD JOB
 Build Ingestion image:
   extends: .build_template
   variables:

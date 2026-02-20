@@ -7,6 +7,9 @@
 Trigger Datasource:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # 1. Main Branch Rule - DEFINES the changes list (&datasource_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &datasource_changes
@@ -28,6 +31,9 @@ Trigger Datasource:
 Trigger Searcher:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&searcher_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &searcher_changes
@@ -48,6 +54,9 @@ Trigger Searcher:
 Trigger Ingestion:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&ingestion_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &ingestion_changes
@@ -68,6 +77,9 @@ Trigger Ingestion:
 Trigger K8S-Client:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&k8s_client_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &k8s_client_changes
@@ -88,6 +100,9 @@ Trigger K8S-Client:
 Trigger File-Manager:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&file_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &file_manager_changes
@@ -108,6 +123,9 @@ Trigger File-Manager:
 Trigger Tenant-Manager:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&tenant_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_manager_changes
@@ -128,6 +146,9 @@ Trigger Tenant-Manager:
 Trigger API-Gateway:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&api_gateway_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &api_gateway_changes
@@ -148,6 +169,9 @@ Trigger API-Gateway:
 Trigger Tika:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&tika_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tika_changes
@@ -168,6 +192,9 @@ Trigger Tika:
 Trigger Entity-Manager:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&entity_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &entity_manager_changes
@@ -188,6 +215,9 @@ Trigger Entity-Manager:
 Trigger Resources-Validator:
   stage: trigger
   rules:
+    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     # Define changes (&resources_validator_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &resources_validator_changes

@@ -6,14 +6,13 @@
 Trigger Connectors Build:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - connectors/**/*
         - .gitlab/.gitlab-ci-connectors.yaml
     - if: '$CI_COMMIT_TAG'
-      changes:
-        - connectors/**/*
-        - .gitlab/.gitlab-ci-connectors.yaml
   trigger:
     include: "/.gitlab/.gitlab-ci-connectors.yaml"
     strategy: depend
@@ -28,9 +27,12 @@ Trigger Connectors Build:
 Trigger Helm Base Core:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/01-base-core/**/*
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml"
 
@@ -38,9 +40,12 @@ Trigger Helm Base Core:
 Trigger Helm File Handling:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/02-file-handling/**/*
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml"
 
@@ -48,9 +53,12 @@ Trigger Helm File Handling:
 Trigger Helm Gen AI:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/03-gen-ai/**/* 
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
 
@@ -58,10 +66,13 @@ Trigger Helm Gen AI:
 Trigger Helm Connectors:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/05-connectors/**/* 
         - helm-charts/**/*connectors/**/*
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-05-connectors.yaml"
 
@@ -69,9 +80,12 @@ Trigger Helm Connectors:
 Trigger Helm Utilities:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/06-utilities/**/*
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
 
@@ -79,8 +93,11 @@ Trigger Helm Utilities:
 Trigger Helm Knowledge Handling:
   stage: trigger
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/04-knowledge-handling/**/*
+    - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
