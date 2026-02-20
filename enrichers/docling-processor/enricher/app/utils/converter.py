@@ -25,13 +25,14 @@ from docling_core.types.io import DocumentStream
 from app.utils.fm_helper import FileManagerHelper
 from app.utils.format_detect import extract_extension_base64
 from app.utils.logger import logger
+from app.utils.pipeline_options import get_format_options
 
 FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
 FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
 
 
-def conversion(bin, tenant):
+def conversion(bin, tenant, configs):
     """
     Converts a binary resource into a document object using a base64-encoded source.
 
@@ -56,6 +57,7 @@ def conversion(bin, tenant):
     bites = BytesIO(base64.b64decode(resource))
     extension = extract_extension_base64(resource)
     source = DocumentStream(name=f"doc.{extension}", stream=bites)
-    converter = DocumentConverter()
+    format_options = get_format_options(configs, extension)
+    converter = DocumentConverter(format_options=format_options)
     result = converter.convert(source)
     return result

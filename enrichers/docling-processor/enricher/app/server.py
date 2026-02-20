@@ -106,7 +106,7 @@ def operation(payload, configs, token):
         logger.info("Multiple binary")
         for bin in binaries:
             try:
-                result = conversion(bin, tenant)
+                result = conversion(bin, tenant, configs)
                 markdown = result.document.export_to_markdown()
                 bin["markdown"] = markdown
             except Exception as e:
