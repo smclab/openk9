@@ -85,13 +85,15 @@ Build Verifier:
     - .yarn-cache
     policy: pull-push
   script:
-  - cd js-packages/admin-ui
   - export NODE_OPTIONS="--max-old-space-size=8192"
+  # Disable workspace strict root check to ensure Lerna aggregates smoothly
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
+  - yarn config set cache-folder .yarn-cache
+  # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
   - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
+  # 2. Build ONLY the specific component using Lerna scope
+  - npx lerna run build --scope openk9-admin-ui
   rules:
     # Run only on MR
     - !reference [.rules:child-verify-mr, rules]
