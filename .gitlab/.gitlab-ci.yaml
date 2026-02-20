@@ -26,8 +26,6 @@ variables:
   CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
 
 include:
-  # 1. Centralized Rules & Templates
-  - local: '/.gitlab/ci/rules.yaml'
   - local: '/.gitlab/.gitlab-templates.yaml'
   
   # 2. Domain-Specific Trigger Files

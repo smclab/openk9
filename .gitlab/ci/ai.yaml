@@ -11,10 +11,12 @@ Trigger Rag Module:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &rag_module_changes
         - ai-packages/rag-module/**/*
-    # 2. Tag Rule - REUSES changes list (*rag_module_changes)
+    # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-      changes: *rag_module_changes
     # 3. Feature Branch Rule - REUSES changes list (*rag_module_changes)
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *rag_module_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *rag_module_changes
   trigger:
@@ -28,8 +30,10 @@ Trigger Embedding Modules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &embedding_modules_changes
         - ai-packages/embedding-modules/**/*
-    # Reuse changes (*embedding_modules_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *embedding_modules_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *embedding_modules_changes
@@ -45,8 +49,10 @@ Trigger Docling Processor:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &docling_processor_changes
         - ai-packages/docling-processor/**/*
-    # Reuse changes (*docling_processor_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *docling_processor_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *docling_processor_changes
@@ -61,8 +67,10 @@ Trigger Chunk Evaluation Module:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chunk_eval_changes
         - ai-packages/chunk-evaluation-module/**/*
-    # Reuse changes (*chunk_eval_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chunk_eval_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *chunk_eval_changes

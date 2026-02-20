@@ -11,10 +11,12 @@ Trigger Search Frontend:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &search_frontend_changes
         - js-packages/search-frontend/**/*
-    # 2. Tag Rule - REUSES changes list (*search_frontend_changes)
+    # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-      changes: *search_frontend_changes
     # 3. Feature Branch Rule - REUSES changes list (*search_frontend_changes)
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *search_frontend_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *search_frontend_changes
   trigger:
@@ -28,8 +30,10 @@ Trigger Admin Frontend:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &admin_ui_changes
         - js-packages/admin-ui/**/*
-    # Reuse changes (*admin_ui_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *admin_ui_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *admin_ui_changes
@@ -44,8 +48,10 @@ Trigger Tenant Frontend:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_ui_changes
         - js-packages/tenant-ui/**/*
-    # Reuse changes (*tenant_ui_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tenant_ui_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *tenant_ui_changes
@@ -60,8 +66,10 @@ Trigger Talk-To Frontend:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &talk_to_changes
         - js-packages/talk-to/**/*
-    # Reuse changes (*talk_to_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *talk_to_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *talk_to_changes
@@ -76,8 +84,10 @@ Trigger OpenK9-Chatbot:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chatbot_changes
         - js-packages/openk9-chatbot/**/*
-    # Reuse changes (*chatbot_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chatbot_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *chatbot_changes

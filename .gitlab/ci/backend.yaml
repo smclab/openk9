@@ -13,10 +13,12 @@ Trigger Datasource:
         - core/app/datasource/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # 2. Tag Rule - REUSES changes list (*datasource_changes)
+    # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-      changes: *datasource_changes
     # 3. Feature Branch Rule - REUSES changes list (*datasource_changes)
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *datasource_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *datasource_changes
   trigger:
@@ -32,8 +34,10 @@ Trigger Searcher:
         - core/app/searcher/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*searcher_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *searcher_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *searcher_changes
@@ -50,8 +54,10 @@ Trigger Ingestion:
         - core/app/ingestion/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*ingestion_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *ingestion_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *ingestion_changes
@@ -68,8 +74,10 @@ Trigger K8S-Client:
         - core/app/k8s-client/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*k8s_client_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *k8s_client_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *k8s_client_changes
@@ -86,8 +94,10 @@ Trigger File-Manager:
         - core/app/file-manager/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*file_manager_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *file_manager_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *file_manager_changes
@@ -104,8 +114,10 @@ Trigger Tenant-Manager:
         - core/app/tenant-manager/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*tenant_manager_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tenant_manager_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *tenant_manager_changes
@@ -122,8 +134,10 @@ Trigger API-Gateway:
         - core/app/api-gateway/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*api_gateway_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *api_gateway_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *api_gateway_changes
@@ -140,8 +154,10 @@ Trigger Tika:
         - core/app/tika/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*tika_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tika_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *tika_changes
@@ -158,8 +174,10 @@ Trigger Entity-Manager:
         - core/app/entity-manager/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*entity_manager_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *entity_manager_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *entity_manager_changes
@@ -176,8 +194,10 @@ Trigger Resources-Validator:
         - core/app/resources-validator/**/*
         - core/common/resources-common/**/*
         - core/common/common-utils/**/*
-    # Reuse changes (*resources_validator_changes)
+    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
+    # MR Rule - REUSES changes list (Build/Test only)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *resources_validator_changes
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
       changes: *resources_validator_changes
