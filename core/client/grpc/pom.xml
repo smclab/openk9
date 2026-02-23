@@ -33,9 +33,9 @@
 	<packaging>pom</packaging>
 
 	<properties>
-		<grpc.version>1.49.0</grpc.version>
-		<protoc.version>3.19.6</protoc.version>
-		<os-maven-plugin-version>1.7.0</os-maven-plugin-version>
+		<grpc.version>1.62.2</grpc.version>
+		<protoc.version>3.25.8</protoc.version>
+		<os-maven-plugin-version>1.7.1</os-maven-plugin-version>
 		<protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
 	</properties>
 
