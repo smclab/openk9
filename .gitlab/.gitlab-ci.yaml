@@ -14,14 +14,7 @@ stages:
   - publish
   - push
 
-# Global cache configuration
-cache:
-  key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
-  paths:
-    - .m2/repository
-  policy: pull-push
 
-  # Image used for container scanning
 
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
