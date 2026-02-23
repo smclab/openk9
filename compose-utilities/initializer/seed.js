@@ -35,6 +35,8 @@ async function getTenantPasswordFromLogs(maxRetries = 10) {
 async function main() {
   console.log('🚀 Starting Data Seeder...');
 
+  const authHeader = 'Basic YWRtaW46YWRtaW4='; // admin:admin
+
   // ---------------------------------------------------------
   // STEP 1: Create Tenant
   // ---------------------------------------------------------
@@ -44,17 +46,24 @@ async function main() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Basic YWRtaW46YWRtaW4='
+      'Authorization': authHeader
     },
-    body: JSON.stringify({ virtualHost: "demo.openk9.localhost" })
+    body: JSON.stringify({ 
+      virtualHost: "demo.openk9.localhost",
+      securityConfiguration: "LEGACY",
+      tenantName: "demo"
+    })
   });
 
   if (!createTenantResponse.ok) {
     const text = await createTenantResponse.text();
     console.error(`❌ Failed to create tenant. Status: ${createTenantResponse.status}.`);
-    if (createTenantResponse.status === 409)
-    console.warn('tenant already created')
-    process.exit(1);
+    console.error(`Response: ${text}`);
+    if (createTenantResponse.status === 409) {
+      console.warn('tenant already created');
+    } else {
+      process.exit(1);
+    }
   }
 
   const tenantData = await createTenantResponse.json();
@@ -80,12 +89,16 @@ async function main() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Basic YWRtaW46YWRtaW4='
+      'Authorization': authHeader
     },
     body: JSON.stringify({ tenantName: schemaName })
   });
 
-  if (!initResponse.ok) process.exit(1);
+  if (!initResponse.ok) {
+    console.error(`❌ Failed to initialize tenant. Status: ${initResponse.status}.`);
+    console.error(await initResponse.text());
+    process.exit(1);
+  }
   console.log('✅ 2/4 Tenant Initialized.');
 
   // ---------------------------------------------------------
@@ -117,12 +130,14 @@ async function main() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': authHeader,
       'X-TENANT-ID': schemaName
     },
     body: JSON.stringify(webConnectorPayload)
   });
 
   if (!webConnectorResponse.ok) {
+    console.error(`❌ Failed to configure Web Connector. Status: ${webConnectorResponse.status}.`);
     console.error(await webConnectorResponse.text());
     process.exit(1);
   }
@@ -153,12 +168,14 @@ async function main() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': authHeader,
       'X-TENANT-ID': schemaName
     },
     body: JSON.stringify(minioConnectorPayload)
   });
 
   if (!minioConnectorResponse.ok) {
+    console.error(`❌ Failed to configure Minio Connector. Status: ${minioConnectorResponse.status}.`);
     console.error(await minioConnectorResponse.text());
     process.exit(1);
   }
