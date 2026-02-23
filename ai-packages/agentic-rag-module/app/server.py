@@ -78,7 +78,7 @@ class RagType(Enum):
 app = FastAPI(
     title="OpenK9 RAG API",
     description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
-    version="2026.1-SNAPSHOT",
+    version="2026.1.0-SNAPSHOT",
 )
 
 app.add_middleware(
