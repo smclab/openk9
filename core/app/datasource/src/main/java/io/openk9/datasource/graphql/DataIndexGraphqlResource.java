@@ -91,8 +91,13 @@ public class DataIndexGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<DataIndex> deleteDataIndex(@Id long dataIndexId) {
-		return dataIndexService.deleteById(dataIndexId);
+	@Description("""
+		Deletes a DataIndex entity by its ID after validating the provided name matches the entity.
+		Requires both the dataIndexId and dataIndexName (as a confirmation mechanism) to prevent
+		accidental deletions.
+		""")
+	public Uni<DataIndex> deleteDataIndex(@Id long dataIndexId, String dataIndexName) {
+		return dataIndexService.deleteById(dataIndexId, dataIndexName);
 	}
 
 	public Uni<Connection<DocType>> docTypes(
