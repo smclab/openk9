@@ -37,18 +37,30 @@ import {
   useCreateOrUpdateEnrichItemMutation,
   useEnrichItemQuery,
 } from "../../graphql-generated";
-import { Box, Button } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { useRestClient } from "@components/queryClient";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { enrichItemId = "new", name, view } = useParams();
+  const [testResult, setTestResult] = React.useState<"success" | "error" | null>(null);
+  const STATUS_CONFIG = {
+    null: { color: "text.secondary", label: "Waiting for test" },
+    success: { color: "success.main", label: "Connection successful" },
+    error: { color: "error.main", label: "Endpoint unreachable" },
+  } as const;
+
+  const statusKey = testResult === null ? "null" : testResult;
+  const { color, label } = STATUS_CONFIG[statusKey];
   const navigate = useNavigate();
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Enrich Item",
     body: "Are you sure you want to edit this Enrich Item?",
     labelConfirm: "Edit",
   });
+  const restClient = useRestClient();
 
   const handleEditClick = async () => {
     const confirmed = await openConfirmModal();
@@ -239,6 +251,31 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                       }
                     />
                   </ContainerFluid>
+                  <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center" }}>
+                    <Button
+                      onClick={async () => {
+                        try {
+                          const res = await restClient.healthApi.health({
+                            baseUri: form.inputProps("baseUri").value,
+                            path: form.inputProps("path").value,
+                          });
+                          setTestResult(res ? "success" : "error");
+                        } catch {
+                          setTestResult("error");
+                        }
+                      }}
+                      variant="outlined"
+                    >
+                      Test Connection
+                    </Button>
+                  </Box>
+                  <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="body2" color={color} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <FiberManualRecordIcon sx={{ color, fontSize: 18 }} />
+                      {label}
+                    </Typography>
+                  </Box>
+
                   <ContainerFluid size="md">
                     <CodeInput
                       language="javascript"
