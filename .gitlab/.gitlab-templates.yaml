@@ -47,7 +47,7 @@ variables:
     echo "$VERSION" > $CI_PROJECT_DIR/.version
     
     # 2. Determine Build Command and Tags
-    BASE_CMD="mvn package -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -pl app/$COMPONENT -am"
+    BASE_CMD="mvn package -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am"
     
     if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
       # ✅ Main/Tag: Official Build & Push
