@@ -59,24 +59,24 @@ Build Embedding ST:
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
       echo "[ST] Build & push as :$VERSION"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/sentence-transformers-module-cache"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[ST] Build & push as :merge-request"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/sentence-transformers-module-cache"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[ST] Feature branch => build & push :997-SNAPSHOT"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/sentence-transformers-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:997-SNAPSHOT" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/sentence-transformers-module-cache"
@@ -114,24 +114,24 @@ Build Embedding OpenAI:
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
       echo "[OA] Build & push as :$VERSION"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/openai-module-cache"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[OA] Build & push as :merge-request"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/openai-module-cache"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[OA] Feature branch => build & push :997-SNAPSHOT"
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/openai-module/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
+        --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:997-SNAPSHOT" \
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/openai-module-cache"

@@ -54,18 +54,13 @@ Build Verifier:
   # 2. Build ONLY the specific component using Lerna scope
   - npx lerna run build --scope @openk9ui/openk9-chatbot
   rules:
-<<<<<<< HEAD
-  # Run on merge requests and main branch only
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-  - if: '$CI_COMMIT_BRANCH == "main"'
-=======
     # Run on MR and Main
     - !reference [.rules:child-verify, rules]
->>>>>>> c48225194 (Issue 1807: Complete CI/CD Refactoring: Modularize pipelines, fix Helm/Connectors, standardize rules, and update documentation)
 
 ######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
 Build OpenK9-Chatbot:
   stage: build
+  timeout: 2h
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [ "" ]
@@ -92,7 +87,10 @@ Build OpenK9-Chatbot:
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/openk9-chatbot/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION" \
-      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192" \
+      --cache=true \
+      --cache-repo="${CI_REGISTRY_NAME}/openk9/openk9-chatbot-cache" \
+      --cache-ttl=168h
   rules:
     # Only run on main branch
     - !reference [.rules:child-deploy-main-tag, rules]

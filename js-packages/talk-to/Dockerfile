@@ -1,19 +1,35 @@
-FROM node:18.18-alpine as react-build
+FROM node:18.18-alpine as deps
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
-RUN mkdir -p /app/js-packages/talk-to
+WORKDIR /app
 
-COPY ./js-packages/talk-to /app/js-packages/talk-to
+# Copy only package files for better caching
+COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/yarn.lock ./js-packages/talk-to/
 WORKDIR /app/js-packages/talk-to
-RUN yarn install
+RUN yarn install --frozen-lockfile --network-timeout 600000
+
+# Stage 2 - Build
+FROM node:18.18-alpine as builder
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
+
+WORKDIR /app/js-packages/talk-to
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/js-packages/talk-to/node_modules ./node_modules
+
+# Copy source code
+COPY ./js-packages/talk-to .
+
+# Build
 RUN NODE_ENV=production yarn build
 
-# Stage 2 - the production environment
+# Stage 3 - Production
 FROM nginx:1.28.2-alpine
 COPY ./js-packages/talk-to/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/chat/
-COPY --from=react-build /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
+COPY --from=builder /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
 	&& chmod g+rw /var/cache/nginx /var/run
 EXPOSE 8080

@@ -1,5 +1,12 @@
 # Generic build template used by each component (datasource, ingestion, etc.)
 
+# ========================================
+# GLOBAL VARIABLES
+# ========================================
+variables:
+  CS_ANALYZER_IMAGE: "registry.gitlab.com/security-products/container-scanning:8"
+
+  
 .build_template:
   #image: eclipse-temurin:21-jdk
   image: maven:3.9.6-eclipse-temurin-21
@@ -40,7 +47,7 @@
     echo "$VERSION" > $CI_PROJECT_DIR/.version
     
     # 2. Determine Build Command and Tags
-    BASE_CMD="mvn package $MAVEN_OPTS -pl app/$COMPONENT -am"
+    BASE_CMD="mvn package -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -pl app/$COMPONENT -am"
     
     if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
       # ✅ Main/Tag: Official Build & Push
@@ -67,7 +74,7 @@
       fi
       
       echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
-      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG -P 'exclude-quarkus-test'"
+      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG -DskipTests"
     else
       echo "⚠️ Unknown branch type, skipping build command construction"
       FINAL_CMD="echo 'Skipping build'"
