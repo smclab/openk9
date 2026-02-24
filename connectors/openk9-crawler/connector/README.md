@@ -32,8 +32,11 @@ This endpoint takes different arguments in JSON raw body:
 - **certVerification**: SSL/TLS certificate verification while processing documents (optional, if not specified is True)
 - **customMetadata**: map key-value where key is the metadata to extract and value is xpath expression to get element/s to extract from html
 - **documentFileExtensions**: extensions of files to allowed during extraction
+- **doGetFileExtensionFromMimetypeMap**: should extract file extension from mimetype map (optional, if not specified is True)
 - **doUseDefaultMimetypeMap**: should use default mimetype map (optional, if not specified is True)
-  - *used with `mimetypeMap` updates the default map with mimetypeMap*
+- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified is null)
+  - required if `doGetFileExtensionFromMimetypeMap` is True and `doUseDefaultMimetypeMap` is False
+  - *used with `doUseDefaultMimetypeMap` updates the default map with mimetypeMap*
   - <details>
     <summary>Default mimetype map</summary>
     
@@ -59,7 +62,6 @@ This endpoint takes different arguments in JSON raw body:
     }
     ```
     </details>
-- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified must use doUseDefaultMimetypeMap)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -98,13 +100,14 @@ curl -X 'POST' \
   "certVerification": False,
   "excluded_paths": [],
   "document_file_extensions": [],
+  "doGetFileExtensionFromMimetypeMap": False,
   "doUseDefaultMimetypeMap": False,
-    "mimetypeMap": {
-      "image/jpeg":"jpg",
-      "image/png":"png",
-      "image/gif":"gif",
-      "application/pdf":"pdf"
-    },
+  "mimetypeMap": {
+    "image/jpeg":"jpg",
+    "image/png":"png",
+    "image/gif":"gif",
+    "application/pdf":"pdf"
+  },
   "close_spider_page_count": 0
 }'
 ```
@@ -123,8 +126,7 @@ This endpoint takes different arguments in JSON raw body:
 - **follow**: boolean to set if follow links from crawled pages; default is *True*
 - **bodyTag**: html tag for main content to extract from page (optional, if not specified get all body page)
 - **linksToFollow**: list of href xpath to follow during extraction (optional, if not specified is ignored)
-- **usePlaywright**: boolean to set if the crawler should use playwright (optional, default is *False*)
-- **playwrightSelector**: css/xpath selector to be waited for by playwright (optional, required if *usePlaywright* is *True*)
+- **playwrightSelector**: css/xpath selector to be waited for by playwright (optional, if set playwright will be used)
 - **playwrightTimeout**: timeout waited by selector if not found (optional, default is *5000*)
 - **excludedBodyTags**:list of excluded tags (css selector) (optional, if not specified exclude nothing)
 - **titleTag**: html tag for title to assign to extracted page  (optional, if not specified get head title tag)
@@ -135,8 +137,11 @@ This endpoint takes different arguments in JSON raw body:
 - **customMetadata**: map key-value where key is the metadata added to Openk9 payload and value is xpath expression to get element/s to extract from html and ling to metadata
 - **doExtractDocs**: if follows links when connector link from sitemap
 - **documentFileExtensions**: extensions of files to allowed during extraction
+- **doGetFileExtensionFromMimetypeMap**: should extract file extension from mimetype map (optional, if not specified is True)
 - **doUseDefaultMimetypeMap**: should use default mimetype map (optional, if not specified is True)
-  - *used with `mimetypeMap` updates the default map with mimetypeMap*
+- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified is null)
+  - required if `doGetFileExtensionFromMimetypeMap` is True and `doUseDefaultMimetypeMap` is False
+  - *used with `doUseDefaultMimetypeMap` updates the default map with mimetypeMap*
   - <details>
     <summary>Default mimetype map</summary>
     
@@ -162,7 +167,6 @@ This endpoint takes different arguments in JSON raw body:
     }
     ```
     </details>
-- **mimetypeMap**: map key-value where key is the mimetype and value is file extension (optional, if not specified must use doUseDefaultMimetypeMap)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -180,7 +184,6 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "allowedPaths": [],
     "excludedPaths": [".pdf"],
     "linksToFollow": ["//a[@class="class-name"]/@href"],
-    "usePlaywright": true,
     "playwrightSelector": "div.card.card-simple.border.p-2",
     "playwrightTimeout": 5000,
     "datasourceId": 1,
@@ -195,6 +198,7 @@ curl --location --request POST 'http://localhost:5008/startSitemapCrawling' \
     "certVerification": False,
     "doExtractDocs": true,
     "documentFileExtensions": [".pdf"],
+    "doGetFileExtensionFromMimetypeMap": False,
     "doUseDefaultMimetypeMap": False,
     "mimetypeMap": {
       "image/jpeg":"jpg",

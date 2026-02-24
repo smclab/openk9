@@ -188,6 +188,20 @@
       }
     },
     {
+      "label": "Do extract File Extension from Mimetype",
+      "name": "doGetFileExtensionFromMimetypeMap",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "Should get the file extension from mimetype map.",
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "label": "Do Use Default Mimetype Map",
       "name": "doUseDefaultMimetypeMap",
       "type": "checkbox",

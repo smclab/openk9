@@ -1,14 +1,15 @@
-import json
-import logging
-import os
 from abc import ABC
-from typing import Optional
 
-import requests
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from typing import Optional, Self
+import json
+import logging
+import os
+import requests
+import os
 
 log_level = os.environ.get("INPUT_LOG_LEVEL")
 if log_level is None:
@@ -66,18 +67,19 @@ class BaseRequest(ABC, BaseModel):
     scheduleId: str
     timestamp: int
     tenantId: str = ""
+    doGetFileExtensionFromMimetypeMap: Optional[bool] = True
     doUseDefaultMimetypeMap: Optional[bool] = True
     mimetypeMap: Optional[dict] = {}
 
     @model_validator(mode='after')
-    def log_failed_validation(self) -> 'BaseRequest':
-        try:
-            assert self.doUseDefaultMimetypeMap or self.mimetypeMap, \
-                f"If `doUseDefaultMimetypeMap` is set to False `mimetypeMap` must be provided"
-            return self
-        except AssertionError as e:
-            logger.error(e)
-            raise
+    def validate_base_request(self) -> 'BaseRequest':
+        if (
+            self.doGetFileExtensionFromMimetypeMap
+            and not self.doUseDefaultMimetypeMap
+            and not self.mimetypeMap
+        ):
+            raise ValueError("Field `mimetypeMap` cannot be empty when `doGetFileExtensionFromMimetypeMap` is True and `doUseDefaultMimetypeMap` is False")
+        return self
 
 
 class SitemapRequest(BaseRequest):
@@ -85,15 +87,14 @@ class SitemapRequest(BaseRequest):
     replaceRule: Optional[list] = ["", ""]
     linksToFollow: Optional[list[str]] = []
     usePlaywright: Optional[bool] = False
-    playwrightSelector: Optional[str] = None
+    playwrightSelector: Optional[str] = ""
     playwrightTimeout: Optional[int] = 5000
 
-    @field_validator("playwrightSelector")
-    @classmethod
-    def validate_playwright_selector_if_use_playwright(cls, playwright_selector: Optional[str], info: ValidationInfo) -> Optional[str]:
-        if info.data.get("usePlaywright") and not playwright_selector:
+    @model_validator(mode='after')
+    def validate_sitemap_request(self) -> 'SitemapRequest':
+        if self.usePlaywright and not self.playwrightSelector:
             raise ValueError("Field 'playwrightSelector' must be set when 'usePlaywright' is True")
-        return playwright_selector
+        return self
 
 
 class CrawlRequest(BaseRequest):
@@ -129,6 +130,7 @@ def get_base_request_payload(request):
     schedule_id = request['scheduleId']
     timestamp = request["timestamp"]
     tenant_id = request["tenantId"]
+    do_use_mimetype_map = request["doGetFileExtensionFromMimetypeMap"]
     do_use_default_mimetype_map = request["doUseDefaultMimetypeMap"]
     mimetype_map = request["mimetypeMap"]
 
@@ -147,11 +149,12 @@ def get_base_request_payload(request):
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),
-        "do_use_default_mimetype_map": json.dumps(do_use_default_mimetype_map),
+        "do_use_mimetype_map": do_use_mimetype_map,
+        "do_use_default_mimetype_map": do_use_default_mimetype_map,
         "mimetype_map": json.dumps(mimetype_map),
         "custom_metadata": json.dumps(custom_metadata),
-        "do_extract_docs": json.dumps(do_extract_docs),
-        "cert_verification": json.dumps(cert_verification),
+        "do_extract_docs": do_extract_docs,
+        "cert_verification": cert_verification,
         "additional_metadata": json.dumps(additional_metadata),
     }
 
@@ -182,7 +185,7 @@ def set_up_sitemap_endpoint(request):
         "use_playwright": use_playwright,
         "playwright_selector": playwright_selector,
         "playwright_timeout": playwright_timeout,
-        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level, "USE_PLAYWRIGHT=%s" % use_playwright],
     }
 
     base_request_payload = get_base_request_payload(request)

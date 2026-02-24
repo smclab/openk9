@@ -92,15 +92,6 @@ def get_as_base64(response):
     return data
 
 
-def str_to_bool(s):
-    if s.capitalize() == 'True':
-        return True
-    elif s.capitalize() == 'False':
-        return False
-    else:
-        raise ValueError("full parameter must be True or False")
-
-
 def clean_extraction(text: str, lowercase: bool = False) -> str | None:
     """ Given a string, it returns a string cleaned from \\n \\t, spaces etc..
     -   lowercase: True = lowercase the string"""

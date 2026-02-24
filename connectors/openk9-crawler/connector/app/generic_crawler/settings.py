@@ -6,6 +6,7 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import ast
 import os
 
 BOT_NAME = "generic_crawler"
@@ -104,10 +105,16 @@ FEED_EXPORT_ENCODING = "utf-8"
 # }
 
 # Enable Playwright download handlers (required)
+
+try:
+    USE_PLAYWRIGHT: bool = ast.literal_eval(os.getenv("USE_PLAYWRIGHT", "False"))
+except (ValueError, SyntaxError):
+    USE_PLAYWRIGHT = False
+
 DOWNLOAD_HANDLERS = {
     'http': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
     'https': 'scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler',
-}
+} if USE_PLAYWRIGHT else {}
 
 # Default navigation timeout (in ms; override per-request if needed)
 PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 5000  # 5 seconds

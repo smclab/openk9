@@ -1,26 +1,28 @@
-import hashlib
 import logging
+from typing import Optional
 from urllib.parse import urlparse
-import requests
-import mimetypes
-from ..generic.utility import clean_extraction, get_as_base64, get_favicon, get_title
 
 
 logger = logging.getLogger(__name__)
 
 
-def extension_from_mimetype(mimetype, do_use_default_mimetype_map, mimetype_map=None):
+def extension_from_mimetype(mimetype, do_use_default_mimetype_map, mimetype_map: Optional[dict] = None):
     """
     Returns the file extension for a given MIME type.
 
     Args:
         mimetype (str): The MIME type string (e.g., 'image/jpeg').
         do_use_default_mimetype_map (bool): Tells if ti should use `default_map`
-        mimetype_map (dict, optional): A custom MIME to extension mapping.
+        mimetype_map (dict, None): A custom MIME to extension mapping.
 
     Returns:
         str or None: The corresponding file extension (e.g., 'jpg'), or None if not found.
     """
+    if not mimetype:
+        return None
+    if not do_use_default_mimetype_map and not mimetype_map:
+        return None
+
     # Default MIME type to extension map (partial, extend as needed)
     default_map = {
         'image/jpeg': 'jpg',
@@ -49,7 +51,10 @@ def extension_from_mimetype(mimetype, do_use_default_mimetype_map, mimetype_map=
     if mimetype_map:
         lookup.update(mimetype_map)
 
-    return lookup.get(mimetype.lower())
+    ext = lookup.get(mimetype.lower())
+    if not ext:
+        logger.info(f"No extension in mimetype_map for {mimetype.lower()}")
+    return ext
 
 
 def get_path(url):
