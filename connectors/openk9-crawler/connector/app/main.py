@@ -1,14 +1,15 @@
-import json
-import logging
-import os
 from abc import ABC
-from typing import Optional
 
-import requests
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
+from typing import Optional, Self
+import json
+import logging
+import os
+import requests
+import os
 
 log_level = os.environ.get("INPUT_LOG_LEVEL")
 if log_level is None:
@@ -44,6 +45,9 @@ if ingestion_url is None:
     ingestion_url = "http://ingestion:8080/api/ingestion/v1/ingestion/"
 
 
+scrapyd_url = os.environ.get("SCRAPYD_URL", "localhost:6800")
+
+
 class BaseRequest(ABC, BaseModel):
     bodyTag: Optional[str] = "body"
     titleTag: Optional[str] = "title::text"
@@ -63,24 +67,34 @@ class BaseRequest(ABC, BaseModel):
     scheduleId: str
     timestamp: int
     tenantId: str = ""
+    doGetFileExtensionFromMimetypeMap: Optional[bool] = True
     doUseDefaultMimetypeMap: Optional[bool] = True
     mimetypeMap: Optional[dict] = {}
 
     @model_validator(mode='after')
-    def log_failed_validation(self) -> 'BaseRequest':
-        try:
-            assert self.doUseDefaultMimetypeMap or self.mimetypeMap, \
-                f"If `doUseDefaultMimetypeMap` is set to False `mimetypeMap` must be provided"
-            return self
-        except AssertionError as e:
-            logger.error(e)
-            raise
+    def validate_base_request(self) -> 'BaseRequest':
+        if (
+            self.doGetFileExtensionFromMimetypeMap
+            and not self.doUseDefaultMimetypeMap
+            and not self.mimetypeMap
+        ):
+            raise ValueError("Field `mimetypeMap` cannot be empty when `doGetFileExtensionFromMimetypeMap` is True and `doUseDefaultMimetypeMap` is False")
+        return self
 
 
 class SitemapRequest(BaseRequest):
     sitemapUrls: list
     replaceRule: Optional[list] = ["", ""]
     linksToFollow: Optional[list[str]] = []
+    usePlaywright: Optional[bool] = False
+    playwrightSelector: Optional[str] = ""
+    playwrightTimeout: Optional[int] = 5000
+
+    @model_validator(mode='after')
+    def validate_sitemap_request(self) -> 'SitemapRequest':
+        if self.usePlaywright and not self.playwrightSelector:
+            raise ValueError("Field 'playwrightSelector' must be set when 'usePlaywright' is True")
+        return self
 
 
 class CrawlRequest(BaseRequest):
@@ -102,9 +116,6 @@ def get_base_request_payload(request):
     excluded_body_tags = request["excludedBodyTags"]
     title_tag = request["titleTag"]
     allowed_domains = request["allowedDomains"]
-    max_length = request["maxLength"]
-    tenant_id = request["tenantId"]
-    links_to_follow = request["linksToFollow"]
     excluded_paths = request["excludedPaths"]
     allowed_paths = request["allowedPaths"]
     max_length = request["maxLength"]
@@ -119,6 +130,7 @@ def get_base_request_payload(request):
     schedule_id = request['scheduleId']
     timestamp = request["timestamp"]
     tenant_id = request["tenantId"]
+    do_use_mimetype_map = request["doGetFileExtensionFromMimetypeMap"]
     do_use_default_mimetype_map = request["doUseDefaultMimetypeMap"]
     mimetype_map = request["mimetypeMap"]
 
@@ -134,16 +146,15 @@ def get_base_request_payload(request):
         "max_length": max_length,
         "max_size_bytes": max_size_bytes,
         "tenant_id": tenant_id,
-        "replace_rule": json.dumps(replace_rule),
-        "links_to_follow": json.dumps(links_to_follow),
         "excluded_paths": json.dumps(excluded_paths),
         "allowed_paths": json.dumps(allowed_paths),
         "document_file_extensions": json.dumps(document_file_extensions),
-        "do_use_default_mimetype_map": json.dumps(do_use_default_mimetype_map),
+        "do_use_mimetype_map": do_use_mimetype_map,
+        "do_use_default_mimetype_map": do_use_default_mimetype_map,
         "mimetype_map": json.dumps(mimetype_map),
         "custom_metadata": json.dumps(custom_metadata),
-        "do_extract_docs": json.dumps(do_extract_docs),
-        "cert_verification": json.dumps(cert_verification),
+        "do_extract_docs": do_extract_docs,
+        "cert_verification": cert_verification,
         "additional_metadata": json.dumps(additional_metadata),
     }
 
@@ -174,7 +185,7 @@ def set_up_sitemap_endpoint(request):
         "use_playwright": use_playwright,
         "playwright_selector": playwright_selector,
         "playwright_timeout": playwright_timeout,
-        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level],
+        "setting": ["CLOSESPIDER_PAGECOUNT=%s" % page_count, "LOG_LEVEL=%s" % log_level, "USE_PLAYWRIGHT=%s" % use_playwright],
     }
 
     base_request_payload = get_base_request_payload(request)
@@ -223,7 +234,7 @@ def set_up_crawl_endpoint(request):
           )
 def execute_sitemap_request(request: SitemapRequest):
     payload = set_up_sitemap_endpoint(request)
-    response = post_message("http://localhost:6800/schedule.json", payload)
+    response = post_message(f"http://{scrapyd_url}/schedule.json", payload)
 
     if response and response["status"] == 'ok':
         logging.info("Crawling process started")
@@ -240,7 +251,7 @@ def execute_sitemap_request(request: SitemapRequest):
           )
 def execute_crawl_request(request: CrawlRequest):
     payload = set_up_crawl_endpoint(request)
-    response = post_message("http://localhost:6800/schedule.json", payload)
+    response = post_message(f"http://{scrapyd_url}/schedule.json", payload)
 
     if response and response["status"] == 'ok':
         logging.info("Crawling process started")
@@ -264,7 +275,7 @@ def cancel_job(project: str, job_id: str):
         "job": str(job_id)
     }
 
-    response = post_message("http://localhost:6800/cancel.json", payload, 10)
+    response = post_message(f"http://{scrapyd_url}/cancel.json", payload, 10)
 
     if response and response["status"] == 'ok':
         return "Cancelled job with id " + str(job_id)
@@ -299,7 +310,7 @@ def get_health() -> HealthCheck:
 
     try:
         fastapi_response = requests.get("http://localhost:5000/docs")
-        scrapyd_response = requests.get("http://localhost:6800")
+        scrapyd_response = requests.get(f"http://{scrapyd_url}")
         if fastapi_response.status_code == 200 and scrapyd_response.status_code == 200:
             return HealthCheck(status="UP")
         else:

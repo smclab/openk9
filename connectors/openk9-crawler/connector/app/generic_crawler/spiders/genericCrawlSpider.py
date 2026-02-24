@@ -1,26 +1,15 @@
-import scrapy
-
-from .util.file.utility import get_path
-from .util.generic.utility import (clean_extraction, str_to_bool, get_as_base64, get_content, get_favicon, get_title,
-                                   generate_item, extract_text)
-from .util.sitemap.utility import iterloc, regex
-from datetime import datetime
-from generic_crawler.items import BinaryItem, DocumentItem, FileItem, Payload
-from generic_crawler.spiders.util.generic.utility import post_message
-from generic_crawler.spiders.abstractBaseCrawlSpider import AbstractBaseCrawlSpider
-from requests_futures.sessions import FuturesSession
-from scrapy import signals, Item, Field
-from scrapy.http import Request, XmlResponse
-from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import CrawlSpider, Rule
-from scrapy.utils.gz import gunzip, gzip_magic_number
-from urllib.parse import urlparse
 import ast
 import hashlib
 import logging
-import mimetypes
-import random
-import re
+
+from scrapy import signals
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import CrawlSpider, Rule
+
+from generic_crawler.items import Payload
+from generic_crawler.spiders.abstractBaseCrawlSpider import AbstractBaseCrawlSpider
+from generic_crawler.spiders.util.generic.utility import post_message
+from .util.generic.utility import (get_content, get_favicon, get_title, generate_item)
 
 logger = logging.getLogger(__name__)
 
@@ -33,16 +22,18 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     type_mapping = []
 
     def __init__(self, allowed_domains, start_urls, allowed_paths, excluded_paths, body_tag, excluded_body_tags, title_tag, follow,
-                 max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions, do_use_default_mimetype_map, mimetype_map,
+                 max_length, max_size_bytes, datasource_id, schedule_id, tenant_id, ingestion_url, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map,
                  custom_metadata, additional_metadata, do_extract_docs, cert_verification, timestamp, *a, **kw):
-        super(GenericCrawlSpider, self).__init__(ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
-                                                 allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_default_mimetype_map, mimetype_map, custom_metadata,
-                                                 additional_metadata, do_extract_docs, cert_verification, datasource_id, schedule_id,
-                                                 timestamp, tenant_id, *a, **kw)
+        CrawlSpider.__init__(self, *a, **kw)
+        AbstractBaseCrawlSpider.__init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
+                                         allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata,
+                                         additional_metadata, do_extract_docs, cert_verification, datasource_id, schedule_id,
+                                         timestamp, tenant_id, *a, *kw)
 
-        self.start_urls = ast.literal_eval(start_urls) if isinstance(ast.literal_eval(start_urls), list) \
-            else []
-        self.follow = str_to_bool(follow)
+        self.start_urls = ast.literal_eval(start_urls)
+        if not isinstance(self.start_urls, list):
+            self.start_urls = []
+        self.follow = ast.literal_eval(follow)
 
         GenericCrawlSpider.rules = (
             # Extract links matching 'item.php' and parse them with the spider's method parse_item

@@ -1,21 +1,18 @@
 import ast
 import hashlib
 import logging
-import mimetypes
 import random
 import re
-from abc import ABC, abstractmethod
+from abc import ABC
 from datetime import datetime
 from urllib.parse import urlparse
 
 import requests
-from requests_futures.sessions import FuturesSession
 from scrapy import Spider
 
-from generic_crawler.items import FileItem, DocumentItem, BinaryItem, Payload
+from generic_crawler.items import FileItem, BinaryItem, Payload
 from generic_crawler.spiders.util.file.utility import get_path, extension_from_mimetype
-from generic_crawler.spiders.util.generic.utility import get_as_base64, post_message, str_to_bool, generate_item
-from twisted.python.log import logerr
+from generic_crawler.spiders.util.generic.utility import get_as_base64, post_message, generate_item
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 	crawled_ids = []
 
 	def __init__(self, ingestion_url, body_tag, excluded_body_tags, title_tag, allowed_domains, excluded_paths,
-				 allowed_paths, max_length, max_size_bytes,  document_file_extensions, do_use_default_mimetype_map, mimetype_map, custom_metadata, additional_metadata,
+				 allowed_paths, max_length, max_size_bytes, document_file_extensions, do_use_mimetype_map, do_use_default_mimetype_map, mimetype_map, custom_metadata, additional_metadata,
 				 do_extract_docs, cert_verification, datasource_id, schedule_id, timestamp, tenant_id, *a, **kw):
 		if self.__class__ == AbstractBaseCrawlSpider:
 			raise Exception("Error: Abstract class initialization")
@@ -43,7 +40,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		self.max_length = int(max_length)
 		self.max_size_bytes = int(max_size_bytes)
 		self.document_file_extensions = ast.literal_eval(document_file_extensions)
-		self.do_use_default_mimetype_map = str_to_bool(do_use_default_mimetype_map)
+		self.do_use_mimetype_map = ast.literal_eval(do_use_mimetype_map)
+		self.do_use_default_mimetype_map = ast.literal_eval(do_use_default_mimetype_map)
 		self.mimetype_map = ast.literal_eval(mimetype_map)
 		self.custom_metadata = ast.literal_eval(custom_metadata)
 		self.additional_metadata = ast.literal_eval(additional_metadata)
@@ -55,8 +53,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 
 		self.end_timestamp = datetime.utcnow().timestamp() * 1000
 
-		self.do_extract_docs = str_to_bool(do_extract_docs)
-		self.cert_verification = str_to_bool(cert_verification)
+		self.do_extract_docs = ast.literal_eval(do_extract_docs)
+		self.cert_verification = ast.literal_eval(cert_verification)
 		self.count = 0
 
 	def try_parse_documents(self, anchors, url_request, extracted_custom_metadata):
@@ -161,10 +159,8 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		document_item['title'] = title
 		document_item['mimeType'] = document_mime_type
 
-		try:
-			document_item['extension'] = extension_from_mimetype(document_mime_type, self.do_use_default_mimetype_map, self.mimetype_map)
-		except Exception as e:
-			document_item['extension'] = None
+		document_item['extension'] = None if not self.do_use_mimetype_map \
+			else extension_from_mimetype(document_mime_type, self.do_use_default_mimetype_map, self.mimetype_map)
 
 		custom_item = generate_item([])
 
