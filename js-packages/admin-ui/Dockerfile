@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy only package files for better caching
 COPY ./js-packages/admin-ui/package.json ./js-packages/admin-ui/yarn.lock ./js-packages/admin-ui/
 WORKDIR /app/js-packages/admin-ui
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN yarn install --network-timeout 600000
 
 # Stage 2 - Build
 FROM node:18.18-alpine as builder

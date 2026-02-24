@@ -25,7 +25,7 @@ WORKDIR /app
 # RUN corepack prepare yarn@4.10.0 --activate
 
 # Install all workspace dependencies - For Yarn v4: RUN yarn install --immutable --immutable-cache
-RUN yarn install --frozen-lockfile
+RUN yarn install --network-timeout 600000
 
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend

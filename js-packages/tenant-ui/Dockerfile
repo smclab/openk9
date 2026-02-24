@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy only package files for better caching
 COPY ./js-packages/tenant-ui/package.json ./yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 600000
+RUN yarn install --network-timeout 600000
 
 # Stage 2 - Build
 FROM node:18-alpine as builder
