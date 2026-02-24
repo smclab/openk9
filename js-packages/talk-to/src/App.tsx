@@ -35,9 +35,9 @@ function App() {
 	});
 
 	const isNewChat = messages.length === 0;
-	const client = OpenK9Client();
+
 	const handleSearch = (query: string) => {
-		chatId?.id && generateResponse(query, chatId?.id || "");
+		chatId?.id && generateResponse(query, chatId?.id);
 	};
 
 	React.useEffect(() => {
@@ -209,7 +209,7 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 		["initial-message", chatId?.id as string],
 		async () => {
 			if (chatId?.isNew) {
-				return [];
+				return { messages: [], retrieve_from_uploaded_documents: undefined };
 			}
 			return await client.getInitialMessages(chatId?.id || "");
 		},
@@ -222,6 +222,7 @@ function useChatData(userId: string, chatId: { id: string | null; isNew: boolean
 		initialMessages: {
 			recoveryChat: initialMessagesQuery.data?.messages,
 			isLoadingChat: initialMessagesQuery.isLoading || false,
+			retrieveFromUploadedDocuments: undefined,
 		},
 		initialMessagesError: initialMessagesQuery.error,
 		initialMessagesLoading: initialMessagesQuery.isLoading,
