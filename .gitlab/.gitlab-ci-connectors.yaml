@@ -186,7 +186,7 @@ Build GitLab Connector image:
 ###############################################################
 Container Scanning Web Connector:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Build Web Connector image"
   script:
@@ -202,7 +202,7 @@ Container Scanning Web Connector:
 ###############################################################
 Container Scanning Email Connector:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Build Email Connector image"
   script:
@@ -218,7 +218,7 @@ Container Scanning Email Connector:
 ###############################################################
 Container Scanning Database Connector:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Build Database Connector image"
   script:
@@ -234,7 +234,7 @@ Container Scanning Database Connector:
 ###############################################################
 Container Scanning YouTube Connector:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Build YouTube Connector image"
   script:
@@ -250,7 +250,7 @@ Container Scanning YouTube Connector:
 ###############################################################
 Container Scanning GitLab Connector:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Build GitLab Connector image"
   script:

@@ -61,9 +61,6 @@ Build Tenant Frontend:
       if [[ "$GITLAB_USER_LOGIN" == "lorenzo.venneri" || "$GITLAB_USER_LOGIN" == "giorgio.bartolomeo" ]]; then 
         DOCKER_TAG="996-SNAPSHOT"
         echo "=== Building Tenant Frontend with VERSION=$DOCKER_TAG for frontend developer ==="
-      elif [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then 
-        DOCKER_TAG="998-SNAPSHOT"
-        echo "=== Building Tenant Frontend with VERSION=$DOCKER_TAG for Michele ==="
       else
         DOCKER_TAG="999-SNAPSHOT"
         echo "=== Building Tenant Frontend with VERSION=$DOCKER_TAG for feature branch ==="
@@ -109,7 +106,7 @@ Build Verifier:
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Fetch version"
   - "Build Tenant Frontend"

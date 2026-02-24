@@ -3,7 +3,7 @@ stages:
 
 push-openk9-rag-module-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   only:
     refs:
       - main
@@ -19,7 +19,7 @@ push-openk9-rag-module-helm:
 
 push-openk9-embedding-module-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   only:
     refs:
       - main
@@ -35,7 +35,7 @@ push-openk9-embedding-module-helm:
 
 push-talk-to-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   only:
     refs:
       - main

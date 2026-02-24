@@ -55,7 +55,7 @@ Build Verifier:
   - npx lerna run build --scope @openk9ui/openk9-chatbot
   rules:
     # Run on MR and Main
-    - !reference [.rules:child-verify, rules]
+    - !reference [.rules:child-verify-mr, rules]
 
 ######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
 Build OpenK9-Chatbot:
@@ -97,7 +97,7 @@ Build OpenK9-Chatbot:
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
   dependencies:
   - "Fetch version"
   - "Build OpenK9-Chatbot"

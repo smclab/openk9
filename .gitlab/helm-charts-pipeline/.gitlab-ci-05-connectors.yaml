@@ -3,7 +3,7 @@ stages:
 
 push-web-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -22,7 +22,7 @@ push-web-connector-helm:
 
 push-email-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -41,7 +41,7 @@ push-email-connector-helm:
 
 push-database-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -60,7 +60,7 @@ push-database-connector-helm:
 
 push-youtube-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.16
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:

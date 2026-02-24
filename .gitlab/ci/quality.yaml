@@ -55,7 +55,7 @@ Maven Dependency Check:
 SonarQube Check:
   stage: quality
   image:
-    name: sonarsource/sonar-scanner-cli:latest
+    name: sonarsource/sonar-scanner-cli:5.0.1
     entrypoint: [ "" ]
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"

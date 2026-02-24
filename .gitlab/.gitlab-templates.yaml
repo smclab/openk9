@@ -159,7 +159,7 @@ variables:
 
 .restart_job_template:
   stage: restart
-  image: alpine:latest
+  image: alpine:3.16
   script:
   - apk add --no-cache bash curl
   - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
