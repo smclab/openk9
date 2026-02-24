@@ -32,7 +32,6 @@ Fetch version:
 ######################## BUILD TALK-TO ########################
 Build Talk-To:
   stage: build
-  timeout: 1h 30m
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [ "" ]

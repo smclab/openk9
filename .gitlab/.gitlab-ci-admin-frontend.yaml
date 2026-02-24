@@ -33,7 +33,6 @@ Fetch version:
 ######################## BUILD Admin FRONTEND ########################
 Build Admin Frontend:
   stage: build
-  timeout: 2h
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [ "" ]

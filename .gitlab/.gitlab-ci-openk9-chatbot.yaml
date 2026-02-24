@@ -60,7 +60,6 @@ Build Verifier:
 ######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
 Build OpenK9-Chatbot:
   stage: build
-  timeout: 2h
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [ "" ]
