@@ -31,6 +31,7 @@ COPY ./js-packages/talk-to/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/chat/
 COPY --from=builder /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
+	&& mkdir -p /var/run \
 	&& chmod g+rw /var/cache/nginx /var/run
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
