@@ -74,7 +74,7 @@ variables:
       fi
       
       echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
-      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG -DskipTests"
+      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
     else
       echo "⚠️ Unknown branch type, skipping build command construction"
       FINAL_CMD="echo 'Skipping build'"
