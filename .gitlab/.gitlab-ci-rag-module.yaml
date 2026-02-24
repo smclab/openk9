@@ -73,7 +73,12 @@ Build Rag Image:
         --cache=true \
         --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
-      echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
+      # Feature branch - check user
+      if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
+        echo "[RAG] Feature branch (Luca) => build & push :997-SNAPSHOT"
+      else
+        echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
+      fi
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \

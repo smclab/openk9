@@ -57,9 +57,17 @@ Build Admin Frontend:
       echo "=== Building Admin UI with VERSION=$VERSION ==="
       DOCKER_TAG="$VERSION"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # For feature branch, use 996-SNAPSHOT
-      echo "=== Building Admin UI with VERSION=996-SNAPSHOT for feature branch ==="
-      DOCKER_TAG="996-SNAPSHOT"
+      # For feature branch, determine tag based on user
+      if [[ "$GITLAB_USER_LOGIN" == "lorenzo.venneri" || "$GITLAB_USER_LOGIN" == "giorgio.bartolomeo" ]]; then 
+        DOCKER_TAG="996-SNAPSHOT"
+        echo "=== Building Admin UI with VERSION=$DOCKER_TAG for frontend developer ==="
+      elif [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then 
+        DOCKER_TAG="998-SNAPSHOT"
+        echo "=== Building Admin UI with VERSION=$DOCKER_TAG for Michele ==="
+      else
+        DOCKER_TAG="999-SNAPSHOT"
+        echo "=== Building Admin UI with VERSION=$DOCKER_TAG for feature branch ==="
+      fi
     fi
 
   # Execute build with the previously determined tag
