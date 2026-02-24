@@ -76,8 +76,8 @@ function TokenTypeAutocomplete<TokenType extends string>({
   const options = React.useMemo(
     () =>
       Object.entries(dict).map(([val, lab]) => ({
-        value: val,
-        label: lab,
+        value: lab,
+        label: val,
       })),
     [dict],
   );
