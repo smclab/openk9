@@ -20,7 +20,7 @@ Trigger Rag Module:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *rag_module_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
       changes: *rag_module_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-rag-module.yaml"
@@ -41,7 +41,7 @@ Trigger Embedding Modules:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *embedding_modules_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
       changes: *embedding_modules_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
@@ -63,7 +63,7 @@ Trigger Docling Processor:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *docling_processor_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
       changes: *docling_processor_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-docling-processor.yaml"
@@ -84,7 +84,7 @@ Trigger Chunk Evaluation Module:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chunk_eval_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
       changes: *chunk_eval_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-chunk-evaluation-module.yaml"

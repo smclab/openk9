@@ -20,7 +20,7 @@ Trigger Search Frontend:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *search_frontend_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
       changes: *search_frontend_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-search-frontend.yaml"
@@ -41,7 +41,7 @@ Trigger Admin Frontend:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *admin_ui_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
       changes: *admin_ui_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-admin-frontend.yaml"
@@ -62,7 +62,7 @@ Trigger Tenant Frontend:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tenant_ui_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
       changes: *tenant_ui_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-frontend.yaml"
@@ -83,7 +83,7 @@ Trigger Talk-To Frontend:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *talk_to_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
       changes: *talk_to_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-talk-to.yaml"
@@ -104,7 +104,7 @@ Trigger OpenK9-Chatbot:
     # MR Rule - REUSES changes list (Build/Test only)
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chatbot_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
       changes: *chatbot_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
