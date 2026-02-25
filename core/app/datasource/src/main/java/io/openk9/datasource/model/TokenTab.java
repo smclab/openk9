@@ -55,10 +55,10 @@ public class TokenTab extends K9Entity {
 	@Column(name = "token_type", nullable = false)
 	private TokenType tokenType;
 
-	@Column(name = "value")
+	@Column(name = "token_value")
 	private String value;
 
-	@Column(name ="filter", nullable = false)
+	@Column(name ="token_filter", nullable = false)
 	private Boolean filter;
 
 	@OneToOne(
