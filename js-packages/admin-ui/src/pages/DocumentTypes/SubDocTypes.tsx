@@ -343,7 +343,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       animation: `${pulseAnimation} 1s infinite alternate`,
                     }}
                   >
-                    <Logo size={150} color={theme.palette.mode === "dark" ? "white" : "black"} />{" "}
+                    <Logo size={150} color={theme.palette.mode === "dark" ? "white" : "black"} />
                   </Box>
                 </Box>
               )}

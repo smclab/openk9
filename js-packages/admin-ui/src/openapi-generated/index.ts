@@ -1,19 +1,3 @@
-﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -32,13 +16,11 @@ export type { Bucket } from './models/Bucket';
 export type { BucketDTO } from './models/BucketDTO';
 export { ChunkType } from './models/ChunkType';
 export { CombinationTechnique } from './models/CombinationTechnique';
-export type { CurrentBucket } from './models/CurrentBucket';
 export type { DataIndex } from './models/DataIndex';
 export type { DataIndexByDocTypes } from './models/DataIndexByDocTypes';
 export type { DataIndexDTO } from './models/DataIndexDTO';
 export type { Datasource } from './models/Datasource';
 export type { DatasourceDTO } from './models/DatasourceDTO';
-export type { DatasourceHealthStatus } from './models/DatasourceHealthStatus';
 export type { DatasourceJobStatus } from './models/DatasourceJobStatus';
 export type { DatasourceMessage } from './models/DatasourceMessage';
 export type { DocType } from './models/DocType';
@@ -61,7 +43,7 @@ export { FormFieldType } from './models/FormFieldType';
 export type { FormFieldValidator } from './models/FormFieldValidator';
 export type { FormTemplate } from './models/FormTemplate';
 export type { GetMappingsOrSettingsFromDocTypesRequest } from './models/GetMappingsOrSettingsFromDocTypesRequest';
-export { HealthStatus } from './models/HealthStatus';
+export type { HealthDTO } from './models/HealthDTO';
 export type { HybridSearchPipelineDTO } from './models/HybridSearchPipelineDTO';
 export { JobStatus } from './models/JobStatus';
 export type { JsonObject } from './models/JsonObject';
@@ -75,8 +57,6 @@ export type { K9EntityEventEnrichItem } from './models/K9EntityEventEnrichItem';
 export type { K9EntityEventEnrichPipeline } from './models/K9EntityEventEnrichPipeline';
 export type { K9EntityEventPluginDriver } from './models/K9EntityEventPluginDriver';
 export type { K9EntityEventSuggestionCategory } from './models/K9EntityEventSuggestionCategory';
-export type { KeycloakSettings } from './models/KeycloakSettings';
-export type { Language } from './models/Language';
 export { NormalizationTechnique } from './models/NormalizationTechnique';
 export type { OffsetDateTime } from './models/OffsetDateTime';
 export type { PageBucket } from './models/PageBucket';
@@ -93,23 +73,21 @@ export type { PluginDriver } from './models/PluginDriver';
 export type { PluginDriverDocType } from './models/PluginDriverDocType';
 export type { PluginDriverDocTypesDTO } from './models/PluginDriverDocTypesDTO';
 export type { PluginDriverDTO } from './models/PluginDriverDTO';
-export type { PluginDriverHealthDTO } from './models/PluginDriverHealthDTO';
 export { PluginDriverType } from './models/PluginDriverType';
+export type { Problem } from './models/Problem';
 export { Provisioning } from './models/Provisioning';
 export type { QueryAnalysis } from './models/QueryAnalysis';
+export type { ResourceUri } from './models/ResourceUri';
 export { RetrieveType } from './models/RetrieveType';
+export { SchedulingStatus } from './models/SchedulingStatus';
 export type { SearchConfig } from './models/SearchConfig';
 export type { SearchPipelineResponseDTO } from './models/SearchPipelineResponseDTO';
-export type { SortingResponseDTO } from './models/SortingResponseDTO';
 export { Status } from './models/Status';
-export type { StatusResponse } from './models/StatusResponse';
 export type { SuggestionCategory } from './models/SuggestionCategory';
 export type { SuggestionCategoryDTO } from './models/SuggestionCategoryDTO';
-export type { TabResponseDTO } from './models/TabResponseDTO';
-export type { TemplateResponseDTO } from './models/TemplateResponseDTO';
 export { TemplateType } from './models/TemplateType';
-export type { TokenTabResponseDTO } from './models/TokenTabResponseDTO';
 export type { TriggerResourceDTO } from './models/TriggerResourceDTO';
+export type { TriggerResponse } from './models/TriggerResponse';
 export type { TriggerV2ResourceDTO } from './models/TriggerV2ResourceDTO';
 export type { Tuple2BucketDatasource } from './models/Tuple2BucketDatasource';
 export type { Tuple2BucketSuggestionCategory } from './models/Tuple2BucketSuggestionCategory';
@@ -130,7 +108,8 @@ export { DateFilterResourceService } from './services/DateFilterResourceService'
 export { DocTypeResourceService } from './services/DocTypeResourceService';
 export { EnrichItemResourceService } from './services/EnrichItemResourceService';
 export { EnrichPipelineResourceService } from './services/EnrichPipelineResourceService';
-export { KeycloakSettingsResourceService } from './services/KeycloakSettingsResourceService';
+export { FormApiService } from './services/FormApiService';
+export { HealthApiService } from './services/HealthApiService';
 export { PipelineResourceService } from './services/PipelineResourceService';
 export { PluginDriverFieldResourceService } from './services/PluginDriverFieldResourceService';
 export { PluginDriverResourceService } from './services/PluginDriverResourceService';
@@ -141,4 +120,3 @@ export { SuggestionCategoryResourceService } from './services/SuggestionCategory
 export { TemplateResourceService } from './services/TemplateResourceService';
 export { TriggerResourceService } from './services/TriggerResourceService';
 export { TriggerWithDateResourceService } from './services/TriggerWithDateResourceService';
-

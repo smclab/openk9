@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { gql } from "@apollo/client";
 
 gql`
@@ -41,8 +41,10 @@ gql`
       name
       description
       type
-      serviceName
-      jsonConfig
+      resourceUri {
+        baseUri
+        path
+      }
       script
       behaviorMergeType
       jsonPath
@@ -58,8 +60,7 @@ gql`
     $name: String!
     $description: String
     $type: EnrichItemType!
-    $serviceName: String!
-    $jsonConfig: String
+    $resourceUri: ResourceUriInput!
     $script: String
     $behaviorMergeType: BehaviorMergeType!
     $jsonPath: String!
@@ -72,8 +73,7 @@ gql`
         name: $name
         description: $description
         type: $type
-        serviceName: $serviceName
-        jsonConfig: $jsonConfig
+        resourceUri: $resourceUri
         script: $script
         behaviorMergeType: $behaviorMergeType
         jsonPath: $jsonPath
@@ -92,4 +92,3 @@ gql`
     }
   }
 `;
-

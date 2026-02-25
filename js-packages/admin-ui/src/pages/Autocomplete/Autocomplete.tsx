@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
 import React from "react";
@@ -32,6 +32,7 @@ import {
 } from "../../components/Form";
 import {
   BooleanOperator,
+  Fuzziness,
   useAutocompleteQuery,
   useCreateOrUpdateAutocompleteMutation,
   useUnboundDocTypeFieldByAutocompleteQuery,
@@ -117,10 +118,10 @@ export function SaveAutocomplete() {
   const form = useForm({
     initialValues: React.useMemo(
       () => ({
-        fuzziness: "",
+        fuzziness: Fuzziness.Auto,
         minimumShouldMatch: "1",
         name: "",
-        operator: "AND" as BooleanOperator,
+        operator: BooleanOperator.And,
         resultSize: 10,
         perfectMatchIncluded: false,
         fieldIds:
@@ -175,7 +176,7 @@ export function SaveAutocomplete() {
                 content: (
                   <div>
                     <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextInput label="Fuzziness" {...form.inputProps("fuzziness")} />
+                    <CustomSelect label="Fuzziness" dict={Fuzziness} {...form.inputProps("fuzziness")} />
                     <TextInput label="Min should Match" {...form.inputProps("minimumShouldMatch")} />
                     <NumberInput label="Result Size" {...form.inputProps("resultSize")} />
                     <CustomSelect
@@ -311,4 +312,3 @@ export function SaveAutocomplete() {
     </ContainerFluid>
   );
 }
-

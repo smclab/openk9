@@ -1,23 +1,7 @@
-﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DatasourceJobStatus } from '../models/DatasourceJobStatus';
+import type { TriggerResponse } from '../models/TriggerResponse';
 import type { TriggerV2ResourceDTO } from '../models/TriggerV2ResourceDTO';
 
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -30,12 +14,12 @@ export class TriggerWithDateResourceService {
     /**
      * Trigger
      * @param requestBody 
-     * @returns DatasourceJobStatus OK
+     * @returns TriggerResponse Auto Generate successful
      * @throws ApiError
      */
     public postApiDatasourceV2Trigger(
 requestBody: TriggerV2ResourceDTO,
-): CancelablePromise<DatasourceJobStatus> {
+): CancelablePromise<TriggerResponse> {
         return this.httpRequest.request({
             method: 'POST',
             url: '/api/datasource/v2/trigger',
@@ -43,11 +27,10 @@ requestBody: TriggerV2ResourceDTO,
             mediaType: 'application/json',
             errors: {
                 400: `Bad Request`,
-                401: `Not Authorized`,
-                403: `Not Allowed`,
+                404: `Not found`,
+                500: `Internal Server Error`,
             },
         });
     }
 
 }
-

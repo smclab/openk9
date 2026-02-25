@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import {
   BooleanInput,
   combineErrorMessages,
@@ -42,6 +42,7 @@ import {
   InputMaybe,
   PluginDriverType,
   Provisioning,
+  ResourceUriInput,
   useDocumentTypeFieldsForPluginQuery,
   usePluginDriverQuery,
   usePluginDriversQuery,
@@ -51,8 +52,8 @@ import {
 import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-generated/models/PluginDriverType";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
-import { ConfigType } from "./gql";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { ResourceUri } from "openapi-generated";
 
 export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "EMAIL" as UserField, label: "EMAIL" as UserField },
@@ -62,6 +63,16 @@ export const aclOption: { value: UserField; label: UserField }[] = [
   { value: "SURNAME" as UserField, label: "SURNAME" as UserField },
   { value: "USERNAME" as UserField, label: "USERNAME" as UserField },
 ];
+
+function convertGraphQLResourceUriToOpenAPI(
+  graphqlUri: { __typename?: "ResourceUri"; baseUri?: string | null; path?: string | null } | null | undefined,
+): ResourceUri | undefined {
+  if (!graphqlUri) return undefined;
+  return {
+    baseUri: graphqlUri.baseUri ?? undefined,
+    path: graphqlUri.path ?? undefined,
+  };
+}
 
 export const SavePluginnDriverModel = React.forwardRef(
   (
@@ -208,18 +219,17 @@ export const SavePluginnDriverModel = React.forwardRef(
       },
     });
 
-    const [config, setConfig] = React.useState<ConfigType | null>(null);
-
+    const [config, setConfig] = React.useState<ResourceUri | undefined>(undefined);
+    console.log(config);
     React.useEffect(() => {
-      if (pluginDriverQuery.data?.pluginDriver?.jsonConfig) {
-        const parsedConfig = DesctructuringJsonConfig(pluginDriverQuery.data?.pluginDriver?.jsonConfig);
-        setConfig(parsedConfig);
+      if (pluginDriverQuery.data?.pluginDriver?.resourceUri) {
+        setConfig(convertGraphQLResourceUriToOpenAPI(pluginDriverQuery.data.pluginDriver.resourceUri));
       }
-    }, [pluginDriverQuery.data?.pluginDriver?.jsonConfig]);
+    }, [pluginDriverQuery.data?.pluginDriver?.resourceUri]);
 
     React.useEffect(() => {
       setTestResult(null);
-    }, [config?.baseUri, config?.path, config?.method, config?.secure]);
+    }, [config?.baseUri, config?.path]);
 
     const form = useForm({
       initialValues: React.useMemo(
@@ -227,7 +237,7 @@ export const SavePluginnDriverModel = React.forwardRef(
           name: "",
           description: "",
           type: PluginDriverType.Http,
-          jsonConfig: "{}",
+          resourceUri: undefined as ResourceUri | undefined,
           provisioning: Provisioning.User,
           userFieldsSelectedOptions: { id: "", name: "" },
           docTypeFieldsSelectedOptions: { id: "", name: "" },
@@ -239,8 +249,13 @@ export const SavePluginnDriverModel = React.forwardRef(
         name: pluginDriverQuery.data?.pluginDriver?.name || "",
         type: pluginDriverQuery.data?.pluginDriver?.type,
         provisioning: Provisioning.User,
-        description: pluginDriverQuery.data?.pluginDriver?.type || "",
-        jsonConfig: pluginDriverQuery.data?.pluginDriver?.jsonConfig || "{}",
+        description: pluginDriverQuery.data?.pluginDriver?.description || "",
+        resourceUri: pluginDriverQuery.data?.pluginDriver?.resourceUri
+          ? {
+              baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
+              path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
+            }
+          : undefined,
         docTypeUserDTOSet:
           pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
             docTypeId: Number(field?.docTypeField?.id),
@@ -256,7 +271,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             name: data.name,
             type: PluginDriverType.Http,
             provisioning: Provisioning.User,
-            jsonConfig: JSON.stringify(config),
+            resourceUri: config as ResourceUriInput,
             docTypeUserDTOSet:
               fields?.map((field) => ({
                 docTypeId: Number(field.docTypeId),
@@ -305,9 +320,7 @@ export const SavePluginnDriverModel = React.forwardRef(
       ],
       valueOverride: {
         baseUri: config?.baseUri || "",
-        secure: config?.secure || "No",
         path: config?.path || "",
-        method: config?.method || "",
         aclMapping: fields?.map((e, index) => ({ [index + 1]: e.fieldName })) || [],
       },
     });
@@ -359,21 +372,12 @@ export const SavePluginnDriverModel = React.forwardRef(
                         value={config?.baseUri || ""}
                         validationMessages={[]}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, baseUri: e } : ({ baseUri: e } as ConfigType)))
+                          setConfig((config: any) =>
+                            config ? { ...config, baseUri: e } : ({ baseUri: e } as ResourceUriInput),
+                          )
                         }
                         id={pluginDriverId}
                         disabled={false}
-                      />
-                      <BooleanInput
-                        label="Secure"
-                        description="If the host is exposed is secure way or not"
-                        id={pluginDriverId}
-                        value={config?.secure ? true : false}
-                        onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, secure: e } : ({ secure: e } as ConfigType)))
-                        }
-                        disabled={false}
-                        validationMessages={[]}
                       />
                       <TextInput
                         label="Path"
@@ -381,39 +385,24 @@ export const SavePluginnDriverModel = React.forwardRef(
                         id={pluginDriverId}
                         value={config?.path || ""}
                         onChange={(e) =>
-                          setConfig((config) => (config ? { ...config, path: e } : ({ path: e } as ConfigType)))
+                          setConfig((config: any) =>
+                            config ? { ...config, path: e } : ({ path: e } as ResourceUriInput),
+                          )
                         }
                         disabled={false}
                         validationMessages={[]}
                       />
-                      <Typography variant="subtitle1" component="label" htmlFor={pluginDriverId + "method"}>
-                        {"Method"}
-                      </Typography>
-                      <Select
-                        value={config?.method || ""}
-                        onChange={(e) =>
-                          setConfig((config) =>
-                            config ? { ...config, method: e.target.value } : ({ method: e.target.value } as ConfigType),
-                          )
-                        }
-                        id={pluginDriverId + "method"}
-                        displayEmpty
-                        fullWidth
-                      >
-                        <MenuItem value="GET">GET</MenuItem>
-                        <MenuItem value="POST">POST</MenuItem>
-                        <MenuItem value="PUT">PUT</MenuItem>
-                        <MenuItem value="DELETE">DELETE</MenuItem>
-                        <MenuItem value="PATCH">PATCH</MenuItem>
-                      </Select>
                       <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center" }}>
                         <Button
                           onClick={async () => {
                             try {
+                              console.log("prova", form.inputProps("type").value);
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
-                                type: OpenApiPluginDriverType.HTTP,
-                                jsonConfig: JSON.stringify(config),
+                                type: (form.inputProps("type").value as PluginDriverType.Http)
+                                  ? OpenApiPluginDriverType.HTTP
+                                  : OpenApiPluginDriverType.HTTP,
+                                resourceUri: config,
                               });
                               setTestResult(res ? "success" : "error");
                             } catch {
@@ -581,11 +570,10 @@ export const SavePluginnDriverModel = React.forwardRef(
 
 function DesctructuringJsonConfig(data: string) {
   try {
-    const { baseUri, secure, path, method } = JSON.parse(data);
-    return { baseUri, secure, path, method };
+    const { baseUri, path } = JSON.parse(data);
+    return { baseUri, path };
   } catch (error) {
     console.error("Invalid JSON string:", error);
     return null;
   }
 }
-
