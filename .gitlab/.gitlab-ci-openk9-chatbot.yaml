@@ -16,7 +16,7 @@ stages:
 #################
 Fetch version:
   stage: build
-  image: node:20.9.0-alpine
+  image: node:22.14.0-alpine
   script:
   - cd js-packages/openk9-chatbot
   - export VERSION=$(node -p "require('./package.json').version")
@@ -32,7 +32,7 @@ Fetch version:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:20.9.0
+  image: node:22.14.0
   cache:
     key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
     paths:
@@ -112,7 +112,7 @@ Container Scanning:
 ####################### PUBLISH OPENK9-CHATBOT #######################
 Publish OpenK9-Chatbot:
   stage: publish
-  image: node:20.9.0
+  image: node:22.14.0
   needs:
   - job: Build Verifier
   - job: Build OpenK9-Chatbot
