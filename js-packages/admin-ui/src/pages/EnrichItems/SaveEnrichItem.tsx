@@ -143,18 +143,11 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       createOrUpdateEnrichItemMutate({
         variables: {
           id: enrichItemId !== "new" ? enrichItemId : undefined,
-          name: data.name,
-          description: data.description,
-          type: data.type,
+          ...data,
           resourceUri: {
             baseUri: data.baseUri,
             path: data.path,
           },
-          script: data.script,
-          behaviorMergeType: data.behaviorMergeType,
-          jsonPath: data.jsonPath,
-          requestTimeout: data.requestTimeout,
-          behaviorOnError: data.behaviorOnError,
         },
       });
     },
