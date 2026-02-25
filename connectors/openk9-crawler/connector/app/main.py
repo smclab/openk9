@@ -1,15 +1,14 @@
+import json
+import logging
+import os
 from abc import ABC
+from typing import Optional
 
+import requests
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel, ValidationInfo, field_validator, model_validator
-from typing import Optional, Self
-import json
-import logging
-import os
-import requests
-import os
 
 log_level = os.environ.get("INPUT_LOG_LEVEL")
 if log_level is None:
@@ -68,7 +67,7 @@ class BaseRequest(ABC, BaseModel):
     mimetypeMap: Optional[dict] = {}
 
     @model_validator(mode='after')
-    def log_failed_validation(self) -> Self:
+    def log_failed_validation(self) -> 'BaseRequest':
         try:
             assert self.doUseDefaultMimetypeMap or self.mimetypeMap, \
                 f"If `doUseDefaultMimetypeMap` is set to False `mimetypeMap` must be provided"

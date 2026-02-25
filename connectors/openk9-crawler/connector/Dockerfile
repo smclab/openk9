@@ -28,6 +28,9 @@ COPY install_playwright.sh /etc/install_playwright.sh
 COPY wait_for_scrapyd.sh /app/wait_for_scrapyd.sh
 COPY scrapyd.conf /etc/scrapyd/scrapyd.conf
 
+# updates tldextract cache
+RUN tldextract --update || echo "Update failed, using local cached version"
+
 # Convert line endings and set permissions
 RUN dos2unix /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
     chmod +x /etc/install_playwright.sh /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
