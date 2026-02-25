@@ -23,14 +23,14 @@ Build Web Connector image:
 
     echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile" \
-      --destination "registry.gitlab.com/openk9/openk9-web-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-web-connector
@@ -59,14 +59,14 @@ Build Email Connector image:
 
     echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/email-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile" \
-      --destination "registry.gitlab.com/openk9/openk9-email-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-email-connector
@@ -94,14 +94,14 @@ Build Database Connector image:
 
     echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/database-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile" \
-      --destination "registry.gitlab.com/openk9/openk9-wordpress-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-database-connector
@@ -129,14 +129,14 @@ Build YouTube Connector image:
 
     echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/youtube-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile" \
-      --destination "registry.gitlab.com/openk9/openk9-youtube-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-youtube-connector
@@ -164,14 +164,14 @@ Build GitLab Connector image:
 
     echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile" \
-      --destination "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-gitlab-connector
@@ -190,8 +190,8 @@ Container Scanning Web Connector:
   dependencies:
   - "Build Web Connector image"
   script:
-  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-web-connector:latest ==="
-  - gtcs scan --image "registry.gitlab.com/openk9/openk9-web-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-web-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -206,8 +206,8 @@ Container Scanning Email Connector:
   dependencies:
   - "Build Email Connector image"
   script:
-  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-email-connector:latest ==="
-  - gtcs scan --image "registry.gitlab.com/openk9/openk9-email-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-email-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -222,8 +222,8 @@ Container Scanning Database Connector:
   dependencies:
   - "Build Database Connector image"
   script:
-  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-wordpress-connector:latest ==="
-  - gtcs scan --image "registry.gitlab.com/openk9/openk9-wordpress-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -238,8 +238,8 @@ Container Scanning YouTube Connector:
   dependencies:
   - "Build YouTube Connector image"
   script:
-  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-youtube-connector:latest ==="
-  - gtcs scan --image "registry.gitlab.com/openk9/openk9-youtube-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -254,8 +254,8 @@ Container Scanning GitLab Connector:
   dependencies:
   - "Build GitLab Connector image"
   script:
-  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-gitlab-connector:latest ==="
-  - gtcs scan --image "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
