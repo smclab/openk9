@@ -43,13 +43,11 @@ import io.vertx.core.json.JsonObject;
 import org.apache.http.HttpEntity;
 import org.jboss.logging.Logger;
 import org.opensearch.OpenSearchStatusException;
-import org.opensearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.client.IndicesClient;
 import org.opensearch.client.Request;
 import org.opensearch.client.RequestOptions;
 import org.opensearch.client.Response;
-import org.opensearch.client.ResponseListener;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.RestHighLevelClient;
 import org.opensearch.client.core.CountRequest;
@@ -61,6 +59,7 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.cluster.PutComponentTemplateRequest;
 import org.opensearch.core.xcontent.MediaType;
 import org.opensearch.core.xcontent.MediaTypeRegistry;
+import org.opensearch.index.IndexNotFoundException;
 import org.opensearch.search.aggregations.AggregationBuilders;
 import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.opensearch.search.aggregations.bucket.terms.Terms;
@@ -270,22 +269,26 @@ public class IndexService {
 	}
 
 	public Uni<String> getSettings(IndexName indexName) {
+		var indexTemplateName = indexName + TEMPLATE_SUFFIX;
+
 		return Uni
 			.createFrom()
 			.item(() -> {
 				try {
-					return restHighLevelClient.indices().getSettings(
-						new GetSettingsRequest().indices(indexName.toString()),
-						RequestOptions.DEFAULT
+					return openSearchClient.indices().getIndexTemplate(
+						builder -> builder.name(indexTemplateName)
 					);
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
 			})
-			.map(response -> response.getIndexToSettings()
-				.get(indexName.toString())
-				.toString());
+			.map(response -> response.indexTemplates().stream()
+				.filter(indexTemplateItem -> indexTemplateItem.name().equals(indexTemplateName))
+				.findFirst()
+				.map(indexTemplateItem -> indexTemplateItem.indexTemplate().template())
+				.map(indexTemplate -> indexTemplate.settings().toString())
+				.orElseThrow(() -> new IndexNotFoundException(indexTemplateName))
+			);
 	}
 
 	private void deleteIndexTemplate(IndexName indexName) {
