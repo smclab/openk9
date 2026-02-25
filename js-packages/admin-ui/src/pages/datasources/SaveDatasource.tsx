@@ -204,7 +204,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
             content: `The datasource has been ${isNewDatasource ? "created" : "updated"} successfully.`,
             displayType: "success",
           });
-          navigate(`/datasources/`, { replace: true });
+          navigate(`/data-sources/`, { replace: true });
         },
         onError: (error) => {
           setActiveTab("recap");
