@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { useToast } from "@components/Form/Form/ToastProvider";
 import { Box, Button } from "@mui/material";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
@@ -46,7 +46,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
   const { autocorrectionId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
   const isRecap = page === 1;
-  const isNew = autocorrectionId === "new" ? "create" : "update";
+  const isNew = autocorrectionId === "new";
   const autocorrectionQuery = useAutocorrectionValueQuery({
     variables: { id: autocorrectionId as string },
     skip: !autocorrectionId || autocorrectionId === "new",
@@ -96,7 +96,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
     onError(error) {
       console.error("Mutation error:", error);
       toast({
-        title: `Error ${isNew}`,
+        title: "Error " + isNew ? "create" : "update",
         content: `Impossible to ${isNew} Autocorrection`,
         displayType: "error",
       });
@@ -256,4 +256,3 @@ export const useOptionAutocomplete: UseOptionsHook = makeUseOptionsHook({
   connectionKey: "docTypeFields",
   first: 20,
 });
-

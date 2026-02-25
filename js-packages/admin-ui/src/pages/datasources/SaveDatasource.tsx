@@ -478,6 +478,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
             setActiveTab("dataIndex");
             setIsRecap(false);
           },
+          submitLabel: datasourceId === "new" ? "Create entity" : "Update entity",
           onSubmit: () => {
             handleDatasource();
           },
