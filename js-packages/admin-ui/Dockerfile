@@ -25,7 +25,7 @@ COPY ./js-packages/admin-ui .
 # Build
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
-RUN yarn add -D @babel/plugin-proposal-private-property-in-object@^7.16.7 --network-timeout 600000
+
 RUN DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build
 
 # Stage 3 - Production
