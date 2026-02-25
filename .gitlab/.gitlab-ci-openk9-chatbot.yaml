@@ -114,7 +114,6 @@ Publish OpenK9-Chatbot:
   stage: publish
   image: node:22.14.0
   needs:
-  - job: Build Verifier
   - job: Build OpenK9-Chatbot
   script:
   - cd js-packages/openk9-chatbot
