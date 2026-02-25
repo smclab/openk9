@@ -57,64 +57,10 @@ Build Verifier:
     # Run on MR and Main
     - !reference [.rules:child-verify-mr, rules]
 
-######################## BUILD OPENK9-CHATBOT (MAIN ONLY) ########################
-Build OpenK9-Chatbot:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-  needs:
-  - job: Fetch version
-    artifacts: true
-  script:
-  # Docker credentials configuration
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - mkdir -p /kaniko/.docker
-  - |
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-
-  # Use version from package.json for main branch (Only runs on main)
-  - source $CI_PROJECT_DIR/version.env
-  - echo "=== Building OpenK9-Chatbot with VERSION=$VERSION ==="
-
-  # Execute build
-  - |
-    /kaniko/executor \
-      --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/openk9-chatbot/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION" \
-      --build-arg NODE_OPTIONS="--max-old-space-size=8192" \
-      --cache=true \
-      --cache-repo="${CI_REGISTRY_NAME}/openk9/openk9-chatbot-cache" \
-      --cache-ttl=168h
-  rules:
-    # Only run on main branch
-    - !reference [.rules:child-deploy-main-tag, rules]
-
-######################## CONTAINER SCANNING ########################
-Container Scanning:
-  stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
-  - "Fetch version"
-  - "Build OpenK9-Chatbot"
-  script:
-  - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-chatbot:$VERSION"
-  rules:
-    # Run only on Main
-    - !reference [.rules:child-deploy-main-tag, rules]
-
 ####################### PUBLISH OPENK9-CHATBOT #######################
 Publish OpenK9-Chatbot:
   stage: publish
   image: node:22.14.0
-  needs:
-  - job: Build OpenK9-Chatbot
   script:
   - cd js-packages/openk9-chatbot
   - pwd
@@ -123,6 +69,7 @@ Publish OpenK9-Chatbot:
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
+  - npx lerna run build --scope @openk9ui/openk9-chatbot
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:

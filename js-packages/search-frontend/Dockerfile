@@ -34,6 +34,7 @@ WORKDIR /app/js-packages/search-frontend
 # Conditional building - BUILD_ENV
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
+RUN yarn add -D @babel/plugin-proposal-private-property-in-object@^7.16.7 --network-timeout 600000
 RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
       echo "Building for Keycloak environment..." && \
       DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:keycloak; \
