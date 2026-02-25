@@ -100,7 +100,7 @@ const DEFAULT_DATAINDEX_VALUES: DataindexData = {
   docTypeIds: [],
   docTypeString: [],
   chunkType: ChunkType.ChunkTypeCharacterTextSplitter,
-  chunkWindowSize: 2000,
+  chunkWindowSize: 0,
   embeddingDocTypeFieldId: null,
   settings: "{}",
   embeddingJsonConfig: "{}",
