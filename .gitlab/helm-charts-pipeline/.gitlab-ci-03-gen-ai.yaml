@@ -4,11 +4,9 @@ stages:
 push-openk9-rag-module-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -20,11 +18,9 @@ push-openk9-rag-module-helm:
 push-openk9-embedding-module-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -36,11 +32,9 @@ push-openk9-embedding-module-helm:
 push-talk-to-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*

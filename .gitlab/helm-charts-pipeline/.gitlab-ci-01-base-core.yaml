@@ -4,11 +4,9 @@ stages:
 push-datasource-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -20,11 +18,9 @@ push-datasource-helm:
 push-ingestion-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -37,11 +33,9 @@ push-ingestion-helm:
 push-searcher-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -54,11 +48,9 @@ push-searcher-helm:
 push-tenant-manager-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -71,11 +63,9 @@ push-tenant-manager-helm:
 push-tenant-ui-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -88,11 +78,9 @@ push-tenant-ui-helm:
 push-admin-ui-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -105,11 +93,9 @@ push-admin-ui-helm:
 push-search-frontend-helm:
   stage: push
   image: alpine:3.19
-  only:
-    refs:
-      - main
-  when:
-    manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*

@@ -76,6 +76,9 @@ Build Admin Frontend:
       --build-arg NODE_OPTIONS="--max-old-space-size=8192" \
       --cache=true \
       --cache-repo="${CI_REGISTRY_NAME}/openk9/admin-ui-cache" \
+      --cache-ttl=168h \
+      --cache=true \
+      --cache-repo="${CI_REGISTRY_NAME}/openk9/admin-ui-cache" \
       --cache-ttl=168h
   rules:
     # Run build only on push (main, tag, feature branch) - NO MR
