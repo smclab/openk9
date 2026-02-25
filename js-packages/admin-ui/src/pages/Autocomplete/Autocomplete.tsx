@@ -37,10 +37,12 @@ import {
   useUnboundDocTypeFieldByAutocompleteQuery,
 } from "../../graphql-generated";
 import { useConfirmModal } from "../../utils/useConfirmModal";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 
-export function SaveAutocomplete() {
+export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { autocompletId = "new", view } = useParams();
   const [page, setPage] = React.useState(0);
+  const isRecap = page === 1;
   const autocompleteQuery = useAutocompleteQuery({
     variables: { id: autocompletId as string },
     skip: !autocompletId || autocompletId === "new",
@@ -145,6 +147,27 @@ export function SaveAutocomplete() {
       });
     },
     getValidationMessages: fromFieldValidators([]),
+  });
+
+  const recapSections = mappingCardRecap({
+    form: form as any,
+    sections: [
+      {
+        cell: [
+          { key: "name" },
+          { key: "fuzziness" },
+          { key: "minimumShouldMatch", label: "Min Should Match" },
+          { key: "resultSize", label: "Result Size" },
+          { key: "operator" },
+          { key: "perfectMatchIncluded", label: "Perfect Match Included" },
+          { key: "fieldIds", label: "Fields" },
+        ],
+        label: "Recap Autocomplete",
+      },
+    ],
+    valueOverride: {
+      fieldIds: form.inputProps("fieldIds").value?.map((field, index) => ({ [index + 1]: field.label })) || [],
+    },
   });
 
   return (
@@ -308,6 +331,17 @@ export function SaveAutocomplete() {
         </form>
       </>
       <ConfirmModal />
+      <Recap
+        recapData={recapSections}
+        setExtraFab={setExtraFab}
+        forceFullScreen={isRecap}
+        actions={{
+          onBack: () => setPage(0),
+          onSubmit: () => form.submit(),
+          submitLabel: autocompletId === "new" ? "Create entity" : "Update entity",
+          backLabel: "Back",
+        }}
+      />
     </ContainerFluid>
   );
 }
