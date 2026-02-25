@@ -23,7 +23,9 @@ COPY --from=deps /app/js-packages/admin-ui/node_modules ./node_modules
 COPY ./js-packages/admin-ui .
 
 # Build
-RUN NODE_ENV=production yarn build
+# CI=false prevents warnings (like outdated babel plugins) from being treated as errors
+# DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
+RUN DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build
 
 # Stage 3 - Production
 FROM nginx:1.28.2-alpine

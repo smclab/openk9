@@ -3,7 +3,7 @@ stages:
 
 push-entity-manager-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main

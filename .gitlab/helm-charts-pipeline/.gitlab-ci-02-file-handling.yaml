@@ -3,7 +3,7 @@ stages:
 
 push-file-manager-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
     - main
@@ -18,7 +18,7 @@ push-file-manager-helm:
 
 push-tika-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
     - main
@@ -33,7 +33,7 @@ push-tika-helm:
 
 push-resources-validator-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
     - main

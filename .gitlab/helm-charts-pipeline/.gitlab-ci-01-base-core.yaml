@@ -3,7 +3,7 @@ stages:
 
 push-datasource-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -19,7 +19,7 @@ push-datasource-helm:
 
 push-ingestion-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -36,7 +36,7 @@ push-ingestion-helm:
 
 push-searcher-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -53,7 +53,7 @@ push-searcher-helm:
 
 push-tenant-manager-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -70,7 +70,7 @@ push-tenant-manager-helm:
 
 push-tenant-ui-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -87,7 +87,7 @@ push-tenant-ui-helm:
 
 push-admin-ui-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main
@@ -104,7 +104,7 @@ push-admin-ui-helm:
 
 push-search-frontend-helm:
   stage: push
-  image: alpine:3.16
+  image: alpine:3.19
   only:
     refs:
       - main

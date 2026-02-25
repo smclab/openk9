@@ -32,18 +32,20 @@ COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend
 
 # Conditional building - BUILD_ENV
+# CI=false prevents warnings (like outdated babel plugins) from being treated as errors
+# DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
 RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
       echo "Building for Keycloak environment..." && \
-      NODE_ENV=production yarn build:keycloak; \
+      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:keycloak; \
     elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
       echo "Building for No-Keycloak environment..." && \
-      NODE_ENV=production yarn build:nokeycloak; \
+      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:nokeycloak; \
     elif [ "$BUILD_ENV" = "chatbot" ]; then \
       echo "Building for Chatbot environment..." && \
-      NODE_ENV=production yarn build:chatbot; \
+      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:chatbot; \
     else \
       echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
-      NODE_ENV=production yarn build:keycloak; \
+      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:keycloak; \
     fi
 
 # Stage 2 - the production environment
