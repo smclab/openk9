@@ -78,13 +78,10 @@ Publish OpenK9-Chatbot:
   needs:
   - job: Fetch version
     artifacts: true
+  - job: Build Verifier
+    artifacts: true
   script:
   - cd js-packages/openk9-chatbot
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
