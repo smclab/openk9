@@ -58,8 +58,13 @@ def get_random_string():
             },
         },
         "enrichItemConfig": {
-            "configs": "Config passata",
+            "accelerator_options.num_threads": 6,
+            "do_picture_description": True,
             "error_strategy": "fail-soft",
+            "picture_description_options.prompt": "Describe the image in three sentences. Be consise and accurate.",
+            "image_scale": 1.0,
+            "generate_picture_images": False,
+            "picture_description_options": "granite_picture_description",
         },
         "replyTo": "fake-token",
     }
