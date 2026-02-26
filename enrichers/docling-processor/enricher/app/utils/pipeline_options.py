@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Type
 
 from docling.backend.json.docling_json_backend import DoclingJSONBackend
@@ -117,20 +118,69 @@ def unflatten_dict(flat_dict, separator="."):
     return unflattened
 
 
+def add_configs(
+    opts,
+    arguments,
+    obj_configs=[
+        "accelerator_options",
+        "picture_description_options",
+        "ocr_options",
+        "layout_options",
+        "asr_options",
+    ],
+):
+
+    for arg in arguments:
+        if arg in obj_configs:
+            try:
+                if args := arguments.get("accelerator_options"):
+                    opts.accelerator_options = add_configs(
+                        opts.accelerator_options, args, obj_configs=[]
+                    )
+                if args := arguments.get("picture_description_options"):
+                    opts.picture_description_options = add_configs(
+                        opts.picture_description_options, args, obj_configs=[]
+                    )
+                if args := arguments.get("ocr_options"):
+                    opts.ocr_options = add_configs(
+                        opts.ocr_options, args, obj_configs=[]
+                    )
+                if args := arguments.get("layout_options"):
+                    opts.layout_options = add_configs(
+                        opts.acceleratolayout_optionsr_options, args, obj_configs=[]
+                    )
+                if args := arguments.get("asr_options"):
+                    opts.asr_options = add_configs(
+                        opts.asr_options, args, obj_configs=[]
+                    )
+                # logging.info("has", arg)
+            except:
+                pass
+                # logging.info("non c'è", arg)
+
+        else:
+            if hasattr(opts, arg):
+                # logging.info("has", arg)
+                setattr(opts, arg, arguments[arg])
+            else:
+                pass
+                # logging.info("NOT PRESENT", arg)
+
+    return opts
+
+
 def get_format_options(configs, format):
 
-    options = collect_format_options_schemas(all_formats)
-    signature = options[format]
-    flat_signature = flatten(signature)
-    flat_arguments = {
-        hit: configs[hit] for hit in configs if (hit in flat_signature.keys())
-    }
-    arguments = unflatten_dict(flat_arguments)
-
-    tipo = "pdf"
-    opts_cls = FORMAT_TO_OPTIONS_CLS.get(tipo)
-    in_form = InputFormat(tipo)
+    logging.info(f"Format: {format}")
+    arguments = unflatten_dict(configs)
+    opts_cls = FORMAT_TO_OPTIONS_CLS.get(format)
+    opts = opts_cls()
+    # logging.info(opts)
+    pipeline_options = add_configs(opts.pipeline_options, arguments)
+    opts.pipeline_options = pipeline_options
+    in_form = InputFormat(format)
     format_options = {
-        in_form: opts_cls(**arguments),
+        in_form: opts,
     }
+    # logging.info(format_options)
     return format_options
