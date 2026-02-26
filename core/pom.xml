@@ -369,6 +369,10 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -444,6 +448,46 @@
 					<artifactId>jib-maven-plugin</artifactId>
 					<version>${jib-plugin.version}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>3.3.1</version>
+					<!-- Forza Checkstyle 10.x per supporto Java 21 -->
+					<dependencies>
+						<dependency>
+							<groupId>com.puppycrawl.tools</groupId>
+							<artifactId>checkstyle</artifactId>
+							<version>10.21.0</version>
+						</dependency>
+					</dependencies>
+					<executions>
+						<execution>
+							<id>checkstyle-validate</id>
+							<phase>validate</phase>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<!-- Usa lo stile Google. Per Sun: sun_checks.xml -->
+						<configLocation>google_checks.xml</configLocation>
+
+						<!-- Non blocca la build, emette solo warning -->
+						<failOnViolation>false</failOnViolation>
+						<logViolationsToConsole>true</logViolationsToConsole>
+						<violationSeverity>warning</violationSeverity>
+
+						<!-- Esclude le classi generate automaticamente -->
+						<excludes>
+							**/generated/**/*,
+							**/io/quarkus/hibernate/**/*
+						</excludes>
+
+						<!-- Encoding sorgenti -->
+						<consoleOutput>true</consoleOutput>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>
@@ -505,4 +549,16 @@
 			</distributionManagement>
 		</profile>
 	</profiles>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<configLocation>google_checks.xml</configLocation>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
 </project>
