@@ -1,7 +1,0 @@
-## Cors configuration
-cors:
-  origins: "*"
-
-## Keycloak configuration
-keycloak:
-  url: "https://keycloak.openk9.local/"

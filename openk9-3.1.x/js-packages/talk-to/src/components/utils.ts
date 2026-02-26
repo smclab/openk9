@@ -1,1 +1,0 @@
-export type jsonObjPost = {userId: string, chatSequenceNumber?: number, paginationFrom: number, paginationSize: number };
