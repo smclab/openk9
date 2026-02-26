@@ -136,6 +136,7 @@ Dependency Check Talk-To:
   needs:
   - job: Fetch version
   - job: Build Verifier
+    optional: true
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
