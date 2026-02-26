@@ -58,6 +58,7 @@ Build Verifier:
   rules:
     # Run on MR and Main
     - !reference [.rules:child-verify-mr, rules]
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ####################### PUBLISH OPENK9-CHATBOT #######################
 Publish OpenK9-Chatbot:
