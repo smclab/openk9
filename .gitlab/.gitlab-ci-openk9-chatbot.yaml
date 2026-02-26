@@ -9,7 +9,6 @@ stages:
 - build-verifier
 - dependency-check
 - publish
-- publish
 
 #################
 # Fetch Version #
@@ -48,17 +47,13 @@ Build Verifier:
     expire_in: 1 day
   script:
   - cd js-packages/openk9-chatbot
-  - cd js-packages/openk9-chatbot
   # Set Node memory limit to 8GB to prevent OOM
   - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience (standalone module)
   # Yarn configuration for resilience (standalone module)
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
-  - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
   - yarn build
   rules:
     # Run on MR and Main
@@ -92,7 +87,6 @@ Publish OpenK9-Chatbot:
 Dependency Check OpenK9-Chatbot:
   stage: dependency-check
   needs:
-  - job: Fetch version
   - job: Fetch version
   extends: .dependency_check_frontend_template
   allow_failure: true
