@@ -37,16 +37,16 @@ WORKDIR /app/js-packages/search-frontend
 
 RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
       echo "Building for Keycloak environment..." && \
-      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:keycloak; \
+      CI=false NODE_ENV=production yarn build:keycloak; \
     elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
       echo "Building for No-Keycloak environment..." && \
-      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:nokeycloak; \
+      CI=false NODE_ENV=production yarn build:nokeycloak; \
     elif [ "$BUILD_ENV" = "chatbot" ]; then \
       echo "Building for Chatbot environment..." && \
-      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:chatbot; \
+      CI=false NODE_ENV=production yarn build:chatbot; \
     else \
       echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
-      DISABLE_NEW_JSX_TRANSFORM=true CI=false NODE_ENV=production yarn build:keycloak; \
+      CI=false NODE_ENV=production yarn build:keycloak; \
     fi
 
 # Stage 2 - the production environment

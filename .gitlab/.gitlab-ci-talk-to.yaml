@@ -72,10 +72,7 @@ Build Talk-To:
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG" \
-      --build-arg NODE_OPTIONS="--max-old-space-size=8192" \
-      --cache=true \
-      --cache-repo="${CI_REGISTRY_NAME}/openk9/talk-to-cache" \
-      --cache-ttl=168h
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Run build only on push (main, tag, feature branch) - NO MR
     - !reference [.rules:child-deploy-main-tag, rules]

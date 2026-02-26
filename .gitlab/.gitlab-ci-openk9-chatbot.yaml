@@ -41,6 +41,10 @@ Build Verifier:
   needs:
   - job: Fetch version
     artifacts: true
+  artifacts:
+    paths:
+    - js-packages/openk9-chatbot/dist/
+    expire_in: 1 day
   script:
   - cd js-packages/openk9-chatbot
   # Set Node memory limit to 8GB to prevent OOM
@@ -68,13 +72,10 @@ Publish OpenK9-Chatbot:
   needs:
   - job: Fetch version
     artifacts: true
+  - job: Build Verifier
+    artifacts: true
   script:
   - cd js-packages/openk9-chatbot
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:

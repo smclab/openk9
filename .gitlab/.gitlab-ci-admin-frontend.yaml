@@ -73,13 +73,7 @@ Build Admin Frontend:
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$DOCKER_TAG" \
-      --build-arg NODE_OPTIONS="--max-old-space-size=8192" \
-      --cache=true \
-      --cache-repo="${CI_REGISTRY_NAME}/openk9/admin-ui-cache" \
-      --cache-ttl=168h \
-      --cache=true \
-      --cache-repo="${CI_REGISTRY_NAME}/openk9/admin-ui-cache" \
-      --cache-ttl=168h
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Run build only on push (main, tag, feature branch) - NO MR
     - !reference [.rules:child-deploy-main-tag, rules]

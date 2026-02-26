@@ -53,27 +53,21 @@ Build Chunk Evaluation Image:
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
-        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[CHUNK-EVAL] Build & push as :merge-request"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
-        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[CHUNK-EVAL] Feature branch => build & push :997-SNAPSHOT"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:997-SNAPSHOT" \
-        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module-cache"
+        --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     fi
   rules:
     # Always run build if parent triggered us

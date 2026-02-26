@@ -61,17 +61,13 @@ Build Rag Image:
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION" \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[RAG] Build & push as :merge-request"
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION" \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       # Feature branch - check user
       if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
@@ -82,9 +78,7 @@ Build Rag Image:
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT" \
-        --cache=true \
-        --cache-repo="${CI_REGISTRY_NAME}/openk9/rag-module-cache"
+        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT"
     fi
   rules:
     # Always run build if parent triggered us
