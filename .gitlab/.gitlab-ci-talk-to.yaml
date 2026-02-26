@@ -141,4 +141,6 @@ Dependency Check Talk-To:
   allow_failure: true
   script:
   - cd js-packages/talk-to
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
   - /analyzer run

@@ -97,6 +97,8 @@ Dependency Check OpenK9-Chatbot:
   allow_failure: true
   script:
   - cd js-packages/openk9-chatbot
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
   - /analyzer run
   rules:
   - !reference [.rules:child-publish, rules]
