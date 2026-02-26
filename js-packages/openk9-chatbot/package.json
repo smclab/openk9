@@ -50,7 +50,21 @@
     "vite": "^5.4.10",
     "vite-plugin-commonjs": "^0.10.3",
     "vite-plugin-dts": "^4.3.0",
-    "vite-plugin-lib-inject-css": "^2.1.1"
+    "vite-plugin-lib-inject-css": "^2.1.1",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.1.6",
+    "@mui/icons-material": "^6.1.6",
+    "@mui/system": "^6.1.6",
+    "@mui/utils": "^6.1.6",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-markdown": "^9.0.1",
+    "styled-components": "^5.1.14",
+    "@types/react": "^18.3.12",
+    "@types/styled-components": "^5.1.14",
+    "@types/react-dom": "^18.3.1",
+    "uuid": "^11.0.2"
   },
   "resolutions": {
     "prop-types": "^15.7.2"
