@@ -43,6 +43,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
+    fetchPolicy: "network-only",
   });
   const { formValues, setFormValues } = useDatasourceForm(datasourceId, datasourceQuery);
   const generateDocumentTypes = useGenerateDocumentTypesMutation();

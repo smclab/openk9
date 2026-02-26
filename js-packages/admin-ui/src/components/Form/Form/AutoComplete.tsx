@@ -14,105 +14,82 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import * as React from "react";
+import { Autocomplete as AutocompleteMaterial, Chip, TextField, Typography } from "@mui/material";
 
-import { Autocomplete as AutocompleteMaterial, Chip, TextField, Typography, Box } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-
-interface AutocompleteProps {
+type Props = {
   defaultChip: string[];
   disabled?: boolean;
   setChips: (value: string[]) => void;
-}
+};
 
-export default function Autocomplete({ defaultChip, setChips, disabled }: AutocompleteProps) {
-  const [inputValue, setInputValue] = useState("");
+export default function Autocomplete({ defaultChip, setChips, disabled }: Props) {
+  const [chips, setLocalChips] = React.useState<string[]>(defaultChip ?? []);
+  const [inputValue, setInputValue] = React.useState("");
 
-  const options = inputValue ? [`${inputValue}`] : [];
-
-  const [internalValue, setInternalValue] = useState(defaultChip || []);
-
-  useEffect(() => {
-    setInternalValue(defaultChip);
+  React.useEffect(() => {
+    setLocalChips(defaultChip ?? []);
   }, [defaultChip]);
 
-  const handleBlur = useCallback(() => {
-    const trimmedInput = inputValue?.trim();
-    if (trimmedInput && trimmedInput.length > 0) {
-      const newValue = [...internalValue];
-      if (!newValue.includes(trimmedInput)) {
-        newValue.push(trimmedInput);
-        setChips(newValue);
-        setInternalValue(newValue);
-      }
+  const commitInputAsChip = React.useCallback(() => {
+    const raw = inputValue.trim();
+    if (!raw) return;
+
+    if (chips.includes(raw)) {
+      setInputValue("");
+      return;
     }
-  }, [inputValue, internalValue, setChips]);
+
+    const next = [...chips, raw];
+    setLocalChips(next);
+    setChips(next);
+    setInputValue("");
+  }, [chips, inputValue, setChips]);
 
   return (
     <AutocompleteMaterial<string, true, false, true>
       multiple
       freeSolo
-      clearOnBlur={false}
       disabled={disabled}
-      options={options}
-      value={internalValue}
+      options={[]}
+      value={chips}
       inputValue={inputValue}
       onInputChange={(_, newInputValue) => setInputValue(newInputValue)}
-      onChange={(_, newValue) => {
-        setInternalValue(newValue as string[]);
-        setChips(newValue as string[]);
+      onChange={(_, value) => {
+        const next = (value as string[]).map((v) => v.trim()).filter(Boolean);
+        const dedup = Array.from(new Set(next));
+
+        setLocalChips(dedup);
+        setChips(dedup);
       }}
-      onBlur={handleBlur}
-      renderTags={(value, getTagProps) =>
-        value.map((option, index) => {
+      onBlur={() => {
+        commitInputAsChip();
+      }}
+      renderTags={(value: readonly string[], getTagProps) =>
+        value.map((option: string, index: number) => {
           const { key, ...tagProps } = getTagProps({ index });
           return <Chip variant="outlined" label={option} key={key} {...tagProps} />;
         })
       }
-      renderOption={(props, option) => {
-        const textLength = option.length;
-        const isLong = textLength > 15;
-
-        return (
-          <Box
-            component="li"
-            {...props}
-            sx={{
-              display: "flex",
-              flexDirection: isLong ? "column" : "row",
-              alignItems: isLong ? "flex-start" : "space-between",
-              gap: isLong ? 0.5 : 1,
-              py: 1,
-            }}
-          >
-            <Typography variant="body2">{option}</Typography>
-            <Typography
-              variant="caption"
-              color="error"
-              sx={{
-                fontSize: "0.7rem",
-                lineHeight: 1.2,
-                mt: isLong ? 0.2 : 0,
-              }}
-            >
-              click here or press enter to confirm
-            </Typography>
-          </Box>
-        );
-      }}
       renderInput={(params) => (
         <TextField
           {...params}
           variant="filled"
-          onBlur={(event) => {
-            const currentText = inputValue?.trim();
-            if (currentText && currentText.length > 0) {
-              const currentChips = defaultChip || [];
-              if (!currentChips.includes(currentText)) {
-                setChips([...currentChips, currentText]);
-              }
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commitInputAsChip();
             }
-            setInputValue("");
           }}
+          helperText={
+            !disabled && inputValue.trim().length > 0 ? (
+              <Typography variant="caption">
+                Press <b>Enter</b> or click the suggestion to add it
+              </Typography>
+            ) : (
+              " "
+            )
+          }
         />
       )}
     />
