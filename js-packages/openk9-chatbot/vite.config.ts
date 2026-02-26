@@ -50,6 +50,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         "react",
+        "react-markdown",
         "react/jsx-runtime",
         "@mui/material",
         "@mui/system",
@@ -80,7 +81,7 @@ export default defineConfig({
       formats: ["es"],
     },
   },
- 
+
   optimizeDeps: {
     include: [
       "prop-types",
