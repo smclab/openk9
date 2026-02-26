@@ -132,7 +132,7 @@ def operation(payload, configs, token):
     elif len(binaries) == 1:
         logger.info("Single binary")
         try:
-            result = conversion(binaries[0], tenant)
+            result = conversion(binaries[0], tenant, configs)
             markdown = result.document.export_to_markdown()
             response = {"document": {"markdown": markdown}}
         except Exception as e:
