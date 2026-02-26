@@ -88,6 +88,10 @@ Build Verifier:
     - js-packages/search-frontend/node_modules
     - .yarn-cache
     policy: pull-push
+  artifacts:
+    paths:
+    - js-packages/search-frontend/dist/
+    expire_in: 1 day
   script:
   - export NODE_OPTIONS="--max-old-space-size=8192"
   # Disable workspace strict root check to ensure Lerna aggregates smoothly
@@ -134,14 +138,13 @@ Trigger Restart:
 Publish Search Frontend:
   stage: publish
   image: node:22.14.0
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Verifier
+    artifacts: true
   script:
   - cd js-packages/search-frontend
-  - pwd
-  - whoami
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
@@ -153,6 +156,9 @@ Publish Search Frontend:
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Search Frontend:
   stage: dependency-check
+  needs:
+  - job: Fetch version
+  - job: Build Verifier
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:

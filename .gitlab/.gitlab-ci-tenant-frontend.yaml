@@ -134,9 +134,6 @@ Trigger Restart:
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Tenant UI:
   stage: dependency-check
-  needs:
-  - job: Fetch version
-    artifacts: true
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:

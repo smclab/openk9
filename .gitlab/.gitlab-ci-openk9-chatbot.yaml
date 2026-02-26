@@ -88,6 +88,7 @@ Dependency Check OpenK9-Chatbot:
   stage: dependency-check
   needs:
   - job: Fetch version
+  - job: Build Verifier
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:

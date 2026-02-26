@@ -187,7 +187,7 @@ Build GitLab Connector image:
 Container Scanning Web Connector:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
+  needs:
   - "Build Web Connector image"
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:latest ==="
@@ -203,7 +203,7 @@ Container Scanning Web Connector:
 Container Scanning Email Connector:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
+  needs:
   - "Build Email Connector image"
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:latest ==="
@@ -219,7 +219,7 @@ Container Scanning Email Connector:
 Container Scanning Database Connector:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
+  needs:
   - "Build Database Connector image"
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest ==="
@@ -235,7 +235,7 @@ Container Scanning Database Connector:
 Container Scanning YouTube Connector:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
+  needs:
   - "Build YouTube Connector image"
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:latest ==="
@@ -251,7 +251,7 @@ Container Scanning YouTube Connector:
 Container Scanning GitLab Connector:
   stage: container-scanning
   image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7
-  dependencies:
+  needs:
   - "Build GitLab Connector image"
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:latest ==="
