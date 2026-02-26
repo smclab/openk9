@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: datasource-monitoring
+  namespace: monitor
+  labels:
+#    prometheus: kube-prometheus-stack-prometheus
+    release: prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - k9-milano
+  selector:
+    matchLabels:
+      app: datasource
+#      release: kube-prometheus-stack
+  endpoints:
+    - port: metrics
+      path: /metrics

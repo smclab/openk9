@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "outDir": "./dist",
+    "declarationDir": "./dist/types",
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["lib"]
+}

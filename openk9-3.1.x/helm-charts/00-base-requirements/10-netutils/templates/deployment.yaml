@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "netutils.name" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "netutils.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels: {{- include "netutils.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "netutils.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: netutils
+          image: {{ template "netutils.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          command: ["tail", "-f", "/dev/null"]
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}

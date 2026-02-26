@@ -1,0 +1,68 @@
+# Example values for OpenShift (CRC) environment
+# Usage: helm install api-gateway . -f scenarios/local-crc.yaml
+
+replicaCount: 1
+
+image:
+  registry: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+debug:
+  enabled: false
+
+databaseJob:
+  enabled: false
+
+database:
+  postgresql:
+    host: "postgresql"
+    port: 5432
+
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+
+openk9:
+  searcher:
+    host: "openk9-searcher"
+    port: "8080"
+  datasource:
+    host: "openk9-datasource"
+    port: "8080"
+
+route:
+  enabled: true
+  host: "openk9.local"
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilizationPercentage: 80
+  averageMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false

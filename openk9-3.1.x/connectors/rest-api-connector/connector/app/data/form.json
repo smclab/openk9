@@ -1,0 +1,16 @@
+{
+  "fields": [
+    {
+      "label": "Requests",
+      "name": "requestList",
+      "type": "list",
+      "size": 4,
+      "required": true,
+      "info": "List of requests to execute",
+      "values": [],
+      "validator": {
+        "regex": "^[a-zA-Z0-9]+$"
+      }
+    }
+  ]
+}

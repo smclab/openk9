@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>io.openk9</groupId>
+	<artifactId>openk9</artifactId>
+	<version>3.1.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<name>OpenK9</name>
+
+	<licenses>
+		<license>
+			<name>The GNU Affero General Public License, Version 3</name>
+			<url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<connection>${scm.connection}</connection>
+		<developerConnection>${scm.developerConnection}</developerConnection>
+		<url>${scm.url}</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>1</id>
+			<name>The smclab Openk9 Team</name>
+			<email>openk9@smc.it</email>
+			<url>https://openk9.io</url>
+			<organization>SMC</organization>
+			<organizationUrl>https://www.smc.it</organizationUrl>
+		</developer>
+	</developers>
+
+	<modules>
+		<module>../vendor/hibernate-rx-multitenancy</module>
+		<module>app</module>
+		<module>client</module>
+		<module>common</module>
+		<module>events</module>
+	</modules>
+
+	<properties>
+		<autoVersionSubmodules>true</autoVersionSubmodules>
+
+		<product.name>OpenK9 Powered by SMC Treviso SRL</product.name>
+		<maven.compiler.release>21</maven.compiler.release>
+		<maven.compiler.target>21</maven.compiler.target>
+		<project.build.outputTimestamp>1769788877</project.build.outputTimestamp>
+
+		<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
+		<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
+		<scm.url>https://github.com/smclab/openk9.git;a=summary</scm.url>
+
+		<maven-plugin-annotations.version>3.6.0</maven-plugin-annotations.version>
+		<maven.resolver.version>1.3.1</maven.resolver.version>
+
+		<commons-codec.version>1.15</commons-codec.version>
+		<checker-qual.version>3.8.0</checker-qual.version>
+		<com.google.errorprone.error_prone_annotations.version>2.4.0</com.google.errorprone.error_prone_annotations.version>
+		<LatencyUtils.version>2.0.3</LatencyUtils.version>
+		<!-- Further used maven plugin versions; e.g. in the docs -->
+		<surefire.argLine />
+		<!-- General Settings -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<compiler-plugin.version>3.14.0</compiler-plugin.version>
+		<dependency.version.lombok>1.18.34</dependency.version.lombok>
+		<dependency.version.mapstruct>1.5.5.Final</dependency.version.mapstruct>
+		<maven.compiler.parameters>true</maven.compiler.parameters>
+		<failsafe.useModulePath>false</failsafe.useModulePath>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<quarkus-plugin.version>3.20.5</quarkus-plugin.version>
+		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+		<quarkus.platform.version>3.20.5</quarkus.platform.version>
+		<quarkus.version>3.20.5</quarkus.version>
+		<quarkiverse.opensearch.version>1.17.2</quarkiverse.opensearch.version>
+		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
+		<quarkus-minio.version>3.7.7</quarkus-minio.version>
+		<quarkus-tika.version>2.2.1</quarkus-tika.version>
+		<hibernate.version>6.6.23.Final</hibernate.version>
+		<surefire-plugin.version>3.5.2</surefire-plugin.version>
+		<failsafe-plugin.version>3.5.2</failsafe-plugin.version>
+		<gpg-plugin.version>3.2.7</gpg-plugin.version>
+		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
+		<jandex-maven-plugin.version>3.0.5</jandex-maven-plugin.version>
+		<reactor-bom-version>2022.0.1</reactor-bom-version>
+		<pekko.version>1.1.5</pekko.version>
+		<scala.version>2.13</scala.version>
+		<quarkus.package.jar.type>fast-jar</quarkus.package.jar.type>
+		<pekko.management.version>1.1.1</pekko.management.version>
+		<lucene.version>9.12.1</lucene.version>
+		<zstd-jni.version>1.5.6-3</zstd-jni.version>
+
+		<spring-cloud.version>2025.0.0</spring-cloud.version>
+		<spring-boot.version>3.5.8</spring-boot.version>
+		<jib-plugin.version>3.4.6</jib-plugin.version>
+
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.apache.pekko</groupId>
+				<artifactId>pekko-bom_${scala.version}</artifactId>
+				<version>${pekko.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>${quarkus.platform.group-id}</groupId>
+				<artifactId>${quarkus.platform.artifact-id}</artifactId>
+				<version>${quarkus.platform.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-rest-high-level-client</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.quarkiverse.opensearch</groupId>
+				<artifactId>quarkus-opensearch-java-client</artifactId>
+				<version>${quarkiverse.opensearch.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.quarkiverse.rabbitmqclient</groupId>
+				<artifactId>quarkus-rabbitmq-client</artifactId>
+				<version>${quarkiverse.rabbitmq.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.projectreactor</groupId>
+				<artifactId>reactor-bom</artifactId>
+				<version>${reactor-bom-version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${dependency.version.lombok}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${dependency.version.mapstruct}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>tenant-manager-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>searcher-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>file-manager-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>datasource-client-grpc</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>text-embedding</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.grpc</groupId>
+				<artifactId>app-manager</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>quarkus-common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>resources</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>util</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.api</groupId>
+				<artifactId>tenant-manager-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.client.common</groupId>
+				<artifactId>tenant-manager-bridge</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>graphql-util</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>k8s-manifest</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>datasource-model</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.openk9</groupId>
+				<artifactId>events</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- FIXME: fixes CVE-2024-7254, review during quarkus version update after 3.20.2 -->
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java</artifactId>
+				<version>3.25.8</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.protobuf</groupId>
+				<artifactId>protobuf-java-util</artifactId>
+				<version>3.25.8</version>
+			</dependency>
+			<!-- FIXME: fixes CVE-2025-48924, review during quarkus version update after 3.20.2 -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-lang3</artifactId>
+				<version>3.18.0</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>${dependency-check-plugin.version}</version>
+				<configuration>
+					<!-- Use the defined property for the NVD API key -->
+					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
+					<nvdApiDelay>6000</nvdApiDelay>
+					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>3.0.0-M5</version>
+				<configuration>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<releaseProfiles>releases</releaseProfiles>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>properties</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>${compiler-plugin.version}</version>
+					<configuration>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>org.projectlombok</groupId>
+								<artifactId>lombok</artifactId>
+								<version>${dependency.version.lombok}</version>
+							</path>
+							<path>
+								<groupId>org.mapstruct</groupId>
+								<artifactId>mapstruct-processor</artifactId>
+								<version>${dependency.version.mapstruct}</version>
+							</path>
+							<path>
+								<groupId>org.hibernate.orm</groupId>
+								<artifactId>hibernate-jpamodelgen</artifactId>
+								<version>${hibernate.version}</version>
+							</path>
+							<path>
+								<groupId>no.entur.mapstruct.spi</groupId>
+								<artifactId>protobuf-spi-impl</artifactId> <!-- Make sure mapstruct version here is the same as below -->
+								<version>1.45</version>
+							</path>
+						</annotationProcessorPaths>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.projectlombok</groupId>
+					<artifactId>lombok-maven-plugin</artifactId>
+					<version>1.18.20.0</version>
+					<executions>
+						<execution>
+							<phase>generate-sources</phase>
+							<goals>
+								<goal>delombok</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>io.smallrye</groupId>
+					<artifactId>jandex-maven-plugin</artifactId>
+					<version>${jandex-maven-plugin.version}</version>
+					<executions>
+						<execution>
+							<id>make-index</id>
+							<goals>
+								<goal>jandex</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>io.quarkus</groupId>
+					<artifactId>quarkus-maven-plugin</artifactId>
+					<version>${quarkus-plugin.version}</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>build</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.google.cloud.tools</groupId>
+					<artifactId>jib-maven-plugin</artifactId>
+					<version>${jib-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>smc</id>
+			<repositories>
+				<repository>
+					<id>smc</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-group/</url>
+				</repository>
+			</repositories>
+			<distributionManagement>
+				<repository>
+					<id>smc</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-releases/</url>
+				</repository>
+				<snapshotRepository>
+					<id>smc</id>
+					<url>https://registry.smc.it/repository/maven-openk9-public-snapshots/</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>public</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-gpg-plugin</artifactId>
+						<version>${gpg-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+			<properties>
+				<scm.connection>scm:git:https://github.com/smclab/openk9.git</scm.connection>
+				<scm.developerConnection>scm:git:https://github.com/smclab/openk9.git</scm.developerConnection>
+				<scm.url>https://github.com/smclab/openk9.git;a=summary</scm.url>
+			</properties>
+			<distributionManagement>
+				<repository>
+					<id>public</id>
+					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+				<snapshotRepository>
+					<id>public</id>
+					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+	</profiles>
+</project>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2025/02/17-01-changelog.xml">
+
+	<changeSet id="1739804793-1" author="openk9">
+		<createTable tableName="buckets_suggestion_categories">
+			<column name="bucket_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="suggestion_category_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseTableName="buckets_suggestion_categories"
+								 baseColumnNames="bucket_id"
+								 constraintName="fk_buckets_suggestion_categories_bucket"
+								 referencedTableName="bucket" referencedColumnNames="id"/>
+		<addForeignKeyConstraint baseTableName="buckets_suggestion_categories"
+								 baseColumnNames="suggestion_category_id"
+								 constraintName="fk_buckets_suggestion_categories_suggestion_category"
+								 referencedTableName="suggestion_category"
+								 referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1739804793-2" author="openk9">
+		<sql>
+			INSERT INTO buckets_suggestion_categories (bucket_id, suggestion_category_id)
+			SELECT b.id, s.id
+			FROM suggestion_category s
+			JOIN bucket b ON s.bucket_id = b.id;
+		</sql>
+	</changeSet>
+
+	<changeSet id="1739804793-3" author="openk9">
+		<dropColumn tableName="suggestion_category"
+					columnName="bucket_id"/>
+	</changeSet>
+
+</databaseChangeLog>

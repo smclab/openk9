@@ -1,0 +1,8 @@
+opensearchHosts: "http://opensearch-cluster-master:9200"
+replicaCount: 1
+
+
+# Allows you to load environment variables from kubernetes secret or config map
+envFrom:
+  - secretRef:
+      name: opensearch-password

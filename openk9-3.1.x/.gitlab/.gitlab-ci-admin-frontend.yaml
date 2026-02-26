@@ -1,0 +1,144 @@
+################################################################################
+#                                   STAGES                                     #
+################################################################################
+
+stages:
+- build
+- build-verifier
+- container-scanning
+- dependency-check
+- restart
+- publish
+
+include:
+- local: "/.gitlab/.gitlab-templates.yaml"
+
+################################################################################
+#                                    JOBS                                       #
+################################################################################
+
+#################
+# Fetch Version #
+#################
+Fetch version:
+  stage: build
+  image: node:20.9.0-alpine
+  script:
+  - cd js-packages/admin-ui
+  - export VERSION=$(node -p "require('./package.json').version")
+  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
+  artifacts:
+    paths:
+    - version.env
+    expire_in: 1 day
+
+######################## BUILD Admin FRONTEND ########################
+Build Admin Frontend:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+  - job: Fetch version
+    artifacts: true
+  script:
+  # Docker credentials configuration
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - mkdir -p /kaniko/.docker
+  - |
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+  # Conditional logic to determine which tag to use
+  - |
+    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
+      # For main, use version from package.json
+      source $CI_PROJECT_DIR/version.env
+      echo "=== Building Admin UI with VERSION=$VERSION ==="
+      DOCKER_TAG="$VERSION"
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      # For feature branch, use 996-SNAPSHOT
+      echo "=== Building Admin UI with VERSION=996-SNAPSHOT for feature branch ==="
+      DOCKER_TAG="996-SNAPSHOT"
+    fi
+
+  # Execute build with the previously determined tag
+  - |
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
+      --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$DOCKER_TAG" \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
+  rules:
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/admin-ui/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/admin-ui/**/*
+
+######################## BUILD VERIFIER ########################
+Build Verifier:
+  stage: build-verifier
+  image: node:20.9.0
+  cache:
+    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - js-packages/admin-ui/node_modules
+    policy: pull-push
+  script:
+  - cd js-packages/admin-ui
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - yarn install
+  - yarn build
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes:
+    - js-packages/admin-ui/**/*
+
+######################## CONTAINER SCANNING ########################
+Container Scanning:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Fetch version"
+  - "Build Admin Frontend"
+  script:
+  - source version.env
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+
+######################## TRIGGER RESTART ########################
+Trigger Restart:
+  extends: .restart_job_template
+  dependencies:
+  - Fetch version
+  variables:
+    COMPONENT_NAME: "admin-ui"
+    COMPONENT_TYPE: "frontend"
+  rules:
+  # Rule for main branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/admin-ui/**/*
+  # Rule for feature branch
+  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
+    changes:
+    - js-packages/admin-ui/**/*
+
+# PUBLISH JOB REMOVED - Not needed for admin frontend
+
+####################### DEPENDENCY CHECK #######################
+Dependency Check Admin UI:
+  stage: dependency-check
+  extends: .dependency_check_frontend_template
+  allow_failure: true
+  script:
+  - cd js-packages/admin-ui
+  - /analyzer run

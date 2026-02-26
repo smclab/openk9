@@ -1,0 +1,48 @@
+.iconTextItem {
+  padding-right: 16px;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.titleIconItem {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.descriptionIconItem {
+  font-size: 16px;
+}
+
+.iconItem {
+  height: 80px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .iconTextItem {
+    padding-right: 0;
+  }
+
+  .right {
+    text-align: left;
+  }
+
+  .titleIconItem {
+    font-size: 20px;
+  }
+
+  .descriptionIconItem {
+    font-size: 14px;
+  }
+}

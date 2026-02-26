@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    "babel-plugin-macros"
+  ],
+  "presets": [
+    "@babel/preset-typescript",
+    "@babel/preset-react"
+  ]
+}

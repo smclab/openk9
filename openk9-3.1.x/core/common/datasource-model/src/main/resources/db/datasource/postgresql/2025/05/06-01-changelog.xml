@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2025/05/06-01-changelog.xml"
+>
+
+	<changeSet id="1746544287297-1" author="openk9">
+		<comment>Combina i campi host e port nel nuovo campo baseUri</comment>
+		<sql>
+			UPDATE plugin_driver
+			SET json_config =
+				jsonb_set(
+					json_config::jsonb,
+					'{baseUri}',
+					to_jsonb(
+						(json_config::jsonb ->> 'host') || ':' || (json_config::jsonb ->> 'port')
+					)
+				)
+			WHERE
+				(json_config::jsonb #>> '{host}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{port}' IS NOT NULL);
+		</sql>
+	</changeSet>
+
+	<changeSet id="1746544287297-2" author="openk9">
+		<comment>Rimuovi i campi host e port dopo la migrazione a baseUri</comment>
+		<sql>
+			UPDATE plugin_driver
+			SET json_config =
+				json_config::jsonb - 'host' - 'port'
+			WHERE
+				(json_config::jsonb #>> '{baseUri}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{host}' IS NOT NULL)
+				AND (json_config::jsonb #>> '{port}' IS NOT NULL);
+		</sql>
+	</changeSet>
+
+</databaseChangeLog>

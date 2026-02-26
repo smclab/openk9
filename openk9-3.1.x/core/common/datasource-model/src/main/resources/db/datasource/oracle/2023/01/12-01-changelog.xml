@@ -1,0 +1,56 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+				   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+	<changeSet id="1673543649792-1" author="openk9">
+		<createTable tableName="file_resource">
+			<column name="id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+						 primaryKeyName="file_resource_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP"/>
+			<column name="modified_date" type="TIMESTAMP"/>
+			<column name="file_id" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="resource_id" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="datasource_id" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+	<changeSet id="1673543649792-2" author="openk9">
+		<addUniqueConstraint
+			columnNames="file_id, datasource_id"
+			constraintName="uc_fileresource_fileid_datasource_id"
+			tableName="file_resource"/>
+	</changeSet>
+	<changeSet id="1673543649792-3" author="openk9">
+		<addUniqueConstraint
+			columnNames="resource_id"
+			constraintName="uc_fileresource_resource_id"
+			tableName="file_resource"/>
+	</changeSet>
+	
+</databaseChangeLog>
