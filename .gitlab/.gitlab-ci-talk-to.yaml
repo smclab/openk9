@@ -140,7 +140,7 @@ Dependency Check Talk-To:
   extends: .dependency_check_frontend_template
   allow_failure: true
   script:
-  - cd js-packages/talk-to
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
+  - cd js-packages/talk-to
   - /analyzer run

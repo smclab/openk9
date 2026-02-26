@@ -1,4 +1,4 @@
-FROM node:18.18-alpine as deps
+FROM node:20-alpine as deps
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
@@ -10,7 +10,7 @@ WORKDIR /app/js-packages/admin-ui
 RUN yarn install --network-timeout 600000
 
 # Stage 2 - Build
-FROM node:18.18-alpine as builder
+FROM node:20-alpine as builder
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
