@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { DocumentNode, useQuery } from "@apollo/client";
 import { CodeInput, ModalConfirm } from "@components/Form";
 import { useSideNavigation } from "@components/sideNavigationContext";
@@ -96,7 +96,8 @@ export function ConfigureDatasource({
     // pipelineArea: "no-pipeline",
   });
   const navigate = useNavigate();
-
+  const pipelineTab = tabs.find((tab) => tab.value === "pipeline");
+  const isPipelineDisabled = !!pipelineTab?.disabled;
   return (
     <React.Fragment>
       <Box sx={{ marginTop: "20px" }}>
@@ -136,7 +137,6 @@ export function ConfigureDatasource({
             <Box
               sx={{
                 marginTop: "10px",
-                marginBottom: "70px",
                 display: "flex",
                 justifyContent: "space-between",
               }}
@@ -158,13 +158,11 @@ export function ConfigureDatasource({
               <Button
                 variant="contained"
                 aria-label="Recap"
-                disabled={!areaState.schedulingArea}
+                disabled={!areaState.schedulingArea || isPipelineDisabled}
                 onClick={() => {
+                  if (isPipelineDisabled) return;
                   setActiveTab("pipeline");
-                  const pipelineTab = tabs.find((tab) => tab.value === "pipeline");
-                  if (pipelineTab) {
-                    navigate(pipelineTab.path);
-                  }
+                  if (pipelineTab) navigate(pipelineTab.path);
                 }}
               >
                 Next Step
@@ -589,4 +587,3 @@ const InfiniteScrollSelect: React.FC<InfiniteScrollSelectProps> = ({
     </FormControl>
   );
 };
-

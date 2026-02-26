@@ -43,16 +43,13 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const datasourceQuery = useDataSourceQuery({
     variables: { id: datasourceId, searchText: "" },
     skip: datasourceId === "new",
-    fetchPolicy: "network-only",
   });
   const { formValues, setFormValues } = useDatasourceForm(datasourceId, datasourceQuery);
   const generateDocumentTypes = useGenerateDocumentTypesMutation();
   const toast = useToast();
   const restClient = useRestClient();
   const pluginDriverId = formValues.pluginDriverSelect?.id;
-  const isDisabledNextStep =
-    (pluginDriverId === null || pluginDriverId === undefined || !formValues?.name) && areaEnabled !== "selectConnectos";
-  const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap });
+
   const [requestBody, setRequestBody] = React.useState<any>({
     name: formValues.pluginDriverSelect?.nameConnectors,
     description: formValues.pluginDriverSelect?.description,
@@ -68,6 +65,14 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     template: recoveryFormStandart,
     jsonConfig: formValues.jsonConfig,
   });
+
+  const baseDisabled =
+    (pluginDriverId === null || pluginDriverId === undefined || !formValues?.name) && areaEnabled !== "selectConnectos";
+
+  const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
+
+  const isDisabledNextStep = baseDisabled || hasMissingRequiredDynamic;
+  const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap });
 
   const isView = mode === "view";
 
@@ -414,7 +419,7 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   ];
 
   return (
-    <ContainerFluid style={{ width: "100%" }}>
+    <ContainerFluid style={{ width: "100%", paddingBottom: "4rem" }}>
       {modalHeaderButton && (
         <ModalConfirmRadio
           callbackClose={() => setModalHeaderButton(undefined)}
@@ -489,4 +494,51 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
       />
     </ContainerFluid>
   );
+}
+
+function isFieldEmpty(field: any): boolean {
+  const type = field?.type;
+  const required = !!field?.required;
+
+  if (!required) return false;
+
+  const values = Array.isArray(field?.values) ? field.values : [];
+
+  const defaultValue = (() => {
+    if (type === "stringMap") {
+      const obj = values.length > 0 ? Object.assign({}, ...values) : {};
+      return obj;
+    }
+
+    if (type === "list" || type === "multiselect") {
+      return values.filter((v: any) => v?.isDefault).map((v: any) => v?.value);
+    }
+
+    if (type === "checkbox" || type === "boolean") {
+      const v = values.find((x: any) => x?.isDefault);
+      return !!v?.value;
+    }
+
+    const v = values.find((x: any) => x?.isDefault);
+    return v?.value ?? "";
+  })();
+
+  if (type === "stringMap") {
+    const obj = defaultValue && typeof defaultValue === "object" ? defaultValue : {};
+    return Object.keys(obj).length === 0 || Object.values(obj).every((v) => String(v ?? "").trim() === "");
+  }
+
+  if (type === "list" || type === "multiselect") {
+    return !Array.isArray(defaultValue) || defaultValue.length === 0;
+  }
+
+  if (type === "checkbox" || type === "boolean") {
+    return defaultValue !== true;
+  }
+
+  if (type === "number") {
+    return defaultValue === null || defaultValue === undefined || defaultValue === "";
+  }
+
+  return String(defaultValue ?? "").trim() === "";
 }
