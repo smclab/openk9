@@ -80,7 +80,8 @@ export function ConfigureDatasource({
     // pipelineArea: "no-pipeline",
   });
   const navigate = useNavigate();
-
+  const pipelineTab = tabs.find((tab) => tab.value === "pipeline");
+  const isPipelineDisabled = !!pipelineTab?.disabled;
   return (
     <React.Fragment>
       <Box sx={{ marginTop: "20px" }}>
@@ -141,13 +142,11 @@ export function ConfigureDatasource({
               <Button
                 variant="contained"
                 aria-label="Recap"
-                disabled={!areaState.schedulingArea}
+                disabled={!areaState.schedulingArea || isPipelineDisabled}
                 onClick={() => {
+                  if (isPipelineDisabled) return;
                   setActiveTab("pipeline");
-                  const pipelineTab = tabs.find((tab) => tab.value === "pipeline");
-                  if (pipelineTab) {
-                    navigate(pipelineTab.path);
-                  }
+                  if (pipelineTab) navigate(pipelineTab.path);
                 }}
               >
                 Next Step
