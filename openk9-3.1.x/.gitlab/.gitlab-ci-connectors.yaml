@@ -1,0 +1,280 @@
+stages:
+- build
+- container-scanning
+
+variables:
+  # Image used for container scanning
+  CS_ANALYZER_IMAGE: "$CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:7"
+
+include:
+- local: '/.gitlab/.gitlab-templates.yaml'
+
+###############################################################
+#                    BUILD WEB CONNECTOR                      #
+###############################################################
+Build Web Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "web-connector"
+  script:
+  - |
+    echo "=== Building Web Connector (openk9-crawler) ==="
+    cd connectors/openk9-crawler
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-web-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-web-connector
+    echo "VERSION=latest" > version-web-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                   BUILD EMAIL CONNECTOR                     #
+###############################################################
+Build Email Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "email-connector"
+  script:
+  - |
+    echo "=== Building Email Connector ==="
+    cd connectors/email-connector
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/email-connector/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-email-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-email-connector
+    echo "VERSION=latest" > version-email-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                  BUILD DATABASE CONNECTOR                   #
+###############################################################
+Build Database Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "database-connector"
+  script:
+  - |
+    echo "=== Building Database Connector ==="
+    cd connectors/database-connector
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/database-connector/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-wordpress-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-database-connector
+    echo "VERSION=latest" > version-database-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                  BUILD YOUTUBE CONNECTOR                    #
+###############################################################
+Build YouTube Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "youtube-connector"
+  script:
+  - |
+    echo "=== Building YouTube Connector ==="
+    cd connectors/youtube-connector
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/youtube-connector/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-youtube-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-youtube-connector
+    echo "VERSION=latest" > version-youtube-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#                  BUILD GITLAB CONNECTOR                     #
+###############################################################
+Build GitLab Connector image:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    COMPONENT: "gitlab-connector"
+  script:
+  - |
+    echo "=== Building GitLab Connector ==="
+    cd connectors/gitlab-connector
+
+    echo "=== Configuring Kaniko ==="
+    mkdir -p /kaniko/.docker
+    echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    > /kaniko/.docker/config.json
+
+    echo "=== Building and pushing Docker image with Kaniko ==="
+    /kaniko/executor \
+      --context "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector" \
+      --dockerfile "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile" \
+      --destination "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+
+    echo "=== Saving version info ==="
+    echo "latest" > $CI_PROJECT_DIR/.version-gitlab-connector
+    echo "VERSION=latest" > version-gitlab-connector.env
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+
+###############################################################
+#               CONTAINER SCANNING WEB CONNECTOR              #
+###############################################################
+Container Scanning Web Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build Web Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-web-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-web-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/**/*
+
+###############################################################
+#               CONTAINER SCANNING EMAIL CONNECTOR            #
+###############################################################
+Container Scanning Email Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build Email Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-email-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-email-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING DATABASE CONNECTOR           #
+###############################################################
+Container Scanning Database Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build Database Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-wordpress-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-wordpress-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING YOUTUBE CONNECTOR            #
+###############################################################
+Container Scanning YouTube Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build YouTube Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-youtube-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-youtube-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/**/*
+
+###############################################################
+#             CONTAINER SCANNING GITLAB CONNECTOR             #
+###############################################################
+Container Scanning GitLab Connector:
+  stage: container-scanning
+  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  dependencies:
+  - "Build GitLab Connector image"
+  script:
+  - echo "=== Scanning image registry.gitlab.com/openk9/openk9-gitlab-connector:latest ==="
+  - gtcs scan --image "registry.gitlab.com/openk9/openk9-gitlab-connector:latest"
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/**/*

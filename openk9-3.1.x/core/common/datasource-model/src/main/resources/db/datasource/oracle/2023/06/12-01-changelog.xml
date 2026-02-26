@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/datasource/2023/06/12-01-changelog.xml">
+
+	<changeSet id="1686583762945-1" author="openk9">
+		<addColumn tableName="data_index">
+			<column name="datasource_id" type="BIGINT"/>
+		</addColumn>
+	</changeSet>
+	<changeSet id="1686583762945-2" author="openk9">
+		<sql>
+			UPDATE data_index di
+			SET datasource_id = (SELECT d.id
+				FROM datasource d
+				WHERE d.data_index_id = di.id)
+			WHERE EXISTS (SELECT d.id
+				FROM datasource d
+				WHERE d.data_index_id = di.id);
+		</sql>
+	</changeSet>
+	<changeSet id="1686583762945-3" author="openk9">
+		<sql>
+			DELETE FROM data_index_doc_types didt
+			WHERE didt.data_index_id IN (SELECT di.id
+				FROM data_index di
+				WHERE di.datasource_id IS null
+			)
+		</sql>
+	</changeSet>
+	<changeSet id="1686583762945-4" author="openk9">
+		<sql>
+			DELETE FROM data_index di
+			WHERE di.datasource_id IS null
+		</sql>
+	</changeSet>
+	<changeSet id="1686583762945-5" author="openk9">
+		<addNotNullConstraint tableName="data_index" columnName="datasource_id"/>
+		<addForeignKeyConstraint baseTableName="data_index" baseColumnNames="datasource_id"
+								 constraintName="FK_data_index_datasource"
+								 referencedTableName="datasource" referencedColumnNames="id"/>
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,9 @@
+services:
+    docling-processor:
+        build:
+            context: .
+            args:
+                MODE: cpu
+        env_file: .env
+        ports:
+            - "5000:5000"

@@ -1,0 +1,63 @@
+# Example values for local Kubernetes development/testing environment
+# Usage: helm install api-gateway . -f scenarios/local-runtime.yaml
+
+replicaCount: 1
+
+image:
+  registry: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+debug:
+  enabled: true
+
+databaseJob:
+  enabled: false
+
+database:
+  postgresql:
+    host: "postgresql"
+    port: 5432
+
+rabbitmq:
+  host: "rabbitmq-headless"
+  port: "5672"
+
+openk9:
+  searcher:
+    host: "openk9-searcher"
+    port: "8080"
+  datasource:
+    host: "openk9-datasource"
+    port: "8080"
+
+ingress:
+  enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  averageCpuUtilizationPercentage: 80
+  averageMemoryUtilizationPercentage: 80
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 10
+
+metrics:
+  enabled: false
+  serviceMonitor:
+    enabled: false

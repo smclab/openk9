@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2025/11/12-01-changelog.xml"
+>
+
+	<changeSet id="1762944829866-1" author="openk9">
+		<createTable tableName="autocomplete">
+			<column name="id" type="NUMBER(38)">
+				<constraints
+						nullable="false"
+						primaryKey="true"
+						primaryKeyName="autocomplete_pkey"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP"/>
+			<column name="modified_date" type="TIMESTAMP"/>
+			<column name="description" type="VARCHAR2(4000)"/>
+			<column name="name" type="VARCHAR2(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="fallback_result_size" type="NUMBER(10)" defaultValueNumeric="10">
+				<constraints nullable="false"/>
+			</column>
+			<column name="fuzziness" type="VARCHAR2(255)" defaultValue="AUTO">
+				<constraints nullable="false"/>
+			</column>
+			<column name="minimum_should_match" type="VARCHAR2(255)" defaultValue="75%">
+				<constraints nullable="false"/>
+			</column>
+			<column name="operator" type="VARCHAR2(255)" defaultValue="or">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1762944829866-2" author="openk9">
+		<createTable tableName="autocomplete_doc_type_field">
+			<column name="autocomplete_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+				             primaryKeyName="autocomplete_doc_type_field_pkey"/>
+			</column>
+			<column name="doc_type_field_id" type="NUMBER(38)">
+				<constraints nullable="false" primaryKey="true"
+				             primaryKeyName="autocomplete_doc_type_field_pkey"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1762944829866-3" author="openk9">
+		<addForeignKeyConstraint baseColumnNames="autocomplete_id"
+		                         baseTableName="autocomplete_doc_type_field"
+		                         constraintName="fk_autocomplete_doc_type_field"
+		                         onDelete="NO ACTION" onUpdate="NO ACTION"
+		                         referencedColumnNames="id"
+		                         referencedTableName="autocomplete"/>
+
+		<addForeignKeyConstraint baseColumnNames="doc_type_field_id"
+		                         baseTableName="autocomplete_doc_type_field"
+		                         constraintName="fk_doc_type_field_autocomplete"
+		                         onDelete="NO ACTION" onUpdate="NO ACTION"
+		                         referencedColumnNames="id"
+		                         referencedTableName="doc_type_field"/>
+	</changeSet>
+</databaseChangeLog>

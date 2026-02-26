@@ -1,0 +1,23 @@
+{
+	"translation": {
+		"error": "Si prega di riprovare, è stato effettuato un errore ...",
+		"version": "Versione",
+		"welcome-to": "Benvenuti su",
+		"where-knowledge-has-no-limits": "dove la conoscenza non ha limiti!",
+		"recents-chat": "Chat recenti",
+		"logout": "Esci",
+		"login": "Accedi",
+		"new-chat": "Nuova chat",
+		"no-chats": "Nessuna chat disponibile",
+		"write-a-message": "Scrivi un messaggio...",
+		"attach-popup-title": "Carica un allegato",
+		"document": "Documento",
+		"attach-file-aria-label": "Allega un file",
+		"uploading": "Caricamento",
+		"upload-completed": "Upload completato",
+		"unsupported-file-type": "Formato non supportato",
+		"file-too-large": "File troppo grande (max 10MB)",
+		"copy-code": "Copia codice",
+		"copied": "Copiato"
+	}
+}

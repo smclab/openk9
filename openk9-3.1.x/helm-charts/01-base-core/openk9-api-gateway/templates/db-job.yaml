@@ -1,0 +1,37 @@
+{{- if .Values.databaseJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "common.names.name" . }}-db
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  ttlSecondsAfterFinished: {{ .Values.databaseJob.ttlSecondsAfterFinished }}
+  template:
+    spec:
+      containers:
+      - name: {{ template "common.names.name" . }}-db
+        image: {{ .Values.databaseJob.image.registry }}/{{ .Values.databaseJob.image.name }}:{{ .Values.databaseJob.image.tag }}
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            psql -c "CREATE ROLE {{ .Values.database.postgresql.username }} WITH LOGIN ENCRYPTED PASSWORD '{{ .Values.database.postgresql.username }}'";
+            psql -c "CREATE DATABASE {{ .Values.database.postgresql.database }} OWNER {{ .Values.database.postgresql.username }};"
+        env:
+        - name: PGHOST
+          value: {{ .Values.database.postgresql.host | quote }}
+        - name: PGPORT
+          value: {{ .Values.database.postgresql.port | quote }}
+        - name: PGUSER
+          value: "postgres"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.postgresql.postgresPasswordSecret }}
+              key: {{ .Values.database.postgresql.postgresPasswordSecret }}
+      restartPolicy: Never
+{{- end }}

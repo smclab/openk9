@@ -1,0 +1,759 @@
+﻿/*
+* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+import React from "react";
+import { css } from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
+import { faSearch } from "@fortawesome/free-solid-svg-icons/faSearch";
+import { SearchToken, SuggestionResult } from "./client";
+import isEqual from "lodash/isEqual";
+import { useInfiniteQuery } from "react-query";
+import { useDebounce } from "./useDebounce";
+import { useOpenK9Client } from "./client";
+import { useTranslation } from "react-i18next";
+import { ArrowDownSvg } from "../svgElement/ArrowDownSvg";
+import { capitalize } from "lodash";
+import { IconsCustom } from "../embeddable/entry";
+
+type FilterCategoryProps = {
+  suggestionCategoryId: number;
+  suggestionCategoryName: string;
+  tokens: SearchToken[];
+  onAdd(searchToken: SearchToken): void;
+  onRemove(searchToken: SearchToken): void;
+  multiSelect: boolean;
+  searchQuery: SearchToken[];
+  isCollapsable?: boolean;
+  isUniqueLoadMore?: boolean;
+  iconCustom: IconsCustom;
+  loadAll?: boolean;
+  dynamicFilters: boolean;
+  numberItems?: number | null | undefined;
+  setHasMoreSuggestionsCategories?: React.Dispatch<
+    React.SetStateAction<boolean>
+  >;
+  language: string;
+};
+function FilterCategory({
+  suggestionCategoryId,
+  suggestionCategoryName,
+  tokens,
+  onAdd,
+  onRemove,
+  multiSelect,
+  searchQuery,
+  isCollapsable = true,
+  isUniqueLoadMore = false,
+  loadAll = false,
+  dynamicFilters,
+  language,
+  numberItems,
+  iconCustom,
+  setHasMoreSuggestionsCategories = undefined,
+}: FilterCategoryProps) {
+  const [text, setText] = React.useState("");
+  const suggestions = useInfiniteSuggestions(
+    tokens,
+    suggestionCategoryId,
+    useDebounce(text, 600),
+    loadAll,
+    dynamicFilters,
+    language,
+    numberItems,
+  );
+  const { t } = useTranslation();
+  React.useEffect(() => {
+    if (
+      setHasMoreSuggestionsCategories &&
+      suggestions &&
+      suggestions.hasNextPage
+    )
+      setHasMoreSuggestionsCategories(suggestions.hasNextPage);
+  }, []);
+
+  const [isOpen, setIsOpen] = React.useState(true);
+  const [singleSelect, setSingleselect] = React.useState<
+    SearchToken | undefined
+  >();
+  const show = Boolean(
+    text ||
+      (suggestions.data?.pages.flatMap((page) => page.result).length ?? 0) > 0,
+  );
+
+  if (!show)
+    return (
+      <React.Fragment>
+        <NoFilter
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          suggestionCategoryName={suggestionCategoryName}
+        />
+      </React.Fragment>
+    );
+
+  return (
+    <div
+      className="openk9-filter-category-container"
+      css={css`
+        margin-bottom: 16px;
+        ${isUniqueLoadMore ? "width: 50%" : null}
+        @media (max-width: 768px) {
+          ${isUniqueLoadMore ? "height: 50%" : null}
+        }
+      `}
+    >
+      <div>
+        <div
+          className="openk9-filter-category-title"
+          css={css`
+            user-select: none;
+            margin-left: 16px;
+            display: flex;
+            align-items: center;
+            width: 100% !important;
+          `}
+          onClick={() => (isCollapsable ? setIsOpen(!isOpen) : null)}
+        >
+          <div
+            css={css`
+              flex-grow: 1;
+              :first-letter {
+                text-transform: uppercase;
+              }
+            `}
+          >
+            <strong>{suggestionCategoryName}</strong>
+          </div>
+          {isCollapsable && (
+            <button
+              aria-label={
+                t("category-collapsable-toggle") ||
+                "category collapsable toggle"
+              }
+              css={css`
+                background: inherit;
+                border: none;
+              `}
+            >
+              {}
+              <FontAwesomeIcon
+                icon={isOpen ? faChevronDown : faChevronUp}
+                css={css`
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                  margin-right: 8px;
+                `}
+              />
+            </button>
+          )}
+        </div>
+      </div>
+      {isOpen && (
+        <React.Fragment>
+          {!isUniqueLoadMore && (
+            <div
+              className="openk9-filter-category-container-search"
+              css={css`
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                @media (max-width: 480px) {
+                  display: none;
+                }
+              `}
+            >
+              <FontAwesomeIcon
+                icon={faSearch}
+                css={css`
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                  margin-left: 25px;
+                  opacity: 0.3;
+                  z-index: 3;
+                  margin-top: 16px;
+                  height: 15px;
+                `}
+              />
+              <label
+                htmlFor={"search-category-" + suggestionCategoryId}
+                className="visually-hidden"
+                css={css`
+                  border: 0;
+                  padding: 0;
+                  margin: 0;
+                  position: absolute !important;
+                  height: 1px;
+                  width: 1px;
+                  overflow: hidden;
+                  clip: rect(
+                    1px 1px 1px 1px
+                  ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+                  clip: rect(
+                    1px,
+                    1px,
+                    1px,
+                    1px
+                  ); /*maybe deprecated but we need to support legacy browsers */
+                  clip-path: inset(50%);
+                  white-space: nowrap;
+                `}
+              >
+                Search Filter
+              </label>
+              <input
+                className="openk9-filter-category-search"
+                type="text"
+                id={"search-category-" + suggestionCategoryId}
+                value={text}
+                placeholder={t("search-filters") || ""}
+                onChange={(event) => setText(event.currentTarget.value)}
+                css={css`
+                  margin-top: 17px;
+                  flex-grow: 1;
+                  text-indent: 25px;
+                  margin-left: -25px;
+                  margin-right: -9px;
+                  padding: 8px 16px 8px 8px;
+                  border-radius: 4px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                  border-radius: 20px;
+                  background: white;
+                  :focus {
+                    border: 1px solid
+                      var(--openk9-embeddable-search--active-color);
+                    outline: none;
+                  }
+                  ::placeholder {
+                    font-style: normal;
+                    font-weight: 400;
+                    font-size: 15px;
+                  }
+                `}
+              />
+            </div>
+          )}
+          <div
+            className="openk9-filter-form-check-container"
+            css={css`
+              display: flex;
+              flex-direction: ${isUniqueLoadMore ? "row" : "column"};
+              gap: ${isUniqueLoadMore ? "0" : "5px"};
+              flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
+              padding-left: 13px;
+              @media (max-width: 480px) {
+                margin-top: 15px;
+              }
+            `}
+          >
+            {suggestions.data?.pages.map(({ result }, index) => {
+              return (
+                <React.Fragment key={index}>
+                  {result.map((suggestion, index) => {
+                    const asSearchToken = mapSuggestionToSearchToken(
+                      suggestion,
+                      true,
+                    );
+
+                    const isChecked = tokens.some((searchToken) =>
+                      isEqual(searchToken, asSearchToken),
+                    );
+                    return (
+                      <React.Fragment key={index}>
+                        <div
+                          key={index}
+                          className="form-check"
+                          css={css`
+                            display: flex;
+                            align-items: ${multiSelect
+                              ? "baseline"
+                              : "stretch"};
+                            width: ${isUniqueLoadMore ? "50%" : "auto"};
+                            margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                            @media (max-width: 768px) {
+                              width: 100%;
+                              height: ${isUniqueLoadMore ? "50%" : "auto"};
+                            }
+                          `}
+                        >
+                          {multiSelect ? (
+                            <React.Fragment>
+                              <input
+                                className={`form-check-input ${
+                                  isChecked
+                                    ? "is-checked-fliter-category"
+                                    : "not-is-cheched"
+                                }`}
+                                id={
+                                  "" +
+                                  index +
+                                  suggestion.value.replaceAll(" ", "")
+                                }
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(event) => {
+                                  if (event.currentTarget.checked) {
+                                    if (multiSelect) {
+                                      onAdd(asSearchToken);
+                                    } else {
+                                      tokens.some((searchToken) => {
+                                        if (
+                                          JSON.parse(
+                                            JSON.stringify(searchToken),
+                                          )?.multiSelect
+                                        )
+                                          onRemove(searchToken);
+                                      });
+                                      onAdd(asSearchToken);
+                                    }
+                                  } else {
+                                    onRemove(asSearchToken);
+                                  }
+                                }}
+                                css={css`
+                                  width: 14px;
+                                  appearance: none;
+                                  min-width: 15px;
+                                  min-height: 15px;
+                                  border-radius: 4px;
+                                  border: 2px solid #ccc;
+                                  background-color: ${isChecked
+                                    ? "var(--openk9-embeddable-search--secondary-active-color)"
+                                    : "#fff"};
+                                  background-size: 100%;
+                                  background-position: center;
+                                  background-repeat: no-repeat;
+                                  cursor: pointer;
+                                  margin-right: 10px;
+                                `}
+                              />
+                            </React.Fragment>
+                          ) : (
+                            <SingleSelect
+                              isChecked={isChecked}
+                              index={
+                                "" +
+                                index +
+                                suggestion.value.replaceAll(" ", "")
+                              }
+                              multiSelect={multiSelect}
+                              asSearchToken={asSearchToken}
+                              onAdd={onAdd}
+                              onRemove={onRemove}
+                              singleSelect={singleSelect}
+                              setSingleSelect={setSingleselect}
+                            />
+                          )}
+                          <span
+                            css={css`
+                              margin-left: 5px;
+                            `}
+                          >
+                            <label
+                              className="form-check-label"
+                              htmlFor={
+                                "" +
+                                index +
+                                suggestion.value.replaceAll(" ", "")
+                              }
+                              css={css`
+                                text-overflow: ellipsis;
+                                font-style: normal;
+                                font-weight: 600;
+                                line-height: 22px;
+                                /* or 147% */
+                                color: #000000;
+                              `}
+                            >
+                              {suggestion.tokenType === "ENTITY" ? (
+                                <>
+                                  <strong
+                                    className="openk9-filter-category-suggestion-value"
+                                    css={css`
+                                      :first-letter {
+                                        text-transform: uppercase;
+                                      }
+                                      display: inline-block;
+                                    `}
+                                  >
+                                    {suggestion.entityType}
+                                  </strong>
+                                  : {suggestion.entityValue}
+                                </>
+                              ) : (
+                                capitalize(suggestion.value)
+                              )}
+                            </label>
+                          </span>
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
+          </div>
+          {!isUniqueLoadMore && suggestions.hasNextPage && (
+            <div
+              className="openk9-container-load-more"
+              css={css`
+                text-align: center;
+                width: 100%;
+                display: flex;
+                margin-left: 12px;
+                margin-top: 10px;
+                justify-content: center;
+                @media (max-width: 480px) {
+                  margin-top: 15px;
+                }
+              `}
+            >
+              <button
+                className="openk9-load-more-button"
+                aria-label={t("load-more-filter") || "load more filters"}
+                css={css`
+                  background: inherit;
+                  color: var(--openk9-embeddable-search--primary-color);
+                  font-size: 14px;
+                  font-style: normal;
+                  font-weight: 400;
+                  line-height: normal;
+                  display: flex;
+                  align-items: center;
+                  gap: 10px;
+                  cursor: pointer;
+                  padding: 8px 16px;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--primary-color);
+                  border-radius: 20px;
+                `}
+                onClick={() => {
+                  suggestions.fetchNextPage();
+                }}
+              >
+                {t("load-more") || "Load More"}
+                <ArrowDownSvg size="16px" />
+              </button>
+            </div>
+          )}
+        </React.Fragment>
+      )}
+    </div>
+  );
+}
+
+export const FilterCategoryMemo = React.memo(FilterCategory);
+
+export const buttonStyle = css`
+  color: inherit;
+  font-weight: bold;
+  background: none;
+  appearance: none;
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid var(--openk9-embeddable-search--primary-color);
+  color: var(--openk9-embeddable-search--primary-color);
+  border-radius: 4px;
+  :hover {
+    color: var(--openk9-embeddable-search--primary-color);
+    cursor: pointer;
+  }
+  :disabled {
+    border: 1px solid var(--openk9-embeddable-search--border-color);
+    color: var(--openk9-embeddable-search--border-color);
+    cursor: not-allowed;
+  }
+`;
+
+export function useInfiniteSuggestions(
+  searchQueryParams: SearchToken[] | null,
+  activeSuggestionCategory: number,
+  suggestKeyword: string,
+  loadAll: boolean,
+  dynamicFilters: boolean,
+  language: string,
+  numberItems: number | null | undefined,
+) {
+  const pageSize = loadAll ? 19 : suggestKeyword === "" ? 8 : 19;
+  const NPageSize = numberItems ? numberItems : pageSize;
+  const client = useOpenK9Client();
+  let searchQuery: SearchToken[] | null = [];
+  if (searchQueryParams && searchQueryParams?.length > 0) {
+    searchQueryParams.forEach((singleSearchQuery) => {
+      if (dynamicFilters) searchQuery?.push(singleSearchQuery);
+    });
+  } else {
+    searchQuery = searchQueryParams;
+  }
+
+  const suggestionCategories = useInfiniteQuery(
+    [
+      "suggestions",
+      searchQuery,
+      activeSuggestionCategory,
+      suggestKeyword,
+      loadAll,
+      language,
+    ] as const,
+    async ({
+      queryKey: [_, searchQuery, activeSuggestionCategory, suggestKeyword],
+      pageParam,
+    }) => {
+      if (!searchQuery) throw new Error();
+      const result = await client.getSuggestions({
+        searchQuery,
+        range: [0, NPageSize + 1],
+        afterKey: pageParam,
+        suggestionCategoryId: activeSuggestionCategory,
+        suggestKeyword,
+        order: suggestKeyword ? "desc" : "asc",
+        language: language,
+      });
+      return {
+        result: result.result,
+        afterKey: result.afterKey,
+      };
+    },
+    {
+      enabled: searchQuery !== null,
+      keepPreviousData: true,
+      getNextPageParam(lastPage, pages) {
+        if (!lastPage.afterKey) return undefined;
+        if (pages[pages.length - 1].result.length < pageSize) return undefined;
+        return lastPage.afterKey;
+      },
+      suspense: true,
+    },
+  );
+
+  return suggestionCategories;
+}
+
+function SingleSelect({
+  isChecked,
+  multiSelect,
+  asSearchToken,
+  onAdd,
+  onRemove,
+  singleSelect,
+  setSingleSelect,
+  index,
+}: {
+  isChecked: boolean;
+  multiSelect: boolean;
+  asSearchToken: SearchToken;
+  onAdd: (searchToken: SearchToken) => void;
+  onRemove: (searchToken: SearchToken) => void;
+  singleSelect: SearchToken | undefined;
+  setSingleSelect: React.Dispatch<
+    React.SetStateAction<SearchToken | undefined>
+  >;
+  index: string;
+}) {
+  return (
+    <React.Fragment>
+      <div>
+        <input
+          className={`radio-button ${
+            isChecked
+              ? "filter-category-radio-checked"
+              : "not-checked-filter-category"
+          }`}
+          id={index}
+          type="radio"
+          checked={false}
+          onChange={(event) => {
+            if (event.currentTarget.checked) {
+              if (singleSelect) onRemove(singleSelect);
+              setSingleSelect(asSearchToken);
+              onAdd(asSearchToken);
+            } else {
+              onRemove(asSearchToken);
+            }
+          }}
+          onClick={(event) => {
+            if (isChecked) {
+              onRemove(asSearchToken);
+            }
+          }}
+          css={css`
+            appearance: none !important;
+            width: 17px !important;
+            height: 16px !important;
+            border-radius: 50% !important;
+            border: 2px solid #ccc !important;
+            background-color: ${isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color) !important"
+              : "#fff !important"};
+            cursor: pointer !important;
+          `}
+          onMouseOver={(event) => {
+            if (!isChecked) {
+              const target = event.target as HTMLInputElement;
+              target.style.backgroundColor = "#e6e6e6";
+            }
+          }}
+          onMouseOut={(event) => {
+            const target = event.target as HTMLInputElement;
+            target.style.backgroundColor = isChecked
+              ? "var(--openk9-embeddable-search--secondary-active-color)"
+              : "#fff";
+          }}
+        />
+      </div>
+    </React.Fragment>
+  );
+}
+
+export const mapSuggestionToSearchToken = (
+  suggestion: SuggestionResult,
+  filter: boolean,
+): SearchToken => {
+  switch (suggestion.tokenType) {
+    case "DATASOURCE": {
+      return {
+        tokenType: "DATASOURCE",
+        values: [suggestion.value],
+        filter,
+      };
+    }
+    case "DOCTYPE": {
+      return {
+        tokenType: "DOCTYPE",
+        keywordKey: "type",
+        values: [suggestion.value],
+        filter: true,
+      };
+    }
+    case "ENTITY": {
+      return {
+        tokenType: "ENTITY",
+        keywordKey: suggestion.keywordKey,
+        entityType: suggestion.entityType,
+        entityName: suggestion.entityValue,
+        values: [suggestion.value],
+        filter,
+      };
+    }
+    case "TEXT": {
+      return {
+        tokenType: "TEXT",
+        keywordKey: suggestion.keywordKey,
+        values: [suggestion.value],
+        filter,
+        goToSuggestion: false,
+        count: suggestion.count,
+        suggestionCategoryId: suggestion.suggestionCategoryId,
+      };
+    }
+    case "FILTER": {
+      return {
+        tokenType: "FILTER",
+        keywordKey: suggestion.keywordKey,
+        values: [suggestion.value],
+        filter,
+        goToSuggestion: false,
+        count: suggestion.count,
+        suggestionCategoryId: suggestion.suggestionCategoryId,
+      };
+    }
+  }
+};
+
+export function NoFilter({
+  setIsOpen,
+  isOpen,
+  suggestionCategoryName,
+  noResultMessage,
+}: {
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isOpen: Boolean;
+  suggestionCategoryName: string;
+  noResultMessage?: string | undefined | null;
+}) {
+  const messageNoResult = noResultMessage
+    ? noResultMessage.replaceAll("%s", suggestionCategoryName)
+    : "";
+  const { t } = useTranslation();
+
+  return (
+    <fieldset
+      className="openk9-filter-category-container"
+      css={css`
+        @media (max-width: 480px) {
+          width: unset;
+        }
+        margin: 0;
+        padding: 0;
+        border: none;
+        box-shadow: none;
+        background-color: transparent;
+        background-image: none;
+        font: inherit;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 8px 16px;
+      `}
+    >
+      <div
+        className="openk9-filter-category-title"
+        css={css`
+          user-select: none;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        `}
+      >
+        <legend
+          className="legend-filters"
+          css={css`
+            :first-letter {
+              text-transform: uppercase;
+            }
+          `}
+        >
+          <strong className="name-category-filter">
+            {suggestionCategoryName}
+          </strong>
+        </legend>
+
+        <button
+          aria-label={
+            t("openk9-collapsable-filter") || "openk9 collapsable filter"
+          }
+          aria-expanded={isOpen ? "true" : "false"}
+          css={css`
+            background: inherit;
+            border: none;
+          `}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <FontAwesomeIcon
+            icon={faChevronUp}
+            css={css`
+              color: var(--openk9-embeddable-search--secondary-text-color);
+              cursor: pointer;
+            `}
+          />
+        </button>
+      </div>
+      <div id="no-filters-result" className="no-filters-result"></div>
+    </fieldset>
+  );
+}
+

@@ -1,0 +1,313 @@
+﻿/*
+* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+import { TitleEntity } from "@components/Form";
+import { Box, Button, styled, Tab, Tabs, TextField, Typography } from "@mui/material";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useConfirmModal } from "../../utils/useConfirmModal";
+import { ConfigureDatasource, MonitoringTab } from "./Function";
+import Reindex from "./Function/Reindex";
+import { ConfigureConnectors } from "./components/Sections/Connectors/ConfigureConnectors";
+import DataIndex from "./components/Sections/DataIndex/ConfigureDataIndex";
+import ConfigurePipeline from "./components/Sections/Pipeline/ConfigurePipeline";
+import ReindexArea from "./components/Sections/ReindexArea";
+import { HeaderType, tabsPropsConstructor } from "./datasourceType";
+import { ConnectionData } from "./types";
+
+export const TabsSection = ({
+  tabs,
+  activeTab,
+  handleTabChange,
+  setActiveTab,
+  areaEnabled,
+  formValues,
+  getHealthInfo,
+  getHealthInfoWithoutId,
+  isView,
+  setAreaEnabled,
+  setFormValues,
+  setShowDialog,
+  requestBody,
+  formCustom,
+  setFormCustom,
+  datasourceId,
+  dynamicTemplate,
+  changeValueTemplate,
+  dynamicFormJson,
+  loadingFormCustom,
+  isRecap,
+  setIsRecap,
+  handleDatasource,
+  isCreated,
+  setExtraFab,
+}: tabsPropsConstructor) => {
+  const isRecapTab = "recap";
+  isRecap && handleTabChange(null, isRecapTab);
+
+  return (
+    <>
+      <Tabs value={activeTab} onChange={handleTabChange}>
+        {tabs.map((tab, index) => {
+          const currentTabIndex = tabs.findIndex((t) => t.value === activeTab);
+          const isDisabled = isView
+            ? false
+            : tab.disabled || (index !== currentTabIndex + 1 && index !== currentTabIndex - 1);
+          const isClickable = !isDisabled && activeTab !== tab.value;
+
+          return (
+            <Tab
+              key={tab.value}
+              label={
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  {tab.step && (
+                    <StepCircle active={activeTab === tab.value} clickable={isClickable}>
+                      {tab.step}
+                    </StepCircle>
+                  )}
+                  {tab.label}
+                </Box>
+              }
+              value={tab.value}
+              disabled={isDisabled}
+              sx={{
+                "&.Mui-disabled": {
+                  color: activeTab === tab.value ? "primary.main" : undefined,
+                },
+              }}
+            />
+          );
+        })}
+      </Tabs>
+      {activeTab === "connectors" && (
+        <ConfigureConnectors
+          areaEnabled={areaEnabled}
+          formValues={formValues}
+          getHealthInfo={getHealthInfo}
+          getHealthInfoWithoutId={getHealthInfoWithoutId}
+          disabled={isView}
+          tabs={tabs}
+          setActiveTab={setActiveTab}
+          setAreaEnabled={setAreaEnabled}
+          setFormValues={setFormValues}
+          setShowDialog={setShowDialog}
+          setExtraFab={setExtraFab}
+        />
+      )}
+      {activeTab === "datasource" && (
+        <ConfigureDatasource
+          dataDatasource={formValues}
+          setDataDatasource={setFormValues}
+          setActiveTab={setActiveTab}
+          disabled={isView}
+          isRecap={isRecap}
+          tabs={tabs}
+          setIsRecap={setIsRecap}
+          requestBody={requestBody}
+          formCustom={formCustom}
+          setFormCustom={setFormCustom}
+          datasourceId={datasourceId}
+          dynamicTemplate={dynamicTemplate}
+          changeValueTemplate={changeValueTemplate}
+          dynamicFormJson={dynamicFormJson}
+          loadingFormCustom={loadingFormCustom}
+        />
+      )}
+      {activeTab === "pipeline" && (
+        <ConfigurePipeline
+          dataDatasource={formValues}
+          setDataDatasource={setFormValues}
+          disabled={isView}
+          datasourceId={datasourceId}
+          isRecap={isRecap}
+          tabs={tabs}
+          setIsRecap={setIsRecap}
+          setActiveTab={setActiveTab}
+        />
+      )}
+      {activeTab === "monitoring" && datasourceId !== "new" && <MonitoringTab id={datasourceId} />}
+      {activeTab === "reindex" && datasourceId !== "new" && (
+        <Reindex id={datasourceId} data={formValues.lastIngestionDate} />
+      )}
+      {activeTab === "dataIndex" && isCreated ? (
+        <DataIndex
+          id={formValues.pluginDriverSelect?.id || ""}
+          resetDataIndex={() => {
+            setFormValues((prev: ConnectionData) => ({
+              ...prev,
+              dataIndex: null,
+              dataIndices: null,
+            }));
+          }}
+          changeExtraParamsDataIndex={(key, value) => {
+            setFormValues((prev: ConnectionData) => ({
+              ...prev,
+              vectorIndex: {
+                ...prev.vectorIndex,
+                [key]: value,
+              },
+            }));
+          }}
+          setActiveTab={setActiveTab}
+          extraParamsDataIndex={{
+            knnIndex: formValues.vectorIndex?.knnIndex || false,
+            chunkWindowSize: formValues.vectorIndex?.chunkWindowSize || 0,
+            embeddingDocTypeFieldId: {
+              id: formValues.vectorIndex?.embeddingDocTypeFieldId?.id || "",
+              name: formValues.vectorIndex?.embeddingDocTypeFieldId?.name || "",
+            },
+            embeddingJsonConfig: formValues?.vectorIndex?.embeddingJsonConfig || "",
+            chunkType: formValues?.vectorIndex?.chunkType,
+          }}
+          microForm={{
+            name: formValues.dataIndex?.name || "",
+            description: formValues.dataIndex?.description || "",
+            knnIndex: formValues.vectorIndex?.knnIndex || false,
+            docTypeId: formValues.vectorIndex?.docTypeIds || [],
+          }}
+          setDataIndexForm={({ key, value }: { key: "name" | "description" | "knnIndex"; value: string | boolean }) => {
+            setFormValues((prev: ConnectionData) => ({
+              ...prev,
+              dataIndex: {
+                ...prev.dataIndex,
+                [key]: value,
+              },
+            }));
+          }}
+          isDisabled={false}
+          isCreated={isCreated}
+          setIsRecap={setIsRecap}
+          dataIndixes={formValues.dataIndices}
+          defaultDataIndex={(defaultData: { id: string; name: string }[]) => {
+            setFormValues((prev: ConnectionData) => ({
+              ...prev,
+              dataIndices: defaultData,
+            }));
+          }}
+          changeDataIndex={({ dataIndex }: { dataIndex: { id: string; name: string } }) => {
+            const isPresentDataIndex = formValues.dataIndices?.find((item) => item.id === dataIndex.id);
+
+            const updatedTypes = isPresentDataIndex
+              ? formValues.dataIndices?.filter((item) => item.id !== dataIndex.id)
+              : [...(formValues.dataIndices || []), dataIndex];
+            setFormValues((prev: ConnectionData) => ({
+              ...prev,
+              dataIndices: updatedTypes,
+            }));
+          }}
+        />
+      ) : (
+        activeTab === "dataIndex" && (
+          <ReindexArea
+            connectionData={formValues}
+            isNew={false}
+            isView={isView}
+            setConnectionData={setFormValues}
+            setActiveTab={setActiveTab}
+            setIsRecap={setIsRecap}
+          />
+        )
+      )}
+    </>
+  );
+};
+
+export const StepCircle = styled(Box)<{ active?: boolean; clickable?: boolean }>(({ theme, active, clickable }) => ({
+  width: 20,
+  height: 20,
+  borderRadius: "50%",
+  backgroundColor: active
+    ? theme.palette.primary.main
+    : clickable
+    ? theme.palette.text.primary
+    : theme.palette.text.disabled,
+  color: active ? theme.palette.primary.contrastText : theme.palette.background.paper,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+  fontSize: "0.75rem",
+}));
+
+export const Header = ({
+  landingTabId,
+  mode,
+  navigate,
+  datasourceId,
+  generateDocumentTypes,
+  setActiveTab,
+}: HeaderType) => {
+  const initialStateEditMessage = {
+    title: "Edit Datasource",
+    body: "Are you sure you want to edit this datasource?",
+    labelConfirm: "Edit",
+  };
+  type modalMessageType = { title: string; body: string; labelConfirm: string };
+  const [modalMessage, setModalMessage] = useState<modalMessageType>(initialStateEditMessage);
+  const { openConfirmModal, ConfirmModal } = useConfirmModal(modalMessage);
+
+  const handleEditClick = async (typology: "editModal" | "generateModal") => {
+    setModalMessage(initialStateEditMessage);
+    const confirmed = await openConfirmModal();
+    setActiveTab("datasource");
+    confirmed && typology === `editModal` && navigate(`/data-source/${datasourceId}/mode/edit/landingTab/datasource`);
+  };
+
+  return (
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <TitleEntity
+        nameEntity="Datasource"
+        description="Create or Edit a Datasource to define the connection to an external or internal data source. Configure indexing options, document type associations, and connector to control how data is ingested and processed by Openk9."
+        id="new"
+      />
+      <Box sx={{ display: "flex", gap: "10px" }}>
+        {mode === "view" && (
+          <Button variant="contained" onClick={() => handleEditClick("editModal")}>
+            Edit
+          </Button>
+        )}
+      </Box>
+      <ConfirmModal />
+    </Box>
+  );
+};
+
+export const FormSection = ({
+  formValues,
+  setFormValues,
+  isView,
+  isRecap,
+}: {
+  formValues: ConnectionData;
+  setFormValues: React.Dispatch<React.SetStateAction<ConnectionData>>;
+  isView: boolean;
+  isRecap: boolean;
+}) => (
+  <Box display={"flex"} flexDirection={"column"} gap={"10px"} maxWidth={"250px"}>
+    <Typography>Name</Typography>
+    <TextField
+      disabled={isView || isRecap}
+      value={formValues?.name}
+      onChange={(event) =>
+        setFormValues((pre) => ({
+          ...pre,
+          name: event?.target?.value,
+        }))
+      }
+    />
+  </Box>
+);
+

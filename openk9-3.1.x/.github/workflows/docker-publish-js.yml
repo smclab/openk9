@@ -1,0 +1,164 @@
+name: Push Js Docker
+
+on:
+  push:
+    # Publish `main` as Docker `latest` image.
+    branches:
+      - main
+
+    # Publish `v1.2.3` tags as releases.
+    tags:
+      - v*
+
+  # Run tests for any PRs.
+  pull_request:
+
+jobs:
+  # Push image to GitHub Packages.
+  # See also https://docs.docker.com/docker-hub/builds/
+  push-js-to-github:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Build Frontend image
+        run: docker build -t search-frontend -f js-packages/search-frontend/Dockerfile .
+
+      - name: Push Frontend image
+        run: |
+          IMAGE_NAME=search-frontend
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+      - name: Build Admin UI image
+        run: docker build -t admin-ui -f js-packages/admin-ui/Dockerfile .
+
+      - name: Push Admin UI image
+        run: |
+          IMAGE_NAME=admin-ui
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+      - name: Build Tenant UI image
+        run: docker build -t admin-logs-service -f js-packages/tenant-ui/Dockerfile .
+
+      - name: Push Tenant UI image
+        run: |
+          IMAGE_NAME=tenant-ui
+          IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/$IMAGE_NAME
+
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "main" ] && VERSION=latest
+
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+
+#  # Push image to Docker Hub.
+#  push-js-to-docker:
+#    runs-on: ubuntu-latest
+#    steps:
+#      -
+#        name: Checkout
+#        uses: actions/checkout@v2
+#      -
+#        name: Prepare
+#        id: prep
+#        run: |
+#          VERSION=edge
+#          if [[ $GITHUB_REF == refs/tags/* ]]; then
+#            VERSION=${GITHUB_REF#refs/tags/}
+#          else VERSION=latest
+#          fi
+#          echo ::set-output name=version::${VERSION}
+#      -
+#        name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v1
+#      -
+#        name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#      -
+#        name: Build and push Frontend image
+#        id: docker_build_frontend
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/search-frontend/Dockerfile
+#          push: true
+#          tags: smclab/openk9-search-frontend:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push Admin UI image
+#        id: docker_build_admin_ui
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/admin-ui/Dockerfile
+#          push: true
+#          tags: smclab/openk9-admin-ui:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push Admin Logs Service image
+#        id: docker_build_admin_logs
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/admin-logs-service/Dockerfile
+#          push: true
+#          tags: smclab/openk9-admin-logs-service:${{ steps.prep.outputs.version }}
+#      -
+#        name: Build and push JS Scripts Executor image
+#        id: docker_build_js_scripts_executor
+#        uses: docker/build-push-action@v2
+#        with:
+#          file: js-packages/js-scripts-executor/Dockerfile
+#          push: true
+#          tags: smclab/openk9-js-scripts-executor:${{ steps.prep.outputs.version }}

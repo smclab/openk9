@@ -1,0 +1,40 @@
+{{- if .Values.ingress.enabled }}
+{{- $paths := .Values.ingress.paths -}}
+{{- $serviceport := .Values.ingress.servicePort -}}
+{{- $service := include "common.names.name" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ template "common.names.name" . }}
+  namespace: {{ .Release.Namespace | quote }} 
+  labels: {{- include "common.labels.standard" . | nindent 4 }}
+  {{- if (or .Values.commonAnnotations .Values.ingress.annotations) }}
+  annotations: 
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.ingress.annotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.ingress.ingressClassName | quote }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+           {{- range .Values.ingress.paths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $service }}
+                port: 
+                  number:  {{ $serviceport }}
+            {{- end -}}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+      - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}
+

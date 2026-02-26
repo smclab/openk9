@@ -1,0 +1,64 @@
+{
+	"properties": {
+	  "chunkText": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "number": {
+		"type": "integer"
+	  },
+	  "total": {
+		"type": "integer"
+	  },
+	  "contentId": {
+		"type": "text",
+		"fields": {
+		  "keyword": {
+			"ignore_above": 256,
+			"type": "keyword"
+		  }
+		}
+	  },
+	  "vector": {
+		"type": "knn_vector",
+		"dimension": {knnVectorDimension}
+	  },
+	  "next": {
+		"properties": {
+		  "chunkText": {
+			"fields": {
+			  "keyword": {
+				"type": "keyword",
+				"ignore_above": 256
+			  }
+			},
+			"type": "text"
+		  },
+		  "number": {
+			"type": "long"
+		  }
+		}
+      },
+	  "previous": {
+		"properties": {
+		  "chunkText": {
+			"fields": {
+			  "keyword": {
+				"type": "keyword",
+				"ignore_above": 256
+			  }
+			},
+			"type": "text"
+		  },
+		  "number": {
+			"type": "long"
+		  }
+		}
+      }
+	}
+}

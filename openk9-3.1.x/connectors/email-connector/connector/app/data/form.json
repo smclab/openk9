@@ -1,0 +1,136 @@
+{
+	"fields": [
+      {
+        "label": "Mail Server",
+        "name": "mailServer",
+        "field": "mailServer",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [],
+        "info": "Imap email server to connect",
+        "placeholder": "string",
+        "validator": {
+          "min": 0,
+          "max": 100,
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Port",
+        "name": "port",
+        "field": "port",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+                    {
+            "value": "993",
+            "isDefault": true
+          }
+        ],
+        "info": "Imap email server port. Default is 993",
+        "placeholder": "string",
+        "validator": {
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Use Ssl",
+        "name": "useSsl",
+        "field": "useSsl",
+        "type": "checkbox",
+        "size": 1,
+        "required": false,
+        "values": [
+          {
+            "value": true,
+            "isDefault": true
+          }
+        ],
+        "info": "If use ssl"
+      },
+      {
+        "label": "Username",
+        "name": "username",
+        "field": "username",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Password",
+        "name": "password",
+        "field": "password",
+        "type": "password",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Folder",
+        "name": "folder",
+        "field": "folder",
+        "type": "text",
+        "size": 4,
+        "required": true,
+        "values": [
+        ],
+        "info": "",
+        "validator": {
+          "regex": "/[[:alnum:]]+/"
+        }
+      },
+      {
+        "label": "Index Acl",
+        "name": "indexAcl",
+        "field": "indexAcl",
+        "type": "checkbox",
+        "size": 1,
+        "required": false,
+        "values": [
+          {
+            "value": false,
+            "isDefault": true
+          }
+        ],
+        "info": "If index access control lists"
+      },
+      {
+        "label": "Get Attachments",
+        "name": "getAttachments",
+        "field": "getAttachments",
+        "type": "checkbox",
+        "size": 1,
+        "required": false,
+        "values": [
+          {
+            "value": false,
+            "isDefault": true
+          }
+        ],
+        "info": "If index attachments"
+      },
+      {
+        "label": "Additional Metadata",
+        "name": "additionalMetadata",
+        "field": "additionalMetadata",
+        "type": "stringMap",
+        "size": 1,
+        "required": false,
+        "values": [],
+        "info": "Additional payload metadata"
+      }
+    ]
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2024/07/09-01-changelog.xml"
+>
+	<changeSet id="1720517315859-1" author="openk9">
+		<createTable tableName="large_language_model">
+			<column name="id" type="BIGINT">
+				<constraints
+					nullable="false"
+					primaryKey="true"
+					primaryKeyName="large_language_model_id"/>
+			</column>
+			<column name="create_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="modified_date" type="TIMESTAMP WITHOUT TIME ZONE"/>
+			<column name="description" type="VARCHAR(4096)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="api_url" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="api_key" type="VARCHAR(255)"/>
+			<column name="prompt_template" type="CLOB"/>
+		</createTable>
+	</changeSet>
+
+	<changeSet id="1720517315859-2" author="openk9">
+		<addColumn tableName="tenant_binding">
+			<column name="large_language_model_id" type="bigint"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet id="1720517315859-3" author="openk9">
+		<addForeignKeyConstraint
+			baseTableName="tenant_binding"
+			baseColumnNames="large_language_model_id"
+			constraintName="tenant_binding_large_language_model_fk"
+			referencedTableName="large_language_model"
+			referencedColumnNames="id"
+			onDelete="NO ACTION"
+			onUpdate="NO ACTION"
+		/>
+	</changeSet>
+
+</databaseChangeLog>

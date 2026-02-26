@@ -1,0 +1,51 @@
+{
+	"priority": 2,
+	"index_patterns": [
+		"micrometer-*"
+	],
+	"template": {
+		"settings": {
+			"index": {
+				"number_of_shards": "1",
+				"number_of_replicas": "1"
+			}
+		},
+		"mappings": {
+			"_source": {
+				"enabled": true
+			},
+			"properties": {
+				"name": {
+					"type": "keyword"
+				},
+				"count": {
+					"type": "double"
+				},
+				"value": {
+					"type": "double"
+				},
+				"sum": {
+					"type": "double"
+				},
+				"mean": {
+					"type": "double"
+				},
+				"duration": {
+					"type": "double"
+				},
+				"max": {
+					"type": "double"
+				},
+				"total": {
+					"type": "double"
+				},
+				"unknown": {
+					"type": "double"
+				},
+				"active": {
+					"type": "double"
+				}
+			}
+		}
+	}
+}

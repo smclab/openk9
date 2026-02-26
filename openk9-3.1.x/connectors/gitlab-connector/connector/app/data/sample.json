@@ -1,0 +1,461 @@
+{
+  "datasourceId": 1,
+  "scheduleId": "1",
+  "tenantId": "1",
+  "contentId": 3062252989527342,
+  "parsingDate": 1705326198961,
+  "rawContent": "Raw Content data based on extraction",
+  "datasourcePayload": {
+    "branch": {
+      "name": "main",
+      "merged": false,
+      "protected": true,
+      "default": true,
+      "developers_can_push": false,
+      "developers_can_merge": false,
+      "can_push": true,
+      "web_url": "https://gitlab.example.com/my-group/my-project/-/tree/main",
+      "commit": {
+        "id": "7b5c3cc8be40ee161ae89a06bba6229da1032a0c",
+        "short_id": "7b5c3cc",
+        "created_at": "2024-06-28T03:44:20-07:00",
+        "parent_ids": [
+          "4ad91d3c1144c406e50c7b33bae684bd6837faf8"
+        ],
+        "title": "add projects API",
+        "message": "add projects API",
+        "author_name": "John Smith",
+        "author_email": "john@example.com",
+        "authored_date": "2024-06-27T05:51:39-07:00",
+        "committer_name": "John Smith",
+        "committer_email": "john@example.com",
+        "committed_date": "2024-06-28T03:44:20-07:00",
+        "trailers": {},
+        "extended_trailers": {},
+        "web_url": "https://gitlab.example.com/my-group/my-project/-/commit/7b5c3cc8be40ee161ae89a06bba6229da1032a0c"
+      }
+    },
+    "commit": {
+      "id": "ed899a2f4b50b4370feeea94676502b42383c746",
+      "short_id": "ed899a2f4b5",
+      "title": "Replace sanitize with escape once",
+      "author_name": "Example User",
+      "author_email": "user@example.com",
+      "authored_date": "2021-09-20T11:50:22.001+00:00",
+      "committer_name": "Administrator",
+      "committer_email": "admin@example.com",
+      "committed_date": "2021-09-20T11:50:22.001+00:00",
+      "created_at": "2021-09-20T11:50:22.001+00:00",
+      "message": "Replace sanitize with escape once",
+      "parent_ids": [
+        "6104942438c14ec7bd21c6cd5bd995272b3faff6"
+      ],
+      "web_url": "https://gitlab.example.com/janedoe/gitlab-foss/-/commit/ed899a2f4b50b4370feeea94676502b42383c746",
+      "trailers": {},
+      "extended_trailers": {}
+    },
+    "issue": {
+      "project_id": 4,
+      "milestone": {
+        "due_date": null,
+        "project_id": 4,
+        "state": "closed",
+        "description": "Rerum est voluptatem provident consequuntur molestias similique ipsum dolor.",
+        "iid": 3,
+        "id": 11,
+        "title": "v3.0",
+        "created_at": "2016-01-04T15:31:39.788Z",
+        "updated_at": "2016-01-04T15:31:39.788Z"
+      },
+      "author": {
+        "state": "active",
+        "web_url": "https://gitlab.example.com/root",
+        "avatar_url": null,
+        "username": "root",
+        "id": 1,
+        "name": "Administrator"
+      },
+      "description": "Omnis vero earum sunt corporis dolor et placeat.",
+      "state": "closed",
+      "iid": 1,
+      "assignees": [
+        {
+          "avatar_url": null,
+          "web_url": "https://gitlab.example.com/lennie",
+          "state": "active",
+          "username": "lennie",
+          "id": 9,
+          "name": "Dr. Luella Kovacek"
+        }
+      ],
+      "assignee": {
+        "avatar_url": null,
+        "web_url": "https://gitlab.example.com/lennie",
+        "state": "active",
+        "username": "lennie",
+        "id": 9,
+        "name": "Dr. Luella Kovacek"
+      },
+      "type": "ISSUE",
+      "labels": [
+        "foo",
+        "bar"
+      ],
+      "upvotes": 4,
+      "downvotes": 0,
+      "merge_requests_count": 0,
+      "id": 41,
+      "title": "Ut commodi ullam eos dolores perferendis nihil sunt.",
+      "updated_at": "2016-01-04T15:31:46.176Z",
+      "created_at": "2016-01-04T15:31:46.176Z",
+      "closed_at": "2016-01-05T15:31:46.176Z",
+      "closed_by": {
+        "state": "active",
+        "web_url": "https://gitlab.example.com/root",
+        "avatar_url": null,
+        "username": "root",
+        "id": 1,
+        "name": "Administrator"
+      },
+      "user_notes_count": 1,
+      "due_date": "2016-07-22",
+      "imported": false,
+      "imported_from": "none",
+      "web_url": "http://gitlab.example.com/my-group/my-project/issues/1",
+      "references": {
+        "short": "#1",
+        "relative": "#1",
+        "full": "my-group/my-project#1"
+      },
+      "time_stats": {
+        "time_estimate": 0,
+        "total_time_spent": 0,
+        "human_time_estimate": null,
+        "human_total_time_spent": null
+      },
+      "has_tasks": true,
+      "task_status": "10 of 15 tasks completed",
+      "confidential": false,
+      "discussion_locked": false,
+      "issue_type": "issue",
+      "severity": "UNKNOWN",
+      "_links": {
+        "self": "http://gitlab.example.com/api/v4/projects/4/issues/41",
+        "notes": "http://gitlab.example.com/api/v4/projects/4/issues/41/notes",
+        "award_emoji": "http://gitlab.example.com/api/v4/projects/4/issues/41/award_emoji",
+        "project": "http://gitlab.example.com/api/v4/projects/4",
+        "closed_as_duplicate_of": "http://gitlab.example.com/api/v4/projects/1/issues/75"
+      },
+      "task_completion_status": {
+        "count": 0,
+        "completed_count": 0
+      }
+    },
+    "label": {
+      "id" : 1,
+      "name" : "bug",
+      "color" : "#d9534f",
+      "text_color" : "#FFFFFF",
+      "description": "Bug reported by user",
+      "description_html": "Bug reported by user",
+      "open_issues_count": 1,
+      "closed_issues_count": 0,
+      "open_merge_requests_count": 1,
+      "subscribed": false,
+      "priority": 10,
+      "is_project_label": true
+    },
+    "mergeRequest": {
+      "id": 1,
+      "iid": 1,
+      "project_id": 3,
+      "title": "test1",
+      "description": "fixed login page css paddings",
+      "state": "merged",
+      "imported": false,
+      "imported_from": "none",
+      "merge_user": {
+        "id": 87854,
+        "name": "Douwe Maan",
+        "username": "DouweM",
+        "state": "active",
+        "avatar_url": "https://gitlab.example.com/uploads/-/system/user/avatar/87854/avatar.png",
+        "web_url": "https://gitlab.com/DouweM"
+      },
+      "merged_at": "2018-09-07T11:16:17.520Z",
+      "merge_after": "2018-09-07T11:16:00.000Z",
+      "prepared_at": "2018-09-04T11:16:17.520Z",
+      "closed_by": null,
+      "closed_at": null,
+      "created_at": "2017-04-29T08:46:00Z",
+      "updated_at": "2017-04-29T08:46:00Z",
+      "target_branch": "main",
+      "source_branch": "test1",
+      "upvotes": 0,
+      "downvotes": 0,
+      "author": {
+        "id": 1,
+        "name": "Administrator",
+        "username": "admin",
+        "state": "active",
+        "avatar_url": null,
+        "web_url" : "https://gitlab.example.com/admin"
+      },
+      "assignee": {
+        "id": 1,
+        "name": "Administrator",
+        "username": "admin",
+        "state": "active",
+        "avatar_url": null,
+        "web_url" : "https://gitlab.example.com/admin"
+      },
+      "assignees": [{
+        "name": "Miss Monserrate Beier",
+        "username": "axel.block",
+        "id": 12,
+        "state": "active",
+        "avatar_url": "http://www.gravatar.com/avatar/46f6f7dc858ada7be1853f7fb96e81da?s=80&d=identicon",
+        "web_url": "https://gitlab.example.com/axel.block"
+      }],
+      "reviewers": [{
+        "id": 2,
+        "name": "Sam Bauch",
+        "username": "kenyatta_oconnell",
+        "state": "active",
+        "avatar_url": "https://www.gravatar.com/avatar/956c92487c6f6f7616b536927e22c9a0?s=80&d=identicon",
+        "web_url": "http://gitlab.example.com//kenyatta_oconnell"
+      }],
+      "source_project_id": 2,
+      "target_project_id": 3,
+      "labels": [
+        "Community contribution",
+        "Manage"
+      ],
+      "draft": false,
+      "work_in_progress": false,
+      "milestone": {
+        "id": 5,
+        "iid": 1,
+        "project_id": 3,
+        "title": "v2.0",
+        "description": "Assumenda aut placeat expedita exercitationem labore sunt enim earum.",
+        "state": "closed",
+        "created_at": "2015-02-02T19:49:26.013Z",
+        "updated_at": "2015-02-02T19:49:26.013Z",
+        "due_date": "2018-09-22",
+        "start_date": "2018-08-08",
+        "web_url": "https://gitlab.example.com/my-group/my-project/milestones/1"
+      },
+      "merge_when_pipeline_succeeds": true,
+      "merge_status": "can_be_merged",
+      "detailed_merge_status": "not_open",
+      "sha": "8888888888888888888888888888888888888888",
+      "merge_commit_sha": null,
+      "squash_commit_sha": null,
+      "user_notes_count": 1,
+      "discussion_locked": null,
+      "should_remove_source_branch": true,
+      "force_remove_source_branch": false,
+      "allow_collaboration": false,
+      "allow_maintainer_to_push": false,
+      "web_url": "http://gitlab.example.com/my-group/my-project/merge_requests/1",
+      "references": {
+        "short": "!1",
+        "relative": "my-group/my-project!1",
+        "full": "my-group/my-project!1"
+      },
+      "time_stats": {
+        "time_estimate": 0,
+        "total_time_spent": 0,
+        "human_time_estimate": null,
+        "human_total_time_spent": null
+      },
+      "squash": false,
+      "task_completion_status":{
+        "count":0,
+        "completed_count":0
+      }
+    },
+    "milestone": {
+      "id": 12,
+      "iid": 3,
+      "project_id": 16,
+      "title": "10.0",
+      "description": "Version",
+      "due_date": "2013-11-29",
+      "start_date": "2013-11-10",
+      "state": "active",
+      "updated_at": "2013-10-02T09:24:18Z",
+      "created_at": "2013-10-02T09:24:18Z",
+      "expired": false
+    },
+    "project": {
+      "id": 3,
+      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      "description_html": "<p data-sourcepos=\"1:1-1:56\" dir=\"auto\">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>",
+      "default_branch": "main",
+      "visibility": "private",
+      "ssh_url_to_repo": "git@example.com:diaspora/diaspora-project-site.git",
+      "http_url_to_repo": "http://example.com/diaspora/diaspora-project-site.git",
+      "web_url": "http://example.com/diaspora/diaspora-project-site",
+      "readme_url": "http://example.com/diaspora/diaspora-project-site/blob/main/README.md",
+      "topics": [
+        "example",
+        "disapora project"
+      ],
+      "owner": {
+        "id": 3,
+        "name": "Diaspora",
+        "created_at": "2013-09-30T13:46:02Z"
+      },
+      "name": "Diaspora Project Site",
+      "name_with_namespace": "Diaspora / Diaspora Project Site",
+      "path": "diaspora-project-site",
+      "path_with_namespace": "diaspora/diaspora-project-site",
+      "issues_enabled": true,
+      "open_issues_count": 1,
+      "merge_requests_enabled": true,
+      "jobs_enabled": true,
+      "wiki_enabled": true,
+      "snippets_enabled": false,
+      "can_create_merge_request_in": true,
+      "resolve_outdated_diff_discussions": false,
+      "container_registry_access_level": "disabled",
+      "security_and_compliance_access_level": "disabled",
+      "container_expiration_policy": {
+        "cadence": "7d",
+        "enabled": false,
+        "keep_n": null,
+        "older_than": null,
+        "name_regex_delete": null,
+        "name_regex_keep": null,
+        "next_run_at": "2020-01-07T21:42:58.658Z"
+      },
+      "created_at": "2013-09-30T13:46:02Z",
+      "updated_at": "2013-09-30T13:46:02Z",
+      "last_activity_at": "2013-09-30T13:46:02Z",
+      "creator_id": 3,
+      "namespace": {
+        "id": 3,
+        "name": "Diaspora",
+        "path": "diaspora",
+        "kind": "group",
+        "full_path": "diaspora",
+        "avatar_url": "http://localhost:3000/uploads/group/avatar/3/foo.jpg",
+        "web_url": "http://localhost:3000/groups/diaspora"
+      },
+      "import_url": null,
+      "import_type": null,
+      "import_status": "none",
+      "import_error": null,
+      "permissions": {
+        "project_access": {
+          "access_level": 10,
+          "notification_level": 3
+        },
+        "group_access": {
+          "access_level": 50,
+          "notification_level": 3
+        }
+      },
+      "archived": false,
+      "avatar_url": "http://example.com/uploads/project/avatar/3/uploads/avatar.png",
+      "license_url": "http://example.com/diaspora/diaspora-client/blob/main/LICENSE",
+      "license": {
+        "key": "lgpl-3.0",
+        "name": "GNU Lesser General Public License v3.0",
+        "nickname": "GNU LGPLv3",
+        "html_url": "http://choosealicense.com/licenses/lgpl-3.0/",
+        "source_url": "http://www.gnu.org/licenses/lgpl-3.0.txt"
+      },
+      "shared_runners_enabled": true,
+      "group_runners_enabled": true,
+      "forks_count": 0,
+      "star_count": 0,
+      "runners_token": "b8bc4a7a29eb76ea83cf79e4908c2b",
+      "ci_default_git_depth": 50,
+      "ci_forward_deployment_enabled": true,
+      "ci_forward_deployment_rollback_allowed": true,
+      "ci_allow_fork_pipelines_to_run_in_parent_project": true,
+      "ci_separated_caches": true,
+      "ci_restrict_pipeline_cancellation_role": "developer",
+      "ci_pipeline_variables_minimum_override_role": "maintainer",
+      "ci_push_repository_for_job_token_allowed": false,
+      "public_jobs": true,
+      "shared_with_groups": [
+        {
+          "group_id": 4,
+          "group_name": "Twitter",
+          "group_full_path": "twitter",
+          "group_access_level": 30
+        },
+        {
+          "group_id": 3,
+          "group_name": "Gitlab Org",
+          "group_full_path": "gitlab-org",
+          "group_access_level": 10
+        }
+      ],
+      "repository_storage": "default",
+      "only_allow_merge_if_pipeline_succeeds": false,
+      "allow_merge_on_skipped_pipeline": false,
+      "allow_pipeline_trigger_approve_deployment": false,
+      "restrict_user_defined_variables": false,
+      "only_allow_merge_if_all_discussions_are_resolved": false,
+      "remove_source_branch_after_merge": false,
+      "printing_merge_requests_link_enabled": true,
+      "request_access_enabled": false,
+      "merge_method": "merge",
+      "squash_option": "default_on",
+      "auto_devops_enabled": true,
+      "auto_devops_deploy_strategy": "continuous",
+      "mirror": false,
+      "mirror_user_id": 45,
+      "mirror_trigger_builds": false,
+      "only_mirror_protected_branches": false,
+      "mirror_overwrites_diverged_branches": false,
+      "external_authorization_classification_label": null,
+      "packages_enabled": true,
+      "service_desk_enabled": false,
+      "service_desk_address": null,
+      "autoclose_referenced_issues": true,
+      "suggestion_commit_message": null,
+      "enforce_auth_checks_on_uploads": true,
+      "merge_commit_template": null,
+      "squash_commit_template": null,
+      "issue_branch_template": "gitlab/%{id}-%{title}",
+      "marked_for_deletion_on": "2020-04-03",
+      "compliance_frameworks": [ "sox" ],
+      "warn_about_potentially_unwanted_characters": true,
+      "pre_receive_secret_detection_enabled": false,
+      "statistics": {
+        "commit_count": 37,
+        "storage_size": 1038090,
+        "repository_size": 1038090,
+        "wiki_size" : 0,
+        "lfs_objects_size": 0,
+        "job_artifacts_size": 0,
+        "pipeline_artifacts_size": 0,
+        "packages_size": 0,
+        "snippets_size": 0,
+        "uploads_size": 0,
+        "container_registry_size": 0
+      },
+      "container_registry_image_prefix": "registry.example.com/diaspora/diaspora-client"
+    },
+    "user": {
+      "id": 1,
+      "username": "john_smith",
+      "name": "John Smith",
+      "state": "active",
+      "locked": false,
+      "avatar_url": "http://localhost:3000/uploads/user/avatar/1/cd8.jpeg",
+      "web_url": "http://localhost:3000/john_smith"
+    }
+  },
+   "resources":{
+      "binaries":[
+
+      ]
+   }
+}

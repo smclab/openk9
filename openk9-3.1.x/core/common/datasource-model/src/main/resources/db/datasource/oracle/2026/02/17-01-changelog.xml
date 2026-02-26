@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/02/17-01-changelog.xml">
+
+
+	<changeSet id="1771322408-1" author="openk9">
+		<renameTable oldTableName="translation" newTableName="translation_table"/>
+	</changeSet>
+	
+	<changeSet id="1771322408-2" author="openk9">
+		<renameColumn tableName="translation_table" oldColumnName="language" newColumnName="translation_language"/>
+	</changeSet>
+
+	<changeSet id="1771322408-3" author="openk9">
+		<renameColumn tableName="translation_table" oldColumnName="key" newColumnName="translation_key"/>
+	</changeSet>
+
+	<changeSet id="1771322408-4" author="openk9">
+		<renameColumn tableName="translation_table" oldColumnName="value" newColumnName="translation_value"/>
+	</changeSet>
+
+	<changeSet id="1771322408-5" author="openk9">
+		<dropIndex tableName="translation_table" indexName="idx_translation_key"/>
+	</changeSet>
+
+	<changeSet id="1771322408-6" author="openk9">
+		<createIndex tableName="translation_table" indexName="idx_translation_key" unique="true">
+			<column name="translation_language"/>
+			<column name="class_name"/>
+			<column name="class_pk"/>
+			<column name="translation_key"/>
+		</createIndex>
+	</changeSet>
+
+
+</databaseChangeLog>
