@@ -71,6 +71,7 @@ public class TenantManagerActorSystem {
 		String tenantName = request.tenantName();
 		SecurityConfiguration secConfiguration = request.securityConfiguration();
 		OAuth2Settings oAuth2Settings = request.oAuth2Settings();
+		Boolean skipOAuth2 = request.skipOAuth2();
 
 		CompletionStage<TenantProvisioningManager.Response> ask =
 			AskPattern.ask(
@@ -78,7 +79,7 @@ public class TenantManagerActorSystem {
 				(ActorRef<TenantProvisioningManager.Response> actorRef) ->
 					new TenantProvisioningManager.CreateTenant(
 						vHost, tenantName, secConfiguration,
-						oAuth2Settings, actorRef
+						oAuth2Settings, skipOAuth2, actorRef
 					),
 				requestTimeout,
 				actorSystem.scheduler()

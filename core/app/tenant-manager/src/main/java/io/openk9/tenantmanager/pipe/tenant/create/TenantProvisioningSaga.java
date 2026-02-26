@@ -46,6 +46,7 @@ public class TenantProvisioningSaga
 	// Accumulators
 	private final List<Object> collectedResponses = new ArrayList<>();
 	private final OAuth2Settings oAuth2Settings;
+	private final Boolean skipOAuth2;
 
 	// Context Data
 	private String schemaName;
@@ -60,6 +61,7 @@ public class TenantProvisioningSaga
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
@@ -68,6 +70,7 @@ public class TenantProvisioningSaga
 		this.virtualHost = virtualHost;
 		this.schemaName = schemaName;
 		this.oAuth2Settings = oAuth2Settings;
+		this.skipOAuth2 = skipOAuth2;
 		this.securityConfiguration = securityConfiguration;
 		this.replyTo = replyTo;
 		this.factory = factory;
@@ -94,12 +97,13 @@ public class TenantProvisioningSaga
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
 			ctx, virtualHost, schemaName,
-			oAuth2Settings,
+			oAuth2Settings, skipOAuth2,
 			securityConfiguration, replyTo,
 			new DefaultProvisioningFactory()
 		));
@@ -109,13 +113,14 @@ public class TenantProvisioningSaga
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
+		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory provisioningFactory) {
 
 		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
 			ctx, virtualHost, schemaName,
-			oAuth2Settings,
+			oAuth2Settings, skipOAuth2,
 			securityConfiguration,
 			replyTo,
 			provisioningFactory
@@ -347,6 +352,16 @@ public class TenantProvisioningSaga
 				virtualHost,
 				oAuth2Settings.issuerUri(),
 				null, null // username/password not needed if we have settings
+			)));
+		}
+		else if (Boolean.TRUE.equals(skipOAuth2)) {
+			// Skip Realm creation, simulate success with dummy values
+			context.getSelf().tell(new OperationResponse(new Realm.Success(
+				"DISABLED",
+				"DISABLED",
+				virtualHost,
+				"DISABLED",
+				null, null
 			)));
 		}
 		else {

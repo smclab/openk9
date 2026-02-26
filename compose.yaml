@@ -51,7 +51,7 @@ services:
     container_name: postgresql
     hostname: postgresql
     environment:
-      - POSTGRES_MULTIPLE_DATABASES=keycloak,tenantmanager,apigateway,openk9
+      - POSTGRES_MULTIPLE_DATABASES=tenantmanager,apigateway,openk9
       - POSTGRES_PASSWORD=openk9
       - POSTGRES_USER=postgres
       - OPENK9_USER=openk9
@@ -66,36 +66,6 @@ services:
     volumes:
       - ./compose-utilities/postgresql:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
-  keycloak:
-    image: bitnamilegacy/keycloak:26.1.3-debian-12-r0
-    container_name: keycloak
-    hostname: keycloak.openk9.localhost
-    environment:
-      KEYCLOAK_CREATE_ADMIN_USER: 'true'
-      KEYCLOAK_ADMIN_USER: user
-      KEYCLOAK_ADMIN_PASSWORD: openk9
-      KEYCLOAK_DATABASE_VENDOR: postgresql
-      KEYCLOAK_DATABASE_HOST: postgresql
-      KEYCLOAK_DATABASE_PORT: 5432
-      KEYCLOAK_DATABASE_NAME: keycloak
-      KEYCLOAK_DATABASE_USER: postgres
-      KEYCLOAK_DATABASE_SCHEMA: public
-      KEYCLOAK_DATABASE_PASSWORD: openk9
-      KEYCLOAK_HTTP_PORT: 8081
-    healthcheck:
-      test: "curl --silent -fail http://localhost:8081"
-      interval: 10s
-      timeout: 10s
-      retries: 10
-    ports:
-      - 8081:8081
-    depends_on:
-      postgresql:
-        condition: service_healthy
-    networks:
-      default:
-        aliases:
-          - keycloak.openk9.localhost
   caddy:
     image: caddy:latest
     container_name: caddy
@@ -126,9 +96,6 @@ services:
       QUARKUS_HTTP_CORS: 'true'
       QUARKUS_HTTP_CORS_ORIGINS: /.*/
       QUARKUS_LOG_LEVEL: 'INFO'
-      QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'user'
-      QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'openk9'
-      QUARKUS_KEYCLOAK_ADMIN_CLIENT_SERVER_URL: 'http://keycloak.openk9.localhost:8081'
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       OPENK9_TENANT_MANAGER_KEYCLOAK_BASE_ISSUER_URI: 'http://keycloak.openk9.localhost:8081/realms/'
@@ -137,8 +104,6 @@ services:
       - 8186:8080
     depends_on:
       rabbitmq:
-        condition: service_healthy
-      keycloak:
         condition: service_healthy
       postgresql:
         condition: service_healthy
@@ -198,7 +163,6 @@ services:
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
-      QUARKUS_SMALLRYE_GRAPHQL_UI_ALWAYS_INCLUDE: 'false'
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
       RABBITMQ_PORT: '5672'
@@ -209,8 +173,6 @@ services:
         condition: service_healthy
       opensearch:
         condition: service_healthy
-      keycloak:
-        condition: service_healthy
       postgresql:
         condition: service_healthy
     healthcheck:
@@ -218,6 +180,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+    ports:
+      - 8187:8080
   ingestion:
     image: smclab/openk9-ingestion:2026.1.0-SNAPSHOT
     container_name: openk9-ingestion
@@ -229,7 +193,7 @@ services:
       RABBITMQ_PORT: '5672'
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
-      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '10240K'
+      QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://openk9-file-manager:8080
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
@@ -275,8 +239,6 @@ services:
   initializer:
     build: ./compose-utilities/initializer
     container_name: openk9-initializer
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       tenant-manager:
         condition: service_healthy

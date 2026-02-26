@@ -1,36 +1,7 @@
-const { execSync } = require('child_process');
-
 const TENANT_API = 'http://openk9-tenant-manager:8080';
 const DATASOURCE_API = 'http://openk9-datasource:8080';
-const TARGET_CONTAINER_NAME = 'openk9-tenant-manager';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// Helper: Run docker logs and Regex search
-async function getTenantPasswordFromLogs(maxRetries = 10) {
-  const regex = /password=([a-f0-9\-]{36})/; // Matches UUID format
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      console.log(`🔎 Scanning logs for password (Attempt ${i + 1}/${maxRetries})...`);
-
-      // Run docker logs command inside the container
-      // We use the container_name defined in docker-compose
-      const logs = execSync(`docker logs ${TARGET_CONTAINER_NAME} --tail 100`).toString();
-
-      const match = logs.match(regex);
-      if (match && match[1]) {
-        return match[1];
-      }
-    } catch (e) {
-      console.warn("⚠️ Error reading logs (container might not be ready yet):", e.message);
-    }
-
-    // Wait 2 seconds before retry
-    await sleep(2000);
-  }
-  throw new Error("❌ Could not find password in logs after multiple attempts.");
-}
 
 async function main() {
   console.log('🚀 Starting Data Seeder...');
@@ -48,10 +19,11 @@ async function main() {
       'Content-Type': 'application/json',
       'Authorization': authHeader
     },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       virtualHost: "demo.openk9.localhost",
       securityConfiguration: "LEGACY",
-      tenantName: "demo"
+      tenantName: "demo",
+      skipOAuth2: true
     })
   });
 
@@ -69,16 +41,6 @@ async function main() {
   const tenantData = await createTenantResponse.json();
   const schemaName = tenantData.schemaName;
   console.log(`✅ 1/4 Tenant Created. Schema: ${schemaName}`);
-
-  // ---------------------------------------------------------
-  // STEP 1.5: EXTRACT PASSWORD FROM LOGS
-  // ---------------------------------------------------------
-  console.log('🕵️  Hunting for password in logs...');
-
-  // Note: We wait a tiny bit to ensure the async log write happened
-  await sleep(1000);
-
-  const tempPassword = await getTenantPasswordFromLogs();
 
   // ---------------------------------------------------------
   // STEP 2: Initialize Tenant Data
@@ -181,8 +143,6 @@ async function main() {
   }
 
   console.log('✅ 4/4 Minio Connector configured.');
-
-  console.log(`🔐 FOUND PASSWORD: ${tempPassword}`);
 
   console.log('🎉 Done.');
 }

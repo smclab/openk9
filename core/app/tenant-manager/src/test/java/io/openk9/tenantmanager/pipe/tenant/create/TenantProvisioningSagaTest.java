@@ -64,7 +64,7 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null,
+			"vhost", "schema", null, null,
 			SecurityConfiguration.LEGACY,
 			replyTo.getRef(),
 			mocks
@@ -121,7 +121,7 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null,
+			"vhost", "schema", null, null,
 			SecurityConfiguration.LEGACY,
 			replyTo.getRef(),
 			mocks));
@@ -165,7 +165,7 @@ class TenantProvisioningSagaTest {
 		OAuth2Settings settings = new OAuth2Settings("cid", "csec", "issuer");
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant", settings,
+			"vh", "tenant", settings, null,
 			SecurityConfiguration.LEGACY,
 			replyTo.getRef(),
 			mocks)
@@ -220,7 +220,7 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", null, null,
+			"vh", null, null, null,
 			SecurityConfiguration.LEGACY, replyTo.getRef(), mocks));
 
 		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
@@ -234,6 +234,50 @@ class TenantProvisioningSagaTest {
 		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
 
 		// 3. Verify Final Saga Response
+		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void should_succeed_with_skip_oauth2() {
+		TenantResponseDTO expectedTenant = new TenantResponseDTO(
+			"1213402949",
+			"mySchema",
+			"mySchema",
+			"vHost",
+			"DISABLED",
+			"DISABLED",
+			"DISABLED");
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(expectedTenant);
+
+		Uni<Message<TenantResponseDTO>> uni = Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY), any()))
+			.thenReturn(uni);
+
+		TestProbe<TenantProvisioningSaga.Response> replyTo = testKit.createTestProbe();
+		MockProvisioningFactory mocks = new MockProvisioningFactory();
+
+		testKit.spawn(TenantProvisioningSaga.create(
+			"vh", "tenant", null, true,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks)
+		);
+
+		// 1. Verify Parallel Starts (Realm skipped due to skipOAuth2)
+		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
+
+		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
+		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
+
+		// Realm should NOT start
+		mocks.realmProbe.expectNoMessage();
+
+		// 2. Verify Final Saga Response
 		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
 	}
 

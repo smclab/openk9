@@ -47,46 +47,46 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  */
 @ApplicationScoped
 public class AdminIdentityProvider
-                implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
+	implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-        @ConfigProperty(name = "openk9.security.admin.password")
-        String adminPassword;
+	@ConfigProperty(name = "openk9.security.admin.password")
+	String adminPassword;
 
-        private byte[] adminPasswordBytes;
+	private byte[] adminPasswordBytes;
 
-        @PostConstruct
-        void init() {
-                this.adminPasswordBytes = adminPassword.getBytes(StandardCharsets.UTF_8);
-        }
+	@Override
+	public Uni<SecurityIdentity> authenticate(
+		UsernamePasswordAuthenticationRequest request,
+		AuthenticationRequestContext context) {
 
-        @Override
-        public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
-                return UsernamePasswordAuthenticationRequest.class;
-        }
+		if (!"admin".equals(request.getUsername())) {
+			return Uni.createFrom().failure(
+				new AuthenticationFailedException("Invalid credentials"));
+		}
 
-        @Override
-        public Uni<SecurityIdentity> authenticate(
-                        UsernamePasswordAuthenticationRequest request,
-                        AuthenticationRequestContext context) {
+		byte[] actual = new String(request.getPassword().getPassword())
+			.getBytes(StandardCharsets.UTF_8);
 
-                if (!"admin".equals(request.getUsername())) {
-                        return Uni.createFrom().failure(
-                                        new AuthenticationFailedException("Invalid credentials"));
-                }
+		if (!MessageDigest.isEqual(adminPasswordBytes, actual)) {
+			return Uni.createFrom().failure(
+				new AuthenticationFailedException("Invalid credentials"));
+		}
 
-                byte[] actual = new String(request.getPassword().getPassword())
-                                .getBytes(StandardCharsets.UTF_8);
+		return Uni.createFrom().item(
+			QuarkusSecurityIdentity.builder()
+				.setPrincipal(new QuarkusPrincipal("admin"))
+				.addRole("k9-admin")
+				.build());
+	}
 
-                if (!MessageDigest.isEqual(adminPasswordBytes, actual)) {
-                        return Uni.createFrom().failure(
-                                        new AuthenticationFailedException("Invalid credentials"));
-                }
+	@Override
+	public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
+		return UsernamePasswordAuthenticationRequest.class;
+	}
 
-                return Uni.createFrom().item(
-                                QuarkusSecurityIdentity.builder()
-                                                .setPrincipal(new QuarkusPrincipal("admin"))
-                                                .addRole("k9-admin")
-                                                .build());
-        }
+	@PostConstruct
+	void init() {
+		this.adminPasswordBytes = adminPassword.getBytes(StandardCharsets.UTF_8);
+	}
 
 }

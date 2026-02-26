@@ -27,16 +27,19 @@ build_images() {
         echo "Clean everything..."
         ./mvnw clean 
 
-        # We build and install ALL common dependencies first.
-        # Explicitly targeting client submodules ensures gRPC classes are generated 
-        # and Jandex indexes are created and available in local repo.
+        echo "Installing hibernate-rx-multitenancy..."
+        ./mvnw install -P '!validate,!format' -DskipTests \
+            -f "../vendor/hibernate-rx-multitenancy/pom.xml"
+
+        # We build and install all common dependencies first.
         echo "Installing all shared modules..."
-        ./mvnw install -DskipTests \
-            -pl common,client,client/grpc,client/grpc/common,client/grpc/searcher-client-grpc,client/grpc/tenant-manager-client-grpc,client/grpc/file-manager-client-grpc,client/grpc/datasource-client-grpc,client/grpc/app-manager,client/grpc/text-embedding,tenant-events,../vendor/hibernate-rx-multitenancy \
-            -am
+        for module in common client tenant-events; do
+            echo "Installing $module..."
+            ./mvnw install -DskipTests -f "$module/pom.xml"
+        done
 
         # Spring Boot: api-gateway (uses jib-maven-plugin)
-        echo "Building api-gateway (Spring Boot)..."
+        echo "Building Spring Boot services..."
         ./mvnw package -DskipTests jib:dockerBuild \
             -Djib.to.image=smclab/openk9-api-gateway:$TAG \
             -f app/api-gateway/pom.xml
@@ -59,19 +62,23 @@ build_images() {
     )
 
     # 2. Build Frontend Services (Docker context is root)
-    # echo "--- Building Frontend Services ---"
-    # docker build --build-arg BUILD_ENV=chatbot -t smclab/openk9-search-frontend:$TAG -f js-packages/search-frontend/Dockerfile .
-    # docker build -t smclab/openk9-admin-ui:$TAG -f js-packages/admin-ui/Dockerfile .
+    echo "--- Building Frontend Services ---"
+    docker build -t smclab/openk9-search-frontend:$TAG -f js-packages/search-frontend/Dockerfile .
+    docker build -t smclab/openk9-admin-ui:$TAG -f js-packages/admin-ui/Dockerfile .
 
     # 3. Build Connectors
-    # echo "--- Building Connectors ---"
-    # docker build -t smclab/openk9-web-connector:$TAG -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+    echo "--- Building Connectors ---"
+    docker build -t smclab/openk9-web-connector:$TAG -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
 
     echo "All images built successfully with tag: $TAG"
 }
 
 run_compose() {
     echo "Starting Docker Compose with local images..."
+
+    # Build Initializer Image
+    $DOCKER_COMPOSE -f $COMPOSE_FILE build initializer
+
     # Execute the command with provided arguments, or default to 'up -d' if none
     if [ $# -eq 0 ]; then
         $DOCKER_COMPOSE -f $COMPOSE_FILE up -d

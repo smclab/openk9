@@ -1,6 +1,4 @@
-FROM node:18-alpine
-
-RUN apk add --no-cache docker-cli
+FROM node:18.18-alpine
 
 # Set working directory
 WORKDIR /app

@@ -17,6 +17,7 @@
 
 package io.openk9.tenantmanager.service;
 
+import java.util.Optional;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.event.Startup;
@@ -44,23 +45,32 @@ public class TenantRealmService {
 	KeycloakDefaultRealmRepresentationFactory defaultRepresentationFactory;
 	@Inject
 	KeycloakAdminClientConfig keycloakAdminClientConfig;
+	@Inject
 	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
-	String baseIssuerUri;
+	private Optional<String> mayBaseIssuerUri;
 
-	private Keycloak keycloakClient;
+	private String baseIssuerUri = null;
+	private Keycloak keycloakClient = null;
 
 	void setup(@Observes Startup startup) {
 
+		if (mayBaseIssuerUri.isEmpty()) {
+			log.warn("Realm Service cannot be configured: baseIssuerUri isn't set.");
+			return;
+		}
+
+		if (keycloakAdminClientConfig.serverUrl().isEmpty()) {
+			log.warn("Realm Service cannot be configured: admin serverUrl isn't set.");
+			return;
+		}
+
+		this.baseIssuerUri = mayBaseIssuerUri.get();
 		this.keycloakClient = createKeycloakClient(keycloakAdminClientConfig);
 	}
 
 	private static Keycloak createKeycloakClient(KeycloakAdminClientConfig config) {
 
 		KeycloakAdminClientConfigUtil.validate(config);
-
-		if (config.serverUrl().isEmpty()) {
-			throw new IllegalStateException("keycloak serverUrl is empty");
-		}
 
 		KeycloakBuilder keycloakBuilder = KeycloakBuilder
 			.builder()
@@ -70,7 +80,7 @@ public class TenantRealmService {
 			.username(config.username().orElse(null))
 			.password(config.password().orElse(null))
 			.realm(config.realm())
-			.serverUrl(config.serverUrl().get())
+			.serverUrl(config.serverUrl().orElse(null))
 			.scope(config.scope().orElse(null));
 
 		return keycloakBuilder.build();
