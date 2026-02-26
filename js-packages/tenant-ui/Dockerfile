@@ -5,7 +5,7 @@ ENV NODE_OPTIONS=${NODE_OPTIONS}
 WORKDIR /app
 
 # Copy only package files for better caching
-COPY ./js-packages/tenant-ui/package.json ./yarn.lock ./
+COPY ./js-packages/tenant-ui/package.json ./yarn.lock* ./
 RUN yarn install --network-timeout 600000
 
 # Stage 2 - Build

@@ -5,7 +5,7 @@ ENV NODE_OPTIONS=${NODE_OPTIONS}
 WORKDIR /app
 
 # Copy only package files for better caching
-COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/yarn.lock ./js-packages/talk-to/
+COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/yarn.lock* ./js-packages/talk-to/
 WORKDIR /app/js-packages/talk-to
 RUN yarn install --network-timeout 600000
 

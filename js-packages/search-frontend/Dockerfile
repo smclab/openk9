@@ -8,7 +8,7 @@ RUN mkdir -p /app/js-packages/search-frontend
 
 # Copy the package.json from the root
 COPY ./package.json /app/package.json
-COPY ./yarn.lock /app
+COPY ./yarn.lock* /app
 # COPY ./.yarn/ /app/.yarn/
 # COPY ./.yarnrc.yml /app/
 
