@@ -22,8 +22,10 @@ import java.io.IOException;
 import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -31,11 +33,15 @@ import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.amqp.support.converter.MessageConverter;
 
 @Slf4j
-@RequiredArgsConstructor
 public class TenantManagementEventMessageConverter implements MessageConverter {
 
 	private static final String X_EVENT_TYPE = "x-event-type";
 	private final ObjectMapper mapper;
+
+	public TenantManagementEventMessageConverter(ObjectMapper mapper) {
+		this.mapper = mapper.copy()
+			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	}
 
 	@Override
 	public Message toMessage(Object object, MessageProperties messageProperties)
@@ -77,12 +83,26 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			byte[] body = message.getBody();
 
 			String eventType = messageProperties.getHeader(X_EVENT_TYPE);
+
+			// Pattern Event Upcaster: intercept and transform the JSON before deserialization
+			JsonNode root = mapper.readTree(body);
+
+			if ("TenantCreated".equals(eventType) || "TenantUpdated".equals(eventType)) {
+				root = upcastTenantEvent(root);
+			}
+			else if ("ApiKeyCreated".equals(eventType)) {
+				if (shouldIgnoreApiKeyCreated(root)) {
+					log.warn("Ignoring legacy ApiKeyCreated event: {}", root);
+					return null;
+				}
+			}
+
 			Object event = switch (eventType) {
-				case "ApiKeyCreated" -> mapper.readValue(body, TenantEvent.ApiKeyCreated.class);
-				case "ApiKeyRevoked" -> mapper.readValue(body, TenantEvent.ApiKeyRevoked.class);
-				case "TenantCreated" -> mapper.readValue(body, TenantEvent.TenantCreated.class);
-				case "TenantDeleted" -> mapper.readValue(body, TenantEvent.TenantDeleted.class);
-				case "TenantUpdated" -> mapper.readValue(body, TenantEvent.TenantUpdated.class);
+				case "ApiKeyCreated" -> mapper.treeToValue(root, TenantEvent.ApiKeyCreated.class);
+				case "ApiKeyRevoked" -> mapper.treeToValue(root, TenantEvent.ApiKeyRevoked.class);
+				case "TenantCreated" -> mapper.treeToValue(root, TenantEvent.TenantCreated.class);
+				case "TenantDeleted" -> mapper.treeToValue(root, TenantEvent.TenantDeleted.class);
+				case "TenantUpdated" -> mapper.treeToValue(root, TenantEvent.TenantUpdated.class);
 				default -> throw new MessageConversionException("unknown x-event-type value");
 			};
 
@@ -93,8 +113,46 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			return event;
 		}
 		catch (IOException e) {
-			throw new RuntimeException(e);
+			throw new MessageConversionException("Error during message deserialization", e);
 		}
+	}
+
+	private JsonNode upcastTenantEvent(JsonNode root) {
+		if (!(root instanceof ObjectNode objectNode)) {
+			return root;
+		}
+
+		// 1. Handle missing issuerUri if realm_name is present
+		if (!objectNode.has("issuerUri") && objectNode.has("realm_name")) {
+			String realmName = objectNode.get("realm_name").asText();
+			// Using the default base URL discovered in tenant-manager
+			objectNode.put("issuerUri", "http://localhost:9090/realms/" + realmName);
+		}
+
+		// 2. Handle routeAuthorizationMap adaptation
+		if (objectNode.has("routeAuthorizationMap")) {
+			JsonNode authMapNode = objectNode.get("routeAuthorizationMap");
+			if (authMapNode instanceof ObjectNode authMap) {
+				// Detect legacy by presence of DATASOURCE or missing modern keys
+				if (authMap.has("DATASOURCE") || !authMap.has("ADMINISTRATION")) {
+					JsonNode searchScheme = authMap.get("SEARCH");
+					String searchSchemeStr = (searchScheme != null) ? searchScheme.asText() : "OAUTH2";
+
+					authMap.put("ADMINISTRATION", "OAUTH2");
+					authMap.put("PUBLIC", searchSchemeStr);
+					authMap.put("INGESTION", searchSchemeStr);
+
+					authMap.remove("DATASOURCE");
+				}
+			}
+		}
+
+		return objectNode;
+	}
+
+	private boolean shouldIgnoreApiKeyCreated(JsonNode root) {
+		// Ignore if missing apiGroup or expirationDate
+		return !root.has("apiGroup") || !root.has("expirationDate");
 	}
 
 }
