@@ -5,6 +5,7 @@ include:
 
 stages:
 - build
+- build-verifier
 - container-scanning
 - restart
 
@@ -21,7 +22,21 @@ Build Entity-Manager Image:
     - .version
     expire_in: 24 hours
   rules:
-    - !reference [.rules:child-build-always, rules]
+    # Push image only on main/tag/feature branch - NOT on MR
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
+
+######################## BUILD VERIFIER ########################
+Build Verifier Entity-Manager:
+  extends: .build_template
+  stage: build-verifier
+  variables:
+    COMPONENT: "entity-manager"
+  script:
+  - !reference [.maven-build-verifier-logic, script]
+  rules:
+    # Run only on MR - lightweight compile check, no push
+    - !reference [.rules:child-verify-mr, rules]
 
 # SCANNING JOB
 Container Scanning Entity-Manager:

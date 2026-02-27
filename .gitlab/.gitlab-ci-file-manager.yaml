@@ -5,6 +5,7 @@ include:
 
 stages:
 - build
+- build-verifier
 - container-scanning
 - restart
 
@@ -25,7 +26,26 @@ Build File-Manager Image:
     - .version
     expire_in: 24 hours
   rules:
-    - !reference [.rules:child-build-always, rules]
+    # Push image only on main/tag/feature branch - NOT on MR
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
+
+######################## BUILD VERIFIER ########################
+Build Verifier File-Manager:
+  extends: .build_template
+  stage: build-verifier
+  variables:
+    COMPONENT: "file-manager"
+  script:
+  # Clean Maven cache also needed for MR verification (same protobuf issue)
+  - cd core
+  - mvn dependency:purge-local-repository -DmanualInclude="io.openk9" -DactOnly=false -DreResolve=false
+  - mvn clean
+  - cd ..
+  - !reference [.maven-build-verifier-logic, script]
+  rules:
+    # Run only on MR - lightweight compile check, no push
+    - !reference [.rules:child-verify-mr, rules]
 
 # SCANNING JOB
 Container Scanning File-Manager:

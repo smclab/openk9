@@ -85,6 +85,28 @@ variables:
     eval "$FINAL_CMD"
 
 
+# ========================================
+# TEMPLATE: .maven-build-verifier-logic
+# ========================================
+# Lightweight Maven build for MR validation.
+# Does NOT push to registry. Only validates that the code compiles.
+# Used by Build Verifier jobs in backend child pipelines.
+
+.maven-build-verifier-logic:
+  script:
+  - |
+    echo "🧪 Starting Build Verifier (MR only) for: $COMPONENT"
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f core/pom.xml)
+    echo "VERSION=$VERSION"
+    echo "▶️ Compiling only, no image push"
+    cd core
+    mvn $MAVEN_CLI_OPTS package \
+      -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository \
+      -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am \
+      -Dquarkus.container-image.build=false \
+      -Dquarkus.container-image.push=false
+    echo "✅ Build Verifier completed successfully for $COMPONENT"
+
 .container-scanning-template:
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE
@@ -253,6 +275,11 @@ variables:
     fi
     '
   rules:
+  # Explicitly block on MR: restart must never run on MR
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    when: never
+  - if: '$CI_MERGE_REQUEST_IID'
+    when: never
   - if: '$CI_COMMIT_BRANCH == "main"'
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'

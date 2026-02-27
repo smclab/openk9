@@ -3,6 +3,12 @@
 # ================================
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
+#
+# ISOLATION STRATEGY:
+# The MR rule and the feature-branch rule are MERGED into a single condition.
+# This ensures that ONLY the designated backend developers can trigger
+# these pipelines, even when a Merge Request is open.
+# Frontend/AI developers opening MRs will NOT accidentally trigger backend pipelines.
 
 Trigger Datasource:
   stage: trigger
@@ -18,11 +24,8 @@ Trigger Datasource:
         - core/common/common-utils/**/*
     # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # 3. Feature Branch Rule - REUSES changes list (*datasource_changes)
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *datasource_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # 3. MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *datasource_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-datasource.yaml"
@@ -42,10 +45,8 @@ Trigger Searcher:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *searcher_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *searcher_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-searcher.yaml"
@@ -65,10 +66,8 @@ Trigger Ingestion:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *ingestion_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *ingestion_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-ingestion.yaml"
@@ -88,10 +87,8 @@ Trigger K8S-Client:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *k8s_client_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *k8s_client_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-k8s-client.yaml"
@@ -111,10 +108,8 @@ Trigger File-Manager:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *file_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *file_manager_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-file-manager.yaml"
@@ -134,10 +129,8 @@ Trigger Tenant-Manager:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *tenant_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *tenant_manager_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
@@ -157,10 +150,8 @@ Trigger API-Gateway:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *api_gateway_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *api_gateway_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
@@ -180,10 +171,8 @@ Trigger Tika:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *tika_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *tika_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
@@ -203,10 +192,8 @@ Trigger Entity-Manager:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *entity_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *entity_manager_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
@@ -226,10 +213,8 @@ Trigger Resources-Validator:
         - core/common/common-utils/**/*
     # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR Rule - REUSES changes list (Build/Test only)
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *resources_validator_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    # MR or Feature Branch Rule - only for backend developers
+    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
       changes: *resources_validator_changes
   trigger:
     include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
