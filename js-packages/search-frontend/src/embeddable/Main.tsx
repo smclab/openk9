@@ -2026,6 +2026,8 @@ export function remappingLanguage({ language }: { language: string }) {
       return "en";
     case "fr_FR":
       return "fr";
+    case "de_DE":
+      return "de";
     default:
       return "en";
   }
