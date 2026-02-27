@@ -29,12 +29,15 @@ import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.BucketDTO;
 import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.K9EntityDTO;
 import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
 import io.openk9.datasource.model.dto.base.TabDTO;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.dto.request.SearchConfigWithQueryParsersDTO;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.service.BaseK9EntityService;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceConnectionObjects;
 import io.openk9.datasource.service.DatasourceService;
@@ -272,6 +275,18 @@ public class EntitiesUtils {
 				session -> searchConfigService.findByName(session, name)
 				.call(searchConfig ->
 					Mutiny.fetch(searchConfig.getQueryParserConfigs()))
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> List<ENTITY> getAllEntities(
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(session ->
+				service.findAll()
 			)
 			.await()
 			.indefinitely();

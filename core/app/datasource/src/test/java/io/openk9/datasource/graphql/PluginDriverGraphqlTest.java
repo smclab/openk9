@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import io.openk9.datasource.plugindriver.HttpPluginDriverClient;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
@@ -39,7 +40,6 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.index.exception.SampleEndpointException;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.client.HttpPluginDriverClient;
 import io.openk9.datasource.service.DocTypeService;
 
 import io.quarkus.test.InjectMock;
