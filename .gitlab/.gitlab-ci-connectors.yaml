@@ -101,7 +101,7 @@ Build Database Connector image:
     /kaniko/executor \
       --context "${CI_PROJECT_DIR}/connectors/database-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest"
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:latest"
 
     echo "=== Saving version info ==="
     echo "latest" > $CI_PROJECT_DIR/.version-database-connector
@@ -222,8 +222,8 @@ Container Scanning Database Connector:
   needs:
   - "Build Database Connector image"
   script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-wordpress-connector:latest"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-database-connector:latest ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-database-connector:latest"
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:

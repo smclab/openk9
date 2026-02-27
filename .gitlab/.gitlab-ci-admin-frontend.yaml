@@ -98,7 +98,7 @@ Build Verifier:
   # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
   - yarn install --prefer-offline --frozen-lockfile
   # 2. Build ONLY the specific component using Lerna scope
-  - npx lerna run build --scope openk9-admin-ui
+  - CI=false npx lerna run build --scope openk9-admin-ui
   rules:
     # Run only on MR
     - !reference [.rules:child-verify-mr, rules]

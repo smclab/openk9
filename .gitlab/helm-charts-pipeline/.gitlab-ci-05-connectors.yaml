@@ -54,7 +54,7 @@ push-database-connector-helm:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-  - cd connectors/database-connector/chart/openk9-wordpress-connector && mkdir -p package
+  - cd connectors/database-connector/chart/openk9-database-connector && mkdir -p package
   - helm package . -d package
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 

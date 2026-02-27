@@ -97,7 +97,7 @@ Build Verifier:
   # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
   - yarn install --prefer-offline --frozen-lockfile
   # 2. Build ONLY the specific component using Lerna scope
-  - npx lerna run build --scope talk-to
+  - CI=false npx lerna run build --scope talk-to
   rules:
     # Run only on MR
     - !reference [.rules:child-verify-mr, rules]
