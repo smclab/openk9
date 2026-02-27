@@ -122,14 +122,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			return root;
 		}
 
-		// 1. Handle missing issuerUri if realm_name is present
-		if (!objectNode.has("issuerUri") && objectNode.has("realm_name")) {
-			String realmName = objectNode.get("realm_name").asText();
-			// Using the default base URL discovered in tenant-manager
-			objectNode.put("issuerUri", "http://localhost:9090/realms/" + realmName);
-		}
-
-		// 2. Handle routeAuthorizationMap adaptation
+		// Handle routeAuthorizationMap adaptation
 		if (objectNode.has("routeAuthorizationMap")) {
 			JsonNode authMapNode = objectNode.get("routeAuthorizationMap");
 			if (authMapNode instanceof ObjectNode authMap) {

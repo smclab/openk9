@@ -44,14 +44,13 @@ class TenantManagementEventMessageConverterTest {
 	}
 
 	@Test
-	@DisplayName("Should transform legacy TenantCreated event (with DATASOURCE and realm_name)")
+	@DisplayName("Should transform legacy TenantCreated event (with DATASOURCE)")
 	void testLegacyTenantCreatedUpcasting() {
 		String legacyJson = """
 			{
 				"tenantId": "legacy-tenant",
 				"hostName": "legacy.localhost",
 				"schemaName": "legacy_tenant",
-				"realm_name": "legacy-realm",
 				"routeAuthorizationMap": {
 					"SEARCH": "API_KEY",
 					"DATASOURCE": "OAUTH2"
@@ -69,8 +68,6 @@ class TenantManagementEventMessageConverterTest {
 		TenantEvent.TenantCreated event = (TenantEvent.TenantCreated) result;
 
 		assertThat(event.tenantId()).isEqualTo("legacy-tenant");
-		// Expecting reconstructed issuerUri (logic: baseIssuerUri + realm_name)
-		assertThat(event.issuerUri()).contains("legacy-realm");
 		
 		// mapping: ADMINISTRATION = OAUTH2, PUBLIC = SEARCH (API_KEY), INGESTION = SEARCH (API_KEY)
 		assertThat(event.routeAuthorizationMap())
