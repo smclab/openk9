@@ -28,12 +28,10 @@ Build Entity-Manager Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Entity-Manager:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "entity-manager"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
     # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]

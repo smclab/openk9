@@ -28,7 +28,7 @@ Build Datasource image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Datasource:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "datasource"

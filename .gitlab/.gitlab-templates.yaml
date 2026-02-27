@@ -17,9 +17,12 @@ variables:
     MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress -DskipTests -Dquarkus.devservices.enabled=false"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   cache:
-    key: "$COMPONENT"
+    # Key includes '-mvn' suffix to isolate Maven repo cache from other caches
+    # (e.g. pip, yarn). pull-push: build jobs populate the cache on main/feature.
+    key: "$COMPONENT-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
+    policy: pull-push
   artifacts:
     paths:
     - "$CI_PROJECT_DIR/core/app/$COMPONENT/target/"
@@ -106,6 +109,32 @@ variables:
       -Dquarkus.container-image.build=false \
       -Dquarkus.container-image.push=false
     echo "✅ Build Verifier completed successfully for $COMPONENT"
+
+# ========================================
+# TEMPLATE: .maven-verifier-template
+# ========================================
+# Reusable verifier job for backend components on MR.
+# Extends .build_template but overrides cache to pull-only:
+# - MR jobs must NOT write to the shared Maven cache
+# - Only main/feature branch builds populate the cache (pull-push)
+# Usage in child pipelines:
+#   Build Verifier Datasource:
+#     extends: .maven-verifier-template
+#     stage: build-verifier
+#     variables:
+#       COMPONENT: "datasource"
+#     rules:
+#       - !reference [.rules:child-verify-mr, rules]
+
+.maven-verifier-template:
+  extends: .build_template
+  cache:
+    key: "$COMPONENT-mvn"
+    paths:
+    - $CI_PROJECT_DIR/.m2/repository
+    policy: pull  # MR: read-only - avoids overwriting shared cache with unreviewed code
+  script:
+  - !reference [.maven-build-verifier-logic, script]
 
 .container-scanning-template:
   stage: container-scanning

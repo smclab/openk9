@@ -28,14 +28,11 @@ Build Resources-Validator Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Resources-Validator:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "resources-validator"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
-    # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]
 
 # SCANNING JOB

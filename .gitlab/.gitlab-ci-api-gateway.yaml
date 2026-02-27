@@ -31,15 +31,12 @@ Build API-Gateway Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier API-Gateway:
-  extends: .build_template
+  extends: .maven-verifier-template
   image: maven:3.9.6-eclipse-temurin-21
   stage: build-verifier
   variables:
     COMPONENT: "api-gateway"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
-    # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]
 
 #################### CONTAINER SCANNING API-GATEWAY ####################

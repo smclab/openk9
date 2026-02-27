@@ -28,12 +28,10 @@ Build Ingestion image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Ingestion:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "ingestion"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
     # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]

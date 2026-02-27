@@ -28,7 +28,7 @@ Build Searcher Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Searcher:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "searcher"

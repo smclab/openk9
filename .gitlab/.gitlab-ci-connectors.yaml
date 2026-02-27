@@ -27,7 +27,20 @@ Build Web Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:latest"
@@ -63,7 +76,20 @@ Build Email Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}/connectors/email-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:latest"
@@ -98,7 +124,20 @@ Build Database Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}/connectors/database-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:latest"
@@ -133,7 +172,20 @@ Build YouTube Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}/connectors/youtube-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:latest"
@@ -168,7 +220,20 @@ Build GitLab Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building and pushing Docker image with Kaniko ==="
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector" \
       --dockerfile "${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:latest"

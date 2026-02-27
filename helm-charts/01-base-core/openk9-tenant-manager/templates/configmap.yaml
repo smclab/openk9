@@ -53,8 +53,6 @@ data:
   # JVM Memory variable
   JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
 
-  QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
-
   {{- if .Values.quarkus.kubernetes.namespace }}
   QUARKUS_KUBERNETES_NAMESPACE: {{ .Values.quarkus.kubernetes.namespace | quote }}
   {{- end }}

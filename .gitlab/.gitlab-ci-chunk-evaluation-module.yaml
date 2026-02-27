@@ -49,21 +49,60 @@ Build Chunk Evaluation Image:
   - |
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
       echo "[CHUNK-EVAL] Build & push as :$VERSION"
+      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+      # --cache=true         abilita il Docker layer cache
+      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+      #                      evita di riempire il registry SMC con layer temporanei
+      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+      #                      coerente con il MinIO lifecycle TTL sul bucket
+      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+      # ──────────────────────────────────────────────────────────────────────────────
       /kaniko/executor \
+        --cache=true \
+        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+        --cache-ttl=168h \
+        --snapshot-mode=redo \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
         --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[CHUNK-EVAL] Build & push as :merge-request"
+      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+      # --cache=true         abilita il Docker layer cache
+      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+      #                      evita di riempire il registry SMC con layer temporanei
+      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+      #                      coerente con il MinIO lifecycle TTL sul bucket
+      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+      # ──────────────────────────────────────────────────────────────────────────────
       /kaniko/executor \
+        --cache=true \
+        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+        --cache-ttl=168h \
+        --snapshot-mode=redo \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:$VERSION" \
         --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[CHUNK-EVAL] Feature branch => build & push :997-SNAPSHOT"
+      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+      # --cache=true         abilita il Docker layer cache
+      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+      #                      evita di riempire il registry SMC con layer temporanei
+      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+      #                      coerente con il MinIO lifecycle TTL sul bucket
+      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+      # ──────────────────────────────────────────────────────────────────────────────
       /kaniko/executor \
+        --cache=true \
+        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+        --cache-ttl=168h \
+        --snapshot-mode=redo \
         --context "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/chunk-evaluation-module:997-SNAPSHOT" \

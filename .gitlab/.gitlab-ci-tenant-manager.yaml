@@ -28,14 +28,11 @@ Build Tenant-Manager image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Tenant-Manager:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "tenant-manager"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
-    # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]
 
 # SCANNING JOB

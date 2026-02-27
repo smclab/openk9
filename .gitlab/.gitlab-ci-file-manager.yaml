@@ -32,10 +32,15 @@ Build File-Manager Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier File-Manager:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "file-manager"
+  cache:
+    key: "file-manager-mvn"
+    paths:
+    - $CI_PROJECT_DIR/.m2/repository
+    policy: pull
   script:
   # Clean Maven cache also needed for MR verification (same protobuf issue)
   - cd core
@@ -44,7 +49,6 @@ Build Verifier File-Manager:
   - cd ..
   - !reference [.maven-build-verifier-logic, script]
   rules:
-    # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]
 
 # SCANNING JOB

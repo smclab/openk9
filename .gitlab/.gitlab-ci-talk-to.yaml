@@ -68,7 +68,20 @@ Build Talk-To:
 
   # Execute build with the previously determined tag
   - |
+    # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
+    # --cache=true         abilita il Docker layer cache
+    # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
+    #                      evita di riempire il registry SMC con layer temporanei
+    # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
+    #                      coerente con il MinIO lifecycle TTL sul bucket
+    # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
+    #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+    # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=168h \
+      --snapshot-mode=redo \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG" \
@@ -139,8 +152,12 @@ Dependency Check Talk-To:
     optional: true
   extends: .dependency_check_frontend_template
   allow_failure: true
+  variables:
+    # Tell the npm-audit analyzer to scan only the talk-to subdirectory,
+    # NOT the monorepo root. Without this, the analyzer finds the root yarn.lock
+    # and tries to install ALL workspace packages → segfault in yarn 1.22.5
+    DS_PROJECT_DIR: "js-packages/talk-to"
   script:
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
-  - cd js-packages/talk-to
   - /analyzer run

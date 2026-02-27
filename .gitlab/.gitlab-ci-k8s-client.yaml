@@ -28,12 +28,10 @@ Build K8S-Client Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier K8S-Client:
-  extends: .build_template
+  extends: .maven-verifier-template
   stage: build-verifier
   variables:
     COMPONENT: "k8s-client"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
   rules:
     # Run only on MR - lightweight compile check, no push
     - !reference [.rules:child-verify-mr, rules]
