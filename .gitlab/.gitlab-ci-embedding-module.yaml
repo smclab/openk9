@@ -66,31 +66,27 @@ Build Embedding ST:
       #                      coerente con il MinIO lifecycle TTL sul bucket
       # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
       #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+      # --compressed-caching=false evita l'errore OOM (exit code 137) disabilitando
+      #                      la compressione in RAM dei layer giganti (es. PyTorch)
       # ──────────────────────────────────────────────────────────────────────────────
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[ST] Build & push as :merge-request"
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # ──────────────────────────────────────────────────────────────────────────────
+      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION"
@@ -101,20 +97,13 @@ Build Embedding ST:
       else
         echo "[ST] Feature branch => build & push :997-SNAPSHOT"
       fi
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # ──────────────────────────────────────────────────────────────────────────────
+      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:997-SNAPSHOT"
@@ -151,39 +140,25 @@ Build Embedding OpenAI:
   - |
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
       echo "[OA] Build & push as :$VERSION"
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # ──────────────────────────────────────────────────────────────────────────────
+      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[OA] Build & push as :merge-request"
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # ──────────────────────────────────────────────────────────────────────────────
+      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION"
@@ -194,20 +169,13 @@ Build Embedding OpenAI:
       else
         echo "[OA] Feature branch => build & push :997-SNAPSHOT"
       fi
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # ──────────────────────────────────────────────────────────────────────────────
+      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
       /kaniko/executor \
         --cache=true \
         --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
         --cache-ttl=168h \
         --snapshot-mode=redo \
+        --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
         --destination "${CI_REGISTRY_NAME}/openk9/openai-module:997-SNAPSHOT"

@@ -76,12 +76,15 @@ Build Search Frontend:
     #                      coerente con il MinIO lifecycle TTL sul bucket
     # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
     #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
+        # --compressed-caching=false evita l'errore OOM (exit code 137) disabilitando
+        #                      la compressione in RAM dei layer giganti (es. PyTorch)
     # ──────────────────────────────────────────────────────────────────────────────
     /kaniko/executor \
       --cache=true \
       --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
       --cache-ttl=168h \
       --snapshot-mode=redo \
+      --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
       --destination "$CI_REGISTRY_NAME/openk9/search-frontend:$DOCKER_TAG" \
