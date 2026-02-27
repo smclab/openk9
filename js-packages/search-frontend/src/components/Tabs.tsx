@@ -433,7 +433,7 @@ export function translationTab({
   tabLanguages: { [key: string]: string };
   defaultValue: string;
 }): string {
-  const desiredKey = "label." + language;
+  const desiredKey = "name." + language;
   if (tabLanguages && tabLanguages.hasOwnProperty(desiredKey)) {
     return tabLanguages[desiredKey];
   }
