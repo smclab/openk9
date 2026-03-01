@@ -1219,7 +1219,7 @@ For kubernetes/OpenShift execute:
 ```yaml
 helm install minio oci://registry-1.docker.io/cloudpirates/minio \
   -n openk9 \
-  --version 0.6.1 \
+  --version 0.10.1 \
   -f 00-base-requirements/08-minio/local-runtime.yaml
 ```
 
