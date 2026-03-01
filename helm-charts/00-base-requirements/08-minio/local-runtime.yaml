@@ -3,8 +3,8 @@
 ## Immagine MinIO
 image:
   registry: docker.io
-  repository: minio/minio
-  tag: "RELEASE.2025-09-07T16-13-09Z"
+  repository: cloudpirates/image-minio
+  tag: "RELEASE.2025-10-15T17-29-55Z-hardened@sha256:8dc02a7e509336c8bbb67962086d691bdcde20a2c9327ed68e5081a681f6dbfc"
   imagePullPolicy: IfNotPresent
 
 ## Autenticazione - USA SECRET
