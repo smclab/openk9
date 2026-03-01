@@ -57,7 +57,7 @@ class GenericCrawlerPipeline:
 
             spider.crawled_ids.append(item['contentId'])
             spider.count = spider.count + 1
-            logger.info("Crawled " + str(spider.cpunt) + " elements")
+            logger.info("Crawled " + str(spider.count) + " elements")
 
             return item
 
