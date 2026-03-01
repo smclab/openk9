@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
     name = "genericCrawlSpider"
-    cont = 0
+    count = 0
 
     allowed_types = []
     type_mapping = []
