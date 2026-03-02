@@ -146,54 +146,54 @@ public class BaseAutoCompleteAnnotator extends BaseAnnotator {
 
 
 					if (value instanceof String) {
-						if (!value.equals(token)) {
+						if (!((String) value).toLowerCase().equals(token)) {
 							categorySemantics.add(
-								CategorySemantics.of(
-									"$AUTOCOMPLETE",
-									Map.of(
-										"tokenType", "TEXT",
-										"label", label,
-										"value", value,
-										"score", 0.2f,
-										"extra", annotator.getExtraParams()
-									)
-								));
+									CategorySemantics.of(
+											"$AUTOCOMPLETE",
+											Map.of(
+													"tokenType", "TEXT",
+													"label", label,
+													"value", value,
+													"score", 0.2f,
+													"extra", annotator.getExtraParams()
+											)
+									));
 						}
 					}
 					else if (value instanceof Map) {
 						for (Map.Entry<?, ?> e2 : ((Map<?, ?>) value).entrySet()) {
 							if (e2.getValue() instanceof ArrayList) {
 								for (String name : ((ArrayList<String>) e2.getValue())) {
-									if (!name.equals(token) &&
-										(name.contains(token))) {
+									if (!name.toLowerCase().equals(token)) {
 										categorySemantics.add(
-											CategorySemantics.of(
-												"$AUTOCOMPLETE",
-												Map.of(
-													"tokenType", "TEXT",
-													"label", label,
-													"value", name,
-													"score", 0.1f,
-													"extra", annotator.getExtraParams()
+												CategorySemantics.of(
+														"$AUTOCOMPLETE",
+														Map.of(
+																"tokenType", "TEXT",
+																"label", label,
+																"value", name,
+																"score", 0.1f,
+																"extra", annotator.getExtraParams()
+														)
 												)
-											)
 										);
 									}
 								}
 							}
 							else {
-								if (!e2.getValue().equals(token)) {
+								String name = e2.getValue().toString().toLowerCase();
+								if (!name.equals(token)) {
 									categorySemantics.add(
-										CategorySemantics.of(
-											"$AUTOCOMPLETE",
-											Map.of(
-												"tokenType", "TEXT",
-												"label", label,
-												"value", e2.getValue(),
-												"score", 0.1f,
-												"extra", annotator.getExtraParams()
+											CategorySemantics.of(
+													"$AUTOCOMPLETE",
+													Map.of(
+															"tokenType", "TEXT",
+															"label", label,
+															"value", e2.getValue(),
+															"score", 0.1f,
+															"extra", annotator.getExtraParams()
+													)
 											)
-										)
 									);
 								}
 							}
