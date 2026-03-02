@@ -152,7 +152,6 @@ async def rag_generate(
     Args:
         search_query_request (models.SearchQuery): Request object containing:
             - searchQuery: Main search query parameters
-            - range: Range filter as [start, end]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
             - suggestionCategoryId: Category ID to filter suggestions
@@ -190,7 +189,6 @@ async def rag_generate(
         - Implements result re-ranking
     """
     search_query = search_query_request.searchQuery
-    range_values = search_query_request.range
     after_key = search_query_request.afterKey
     suggest_keyword = search_query_request.suggestKeyword
     suggestion_category_id = search_query_request.suggestionCategoryId
@@ -229,7 +227,6 @@ async def rag_generate(
 
     chain = get_chain(
         search_query,
-        range_values,
         after_key,
         suggest_keyword,
         suggestion_category_id,
@@ -269,7 +266,6 @@ async def rag_chat(
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
             - retrieveFromUploadedDocuments: Whether to retrieve from uploaded documents
-            - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
             - suggestionCategoryId: Category ID to filter suggestions
@@ -314,7 +310,6 @@ async def rag_chat(
     """
     chat_id = search_query_chat.chatId
     retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
-    range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
     suggestion_category_id = search_query_chat.suggestionCategoryId
@@ -375,7 +370,6 @@ async def rag_chat(
     llm_configuration = configurations["llm_configuration"]
 
     chain = get_chat_chain(
-        range_values,
         after_key,
         suggest_keyword,
         suggestion_category_id,
@@ -424,7 +418,6 @@ async def rag_chat_tool(
         search_query_chat (models.SearchQueryChat): Request object containing:
             - chatId: Unique identifier for the chat session
             - retrieveFromUploadedDocuments: Whether to retrieve from uploaded documents
-            - range: Result window range as [offset, limit]
             - afterKey: Pagination key for subsequent requests
             - suggestKeyword: Partial keyword for suggestion autocomplete
             - suggestionCategoryId: Category ID to filter suggestions
@@ -472,7 +465,6 @@ async def rag_chat_tool(
     """
     chat_id = search_query_chat.chatId
     retrieve_from_uploaded_documents = search_query_chat.retrieveFromUploadedDocuments
-    range_values = search_query_chat.range
     after_key = search_query_chat.afterKey
     suggest_keyword = search_query_chat.suggestKeyword
     suggestion_category_id = search_query_chat.suggestionCategoryId
@@ -533,7 +525,6 @@ async def rag_chat_tool(
     llm_configuration = configurations["llm_configuration"]
 
     chain = get_chat_chain_tool(
-        range_values,
         after_key,
         suggest_keyword,
         suggestion_category_id,

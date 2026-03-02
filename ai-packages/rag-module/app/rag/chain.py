@@ -41,7 +41,6 @@ UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 
 def get_chain(
     search_query,
-    range_values,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -68,6 +67,7 @@ def get_chain(
         reformulate = rag_configuration.get("reformulate")
         rerank = rag_configuration.get("rerank")
         metadata = rag_configuration.get("metadata")
+        range_values = rag_configuration.get("range_values")
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")
@@ -159,7 +159,6 @@ def get_chain(
 
 
 def get_chat_chain(
-    range_values,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -197,6 +196,7 @@ def get_chat_chain(
         chunk_window = rag_configuration.get("chunk_window")
         enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
+        range_values = rag_configuration.get("range_values")
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")
@@ -274,7 +274,6 @@ def rag_tool(
 
 
 def get_chat_chain_tool(
-    range_values,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -314,6 +313,7 @@ def get_chat_chain_tool(
         enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
         rag_tool_description = rag_configuration.get("rag_tool_description")
+        range_values = rag_configuration.get("range_values")
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")
