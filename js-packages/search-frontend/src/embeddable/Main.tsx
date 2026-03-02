@@ -166,7 +166,6 @@ export function Main({
       filterTokens,
       dateTokens,
       onQueryStateChange,
-      setCurrentPage,
       selectionsState,
       selectionsDispatch,
       retrieveType,
