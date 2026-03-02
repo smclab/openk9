@@ -656,11 +656,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							int startPos = maps.getPos().get(0);
 							Object keywordKey = map.get("keywordKey");
 
-							if (Objects.equals(mode, "semantic-autocomplete")) {
-								log.info(mode);
-								if (startPos > 0 && keywordKey != null) {
-									continue;
-								}
+							if (startPos >= 1) {
+								continue;
 							}
 
 							if (tokenType != null && !tokenType.equals("TOKEN")) {
