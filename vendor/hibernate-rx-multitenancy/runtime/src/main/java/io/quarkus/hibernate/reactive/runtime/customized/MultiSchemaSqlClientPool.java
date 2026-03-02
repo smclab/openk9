@@ -91,6 +91,11 @@ public class MultiSchemaSqlClientPool extends SqlClientPool
     }
 
     private static String alterSessionSchema(String dbKind, String tenantId) {
+        // tenantId validation
+        if (!tenantId.matches("^[a-zA-Z0-9_-]+$")) {
+            throw new IllegalArgumentException("Invalid tenant ID: " + tenantId);
+        }
+
         switch (dbKind) {
             case "postgresql":
                 return "SET SESSION SCHEMA '" + tenantId + "'";
