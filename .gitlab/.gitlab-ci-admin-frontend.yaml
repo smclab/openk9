@@ -92,7 +92,7 @@ Build Admin Frontend:
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$DOCKER_TAG" \
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-admin-ui:$DOCKER_TAG" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Run build only on push (main, tag, feature branch) - NO MR
@@ -132,8 +132,8 @@ Container Scanning:
   - "Build Admin Frontend"
   script:
   - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION"
   rules:
     # Run only on Main/Tag
     - !reference [.rules:child-deploy-main-tag, rules]

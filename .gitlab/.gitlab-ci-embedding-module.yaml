@@ -77,7 +77,7 @@ Build Embedding ST:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[ST] Build & push as :merge-request"
       # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
@@ -89,7 +89,7 @@ Build Embedding ST:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       # Feature branch - check user
       if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
@@ -106,7 +106,7 @@ Build Embedding ST:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/sentence-transformers-module:997-SNAPSHOT"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:997-SNAPSHOT"
     fi
   rules:
     # Always run build if parent triggered us
@@ -149,7 +149,7 @@ Build Embedding OpenAI:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[OA] Build & push as :merge-request"
       # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
@@ -161,7 +161,7 @@ Build Embedding OpenAI:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/openai-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       # Feature branch - check user
       if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
@@ -178,7 +178,7 @@ Build Embedding OpenAI:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/embedding-modules" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/openai-module:997-SNAPSHOT"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:997-SNAPSHOT"
     fi
   rules:
     # Always run build if parent triggered us
@@ -197,7 +197,7 @@ Container Scanning Embedding OA:
     CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     GIT_STRATEGY: fetch
-    REGISTRY_COMPONENT_NAME: "openai-module"
+    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
   allow_failure: true
   artifacts:
     reports:

@@ -68,7 +68,7 @@ Build Docling Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher" \
         --dockerfile "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/docling-processor:$VERSION" \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$VERSION" \
         --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[DOCLING] Build & push as :merge-request"
@@ -81,7 +81,7 @@ Build Docling Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher" \
         --dockerfile "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/docling-processor:$VERSION" \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$VERSION" \
         --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       echo "[DOCLING] Feature branch => build & push :999-SNAPSHOT"
@@ -94,7 +94,7 @@ Build Docling Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher" \
         --dockerfile "${CI_PROJECT_DIR}/enrichers/docling-processor/enricher/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/docling-processor:999-SNAPSHOT" \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:999-SNAPSHOT" \
         --build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE
     fi
   rules:

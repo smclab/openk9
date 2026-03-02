@@ -87,7 +87,7 @@ Build Talk-To:
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/talk-to:$DOCKER_TAG" \
+      --destination "$CI_REGISTRY_NAME/openk9/openk9-talk-to:$DOCKER_TAG" \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     # Run build only on push (main, tag, feature branch) - NO MR
@@ -127,8 +127,8 @@ Container Scanning:
   - "Build Talk-To"
   script:
   - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/talk-to:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/talk-to:$VERSION"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION"
   rules:
     # Run only on Main/Tag
     - !reference [.rules:child-deploy-main-tag, rules]

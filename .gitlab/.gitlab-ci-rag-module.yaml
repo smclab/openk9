@@ -77,7 +77,7 @@ Build Rag Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
       echo "[RAG] Build & push as :merge-request"
       # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
@@ -89,7 +89,7 @@ Build Rag Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:$VERSION"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       # Feature branch - check user
       if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
@@ -106,7 +106,7 @@ Build Rag Image:
         --compressed-caching=false \
         --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
         --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/rag-module:997-SNAPSHOT"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:997-SNAPSHOT"
     fi
   rules:
     # Always run build if parent triggered us
@@ -125,7 +125,7 @@ Container Scanning Rag:
     CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     GIT_STRATEGY: fetch
-    REGISTRY_COMPONENT_NAME: "rag-module"
+    REGISTRY_COMPONENT_NAME: "openk9-rag-module"
   allow_failure: true
   artifacts:
     reports:
