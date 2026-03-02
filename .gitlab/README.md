@@ -4,102 +4,315 @@
 > **Last Updated:** February 2026  
 > **Maintainer:** DevOps Team
 
-Complete technical documentation for OpenK9's GitLab CI/CD pipeline architecture, deployment processes, and operational procedures.
-
 ---
 
 ## 📚 Table of Contents
 
-### 🏗️ [Architecture & Design](#architecture--design)
-- [Pipeline Layers](#pipeline-layers)
-- [Smart Trigger Logic](#smart-trigger-logic)
-- [Shared Templates](#shared-templates)
-
-### 🆕 [Recent Improvements (Feb 2026)](#recent-improvements)
-- [Performance Fixes](#performance-fixes)
-- [Logic Fixes](#logic-fixes)
-
-### 🔄 [Deployment Workflow](#deployment-workflow)
-- [Branch Strategy](#branch-strategy)
-- [Namespace Matrix](#namespace-matrix)
-- [Image Tagging](#image-tagging)
-
-### 📊 [Visual Flows](#visual-flows)
-- [Feature Branch Flow](#feature-branch-flow)
-- [Main Branch Flow](#main-branch-flow)
-- [Restart Logic](#restart-logic)
-
----
-
-# Architecture & Design
-
-## Pipeline Layers
-
-The pipeline follows a **Parent-Child architecture**: 
-1.  **Orchestrator & Smart Triggers**: The entry point routes logic into domain-specific trigger files (`backend.yaml`, `frontend.yaml`, etc.).
-    - **Anti-Spam Filter**: Automatically blocks execution globally on initial branch creation (SHA `0000000...`) to prevent massive "pipeline storms".
-    - **Merge Request Validation**: Triggers downstream pipelines specifically to run unit tests and offline compilations (e.g. `yarn build` or `mvn package --no-push`). This strictly isolates the Docker registry from untested or incomplete code.
-2.  **Component Pipelines**: Independent child pipelines that isolate builds, container scanning, and component-specific restart logic via ArgoCD.
-3.  **Shared Templates (`.gitlab-templates.yaml`)**: A strictly **DRY (Don't Repeat Yourself)** repository for reusable logic (Maven/Kaniko builds, security scans) and global variables (e.g. `CS_ANALYZER_IMAGE`).
+- [Overview](#overview)
+- [File Structure](#file-structure)
+- [Pipeline Architecture](#pipeline-architecture)
+  - [Parent Pipeline](#parent-pipeline)
+  - [Child Pipelines](#child-pipelines)
+  - [Shared Templates](#shared-templates)
+- [Trigger Rules](#trigger-rules)
+  - [Anti-Spam Filter](#anti-spam-filter)
+  - [Branch-Based Triggers](#branch-based-triggers)
+  - [Change Detection](#change-detection)
+- [Build Process](#build-process)
+  - [Backend Java (Maven + JIB)](#backend-java-maven--jib)
+  - [Frontend & AI (Kaniko)](#frontend--ai-kaniko)
+- [Cache Strategy](#cache-strategy)
+  - [Maven Cache](#maven-cache)
+  - [Docker Layer Cache (Kaniko)](#docker-layer-cache-kaniko)
+  - [Frontend Node Modules Cache](#frontend-node-modules-cache)
+- [Security Scans](#security-scans)
+- [Deployment](#deployment)
+  - [Branch Strategy](#branch-strategy)
+  - [Namespace Matrix](#namespace-matrix)
+  - [Image Tagging](#image-tagging)
+- [Visual Flows](#visual-flows)
 
 ---
 
-# 🆕 Recent Improvements (Feb 2026)
+# Overview
 
-### Performance & Stability
-- **Build Resilience**: Implemented `yarn install` with timeouts (10m), registry fallbacks, and aggressive caching.
-- **Node Memory**: Incremented to 8GB (`NODE_OPTIONS`) for frontend builds.
-- **Maven Clean**: Automated local repository purging for internal artifacts.
-
-### Logic Optimizations
-- **No Duplicate Restarts**: Main branch deployments now trigger a **single** external call.
-- **Child Pipeline Fix**: Removed redundant `changes:` filters in downstream jobs to prevent "empty pipeline" errors.
-
-
+OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline acts as an orchestrator: it detects which components changed and triggers only the relevant child pipelines. Each child pipeline is fully independent and handles the build, test, security scan, and deployment of a single component.
 
 ---
 
-# Deployment Workflow
+# File Structure
+
+```
+.gitlab/
+├── README.md                          ← this document
+├── .gitlab-ci.yml                     ← parent pipeline (orchestrator)
+├── .gitlab-templates.yaml             ← shared templates (DRY)
+├── ci/
+│   ├── backend.yaml                   ← backend change detection triggers
+│   ├── frontend.yaml                  ← frontend change detection triggers
+│   ├── ai.yaml                        ← AI module change detection triggers
+│   ├── child-rules.yaml               ← shared job rules (MR, main, tag, feature)
+│   └── quality.yaml                   ← SonarQube quality gate
+├── .gitlab-ci-datasource.yaml         ← child pipeline: datasource
+├── .gitlab-ci-searcher.yaml           ← child pipeline: searcher
+├── .gitlab-ci-ingestion.yaml          ← child pipeline: ingestion
+├── .gitlab-ci-entity-manager.yaml     ← child pipeline: entity-manager
+├── .gitlab-ci-tenant-manager.yaml     ← child pipeline: tenant-manager
+├── .gitlab-ci-resources-validator.yaml
+├── .gitlab-ci-k8s-client.yaml
+├── .gitlab-ci-file-manager.yaml
+├── .gitlab-ci-api-gateway.yaml
+├── .gitlab-ci-tika.yaml
+├── .gitlab-ci-admin-frontend.yaml
+├── .gitlab-ci-search-frontend.yaml
+├── .gitlab-ci-tenant-frontend.yaml
+├── .gitlab-ci-talk-to.yaml
+├── .gitlab-ci-rag-module.yaml
+├── .gitlab-ci-embedding-module.yaml
+├── .gitlab-ci-chunk-evaluation-module.yaml
+├── .gitlab-ci-docling-processor.yaml
+└── .gitlab-ci-connectors.yaml
+```
+
+---
+
+# Pipeline Architecture
+
+## Parent Pipeline
+
+The parent pipeline (`.gitlab-ci.yml`) is the entry point for every push or MR. It does **not** build anything directly. Its job is to:
+
+1. Check what changed (file paths)
+2. Decide which child pipelines to trigger
+3. Pass context variables (branch, tag, user) to the children
+
+## Child Pipelines
+
+Each component has its own YAML file. A child pipeline typically has these stages:
+
+| Stage | Jobs |
+|---|---|
+| `build` | Build Docker image (or Maven build on MR) |
+| `build-verifier` | Compile-only check on MR (no Docker push) |
+| `container-scanning` | Trivy/GitLab container scan |
+| `dependency-check` | OWASP (backend) or npm audit (frontend) |
+| `restart` | Trigger ArgoCD restart via external pipeline |
+
+## Shared Templates
+
+All reusable logic lives in `.gitlab-templates.yaml`. Child pipelines `!reference` these templates to avoid duplication.
+
+| Template | Used by | Purpose |
+|---|---|---|
+| `.build_template` | Backend Java jobs on `main` / feature | Full Maven build + Docker push. Cache policy: `pull-push` |
+| `.maven-verifier-template` | Backend **Build Verifier** jobs on MR | Maven compile only, no Docker push. Cache policy: `pull` (read-only — prevents MR code from overwriting shared cache) |
+| `.dependency_check_backend_template` | All backend components | OWASP dependency-check |
+| `.dependency_check_frontend_template` | All frontend components | npm audit, scoped via `DS_PROJECT_DIR` |
+
+---
+
+# Trigger Rules
+
+## Anti-Spam Filter
+
+When a developer creates a new branch, GitLab generates a push event with the special SHA `0000000000000000000000000000000000000000`. The parent pipeline detects this and **blocks all child triggers** to avoid launching a massive "pipeline storm" on an empty branch.
+
+## Branch-Based Triggers
+
+| Event | What runs |
+|---|---|
+| Push to feature branch (`^[0-9]+-.*`) | Build + push image with personal tag (`99x-SNAPSHOT`) + ArgoCD restart to personal namespace |
+| Merge Request opened/updated | Build Verifier (compile only, no push) + dependency check |
+| Push to `main` | Build + push image with `x.y.z-SNAPSHOT` + ArgoCD restart to all shared envs |
+| Tag push (`v*`) | Full rebuild of **all** components regardless of changes, tagged `vX.Y.Z` |
+
+## Change Detection
+
+On `main` and feature branches, each child pipeline is only triggered if its relevant files changed:
+
+```yaml
+# Example: datasource child is triggered only if these paths changed
+changes:
+  - core/datasource/**/*
+  - core/common/**/*
+  - pom.xml
+```
+
+Tag pushes (`v*`) bypass all `changes:` filters to force a full system rebuild.
+
+---
+
+# Build Process
+
+## Backend Java (Maven + JIB)
+
+Backend components (datasource, searcher, ingestion, etc.) use **Maven + JIB** to build and push Docker images directly — no Dockerfile needed, no Docker daemon required.
+
+**On `main` / feature branch** (`.build_template`):
+```bash
+mvn clean package \
+  -Dquarkus.container-image.push=true \
+  -Dquarkus.container-image.tag=$VERSION \
+  -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+```
+
+**On MR** (`.maven-verifier-template`):
+```bash
+mvn clean package \
+  -Dquarkus.container-image.push=false   # compile only, no Docker push
+  -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+```
+
+## Frontend & AI (Kaniko)
+
+Frontend (admin-ui, search-frontend, tenant-ui, talk-to) and AI modules (rag-module, embedding-module, etc.) use **Kaniko** to build and push Docker images inside the CI container without a Docker daemon.
+
+Every Kaniko call uses these flags:
+
+```bash
+/kaniko/executor \
+  --cache=true \
+  --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+  --cache-ttl=168h \
+  --snapshot-mode=redo \
+  --compressed-caching=false \
+  --context "..." \
+  --dockerfile "..." \
+  --destination "registry.smc.it:49083/openk9/<component>:<tag>"
+```
+
+| Flag | Why it's there |
+|---|---|
+| `--cache=true` + `--cache-repo` | Reuses cached Docker layers from previous builds (e.g. `yarn install` result). See [Docker Layer Cache](#docker-layer-cache-kaniko) |
+| `--snapshot-mode=redo` | Uses file mtime instead of sha256 checksums to detect changes. Reduces "Taking snapshot of full filesystem" from ~900s to ~5s after a `yarn install` |
+| `--compressed-caching=false` | Prevents Kaniko from compressing multi-GB layers (PyTorch, node_modules) in RAM before pushing, which caused OOM → `Killed` (exit code 137) on AI images |
+
+---
+
+# Cache Strategy
+
+## Maven Cache
+
+Maven downloads `.jar` dependencies on first run and caches them in `.m2/repository`. The GitLab Runner saves and restores this folder between jobs using the `cache:` block.
+
+| Job type | Cache key | Policy | Effect |
+|---|---|---|---|
+| `main` / feature build | `$COMPONENT-mvn` | `pull-push` | Saves updated cache after build |
+| MR Build Verifier | `$COMPONENT-mvn` | `pull` only | Reads existing cache, never writes — protects shared cache from unreviewed MR code |
+
+Each component has its own key (`datasource-mvn`, `searcher-mvn`, etc.) to avoid cross-component cache conflicts.
+
+> The runner currently stores Maven cache on local disk (`rci.smc.it`). To share it across multiple runner instances, configure `[runners.cache] Type = "s3"` in the runner's `config.toml` pointing to `minio.openk9.io`.
+
+## Docker Layer Cache (Kaniko)
+
+A dedicated `registry:2` container is deployed in the `k9-requirements` Kubernetes namespace. It stores Docker build layers in the existing MinIO instance under a dedicated bucket.
+
+```
+Kaniko (CI job on runner VM)
+      │ HTTPS — Docker Registry API (push/pull layers)
+      ▼
+kaniko-cache-registry.openk9.io   ← Ingress → registry:2 pod (k9-requirements)
+      │ S3 API — internal ClusterIP
+      ▼
+MinIO (minio.k9-requirements.svc.cluster.local:9000)
+      └── bucket: kaniko-cache   ← 7-day TTL lifecycle (auto-cleanup)
+```
+
+**How it works:**
+- First build: Kaniko pushes every layer to the cache registry. No speedup yet.
+- Subsequent builds: if a Dockerfile instruction and its inputs are unchanged, Kaniko pulls the cached layer and skips re-execution. A `yarn install` that took 15 min becomes a 10-second pull.
+
+**Inspecting the cache:**
+```bash
+curl -s https://kaniko-cache-registry.openk9.io/v2/_catalog
+curl -s https://kaniko-cache-registry.openk9.io/v2/kaniko-cache/tags/list
+```
+
+**Why not use the SMC Nexus registry for cache?**  
+Kaniko would accumulate thousands of anonymous cache layers in Nexus with no automatic cleanup, polluting the production registry. The dedicated MinIO-backed registry keeps cache completely separate and self-cleaning (7-day TTL).
+
+## Frontend Node Modules Cache
+
+Build Verifier jobs for frontend components cache `node_modules` and `.yarn-cache` per component and branch:
+
+```yaml
+cache:
+  key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+  paths:
+    - js-packages/<component>/node_modules
+    - .yarn-cache
+  policy: pull-push
+```
+
+**Dependency Check jobs** set `DS_PROJECT_DIR` to point the `npm-audit` analyzer at the specific component subdirectory. Without this, the analyzer detects the monorepo root, triggers a full workspace `yarn install`, exhausts memory, and crashes with a segfault.
+
+---
+
+# Security Scans
+
+## Container Scanning
+Every build job is followed by a container scanning job (Trivy via GitLab analyzer). It scans the pushed image for known CVEs and uploads results to GitLab Security Dashboard. Failures are `allow_failure: true` (non-blocking).
+
+## Dependency Check — Backend (OWASP)
+Runs `dependency-check` against the Maven project to detect known vulnerable JARs. Results are uploaded as a GitLab artifact.
+
+## Dependency Check — Frontend (npm audit)
+Runs `npm audit` via the GitLab `npm-audit` analyzer. Scoped to the individual component directory via `DS_PROJECT_DIR`.
+
+## SonarQube
+Quality analysis runs on `main` and MR pipelines via the `quality.yaml` include. It analyzes source code for bugs, vulnerabilities, and code smells and posts results back to the GitLab MR.
+
+---
+
+# Deployment
 
 ## Branch Strategy
 
-| Branch Pattern | Type | Trigger | Deployment Target | Pipeline Behavior / Tag Strategy |
-|----------------|------|---------|-------------------|----------------------------------|
-| `^[0-9]+-.*` | Feature | Push | **Developer Namespace** (Personal) | Pushes static `99x-SNAPSHOT` tags based on user ID |
-| `*` (Any MR) | Pull Request | Merge Request | **None** (Test Phase Only) | Compiles code (`yarn build` / `mvn package`) to validate logic. **Docker push is skipped**. |
-| `main` | Integration | Merge | **ALL Integration Envs** (Shared) | Deploys `x.y.z-SNAPSHOT` only for components triggering the `changes` filter. |
-| `v*` | Release | Tag | **Production/Stable** | Bypasses `changes` filters to force a **Full System Rebuild** of all containers with tag `v1.2.3`. |
+| Branch | Build | Docker Push | Deploy to |
+|---|---|---|---|
+| Feature (`^[0-9]+-.*`) | ✅ | ✅ personal tag (`99x-SNAPSHOT`) | Developer personal namespace |
+| Merge Request | ✅ compile only | ❌ | Nothing |
+| `main` | ✅ | ✅ `x.y.z-SNAPSHOT` | All shared integration envs |
+| Tag (`v*`) | ✅ full rebuild | ✅ `vX.Y.Z` | Production/stable |
 
 ## Namespace Matrix
 
-The deployment target depends on **WHO** pushes (Feature) or **WHAT** is pushed (Main).
+### Feature Branch — User-Based Routing
 
-### 1. Feature Branch (User-Based Routing)
-*Deploys to the developer's assigned namespace.*
+| User | Role | Tag | Namespace |
+|---|---|---|---|
+| `mirko.zizzari` | Backend Lead | `999-SNAPSHOT` | `k9-backend` |
+| `michele.bastianelli` | Backend Dev | `998-SNAPSHOT` | `k9-backend01` |
+| `luca.callocchia` | AI Dev | `997-SNAPSHOT` | `k9-ai` |
+| `lorenzo.venneri` | Frontend Dev | `996-SNAPSHOT` | `k9-frontend` |
+| `giorgio.bartolomeo` | Frontend Dev | `996-SNAPSHOT` | `k9-frontend` |
 
-| User | Role | Namespace | Tag Info |
-|------|------|-----------|----------|
-| `mirko.zizzari` | Backend Lead | `k9-backend` | `999-SNAPSHOT` |
-| `michele.bastianelli` | Backend Dev | `k9-backend01` | `998-SNAPSHOT` |
-| `lorenzo.venneri` | Frontend Dev | `k9-frontend` | `996-SNAPSHOT` |
-| `luca.callocchia` | AI Dev | `k9-ai` | `997-SNAPSHOT` |
-| `giorgio.bartolomeo` | Frontend Dev | `k9-frontend` | `996-SNAPSHOT` |
+### Main Branch — Component-Based Routing
 
-### 2. Main Branch (Component-Based Routing)
-*Updates all environments dependent on the modified component.*
+When a component is merged to `main`, it restarts all namespaces that depend on it (excluding its own origin namespace to avoid redundant restarts).
 
-| Component Type | Origin (Skipped) | Targets (Deployed) | Reason |
-|----------------|------------------|--------------------|--------|
-| **Backend** | `k9-backend` | `k9-ai`, `k9-frontend` | AI/FE need latest BE. |
-| **Frontend** | `k9-frontend` | `k9-backend`, `k9-backend01`, `k9-ai`, `k9-test` | Everyone needs latest UI. |
-| **AI** | `k9-ai` | `k9-backend`, `k9-frontend`, `k9-test` | BE/FE need latest AI. |
+| Component updated | Restarts in |
+|---|---|
+| Backend | `k9-ai`, `k9-frontend` |
+| Frontend | `k9-backend`, `k9-backend01`, `k9-ai`, `k9-test` |
+| AI | `k9-backend`, `k9-frontend`, `k9-test` |
+
+## Image Tagging
+
+| Branch | Tag format | Example |
+|---|---|---|
+| `main` | `x.y.z-SNAPSHOT` (from `pom.xml` / `package.json`) | `2026.1.0-SNAPSHOT` |
+| Feature (backend user) | `999-SNAPSHOT` / `998-SNAPSHOT` | `999-SNAPSHOT` |
+| Feature (frontend user) | `996-SNAPSHOT` | `996-SNAPSHOT` |
+| Feature (AI user) | `997-SNAPSHOT` | `997-SNAPSHOT` |
+| Tag `v*` | exact tag | `v3.1.0` |
 
 ---
 
 # Visual Flows
 
 ## Feature Branch Flow
-*Developer works in isolation. Pipeline makes a single call, external system maps User->Namespace.*
 
 ```mermaid
 sequenceDiagram
@@ -125,7 +338,6 @@ sequenceDiagram
 ```
 
 ## Main Branch Flow
-*Integration update propagates. Single external call handles multi-destination logic.*
 
 ```mermaid
 sequenceDiagram

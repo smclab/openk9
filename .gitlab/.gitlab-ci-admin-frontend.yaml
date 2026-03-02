@@ -38,6 +38,11 @@ Build Admin Frontend:
     entrypoint: [ "" ]
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
+    # GENERATE_SOURCEMAP=false: skips source map generation during production build.
+    # Source maps are large files webpack must compute — not useful inside a Docker image.
+    # This alone can cut craco/webpack build time by 30-50%.
+    GENERATE_SOURCEMAP: "false"
+  timeout: 3h   # craco/webpack build for admin-ui can exceed 2h on cold cache
   needs:
   - job: Fetch version
     artifacts: true
