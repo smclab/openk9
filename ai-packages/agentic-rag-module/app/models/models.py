@@ -48,11 +48,6 @@ class SearchQuery(BaseModel):
     """Represents a search query with various parameters for filtering, sorting, and pagination."""
 
     searchQuery: list[SearchToken] = Field(..., description="List of search tokens")
-    range: list = Field(
-        ...,
-        description="Range filter as [start, end]",
-        example=[0, 10],
-    )
     afterKey: Optional[str] = Field(
         None, description="Pagination key for subsequent requests", example="page_2"
     )
@@ -98,11 +93,6 @@ class SearchQueryChat(BaseModel):
     )
     retrieveFromUploadedDocuments: Optional[bool] = Field(
         False, description="Whether to retrieve from uploaded documents", example=False
-    )
-    range: Optional[list] = Field(
-        [0, 5],
-        description="Result window range as [offset, limit]",
-        example=[0, 5],
     )
     afterKey: Optional[str] = Field(
         None, description="Pagination key for subsequent requests", example="page_2"
