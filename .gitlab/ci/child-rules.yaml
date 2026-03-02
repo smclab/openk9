@@ -18,8 +18,10 @@
 .rules:child-verify-mr:
   rules:
     - if: '$CI_MERGE_REQUEST_IID'
-    # NUOVA REGOLA: Se esiste l'ID della MR, allora siamo dentro una MR!
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # Child pipeline triggered from MR parent: CI_PIPELINE_SOURCE = "pipeline"
+    # but CI_MERGE_REQUEST_SOURCE_BRANCH_NAME is inherited from parent
+    - if: '$CI_PIPELINE_SOURCE == "pipeline" && $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME != ""'
 
 .rules:child-publish:
   rules:

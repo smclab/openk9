@@ -25,7 +25,8 @@ WORKDIR /app
 # RUN corepack prepare yarn@4.10.0 --activate
 
 # Install all workspace dependencies - For Yarn v4: RUN yarn install --immutable --immutable-cache
-RUN yarn install --network-timeout 600000
+RUN yarn config set registry https://registry.npmjs.org/ && \
+  yarn install --network-timeout 600000
 
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
@@ -36,18 +37,18 @@ WORKDIR /app/js-packages/search-frontend
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
 
 RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
-      echo "Building for Keycloak environment..." && \
-      CI=false NODE_ENV=production yarn build:keycloak; \
-    elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
-      echo "Building for No-Keycloak environment..." && \
-      CI=false NODE_ENV=production yarn build:nokeycloak; \
-    elif [ "$BUILD_ENV" = "chatbot" ]; then \
-      echo "Building for Chatbot environment..." && \
-      CI=false NODE_ENV=production yarn build:chatbot; \
-    else \
-      echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
-      CI=false NODE_ENV=production yarn build:keycloak; \
-    fi
+  echo "Building for Keycloak environment..." && \
+  CI=false NODE_ENV=production yarn build:keycloak; \
+  elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
+  echo "Building for No-Keycloak environment..." && \
+  CI=false NODE_ENV=production yarn build:nokeycloak; \
+  elif [ "$BUILD_ENV" = "chatbot" ]; then \
+  echo "Building for Chatbot environment..." && \
+  CI=false NODE_ENV=production yarn build:chatbot; \
+  else \
+  echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
+  CI=false NODE_ENV=production yarn build:keycloak; \
+  fi
 
 # Stage 2 - the production environment
 FROM nginx:1.28.2-alpine
@@ -55,7 +56,7 @@ COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
-    && mkdir -p /var/run \
-    && chmod g+rw /var/cache/nginx /var/run
+  && mkdir -p /var/run \
+  && chmod g+rw /var/cache/nginx /var/run
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
