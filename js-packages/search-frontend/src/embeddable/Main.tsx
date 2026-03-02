@@ -1869,6 +1869,8 @@ export function remappingLanguage({ language }: { language: string }) {
       return "en";
     case "fr_FR":
       return "fr";
+    case "de_DE":
+      return "de";
     default:
       return "en";
   }
@@ -1884,6 +1886,8 @@ function remappingLanguageToBack({ language }: { language: string }) {
       return "en_US";
     case "fr":
       return "fr_FR";
+    case "de":
+      return "de_DE";
     default:
       return "en_US";
   }

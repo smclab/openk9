@@ -126,6 +126,8 @@ function remappingLanguageToBack({ language }: { language: string }) {
   switch (language) {
     case "it_IT":
       return "ITA";
+    case "pt_PT":
+      return "PRT";
     case "es_ES":
       return "ESP";
     case "en_US":
