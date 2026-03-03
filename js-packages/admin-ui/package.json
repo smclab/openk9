@@ -79,6 +79,7 @@
     ]
   },
   "devDependencies": {
-    "@graphql-codegen/time": "^3.2.3"
+    "@graphql-codegen/time": "^3.2.3",
+    "compression-webpack-plugin": "^11.1.0"
   }
 }
