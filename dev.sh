@@ -88,11 +88,11 @@ run_compose() {
 }
 
 usage() {
-    echo "Usage: $0 [build|run|up|stop|down|restart]"
+    echo "Usage: $0 [build|start|stop|down|restart]"
     echo ""
     echo "Commands:"
     echo "  build   Build all local images with tag $TAG"
-    echo "  run/up  Run docker compose with local images (defaults to 'up -d')"
+    echo "  start  Run docker compose with local images (defaults to 'up -d')"
     echo "          Use --build to build before running: $0 up --build"
     echo "  stop    Stop containers"
     echo "  down    Stop and remove containers"
@@ -103,8 +103,8 @@ case "$1" in
     build)
         build_images
         ;;
-    up|run)
-        shift # remove 'up' or 'run' from arguments
+    start)
+        shift # remove 'start' from arguments
         if [ "$1" == "--build" ]; then
             build_images
             shift # remove '--build' from arguments
