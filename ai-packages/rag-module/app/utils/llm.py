@@ -745,6 +745,19 @@ def stream_rag_conversation(
         conversation_title = generate_conversation_title(
             llm, search_text, result_answer
         )
+
+        yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
+
+        info = {
+            "chain": "chat_chain",
+            "user_id": user_id,
+            "conversation_title": conversation_title.strip('"'),
+        }
+        logger.info(json.dumps(info))
+
+    elif chat_sequence_number == 1 and user_id:
+        conversation_title = search_text
+
         yield json.dumps({"chunk": conversation_title.strip('"'), "type": "TITLE"})
 
         info = {
