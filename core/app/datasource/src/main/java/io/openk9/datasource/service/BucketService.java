@@ -365,6 +365,21 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 						}
 
+						//Language
+						var languageIds = bucketWithListsDTO.getLanguageIds();
+
+						if(languageIds != null && !languageIds.isEmpty()) {
+
+							for(long languageId : languageIds) {
+
+								builder.add(addLanguage(
+									bucket.getId(), languageId)
+									.replaceWithVoid()
+								);
+							}
+
+						}
+
 						//QueryAnalysis
 						if (bucketWithListsDTO.getQueryAnalysisId() != null) {
 
@@ -791,6 +806,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.call(bucket -> Mutiny.fetch(bucket.getDatasources()))
 					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
 					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
+					.call(bucket -> Mutiny.fetch(bucket.getAvailableLanguages()))
 					.flatMap(bucket -> {
 						var newStateBucket = mapper.patch(bucket, bucketWithListsDTO);
 
@@ -868,6 +884,30 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 								builder.add(addTabToBucket(
 									bucketId, tabId)
+									.replaceWithVoid()
+								);
+
+							}
+
+						}
+
+						//Language
+						var languageIds = bucketWithListsDTO.getLanguageIds();
+
+						if (languageIds != null) {
+							var oldLanguages = bucket.getAvailableLanguages();
+
+							for (Language oldLanguage : oldLanguages) {
+								builder.add(removeLanguage(
+									bucketId, oldLanguage.getId())
+									.replaceWithVoid()
+								);
+							}
+
+							for (long languageId : languageIds) {
+
+								builder.add(addLanguage(
+									bucketId, languageId)
 									.replaceWithVoid()
 								);
 
@@ -1125,6 +1165,7 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 					.call(bucket -> Mutiny.fetch(bucket.getDatasources()))
 					.call(bucket -> Mutiny.fetch(bucket.getSuggestionCategories()))
 					.call(bucket -> Mutiny.fetch(bucket.getTabs()))
+					.call(bucket -> Mutiny.fetch(bucket.getAvailableLanguages()))
 					.flatMap(bucket -> {
 						var newStateBucket = mapper.update(bucket, bucketWithListsDTO);
 
@@ -1196,6 +1237,29 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 								builder.add(addTabToBucket(
 									bucketId, tabId)
+									.replaceWithVoid()
+								);
+
+							}
+						}
+						
+						//Language
+						var languageIds = bucketWithListsDTO.getLanguageIds();
+
+						var oldLanguages = bucket.getAvailableLanguages();
+
+						for (Language oldLanguage : oldLanguages) {
+							builder.add(removeLanguage(
+								bucketId, oldLanguage.getId())
+								.replaceWithVoid()
+							);
+						}
+
+						if (languageIds != null) {
+							for (long languageId : languageIds) {
+
+								builder.add(addLanguage(
+									bucketId, languageId)
 									.replaceWithVoid()
 								);
 
