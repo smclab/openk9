@@ -174,7 +174,7 @@ export function SaveSubDocType({
           {...form.inputProps("exclude")}
           description="If field need to be excluded from search response or not"
         />
-        <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is searchable or not" />
+        <BooleanInput label="Sortable" {...form.inputProps("sortable")} description="If field is sortable or not" />
         <CodeInput language="json" label="Configuration" {...form.inputProps("jsonConfig")} />
       </form>
     </>
