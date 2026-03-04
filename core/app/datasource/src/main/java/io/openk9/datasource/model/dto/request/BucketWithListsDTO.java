@@ -34,6 +34,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BucketWithListsDTO extends BucketDTO {
 	private Set<Long> datasourceIds;
+	private Set<Long> languageIds;
 	private Long defaultLanguageId;
 	private Long queryAnalysisId;
 	private Long searchConfigId;
