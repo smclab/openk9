@@ -219,13 +219,13 @@ class Evaluation(BaseModel):
         example="2026-01-14",
     )
     evaluateRagRouter: Optional[bool] = Field(
-        False, description="Whether to retrieve from uploaded documents", example=False
+        False, description="Whether to evaluate rag router", example=False
     )
     evaluateRetriever: Optional[bool] = Field(
-        False, description="Whether to retrieve from uploaded documents", example=False
+        False, description="Whether to evaluate retriever", example=False
     )
     evaluateResponse: Optional[bool] = Field(
-        False, description="Whether to retrieve from uploaded documents", example=False
+        False, description="Whether to to evaluate response", example=False
     )
 
 

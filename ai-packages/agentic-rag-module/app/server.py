@@ -15,10 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import json
+import asyncio
 import os
+from contextlib import asynccontextmanager
 from enum import Enum
-from typing import Annotated, Optional
+from pathlib import Path
+from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
@@ -26,13 +28,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
-from google.protobuf.struct_pb2 import Struct
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.grpc_client import (
-    generate_documents_embeddings,
     get_embedding_model_configuration,
     get_tenant_manager_configuration,
 )
@@ -42,8 +42,10 @@ from app.rag.evaluations import evaluations
 from app.utils import openapi_definitions as openapi
 from app.utils.authentication import decode_token, unauthorized_response
 from app.utils.embedding import documents_embedding
+from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
+from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
 
@@ -53,15 +55,25 @@ OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
 GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
+RERANKER_API_URL = os.getenv("RERANKER_API_URL")
+SCHEDULE = bool(os.getenv("SCHEDULE", False))
+CRON_EXPRESSION = os.getenv("CRON_EXPRESSION", "0 0 0 ? * * *")
+INTERVAL_IN_DAYS = int(os.getenv("INTERVAL_IN_DAYS", 180))
 ARIZE_PHOENIX_ENABLED = bool(os.getenv("ARIZE_PHOENIX_ENABLED", False))
-ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "agentic_rag")
+ARIZE_PHOENIX_PROJECT_NAME = os.getenv("ARIZE_PHOENIX_PROJECT_NAME", "default")
 ARIZE_PHOENIX_ENDPOINT = os.getenv(
-    "ARIZE_PHOENIX_ENDPOINT", "https://phoenix.openk9.io/v1/traces"
+    "ARIZE_PHOENIX_ENDPOINT", "http://127.0.0.1:6006/v1/traces"
 )
 OPENK9_ACL_HEADER = "OPENK9_ACL"
 TOKEN_PREFIX = "Bearer "
 USER_ID_KEY = "sub"
 TENANT_ID_KEY = "realm_name"
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR"))
+UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
+MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
+MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
+
 
 if ARIZE_PHOENIX_ENABLED:
     tracer_provider = register(
@@ -78,10 +90,35 @@ class RagType(Enum):
     SIMPLE_GENERATE = "SIMPLE_GENERATE"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start scheduler on startup
+    start_document_deletion_scheduler(
+        opensearch_host=OPENSEARCH_HOST,
+        schedule=SCHEDULE,
+        cron_expression=CRON_EXPRESSION,
+        interval_in_days=INTERVAL_IN_DAYS,
+    )
+
+    yield
+
+    # Stop scheduler on shutdown
+    start_document_deletion_scheduler(
+        opensearch_host=OPENSEARCH_HOST,
+        schedule=False,
+        cron_expression=CRON_EXPRESSION,
+        interval_in_days=INTERVAL_IN_DAYS,
+    )
+
+
 app = FastAPI(
     title="OpenK9 RAG API",
     description="API for Retrieval-Augmented Generation (RAG) operations and chat interactions",
     version="2026.1.0-SNAPSHOT",
+    openapi_tags=openapi.OPENAPI_TAGS,
+    contact=openapi.CONTACT,
+    license_info=openapi.LICENSE_INFO,
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -346,6 +383,14 @@ async def rag_chat(
         virtual_host=virtual_host,
     )
 
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
+
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
 
@@ -374,6 +419,7 @@ async def rag_chat(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
@@ -496,6 +542,14 @@ async def rag_chat_tool(
         virtual_host=virtual_host,
     )
 
+    embedding_model_configuration = {}
+
+    if retrieve_from_uploaded_documents:
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=GRPC_DATASOURCE_HOST,
+            virtual_host=virtual_host,
+        )
+
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
 
@@ -524,6 +578,7 @@ async def rag_chat_tool(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        embedding_model_configuration,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
@@ -1256,6 +1311,197 @@ async def embed_guardrails(
         embedded_documents.extend(embedded_document)
 
     return save_guardrails_documents(OPENSEARCH_HOST, embedded_documents, vector_size)
+
+
+@app.post(
+    "/api/rag/upload-files",
+    tags=["RAG"],
+    summary="Upload and process multiple files for RAG",
+    description="""This endpoint accepts multiple file uploads, validates them, processes the content, generates embeddings, 
+    and stores them in OpenSearch for later retrieval. Files are processed individually, and failures in one file don't affect 
+    processing of other files.""",
+    responses=openapi.API_RAG_UPLOAD_FILES_RESPONSES,
+)
+async def upload_files(
+    request: Request,
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
+    files: Annotated[
+        list[UploadFile], File(description="Multiple files as UploadFile")
+    ],
+    chat_id: str,
+):
+    """
+    Upload multiple files for RAG (Retrieval-Augmented Generation) processing.
+
+    This endpoint allows users to upload multiple files which are then processed through
+    a pipeline that includes validation, content extraction, embedding generation, and
+    storage in OpenSearch for future retrieval in chat conversations.
+
+    :param request: The incoming HTTP request
+    :type request: Request
+    :param headers: HTTP headers containing authentication and host information
+    :type headers: models.CommonHeadersMinimal
+    :param files: List of files to upload and process
+    :type files: list[UploadFile]
+    :param chat_id: Unique identifier for the chat session where documents will be available
+    :type chat_id: str
+
+    :return: JSON response indicating processing status for all files
+    :rtype: JSONResponse
+
+    :raises HTTPException:
+        - 401 Unauthorized if authentication fails
+        - 400 Bad Request if file limit exceeded or other validation errors
+
+    **Authentication:**
+        Requires Bearer token in Authorization header for user verification.
+
+    **File Processing Flow:**
+        1. User authentication and authorization validation
+        2. File count validation (max files limit)
+        3. Concurrent processing of all files
+        4. Individual file validation (type, size)
+        5. Content extraction and conversion to markdown
+        6. Embedding generation via gRPC services
+        7. Storage in OpenSearch with metadata
+
+    **Response Status Codes:**
+
+    - **200 OK**: All files processed successfully
+    - **207 Multi-Status**: Partial success, some files processed, some failed
+    - **400 Bad Request**: All files failed processing or file limit exceeded
+    - **401 Unauthorized**: Authentication failed or invalid token
+
+    **Example Responses:**
+
+    Success (200):
+
+    .. code-block:: json
+
+        {
+            "message": "All documents uploaded successfully.",
+            "status": "success",
+            "processed_files": ["document1.pdf", "document2.txt"]
+        }
+
+    Partial Success (207):
+
+    .. code-block:: json
+
+        {
+            "message": "Some files were processed successfully, but others failed.",
+            "status": "partial_success",
+            "processed_files": ["document1.pdf"],
+            "failed_files": [
+                {"filename": "document2.pdf", "error": "File too large"}
+            ]
+        }
+
+    Error (400):
+
+    .. code-block:: json
+
+        {
+            "message": "All files failed to process.",
+            "status": "error",
+            "failed_files": [
+                {"filename": "document1.pdf", "error": "Invalid document type"}
+            ]
+        }
+    """
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
+    token = (
+        headers.authorization.replace(TOKEN_PREFIX, "")
+        if headers.authorization
+        else None
+    )
+
+    if token:
+        decoded_token = decode_token(token)
+        user_id = decoded_token[USER_ID_KEY]
+    else:
+        unauthorized_response()
+
+    if len(files) > MAX_UPLOAD_FILES_NUMBER:
+        logger.error(f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail=f"You can upload max {MAX_UPLOAD_FILES_NUMBER} files",
+        )
+
+    tasks = [
+        process_file(
+            file,
+            user_id,
+            chat_id,
+            tenant_id,
+            virtual_host,
+            UPLOAD_FILE_EXTENSIONS,
+            UPLOAD_DIR,
+            MAX_UPLOAD_FILE_SIZE,
+            OPENSEARCH_HOST,
+            GRPC_DATASOURCE_HOST,
+            GRPC_EMBEDDING_MODULE_HOST,
+        )
+        for file in files
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    processed_files = []
+    failed_files = []
+
+    for result in results:
+        if isinstance(result, dict) and result.get("status") == "success":
+            processed_files.append(result["filename"])
+        elif isinstance(result, dict) and result.get("status") == "error":
+            failed_files.append(
+                {"filename": result["filename"], "error": result["error"]}
+            )
+        else:
+            failed_files.append({"filename": "unknown", "error": str(result)})
+
+    if processed_files and not failed_files:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": "All documents uploaded successfully.",
+                "status": "success",
+                "processed_files": processed_files,
+            },
+        )
+    elif processed_files and failed_files:
+        return JSONResponse(
+            status_code=status.HTTP_207_MULTI_STATUS,
+            content={
+                "message": "Some files were processed successfully, but others failed.",
+                "status": "partial_success",
+                "processed_files": processed_files,
+                "failed_files": failed_files,
+            },
+        )
+    else:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": "All files failed to process.",
+                "status": "error",
+                "failed_files": failed_files,
+            },
+        )
 
 
 @app.get(

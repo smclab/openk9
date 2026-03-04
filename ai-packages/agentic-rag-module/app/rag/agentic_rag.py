@@ -41,6 +41,10 @@ from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
 from app.rag.retrievers.retriever import OpenSearchRetriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
+from app.utils.authentication import unauthorized_response
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 
@@ -178,6 +182,9 @@ class RagGraph:
         self.chat_id = configuration.get("chat_id")
         self.chat_sequence_number = configuration.get("chat_sequence_number")
         self.chat_history = configuration.get("chat_history")
+        self.retrieve_from_uploaded_documents = configuration.get(
+            "retrieve_from_uploaded_documents"
+        )
         self.opensearch_host = configuration.get("opensearch_host")
         self.open_search_client = OpenSearch(
             hosts=[self.opensearch_host],
@@ -587,27 +594,45 @@ class RagGraph:
 
         query = state.current_query
 
-        retriever = OpenSearchRetriever(
-            search_query=self.configuration.get("search_query"),
-            search_text=query,
-            rerank=self.configuration.get("rerank"),
-            chunk_window=self.configuration.get("chunk_window"),
-            range_values=self.configuration.get("range_values"),
-            after_key=self.configuration.get("after_key"),
-            suggest_keyword=self.configuration.get("suggest_keyword"),
-            suggestion_category_id=self.configuration.get("suggestion_category_id"),
-            virtual_host=self.configuration.get("virtual_host"),
-            jwt=self.configuration.get("jwt"),
-            extra=self.configuration.get("extra"),
-            sort=self.configuration.get("sort"),
-            sort_after_key=self.configuration.get("sort_after_key"),
-            language=self.configuration.get("language"),
-            context_window=self.configuration.get("context_window"),
-            metadata=self.configuration.get("metadata"),
-            retrieve_type=self.configuration.get("retrieve_type"),
-            opensearch_host=self.configuration.get("opensearch_host"),
-            grpc_host=self.configuration.get("grpc_host_datasource"),
-        )
+        if self.retrieve_from_uploaded_documents and self.user_id and self.tenant_id:
+            retriever = OpenSearchUploadedDocumentsRetriever(
+                opensearch_host=self.configuration.get("opensearch_host"),
+                grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
+                embedding_model_configuration=self.configuration.get(
+                    "embedding_model_configuration"
+                ),
+                uploaded_documents_index=f"{self.tenant_id}-uploaded-documents-index",
+                retrieve_type=self.configuration.get("retrieve_type"),
+                user_id=self.user_id,
+                chat_id=self.chat_id,
+                search_text=query,
+            )
+        elif self.retrieve_from_uploaded_documents and (
+            not self.user_id or not self.tenant_id
+        ):
+            unauthorized_response()
+        else:
+            retriever = OpenSearchRetriever(
+                search_query=self.configuration.get("search_query"),
+                search_text=query,
+                rerank=self.configuration.get("rerank"),
+                chunk_window=self.configuration.get("chunk_window"),
+                range_values=self.configuration.get("range_values"),
+                after_key=self.configuration.get("after_key"),
+                suggest_keyword=self.configuration.get("suggest_keyword"),
+                suggestion_category_id=self.configuration.get("suggestion_category_id"),
+                virtual_host=self.configuration.get("virtual_host"),
+                jwt=self.configuration.get("jwt"),
+                extra=self.configuration.get("extra"),
+                sort=self.configuration.get("sort"),
+                sort_after_key=self.configuration.get("sort_after_key"),
+                language=self.configuration.get("language"),
+                context_window=self.configuration.get("context_window"),
+                metadata=self.configuration.get("metadata"),
+                retrieve_type=self.configuration.get("retrieve_type"),
+                opensearch_host=self.configuration.get("opensearch_host"),
+                grpc_host=self.configuration.get("grpc_host_datasource"),
+            )
 
         retrieved_docs = retriever.invoke(query)
         state.context = retrieved_docs

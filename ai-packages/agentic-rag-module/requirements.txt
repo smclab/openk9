@@ -4,6 +4,7 @@ aiohttp==3.12.15
 aiosignal==1.4.0
 annotated-types==0.7.0
 anyio==4.11.0
+apscheduler==3.11.0
 arize-phoenix-client==1.26.0
 arize-phoenix-evals==2.6.0
 arize-phoenix-otel==0.14.0
@@ -65,6 +66,7 @@ jwcrypto==1.5.6
 langchain-cli==0.0.36
 langchain-community==0.3.20
 langchain-core==0.3.76
+langchain-docling==1.0.0
 langchain-google-vertexai==2.0.15
 langchain-ibm==0.3.8
 langchain-aws==0.2.35
