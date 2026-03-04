@@ -36,6 +36,7 @@ public class BucketWithListsDTO extends BucketDTO {
 	private Long autocompleteId;
 	private Long autocorrectionId;
 	private Set<Long> datasourceIds;
+	private Set<Long> languageIds;
 	private Long defaultLanguageId;
 	private Long queryAnalysisId;
 	private Long ragConfigurationChat;
