@@ -36,13 +36,14 @@ import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
+import io.openk9.datasource.model.init.Languages;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.DatasourceService;
+import io.openk9.datasource.service.LanguageService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SuggestionCategoryService;
 import io.openk9.datasource.service.TabService;
-
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.core.OperationType;
@@ -51,6 +52,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 @QuarkusTest
 public class BucketGraphqlTest {
@@ -88,9 +91,13 @@ public class BucketGraphqlTest {
 	private static final String TAB_IDS = "tabIds";
 	private static final String SUGGESTION_CATEGORY_IDS = "suggestionCategoryIds";
 	private static final String SUGGESTION_CATEGORIES = "suggestionCategories";
+	private static final String LANGUAGE_IDS = "languageIds";
 
 	@Inject
 	BucketService bucketService;
+
+	@Inject
+	LanguageService languageService;
 
 	@Inject
 	DatasourceService datasourceService;
@@ -180,6 +187,12 @@ public class BucketGraphqlTest {
 			.map(K9Entity::getId)
 			.collect(Collectors.toSet());
 
+		var languageIds = languageService.findAll()
+			.await().indefinitely()
+			.stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
+
 		var query = document(
 			operation(
 				OperationType.MUTATION,
@@ -197,6 +210,7 @@ public class BucketGraphqlTest {
 								prop(RETRIEVE_TYPE, Bucket.RetrieveType.TEXT),
 								prop(DATASOURCE_IDS, datasourceIds),
 								prop(TAB_IDS, tabIds),
+								prop(LANGUAGE_IDS, languageIds),
 								prop(SUGGESTION_CATEGORY_IDS, suggestionCategorieIds),
 								prop(RAG_CONFIGURATION_CHAT, ragConfigurationChatOne.getId()),
 								prop(
@@ -300,6 +314,12 @@ public class BucketGraphqlTest {
 			.map(K9Entity::getId)
 			.collect(Collectors.toSet());
 
+		// Setting a new language
+		var languageId = sessionFactory.withTransaction(
+			(s, transaction) ->
+				languageService.findByName(s,Languages.ITALIAN.getName())
+			).await().indefinitely();
+
 		var query = document(
 			operation(
 				OperationType.MUTATION,
@@ -324,6 +344,7 @@ public class BucketGraphqlTest {
 								),
 								prop(DATASOURCE_IDS, datasourceIds),
 								prop(TAB_IDS, List.of()),
+								prop(LANGUAGE_IDS, Set.of(languageId.getId())),
 								prop(RAG_CONFIGURATION_CHAT, ragConfigurationChatTwo.getId()),
 								prop(
 									RAG_CONFIGURATION_CHAT_TOOL,
