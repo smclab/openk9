@@ -1,0 +1,38 @@
+services:
+  keycloak:
+    image: keycloak/keycloak:26
+    container_name: keycloak
+    command: start-dev
+    environment:
+      KC_HTTP_PORT: "8081"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgresql/keycloak
+      KC_DB_USERNAME: openk9
+      KC_DB_PASSWORD: openk9
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8081:8081"
+    networks:
+      default:
+        aliases:
+          - keycloak.openk9.localhost
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: "bash -c ':> /dev/tcp/127.0.0.1/8081' || exit 1"
+      interval: 10s
+      timeout: 10s
+      retries: 10
+  postgresql:
+    environment:
+      - POSTGRES_MULTIPLE_DATABASES=tenantmanager,apigateway,openk9,keycloak
+  tenant-manager:
+    environment:
+      KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'admin'
+      QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'admin'
+    depends_on:
+      keycloak:
+        condition: service_healthy

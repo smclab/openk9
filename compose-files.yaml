@@ -1,6 +1,3 @@
-include:
-  - path:
-      - compose.yaml
 services:
   minio:
     image: minio/minio:latest

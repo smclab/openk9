@@ -1,5 +1,7 @@
 include:
   - path:
+      - compose.yaml
+  - path:
       - compose-files.yaml
   - path:
       - compose-ai.yaml

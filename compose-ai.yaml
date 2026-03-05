@@ -1,6 +1,3 @@
-include:
-  - path:
-      - compose.yaml
 services:
   rag-module:
     image: smclab/openk9-rag-module:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
@@ -13,7 +10,6 @@ services:
       GRPC_DATASOURCE_HOST: 'openk9-datasource:9000'
       GRPC_TENANT_MANAGER_HOST: 'openk9-tenant-manager:9000'
       GRPC_EMBEDDING_MODULE_HOST: 'openk9-embedding-module:5000'
-      KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
       UPLOAD_DIR: 'uploads'
       UPLOAD_FILE_EXTENSIONS: '[".pdf",".md",".docx",".xlsx",".pptx",".csv"]'
       MAX_UPLOAD_FILE_SIZE: '10'

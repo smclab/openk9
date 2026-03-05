@@ -3,7 +3,7 @@ set -e
 
 # Configuration defaults
 TAG="local-dev"
-PROFILE="core"
+PROFILES=()
 
 # Detect docker compose command
 if docker compose version >/dev/null 2>&1; then
@@ -19,15 +19,15 @@ cd "$(dirname "$0")"
 
 profile_to_file() {
     case "$1" in
-        core)  echo "compose.yaml" ;;
-        files) echo "compose-files.yaml" ;;
-        ai)    echo "compose-ai.yaml" ;;
-        all)   echo "compose-all.yaml" ;;
-        *)     return 1 ;;
+        core)     echo "" ;;
+        files)    echo "compose-files.yaml" ;;
+        ai)       echo "compose-ai.yaml" ;;
+        keycloak) echo "compose-keycloak.yaml" ;;
+        *)        return 1 ;;
     esac
 }
 
-VALID_PROFILES="core files ai all"
+VALID_PROFILES="core files ai keycloak all"
 
 # --- Valid services for build ---
 
@@ -52,9 +52,13 @@ parse_args() {
         elif [[ "$arg" == --tag=* ]]; then
             TAG="${arg#--tag=}"
         elif [[ "$arg" == --profile=* ]]; then
-            PROFILE="${arg#--profile=}"
-            if ! profile_to_file "$PROFILE" >/dev/null; then
-                echo "Error: unknown profile '$PROFILE'"
+            local p="${arg#--profile=}"
+            if [ "$p" == "all" ]; then
+                PROFILES+=(files ai)
+            elif profile_to_file "$p" >/dev/null; then
+                PROFILES+=("$p")
+            else
+                echo "Error: unknown profile '$p'"
                 echo "Valid profiles: $VALID_PROFILES"
                 exit 1
             fi
@@ -65,6 +69,22 @@ parse_args() {
             SERVICES+=("$arg")
         fi
     done
+
+    # Deduplicate profiles
+    local unique=()
+    for p in "${PROFILES[@]}"; do
+        local dup=false
+        for u in "${unique[@]}"; do
+            if [ "$p" == "$u" ]; then
+                dup=true
+                break
+            fi
+        done
+        if [ "$dup" = false ]; then
+            unique+=("$p")
+        fi
+    done
+    PROFILES=("${unique[@]}")
 }
 
 validate_service() {
@@ -180,15 +200,21 @@ do_build() {
 # --- Compose helper ---
 
 compose() {
-    local file
-    file="$(profile_to_file "$PROFILE")"
-    IMAGE_TAG="$TAG" $DOCKER_COMPOSE -f "$file" "$@"
+    local flags=(-f "compose.yaml")
+    for p in "${PROFILES[@]}"; do
+        local overlay
+        overlay="$(profile_to_file "$p")"
+        if [ -n "$overlay" ]; then
+            flags+=(-f "$overlay")
+        fi
+    done
+    IMAGE_TAG="$TAG" $DOCKER_COMPOSE "${flags[@]}" "$@"
 }
 
 # --- Usage ---
 
 usage() {
-    echo "Usage: $0 <command> [services...] [--profile=PROFILE] [--tag=TAG] [--build]"
+    echo "Usage: $0 <command> [services...] [--profile=PROFILE]... [--tag=TAG] [--build]"
     echo ""
     echo "Commands:"
     echo "  build   [services...] [--tag=TAG] Build images (default tag: $TAG)"
@@ -199,10 +225,14 @@ usage() {
     echo "  logs    [services...]             Follow container logs"
     echo ""
     echo "Profiles: $VALID_PROFILES (default: core)"
-    echo "  core   Base services only (compose.yaml)"
-    echo "  files  Core + file management (minio, tika, file-manager)"
-    echo "  ai     Core + AI services (rag, embedding, talk-to)"
-    echo "  all    Core + files + AI"
+    echo "  core      Base services only (compose.yaml)"
+    echo "  files     Core + file management (minio, tika, file-manager)"
+    echo "  ai        Core + AI services (rag, embedding, talk-to)"
+    echo "  keycloak  Core + Keycloak IdP"
+    echo "  all       Core + files + AI"
+    echo ""
+    echo "Multiple profiles can be combined:"
+    echo "  --profile=keycloak --profile=ai   Core + Keycloak + AI"
     echo ""
     echo "Valid services: ${VALID_SERVICES[*]}"
     echo ""
@@ -210,7 +240,9 @@ usage() {
     echo "  $0 build                            Build all images"
     echo "  $0 build tenant-ui --tag=my-tag     Build tenant-ui with custom tag"
     echo "  $0 start                            Start core services"
-    echo "  $0 start --profile=all              Start all services"
+    echo "  $0 start --profile=all              Start all services (core + files + AI)"
+    echo "  $0 start --profile=keycloak         Start core + Keycloak"
+    echo "  $0 start --profile=keycloak --profile=ai  Start core + Keycloak + AI"
     echo "  $0 start --profile=ai --build       Build and start core + AI"
     echo "  $0 restart tenant-ui --build        Rebuild and restart tenant-ui"
     echo "  $0 stop --profile=all               Stop all services"
