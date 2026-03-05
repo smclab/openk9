@@ -32,8 +32,8 @@ RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" y
 # Stage 3 - Production
 FROM nginx:1.28.2-alpine
 COPY ./js-packages/tenant-ui/nginx.conf /etc/nginx/conf.d/default.conf
-RUN mkdir -p /usr/share/nginx/html/admin/
-COPY --from=builder /app/js-packages/tenant-ui/build /usr/share/nginx/html/admin/
+RUN mkdir -p /usr/share/nginx/html/tenant/
+COPY --from=builder /app/js-packages/tenant-ui/build /usr/share/nginx/html/tenant/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && mkdir -p /var/run \
     && chmod g+rw /var/cache/nginx /var/run

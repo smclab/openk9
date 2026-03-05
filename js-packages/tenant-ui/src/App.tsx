@@ -41,7 +41,7 @@ export default function App() {
           <ThemeProvider theme={memoizedTheme}>
             <ToastProvider>
               <ModalProvider>
-                <BrowserRouter basename="/admin">
+                <BrowserRouter basename="/tenant">
                   <SideNavigationContextProvider>
                     <Box
                       sx={{
