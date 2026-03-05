@@ -94,8 +94,9 @@ build_single_image() {
             docker build -t smclab/openk9-tenant-ui:$TAG -f js-packages/tenant-ui/Dockerfile .
             ;;
         *)
-            echo "Building all images as fallback..."
-            build_images
+            echo "Error: unknown service '$service'"
+            echo "Valid services: api-gateway, tenant-manager, datasource, ingestion, searcher, search-frontend, admin-ui, tenant-ui"
+            exit 1
             ;;
     esac
 }
