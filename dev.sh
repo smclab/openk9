@@ -170,10 +170,10 @@ run_compose() {
 # --- Usage ---
 
 usage() {
-    echo "Usage: $0 <command> [services...] [--build]"
+    echo "Usage: $0 <command> [services...] [--build] [--tag=TAG]"
     echo ""
     echo "Commands:"
-    echo "  build   [services...]          Build images (all if no services specified)"
+    echo "  build   [services...] [--tag=TAG] Build images (default tag: $TAG)"
     echo "  start   [services...] [--build] Start containers (rebuilds initializer, build first with --build)"
     echo "  stop    [services...]          Stop containers"
     echo "  down    [services...]          Stop and remove containers (with volumes)"
@@ -187,6 +187,7 @@ usage() {
     echo "  $0 build tenant-ui admin-ui    Build only tenant-ui and admin-ui"
     echo "  $0 start --build               Build all and start"
     echo "  $0 restart tenant-ui --build   Rebuild and restart tenant-ui"
+    echo "  $0 build --tag=2026.1-SNAPSHOT Build all with a custom tag"
     echo "  $0 stop datasource             Stop only datasource"
     echo "  $0 logs tenant-ui              Follow tenant-ui logs"
 }
@@ -197,6 +198,15 @@ parse_args "$@"
 
 case "$CMD" in
     build)
+        # Parse --tag from OTHER_ARGS (only valid for build command)
+        for arg in "${OTHER_ARGS[@]}"; do
+            if [[ "$arg" == --tag=* ]]; then
+                TAG="${arg#--tag=}"
+            else
+                echo "Error: unknown option '$arg' for build command"
+                exit 1
+            fi
+        done
         do_build
         ;;
     start)
