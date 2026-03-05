@@ -142,34 +142,28 @@ case "$1" in
     start)
         shift # remove 'start' from arguments
         BUILD=false
-        SERVICES=""
-        
-        # Parse arguments to find --build and identify services
-        OTHER_ARGS=""
+        SERVICES=()
+        OTHER_ARGS=()
         for arg in "$@"; do
             if [ "$arg" == "--build" ]; then
                 BUILD=true
             elif [[ "$arg" == -* ]]; then
-                OTHER_ARGS="$OTHER_ARGS $arg"
+                OTHER_ARGS+=("$arg")
             else
-                SERVICES="$SERVICES $arg"
+                SERVICES+=("$arg")
             fi
         done
 
-        # Trim whitespace
-        SERVICES=$(echo "$SERVICES" | sed 's/^[ \t]*//;s/[ \t]*$//')
-        OTHER_ARGS=$(echo "$OTHER_ARGS" | sed 's/^[ \t]*//;s/[ \t]*$//')
-
         if [ "$BUILD" = true ]; then
-            if [ -n "$SERVICES" ]; then
-                for svc in $SERVICES; do
+            if [ ${#SERVICES[@]} -gt 0 ]; then
+                for svc in "${SERVICES[@]}"; do
                     build_single_image "$svc"
                 done
             else
                 build_images
             fi
         fi
-        run_compose up -d $OTHER_ARGS $SERVICES
+        run_compose up -d "${OTHER_ARGS[@]}" "${SERVICES[@]}"
         ;;
     stop)
         $DOCKER_COMPOSE -f $COMPOSE_FILE stop
@@ -180,30 +174,27 @@ case "$1" in
     restart)
         shift # remove 'restart'
         BUILD=false
-        SERVICES=""
+        SERVICES=()
         for arg in "$@"; do
             if [ "$arg" == "--build" ]; then
                 BUILD=true
             else
-                SERVICES="$SERVICES $arg"
+                SERVICES+=("$arg")
             fi
         done
-        
-        # Trim leading/trailing whitespace without xargs
-        SERVICES=$(echo "$SERVICES" | sed 's/^[ \t]*//;s/[ \t]*$//')
 
         if [ "$BUILD" = true ]; then
-            if [ -n "$SERVICES" ]; then
-                for svc in $SERVICES; do
+            if [ ${#SERVICES[@]} -gt 0 ]; then
+                for svc in "${SERVICES[@]}"; do
                     build_single_image "$svc"
                 done
             else
                 build_images
             fi
             # Use up -d to force recreate and pick up the new images
-            run_compose up -d $SERVICES
+            run_compose up -d "${SERVICES[@]}"
         else
-            $DOCKER_COMPOSE -f $COMPOSE_FILE restart $SERVICES
+            $DOCKER_COMPOSE -f $COMPOSE_FILE restart "${SERVICES[@]}"
         fi
         ;;
     *)
