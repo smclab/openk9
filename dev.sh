@@ -15,7 +15,50 @@ fi
 # Change to the openk9 directory
 cd "$(dirname "$0")"
 
-build_images() {
+# --- Argument parsing ---
+# Parses: COMMAND [services...] [--build] [other flags...]
+# Results are stored in: CMD, SERVICES, BUILD, OTHER_ARGS
+
+VALID_SERVICES=(
+    api-gateway tenant-manager datasource ingestion searcher
+    search-frontend admin-ui tenant-ui web-connector
+)
+
+parse_args() {
+    CMD="${1:-}"
+    shift 2>/dev/null || true
+
+    BUILD=false
+    SERVICES=()
+    OTHER_ARGS=()
+
+    for arg in "$@"; do
+        if [ "$arg" == "--build" ]; then
+            BUILD=true
+        elif [[ "$arg" == -* ]]; then
+            OTHER_ARGS+=("$arg")
+        else
+            validate_service "$arg"
+            SERVICES+=("$arg")
+        fi
+    done
+}
+
+validate_service() {
+    local svc="$1"
+    for valid in "${VALID_SERVICES[@]}"; do
+        if [ "$svc" == "$valid" ]; then
+            return 0
+        fi
+    done
+    echo "Error: unknown service '$svc'"
+    echo "Valid services: ${VALID_SERVICES[*]}"
+    exit 1
+}
+
+# --- Build functions ---
+
+build_all() {
     echo "Starting build of all local images with tag: $TAG"
 
     # 1. Build Core Java Services
@@ -25,7 +68,7 @@ build_images() {
         chmod +x mvnw
 
         echo "Clean everything..."
-        ./mvnw clean 
+        ./mvnw clean
 
         echo "Installing hibernate-rx-multitenancy..."
         ./mvnw install -P '!validate,!format' -DskipTests \
@@ -47,8 +90,8 @@ build_images() {
         # Quarkus Services (use quarkus-container-image-jib)
         echo "Building Quarkus services..."
 
-        SERVICES=("tenant-manager" "datasource" "ingestion" "searcher")
-        for SVC in "${SERVICES[@]}"; do
+        QUARKUS_SERVICES=("tenant-manager" "datasource" "ingestion" "searcher")
+        for SVC in "${QUARKUS_SERVICES[@]}"; do
             echo "Building $SVC..."
             ./mvnw package -DskipTests \
                 -Dquarkus.profile=prod \
@@ -74,15 +117,24 @@ build_images() {
     echo "All images built successfully with tag: $TAG"
 }
 
-build_single_image() {
+build_single() {
     local service=$1
-    echo "--- Building single service: $service ---"
+    echo "--- Building: $service ---"
     case "$service" in
         api-gateway)
-            (cd core && ./mvnw package -DskipTests jib:dockerBuild -Djib.to.image=smclab/openk9-api-gateway:$TAG -f app/api-gateway/pom.xml)
+            (cd core && ./mvnw package -DskipTests jib:dockerBuild \
+                -Djib.to.image=smclab/openk9-api-gateway:$TAG \
+                -f app/api-gateway/pom.xml)
             ;;
         tenant-manager|datasource|ingestion|searcher)
-            (cd core && ./mvnw package -DskipTests -Dquarkus.profile=prod -Dquarkus.container-image.build=true -Dquarkus.container-image.push=false -Dquarkus.container-image.group=smclab -Dquarkus.container-image.name=openk9-$service -Dquarkus.container-image.tag=$TAG -pl app/$service)
+            (cd core && ./mvnw package -DskipTests \
+                -Dquarkus.profile=prod \
+                -Dquarkus.container-image.build=true \
+                -Dquarkus.container-image.push=false \
+                -Dquarkus.container-image.group=smclab \
+                -Dquarkus.container-image.name=openk9-$service \
+                -Dquarkus.container-image.tag=$TAG \
+                -pl app/$service)
             ;;
         search-frontend)
             docker build -t smclab/openk9-search-frontend:$TAG -f js-packages/search-frontend/Dockerfile .
@@ -93,109 +145,87 @@ build_single_image() {
         tenant-ui)
             docker build -t smclab/openk9-tenant-ui:$TAG -f js-packages/tenant-ui/Dockerfile .
             ;;
-        *)
-            echo "Error: unknown service '$service'"
-            echo "Valid services: api-gateway, tenant-manager, datasource, ingestion, searcher, search-frontend, admin-ui, tenant-ui"
-            exit 1
+        web-connector)
+            docker build -t smclab/openk9-web-connector:$TAG -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
     esac
 }
 
-run_compose() {
-    echo "Starting Docker Compose with local images..."
-
-    # Build Initializer Image
-    $DOCKER_COMPOSE -f $COMPOSE_FILE build initializer
-
-    # Execute the command with provided arguments, or default to 'up -d' if none
-    if [ $# -eq 0 ]; then
-        $DOCKER_COMPOSE -f $COMPOSE_FILE up -d
+do_build() {
+    if [ ${#SERVICES[@]} -gt 0 ]; then
+        for svc in "${SERVICES[@]}"; do
+            build_single "$svc"
+        done
     else
-        $DOCKER_COMPOSE -f $COMPOSE_FILE "$@"
+        build_all
     fi
 }
 
-usage() {
-    echo "Usage: $0 [build|start|stop|down|restart]"
-    echo ""
-    echo "Commands:"
-    echo "  build   Build all local images with tag $TAG"
-    echo "  start   Run docker compose with local images (defaults to 'up -d')"
-    echo "          Use --build to build before running: $0 start --build"
-    echo "  stop    Stop containers"
-    echo "  down    Stop and remove containers"
-    echo "  restart Restart containers or specific service(s)"
-    echo "          Use --build to rebuild specific service(s) before restarting: $0 restart api-gateway --build"
+# --- Compose helpers ---
+
+run_compose() {
+    $DOCKER_COMPOSE -f $COMPOSE_FILE "$@"
 }
 
-case "$1" in
+# --- Usage ---
+
+usage() {
+    echo "Usage: $0 <command> [services...] [--build]"
+    echo ""
+    echo "Commands:"
+    echo "  build   [services...]          Build images (all if no services specified)"
+    echo "  start   [services...] [--build] Start containers (rebuilds initializer, build first with --build)"
+    echo "  stop    [services...]          Stop containers"
+    echo "  down    [services...]          Stop and remove containers (with volumes)"
+    echo "  restart [services...] [--build] Restart containers (build first with --build)"
+    echo "  logs    [services...]          Follow container logs"
+    echo ""
+    echo "Valid services: ${VALID_SERVICES[*]}"
+    echo ""
+    echo "Examples:"
+    echo "  $0 build                       Build all images"
+    echo "  $0 build tenant-ui admin-ui    Build only tenant-ui and admin-ui"
+    echo "  $0 start --build               Build all and start"
+    echo "  $0 restart tenant-ui --build   Rebuild and restart tenant-ui"
+    echo "  $0 stop datasource             Stop only datasource"
+    echo "  $0 logs tenant-ui              Follow tenant-ui logs"
+}
+
+# --- Main ---
+
+parse_args "$@"
+
+case "$CMD" in
     build)
-        shift
-        if [ $# -eq 0 ]; then
-            build_images
-        else
-            for svc in "$@"; do
-                build_single_image "$svc"
-            done
-        fi
+        do_build
         ;;
     start)
-        shift # remove 'start' from arguments
-        BUILD=false
-        SERVICES=()
-        OTHER_ARGS=()
-        for arg in "$@"; do
-            if [ "$arg" == "--build" ]; then
-                BUILD=true
-            elif [[ "$arg" == -* ]]; then
-                OTHER_ARGS+=("$arg")
-            else
-                SERVICES+=("$arg")
-            fi
-        done
-
         if [ "$BUILD" = true ]; then
-            if [ ${#SERVICES[@]} -gt 0 ]; then
-                for svc in "${SERVICES[@]}"; do
-                    build_single_image "$svc"
-                done
-            else
-                build_images
-            fi
+            do_build
         fi
+        # Always rebuild the initializer image before starting, as it
+        # contains the seed.js script that provisions tenants and
+        # configures connectors on first boot.
+        run_compose build initializer
         run_compose up -d "${OTHER_ARGS[@]}" "${SERVICES[@]}"
         ;;
     stop)
-        $DOCKER_COMPOSE -f $COMPOSE_FILE stop
+        run_compose stop "${SERVICES[@]}"
         ;;
     down)
-        $DOCKER_COMPOSE -f $COMPOSE_FILE down --volumes
+        run_compose down --volumes "${SERVICES[@]}"
         ;;
     restart)
-        shift # remove 'restart'
-        BUILD=false
-        SERVICES=()
-        for arg in "$@"; do
-            if [ "$arg" == "--build" ]; then
-                BUILD=true
-            else
-                SERVICES+=("$arg")
-            fi
-        done
-
         if [ "$BUILD" = true ]; then
-            if [ ${#SERVICES[@]} -gt 0 ]; then
-                for svc in "${SERVICES[@]}"; do
-                    build_single_image "$svc"
-                done
-            else
-                build_images
-            fi
+            do_build
             # Use up -d to force recreate and pick up the new images
             run_compose up -d "${SERVICES[@]}"
         else
-            $DOCKER_COMPOSE -f $COMPOSE_FILE restart "${SERVICES[@]}"
+            run_compose restart "${SERVICES[@]}"
         fi
+        ;;
+    logs)
+        run_compose logs -f "${SERVICES[@]}"
         ;;
     *)
         usage
