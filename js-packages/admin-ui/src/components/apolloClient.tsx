@@ -16,19 +16,31 @@
 */
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { relayStylePagination } from "@apollo/client/utilities";
-import { keycloak } from "./authentication";
+import { keycloak, isOauth2Enabled } from "./authentication";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
     uri: "/api/datasource/graphql",
     async fetch(input, init?) {
-      if (keycloak.authenticated) {
-        await keycloak.updateToken(30);
-        const headers = { ...(init ?? { headers: {} }).headers, Authorization: `Bearer ${keycloak.token}` };
-        return await fetch(input, { ...init, headers });
+      let authHeaders: Record<string, string> = {};
+      if (isOauth2Enabled) {
+        if (keycloak.authenticated) {
+          await keycloak.updateToken(30);
+          authHeaders = { Authorization: `Bearer ${keycloak.token}` };
+        }
       } else {
-        return await fetch(input, init);
+        const basicToken = sessionStorage.getItem("basic_auth_token");
+        const tenantId = sessionStorage.getItem("basic_auth_tenant_id");
+        if (basicToken && tenantId) {
+          authHeaders = {
+            Authorization: `Basic ${basicToken}`,
+            "X-TENANT-ID": tenantId,
+          };
+        }
       }
+      
+      const headers = { ...(init ?? { headers: {} }).headers, ...authHeaders };
+      return await fetch(input, { ...init, headers });
     },
   }),
   cache: new InMemoryCache({

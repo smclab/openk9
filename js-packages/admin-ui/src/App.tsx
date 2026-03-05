@@ -92,6 +92,7 @@ import React, { useMemo, useState } from "react";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import "./app.css";
 import { apolloClient } from "./components/apolloClient";
+import { AuthenticationProvider } from "./components/authentication";
 import { Logo } from "./components/common/Logo";
 import { NavigationFooter } from "./components/Navigation/NavigationFooter";
 import { queryClient } from "./components/queryClient";
@@ -545,14 +546,15 @@ export default function App() {
   const filteredMenuItems = useFilteredMenuItems(searchTerm);
 
   return (
-    <ThemeProvider theme={memoizedTheme}>
-      <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <ApolloProvider client={apolloClient}>
-          <ToastProvider>
-            <ModalProvider>
-              <BrowserRouter basename="/admin">
-                <SideNavigationContextProvider>
+    <AuthenticationProvider>
+      <ThemeProvider theme={memoizedTheme}>
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
+          <ApolloProvider client={apolloClient}>
+            <ToastProvider>
+              <ModalProvider>
+                <BrowserRouter basename="/admin">
+                  <SideNavigationContextProvider>
                   <Box
                     sx={{
                       display: "flex",
@@ -756,5 +758,6 @@ export default function App() {
         </ApolloProvider>
       </QueryClientProvider>
     </ThemeProvider>
+    </AuthenticationProvider>
   );
 }

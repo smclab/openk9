@@ -17,18 +17,28 @@
 import React from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { OpenApiRestClient } from "../openapi-generated/OpenApiRestClient";
-import { keycloak } from "./authentication";
+import { keycloak, isOauth2Enabled } from "./authentication";
 
 export const queryClient = new QueryClient();
 const RestClientContext = React.createContext(
   new OpenApiRestClient({
     async HEADERS(options) {
-      if (keycloak.authenticated) {
-        await keycloak.updateToken(30);
-        return { Authorization: `Bearer ${keycloak.token}` };
+      if (isOauth2Enabled) {
+        if (keycloak.authenticated) {
+          await keycloak.updateToken(30);
+          return { Authorization: `Bearer ${keycloak.token}` };
+        }
       } else {
-        return {} as any;
+        const basicToken = sessionStorage.getItem("basic_auth_token");
+        const tenantId = sessionStorage.getItem("basic_auth_tenant_id");
+        if (basicToken && tenantId) {
+          return {
+            Authorization: `Basic ${basicToken}`,
+            "X-TENANT-ID": tenantId,
+          };
+        }
       }
+      return {} as any;
     },
   })
 );

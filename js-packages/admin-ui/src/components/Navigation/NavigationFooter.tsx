@@ -16,11 +16,12 @@
 */
 import { Box, Button } from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { keycloak } from "../authentication";
+import { useAuthentication } from "../authentication";
 
 export function NavigationFooter() {
+  const { logout } = useAuthentication();
   return (
-    <Button variant="outlined" onClick={() => keycloak.logout()}>
+    <Button variant="outlined" onClick={() => logout()}>
       <LogoutIcon />
     </Button>
   );

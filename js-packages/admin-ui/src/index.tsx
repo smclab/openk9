@@ -17,7 +17,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { keycloakInit } from "./components/authentication";
+import { authInit } from "./components/authentication";
 import reportWebVitals from "./reportWebVitals";
 
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
@@ -47,7 +47,7 @@ declare global {
     KEYCLOAK_CLIENT_ID: string;
   }
 }
-keycloakInit.then(() => {
+authInit().then(() => {
   root.render(
     <React.StrictMode>
       <App />
