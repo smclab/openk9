@@ -1,12 +1,8 @@
 localhost, *.localhost, *.*.localhost {
     tls internal
 
-    handle /api/datasource/oauth2/settings.js {
-        reverse_proxy openk9-api-gateway:8080
-    }
-
     handle /api/datasource/* {
-        reverse_proxy openk9-datasource:8080
+        reverse_proxy openk9-api-gateway:8080
     }
 
     handle /api/tenant-manager/* {

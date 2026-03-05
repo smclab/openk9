@@ -21,6 +21,7 @@ import io.openk9.apigw.security.AuthorizationHeaderFilter;
 import io.openk9.apigw.security.ApiRoute;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,6 +47,8 @@ public class WebFilterChainConfiguration {
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver;
 	@Autowired
 	ReactiveAuthorizationManager<AuthorizationContext> authzManager;
+	@Value("${io.openk9.apigw.reject-basic-auth:true}")
+	boolean rejectBasicAuth;
 
 	@Bean
 	SecurityWebFilterChain actuatorSecurityFilterChain(ServerHttpSecurity http) {
@@ -58,26 +61,34 @@ public class WebFilterChainConfiguration {
 	@Bean
 	SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 
-		return http
+		http
 			.addFilterBefore(
 				tenantResolverFilter,
 				SecurityWebFiltersOrder.CORS)
-			// CSRF is not required because we use Authorization header
-			// for authentication.
-			.csrf(ServerHttpSecurity.CsrfSpec::disable)
-			.addFilterAt(
-				new AuthorizationHeaderFilter(),
-				SecurityWebFiltersOrder.AUTHENTICATION)
-			.addFilterAt(
-				apiKeyAuthFilter,
-				SecurityWebFiltersOrder.AUTHENTICATION)
-			.oauth2ResourceServer(oauth2 -> oauth2
-				.authenticationManagerResolver(jwtAuthManagerResolver))
-			.authorizeExchange(authorize -> authorize
-				.pathMatchers(ApiRoute.antPatterns())
-				.access(authzManager)
-			)
-			.build();
+			.csrf(ServerHttpSecurity.CsrfSpec::disable);
+
+		if (rejectBasicAuth) {
+			http
+				.addFilterAt(
+					new AuthorizationHeaderFilter(),
+					SecurityWebFiltersOrder.AUTHENTICATION)
+				.addFilterAt(
+					apiKeyAuthFilter,
+					SecurityWebFiltersOrder.AUTHENTICATION)
+				.oauth2ResourceServer(oauth2 -> oauth2
+					.authenticationManagerResolver(jwtAuthManagerResolver))
+				.authorizeExchange(authorize -> authorize
+					.pathMatchers(ApiRoute.antPatterns())
+					.access(authzManager)
+				);
+		}
+		else {
+			http.authorizeExchange(authorize -> authorize
+				.anyExchange().permitAll()
+			);
+		}
+
+		return http.build();
 	}
 
 }

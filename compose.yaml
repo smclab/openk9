@@ -127,6 +127,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: openk9
       SPRING_RABBITMQ_PASSWORD: openk9
+      IO_OPENK9_APIGW_REJECT_BASIC_AUTH: 'false'
     healthcheck:
       test: "curl --silent --fail http://localhost:8081/actuator/health"
       interval: 10s

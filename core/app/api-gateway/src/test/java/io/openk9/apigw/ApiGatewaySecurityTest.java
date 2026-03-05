@@ -467,6 +467,72 @@ class ApiGatewaySecurityTest {
 				.expectStatus().isBadRequest();
         }
 
+		@Test
+		@DisplayName("Basic Auth on datasource route should be rejected")
+		void testBasicAuthOnDatasource() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "Basic YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("Basic Auth on public route should be rejected")
+		void testBasicAuthOnPublicRoute() {
+			webTestClient.get()
+				.uri("/api/datasource/buckets/current")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "Basic YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("Basic Auth on searcher route should be rejected")
+		void testBasicAuthOnSearcher() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "Basic YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("Basic Auth on no-auth catch-all route should be rejected")
+		void testBasicAuthOnCatchAll() {
+			webTestClient.get()
+				.uri("/undefined/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "Basic YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("Basic Auth with lowercase scheme should be rejected")
+		void testBasicAuthLowercase() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "basic YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("Basic Auth with mixed-case scheme should be rejected")
+		void testBasicAuthMixedCase() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, "BASIC YWRtaW46YWRtaW4=")
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
     }
 
     @Nested
