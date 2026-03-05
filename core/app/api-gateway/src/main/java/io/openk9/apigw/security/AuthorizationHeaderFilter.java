@@ -45,6 +45,15 @@ public class AuthorizationHeaderFilter implements WebFilter {
 			return Mono.empty();
 		}
 
+		if (authorizations != null && authorizations.size() == 1) {
+			String auth = authorizations.get(0);
+			if (auth != null && auth.toLowerCase().startsWith("basic ")) {
+				var response = exchange.getResponse();
+				response.setStatusCode(HttpStatus.UNAUTHORIZED);
+				return Mono.empty();
+			}
+		}
+
 		return chain.filter(exchange);
 	}
 
