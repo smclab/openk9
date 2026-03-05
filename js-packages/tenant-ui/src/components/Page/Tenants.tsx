@@ -11,8 +11,6 @@ gql`
         node {
           id
           virtualHost
-          createDate
-          modifiedDate
         }
       }
     }
@@ -52,8 +50,6 @@ export function Tenants() {
         onCreatePath="/buckets/new"
         columns={[
           { header: "Virtual Host", content: (tenant) => tenant?.virtualHost },
-          { header: "Create Date", content: (tenant) => tenant?.createDate },
-          { header: "Modify Date", content: (tenant) => tenant?.modifiedDate },
         ]}
         onDelete={() => {}}
         rowActions={[

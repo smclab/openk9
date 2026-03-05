@@ -201,13 +201,9 @@ export type Tenant = GraphqlId & {
   __typename?: 'Tenant';
   clientId?: Maybe<Scalars['String']>;
   clientSecret?: Maybe<Scalars['String']>;
-  /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
   id?: Maybe<Scalars['BigInteger']>;
+  issuerUri?: Maybe<Scalars['String']>;
   liquibaseSchemaName?: Maybe<Scalars['String']>;
-  /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  realmName?: Maybe<Scalars['String']>;
   schemaName?: Maybe<Scalars['String']>;
   virtualHost?: Maybe<Scalars['String']>;
 };
@@ -231,7 +227,7 @@ export type TenantQueryVariables = Exact<{
 }>;
 
 
-export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, realmName?: string | null, schemaName?: string | null, modifiedDate?: any | null, virtualHost?: string | null, clientSecret?: string | null, createDate?: any | null } | null };
+export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, schemaName?: string | null, virtualHost?: string | null, clientSecret?: string | null, issuerUri?: string | null } | null };
 
 export type CreateOrUpdateTenantMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -251,7 +247,7 @@ export type TenantsQueryVariables = Exact<{
 }>;
 
 
-export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null, createDate?: any | null, modifiedDate?: any | null } | null } | null> | null } | null };
+export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null } | null } | null> | null } | null };
 
 
 export const ProcessesDocument = gql`
@@ -305,12 +301,10 @@ export const TenantDocument = gql`
     query Tenant($id: ID!) {
   tenant(id: $id) {
     id
-    realmName
     schemaName
-    modifiedDate
     virtualHost
     clientSecret
-    createDate
+    issuerUri
   }
 }
     `;
@@ -393,8 +387,6 @@ export const TenantsDocument = gql`
       node {
         id
         virtualHost
-        createDate
-        modifiedDate
       }
     }
   }

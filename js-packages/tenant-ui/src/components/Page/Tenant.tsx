@@ -21,12 +21,10 @@ export const TenantQuery = gql`
   query Tenant($id: ID!) {
     tenant(id: $id) {
       id
-      realmName
       schemaName
-      modifiedDate
       virtualHost
       clientSecret
-      createDate
+      issuerUri
     }
   }
 `;
@@ -47,10 +45,6 @@ export function Tenant() {
   const restClient = useRestClient();
   const showToast = useToast();
 
-  const formatDate = (date: string | undefined) => {
-    if (!date) return "";
-    return new Date(date).toLocaleDateString();
-  };
 
   return (
     <React.Fragment>
@@ -218,8 +212,7 @@ export function Tenant() {
               },
             }}
           >
-            <TextField label="Name" value={tenant?.virtualHost || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
-            <TextField label="Real Name" value={tenant?.realmName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
+            <TextField label="Virtual Host" value={tenant?.virtualHost || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Schema Name" value={tenant?.schemaName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField
               label="Client Secret"
@@ -229,15 +222,8 @@ export function Tenant() {
               fullWidth
             />
             <TextField
-              label="Create Date"
-              value={formatDate(tenant?.createDate)}
-              InputProps={{ readOnly: true }}
-              variant="outlined"
-              fullWidth
-            />
-            <TextField
-              label="Modify Date"
-              value={formatDate(tenant?.modifiedDate)}
+              label="Issuer URI"
+              value={tenant?.issuerUri || ""}
               InputProps={{ readOnly: true }}
               variant="outlined"
               fullWidth
