@@ -27,7 +27,7 @@ COPY ./js-packages/tenant-ui .
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
 
-RUN CI=false NODE_ENV=production yarn build
+RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" yarn build
 
 # Stage 3 - Production
 FROM nginx:1.28.2-alpine
