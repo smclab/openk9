@@ -236,6 +236,9 @@ services:
   admin-ui:
     image: smclab/openk9-admin-ui:2026.1.0-SNAPSHOT
     container_name: openk9-admin-ui
+  tenant-ui:
+    image: smclab/openk9-tenant-ui:2026.1.0-SNAPSHOT
+    container_name: openk9-tenant-ui
   initializer:
     build: ./compose-utilities/initializer
     container_name: openk9-initializer

@@ -1,8 +1,16 @@
 localhost, *.localhost, *.*.localhost {
     tls internal
 
-    handle /api/datasource/* {
+    handle /api/datasource/oauth2/settings.js {
         reverse_proxy openk9-api-gateway:8080
+    }
+
+    handle /api/datasource/* {
+        reverse_proxy openk9-datasource:8080
+    }
+
+    handle /api/tenant-manager/* {
+        reverse_proxy openk9-tenant-manager:8080
     }
 
     handle /api/searcher/* {
@@ -22,6 +30,13 @@ localhost, *.localhost, *.*.localhost {
     }
     handle @adminPaths {
         reverse_proxy admin-ui:8080
+    }
+
+    @tenantPaths {
+        path /tenant /tenant/*
+    }
+    handle @tenantPaths {
+        reverse_proxy tenant-ui:8080
     }
 
     @chatPaths {

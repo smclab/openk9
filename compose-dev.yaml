@@ -17,5 +17,7 @@ services:
     image: smclab/openk9-search-frontend:local-dev
   admin-ui:
     image: smclab/openk9-admin-ui:local-dev
+  tenant-ui:
+    image: smclab/openk9-tenant-ui:local-dev
   web-connector:
     image: smclab/openk9-web-connector:local-dev
