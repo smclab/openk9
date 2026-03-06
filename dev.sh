@@ -112,6 +112,9 @@ build_all() {
         echo "Clean everything..."
         ./mvnw clean
 
+        echo "Installing root POM..."
+        ./mvnw install -N -DskipTests
+
         echo "Installing hibernate-rx-multitenancy..."
         ./mvnw install -P '!validate,!format' -DskipTests \
             -f "../vendor/hibernate-rx-multitenancy/pom.xml"
