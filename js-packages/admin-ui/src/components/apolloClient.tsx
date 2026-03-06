@@ -30,11 +30,9 @@ export const apolloClient = new ApolloClient({
         }
       } else {
         const basicToken = sessionStorage.getItem("basic_auth_token");
-        const tenantId = sessionStorage.getItem("basic_auth_tenant_id");
-        if (basicToken && tenantId) {
+        if (basicToken) {
           authHeaders = {
             Authorization: `Basic ${basicToken}`,
-            "X-TENANT-ID": tenantId,
           };
         }
       }

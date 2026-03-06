@@ -30,11 +30,9 @@ const RestClientContext = React.createContext(
         }
       } else {
         const basicToken = sessionStorage.getItem("basic_auth_token");
-        const tenantId = sessionStorage.getItem("basic_auth_tenant_id");
-        if (basicToken && tenantId) {
+        if (basicToken) {
           return {
             Authorization: `Basic ${basicToken}`,
-            "X-TENANT-ID": tenantId,
           };
         }
       }

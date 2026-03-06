@@ -35,10 +35,10 @@ export default function App() {
   };
 
   return (
-    <AuthenticationProvider>
-      <QueryClientProvider client={queryClient}>
-        <ApolloProvider client={apolloClient}>
-          <ThemeProvider theme={memoizedTheme}>
+    <ThemeProvider theme={memoizedTheme}>
+      <AuthenticationProvider>
+        <QueryClientProvider client={queryClient}>
+          <ApolloProvider client={apolloClient}>
             <ToastProvider>
               <ModalProvider>
                 <BrowserRouter basename="/tenant">
@@ -177,10 +177,10 @@ export default function App() {
                 </BrowserRouter>
               </ModalProvider>
             </ToastProvider>
-          </ThemeProvider>
-        </ApolloProvider>
-      </QueryClientProvider>
-    </AuthenticationProvider>
+          </ApolloProvider>
+        </QueryClientProvider>
+      </AuthenticationProvider>
+    </ThemeProvider>
   );
 }
 

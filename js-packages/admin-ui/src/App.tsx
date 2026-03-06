@@ -546,9 +546,9 @@ export default function App() {
   const filteredMenuItems = useFilteredMenuItems(searchTerm);
 
   return (
-    <AuthenticationProvider>
-      <ThemeProvider theme={memoizedTheme}>
-        <CssBaseline />
+    <ThemeProvider theme={memoizedTheme}>
+      <CssBaseline />
+      <AuthenticationProvider>
         <QueryClientProvider client={queryClient}>
           <ApolloProvider client={apolloClient}>
             <ToastProvider>
@@ -757,7 +757,7 @@ export default function App() {
           </ToastProvider>
         </ApolloProvider>
       </QueryClientProvider>
+      </AuthenticationProvider>
     </ThemeProvider>
-    </AuthenticationProvider>
   );
 }
