@@ -1,31 +1,52 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { formatDate } from "@components/common";
 import { Table } from "@components/Table/Table";
 import { Box, Button, Container, Typography } from "@mui/material";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useDataIndicesQuery } from "../../graphql-generated";
+import { useDataIndicesQuery, useDeleteDataIndexMutation } from "../../graphql-generated";
+import { useToast } from "@components/Form";
 
 export function Dataindices() {
   const dataIndicesQuery = useDataIndicesQuery({ variables: { first: 10 } });
   const navigate = useNavigate();
+  const toast = useToast();
   const isLoading = dataIndicesQuery.loading;
-
+  const [deleteDataIndex] = useDeleteDataIndexMutation({
+    refetchQueries: ["DataIndices"],
+    onCompleted(data) {
+      if (data.deleteDataIndex?.id) {
+        toast({
+          title: "Data Index Deleted",
+          content: "Data Index has been deleted successfully",
+          displayType: "success",
+        });
+      }
+    },
+    onError(error) {
+      console.log(error);
+      toast({
+        title: "Error Delete",
+        content: "Impossible to delete Data Index",
+        displayType: "error",
+      });
+    },
+  });
   if (isLoading) {
     return null;
   }
@@ -70,10 +91,18 @@ export function Dataindices() {
                 },
               },
             ]}
+            onDelete={() => {}}
             onCreatePath="/data-indices/new"
             edgesPath="dataIndices.edges"
             pageInfoPath="dataIndices.pageInfo"
-            onDelete={(dataIndices) => {}}
+            deleted={{
+              title: "Datasource",
+              messsage: "Deleting the datasource will remove all entities and related indexes.",
+              wordConfirm: "Delete",
+              actionDeleted: (id: string, name: string) => {
+                deleteDataIndex({ variables: { dataIndexId: id, dataIndexName: name } });
+              },
+            }}
             columns={[
               {
                 header: "Name",
@@ -102,4 +131,3 @@ export function Dataindices() {
     </React.Fragment>
   );
 }
-

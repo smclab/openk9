@@ -2136,6 +2136,12 @@ export type Mutation = {
   deleteAutocorrection?: Maybe<Autocorrection>;
   deleteBucket?: Maybe<Bucket>;
   deleteCharFilter?: Maybe<CharFilter>;
+  /**
+   * Deletes a DataIndex entity by its ID after validating the provided name matches the entity.
+   * Requires both the dataIndexId and dataIndexName (as a confirmation mechanism) to prevent
+   * accidental deletions.
+   *
+   */
   deleteDataIndex?: Maybe<DataIndex>;
   deleteDatasource?: Maybe<Datasource>;
   /**
@@ -2698,6 +2704,7 @@ export type MutationDeleteCharFilterArgs = {
 /** Mutation root */
 export type MutationDeleteDataIndexArgs = {
   dataIndexId: Scalars['ID'];
+  dataIndexName?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -6925,6 +6932,14 @@ export type DataIndexQueryVariables = Exact<{
 
 
 export type DataIndexQuery = { __typename?: 'Query', dataIndex?: { __typename?: 'DataIndex', name?: string | null, description?: string | null, settings?: string | null, chunkType?: ChunkType | null, chunkWindowSize?: number | null, embeddingJsonConfig?: string | null, knnIndex?: boolean | null, datasource?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null, embeddingDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null, docTypes?: { __typename?: 'DefaultConnection_DocType', edges?: Array<{ __typename?: 'DefaultEdge_DocType', node?: { __typename?: 'DocType', id?: string | null, name?: string | null } | null } | null> | null } | null, cat?: { __typename?: 'CatResponse', docsCount?: string | null, docsDeleted?: string | null, storeSize: any } | null } | null };
+
+export type DeleteDataIndexMutationVariables = Exact<{
+  dataIndexId: Scalars['ID'];
+  dataIndexName: Scalars['String'];
+}>;
+
+
+export type DeleteDataIndexMutation = { __typename?: 'Mutation', deleteDataIndex?: { __typename?: 'DataIndex', id?: string | null, name?: string | null } | null };
 
 export type DataIndexMappingQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -14924,6 +14939,41 @@ export function useDataIndexLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<
 export type DataIndexQueryHookResult = ReturnType<typeof useDataIndexQuery>;
 export type DataIndexLazyQueryHookResult = ReturnType<typeof useDataIndexLazyQuery>;
 export type DataIndexQueryResult = Apollo.QueryResult<DataIndexQuery, DataIndexQueryVariables>;
+export const DeleteDataIndexDocument = gql`
+    mutation DeleteDataIndex($dataIndexId: ID!, $dataIndexName: String!) {
+  deleteDataIndex(dataIndexId: $dataIndexId, dataIndexName: $dataIndexName) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteDataIndexMutationFn = Apollo.MutationFunction<DeleteDataIndexMutation, DeleteDataIndexMutationVariables>;
+
+/**
+ * __useDeleteDataIndexMutation__
+ *
+ * To run a mutation, you first call `useDeleteDataIndexMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteDataIndexMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteDataIndexMutation, { data, loading, error }] = useDeleteDataIndexMutation({
+ *   variables: {
+ *      dataIndexId: // value for 'dataIndexId'
+ *      dataIndexName: // value for 'dataIndexName'
+ *   },
+ * });
+ */
+export function useDeleteDataIndexMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDataIndexMutation, DeleteDataIndexMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteDataIndexMutation, DeleteDataIndexMutationVariables>(DeleteDataIndexDocument, options);
+      }
+export type DeleteDataIndexMutationHookResult = ReturnType<typeof useDeleteDataIndexMutation>;
+export type DeleteDataIndexMutationResult = Apollo.MutationResult<DeleteDataIndexMutation>;
+export type DeleteDataIndexMutationOptions = Apollo.BaseMutationOptions<DeleteDataIndexMutation, DeleteDataIndexMutationVariables>;
 export const DataIndexMappingDocument = gql`
     query DataIndexMapping($id: ID!) {
   dataIndex(id: $id) {
@@ -16042,4 +16092,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-02-17T11:00:27+01:00
+// Generated on 2026-03-06T10:37:13+01:00
