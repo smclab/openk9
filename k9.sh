@@ -1,6 +1,26 @@
 #!/bin/bash
 set -e
 
+#
+# k9.sh — OpenK9 local development CLI
+#
+# Builds Docker images from source and manages the local Docker Compose
+# stack. Wraps Maven, Docker, and Docker Compose into a single entry
+# point so you don't have to remember individual build commands.
+#
+# Prerequisites:
+#   - Docker (with Compose v2 plugin or standalone docker-compose)
+#   - Java 21+ and Maven (via the bundled mvnw wrapper)
+#   - Node.js / Yarn (only if building frontend images)
+#
+# Quick start:
+#   ./k9.sh start                        # start core services (pulls images)
+#   ./k9.sh start --build                # build from source, then start
+#   ./k9.sh start --profile=ai --build   # build and start with AI services
+#
+# Run ./k9.sh without arguments for full usage information.
+#
+
 # Configuration defaults
 TAG="local-dev"
 PROFILES=()
@@ -217,39 +237,85 @@ compose() {
 # --- Usage ---
 
 usage() {
-    echo "Usage: $0 <command> [services...] [--profile=PROFILE]... [--tag=TAG] [--build]"
-    echo ""
-    echo "Commands:"
-    echo "  build   [services...] [--tag=TAG] Build images (default tag: $TAG)"
-    echo "  start   [services...] [--build]   Start containers (rebuilds initializer)"
-    echo "  stop    [services...]             Stop containers"
-    echo "  down    [services...]             Stop and remove containers (with volumes)"
-    echo "  restart [services...] [--build]   Restart containers (build first with --build)"
-    echo "  logs    [services...]             Follow container logs"
-    echo ""
-    echo "Profiles: $VALID_PROFILES (default: core)"
-    echo "  core      Base services only (compose.yaml)"
-    echo "  files     Core + file management (minio, tika, file-manager)"
-    echo "  ai        Core + AI services (rag, embedding, talk-to)"
-    echo "  keycloak  Core + Keycloak IdP"
-    echo "  all       Core + files + AI"
-    echo ""
-    echo "Multiple profiles can be combined:"
-    echo "  --profile=keycloak --profile=ai   Core + Keycloak + AI"
-    echo ""
-    echo "Valid services: ${VALID_SERVICES[*]}"
-    echo ""
-    echo "Examples:"
-    echo "  $0 build                            Build all images"
-    echo "  $0 build tenant-ui --tag=my-tag     Build tenant-ui with custom tag"
-    echo "  $0 start                            Start core services"
-    echo "  $0 start --profile=all              Start all services (core + files + AI)"
-    echo "  $0 start --profile=keycloak         Start core + Keycloak"
-    echo "  $0 start --profile=keycloak --profile=ai  Start core + Keycloak + AI"
-    echo "  $0 start --profile=ai --build       Build and start core + AI"
-    echo "  $0 restart tenant-ui --build        Rebuild and restart tenant-ui"
-    echo "  $0 stop --profile=all               Stop all services"
-    echo "  $0 logs tenant-ui                   Follow tenant-ui logs"
+    cat <<'USAGE'
+k9.sh — OpenK9 local development CLI
+
+Usage: ./k9.sh <command> [services...] [options]
+
+Commands:
+  build   [services...]   Build Docker images from source
+  start   [services...]   Start the Docker Compose stack
+  stop    [services...]   Stop running containers
+  down    [services...]   Stop and remove containers and volumes
+  restart [services...]   Restart containers
+  logs    [services...]   Follow container logs
+
+Options:
+  --build              Build images before starting/restarting
+  --tag=TAG            Docker image tag (default: local-dev)
+  --profile=PROFILE    Enable a compose profile (repeatable)
+
+Profiles:
+  core       Base services: PostgreSQL, OpenSearch, RabbitMQ,
+             API Gateway, Datasource, Tenant Manager, Ingestion,
+             Searcher, frontends, Caddy reverse proxy (default)
+  files      Core + file handling: MinIO, Tika, File Manager
+  ai         Core + AI services: RAG module, Embedding, Talk-To
+  keycloak   Core + Keycloak identity provider
+  all        Shorthand for: files + ai
+
+  Profiles are additive. Combine multiple --profile flags to
+  compose the stack you need.
+
+Services (for targeted build/restart):
+  api-gateway  tenant-manager  datasource  ingestion  searcher
+  search-frontend  admin-ui  tenant-ui  web-connector
+
+Build details:
+  A full build (./k9.sh build) performs these steps in order:
+    1. Clean all Maven modules
+    2. Install root POM into local Maven repository
+    3. Install vendored hibernate-rx-multitenancy
+    4. Install shared modules (common, client, tenant-events)
+    5. Build api-gateway (Spring Boot + Jib)
+    6. Build Quarkus services (tenant-manager, datasource,
+       ingestion, searcher) as container images
+    7. Build frontend Docker images (search-frontend, admin-ui,
+       tenant-ui)
+    8. Build web-connector Docker image
+
+  A single-service build (./k9.sh build datasource) skips steps
+  1-4 and only builds the specified service. Make sure shared
+  modules are already installed (run a full build first).
+
+Startup behavior:
+  On every start, the initializer container is rebuilt and runs
+  seed.js, which idempotently provisions:
+    - A demo tenant (demo.openk9.localhost)
+    - Plugin drivers (Sitemap Crawler, Minio Connector)
+    - A sample datasource (SMC Website)
+    - Links the datasource to the Default Bucket
+
+  The initializer is safe to re-run and skips already-created
+  resources.
+
+Access:
+  After startup, the services are available at:
+    Admin UI:    https://demo.openk9.localhost/admin
+    Search:      https://demo.openk9.localhost
+    API Gateway: https://demo.openk9.localhost/api
+
+Examples:
+  ./k9.sh start                            Start core services
+  ./k9.sh start --build                    Build everything, then start
+  ./k9.sh start --profile=ai              Start core + AI services
+  ./k9.sh start --profile=keycloak --profile=ai --build
+                                           Build and start with Keycloak + AI
+  ./k9.sh build datasource --tag=test     Build only datasource with custom tag
+  ./k9.sh restart datasource --build      Rebuild and restart datasource
+  ./k9.sh logs datasource                 Follow datasource logs
+  ./k9.sh down                            Tear down everything (with volumes)
+USAGE
 }
 
 # --- Main ---
