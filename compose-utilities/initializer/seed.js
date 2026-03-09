@@ -455,7 +455,7 @@ async function main() {
 
       const result = await graphqlQuery(
         schemaName,
-        `mutation { addDatasourceToBucket(bucketId: ${bucketId}, datasourceId: ${dsMatch.node.id}) { item1 { id } } }`,
+        `mutation { addDatasourceToBucket(bucketId: ${bucketId}, datasourceId: ${dsMatch.node.id}) { left { id } } }`,
         `Link ${dsName} to Default Bucket`
       );
 
