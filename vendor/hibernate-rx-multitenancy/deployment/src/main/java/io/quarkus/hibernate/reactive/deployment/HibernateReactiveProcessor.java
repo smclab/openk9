@@ -63,6 +63,7 @@ import io.quarkus.hibernate.orm.runtime.PersistenceUnitUtil;
 import io.quarkus.hibernate.orm.runtime.boot.QuarkusPersistenceUnitDescriptor;
 import io.quarkus.hibernate.orm.runtime.customized.FormatMapperKind;
 import io.quarkus.hibernate.orm.runtime.customized.JsonFormatterCustomizationCheck;
+import io.quarkus.hibernate.orm.runtime.migration.MultiTenancyStrategy;
 import io.quarkus.hibernate.orm.runtime.recording.RecordedConfig;
 import io.quarkus.hibernate.reactive.runtime.FastBootHibernateReactivePersistenceProvider;
 import io.quarkus.hibernate.reactive.runtime.HibernateReactiveRecorder;
@@ -262,7 +263,7 @@ public final class HibernateReactiveProcessor {
                         reactivePUWithDBKind.supportedDatabaseKind.map(DatabaseKind.SupportedDatabaseKind::getMainName),
                         dbVersion,
                         persistenceUnitConfig.dialect().dialect(),
-                        io.quarkus.hibernate.orm.runtime.migration.MultiTenancyStrategy.NONE,
+                        MultiTenancyStrategy.SCHEMA,
                         hibernateOrmConfig.database().ormCompatibilityVersion(),
                         hibernateOrmConfig.mapping().format().global(),
                         jsonFormatterCustomizationCheck,
