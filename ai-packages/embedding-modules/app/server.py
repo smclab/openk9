@@ -342,7 +342,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             channel = connection.channel()
 
             data = [
-                {f"chunk_{i}": {"text": chunk.text, "embedding": chunk.vectors}}
+                {f"chunk_{i}": {"text": chunk["text"], "embedding": chunk["vectors"]}}
                 for i, chunk in enumerate(chunks)
             ]
             data_pack = {"chunks": data, "text": text}
