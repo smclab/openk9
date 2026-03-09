@@ -36,7 +36,7 @@ Maven Dependency Check:
     - core/target/dependency-check-report.html
     expire_in: 1 week
   cache:
-    key: "${CI_COMMIT_BRANCH}-dependency-check"
+    key: "owasp-nvd-db"   # fixed key: NVD database is not branch-specific.
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push

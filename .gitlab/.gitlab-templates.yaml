@@ -136,6 +136,97 @@ variables:
   script:
   - !reference [.maven-build-verifier-logic, script]
 
+
+# ========================================
+# TEMPLATE: .springboot-build-logic
+# ========================================
+# Build + push logic for Spring Boot components that use JIB directly.
+# API Gateway is Spring Boot (NOT Quarkus), so it cannot use
+# -Dquarkus.container-image.push flags — JIB is invoked as a separate step.
+#
+# Requires variables in the child pipeline job:
+#   COMPONENT:      short name, e.g. "api-gateway"
+#   REGISTRY_IMAGE: full image path, e.g. "$CI_REGISTRY_NAME/openk9/openk9-api-gateway"
+#
+# Branch behaviour:
+#   main / tag  -> mvn install + jib:build (versioned image)
+#   feature     -> mvn install + jib:build (snapshot tag per user)
+#   MR          -> mvn install only (compile check, no push)
+
+.springboot-build-logic:
+  script:
+  - |
+    echo "Starting Spring Boot / JIB Build for: $COMPONENT"
+
+    cd core
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    echo "VERSION=$VERSION"
+    echo "$VERSION" > $CI_PROJECT_DIR/.version
+
+    BASE_INSTALL="mvn $MAVEN_CLI_OPTS clean install -am -pl app/$COMPONENT -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
+      echo "Build type: OFFICIAL (Main/Tag) — tag: $VERSION"
+      eval "$BASE_INSTALL"
+      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
+        -Djib.to.image="$REGISTRY_IMAGE:$VERSION" \
+        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
+        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
+        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+
+    elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" || \
+            ("$CI_PIPELINE_SOURCE" == "parent_pipeline" && -z "$CI_COMMIT_BRANCH" && -z "$CI_COMMIT_TAG") ]]; then
+      echo "Build type: TEST (Merge Request) — compile only, no push"
+      eval "$BASE_INSTALL"
+
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
+      TAG="999-SNAPSHOT"
+      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
+        TAG="998-SNAPSHOT"
+        echo "User: Michele ($TAG)"
+      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
+        echo "User: Mirko ($TAG)"
+      else
+        echo "User: Generic ($TAG)"
+      fi
+      echo "Build type: FEATURE SNAPSHOT ($TAG)"
+      eval "$BASE_INSTALL"
+      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
+        -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
+        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
+        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
+        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    else
+      echo "Unknown branch type — compile only"
+      eval "$BASE_INSTALL"
+    fi
+
+# ========================================
+# TEMPLATE: .springboot-verifier-logic
+# ========================================
+.springboot-verifier-logic:
+  script:
+  - |
+    echo "Starting Spring Boot Build Verifier (MR only) for: $COMPONENT"
+    cd core
+    mvn $MAVEN_CLI_OPTS clean install -am -pl app/$COMPONENT \
+      -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    echo "Build Verifier completed for $COMPONENT"
+
+# ========================================
+# TEMPLATE: .springboot-verifier-template
+# ========================================
+# pull-only cache: MR jobs must NOT write to the shared Maven cache.
+.springboot-verifier-template:
+  extends: .build_template
+  cache:
+    key: "$COMPONENT-mvn"
+    paths:
+    - $CI_PROJECT_DIR/.m2/repository
+    policy: pull
+  script:
+  - !reference [.springboot-verifier-logic, script]
+
 .container-scanning-template:
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE

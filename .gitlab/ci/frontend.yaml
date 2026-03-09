@@ -4,27 +4,30 @@
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# ISOLATION STRATEGY:
-# The MR rule and the feature-branch rule are MERGED into a single condition.
-# This ensures that ONLY the designated frontend developers can trigger
-# these pipelines, even when a Merge Request is open.
-# Backend/AI developers opening MRs will NOT accidentally trigger frontend pipelines.
+# USER_TYPE variable passed to child pipelines:
+#   "designated" → lorenzo/giorgio: full pipeline (build + push + restart)
+#   "generic"    → any other user: Build Verifier only (compile check, no push)
+# MR and main/tag rules do NOT set USER_TYPE (handled by child-rules defaults).
 
 Trigger Search Frontend:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # 1. Main Branch Rule - DEFINES the changes list (&search_frontend_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &search_frontend_changes
         - js-packages/search-frontend/**/*
-    # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # 3. MR or Feature Branch Rule - only for frontend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *search_frontend_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+      changes: *search_frontend_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *search_frontend_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-search-frontend.yaml"
     strategy: depend
@@ -32,18 +35,22 @@ Trigger Search Frontend:
 Trigger Admin Frontend:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&admin_ui_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &admin_ui_changes
         - js-packages/admin-ui/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for frontend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *admin_ui_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+      changes: *admin_ui_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *admin_ui_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-admin-frontend.yaml"
     strategy: depend
@@ -51,18 +58,22 @@ Trigger Admin Frontend:
 Trigger Tenant Frontend:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&tenant_ui_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_ui_changes
         - js-packages/tenant-ui/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for frontend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tenant_ui_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+      changes: *tenant_ui_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *tenant_ui_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-frontend.yaml"
     strategy: depend
@@ -70,18 +81,22 @@ Trigger Tenant Frontend:
 Trigger Talk-To Frontend:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&talk_to_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &talk_to_changes
         - js-packages/talk-to/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for frontend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *talk_to_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+      changes: *talk_to_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *talk_to_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-talk-to.yaml"
     strategy: depend
@@ -89,18 +104,22 @@ Trigger Talk-To Frontend:
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&chatbot_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chatbot_changes
         - js-packages/openk9-chatbot/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for frontend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chatbot_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
+      changes: *chatbot_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *chatbot_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
     strategy: depend

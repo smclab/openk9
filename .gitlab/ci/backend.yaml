@@ -4,29 +4,39 @@
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# ISOLATION STRATEGY:
-# The MR rule and the feature-branch rule are MERGED into a single condition.
-# This ensures that ONLY the designated backend developers can trigger
-# these pipelines, even when a Merge Request is open.
-# Frontend/AI developers opening MRs will NOT accidentally trigger backend pipelines.
+# USER_TYPE variable passed to child pipelines:
+#   "designated" → mirko/michele: full pipeline (build + push + restart)
+#   "generic"    → any other user: Build Verifier only (compile check, no push)
+# MR and main/tag rules do NOT set USER_TYPE (handled by child-rules defaults).
 
 Trigger Datasource:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # 1. Main Branch Rule - DEFINES the changes list (&datasource_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &datasource_changes
         - core/app/datasource/**/*
+        - core/service/**/*
+        - core/common/graphql-util/**/*
+        - core/common/model/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # 2. Tag Rule - always run, no changes filter (tag = full release)
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
+        - core/common/datasource-model/**/*
     - if: '$CI_COMMIT_TAG'
-    # 3. MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *datasource_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *datasource_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *datasource_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-datasource.yaml"
     strategy: depend
@@ -34,20 +44,27 @@ Trigger Datasource:
 Trigger Searcher:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&searcher_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &searcher_changes
         - core/app/searcher/**/*
+        - core/service/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *searcher_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *searcher_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *searcher_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-searcher.yaml"
     strategy: depend
@@ -55,20 +72,24 @@ Trigger Searcher:
 Trigger Ingestion:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&ingestion_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &ingestion_changes
         - core/app/ingestion/**/*
+        - core/common/util/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *ingestion_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *ingestion_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *ingestion_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-ingestion.yaml"
     strategy: depend
@@ -76,20 +97,29 @@ Trigger Ingestion:
 Trigger K8S-Client:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&k8s_client_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &k8s_client_changes
         - core/app/k8s-client/**/*
+        - core/service/**/*
+        - core/client/grpc/**/*
+        - core/common/k8s-manifest/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/api/tenant-manager-api/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *k8s_client_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *k8s_client_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *k8s_client_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-k8s-client.yaml"
     strategy: depend
@@ -97,20 +127,24 @@ Trigger K8S-Client:
 Trigger File-Manager:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&file_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &file_manager_changes
         - core/app/file-manager/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/client/grpc/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *file_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *file_manager_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *file_manager_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-file-manager.yaml"
     strategy: depend
@@ -118,20 +152,30 @@ Trigger File-Manager:
 Trigger Tenant-Manager:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&tenant_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_manager_changes
         - core/app/tenant-manager/**/*
+        - core/common/graphql-util/**/*
+        - core/common/model/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/common/util/**/*
+        - core/client/common/**/*
+        - core/client/grpc/**/*
+        - core/api/tenant-manager-api/**/*
+        - core/common/datasource-model/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tenant_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *tenant_manager_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *tenant_manager_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
     strategy: depend
@@ -139,20 +183,24 @@ Trigger Tenant-Manager:
 Trigger API-Gateway:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&api_gateway_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &api_gateway_changes
         - core/app/api-gateway/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/service/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *api_gateway_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *api_gateway_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *api_gateway_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
     strategy: depend
@@ -160,20 +208,23 @@ Trigger API-Gateway:
 Trigger Tika:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&tika_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tika_changes
         - core/app/tika/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *tika_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *tika_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *tika_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
     strategy: depend
@@ -181,20 +232,24 @@ Trigger Tika:
 Trigger Entity-Manager:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&entity_manager_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &entity_manager_changes
         - core/app/entity-manager/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
+        - core/common/util/**/*
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *entity_manager_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *entity_manager_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *entity_manager_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
     strategy: depend
@@ -202,20 +257,23 @@ Trigger Entity-Manager:
 Trigger Resources-Validator:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&resources_validator_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &resources_validator_changes
         - core/app/resources-validator/**/*
         - core/common/resources-common/**/*
-        - core/common/common-utils/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for backend developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *resources_validator_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+      changes: *resources_validator_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *resources_validator_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
     strategy: depend

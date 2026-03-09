@@ -4,27 +4,30 @@
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# ISOLATION STRATEGY:
-# The MR rule and the feature-branch rule are MERGED into a single condition.
-# This ensures that ONLY the designated AI developers can trigger
-# these pipelines, even when a Merge Request is open.
-# Frontend/Backend developers opening MRs will NOT accidentally trigger AI pipelines.
+# USER_TYPE variable passed to child pipelines:
+#   "designated" → luca.callocchia: full pipeline (build + push + restart)
+#   "generic"    → any other user: Build Verifier only (compile check, no push)
+# MR and main/tag rules do NOT set USER_TYPE (handled by child-rules defaults).
 
 Trigger Rag Module:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # 1. Main Branch Rule - DEFINES the changes list (&rag_module_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &rag_module_changes
         - ai-packages/rag-module/**/*
-    # 2. Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # 3. MR or Feature Branch Rule - only for AI developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && $GITLAB_USER_LOGIN == "luca.callocchia"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *rag_module_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *rag_module_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *rag_module_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-rag-module.yaml"
     strategy: depend
@@ -32,18 +35,22 @@ Trigger Rag Module:
 Trigger Embedding Modules:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&embedding_modules_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &embedding_modules_changes
         - ai-packages/embedding-modules/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for AI developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && $GITLAB_USER_LOGIN == "luca.callocchia"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *embedding_modules_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *embedding_modules_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *embedding_modules_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
     strategy: depend
@@ -52,18 +59,22 @@ Trigger Embedding Modules:
 Trigger Docling Processor:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&docling_processor_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &docling_processor_changes
         - enrichers/docling-processor/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for AI developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && $GITLAB_USER_LOGIN == "luca.callocchia"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *docling_processor_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *docling_processor_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *docling_processor_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-docling-processor.yaml"
     strategy: depend
@@ -71,18 +82,22 @@ Trigger Docling Processor:
 Trigger Chunk Evaluation Module:
   stage: trigger
   rules:
-    # Prevent massive pipeline spam on initial branch creation (SHA 0000...)
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    # Define changes (&chunk_eval_changes)
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chunk_eval_changes
         - ai-packages/chunk-evaluation-module/**/*
-    # Tag Rule - always run, no changes filter (tag = full release)
     - if: '$CI_COMMIT_TAG'
-    # MR or Feature Branch Rule - only for AI developers
-    - if: '($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/) && $GITLAB_USER_LOGIN == "luca.callocchia"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *chunk_eval_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *chunk_eval_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+      changes: *chunk_eval_changes
+      variables:
+        USER_TYPE: "generic"
   trigger:
     include: "/.gitlab/.gitlab-ci-chunk-evaluation-module.yaml"
     strategy: depend

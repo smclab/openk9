@@ -1,0 +1,93 @@
+Datasource: - core/app/datasource
+/**/
+* - core/service
+/**/
+* - core/common/graphql-util
+/**/
+* - core/common/model
+/**/
+* - core/common/resources-common
+/**/
+* - core/common/util
+/**/
+* - core/client/common
+/**/
+* - core/client/grpc
+/**/
+* - core/api/tenant-manager-api
+/**/
+* - core/common/datasource-model
+/**/
+* Searcher: - core/common/resources-common
+/**/
+* - core/app/searcher
+/**/
+* - core/service
+/**/
+* - core/client/common
+/**/
+* - core/client/grpc
+/**/
+* - core/api/tenant-manager-api
+/**/
+* Ingestion: - core/app/ingestion
+/**/
+* - core/common/util
+/**/
+* - core/common/resources-common
+/**/
+* K8s client: - core/app/k8s-client
+/**/
+* - core/app/service
+/**/
+* - core/client/grpc
+/**/
+* - core/common/k8s-manifest
+/**/
+* - core/common/resources-common
+/**/
+* - core/common/util
+/**/
+* - core/client/common
+/**/
+* - core/api/tenant-manager-api
+/**/
+* file manager: - core/app/file-manager
+/**/
+* - core/common/resources-common
+/**/
+* - core/client/grpc
+/**/
+* Tenant manager: - core/app/tenant-manager
+/**/
+* - core/common/graphql-util
+/**/
+* - core/common/model
+/**/
+* - core/common/resources-common
+/**/
+* - core/common/util
+/**/
+* - core/client/common
+/**/
+* - core/client/grpc
+/**/
+* - core/api/tenant-manager-api
+/**/
+* - core/common/datasource-model
+/**/
+* Tika: - core/app/tika
+/**/
+* - core/common/resources-common
+/**/
+* entity manager: - core/app/entity-manager
+/**/
+* - core/common/resources-common
+/**/
+* - core/common/util
+/**/
+* resources validator: - core/app/resources-validator
+/**/
+* - core/common/resources-common
+/**/
+*

@@ -1,7 +1,6 @@
 ###################### API-GATEWAY CHILD PIPELINE ######################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
-  # NEW: Include standardized child rules
   - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
@@ -10,16 +9,21 @@ stages:
 - container-scanning
 - restart
 
+# API Gateway is Spring Boot (NOT Quarkus).
+# It uses JIB directly (mvn jib:build) instead of the Quarkus container-image
+# extension. Therefore it cannot use .maven-build-logic (which passes
+# -Dquarkus.container-image.push flags). It uses .springboot-build-logic instead.
+
 ######################## BUILD API-GATEWAY ########################
 Build API-Gateway Image:
   extends: .build_template
   image: maven:3.9.6-eclipse-temurin-21
   variables:
     COMPONENT: "api-gateway"
+    REGISTRY_IMAGE: "$CI_REGISTRY_NAME/openk9/openk9-api-gateway"
   stage: build
   script:
-  - cd core
-  - !reference [.maven-build-logic, script]
+  - !reference [.springboot-build-logic, script]
   artifacts:
     paths:
     - .version
@@ -31,7 +35,7 @@ Build API-Gateway Image:
 
 ######################## BUILD VERIFIER ########################
 Build Verifier API-Gateway:
-  extends: .maven-verifier-template
+  extends: .springboot-verifier-template
   image: maven:3.9.6-eclipse-temurin-21
   stage: build-verifier
   variables:
@@ -46,7 +50,6 @@ Container Scanning API-Gateway:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-api-gateway"
   rules:
-    # Run only on Main/Tag
     - !reference [.rules:child-deploy-main-tag, rules]
 
 ##################### TRIGGER RESTART API-GATEWAY #####################
@@ -58,6 +61,5 @@ Trigger Restart API-Gateway:
     COMPONENT_NAME: "api-gateway"
     COMPONENT_TYPE: "backend"
   rules:
-    # Run on Main/Tag and Feature
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]

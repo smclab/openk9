@@ -1,6 +1,13 @@
 # Standard rules for Child Pipelines
 # These rules assume the parent pipeline has already decided "IF" to run.
 # These rules decide "WHICH JOBS" to run within the child pipeline.
+#
+# USER_TYPE variable (set by the parent trigger job):
+#   "designated" → developer with a personal k8s env (mirko, michele, lorenzo, etc.)
+#                  → full pipeline: build + push + restart
+#   "generic"    → any other developer
+#                  → build verifier only (compile check, no push, no restart)
+#   (unset)      → main / tag / MR pipeline (standard behaviour)
 
 .rules:child-build-always:
   rules:
@@ -11,18 +18,24 @@
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
 
+# Restart and full build run only for DESIGNATED developers on feature branches
 .rules:child-restart-feature:
   rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $USER_TYPE == "designated"'
 
+# Build Verifier runs on:
+#  - Merge Requests (any user)
+#  - Feature branches for GENERIC users (compile check only, no push)
 .rules:child-verify-mr:
   rules:
     - if: '$CI_MERGE_REQUEST_IID'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     # In GitLab, parent-child pipelines have CI_PIPELINE_SOURCE="parent_pipeline".
     # Since predefined MR variables (like CI_MERGE_REQUEST_IID) are NOT passed to children,
-    # we detect an MR child pipeline by the ABSENCE of a branch/tag (which are present on push children)
+    # we detect an MR child pipeline by the ABSENCE of a branch/tag
     - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
+    # Generic user on feature branch → Build Verifier only
+    - if: '$USER_TYPE == "generic"'
 
 .rules:child-publish:
   rules:

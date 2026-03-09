@@ -33,7 +33,10 @@ Build Verifier:
   stage: build-verifier
   image: node:22.14.0
   cache:
-    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    key:
+      prefix: "openk9-chatbot"
+      files:
+        - yarn.lock
     paths:
     - js-packages/openk9-chatbot/node_modules
     - .yarn-cache
@@ -64,7 +67,10 @@ Publish OpenK9-Chatbot:
   stage: publish
   image: node:22.14.0
   cache:
-    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    key:
+      prefix: "openk9-chatbot"
+      files:
+        - yarn.lock
     paths:
     - js-packages/openk9-chatbot/node_modules
     - .yarn-cache

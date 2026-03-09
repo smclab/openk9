@@ -99,7 +99,10 @@ Build Verifier:
   stage: build-verifier
   image: node:22.14.0
   cache:
-    key: "${CI_JOB_NAME}-${CI_COMMIT_REF_SLUG}"
+    key:
+      prefix: "talk-to"
+      files:
+        - yarn.lock
     paths:
     - js-packages/talk-to/node_modules
     - .yarn-cache
