@@ -324,25 +324,33 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             connection = pika.BlockingConnection(
                 pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
             )
-            channel = connection.channel()
+            try:
+                channel = connection.channel()
 
-            data = [
-                {f"chunk_{i}": {"text": chunk["text"], "embedding": chunk["vectors"]}}
-                for i, chunk in enumerate(chunks)
-            ]
-            data_pack = {"chunks": data, "text": text}
+                data = [
+                    {
+                        f"chunk_{i}": {
+                            "text": chunk["text"],
+                            "embedding": chunk["vectors"],
+                        }
+                    }
+                    for i, chunk in enumerate(chunks)
+                ]
+                data_pack = {"chunks": data, "text": text}
 
-            body = json.dumps(data_pack).encode("utf-8")
+                body = json.dumps(data_pack).encode("utf-8")
 
-            channel.basic_publish(
-                exchange="main.exchange",
-                routing_key="main",
-                body=body,
-                properties=pika.BasicProperties(
-                    delivery_mode=2,  # messaggio persistente
-                    headers={"retry-count": 0},  # header custom per i retry
-                ),
-            )
+                channel.basic_publish(
+                    exchange="main.exchange",
+                    routing_key="main",
+                    body=body,
+                    properties=pika.BasicProperties(
+                        delivery_mode=2,  # messaggio persistente
+                        headers={"retry-count": 0},  # header custom per i retry
+                    ),
+                )
+            finally:
+                connection.close()
 
         return embedding_pb2.EmbeddingResponse(chunks=chunks)
 
