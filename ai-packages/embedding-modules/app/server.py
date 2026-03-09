@@ -26,6 +26,9 @@ from typing import get_type_hints
 
 import grpc
 import pika
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
+from app.text_splitters.derived_text_splitter import DerivedTextSplitter
+from app.utils.text_cleaner import clean_text
 from chonkie import (
     LateChunker,
     NeuralChunker,
@@ -47,10 +50,6 @@ from langchain_huggingface.embeddings import HuggingFaceEmbeddings
 from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
-
-from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
-from app.text_splitters.derived_text_splitter import DerivedTextSplitter
-from app.utils.text_cleaner import clean_text
 
 load_dotenv()
 
@@ -315,13 +314,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         total_chunks = len(text_splitted)
 
         for index, chunk_text in enumerate(text_splitted, start=1):
-            chunk = {
+            chunk_result = {
                 "number": index,
                 "total": total_chunks,
                 "text": chunk_text,
                 "vectors": embeddings.embed_query(chunk_text),
             }
-            chunks.append(chunk)
+            chunks.append(chunk_result)
 
         end = time.time()
 
