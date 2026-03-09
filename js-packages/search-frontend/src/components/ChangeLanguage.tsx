@@ -157,8 +157,6 @@ function remappingLanguageToBack({ language }: { language: string }) {
       return "DEU";
     case "fr_FR":
       return "FRA";
-    case "de_DE":
-      return "DEU";
     default:
       return "GBR";
   }
