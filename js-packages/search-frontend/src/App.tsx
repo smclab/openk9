@@ -48,13 +48,14 @@ import "react-dates/lib/css/_datepicker.css";
 
 const isKeycloakEnabled = import.meta.env.VITE_KEYCLOAK_ENABLED === "true";
 const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
+const isGenerativeEnabled = import.meta.env.VITE_GENERATIVE_ENABLED === "true";
 
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: false,
   searchReplaceText: false,
   memoryResults: false,
-  useGenerativeApi: true,
+  useGenerativeApi: isGenerativeEnabled,
   useKeycloak: isKeycloakEnabled,
   queryStringMap: { filters: "filtri" },
   useQueryAnalysis: false,
@@ -74,7 +75,6 @@ export function App() {
   const [focusedInput, setFocusedInput] = React.useState(null);
   const [isClickReset, setIsClickReset] = React.useState(false);
   const [isPanelVisible, setIsPanelVisible] = React.useState(true);
-  const [isOpenCalendar, setIsOpenCalendar] = React.useState(false);
   const [searchText, setSearchText] = React.useState<string | null | undefined>(
     undefined,
   );
@@ -407,7 +407,7 @@ export function App() {
             >
               <FilterHorizontalSvg />
             </button>
-            {searchText !== undefined && (
+            {isGenerativeEnabled && searchText !== undefined && (
               <div
                 css={css`
                   padding-block: 8px;
@@ -438,7 +438,7 @@ export function App() {
                     }
                   `}
                 >
-                  {isPanelVisible ? (
+                  {isGenerativeEnabled && isPanelVisible ? (
                     <>
                       Chiudi <Logo />
                     </>
@@ -766,7 +766,7 @@ export function App() {
         ></div>
       </div>
 
-      {searchText !== undefined && (
+      {isGenerativeEnabled && searchText !== undefined && (
         <div
           css={css`
             grid-area: panel;
@@ -819,17 +819,19 @@ export function App() {
               )}
             </button>
           </div>
-          <div
-            ref={(element) =>
-              openk9.updateConfiguration({
-                generateResponse: element,
-              })
-            }
-            css={css`
-              color: black;
-              display: ${isPanelVisible ? "block" : "none"};
-            `}
-          ></div>
+          {isGenerativeEnabled && (
+            <div
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  generateResponse: element,
+                })
+              }
+              css={css`
+                color: black;
+                display: ${isPanelVisible ? "block" : "none"};
+              `}
+            ></div>
+          )}
         </div>
       )}
 
@@ -845,7 +847,9 @@ export function App() {
         }
         css={css`
           grid-area: result;
-          margin-top: ${searchText !== undefined ? "20px" : "unset"};
+          margin-top: ${searchText !== undefined && isGenerativeEnabled
+            ? "20px"
+            : "unset"};
           overflow: auto;
           display: flex;
           flex-direction: column;
@@ -936,7 +940,9 @@ export function App() {
             --openk9-embeddable-search--primary-background-color
           );
           border-radius: 8px;
-          margin-top: ${searchText !== undefined ? "20px" : "unset"};
+          margin-top: ${searchText !== undefined && isGenerativeEnabled
+            ? "20px"
+            : "unset"};
 
           @media (max-width: 480px) {
             display: none;
