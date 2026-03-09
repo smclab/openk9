@@ -292,6 +292,12 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             "possible_arguments": signature,
         }
         logger.info(info_arguments)
+        if chunk_type not in chunk_types:
+            context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT,
+                f"Unsupported chunk type: {chunk_type}",
+            )
+            return
 
         text_splitter = chunk_types[chunk_type](**arguments)
         text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
