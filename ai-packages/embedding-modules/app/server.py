@@ -300,13 +300,13 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         total_chunks = len(text_splitted)
 
         for index, chunk_text in enumerate(text_splitted, start=1):
-            chunk = {
+            chunk_result = {
                 "number": index,
                 "total": total_chunks,
                 "text": chunk_text,
                 "vectors": embeddings.embed_query(chunk_text),
             }
-            chunks.append(chunk)
+            chunks.append(chunk_result)
 
         end = time.time()
 
