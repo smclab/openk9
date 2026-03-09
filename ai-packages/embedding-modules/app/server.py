@@ -260,7 +260,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
         text_splitted = []
         chunks = []
 
-        info = {
+        info_chunk = {
             "text": text,
             "chunk_type": chunk_type,
             "provider": model_type,
@@ -268,7 +268,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             "chunk_config": chunk_json_config,
         }
 
-        logger.info(info)
+        logger.info(info_chunk)
 
         def _is_int_like(value):
             """Checks if an input can be casted to int."""
@@ -278,7 +278,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             except (ValueError, TypeError):
                 return False
 
-        logger.info(info)
         signature = {
             name: hint
             for name, hint in get_type_hints(chunk_types[chunk_type].__init__).items()
@@ -299,14 +298,14 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             )
         }
 
-        info = {
+        info_arguments = {
             "using_arguments": arguments,
             "unused_arguments": {
                 k: v for k, v in chunk_json_config.items() if k not in arguments
             },
             "possible_arguments": signature,
         }
-        logger.info(info)
+        logger.info(info_arguments)
 
         text_splitter = chunk_types[chunk_type](**arguments)
         text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
