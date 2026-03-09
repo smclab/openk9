@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: keycloak/keycloak:26
+    image: keycloak/keycloak:26.5
     container_name: keycloak
     command: start-dev
     environment:
@@ -11,6 +11,8 @@ services:
       KC_DB_PASSWORD: openk9
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
     ports:
       - "8081:8081"
     networks:
@@ -33,6 +35,7 @@ services:
       KEYCLOAK_URL: 'http://keycloak.openk9.localhost:8081'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_USERNAME: 'admin'
       QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD: 'admin'
+      OPENK9_TENANT_MANAGER_KEYCLOAK_BASE_ISSUER_URI: 'http://keycloak.openk9.localhost:8081/realms/'
     depends_on:
       keycloak:
         condition: service_healthy
