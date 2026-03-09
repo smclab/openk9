@@ -14,7 +14,6 @@ COPY ./requirements.txt ./
 RUN if [ "$MODE" = "cpu" ]; then \
         sed -i '1i\--extra-index-url https://download.pytorch.org/whl/cpu\n' requirements.txt; \
     fi
-
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
