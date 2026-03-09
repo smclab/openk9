@@ -19,14 +19,11 @@ package io.openk9.tenantmanager.resource;
 
 import jakarta.ws.rs.core.Application;
 
-import org.eclipse.microprofile.openapi.annotations.Components;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
-import org.eclipse.microprofile.openapi.annotations.enums.SecuritySchemeType;
 import org.eclipse.microprofile.openapi.annotations.info.Contact;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
-import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 
 @OpenAPIDefinition(
 	info = @Info(
@@ -42,16 +39,7 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityScheme;
 			email = "dev@openk9.io"
 		)
 	),
-	security = @SecurityRequirement(name = "http"),
-	components = @Components(
-		securitySchemes = {
-			@SecurityScheme(
-				securitySchemeName = "http",
-				type = SecuritySchemeType.HTTP,
-				scheme = "Basic"
-			)
-		}
-	)
+	security = @SecurityRequirement(name = "SecurityScheme")
 )
 public class TenantManagerApplication  extends Application {
 }
