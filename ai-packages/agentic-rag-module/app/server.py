@@ -262,6 +262,7 @@ async def rag_generate(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
+        None,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
