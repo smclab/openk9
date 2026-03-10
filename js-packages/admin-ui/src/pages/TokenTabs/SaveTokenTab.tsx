@@ -250,13 +250,13 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
           ...(isExtraParamsType
             ? {
-                extraParams: JSON.stringify({
-                  globalQueryType: data.globalQueryType,
-                  valuesQueryType: data.valuesQueryType,
-                  boost: data.boost,
-                  fuzziness: data.fuzziness,
-                }),
-              }
+              extraParams: JSON.stringify({
+                globalQueryType: data.globalQueryType,
+                valuesQueryType: data.valuesQueryType,
+                boost: data.boost,
+                fuzziness: data.fuzziness,
+              }),
+            }
             : {}),
 
           ...(data.docTypeFieldId?.id !== "undefined" && data.docTypeFieldId?.id ? { docTypeFieldId: docTypeId } : {}),
@@ -280,11 +280,11 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           { key: "docTypeFieldId", label: "Document Type Field" },
           ...(form.inputProps("tokenType").value === "FILTER" || form.inputProps("tokenType").value === "TEXT"
             ? [
-                { key: "boost" },
-                { key: "valuesQueryType", label: "Values Query Type" },
-                { key: "globalQueryType", label: "Global Query Type" },
-                { key: "fuzziness" },
-              ]
+              { key: "boost" },
+              { key: "valuesQueryType", label: "Values Query Type" },
+              { key: "globalQueryType", label: "Global Query Type" },
+              { key: "fuzziness" },
+            ]
             : []),
           { key: "filter" },
         ],
@@ -314,7 +314,7 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
           )}
         </Box>
 
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -368,9 +368,9 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
                         !form?.inputProps("docTypeFieldId")?.value?.id
                           ? undefined
                           : {
-                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
-                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
-                            }
+                            id: form?.inputProps("docTypeFieldId")?.value?.id || "",
+                            name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                          }
                       }
                       onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
                       disabled={page === 1}
@@ -379,31 +379,31 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
                     {(form.inputProps("tokenType").value === "TEXT" ||
                       form.inputProps("tokenType").value === "FILTER") && (
-                      <div>
-                        <TextInput label="boost" {...form.inputProps("boost")} disabled={disabled} />
+                        <div>
+                          <TextInput label="boost" {...form.inputProps("boost")} disabled={disabled} />
 
-                        <CustomSelect
-                          label="valuesQueryType"
-                          dict={valuesQueryType}
-                          {...form.inputProps("valuesQueryType")}
-                          disabled={disabled}
-                        />
+                          <CustomSelect
+                            label="valuesQueryType"
+                            dict={valuesQueryType}
+                            {...form.inputProps("valuesQueryType")}
+                            disabled={disabled}
+                          />
 
-                        <CustomSelect
-                          label="globalQueryType"
-                          dict={globalQueryType}
-                          {...form.inputProps("globalQueryType")}
-                          disabled={disabled}
-                        />
+                          <CustomSelect
+                            label="globalQueryType"
+                            dict={globalQueryType}
+                            {...form.inputProps("globalQueryType")}
+                            disabled={disabled}
+                          />
 
-                        <CustomSelect
-                          label="fuzziness"
-                          dict={fuzziness}
-                          {...form.inputProps("fuzziness")}
-                          disabled={disabled}
-                        />
-                      </div>
-                    )}
+                          <CustomSelect
+                            label="fuzziness"
+                            dict={fuzziness}
+                            {...form.inputProps("fuzziness")}
+                            disabled={disabled}
+                          />
+                        </div>
+                      )}
 
                     <BooleanInput label="Filter" {...form.inputProps("filter")} disabled={disabled} />
                   </>

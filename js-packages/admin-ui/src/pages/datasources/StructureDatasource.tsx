@@ -232,8 +232,8 @@ export const StepCircle = styled(Box)<{ active?: boolean; clickable?: boolean }>
   backgroundColor: active
     ? theme.palette.primary.main
     : clickable
-    ? theme.palette.text.primary
-    : theme.palette.text.disabled,
+      ? theme.palette.text.primary
+      : theme.palette.text.disabled,
   color: active ? theme.palette.primary.contrastText : theme.palette.background.paper,
   display: "flex",
   alignItems: "center",

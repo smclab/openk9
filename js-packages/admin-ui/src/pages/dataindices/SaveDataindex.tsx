@@ -341,11 +341,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               { key: "knnIndex", label: "KNN Index" },
               ...(form.inputProps("knnIndex").value
                 ? [
-                    { key: "chunkType" },
-                    { key: "chunkWindowSize" },
-                    { key: "embeddingJsonConfig", jsonView: true },
-                    { key: "embeddingDocTypeFieldId" },
-                  ]
+                  { key: "chunkType" },
+                  { key: "chunkWindowSize" },
+                  { key: "embeddingJsonConfig", jsonView: true },
+                  { key: "embeddingDocTypeFieldId" },
+                ]
                 : []),
             ],
             label: "Recap Data Index",
@@ -439,7 +439,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     <>
       <TitleEntity nameEntity="Data Index" description="" id={dataindexData.dataindexId} />
 
-      <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+      <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
         <CreateDataEntity
           form={form}
           page={page}
@@ -552,9 +552,8 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         </Button>
         <Button
           variant="contained"
-          className={`btn${form.inputProps("name").value ? ` btn-name` : ""}${
-            form.inputProps("docTypeIds").value ? " btn-danger" : ""
-          }`}
+          className={`btn${form.inputProps("name").value ? ` btn-name` : ""}${form.inputProps("docTypeIds").value ? " btn-danger" : ""
+            }`}
           type="button"
           sx={{
             border: form.inputProps("name").value && form.inputProps("docTypeIds").value ? "1px solid" : "unset",

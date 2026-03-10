@@ -243,7 +243,7 @@ export function SaveQueryAnalysis({ setExtraFab }: { setExtraFab: (fab: React.Re
           </Button>
         )}
       </Box>
-      <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+      <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
         <CreateDataEntity
           form={form}
           page={page}

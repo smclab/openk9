@@ -118,10 +118,10 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
     ),
     originalValues: embeddingModelQuery.data?.embeddingModel
       ? {
-          ...embeddingModelQuery.data.embeddingModel,
-          provider: embeddingModelQuery.data.embeddingModel.providerModel?.provider || "openai",
-          model: embeddingModelQuery.data.embeddingModel.providerModel?.model || "",
-        }
+        ...embeddingModelQuery.data.embeddingModel,
+        provider: embeddingModelQuery.data.embeddingModel.providerModel?.provider || "openai",
+        model: embeddingModelQuery.data.embeddingModel.providerModel?.model || "",
+      }
       : undefined,
     isLoading: embeddingModelQuery.loading || createOrUpdateEmbeddingModelsMutation.loading,
     onSubmit(data) {
@@ -181,7 +181,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}

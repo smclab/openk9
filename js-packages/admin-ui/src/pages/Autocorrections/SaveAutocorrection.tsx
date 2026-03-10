@@ -172,7 +172,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -214,9 +214,9 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                         !form?.inputProps("docTypeFields")?.value?.id
                           ? undefined
                           : {
-                              id: form?.inputProps("docTypeFields")?.value?.id || "",
-                              name: form?.inputProps("docTypeFields")?.value?.name || "",
-                            }
+                            id: form?.inputProps("docTypeFields")?.value?.id || "",
+                            name: form?.inputProps("docTypeFields")?.value?.name || "",
+                          }
                       }
                       onClear={() => form.inputProps("docTypeFields").onChange({ id: undefined, name: undefined })}
                       disabled={page === 1}

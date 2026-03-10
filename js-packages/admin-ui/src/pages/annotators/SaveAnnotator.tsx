@@ -147,12 +147,12 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         docTypeFieldId: data?.docTypeFieldId?.id ? data?.docTypeFieldId?.id : null,
         ...(isExtraParamsType
           ? {
-              extraParams: JSON.stringify({
-                globalQueryType: data.globalQueryType,
-                valuesQueryType: data.valuesQueryType,
-                boost: data.boost,
-              }),
-            }
+            extraParams: JSON.stringify({
+              globalQueryType: data.globalQueryType,
+              valuesQueryType: data.valuesQueryType,
+              boost: data.boost,
+            }),
+          }
           : {}),
       };
 
@@ -189,10 +189,10 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             AnnotatorType.Aggregator,
           ].includes(form.inputProps("type").value)
             ? [
-                { key: "valuesQueryType", label: "Values Query Type" },
-                { key: "globalQueryType", label: "Global Query Type" },
-                { key: "docTypeFieldId", label: "Document Type Field" },
-              ]
+              { key: "valuesQueryType", label: "Values Query Type" },
+              { key: "globalQueryType", label: "Global Query Type" },
+              { key: "docTypeFieldId", label: "Document Type Field" },
+            ]
             : []),
         ],
         label: "Recap Annotator",
@@ -218,7 +218,7 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           )}
         </Box>
 
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -281,9 +281,9 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                         !form?.inputProps("docTypeFieldId")?.value?.id
                           ? undefined
                           : {
-                              id: form?.inputProps("docTypeFieldId")?.value?.id || "",
-                              name: form?.inputProps("docTypeFieldId")?.value?.name || "",
-                            }
+                            id: form?.inputProps("docTypeFieldId")?.value?.id || "",
+                            name: form?.inputProps("docTypeFieldId")?.value?.name || "",
+                          }
                       }
                       onClear={() => form.inputProps("docTypeFieldId").onChange(undefined)}
                       disabled={page === 1}
@@ -311,22 +311,22 @@ export function SaveAnnotator({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                       AnnotatorType.Ner,
                       AnnotatorType.Aggregator,
                     ].includes(form.inputProps("type").value) && (
-                      <div>
-                        <TextInput label="boost" {...form.inputProps("boost")} disabled={isDisabled("boost")} />
-                        <CustomSelect
-                          label="valuesQueryType"
-                          dict={valuesQueryType}
-                          {...form.inputProps("valuesQueryType")}
-                          disabled={isDisabled("valuesQueryType")}
-                        />
-                        <CustomSelect
-                          label="globalQueryType"
-                          dict={globalQueryType}
-                          {...form.inputProps("globalQueryType")}
-                          disabled={isDisabled("globalQueryType")}
-                        />
-                      </div>
-                    )}
+                        <div>
+                          <TextInput label="boost" {...form.inputProps("boost")} disabled={isDisabled("boost")} />
+                          <CustomSelect
+                            label="valuesQueryType"
+                            dict={valuesQueryType}
+                            {...form.inputProps("valuesQueryType")}
+                            disabled={isDisabled("valuesQueryType")}
+                          />
+                          <CustomSelect
+                            label="globalQueryType"
+                            dict={globalQueryType}
+                            {...form.inputProps("globalQueryType")}
+                            disabled={isDisabled("globalQueryType")}
+                          />
+                        </div>
+                      )}
                   </div>
                 ),
                 page: 0,

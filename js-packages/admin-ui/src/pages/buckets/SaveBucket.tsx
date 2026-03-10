@@ -188,39 +188,39 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
         tabIds: tabs?.associated || [],
         queryAnalysisId: bucketQuery.data?.bucket?.queryAnalysis?.id
           ? {
-              id: bucketQuery.data?.bucket?.queryAnalysis?.id,
-              name: bucketQuery.data?.bucket?.queryAnalysis?.name,
-            }
+            id: bucketQuery.data?.bucket?.queryAnalysis?.id,
+            name: bucketQuery.data?.bucket?.queryAnalysis?.name,
+          }
           : undefined,
         defaultLanguageId: bucketQuery.data?.bucket?.language?.id
           ? {
-              id: bucketQuery.data?.bucket?.language?.id,
-              name: bucketQuery.data?.bucket?.language?.name,
-            }
+            id: bucketQuery.data?.bucket?.language?.id,
+            name: bucketQuery.data?.bucket?.language?.name,
+          }
           : undefined,
         searchConfigId: bucketQuery.data?.bucket?.searchConfig?.id
           ? {
-              id: bucketQuery.data?.bucket?.searchConfig?.id,
-              name: bucketQuery.data?.bucket?.searchConfig?.name,
-            }
+            id: bucketQuery.data?.bucket?.searchConfig?.id,
+            name: bucketQuery.data?.bucket?.searchConfig?.name,
+          }
           : undefined,
         ragConfigurationChatId: bucketQuery.data?.bucket?.ragConfigurationChat?.id
           ? {
-              id: bucketQuery.data?.bucket?.ragConfigurationChat?.id,
-              name: bucketQuery.data?.bucket?.ragConfigurationChat?.name,
-            }
+            id: bucketQuery.data?.bucket?.ragConfigurationChat?.id,
+            name: bucketQuery.data?.bucket?.ragConfigurationChat?.name,
+          }
           : undefined,
         ragConfigurationChatToolId: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id
           ? {
-              id: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id,
-              name: bucketQuery.data?.bucket?.ragConfigurationChatTool?.name,
-            }
+            id: bucketQuery.data?.bucket?.ragConfigurationChatTool?.id,
+            name: bucketQuery.data?.bucket?.ragConfigurationChatTool?.name,
+          }
           : undefined,
         ragConfigurationSimpleGenerateId: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id
           ? {
-              id: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id,
-              name: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.name,
-            }
+            id: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.id,
+            name: bucketQuery.data?.bucket?.ragConfigurationSimpleGenerate?.name,
+          }
           : undefined,
         autocorrectionId: {
           id: bucketQuery.data?.bucket?.autocorrection?.id || "-1",
@@ -327,7 +327,7 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -464,9 +464,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("searchConfigId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("searchConfigId")?.value?.id || "",
-                                name: form?.inputProps("searchConfigId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("searchConfigId")?.value?.id || "",
+                              name: form?.inputProps("searchConfigId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("searchConfigId").onChange(undefined)}
                         disabled={page === 1}
@@ -481,9 +481,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("defaultLanguageId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("defaultLanguageId")?.value?.id || "",
-                                name: form?.inputProps("defaultLanguageId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("defaultLanguageId")?.value?.id || "",
+                              name: form?.inputProps("defaultLanguageId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("defaultLanguageId").onChange(undefined)}
                         disabled={page === 1}
@@ -496,9 +496,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("queryAnalysisId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("queryAnalysisId")?.value?.id || "",
-                                name: form?.inputProps("queryAnalysisId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("queryAnalysisId")?.value?.id || "",
+                              name: form?.inputProps("queryAnalysisId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("queryAnalysisId").onChange(undefined)}
                         disabled={page === 1}
@@ -513,9 +513,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("ragConfigurationChatId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("ragConfigurationChatId")?.value?.id || "",
-                                name: form?.inputProps("ragConfigurationChatId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("ragConfigurationChatId")?.value?.id || "",
+                              name: form?.inputProps("ragConfigurationChatId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("ragConfigurationChatId").onChange(undefined)}
                         disabled={page === 1}
@@ -535,9 +535,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("ragConfigurationChatToolId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("ragConfigurationChatToolId")?.value?.id || "",
-                                name: form?.inputProps("ragConfigurationChatToolId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("ragConfigurationChatToolId")?.value?.id || "",
+                              name: form?.inputProps("ragConfigurationChatToolId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("ragConfigurationChatToolId").onChange(undefined)}
                         disabled={page === 1}
@@ -577,9 +577,9 @@ export function SaveBucket({ setExtraFab }: { setExtraFab: (fab: React.ReactNode
                           !form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.id
                             ? undefined
                             : {
-                                id: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.id || "",
-                                name: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.name || "",
-                              }
+                              id: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.id || "",
+                              name: form?.inputProps("ragConfigurationSimpleGenerateId")?.value?.name || "",
+                            }
                         }
                         onClear={() => form.inputProps("ragConfigurationSimpleGenerateId").onChange(undefined)}
                         disabled={page === 1}

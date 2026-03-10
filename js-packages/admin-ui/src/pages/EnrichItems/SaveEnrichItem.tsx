@@ -37,11 +37,17 @@ import {
   useCreateOrUpdateEnrichItemMutation,
   useEnrichItemQuery,
 } from "../../graphql-generated";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useRestClient } from "@components/queryClient";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import {
+  ChangeValueKey,
+  GenerateDynamicForm,
+  Template,
+} from "../datasources/components/Sections/DataSource/DynamicForm";
+import useDynamicForm from "../datasources/components/Sections/DataSource/DynamicForm";
 
 export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { enrichItemId = "new", name, view } = useParams();
@@ -76,8 +82,12 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
   });
 
   const [page, setPage] = React.useState(0);
+  const [step, setStep] = React.useState<"configureBase" | "configureDynamic">("configureBase");
   const isRecap = page === 1;
   const isNew = enrichItemId === "new";
+
+  const [dynamicTemplateState, setDynamicTemplateState] = React.useState<Template | null>(null);
+  const [loadingForm, setLoadingForm] = React.useState(false);
 
   const toast = useToast();
   const [createOrUpdateEnrichItemMutate, createOrUpdateEnrichItemMutation] = useCreateOrUpdateEnrichItemMutation({
@@ -144,6 +154,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         variables: {
           id: enrichItemId !== "new" ? enrichItemId : undefined,
           ...data,
+          script: dynamicFormJson || data.script,
           resourceUri: {
             baseUri: data.baseUri,
             path: data.path,
@@ -153,6 +164,91 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
     },
     getValidationMessages: fromFieldValidators(createOrUpdateEnrichItemMutation.data?.enrichItem?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (enrichItemId !== "new" && enrichItemQuery.data?.enrichItem?.resourceUri) {
+      const { baseUri, path } = enrichItemQuery.data.enrichItem.resourceUri;
+      if (baseUri && path) {
+        restClient.formApi
+          .form({ baseUri, path })
+          .then((res) => {
+            if (res) {
+              setDynamicTemplateState(res as Template);
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching initial dynamic form", err);
+          });
+      }
+    }
+  }, [enrichItemQuery.data, enrichItemId, restClient.formApi]);
+
+  const baseUriValue = form.inputProps("baseUri").value;
+  const pathValue = form.inputProps("path").value;
+
+  React.useEffect(() => {
+    setDynamicTemplateState(null);
+  }, [baseUriValue, pathValue]);
+
+  const { dynamicTemplate, changeValueTemplate, dynamicFormJson } = useDynamicForm({
+    template: dynamicTemplateState,
+    jsonConfig: form.inputProps("script").value,
+  });
+
+  const handleNextStep = async () => {
+    const baseUri = form.inputProps("baseUri").value;
+    const path = form.inputProps("path").value;
+    const name = form.inputProps("name").value;
+
+    if (!name) {
+      toast({
+        title: "Missing data",
+        content: "Please provide a Name for the Enrich Item",
+        displayType: "error",
+      });
+      return;
+    }
+
+    if (!baseUri || !path) {
+      toast({
+        title: "Missing data",
+        content: "Please provide both Base URI and Path",
+        displayType: "error",
+      });
+      return;
+    }
+
+    if (testResult !== "success") {
+      toast({
+        title: "Connection not verified",
+        content: "Please test the connection before proceeding, or ensure the endpoint is reachable.",
+        displayType: "warning",
+      });
+      // For now, allowing to proceed as per "imposta anche la possibilità di poterlo bloccare" 
+      // but keeping it as a warning unless we want to strictly block.
+    }
+
+    try {
+      setLoadingForm(true);
+      const res = await restClient.formApi.form({
+        baseUri,
+        path,
+      });
+      if (res) {
+        setDynamicTemplateState(res as Template);
+      }
+      setStep("configureDynamic");
+    } catch (e) {
+      toast({
+        title: "Error",
+        content: "Impossible to fetch dynamic form. Check connection settings.",
+        displayType: "warning",
+      });
+      setStep("configureDynamic");
+    } finally {
+      setLoadingForm(false);
+    }
+  };
 
   const recapSections = mappingCardRecap({
     form: form as any,
@@ -168,11 +264,18 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "requestTimeout", label: "Request Timeout" },
           { key: "behaviorMergeType", label: "Behavior Merge Type" },
           { key: "behaviorOnError", label: "Behavior On Error" },
-          { key: "script", label: "Script", jsonView: true },
+          {
+            key: "script",
+            label: "Configuration",
+            jsonView: true,
+          },
         ],
         label: "Recap Enrich Item",
       },
     ],
+    valueOverride: {
+      script: dynamicFormJson || form.inputProps("script").value,
+    },
   });
 
   return (
@@ -190,107 +293,166 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           </Button>
         )}
       </Box>
-      <form style={{ borderStyle: "unset", padding: 0 }}>
-        <CreateDataEntity
-          form={form}
-          page={page}
-          id={enrichItemId}
-          pathBack="/enrich-items/"
-          setPage={setPage}
-          haveConfirmButton={view ? false : true}
-          informationSuggestion={[
-            {
-              content: (
-                <>
-                  <ContainerFluid flexColumn>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
-                    <NumberInput
-                      label="Request Timeout - Milliseconds"
-                      {...form.inputProps("requestTimeout")}
-                      description={"the value is expressed in milliseconds"}
-                    />
-                    <TextInput
-                      label="Base URI"
-                      {...form.inputProps("baseUri")}
-                      description={"Base URL where enrich service listens"}
-                    />
-                    <TextInput label="Path" {...form.inputProps("path")} description={"API endpoint path"} />
-                    <TextInput
-                      label="Json Path"
-                      {...form.inputProps("jsonPath")}
-                      description={"Json Path for merging result. To merge entire Json response set $"}
-                    />
-                    <CustomSelect
-                      label="Type"
-                      dict={EnrichItemType}
-                      {...form.inputProps("type")}
-                      description={
-                        "Enrich Type. Set Sync/Async for external Openk9 compatible service or Groovy Script for simple script enrich."
-                      }
-                    />
-                    <CustomSelect
-                      label="Behavior Merge Type"
-                      dict={BehaviorMergeType}
-                      {...form.inputProps("behaviorMergeType")}
-                      description={"If merge or replace original message with enrich response"}
-                    />
-                    <CustomSelect
-                      label="Behavior On Error"
-                      dict={BehaviorOnError}
-                      {...form.inputProps("behaviorOnError")}
-                      description={
-                        "Behavior in case of error. If Fail, retry and error handling flow is performed for message. If Skip message go to next step, ignoring the error"
-                      }
-                    />
-                  </ContainerFluid>
-                  <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center" }}>
-                    <Button
-                      onClick={async () => {
-                        try {
-                          const res = await restClient.healthApi.health({
-                            baseUri: form.inputProps("baseUri").value,
-                            path: form.inputProps("path").value,
-                          });
-                          setTestResult(res ? "success" : "error");
-                        } catch {
-                          setTestResult("error");
+      <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
+        {step === "configureBase" ? (
+          <CreateDataEntity
+            form={form}
+            page={page}
+            id={enrichItemId}
+            pathBack="/enrich-items/"
+            setPage={setPage}
+            isFooterButton={false}
+            haveConfirmButton={view ? false : true}
+            informationSuggestion={[
+              {
+                content: (
+                  <>
+                    <ContainerFluid flexColumn>
+                      <TextInput label="Name" {...form.inputProps("name")} />
+                      <TextArea label="Description" {...form.inputProps("description")} />
+                      <TextInput
+                        label="Base URI"
+                        {...form.inputProps("baseUri")}
+                        description={"Base URL where enrich service listens"}
+                      />
+                      <TextInput label="Path" {...form.inputProps("path")} description={"API endpoint path"} />
+                      <Box sx={{ display: "flex", marginBlock: 2, alignItems: "center", gap: 2 }}>
+                        <Button
+                          onClick={async () => {
+                            try {
+                              const res = await restClient.healthApi.health({
+                                baseUri: form.inputProps("baseUri").value,
+                                path: form.inputProps("path").value,
+                              });
+                              setTestResult(res ? "success" : "error");
+                            } catch {
+                              setTestResult("error");
+                            }
+                          }}
+                          variant="outlined"
+                        >
+                          Test Connection
+                        </Button>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <Typography
+                            variant="body2"
+                            color={color}
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                          >
+                            <FiberManualRecordIcon sx={{ color, fontSize: 18 }} />
+                            {label}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <NumberInput
+                        label="Request Timeout - Milliseconds"
+                        {...form.inputProps("requestTimeout")}
+                        description={"the value is expressed in milliseconds"}
+                      />
+                      <TextInput
+                        label="Json Path"
+                        {...form.inputProps("jsonPath")}
+                        description={"Json Path for merging result. To merge entire Json response set $"}
+                      />
+                      <CustomSelect
+                        label="Type"
+                        dict={EnrichItemType}
+                        {...form.inputProps("type")}
+                        description={
+                          "Enrich Type. Set Sync/Async for external Openk9 compatible service or Groovy Script for simple script enrich."
                         }
-                      }}
-                      variant="outlined"
-                    >
-                      Test Connection
-                    </Button>
-                  </Box>
-                  <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography variant="body2" color={color} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <FiberManualRecordIcon sx={{ color, fontSize: 18 }} />
-                      {label}
-                    </Typography>
-                  </Box>
-
-                  <ContainerFluid size="md">
-                    <CodeInput
-                      language="javascript"
-                      label="Script"
-                      {...form.inputProps("script")}
-                      readonly={view === "view" || page === 1}
-                      description={
-                        "Use it to insert script to be executed in case of Groovy Script enrich, or use it for validation in case of Sync/Async enrich"
-                      }
-                    />
-                  </ContainerFluid>
-                </>
-              ),
-              page: 0,
-              validation: view ? true : false,
-            },
-            {
-              validation: true,
-            },
-          ]}
-          fieldsControll={["name"]}
-        />
+                      />
+                      <CustomSelect
+                        label="Behavior Merge Type"
+                        dict={BehaviorMergeType}
+                        {...form.inputProps("behaviorMergeType")}
+                        description={"If merge or replace original message with enrich response"}
+                      />
+                      <CustomSelect
+                        label="Behavior On Error"
+                        dict={BehaviorOnError}
+                        {...form.inputProps("behaviorOnError")}
+                        description={
+                          "Behavior in case of error. If Fail, retry and error handling flow is performed for message. If Skip message go to next step, ignoring the error"
+                        }
+                      />
+                    </ContainerFluid>
+                  </>
+                ),
+                page: 0,
+                validation: view ? true : false,
+              },
+              {
+                validation: true,
+              },
+            ]}
+            fieldsControll={["name"]}
+          />
+        ) : (
+          <ContainerFluid size="lg">
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Dynamic Configuration
+            </Typography>
+            {!loadingForm ? (
+              dynamicTemplate ? (
+                <GenerateDynamicForm
+                  templates={dynamicTemplate}
+                  changeValueKey={changeValueTemplate}
+                  disabled={!!view}
+                />
+              ) : (
+                <CodeInput
+                  language="json"
+                  label="Configuration"
+                  disabled={!!view}
+                  id="code-input-enricher"
+                  onChange={(e) => {
+                    form.inputProps("script").onChange(e);
+                  }}
+                  validationMessages={[]}
+                  value={form.inputProps("script").value || ""}
+                  description="Json configuration sended to corresponding external parser when execution start"
+                />
+              )
+            ) : (
+              <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
+                <CircularProgress />
+              </Box>
+            )}
+          </ContainerFluid>
+        )}
+        {!isRecap && (
+          <Box display="flex" justifyContent="space-between" mt={4} mb={2}>
+            {step === "configureBase" ? (
+              <>
+                <Button variant="outlined" onClick={() => navigate("/enrich-items/")}>
+                  Back
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleNextStep}
+                  disabled={loadingForm || !form.inputProps("name").value}
+                >
+                  Next Step
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outlined" onClick={() => setStep("configureBase")}>
+                  Back
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setPage(1);
+                  }}
+                >
+                  Save and continue
+                </Button>
+              </>
+            )}
+          </Box>
+        )}
       </form>
       <ConfirmModal />
       <Recap

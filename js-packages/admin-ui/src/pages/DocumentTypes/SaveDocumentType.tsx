@@ -119,7 +119,7 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -144,9 +144,9 @@ export function SaveDocumentType({ setExtraFab }: { setExtraFab: (fab: React.Rea
                         !form?.inputProps("docTypeTemplateId")?.value?.id
                           ? undefined
                           : {
-                              id: form?.inputProps("docTypeTemplateId")?.value?.id || "",
-                              name: form?.inputProps("docTypeTemplateId")?.value?.name || "",
-                            }
+                            id: form?.inputProps("docTypeTemplateId")?.value?.id || "",
+                            name: form?.inputProps("docTypeTemplateId")?.value?.name || "",
+                          }
                       }
                       onClear={() => form.inputProps("docTypeTemplateId").onChange(undefined)}
                       disabled={page === 1}

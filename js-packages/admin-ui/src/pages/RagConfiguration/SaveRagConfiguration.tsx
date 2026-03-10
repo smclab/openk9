@@ -146,16 +146,16 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
       const isNew = ragConfigId === "new";
       isNew
         ? createRagConfigMutate({
-            variables: {
-              ...data,
-            },
-          })
+          variables: {
+            ...data,
+          },
+        })
         : updateRagConfigMutate({
-            variables: {
-              id: ragConfigId,
-              ...data,
-            },
-          });
+          variables: {
+            id: ragConfigId,
+            ...data,
+          },
+        });
     },
     getValidationMessages:
       fromFieldValidators(resultCreateRagConfigMutation.data?.createRAGConfiguration?.fieldValidators) ||
@@ -181,9 +181,9 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           { key: "jsonConfig", label: "JSON Config", jsonView: true },
           ...(form.inputProps("type").value === RagType.ChatRagTool
             ? [
-                { key: "ragToolDescription", label: "RAG Tool Description" },
-                { key: "promptNoRag", label: "Prompt No RAG" },
-              ]
+              { key: "ragToolDescription", label: "RAG Tool Description" },
+              { key: "promptNoRag", label: "Prompt No RAG" },
+            ]
             : []),
         ],
         label: "Recap RAG Configuration",
@@ -206,7 +206,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}

@@ -195,10 +195,10 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
               { key: "type" },
               ...(typeSelected === "custom"
                 ? [
-                    { key: "charFilters", label: "Char Filters" },
-                    { key: "tokenFilters", label: "Token Filters" },
-                    { key: "tokenizerId", label: "Tokenizer" },
-                  ]
+                  { key: "charFilters", label: "Char Filters" },
+                  { key: "tokenFilters", label: "Token Filters" },
+                  { key: "tokenizerId", label: "Tokenizer" },
+                ]
                 : []),
               ...(typeSelected ? [{ key: "jsonConfig", label: "JSON Config", keyNotView: "type" }] : []),
             ],
@@ -221,13 +221,13 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
   const handleAssociationSelect =
     (field: "charFilters" | "tokenFilters") =>
-    ({ items, isAdd }: { items: any[]; isAdd: boolean }) => {
-      const currentData = form.inputProps(field).value;
-      const updatedData = isAdd
-        ? [...currentData, ...items.filter((item) => !currentData.some((d: any) => d.value === item.value))]
-        : currentData.filter((dataItem: any) => !items.some((item) => item.value === dataItem.value));
-      form.inputProps(field).onChange(updatedData);
-    };
+      ({ items, isAdd }: { items: any[]; isAdd: boolean }) => {
+        const currentData = form.inputProps(field).value;
+        const updatedData = isAdd
+          ? [...currentData, ...items.filter((item) => !currentData.some((d: any) => d.value === item.value))]
+          : currentData.filter((dataItem: any) => !items.some((item) => item.value === dataItem.value));
+        form.inputProps(field).onChange(updatedData);
+      };
 
   return (
     <ContainerFluid>
@@ -246,7 +246,7 @@ export function SaveAnalyzer({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}

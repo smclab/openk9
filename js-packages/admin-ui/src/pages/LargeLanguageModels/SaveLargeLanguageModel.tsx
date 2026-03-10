@@ -129,10 +129,10 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
     ),
     originalValues: embeddingModelQuery.data?.largeLanguageModel
       ? {
-          ...embeddingModelQuery.data.largeLanguageModel,
-          provider: embeddingModelQuery.data.largeLanguageModel.providerModel?.provider || "openai",
-          model: embeddingModelQuery.data.largeLanguageModel.providerModel?.model || "",
-        }
+        ...embeddingModelQuery.data.largeLanguageModel,
+        provider: embeddingModelQuery.data.largeLanguageModel.providerModel?.provider || "openai",
+        model: embeddingModelQuery.data.largeLanguageModel.providerModel?.model || "",
+      }
       : undefined,
     isLoading: embeddingModelQuery.loading || createOrUpdateLargeLanguageModelMutation.loading,
     onSubmit(data) {
@@ -184,7 +184,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
           </Button>
         )}
       </Box>
-      <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+      <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
         <CreateDataEntity
           form={form}
           page={page}

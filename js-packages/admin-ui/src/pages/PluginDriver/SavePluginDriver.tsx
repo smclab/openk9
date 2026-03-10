@@ -252,9 +252,9 @@ export const SavePluginnDriverModel = React.forwardRef(
         description: pluginDriverQuery.data?.pluginDriver?.description || "",
         resourceUri: pluginDriverQuery.data?.pluginDriver?.resourceUri
           ? {
-              baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
-              path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
-            }
+            baseUri: pluginDriverQuery.data.pluginDriver.resourceUri.baseUri ?? undefined,
+            path: pluginDriverQuery.data.pluginDriver.resourceUri.path ?? undefined,
+          }
           : undefined,
         docTypeUserDTOSet:
           pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
@@ -351,7 +351,7 @@ export const SavePluginnDriverModel = React.forwardRef(
               </Box>
             )}
           </Box>
-          <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+          <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
             <CreateDataEntity
               id={pluginDriverId}
               form={form}
@@ -469,12 +469,12 @@ export const SavePluginnDriverModel = React.forwardRef(
                                   prev.map((field, i) => {
                                     return i === index
                                       ? {
-                                          ...field,
-                                          ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
-                                          ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
-                                          ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
-                                          ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
-                                        }
+                                        ...field,
+                                        ...(item?.itemLabel ? { userField: item.itemLabel } : {}),
+                                        ...(item?.ItemId ? { userFieldId: item.ItemId } : {}),
+                                        ...(item?.associatedLabel ? { fieldName: item.associatedLabel } : {}),
+                                        ...(item?.associatedLabelId ? { docTypeId: item.associatedLabelId } : {}),
+                                      }
                                       : field;
                                   }),
                                 );

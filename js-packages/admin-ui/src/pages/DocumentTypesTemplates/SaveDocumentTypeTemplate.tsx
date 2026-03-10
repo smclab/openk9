@@ -157,7 +157,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
           { key: "description" },
           { key: "templateType", label: "Template Type" },
           ...(form.inputProps("templateType").value === "JAVASCRIPT_SOURCE" ||
-          form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
+            form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
             ? [{ key: "source" }]
             : [{ key: "compiled" }]),
         ],
@@ -185,7 +185,7 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}

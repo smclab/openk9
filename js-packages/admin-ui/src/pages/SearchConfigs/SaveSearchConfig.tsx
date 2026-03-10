@@ -299,11 +299,11 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       },
       ...(searchConfigId !== "new"
         ? [
-            {
-              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
-              label: "Hybrid Search",
-            },
-          ]
+          {
+            cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
+            label: "Hybrid Search",
+          },
+        ]
         : []),
     ],
     valueOverride: {
@@ -329,7 +329,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
               </Button>
             )}
           </Box>
-          <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+          <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
             <CreateDataEntity
               form={form}
               page={page}
@@ -413,7 +413,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                               return (
                                 <GenerateDynamicForm
                                   templates={dynamicObj?.dynamicTemplate ?? null}
-                                  changeValueKey={dynamicObj?.changeValueTemplate ?? (() => {})}
+                                  changeValueKey={dynamicObj?.changeValueTemplate ?? (() => { })}
                                   disabled={false}
                                 />
                               );

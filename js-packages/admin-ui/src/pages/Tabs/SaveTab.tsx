@@ -170,7 +170,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -253,16 +253,16 @@ const useTabData = ({
   tabId: string;
   tabQuery: TabQuery | undefined;
   associatedTabQuery:
-    | ({
-        __typename?: "DefaultEdge_TokenTab";
-        node?: {
-          __typename?: "TokenTab";
-          name?: string | null;
-          id?: string | null;
-        } | null;
-      } | null)[]
-    | null
-    | undefined;
+  | ({
+    __typename?: "DefaultEdge_TokenTab";
+    node?: {
+      __typename?: "TokenTab";
+      name?: string | null;
+      id?: string | null;
+    } | null;
+  } | null)[]
+  | null
+  | undefined;
 }): ReturnUserTabData => {
   const skipRecoveryAllInformation = tabId !== "new";
 

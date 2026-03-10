@@ -162,7 +162,7 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
             </Button>
           )}
         </Box>
-        <form style={{ borderStyle: "unset", padding: "0 16px" }}>
+        <form style={{ borderStyle: "unset", padding: "0 16px", marginBottom: "50px" }}>
           <CreateDataEntity
             form={form}
             page={page}
@@ -197,9 +197,9 @@ export function SaveSuggestionCategory({ setExtraFab }: { setExtraFab: (fab: Rea
                         !docTypeField.value?.id
                           ? undefined
                           : {
-                              id: docTypeField.value.id || "",
-                              name: docTypeField.value.name || "",
-                            }
+                            id: docTypeField.value.id || "",
+                            name: docTypeField.value.name || "",
+                          }
                       }
                       onChange={(val) => docTypeField.onChange({ id: val.id, name: val.name })}
                       onClear={() => docTypeField.onChange(undefined)}
