@@ -1,22 +1,36 @@
 {
   "extends": "./tsconfig.path.json",
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "typeRoots": ["./node_modules/@types", "./custom.d.ts"],
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./custom.d.ts"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": [
+      "vite/client"
+    ]
   },
-  "include": ["src", "src/components/.tsx", "custom.d.ts"]
+  "include": [
+    "src",
+    "src/components/.tsx",
+    "custom.d.ts"
+  ]
 }
