@@ -49,6 +49,5 @@ In the project directory, you can run the following scripts defined in `package.
 - `yarn start`: Runs the app in development mode using Vite.
 - `yarn build`: Compiles TypeScript and builds the app for production to the `dist` folder using Vite. It produces a highly optimized bundle with Gzip/Brotli compression.
 - `yarn test`: Launches the test runner using Vitest.
-- `yarn analyze`: Generates an interactive visual report of the bundle performance and sizes using `rollup-plugin-visualizer` (output: `bundle-analysis.html`).
 - `yarn compile-graphql`: Watches for changes in `.graphql` queries and regenerates the TypeScript types and Apollo hooks in `src/graphql-generated.ts`.
 - `yarn compile-openapi`: Fetches the latest OpenAPI specification from the backend and generates the TypeScript REST client in `src/openapi-generated/`.
