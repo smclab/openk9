@@ -18,31 +18,36 @@ class TenantManagerActorSystemTest {
 
     @Test
     void testStartCreateTenant_Success() {
-        // Prepare Request
-        SecurityConfiguration securityConfig = SecurityConfiguration.LEGACY;
+        SecurityConfiguration securityConfig =
+			SecurityConfiguration.LEGACY;
         CreateTenantRequest request = new CreateTenantRequest(
-                "vh", securityConfig, null, null, "testStartCreateTenantSuccess");
+			"vh", securityConfig, null,
+			"testStartCreateTenantSuccess");
 
-        // Execute
-        TenantResponseDTO tenant = actorSystem.startCreateTenant(request)
+        TenantResponseDTO tenant = actorSystem
+			.startCreateTenant(request)
 			.await().indefinitely();
 
-		Assertions.assertEquals("testStartCreateTenantSuccess", tenant.schemaName());
+		Assertions.assertEquals(
+			"testStartCreateTenantSuccess",
+			tenant.schemaName());
 	}
 
     @Test
-    void testStartCreateTenant_SkipOAuth2() {
-        // Prepare Request
-        SecurityConfiguration securityConfig = SecurityConfiguration.LEGACY;
+    void testStartCreateTenant_BasicAuth() {
+        SecurityConfiguration securityConfig =
+			SecurityConfiguration.BASIC_AUTH;
         CreateTenantRequest request = new CreateTenantRequest(
-                "vh-skip", securityConfig, null, true, "testSkipOAuth2");
+			"vh-basic", securityConfig, null,
+			"testBasicAuth");
 
-        // Execute
-        TenantResponseDTO tenant = actorSystem.startCreateTenant(request)
+        TenantResponseDTO tenant = actorSystem
+			.startCreateTenant(request)
 			.await().indefinitely();
 
-		Assertions.assertEquals("testSkipOAuth2", tenant.schemaName());
-        Assertions.assertEquals("DISABLED", tenant.issuerUri());
-        Assertions.assertEquals("DISABLED", tenant.clientId());
+		Assertions.assertEquals(
+			"testBasicAuth", tenant.schemaName());
+		Assertions.assertNull(tenant.issuerUri());
+		Assertions.assertNull(tenant.clientId());
 	}
 }

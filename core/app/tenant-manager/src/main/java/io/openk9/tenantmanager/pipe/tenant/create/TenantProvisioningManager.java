@@ -43,7 +43,6 @@ public class TenantProvisioningManager
 				message.virtualHost(),
 				message.tenantName(),
 				message.settings(),
-				message.skipOAuth2(),
 				message.securityConfiguration(),
 				adapter
 			)
@@ -75,7 +74,6 @@ public class TenantProvisioningManager
 		String virtualHost, String tenantName,
 		SecurityConfiguration securityConfiguration,
 		OAuth2Settings settings,
-		Boolean skipOAuth2,
 		ActorRef<Response> replyTo) implements Command {}
 
 	private record SagaResponse(

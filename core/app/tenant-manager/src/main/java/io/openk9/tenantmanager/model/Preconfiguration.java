@@ -72,12 +72,12 @@ public record Preconfiguration(
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
 					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
-				SecurityConfiguration.API_KEY_ONLY,
+				SecurityConfiguration.BASIC_AUTH,
 				List.of(
-					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY),
-					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
-					Config.of(ApiGroup.SEARCH, AuthorizationScheme.API_KEY),
-					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
+					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 				)
 			);
 

@@ -46,10 +46,10 @@ public class TenantProvisioningSaga
 	// Accumulators
 	private final List<Object> collectedResponses = new ArrayList<>();
 	private final OAuth2Settings oAuth2Settings;
-	private final Boolean skipOAuth2;
 
 	// Context Data
 	private String schemaName;
+	private Boolean realmConfigured;
 	private String issuerUri;
 	private String clientId;
 	private String clientSecret;
@@ -61,7 +61,6 @@ public class TenantProvisioningSaga
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
-		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
@@ -70,10 +69,16 @@ public class TenantProvisioningSaga
 		this.virtualHost = virtualHost;
 		this.schemaName = schemaName;
 		this.oAuth2Settings = oAuth2Settings;
-		this.skipOAuth2 = skipOAuth2;
 		this.securityConfiguration = securityConfiguration;
 		this.replyTo = replyTo;
 		this.factory = factory;
+
+		// Resolve realmConfigured from the service
+		context.pipeToSelf(
+			TenantProvisioningService.isRealmConfigured(),
+			(res, exc) -> new RealmConfigResolved(
+				exc == null && Boolean.TRUE.equals(res))
+		);
 
 		if (schemaName == null) {
 			context.pipeToSelf(
@@ -83,56 +88,58 @@ public class TenantProvisioningSaga
 						return new NameResolved(res);
 					}
 					else {
-						return new OperationResponse(Error.INSTANCE);
+						return ResolutionFailed.INSTANCE;
 					}
 				}
 			);
 		}
-		else {
-			startProvisioning(context);
-		}
 	}
 
 	public static Behavior<Command> create(
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
-		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo) {
 
-		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName,
-			oAuth2Settings, skipOAuth2,
-			securityConfiguration, replyTo,
-			new DefaultProvisioningFactory()
-		));
+		return create(
+			virtualHost, schemaName, oAuth2Settings,
+			securityConfiguration,
+			replyTo, new DefaultProvisioningFactory()
+		);
 	}
 
 	public static Behavior<Command> create(
 		String virtualHost,
 		String schemaName,
 		OAuth2Settings oAuth2Settings,
-		Boolean skipOAuth2,
 		SecurityConfiguration securityConfiguration,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory provisioningFactory) {
 
-		return Behaviors.setup(ctx -> new TenantProvisioningSaga(
-			ctx, virtualHost, schemaName,
-			oAuth2Settings, skipOAuth2,
-			securityConfiguration,
-			replyTo,
-			provisioningFactory
-		));
+		return Behaviors.setup(ctx ->
+			new TenantProvisioningSaga(
+				ctx, virtualHost, schemaName,
+				oAuth2Settings, securityConfiguration,
+				replyTo, provisioningFactory
+			)
+		);
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 
 		return newReceiveBuilder()
-			.onMessage(OperationResponse.class, this::onParallelResponse)
+			.onMessage(
+				RealmConfigResolved.class,
+				this::onRealmConfigResolved)
 			.onMessage(NameResolved.class, this::onNameResolved)
+			.onMessage(
+				ResolutionFailed.class,
+				this::onResolutionFailed)
+			.onMessage(
+				OperationResponse.class,
+				this::onParallelResponse)
 			.build();
 	}
 
@@ -183,11 +190,27 @@ public class TenantProvisioningSaga
 
 	private Behavior<Command> onNameResolved(NameResolved msg) {
 		this.schemaName = msg.name();
-		startProvisioning(getContext());
-		return this;
+		return tryStartProvisioning();
 	}
 
-	private Behavior<Command> onOperationsFailure(List<Object> errorList) {
+	private Behavior<Command> onRealmConfigResolved(
+		RealmConfigResolved msg) {
+
+		this.realmConfigured = msg.configured();
+		return tryStartProvisioning();
+	}
+
+	private Behavior<Command> onResolutionFailed(
+		ResolutionFailed msg) {
+
+		getContext().getLog().error("Failed to resolve prerequisites");
+		replyTo.tell(Error.INSTANCE);
+		return Behaviors.stopped();
+	}
+
+	private Behavior<Command> onOperationsFailure(
+		List<Object> errorList) {
+
 		var errors = EnumSet.noneOf(Operations.class);
 
 		for (Object obj : errorList) {
@@ -196,11 +219,13 @@ public class TenantProvisioningSaga
 				errors.add(Operations.REALM);
 			}
 			else if (obj instanceof Schema.Error error) {
-				getContext().getLog().error("Schema failed: {}", error);
+				getContext().getLog().error(
+					"Schema failed: {}", error);
 				errors.add(Operations.SCHEMA);
 			}
 			else if (obj instanceof Ingress.Error error) {
-				getContext().getLog().error("Ingress failed: {}", error);
+				getContext().getLog().error(
+					"Ingress failed: {}", error);
 				errors.add(Operations.INGRESS);
 			}
 		}
@@ -230,7 +255,9 @@ public class TenantProvisioningSaga
 			.build();
 	}
 
-	private Behavior<Command> onParallelResponse(OperationResponse wrapper) {
+	private Behavior<Command> onParallelResponse(
+		OperationResponse wrapper) {
+
 		collectedResponses.add(wrapper.response());
 
 		if (collectedResponses.size() == 3) {
@@ -240,10 +267,13 @@ public class TenantProvisioningSaga
 		return this;
 	}
 
-	private Behavior<Command> onTenantResponse(PersistResponse response) {
+	private Behavior<Command> onTenantResponse(
+		PersistResponse response) {
+
 		if (response.tenantException() != null) {
 			Throwable error = response.tenantException();
-			getContext().getLog().error("Tenant creation failed.", error);
+			getContext().getLog().error(
+				"Tenant creation failed.", error);
 
 			return compensateAll();
 		}
@@ -262,12 +292,13 @@ public class TenantProvisioningSaga
 	}
 
 	private Behavior<Command> processParallelResults() {
-		Map<Boolean, List<Object>> partitioned = collectedResponses.stream()
-			.collect(Collectors.partitioningBy(r ->
-				r instanceof Realm.Success
-				|| r instanceof Schema.Success
-				|| r instanceof Ingress.Success)
-			);
+		Map<Boolean, List<Object>> partitioned =
+			collectedResponses.stream()
+				.collect(Collectors.partitioningBy(r ->
+					r instanceof Realm.Success
+					|| r instanceof Schema.Success
+					|| r instanceof Ingress.Success)
+				);
 
 		List<Object> errors = partitioned.get(false);
 
@@ -281,13 +312,47 @@ public class TenantProvisioningSaga
 		}
 	}
 
+	private static boolean requiresRealm(
+		SecurityConfiguration securityConfiguration,
+		OAuth2Settings oAuth2Settings,
+		boolean realmConfigured) {
+
+		return oAuth2Settings == null
+			&& !realmConfigured
+			&& securityConfiguration
+				!= SecurityConfiguration.BASIC_AUTH;
+	}
+
+	private Behavior<Command> tryStartProvisioning() {
+		if (schemaName == null || realmConfigured == null) {
+			return this;
+		}
+
+		if (requiresRealm(
+			securityConfiguration, oAuth2Settings,
+			realmConfigured)) {
+
+			getContext().getLog().error(
+				"Cannot create tenant with {} "
+				+ "without Keycloak or explicit "
+				+ "oAuth2Settings",
+				securityConfiguration);
+			replyTo.tell(Error.INSTANCE);
+			return Behaviors.stopped();
+		}
+
+		startProvisioning(getContext());
+		return this;
+	}
+
 	private Behavior<Command> startCompensations(
 		EnumSet<Operations> compensations) {
 
 		this.compensationCounter = compensations.size();
 
 		getContext().getLog().info(
-			"Starting compensation for {} operations.", compensationCounter);
+			"Starting compensation for {} operations.",
+			compensationCounter);
 
 		if (compensationCounter == 0) {
 			replyTo.tell(Error.INSTANCE);
@@ -300,36 +365,42 @@ public class TenantProvisioningSaga
 					var replyTo = getContext().messageAdapter(
 						Ingress.Response.class,
 						r -> {
-							getContext().getLog().debug("Ingress Rolled Back");
+							getContext().getLog().debug(
+								"Ingress Rolled Back");
 							return CompensationResponse.INSTANCE;
 						}
 					);
-					getContext().spawnAnonymous(factory.ingressRollback(
-							schemaName, virtualHost, replyTo))
+					getContext().spawnAnonymous(
+							factory.ingressRollback(
+								schemaName, virtualHost, replyTo))
 						.tell(Ingress.Start.INSTANCE);
 				}
 				case REALM -> {
 					var replyTo = getContext().messageAdapter(
 						Realm.Response.class,
 						r -> {
-							getContext().getLog().debug("Realm Rolled Back");
+							getContext().getLog().debug(
+								"Realm Rolled Back");
 							return CompensationResponse.INSTANCE;
 						}
 					);
-					getContext().spawnAnonymous(factory.realmRollback(
-							schemaName, replyTo))
+					getContext().spawnAnonymous(
+							factory.realmRollback(
+								schemaName, replyTo))
 						.tell(Realm.Rollback.INSTANCE);
 				}
 				case SCHEMA -> {
 					var replyTo = getContext().messageAdapter(
 						Schema.Response.class,
 						r -> {
-							getContext().getLog().debug("Schema Rolled Back");
+							getContext().getLog().debug(
+								"Schema Rolled Back");
 							return CompensationResponse.INSTANCE;
 						}
 					);
 					getContext().spawnAnonymous(
-							factory.schemaRollback(schemaName, replyTo))
+							factory.schemaRollback(
+								schemaName, replyTo))
 						.tell(Schema.Rollback.INSTANCE);
 				}
 			}
@@ -345,39 +416,44 @@ public class TenantProvisioningSaga
 			Ingress.Response.class, OperationResponse::new);
 
 		if (oAuth2Settings != null) {
-			// Skip Realm creation, simulate success
-			context.getSelf().tell(new OperationResponse(new Realm.Success(
-				oAuth2Settings.clientId(),
-				oAuth2Settings.clientSecret(),
-				virtualHost,
-				oAuth2Settings.issuerUri(),
-				null, null // username/password not needed if we have settings
-			)));
+			// Use explicit OAuth2 settings, skip Realm creation
+			context.getSelf().tell(
+				new OperationResponse(new Realm.Success(
+					oAuth2Settings.clientId(),
+					oAuth2Settings.clientSecret(),
+					virtualHost,
+					oAuth2Settings.issuerUri(),
+					null, null
+				)));
 		}
-		else if (Boolean.TRUE.equals(skipOAuth2)) {
-			// Skip Realm creation, simulate success with dummy values
-			context.getSelf().tell(new OperationResponse(new Realm.Success(
-				"DISABLED",
-				"DISABLED",
-				virtualHost,
-				"DISABLED",
-				null, null
-			)));
-		}
-		else {
+		else if (realmConfigured
+			&& securityConfiguration
+				!= SecurityConfiguration.BASIC_AUTH) {
+
+			// Auto-detect: Keycloak is available, create realm
 			var realmAdapter = context.messageAdapter(
 				Realm.Response.class, OperationResponse::new);
 
-			ActorRef<Realm.Command> realm = context.spawnAnonymous(factory
-				.realm(virtualHost, schemaName, realmAdapter));
+			ActorRef<Realm.Command> realm =
+				context.spawnAnonymous(factory
+					.realm(virtualHost, schemaName, realmAdapter));
 			realm.tell(Realm.Start.INSTANCE);
 		}
+		else {
+			// No realm: BASIC_AUTH or no Keycloak with oAuth2Settings
+			context.getSelf().tell(new OperationResponse(
+				new Realm.Success(
+					null, null, virtualHost, null, null, null)
+			));
+		}
 
-		ActorRef<Schema.Command> schema = context.spawnAnonymous(factory
-			.schema(virtualHost, schemaName, schemaAdapter));
+		ActorRef<Schema.Command> schema =
+			context.spawnAnonymous(factory
+				.schema(virtualHost, schemaName, schemaAdapter));
 
-		ActorRef<Ingress.Command> ingress = context.spawnAnonymous(factory
-			.ingress(virtualHost, schemaName, ingressAdapter));
+		ActorRef<Ingress.Command> ingress =
+			context.spawnAnonymous(factory
+				.ingress(virtualHost, schemaName, ingressAdapter));
 
 		schema.tell(Schema.Start.INSTANCE);
 		ingress.tell(Ingress.Start.INSTANCE);
@@ -486,9 +562,18 @@ public class TenantProvisioningSaga
 
 	private record NameResolved(String name) implements Command {}
 
-	private record OperationResponse(Object response) implements Command {}
+	private record RealmConfigResolved(
+		boolean configured) implements Command {}
 
-	public record Success(TenantResponseDTO tenant) implements Response {}
+	private record OperationResponse(
+		Object response) implements Command {}
+
+	private enum ResolutionFailed implements Command {
+		INSTANCE
+	}
+
+	public record Success(
+		TenantResponseDTO tenant) implements Response {}
 
 	private record PersistResponse(
 		TenantResponseDTO tenant, Throwable tenantException)

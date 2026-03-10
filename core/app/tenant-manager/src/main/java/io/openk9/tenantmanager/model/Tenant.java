@@ -78,13 +78,13 @@ public class Tenant implements GraphqlId {
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;
 
-	@Column(name = "client_id", nullable = false)
+	@Column(name = "client_id")
 	private String clientId;
 
 	@Column(name = "client_secret")
 	private String clientSecret;
 
-	@Column(name = "issuer_uri", nullable = false)
+	@Column(name = "issuer_uri")
 	private String issuerUri;
 
 	@Column(name = "security_configuration", nullable = false)

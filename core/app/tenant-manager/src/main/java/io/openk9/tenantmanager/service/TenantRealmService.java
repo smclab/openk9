@@ -138,6 +138,10 @@ public class TenantRealmService {
 		});
 	}
 
+	public boolean isConfigured() {
+		return keycloakClient != null;
+	}
+
 	public record CreatedRealm(
 		String clientId, String clientSecret,
 		String virtualHost, String issuerUri,

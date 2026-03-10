@@ -122,6 +122,15 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 			return root;
 		}
 
+		// Upcast removed SecurityConfiguration values
+		if (objectNode.has("securityConfiguration")) {
+			String secConfig = objectNode.get(
+				"securityConfiguration").asText();
+			if ("API_KEY_ONLY".equals(secConfig)) {
+				objectNode.put("securityConfiguration", "LEGACY");
+			}
+		}
+
 		// Handle routeAuthorizationMap adaptation
 		if (objectNode.has("routeAuthorizationMap")) {
 			JsonNode authMapNode = objectNode.get("routeAuthorizationMap");

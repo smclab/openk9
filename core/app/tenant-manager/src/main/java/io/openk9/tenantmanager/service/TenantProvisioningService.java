@@ -70,6 +70,8 @@ public class TenantProvisioningService {
 		"TenantProvisioningService#findTenantByVirtualHost";
 	public static final String GENERATE_RANDOM_TENANT_NAME =
 		"TenantProvisioningService#generateRandomTenantName";
+	public static final String IS_REALM_CONFIGURED =
+		"TenantProvisioningService#isRealmConfigured";
 
 	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
 
@@ -199,6 +201,13 @@ public class TenantProvisioningService {
 	public static CompletionStage<String> generateRandomSchemaName() {
 		return EventBusInstanceHolder.getEventBus()
 			.<String>request(GENERATE_RANDOM_TENANT_NAME, null)
+			.map(Message::body)
+			.subscribeAsCompletionStage();
+	}
+
+	public static CompletionStage<Boolean> isRealmConfigured() {
+		return EventBusInstanceHolder.getEventBus()
+			.<Boolean>request(IS_REALM_CONFIGURED, null)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
 	}
@@ -375,6 +384,11 @@ public class TenantProvisioningService {
 
 		return dbService.findAllSchemaName()
 			.map(schemas -> RandomGenerator.generate(schemas.toArray(String[]::new)));
+	}
+
+	@ConsumeEvent(IS_REALM_CONFIGURED)
+	Uni<Boolean> checkRealmConfigured(Object none) {
+		return Uni.createFrom().item(realmService.isConfigured());
 	}
 
 	// ========================================================================

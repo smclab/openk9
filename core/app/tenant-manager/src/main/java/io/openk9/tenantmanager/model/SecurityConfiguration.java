@@ -23,6 +23,6 @@ public enum SecurityConfiguration {
 	PROFILED_LEGACY,
 	PROFILED,
 	PUBLIC_USAGE,
-	API_KEY_ONLY
+	BASIC_AUTH
 
 }

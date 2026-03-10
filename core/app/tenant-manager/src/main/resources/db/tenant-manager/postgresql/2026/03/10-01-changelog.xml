@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/tenant-manager/2026/03/10-01-changelog.xml">
+
+	<!-- 1. Make OAuth2 columns nullable first -->
+	<changeSet id="1773346800-1" author="openk9">
+		<dropNotNullConstraint
+			tableName="tenant"
+			columnName="client_id"
+			columnDataType="VARCHAR(255)"/>
+		<dropNotNullConstraint
+			tableName="tenant"
+			columnName="issuer_uri"
+			columnDataType="VARCHAR(255)"/>
+	</changeSet>
+
+	<!-- 2. Null out DISABLED sentinel values -->
+	<changeSet id="1773346800-2" author="openk9">
+		<sql>
+			UPDATE tenant
+			SET issuer_uri = NULL
+			WHERE issuer_uri = 'DISABLED';
+		</sql>
+		<sql>
+			UPDATE tenant
+			SET client_id = NULL
+			WHERE client_id = 'DISABLED';
+		</sql>
+		<sql>
+			UPDATE tenant
+			SET client_secret = NULL
+			WHERE client_secret = 'DISABLED';
+		</sql>
+	</changeSet>
+
+	<!-- 3. Migrate API_KEY_ONLY to LEGACY -->
+	<changeSet id="1773346800-3" author="openk9">
+		<sql>
+			UPDATE tenant
+			SET security_configuration = 'LEGACY'
+			WHERE security_configuration = 'API_KEY_ONLY';
+		</sql>
+	</changeSet>
+
+</databaseChangeLog>

@@ -29,6 +29,5 @@ public record CreateTenantRequest(
 	@Nonnull String virtualHost,
 	@Nonnull SecurityConfiguration securityConfiguration,
 	@Nullable OAuth2Settings oAuth2Settings,
-	@Nullable Boolean skipOAuth2,
 	@Nullable String tenantName
 ) {}

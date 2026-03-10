@@ -40,9 +40,8 @@ async function ensureTenant() {
       },
       body: JSON.stringify({
         virtualHost: VIRTUAL_HOST,
-        securityConfiguration: 'LEGACY',
-        tenantName: TENANT_NAME,
-        skipOAuth2: true
+        securityConfiguration: 'BASIC_AUTH',
+        tenantName: TENANT_NAME
       })
     },
     'Create Tenant'
