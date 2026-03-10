@@ -24,7 +24,6 @@ import io.openk9.apigw.filter.SelfSignedMPJwtGlobalPreFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -32,6 +31,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -104,6 +104,20 @@ class BasicAuthPassthroughTest {
 		void jwtFilterDisabled() {
 			assertThat(applicationContext.getBeansOfType(
 				SelfSignedMPJwtGlobalPreFilter.class)).isEmpty();
+		}
+
+		@Test
+		@DisplayName("basicAuthFilterChain bean should NOT be present")
+		void basicAuthChainAbsent() {
+			assertThat(applicationContext.containsBean(
+				"basicAuthFilterChain")).isFalse();
+		}
+
+		@Test
+		@DisplayName("Two SecurityWebFilterChain beans should be registered")
+		void twoFilterChains() {
+			assertThat(applicationContext.getBeansOfType(
+				SecurityWebFilterChain.class)).hasSize(2);
 		}
 	}
 

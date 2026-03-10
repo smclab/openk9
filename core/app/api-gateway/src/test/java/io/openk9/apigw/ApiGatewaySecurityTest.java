@@ -29,8 +29,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -66,6 +68,9 @@ class ApiGatewaySecurityTest {
 	@Autowired
     private WebTestClient webTestClient;
 
+	@Autowired
+	private ApplicationContext applicationContext;
+
     @LocalServerPort
     private int port;
 
@@ -84,6 +89,25 @@ class ApiGatewaySecurityTest {
     private static final String SABAODY_HOST = "sabaody.localhost";
     private static final String LOGUETOWN_HOST = "loguetown.localhost";
     private static final String UNKNOWN_HOST = "unknown.localhost";
+
+	@Nested
+	@DisplayName("Bean activation")
+	class BeanActivation {
+
+		@Test
+		@DisplayName("Three SecurityWebFilterChain beans should be registered")
+		void threeFilterChains() {
+			assertThat(applicationContext.getBeansOfType(
+				SecurityWebFilterChain.class)).hasSize(3);
+		}
+
+		@Test
+		@DisplayName("basicAuthFilterChain bean should be present")
+		void basicAuthChainPresent() {
+			assertThat(applicationContext.containsBean(
+				"basicAuthFilterChain")).isTrue();
+		}
+	}
 
 	@Nested
 	@DisplayName("Oauth2 Tenant Settings Endpoints Tests")
