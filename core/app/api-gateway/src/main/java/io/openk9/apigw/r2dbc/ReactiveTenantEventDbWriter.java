@@ -29,6 +29,8 @@ import io.openk9.event.tenant.TenantEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -44,6 +46,7 @@ public class ReactiveTenantEventDbWriter
 	implements ReactiveTenantEventConsumer {
 
 	private final TenantWriteServiceR2dbc writeService;
+	private final CacheManager cacheManager;
 
 	/**
 	 * Handle tenant creation events.
@@ -73,8 +76,14 @@ public class ReactiveTenantEventDbWriter
 				event.clientSecret()
 			)
 			.then(Mono.when(routeSecurityInserts))
-			.doOnSuccess(v -> log.info("Processed tenant created event: {}", event.tenantId()))
-			.doOnError(throwable -> log.error("Failed tenant creation", throwable));
+			.doOnSuccess(v -> {
+				evictCache();
+				log.info(
+					"Processed tenant created event: {}",
+					event.tenantId());
+			})
+			.doOnError(throwable ->
+				log.error("Failed tenant creation", throwable));
 	}
 
 	/**
@@ -85,8 +94,15 @@ public class ReactiveTenantEventDbWriter
 		log.info("Received API key created event for tenant: {}", event.tenantId());
 
 		return writeService
-			.insertApiKey(event.tenantId(), event.apiKeyHash(), event.checksum())
-			.doOnSuccess(v -> log.info("Processed API key created event for tenant: {}", event.tenantId()));
+			.insertApiKey(
+				event.tenantId(), event.apiKeyHash(),
+				event.checksum())
+			.doOnSuccess(v -> {
+				evictCache();
+				log.info(
+					"Processed API key created event for tenant: {}",
+					event.tenantId());
+			});
 	}
 
 	@Override
@@ -95,7 +111,9 @@ public class ReactiveTenantEventDbWriter
 		var tenantId = event.tenantId();
 		var hash = event.apiKeyHash();
 
-		return writeService.deleteApiKey(tenantId, hash);
+		return writeService
+			.deleteApiKey(tenantId, hash)
+			.doOnSuccess(v -> evictCache());
 	}
 
 	/**
@@ -113,7 +131,12 @@ public class ReactiveTenantEventDbWriter
 				event.clientId(),
 				event.clientSecret()
 			)
-			.doOnSuccess(v -> log.info("Processed tenant updated event: {}", event.tenantId()));
+			.doOnSuccess(v -> {
+				evictCache();
+				log.info(
+					"Processed tenant updated event: {}",
+					event.tenantId());
+			});
 	}
 
 	/**
@@ -123,8 +146,21 @@ public class ReactiveTenantEventDbWriter
 	public Publisher<Void> handleTenantDeletedEvent(TenantEvent.TenantDeleted event) {
 		log.info("Received tenant deleted event: {}", event.tenantId());
 
-		return writeService.deleteTenant(event.tenantId())
-			.doOnSuccess(v -> log.info("Processed tenant deleted event: {}", event.tenantId()));
+		return writeService
+			.deleteTenant(event.tenantId())
+			.doOnSuccess(v -> {
+				evictCache();
+				log.info(
+					"Processed tenant deleted event: {}",
+					event.tenantId());
+			});
+	}
+
+	private void evictCache() {
+		Cache cache = cacheManager.getCache("default");
+		if (cache != null) {
+			cache.clear();
+		}
 	}
 
 }
