@@ -1,4 +1,4 @@
-import { debounce } from "lodash";
+﻿import { debounce } from "lodash";
 import moment from "moment";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -15,12 +15,14 @@ import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
 import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
 import { FilterSvg } from "./svgElement/FiltersSvg";
 
+const enableGenerativeApi = false;
+
 export const openk9 = new OpenK9({
   enabled: true,
   searchAutoselect: true,
   searchReplaceText: true,
   memoryResults: false,
-  useGenerativeApi: true,
+  useGenerativeApi: enableGenerativeApi,
 });
 
 export function App() {
@@ -54,12 +56,12 @@ export function App() {
       setIsVisibleSearchMobile(true);
     }
   };
-  const debouncedUpdateSearch = debounce((search) => {
+  const debouncedUpdateSearch = debounce((search: any) => {
     const text = search?.[0]?.values?.[0] || undefined;
     setSearchText(text);
   }, 200);
 
-  const debouncedNumberOfResults = debounce((search) => {
+  const debouncedNumberOfResults = debounce((search: any) => {
     setNumberOfResults(search);
   }, 200);
 
@@ -373,7 +375,7 @@ export function App() {
             >
               <FilterHorizontalSvg />
             </button>
-            {searchText !== undefined && (
+            {enableGenerativeApi && searchText !== undefined && (
               <div
                 css={css`
                   padding-block: 8px;
@@ -544,7 +546,7 @@ export function App() {
         ></div>
       </div>
 
-      {searchText !== undefined && (
+      {enableGenerativeApi && searchText !== undefined && (
         <div
           css={css`
             grid-area: panel;
@@ -623,7 +625,9 @@ export function App() {
         }
         css={css`
           grid-area: result;
-          margin-top: ${searchText !== undefined ? "20px" : "unset"};
+          margin-top: ${enableGenerativeApi && searchText !== undefined
+            ? "20px"
+            : "unset"};
           overflow: auto;
           display: flex;
           flex-direction: column;
@@ -729,7 +733,9 @@ export function App() {
           );
           height: calc(100vh - 193.6px);
           border-radius: 8px;
-          margin-top: ${searchText !== undefined ? "20px" : "unset"};
+          margin-top: ${enableGenerativeApi && searchText !== undefined
+            ? "20px"
+            : "unset"};
 
           @media (max-width: 480px) {
             display: none;
