@@ -9,14 +9,22 @@ RUN mkdir -p /var/log/openk9
 WORKDIR /embedding_module/
 
 COPY ./requirements.txt ./
-COPY ./app ./app
+
 
 RUN if [ "$MODE" = "cpu" ]; then \
         sed -i '1i\--extra-index-url https://download.pytorch.org/whl/cpu\n' requirements.txt; \
-    fi && \
-    pip install --no-cache-dir -r requirements.txt && \
-    python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
-    ./app/external_services/grpc/embedding/embedding.proto
+    fi
+
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+COPY ./app ./app
+
+RUN python -m grpc_tools.protoc \
+        -I. \
+        --python_out=. \
+        --grpc_python_out=. \
+        ./app/external_services/grpc/embedding/embedding.proto
 
 EXPOSE 5000
 
