@@ -341,7 +341,7 @@ public class TenantProvisioningSaga
 			return Behaviors.stopped();
 		}
 
-		startProvisioning(getContext());
+		startProvisioning();
 		return this;
 	}
 
@@ -409,15 +409,15 @@ public class TenantProvisioningSaga
 		return handleCompensations();
 	}
 
-	private void startProvisioning(ActorContext<Command> context) {
-		var schemaAdapter = context.messageAdapter(
+	private void startProvisioning() {
+		var schemaAdapter = getContext().messageAdapter(
 			Schema.Response.class, OperationResponse::new);
-		var ingressAdapter = context.messageAdapter(
+		var ingressAdapter = getContext().messageAdapter(
 			Ingress.Response.class, OperationResponse::new);
 
 		if (oAuth2Settings != null) {
 			// Use explicit OAuth2 settings, skip Realm creation
-			context.getSelf().tell(
+			getContext().getSelf().tell(
 				new OperationResponse(new Realm.Success(
 					oAuth2Settings.clientId(),
 					oAuth2Settings.clientSecret(),
@@ -431,28 +431,28 @@ public class TenantProvisioningSaga
 				!= SecurityConfiguration.BASIC_AUTH) {
 
 			// Auto-detect: Keycloak is available, create realm
-			var realmAdapter = context.messageAdapter(
+			var realmAdapter = getContext().messageAdapter(
 				Realm.Response.class, OperationResponse::new);
 
 			ActorRef<Realm.Command> realm =
-				context.spawnAnonymous(factory
+				getContext().spawnAnonymous(factory
 					.realm(virtualHost, schemaName, realmAdapter));
 			realm.tell(Realm.Start.INSTANCE);
 		}
 		else {
 			// No realm: BASIC_AUTH or no Keycloak with oAuth2Settings
-			context.getSelf().tell(new OperationResponse(
+			getContext().getSelf().tell(new OperationResponse(
 				new Realm.Success(
 					null, null, virtualHost, null, null, null)
 			));
 		}
 
 		ActorRef<Schema.Command> schema =
-			context.spawnAnonymous(factory
+			getContext().spawnAnonymous(factory
 				.schema(virtualHost, schemaName, schemaAdapter));
 
 		ActorRef<Ingress.Command> ingress =
-			context.spawnAnonymous(factory
+			getContext().spawnAnonymous(factory
 				.ingress(virtualHost, schemaName, ingressAdapter));
 
 		schema.tell(Schema.Start.INSTANCE);
