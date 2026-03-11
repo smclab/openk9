@@ -586,6 +586,12 @@ async def get_user_chats(
             detail="Missing x_forwarded_host header.",
         )
 
+    tenant_id = (
+        headers.x_tenant_id
+        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
+            TENANT_ID_KEY
+        ]
+    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -601,6 +607,8 @@ async def get_user_chats(
     open_search_client = OpenSearch(
         hosts=[OPENSEARCH_HOST],
     )
+
+    index_name = f"{tenant_id}-{user_id}"
 
     query = {
         "from": pagination_from,
@@ -622,8 +630,8 @@ async def get_user_chats(
 
     result = {"result": []}
 
-    if open_search_client.indices.exists(index=user_id):
-        response = open_search_client.search(body=query, index=user_id)
+    if open_search_client.indices.exists(index=index_name):
+        response = open_search_client.search(body=query, index=index_name)
 
         for chat in response["hits"]["hits"]:
             result["result"].append(chat["_source"])
@@ -704,6 +712,8 @@ async def get_chat(
         hosts=[OPENSEARCH_HOST],
     )
 
+    index_name = f"{tenant_id}-{user_id}"
+
     query = {
         "query": {"match": {"chat_id.keyword": chat_id}},
         "sort": [{"chat_sequence_number": {"order": "asc"}}],
@@ -713,8 +723,8 @@ async def get_chat(
         },
     }
 
-    if open_search_client.indices.exists(index=user_id) and (
-        open_search_response := open_search_client.search(body=query, index=user_id)
+    if open_search_client.indices.exists(index=index_name) and (
+        open_search_response := open_search_client.search(body=query, index=index_name)
         .get("hits", {})
         .get("hits", [])
     ):
@@ -820,7 +830,9 @@ async def delete_chat(
         hosts=[OPENSEARCH_HOST],
     )
 
-    if not open_search_client.indices.exists(index=user_id):
+    index_name = f"{tenant_id}-{user_id}"
+
+    if not open_search_client.indices.exists(index=index_name):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found.",
@@ -830,7 +842,7 @@ async def delete_chat(
 
     try:
         response = open_search_client.delete_by_query(
-            index=user_id, body=delete_messages_query
+            index=index_name, body=delete_messages_query
         )
     except OpenSearch.exceptions.NotFoundError:
         raise HTTPException(
@@ -942,7 +954,9 @@ async def rename_chat(
         hosts=[OPENSEARCH_HOST],
     )
 
-    if not open_search_client.indices.exists(index=user_id):
+    index_name = f"{tenant_id}-{user_id}"
+
+    if not open_search_client.indices.exists(index=index_name):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User index not found.",
@@ -960,7 +974,7 @@ async def rename_chat(
     }
 
     try:
-        response = open_search_client.search(index=user_id, body=query)
+        response = open_search_client.search(index=index_name, body=query)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -978,7 +992,7 @@ async def rename_chat(
 
     try:
         open_search_client.update(
-            index=user_id,
+            index=index_name,
             id=document_id,
             body={"doc": {"title": chat_message.newTitle}},
             refresh=True,
