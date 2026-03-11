@@ -43,6 +43,7 @@ import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.jboss.logging.Logger;
 import org.opensearch.client.opensearch.OpenSearchAsyncClient;
+import org.opensearch.client.opensearch._types.Conflicts;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.DeleteByQueryResponse;
@@ -112,6 +113,7 @@ public class VectorIndexWriter extends AbstractBehavior<Writer.Command> {
 		return asyncClient.deleteByQuery(delete -> delete
 			.index(indexName)
 			.ignoreUnavailable(true)
+			.conflicts(Conflicts.Proceed)
 			.query(query -> query
 				.match(match -> match
 					.field("contentId.keyword")
