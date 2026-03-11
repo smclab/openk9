@@ -362,10 +362,11 @@ def get_chat_chain_tool(
                     open_search_client=OpenSearch(
                         hosts=[opensearch_host],
                     ),
+                    tenant_id=tenant_id,
                     user_id=user_id,
                     chat_id=chat_id,
                 )
-                if user_id and chat_id
+                if tenant_id and user_id and chat_id
                 else get_chat_history_from_frontend(chat_history)
             )
 

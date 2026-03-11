@@ -28,7 +28,7 @@ SEARCH_PIPELINE = "nlp-uploaded-documents-search-pipeline"
 
 
 def get_chat_history(
-    open_search_client, user_id: str, chat_id: str
+    open_search_client, tenant_id: str, user_id: str, chat_id: str
 ) -> BaseChatMessageHistory:
     """Retrieve chat history from OpenSearch for a specific user and chat session.
 
@@ -38,7 +38,9 @@ def get_chat_history(
 
     :param open_search_client: OpenSearch client instance used to interact with the OpenSearch cluster
     :type open_search_client: opensearchpy.OpenSearch
-    :param user_id: Unique identifier for the user (used as OpenSearch index name)
+    :param tenant_id: Unique identifier for the user's tenant (used as first part of OpenSearch index name)
+    :type tenant_id: str
+    :param user_id: Unique identifier for the user (used as second part of OpenSearch index name)
     :type user_id: str
     :param chat_id: Unique identifier for the specific chat session to retrieve
     :type chat_id: str
@@ -52,9 +54,11 @@ def get_chat_history(
     """
     chat_history = ChatMessageHistory()
 
-    if open_search_client.indices.exists(index=user_id):
+    index_name = f"{tenant_id}-{user_id}"
+
+    if open_search_client.indices.exists(index=index_name):
         query = {"query": {"term": {"chat_id.keyword": chat_id}}}
-        response = open_search_client.search(body=query, index=user_id)
+        response = open_search_client.search(body=query, index=index_name)
         memory = response["hits"]["hits"]
 
         for item in memory:
@@ -166,9 +170,9 @@ def save_chat_message(
         "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
     }
 
-    # open_search_index = f"{tenant_id}-{user_id}"
+    index_name = f"{tenant_id}-{user_id}"
 
-    if not open_search_client.indices.exists(index=user_id):
+    if not open_search_client.indices.exists(index=index_name):
         index_body = {
             "mappings": {
                 "properties": {
@@ -189,12 +193,12 @@ def save_chat_message(
             },
         }
         open_search_client.indices.create(
-            index=user_id,
+            index=index_name,
             body=index_body,
         )
 
     open_search_client.index(
-        index=user_id,
+        index=index_name,
         body=message,
     )
 

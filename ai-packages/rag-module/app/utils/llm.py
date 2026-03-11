@@ -585,7 +585,9 @@ def stream_rag_conversation(
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
     history_factory = (
-        get_chat_history_from_frontend if not user_id else get_chat_history
+        get_chat_history_from_frontend
+        if not (tenant_id and user_id)
+        else get_chat_history
     )
 
     history_factory_config = (
@@ -598,13 +600,20 @@ def stream_rag_conversation(
                 default="",
             ),
         ]
-        if not user_id
+        if not (tenant_id and user_id)
         else [
             ConfigurableFieldSpec(
                 id="open_search_client",
                 annotation=str,
                 name="Opensearch client",
                 description="Opensearch client.",
+                default="",
+            ),
+            ConfigurableFieldSpec(
+                id="tenant_id",
+                annotation=str,
+                name="Tenant ID",
+                description="Unique identifier for the user's tenant.",
                 default="",
             ),
             ConfigurableFieldSpec(
@@ -650,7 +659,7 @@ def stream_rag_conversation(
             history_factory_config=history_factory_config,
         )
 
-    if not user_id:
+    if not (tenant_id and user_id):
         result = conversational_rag_chain.stream(
             {"input": search_text},
             config={
@@ -665,6 +674,7 @@ def stream_rag_conversation(
             config={
                 "configurable": {
                     "open_search_client": open_search_client,
+                    "tenant_id": tenant_id,
                     "user_id": user_id,
                     "chat_id": chat_id,
                 }
@@ -788,7 +798,7 @@ def stream_rag_conversation(
     }
     logger.info(json.dumps(info))
 
-    if user_id:
+    if tenant_id and user_id:
         save_chat_message(
             open_search_client,
             search_text,
