@@ -12,7 +12,7 @@ module.exports = {
       add: [
         [
           new MonacoWebpackPlugin({
-            languages: [],
+            languages: ["json", "typescript", "javascript"],
             features: [
               "bracketMatching",
               "clipboard",
