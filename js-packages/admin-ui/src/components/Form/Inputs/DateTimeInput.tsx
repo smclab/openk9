@@ -21,10 +21,12 @@ export const DateTimeInput = ({
   initialDateTime,
   disabled,
   setDateTime,
+  step,
 }: {
   initialDateTime: any;
   disabled: boolean;
   setDateTime: any;
+  step?: number;
 }) => {
   const handleChange = (event: any) => {
     setDateTime(event.target.value);
@@ -39,6 +41,7 @@ export const DateTimeInput = ({
         value={initialDateTime}
         onChange={handleChange}
         disabled={disabled}
+        step={step}
       />
     </Box>
   );

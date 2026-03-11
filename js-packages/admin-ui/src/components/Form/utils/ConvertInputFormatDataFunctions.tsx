@@ -16,7 +16,7 @@
 */
 export const convertToInputFormat = (isoString: any) => {
   const date = new Date(isoString);
-  const formattedDate = date.toISOString().slice(0, 16);
+  const formattedDate = date.toISOString().slice(0, 19);
   return formattedDate;
 };
 

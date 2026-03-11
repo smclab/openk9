@@ -53,6 +53,7 @@ export default function Reindex({ id, data }: { id: string; data: any }) {
                 initialDateTime={startData}
                 disabled={areaState !== "partial-reindex"}
                 setDateTime={setStartData}
+                step={1}
               />
             </FormControl>
           </BoxArea>
