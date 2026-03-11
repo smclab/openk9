@@ -34,9 +34,6 @@ from phoenix.evals import (
 )
 from pydantic import BaseModel, Field
 
-from app.external_services.grpc.grpc_client import (
-    get_embedding_model_configuration,
-)
 from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
@@ -394,7 +391,9 @@ class RagGraph:
         retriever = OpenSearchGuardrailDocumentsRetriever(
             opensearch_host=self.opensearch_host,
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
-            embedding_model_configuration=embedding_model_configuration,
+            embedding_model_configuration=self.configuration.get(
+                "embedding_model_configuration"
+            ),
             uploaded_documents_index="guardrails-documents-index",
             retrieve_type="HYBRID",
             search_text=query,
@@ -510,28 +509,28 @@ class RagGraph:
 
     def rag_router_node(self, state: GraphState) -> GraphState:
         """Node to determine if RAG is necessary or not"""
-        query = state.current_query
-        messages = state.messages
+        bypass_rag = self.configuration.get("bypass_rag")
 
-        conversation_context = self._get_conversation_context(messages)
-
-        rag_tool_description = self.configuration.get("rag_tool_description")
-
-        rag_router_prompt = (
-            rag_tool_description
-            + """
-        Contesto della conversazione: {context}
-        Domanda corrente: {query}
-
-        Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
-        """
-        )
-
-        no_rag = self.configuration.get("no_rag")
-
-        if no_rag:
+        if bypass_rag:
             state.use_rag = False
         else:
+            query = state.current_query
+            messages = state.messages
+
+            conversation_context = self._get_conversation_context(messages)
+
+            rag_tool_description = self.configuration.get("rag_tool_description")
+
+            rag_router_prompt = (
+                rag_tool_description
+                + """
+            Contesto della conversazione: {context}
+            Domanda corrente: {query}
+
+            Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
+            """
+            )
+
             rag_router_prompt_template = PromptTemplate.from_template(rag_router_prompt)
 
             rag_router_chain = (

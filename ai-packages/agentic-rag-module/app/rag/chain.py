@@ -88,7 +88,7 @@ def get_agentic_rag(
             "enable_real_time_evaluation"
         )
 
-        no_rag = False
+        bypass_rag = False
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")
@@ -134,7 +134,7 @@ def get_agentic_rag(
             "chat_sequence_number": chat_sequence_number,
             "chat_history": chat_history,
             "rerank": rerank,
-            "no_rag": no_rag,
+            "bypass_rag": bypass_rag,
             "chunk_window": chunk_window,
             "range_values": range_values,
             "after_key": after_key,
