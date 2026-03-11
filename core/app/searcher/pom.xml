@@ -46,6 +46,10 @@
 		  <groupId>io.quarkiverse.opensearch</groupId>
 		  <artifactId>quarkus-opensearch-java-client</artifactId>
 	  </dependency>
+	  <dependency>
+		  <groupId>io.quarkiverse.opensearch</groupId>
+		  <artifactId>quarkus-opensearch-transport-apache</artifactId>
+	  </dependency>
 	  <!-- OpenSearch // -->
 
 	  <!-- consumes -->
