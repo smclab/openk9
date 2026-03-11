@@ -65,7 +65,7 @@ export const TabsSection = ({
           const currentTabIndex = tabs.findIndex((t) => t.value === activeTab);
           const isDisabled = isView
             ? false
-            : tab.disabled || (index !== currentTabIndex + 1 && index !== currentTabIndex - 1);
+            : (tab.disabled && index > currentTabIndex) || (index !== currentTabIndex + 1 && index !== currentTabIndex - 1);
           const isClickable = !isDisabled && activeTab !== tab.value;
 
           return (

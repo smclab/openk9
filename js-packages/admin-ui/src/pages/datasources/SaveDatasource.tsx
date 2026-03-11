@@ -106,7 +106,10 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
     if (isView) {
       navigate(selectedTab.path);
       setActiveTab(newValue);
-    } else if (newTabIndex === currentTabIndex + 1 || newTabIndex === currentTabIndex - 1) {
+    } else if (newTabIndex === currentTabIndex - 1) {
+      navigate(selectedTab.path);
+      setActiveTab(newValue);
+    } else if (newTabIndex === currentTabIndex + 1) {
       if (selectedTab && !selectedTab.disabled) {
         navigate(selectedTab.path);
         setActiveTab(newValue);
