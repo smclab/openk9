@@ -287,30 +287,30 @@ class RagGraph:
             self.configuration.get("rephrase_prompt_template")
             if self.configuration.get("rephrase_prompt_template")
             else """
-        Analizza la query corrente in relazione alla query precedente e alla risposta precedente, e riscrivila in una forma ottimizzata per il retrieval informativo.
+                Analyze the current query in relation to the previous query and previous response, and rewrite it in a form optimized for information retrieval.
 
-        **PROTOCOLLO DI RISCITTURA:**
+                **REWRITING PROTOCOL:**
 
-        ANALISI INIZIALE:
-        - Determina se la query corrente è un follow-up o una nuova domanda indipendente.
-        - Identifica riferimenti anaforici, termini vaghi e dipendenze dal contesto precedente.
+                INITIAL ANALYSIS:
+                - Determine whether the current query is a follow-up or a new independent question.
+                - Identify anaphoric references, vague terms, and dependencies on previous context.
 
-        Se è un FOLLOW-UP:
-        - Risolvi tutti i riferimenti anaforici (“questo”, “quello”, “lui”, “lei”, “esso”, “ciò”, ecc.).
-        - Sostituisci termini vaghi con entità specifiche ricavate dal contesto.
-        - Aggiungi le informazioni mancanti per rendere la query completamente autosufficiente.
-        - Mantieni la continuità tematica con la query precedente.
+                If it is a FOLLOW-UP:
+                - Resolve all anaphoric references ("this", "that", "he", "she", "it", "such", etc.).
+                - Replace vague terms with specific entities derived from the context.
+                - Add missing information to make the query completely self-sufficient.
+                - Maintain thematic continuity with the previous query.
 
-        Se è una NUOVA DOMANDA:
-        - Mantieni intatto il nucleo semantico della query.
-        - Aumenta la specificità e la densità di parole chiave rilevanti.
+                If it is a NEW QUESTION:
+                - Preserve the semantic core of the query intact.
+                - Increase specificity and relevant keyword density.
 
-        LINEE GUIDA TRANSVERSALI:
-        - Ottimizza per chiarezza, precisione e recupero efficace di informazioni.
-        - Usa terminologia tecnica quando pertinente.
-        - Mantieni la forma interrogativa.
-        - Preserva l’intento informativo primario.
-        """
+                CROSS-CUTTING GUIDELINES:
+                - Optimize for clarity, precision, and effective information retrieval.
+                - Use technical terminology when relevant.
+                - Maintain the interrogative form.
+                - Preserve the primary informational intent.
+            """
         )
 
         rewrite_query_prompt = (
@@ -349,27 +349,27 @@ class RagGraph:
 
     def _llm_input_guardrail(self, query):
         guardrail_prompt = """
-            Sei un sistema di guardrail specializzato nella classificazione di testo.
-            Il tuo compito è analizzare la frase fornita dall'utente e classificarla
-            esclusivamente in una delle seguenti categorie.
+            You are a guardrail system specialized in text classification.
+            Your task is to analyze the sentence provided by the user and classify it
+            exclusively into one of the following categories.
 
-            CATEGORIE:
-            1. SELF-HARM/SUICIDE - SELF-HARM/SUICIDE - Contenuti che descrivono, incoraggiano, istruiscono o fanno riferimento ad atti di autolesionismo, tagli, disturbi alimentari, pensieri suicidi, metodi per suicidarsi, istigazione al suicidio, o richieste di aiuto implicite/esplicite legate a questi temi
-            2. VIOLENCE/WEAPONS - Contenuti che descrivono, glorificano, istruiscono o minacciano atti di violenza fisica contro persone o animali, uso improprio di armi da fuoco, armi bianche, oggetti contundenti, combattimenti, torture, omicidi, aggressioni, o istruzioni per costruire/ottenere armi
-            3. EXPLOSIVES - Contenuti che descrivono, istruiscono o forniscono informazioni dettagliate sulla produzione, assemblaggio, detonazione o utilizzo di ordigni esplosivi, bombe, materiali esplodenti, incendiari, o componenti per la fabbricazione di esplosivi
-            4. HATE/HARASSMENT - Contenuti che esprimono incitamento all'odio, discriminazione, molestie, bullismo o linguaggio denigratorio basato su razza, etnia, nazionalità, religione, genere, identità di genere, orientamento sessuale, disabilità, età o status socioeconomico; include insulti mirati, stereotipi negativi, deumanizzazione, apologia di genocidio, superiorità razziale, attacchi personali ripetuti, doxxing, molestie sessuali verbali, o richieste di esclusione/danno verso individui o gruppi protetti
-            5. SEXUAL_CONTENT - Contenuti a sfondo sessuale esplicito, descrizioni dettagliate di atti sessuali, linguaggio osceno o volgare a connotazione sessuale, materiale pornografico, richieste di interazioni sessuali, sexting, o contenuti che sessualizzano minori (con priorità massima)
+            CATEGORIES:
+            1. SELF-HARM/SUICIDE - Content that describes, encourages, instructs, or refers to acts of self-harm, cutting, eating disorders, suicidal thoughts, methods of suicide, incitement to suicide, or implicit/explicit requests for help related to these issues.
+            2. VIOLENCE/WEAPONS - Content that describes, glorifies, instructs, or threatens acts of physical violence against people or animals, misuse of firearms, bladed weapons, blunt objects, fights, torture, murder, assault, or instructions for building/obtaining weapons.
+            3. EXPLOSIVES - Content that describes, instructs, or provides detailed information on the production, assembly, detonation, or use of explosive devices, bombs, explosive materials, incendiaries, or components for manufacturing explosives.
+            4. HATE/HARASSMENT - Content that expresses incitement to hatred, discrimination, harassment, bullying, or derogatory language based on race, ethnicity, nationality, religion, gender, gender identity, sexual orientation, disability, age, or socioeconomic status; includes targeted insults, negative stereotypes, dehumanization, advocacy of genocide, racial superiority, repeated personal attacks, doxxing, verbal sexual harassment, or calls for exclusion/harm against protected individuals or groups.
+            5. SEXUAL_CONTENT - Explicit sexual content, detailed descriptions of sexual acts, obscene or vulgar language with sexual connotations, pornographic material, requests for sexual interactions, sexting, or content that sexualizes minors (with maximum priority).
 
-            REGOLE:
-            - Se la frase NON RICADE in nessuna delle categorie sopra elencate, restituisci esattamente: NESSUNA
-            - Se la frase rientra in una delle categorie, restituisci SOLO il nome della categoria in MAIUSCOLO
-            - Se la frase rientra in più categorie, scegli quella predominante o più grave
-            - Non aggiungere spiegazioni, commenti o punteggiatura
+            RULES:
+            - If the sentence DOES NOT FALL INTO any of the categories listed above, return exactly: NONE
+            - If the sentence falls into one of the categories, return ONLY the category name in UPPERCASE
+            - If the sentence falls into multiple categories, choose the predominant or most severe one
+            - Do not add explanations, comments, or punctuation
 
-            FRASE DA CLASSIFICARE:
+            SENTENCE TO CLASSIFY:
             {query}
 
-            CATEGORIA:
+            CATEGORY:
             """
 
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
@@ -446,18 +446,18 @@ class RagGraph:
                 self.configuration.get("analyze_query_prompt_template")
                 if self.configuration.get("analyze_query_prompt_template")
                 else """
-            Analizza la relazione tra la domanda corrente e la conversazione precedente.
+            Analyze the relationship between the current question and the previous conversation.
 
-            **Criteri di classificazione:**
+            **Classification Criteria:**
 
-            1. Rispondi "FOLLOW_UP" se la domanda corrente:
-            -Si riferisce esplicitamente o implicitamente a informazioni presenti nella conversazione precedente
-            -Chiede chiarimenti, approfondimenti, estensioni o applicazioni di concetti già discussi
+            1.  Respond "FOLLOW_UP" if the current question:
+                - Explicitly or implicitly refers to information present in the previous conversation.
+                - Asks for clarification, further details, extensions, or applications of concepts already discussed.
 
-            2. Rispondi "NEW_QUESTION" se la domanda corrente:
-            - Introduce un argomento nuovo, non collegato alla conversazione precedente
-            - Non contiene riferimenti diretti o indiretti a ciò che è stato detto in precedenza
-            - Rappresenta un cambio di tema chiaro e netto
+            2.  Respond "NEW_QUESTION" if the current question:
+                - Introduces a new topic, unrelated to the previous conversation.
+                - Contains no direct or indirect references to what was previously said.
+                - Represents a clear and distinct change of subject.
             """
             )
 
