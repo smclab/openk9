@@ -82,6 +82,7 @@ def get_agentic_rag(
         reformulate = rag_configuration.get("reformulate")
         rerank = rag_configuration.get("rerank")
         chunk_window = rag_configuration.get("chunk_window")
+        enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
         rag_tool_description = rag_configuration.get("rag_tool_description")
         enable_real_time_evaluation = rag_configuration.get(
@@ -136,6 +137,7 @@ def get_agentic_rag(
             "rerank": rerank,
             "bypass_rag": bypass_rag,
             "chunk_window": chunk_window,
+            "enable_conversation_title": enable_conversation_title,
             "range_values": range_values,
             "after_key": after_key,
             "suggest_keyword": suggest_keyword,
