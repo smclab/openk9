@@ -51,8 +51,6 @@ import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
 import org.opensearch.search.aggregations.bucket.terms.Terms;
 import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
-import org.quartz.Trigger;
-import org.quartz.impl.jdbcjobstore.TriggerStatus;
 
 @ApplicationScoped
 public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDTO> {
