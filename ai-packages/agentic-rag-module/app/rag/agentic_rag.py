@@ -34,6 +34,9 @@ from phoenix.evals import (
 )
 from pydantic import BaseModel, Field
 
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
 from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
@@ -398,12 +401,15 @@ class RagGraph:
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         query = state.current_query
 
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=self.configuration.get("grpc_host_datasource"),
+            virtual_host=self.configuration.get("virtual_host"),
+        )
+
         retriever = OpenSearchGuardrailDocumentsRetriever(
             opensearch_host=self.opensearch_host,
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
-            embedding_model_configuration=self.configuration.get(
-                "embedding_model_configuration"
-            ),
+            embedding_model_configuration=embedding_model_configuration,
             uploaded_documents_index="guardrails-documents-index",
             retrieve_type="HYBRID",
             search_text=query,
