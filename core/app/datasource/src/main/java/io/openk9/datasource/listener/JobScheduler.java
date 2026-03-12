@@ -414,8 +414,9 @@ public class JobScheduler {
 
 		OffsetDateTime lastIngestionDate;
 
-		if (scheduler.getNewDataIndex() != null
-			|| datasource.getLastIngestionDate() == null) {
+		if (
+			(datasource.getLastIngestionDate() == null && startIngestionDate == null)
+			|| scheduler.getNewDataIndex() != null) {
 
 			lastIngestionDate = OffsetDateTime.ofInstant(
 				Instant.ofEpochMilli(0), ZoneId.systemDefault());
