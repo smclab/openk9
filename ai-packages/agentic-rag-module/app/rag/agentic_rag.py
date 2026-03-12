@@ -458,35 +458,47 @@ class RagGraph:
 
             conversation_context = self._get_conversation_context(messages)
 
-            analyze_query_prompt_template = (
-                self.configuration.get("analyze_query_prompt_template")
-                if self.configuration.get("analyze_query_prompt_template")
-                else """
-            Analyze the relationship between the current question and the previous conversation.
+            if self.configuration.get("analyze_query_prompt_template"):
+                analyze_query_prompt_template = self.configuration.get(
+                    "analyze_query_prompt_template"
+                )
 
-            **Classification Criteria:**
+                analyze_query_prompt = (
+                    analyze_query_prompt_template
+                    + """
+                        **CONVERSAZIONE PRECEDENTE:**
+                        {context}
 
-            1.  Respond "FOLLOW_UP" if the current question:
-                - Explicitly or implicitly refers to information present in the previous conversation.
-                - Asks for clarification, further details, extensions, or applications of concepts already discussed.
+                        **DOMANDA CORRENTE:**
+                        {query}
+                        """
+                )
+            else:
+                analyze_query_prompt_template = """
+                    Analyze the relationship between the current question and the previous conversation.
 
-            2.  Respond "NEW_QUESTION" if the current question:
-                - Introduces a new topic, unrelated to the previous conversation.
-                - Contains no direct or indirect references to what was previously said.
-                - Represents a clear and distinct change of subject.
-            """
-            )
+                    **Classification Criteria:**
 
-            analyze_query_prompt = (
-                analyze_query_prompt_template
-                + """
-            **CONVERSAZIONE PRECEDENTE:**
-            {context}
+                    1.  Respond "FOLLOW_UP" if the current question:
+                        - Explicitly or implicitly refers to information present in the previous conversation.
+                        - Asks for clarification, further details, extensions, or applications of concepts already discussed.
 
-            **DOMANDA CORRENTE:**
-            {query}
-            """
-            )
+                    2.  Respond "NEW_QUESTION" if the current question:
+                        - Introduces a new topic, unrelated to the previous conversation.
+                        - Contains no direct or indirect references to what was previously said.
+                        - Represents a clear and distinct change of subject.
+                    """
+
+                analyze_query_prompt = (
+                    analyze_query_prompt_template
+                    + """
+                        **PREVIOUS CONVERSATION:**
+                        {context}
+
+                        **CURRENT QUESTION:**
+                        {query}
+                        """
+                )
 
             analyze_query_prompt_template = PromptTemplate.from_template(
                 analyze_query_prompt
