@@ -87,7 +87,7 @@ public class TenantDbServiceTest {
 
 		// verify that the last event is of the right type
 		var createEventType = createEvent.getEventType();
-		Assertions.assertEquals("TenantCreated", createEventType);
+		Assertions.assertEquals(TenantEvent.TENANT_CREATED, createEventType);
 
 		// delete tenant
 
@@ -109,7 +109,7 @@ public class TenantDbServiceTest {
 		OutboxEvent deleteEvent = outboxService.lastEvents(1).await().indefinitely().getFirst();
 		String deleteEventType = deleteEvent.getEventType();
 
-		Assertions.assertEquals("TenantDeleted", deleteEventType);
+		Assertions.assertEquals(TenantEvent.TENANT_DELETED, deleteEventType);
 
 	}
 
@@ -209,7 +209,7 @@ public class TenantDbServiceTest {
 			.getFirst();
 
 		String eventType = deleteEvent.getEventType();
-		Assertions.assertEquals("TenantDeleted", eventType);
+		Assertions.assertEquals(TenantEvent.TENANT_DELETED, eventType);
 
 	}
 

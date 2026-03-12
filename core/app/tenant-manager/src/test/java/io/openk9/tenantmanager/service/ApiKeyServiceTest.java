@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import jakarta.inject.Inject;
 
 import io.openk9.event.tenant.ApiGroup;
+import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyResponse;
@@ -68,7 +69,7 @@ public class ApiKeyServiceTest {
 			.indefinitely();
 
 		var createEvent = outboxService.lastEvents(1).await().indefinitely().getFirst();
-		Assertions.assertEquals("ApiKeyCreated", createEvent.getEventType());
+		Assertions.assertEquals(TenantEvent.API_KEY_CREATED, createEvent.getEventType());
 
 		// 2. Revoke and Delete the API Key
 		apiKeyService.revoke(apiKeyId).await().indefinitely();
@@ -77,7 +78,7 @@ public class ApiKeyServiceTest {
 		// revoke and delete publish the same event type,
 		// so we expect two equals events in the outbox.
 		outboxService.lastEvents(2).await().indefinitely()
-			.forEach(event -> Assertions.assertEquals("ApiKeyRevoked", event.getEventType()));
+			.forEach(event -> Assertions.assertEquals(TenantEvent.API_KEY_REVOKED, event.getEventType()));
 
 		// 3. API Key Table must be empty
 		var list = apiKeyService.findAllByTenantId(Long.parseLong(tenantId)).await().indefinitely();

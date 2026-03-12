@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.handler.annotation.Payload;
 
 @Slf4j
 @Configuration
@@ -36,7 +37,11 @@ public class RabbitAdapter {
 		queues = TenantEvent.TOPIC,
 		containerFactory = "replayContainerFactory"
 	)
-	public void adapter(TenantEvent payload) {
+	public void adapter(@Payload(required = false) TenantEvent payload) {
+		if (payload == null) {
+			return;
+		}
+
 		if (log.isDebugEnabled()) {
 			log.debug("Processing: {}", payload);
 		}

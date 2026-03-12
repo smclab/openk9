@@ -248,8 +248,7 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 
 	private final static CompactSnowflakeIdGenerator ID_GENERATOR =
 		new CompactSnowflakeIdGenerator();
-	private static final String EVENT_TYPE =
-		TenantEvent.TenantCreated.class.getSimpleName();
+	private static final String EVENT_TYPE = TenantEvent.TENANT_CREATED;
 	private static final ObjectMapper OBJ_MAPPER = new ObjectMapper();
 
 	private record BackfillEvent(String payload, Timestamp createDate) {}

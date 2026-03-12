@@ -43,7 +43,7 @@ public class OutboxEventService {
 		Objects.requireNonNull(event);
 
 		long eventId = idGenerator.nextId();
-		String eventType = event.getClass().getSimpleName();
+		String eventType = eventTypeOf(event);
 		String payload = Json.encode(event);
 
 		return persist(eventId, eventType, payload, false, OffsetDateTime.now());
@@ -161,6 +161,16 @@ public class OutboxEventService {
 		SET sent = true
 		WHERE id = $1
 		""";
+
+	private static String eventTypeOf(TenantEvent event) {
+		return switch (event) {
+			case TenantEvent.TenantCreated e -> TenantEvent.TENANT_CREATED;
+			case TenantEvent.TenantUpdated e -> TenantEvent.TENANT_UPDATED;
+			case TenantEvent.TenantDeleted e -> TenantEvent.TENANT_DELETED;
+			case TenantEvent.ApiKeyCreated e -> TenantEvent.API_KEY_CREATED;
+			case TenantEvent.ApiKeyRevoked e -> TenantEvent.API_KEY_REVOKED;
+		};
+	}
 
 	private static final CompactSnowflakeIdGenerator idGenerator = new CompactSnowflakeIdGenerator();
 	private static final Logger log = Logger.getLogger(OutboxEventService.class);

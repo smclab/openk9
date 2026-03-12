@@ -25,7 +25,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -49,11 +48,11 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 		try {
 			String eventType = switch (object) {
-				case TenantEvent.ApiKeyCreated e -> "ApiKeyCreated";
-				case TenantEvent.ApiKeyRevoked e -> "ApiKeyRevoked";
-				case TenantEvent.TenantCreated e -> "TenantCreated";
-				case TenantEvent.TenantDeleted e -> "TenantDeleted";
-				case TenantEvent.TenantUpdated e -> "TenantUpdated";
+				case TenantEvent.ApiKeyCreated e -> TenantEvent.API_KEY_CREATED;
+				case TenantEvent.ApiKeyRevoked e -> TenantEvent.API_KEY_REVOKED;
+				case TenantEvent.TenantCreated e -> TenantEvent.TENANT_CREATED;
+				case TenantEvent.TenantDeleted e -> TenantEvent.TENANT_DELETED;
+				case TenantEvent.TenantUpdated e -> TenantEvent.TENANT_UPDATED;
 				default -> throw new MessageConversionException("invalid type");
 			};
 
@@ -84,25 +83,26 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 			String eventType = messageProperties.getHeader(X_EVENT_TYPE);
 
-			// Pattern Event Upcaster: intercept and transform the JSON before deserialization
-			JsonNode root = mapper.readTree(body);
-
-			if ("TenantCreated".equals(eventType) || "TenantUpdated".equals(eventType)) {
-				root = upcastTenantEvent(root);
+			if (eventType == null) {
+				log.warn(
+					"Message missing x-event-type header, skipping: {}",
+					messageProperties.getMessageId());
+				return null;
 			}
-			else if ("ApiKeyCreated".equals(eventType)) {
-				if (shouldIgnoreApiKeyCreated(root)) {
-					log.warn("Ignoring legacy ApiKeyCreated event: {}", root);
-					return null;
-				}
+
+			JsonNode root = TenantEventUpcaster.upcast(
+				eventType, mapper.readTree(body));
+
+			if (root == null) {
+				return null;
 			}
 
 			Object event = switch (eventType) {
-				case "ApiKeyCreated" -> mapper.treeToValue(root, TenantEvent.ApiKeyCreated.class);
-				case "ApiKeyRevoked" -> mapper.treeToValue(root, TenantEvent.ApiKeyRevoked.class);
-				case "TenantCreated" -> mapper.treeToValue(root, TenantEvent.TenantCreated.class);
-				case "TenantDeleted" -> mapper.treeToValue(root, TenantEvent.TenantDeleted.class);
-				case "TenantUpdated" -> mapper.treeToValue(root, TenantEvent.TenantUpdated.class);
+				case TenantEvent.API_KEY_CREATED -> mapper.treeToValue(root, TenantEvent.ApiKeyCreated.class);
+				case TenantEvent.API_KEY_REVOKED -> mapper.treeToValue(root, TenantEvent.ApiKeyRevoked.class);
+				case TenantEvent.TENANT_CREATED -> mapper.treeToValue(root, TenantEvent.TenantCreated.class);
+				case TenantEvent.TENANT_DELETED -> mapper.treeToValue(root, TenantEvent.TenantDeleted.class);
+				case TenantEvent.TENANT_UPDATED -> mapper.treeToValue(root, TenantEvent.TenantUpdated.class);
 				default -> throw new MessageConversionException("unknown x-event-type value");
 			};
 
@@ -115,46 +115,6 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 		catch (IOException e) {
 			throw new MessageConversionException("Error during message deserialization", e);
 		}
-	}
-
-	private JsonNode upcastTenantEvent(JsonNode root) {
-		if (!(root instanceof ObjectNode objectNode)) {
-			return root;
-		}
-
-		// Upcast removed SecurityConfiguration values
-		if (objectNode.has("securityConfiguration")) {
-			String secConfig = objectNode.get(
-				"securityConfiguration").asText();
-			if ("API_KEY_ONLY".equals(secConfig)) {
-				objectNode.put("securityConfiguration", "LEGACY");
-			}
-		}
-
-		// Handle routeAuthorizationMap adaptation
-		if (objectNode.has("routeAuthorizationMap")) {
-			JsonNode authMapNode = objectNode.get("routeAuthorizationMap");
-			if (authMapNode instanceof ObjectNode authMap) {
-				// Detect legacy by presence of DATASOURCE or missing modern keys
-				if (authMap.has("DATASOURCE") || !authMap.has("ADMINISTRATION")) {
-					JsonNode searchScheme = authMap.get("SEARCH");
-					String searchSchemeStr = (searchScheme != null) ? searchScheme.asText() : "OAUTH2";
-
-					authMap.put("ADMINISTRATION", "OAUTH2");
-					authMap.put("PUBLIC", searchSchemeStr);
-					authMap.put("INGESTION", searchSchemeStr);
-
-					authMap.remove("DATASOURCE");
-				}
-			}
-		}
-
-		return objectNode;
-	}
-
-	private boolean shouldIgnoreApiKeyCreated(JsonNode root) {
-		// Ignore if missing apiGroup or expirationDate
-		return !root.has("apiGroup") || !root.has("expirationDate");
 	}
 
 }

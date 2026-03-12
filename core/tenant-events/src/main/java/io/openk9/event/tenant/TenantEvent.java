@@ -29,6 +29,13 @@ sealed public interface TenantEvent {
 
 	String TOPIC = "tenant.events";
 
+	// x-event-type header values
+	String TENANT_CREATED = "TenantCreated";
+	String TENANT_UPDATED = "TenantUpdated";
+	String TENANT_DELETED = "TenantDeleted";
+	String API_KEY_CREATED = "ApiKeyCreated";
+	String API_KEY_REVOKED = "ApiKeyRevoked";
+
 	/**
 	 * Event published when a new tenant is created.
 	 *

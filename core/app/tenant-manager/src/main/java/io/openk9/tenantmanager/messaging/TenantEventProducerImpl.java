@@ -113,7 +113,7 @@ public class TenantEventProducerImpl
 		return outbox.unsentEvents()
 			.chain(outboxEvents -> {
 				if (log.isDebugEnabled()) {
-					log.infof("Sending %d events...", outboxEvents.size());
+					log.debugf("Sending %d events...", outboxEvents.size());
 				}
 
 				List<Long> ids = new ArrayList<>();
@@ -144,7 +144,9 @@ public class TenantEventProducerImpl
 			Channel channel = getChannel();
 			AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
 				.deliveryMode(2)
-				.headers(Map.of(X_EVENT_TYPE, eventType))
+				.headers(Map.of(
+					X_EVENT_TYPE, eventType,
+					X_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION))
 				.build();
 
 			channel.basicPublish(
@@ -159,7 +161,7 @@ public class TenantEventProducerImpl
 	private Channel getChannel() throws IOException {
 		Channel channel = channelThreadLocal.get();
 
-		if (channel == null) {
+		if (channel == null || !channel.isOpen()) {
 			channel = conn.createChannel();
 			channelThreadLocal.set(channel);
 		}
@@ -179,6 +181,8 @@ public class TenantEventProducerImpl
 
 	private static final String EXCHANGE = "amq.topic";
 	private static final String X_EVENT_TYPE = "x-event-type";
+	private static final String X_SCHEMA_VERSION = "x-schema-version";
+	private static final int CURRENT_SCHEMA_VERSION = 1;
 	private static final String X_QUEUE_TYPE = "x-queue-type";
 
 	private final static Logger log = Logger.getLogger(
