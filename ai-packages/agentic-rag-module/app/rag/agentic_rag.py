@@ -383,11 +383,6 @@ class RagGraph:
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         query = state.current_query
 
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=self.configuration.get("grpc_host_datasource"),
-            virtual_host=self.configuration.get("virtual_host"),
-        )
-
         retriever = OpenSearchGuardrailDocumentsRetriever(
             opensearch_host=self.opensearch_host,
             grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
