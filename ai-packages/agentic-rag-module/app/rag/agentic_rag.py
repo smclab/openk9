@@ -283,10 +283,27 @@ class RagGraph:
         Rewrites user query, using previous messages.
         """
 
-        rephrase_prompt_template = (
-            self.configuration.get("rephrase_prompt_template")
-            if self.configuration.get("rephrase_prompt_template")
-            else """
+        if self.configuration.get("rephrase_prompt_template"):
+            rephrase_prompt_template = self.configuration.get(
+                "rephrase_prompt_template"
+            )
+
+            rewrite_query_prompt = rephrase_prompt_template + (
+                """
+                **QUERY ORIGINALE:**
+                "{query}"
+
+                **QUERY PRECEDENTE:**
+                "{previous_query}"
+
+                **RISPOSTA PRECEDENTE:**
+                {previous_response}
+
+                Rispondi ESCLUSIVAMENTE con la query riscritta.
+                """
+            )
+        else:
+            rephrase_prompt_template = """
                 Analyze the current query in relation to the previous query and previous response, and rewrite it in a form optimized for information retrieval.
 
                 **REWRITING PROTOCOL:**
@@ -311,23 +328,21 @@ class RagGraph:
                 - Maintain the interrogative form.
                 - Preserve the primary informational intent.
             """
-        )
 
-        rewrite_query_prompt = (
-            rephrase_prompt_template
-            + """
-        **QUERY ORIGINALE:**
-        "{query}"
+            rewrite_query_prompt = rephrase_prompt_template + (
+                """
+                **ORIGINAL QUERY:**
+                "{query}"
 
-        **QUERY PRECEDENTE:**
-        "{previous_query}"
+                **PREVIOUS QUERY:**
+                "{previous_query}"
 
-        **RISPOSTA PRECEDENTE:**
-        {previous_response}
+                **PREVIOUS RESPONSE:**
+                {previous_response}
 
-        Rispondi ESCLUSIVAMENTE con la query riscritta.
-        """
-        )
+                Reply ONLY with the rewritten query.
+                """
+            )
 
         rewrite_query_prompt_template = PromptTemplate.from_template(
             rewrite_query_prompt
@@ -636,20 +651,22 @@ class RagGraph:
     def opensearch_retriever_evaluation_node(self, state: GraphState) -> GraphState:
         if state.do_retrieve:
             retriever_evaluation_prompt = """
-                    Stai confrontando un testo di riferimento con una domanda per determinare se il testo di riferimento contiene informazioni rilevanti per rispondere alla domanda. Ecco i dati:
+                    You are comparing a reference text with a question to determine if the reference text contains information relevant to answering the question. Here is the data:
 
                     [BEGIN DATA]
                     ************
-                    [Domanda]: {query}
+                    [Question]: {query}
                     ************
-                    [Testo di riferimento]: {context}
+                    [Reference text]: {context}
                     [END DATA]
 
-                    Dopo la tua analisi, fornisci il seguente output strutturato in tre parti, in questo ordine e separate da una riga vuota:
+                    After your analysis, provide the following structured output in three parts, in this order and separated by a blank line:
 
-                    1.  **judgment:** Una singola parola: "RELEVANT" o "NOT_RELEVANT".
-                    2.  **vote:** Un punteggio numerico intero da 0 a 10 che quantifica il grado di rilevanza, dove 0 indica assenza totale di rilevanza e 10 indica rilevanza perfetta (ovvero il testo di riferimento risponde completamente e direttamente alla domanda).
-                    3.  **explanation:** Una spiegazione dettagliata del tuo ragionamento. Analizza se il testo di riferimento tratta l'argomento o i concetti chiave sollevati dalla domanda. Spiega perché le informazioni sono considerate pertinenti o meno, indicando eventuali punti di contatto parziali o informazioni mancanti. La spiegazione deve essere autonoma e non deve ripetere i termini "GIUDIZIO" o "VOTO". Evita di anticipare il giudizio finale all'inizio della spiegazione.
+                    1. judgment: A single word: "RELEVANT" or "NOT_RELEVANT".
+
+                    2. vote: An integer score from 0 to 10 that quantifies the degree of relevance, where 0 indicates a total lack of relevance and 10 indicates perfect relevance (i.e., the reference text completely and directly answers the question).
+
+                    3. explanation: A detailed explanation of your reasoning. Analyze whether the reference text addresses the topic or key concepts raised by the question. Explain why the information is considered relevant or not, indicating any partial points of contact or missing information. The explanation must be self-contained and must not repeat the terms "JUDGMENT" or "VOTE". Avoid anticipating the final judgment at the beginning of the explanation.
                     """
 
             query = state.current_query
@@ -698,36 +715,36 @@ class RagGraph:
                 chunks.append(chunk)
 
             retriever_evaluation_prompt = """
-                        Sei un valutatore che confronta una domanda con una lista di segmenti di testo (chunks) per determinare se ogni chunk contiene informazioni rilevanti per rispondere alla domanda.
-                        Dati da analizzare:
+                        You are an evaluator comparing a question with a list of text segments (chunks) to determine if each chunk contains information relevant to answering the question.  
+                        Data to be analyzed:
 
-                        [BEGIN DATA]
-                        [Domanda]: {query}
-                        Testo di riferimento - {chunks}
+                        [BEGIN DATA]  
+                        [Question]: {query}  
+                        Reference text - {chunks}  
                         [END DATA]
 
-                        Istruzioni precise:
-                        1. Valuta **OGNI CHUNK IN MODO INDIPENDENTE** dagli altri. Non usare informazioni presenti in altri chunk per giudicare questo chunk.
-                        2. Per ciascun chunk restituisci un oggetto con quattro campi nell'ordine esatto: "chunk_id", "judgment", "vote", "explanation".
-                        - "chunk_id": identificativo del chunk, presente in ogni elemento della lista.
-                        - "judgment": una stringa, **solo** "RELEVANT" o "NOT_RELEVANT".
-                        - "vote": **solo** un intero tra 0 e 10 (0 = per niente rilevante, 10 = risponde completamente e direttamente alla domanda da solo).
-                        - "explanation": una spiegazione autonoma e dettagliata che motiva il voto per **questo singolo chunk**. Deve:
-                            - riferirsi esplicitamente al contenuto di `chunk_content`;
-                            - spiegare quali elementi del chunk sono (o non sono) collegati alla domanda;
-                            - indicare eventuali informazioni mancanti o punti di contatto parziali;
-                            - **non** iniziare riportando il giudizio o il voto e **non** usare le parole "GIUDIZIO" o "VOTO" dentro l'explanation;
-                            - essere autosufficiente (chi legge solo questa explanation deve capire perché quel voto è stato dato).
-                        3. Mantieni output **valid JSON** che sia una lista (array) con un oggetto per ogni chunk, nello **stesso ordine** dei chunk in input.
-                        4. Non aggiungere testo, commenti o metadati extra: **OUTPUT SOLO IL JSON**.
+                        Precise instructions:
+                        1. Evaluate **EACH CHUNK INDEPENDENTLY** from the others. Do not use information present in other chunks to judge this chunk.
+                        2. For each chunk, return an object with four fields in the exact order: "chunk_id", "judgment", "vote", "explanation".
+                        - "chunk_id": the chunk identifier, present in each element of the list.
+                        - "judgment": a string, **only** "RELEVANT" or "NOT_RELEVANT".
+                        - "vote": **only** an integer between 0 and 10 (0 = not relevant at all, 10 = completely and directly answers the question on its own).
+                        - "explanation": a self-contained and detailed explanation that justifies the vote for **this single chunk**. It must:
+                            - explicitly refer to the content of `chunk_content`;
+                            - explain which elements of the chunk are (or are not) related to the question;
+                            - indicate any missing information or partial points of contact;
+                            - **not** begin by stating the judgment or the vote and **not** use the words "JUDGMENT" or "VOTE" within the explanation;
+                            - be self-sufficient (someone reading only this explanation must understand why that vote was given).
+                        3. Maintain **valid JSON** output that is a list (array) with one object for each chunk, in the **same order** as the input chunks.
+                        4. Do not add extra text, comments, or metadata: **OUTPUT ONLY THE JSON**.
 
-                        Requisiti formali ricapitolati:
-                        - "vote" deve essere un intero 0-10.
-                        - "judgment" deve essere esattamente "RELEVANT" o "NOT_RELEVANT".
-                        - L'array restituito deve contenere esattamente un elemento per chunk, nello stesso ordine.
-                        - Nessun testo fuori dal JSON.
+                        Recap of formal requirements:
+                        - "vote" must be an integer 0-10.
+                        - "judgment" must be exactly "RELEVANT" or "NOT_RELEVANT".
+                        - The returned array must contain exactly one element per chunk, in the same order.
+                        - No text outside the JSON.
 
-                        Adesso valuta i chunk forniti usando queste regole.
+                        Now evaluate the provided chunks using these rules.
 
                         """
 
@@ -778,21 +795,21 @@ class RagGraph:
             evaluations = []
             for chunk_number, document in enumerate(context, start=1):
                 retriever_evaluation_prompt = """
-                        Stai confrontando un testo di riferimento con una domanda per determinare se il testo di riferimento contiene informazioni rilevanti per rispondere alla domanda. **Ogni segmento (chunk) del testo di riferimento deve essere valutato INDIPENDENTEMENTE dagli altri.** Ecco i dati:
+                        You are comparing a reference text with a question to determine if the reference text contains information relevant to answering the question. **Each segment (chunk) of the reference text must be evaluated INDEPENDENTLY from the others.** Here is the data:
 
                         [BEGIN DATA]
                         ************
-                        [Domanda]: {query}
+                        [Question]: {query}
                         ************
-                        Testo di riferimento - Chunk {chunk_number} di {total_chunks}]: {context_chunk} con chunk_id {chunk_id}
+                        Reference text - [Chunk {chunk_number} of {total_chunks}]: {context_chunk} with chunk_id {chunk_id}
                         [END DATA]
 
-                        Dopo la tua analisi, fornisci il seguente output strutturato in tre parti, in questo ordine e separate da una riga vuota:
+                        After your analysis, provide the following structured output in three parts, in this order and separated by a blank line:
 
-                        1.  **chunk_id**: identificativo del chunk, presente in ogni chunk.
-                        2.  **judgment:** Una singola parola: "RELEVANT" o "NOT_RELEVANT".
-                        3.  **vote:** Un punteggio numerico intero da 0 a 10 che quantifica il grado di rilevanza di QUESTO SINGOLO CHUNK, dove 0 indica assenza totale di rilevanza e 10 indica che questo chunk, da solo, contiene informazioni che rispondono completamente e direttamente alla domanda.
-                        4.  **explanation:** Una spiegazione dettagliata del tuo ragionamento. Analizza se QUESTO SPECIFICO CHUNK tratta l'argomento o i concetti chiave sollevati dalla domanda. Spiega perché le informazioni in questo segmento sono considerate pertinenti o meno, indicando eventuali punti di contatto parziali o informazioni mancanti. La spiegazione deve essere autonoma, riferirsi esplicitamente al contenuto di questo chunk e non deve ripetere i termini "GIUDIZIO" o "VOTO". Evita di anticipare il giudizio finale all'inizio della spiegazione.
+                        1.  **chunk_id**: chunk identifier, present in each chunk.
+                        2.  **judgment:** A single word: "RELEVANT" or "NOT_RELEVANT".
+                        3.  **vote:** An integer score from 0 to 10 that quantifies the degree of relevance of THIS SINGLE CHUNK, where 0 indicates a total lack of relevance and 10 indicates that this chunk, on its own, contains information that completely and directly answers the question.
+                        4.  **explanation:** A detailed explanation of your reasoning. Analyze whether THIS SPECIFIC CHUNK addresses the topic or key concepts raised by the question. Explain why the information in this segment is considered relevant or not, indicating any partial points of contact or missing information. The explanation must be self-contained, explicitly refer to the content of this chunk, and must not repeat the terms "JUDGMENT" or "VOTE". Avoid anticipating the final judgment at the beginning of the explanation.
                         """
 
                 retriever_evaluation_prompt_template = PromptTemplate.from_template(
