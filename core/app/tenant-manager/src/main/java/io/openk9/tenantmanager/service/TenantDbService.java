@@ -62,9 +62,9 @@ public class TenantDbService {
 			id, virtual_host,
 			schema_name, liquibase_schema_name,
 			issuer_uri, client_id, client_secret, security_configuration,
-			create_date, modified_date
+			create_date, modified_date, realm_provisioned
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		""";
 	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
@@ -208,7 +208,8 @@ public class TenantDbService {
 		String clientSecret,
 		SecurityConfiguration securityConfiguration,
 		OffsetDateTime createDate,
-		OffsetDateTime modifiedDate) {
+		OffsetDateTime modifiedDate,
+		boolean realmProvisioned) {
 
 		long id = idGenerator.nextId();
 
@@ -224,7 +225,8 @@ public class TenantDbService {
 					clientSecret,
 					securityConfiguration.name(),
 					createDate != null ? createDate : OffsetDateTime.now(),
-					modifiedDate != null ? modifiedDate : OffsetDateTime.now()
+					modifiedDate != null ? modifiedDate : OffsetDateTime.now(),
+					realmProvisioned
 				}))
 				.map(SqlResult::rowCount)
 				.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
@@ -250,6 +252,7 @@ public class TenantDbService {
 				.issuerUri(issuerUri)
 				.clientId(clientId)
 				.clientSecret(clientSecret)
+				.realmProvisioned(realmProvisioned)
 				.build()
 			)
 			.onFailure()
@@ -269,7 +272,8 @@ public class TenantDbService {
 			tenant.getClientSecret(),
 			tenant.getSecurityConfiguration(),
 			tenant.getCreateDate(),
-			tenant.getModifiedDate()
+			tenant.getModifiedDate(),
+			tenant.isRealmProvisioned()
 		);
 	}
 
@@ -294,6 +298,7 @@ public class TenantDbService {
 			.clientId(row.getString("client_id"))
 			.clientSecret(row.getString("client_secret"))
 			.issuerUri(row.getString("issuer_uri"))
+			.realmProvisioned(row.getBoolean("realm_provisioned"))
 			.build();
 	}
 

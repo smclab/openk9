@@ -73,7 +73,8 @@ public class TenantDbServiceTest {
 				null,
 				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
-				OffsetDateTime.now()
+				OffsetDateTime.now(),
+				true
 			)
 			.await()
 			.indefinitely();
@@ -137,7 +138,8 @@ public class TenantDbServiceTest {
 				null,
 				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
-				OffsetDateTime.now()
+				OffsetDateTime.now(),
+				true
 			)
 			.await()
 			.indefinitely();
@@ -165,7 +167,8 @@ public class TenantDbServiceTest {
 				null,
 				SecurityConfiguration.LEGACY,
 				OffsetDateTime.now(),
-				OffsetDateTime.now()
+				OffsetDateTime.now(),
+				true
 			)
 			.await()
 			.indefinitely();

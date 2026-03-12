@@ -91,6 +91,9 @@ public class Tenant implements GraphqlId {
 	@Enumerated(EnumType.STRING)
 	private SecurityConfiguration securityConfiguration;
 
+	@Column(name = "realm_provisioned", nullable = false)
+	private boolean realmProvisioned;
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) {

@@ -409,7 +409,7 @@ public class TenantProvisioningService {
 	// Event Bus Request Messages.
 	// =======================================================================
 
-	private record CreateEntityRequest(Tenant tenant) {
+	public record CreateEntityRequest(Tenant tenant) {
 
 		public static CreateEntityRequest of(Tenant tenant) {
 			return new CreateEntityRequest(tenant);

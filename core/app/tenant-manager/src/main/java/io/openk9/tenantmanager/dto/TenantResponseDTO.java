@@ -29,5 +29,6 @@ public record TenantResponseDTO(
 	String virtualHost,
 	String clientId,
 	String clientSecret,
-	String issuerUri) {
+	String issuerUri,
+	boolean realmProvisioned) {
 }

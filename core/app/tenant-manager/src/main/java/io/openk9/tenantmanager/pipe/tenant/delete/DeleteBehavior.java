@@ -47,6 +47,11 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 	private TypedActor.Address<DeleteGroupMessage> deleteGroupActor;
 	private String token;
 	private String virtualHost;
+
+	String getToken() {
+		return token;
+	}
+
 	public DeleteBehavior(
 		EventBus eventBus, TypedActor.Address<DeleteMessage> self) {
 
@@ -96,17 +101,26 @@ public class DeleteBehavior implements TypedActor.Behavior<DeleteMessage> {
 
 						unis.add(deleteSchema);
 
-						var deleteRealm =
-							Uni.createFrom().completionStage(
-								TenantProvisioningService.deleteRealm(tenant.schemaName())
-									.thenAccept(unused -> LOGGER.infof(
-										"Realm for %s virtualHost %s deleted.",
-										tenant.schemaName(),
-										virtualHost
-									))
-							);
+						if (tenant.realmProvisioned()) {
+							var deleteRealm =
+								Uni.createFrom().completionStage(
+									TenantProvisioningService
+										.deleteRealm(tenant.schemaName())
+										.thenAccept(unused -> LOGGER.infof(
+											"Realm for %s virtualHost %s deleted.",
+											tenant.schemaName(),
+											virtualHost
+										))
+								);
 
-						unis.add(deleteRealm);
+							unis.add(deleteRealm);
+						}
+						else {
+							LOGGER.infof(
+								"Skipping realm deletion for tenant %s "
+								+ "(not self-provisioned)",
+								virtualHost);
+						}
 
 						var deleteEntity =
 							Uni.createFrom().completionStage(

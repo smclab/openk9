@@ -16,6 +16,8 @@
  */
 package io.openk9.tenantmanager.pipe.tenant.create;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -24,7 +26,9 @@ import static org.mockito.Mockito.when;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
+import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
+import io.openk9.tenantmanager.service.TenantProvisioningService.CreateEntityRequest;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
@@ -37,7 +41,9 @@ import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class TenantProvisioningSagaTest {
 
@@ -125,7 +131,8 @@ class TenantProvisioningSagaTest {
 			"vHost",
 			"cid",
 			"sec",
-			"issuer");
+			"issuer",
+			true);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(expectedTenant);
@@ -177,7 +184,8 @@ class TenantProvisioningSagaTest {
 			"vHost",
 			"cid",
 			"sec",
-			"issuer");
+			"issuer",
+			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(expectedTenant);
@@ -241,7 +249,8 @@ class TenantProvisioningSagaTest {
 			"vHost",
 			"cid",
 			"sec",
-			"issuer");
+			"issuer",
+			true);
 
 		Message<TenantResponseDTO> tenantMsg = mock(Message.class);
 		when(tenantMsg.body()).thenReturn(expectedTenant);
@@ -291,7 +300,8 @@ class TenantProvisioningSagaTest {
 			"vHost",
 			null,
 			null,
-			null);
+			null,
+			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(expectedTenant);
@@ -341,7 +351,8 @@ class TenantProvisioningSagaTest {
 			"vHost",
 			null,
 			null,
-			null);
+			null,
+			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(expectedTenant);
@@ -399,6 +410,151 @@ class TenantProvisioningSagaTest {
 		mocks.realmProbe.expectNoMessage();
 		mocks.schemaProbe.expectNoMessage();
 		mocks.ingressProbe.expectNoMessage();
+	}
+
+	// --- realmProvisioned flag tests ---
+
+	@Test
+	@SuppressWarnings("unchecked")
+	@DisplayName(
+		"realmProvisioned is true when Keycloak auto-provisions the realm")
+	void realmProvisioned_isTrueWhenKeycloakAutoProvisions() {
+
+		// Arrange: Keycloak is configured, no oAuth2Settings, LEGACY
+		mockRealmConfigured(true);
+
+		ArgumentCaptor<CreateEntityRequest> captor =
+			ArgumentCaptor.forClass(CreateEntityRequest.class);
+		TenantResponseDTO stubDto = new TenantResponseDTO(
+			"1", "s", "s-liq", "vh", null, null, null, true);
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(stubDto);
+		Uni<Message<TenantResponseDTO>> uni =
+			Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY),
+			captor.capture()))
+			.thenReturn(uni);
+
+		TestProbe<TenantProvisioningSaga.Response> replyTo =
+			testKit.createTestProbe();
+		MockProvisioningFactory mocks = new MockProvisioningFactory();
+
+		// Act
+		testKit.spawn(TenantProvisioningSaga.create(
+			"vh", "schema", null,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks));
+
+		mocks.realmProbe.expectMessage(Realm.Start.INSTANCE);
+		mocks.realmAdapter.get().tell(
+			new Realm.Success("cid", "sec", "vh", "iss", null, null));
+		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
+		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
+		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
+
+		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
+
+		// Assert: captured tenant has realmProvisioned = true
+		Tenant tenant = captor.getValue().tenant();
+		assertTrue(tenant.isRealmProvisioned());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	@DisplayName("realmProvisioned is false when external OAuth2 settings are used")
+	void realmProvisioned_isFalseWithExternalOAuth2() {
+
+		// Arrange: oAuth2Settings provided, no Keycloak realm created
+		mockRealmConfigured(false);
+
+		ArgumentCaptor<CreateEntityRequest> captor =
+			ArgumentCaptor.forClass(CreateEntityRequest.class);
+		TenantResponseDTO stubDto = new TenantResponseDTO(
+			"1", "s", "s-liq", "vh", "cid", "csec", "iss", false);
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(stubDto);
+		Uni<Message<TenantResponseDTO>> uni =
+			Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY),
+			captor.capture()))
+			.thenReturn(uni);
+
+		TestProbe<TenantProvisioningSaga.Response> replyTo =
+			testKit.createTestProbe();
+		MockProvisioningFactory mocks = new MockProvisioningFactory();
+		OAuth2Settings settings =
+			new OAuth2Settings("cid", "csec", "https://idp/issuer");
+
+		// Act
+		testKit.spawn(TenantProvisioningSaga.create(
+			"vh", "schema", settings,
+			SecurityConfiguration.LEGACY,
+			replyTo.getRef(),
+			mocks));
+
+		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
+		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
+		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
+		mocks.realmProbe.expectNoMessage();
+
+		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
+
+		// Assert: captured tenant has realmProvisioned = false
+		Tenant tenant = captor.getValue().tenant();
+		assertFalse(tenant.isRealmProvisioned());
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	@DisplayName("realmProvisioned is false when securityConfiguration is BASIC_AUTH")
+	void realmProvisioned_isFalseWithBasicAuth() {
+
+		// Arrange: BASIC_AUTH — no realm regardless of Keycloak availability
+		mockRealmConfigured(true);
+
+		ArgumentCaptor<CreateEntityRequest> captor =
+			ArgumentCaptor.forClass(CreateEntityRequest.class);
+		TenantResponseDTO stubDto = new TenantResponseDTO(
+			"1", "s", "s-liq", "vh", null, null, null, false);
+
+		Message<TenantResponseDTO> mockMsg = mock(Message.class);
+		when(mockMsg.body()).thenReturn(stubDto);
+		Uni<Message<TenantResponseDTO>> uni =
+			Uni.createFrom().item(mockMsg);
+		when(eventBus.<TenantResponseDTO>request(
+			eq(TenantProvisioningService.CREATE_ENTITY),
+			captor.capture()))
+			.thenReturn(uni);
+
+		TestProbe<TenantProvisioningSaga.Response> replyTo =
+			testKit.createTestProbe();
+		MockProvisioningFactory mocks = new MockProvisioningFactory();
+
+		// Act
+		testKit.spawn(TenantProvisioningSaga.create(
+			"vh", "schema", null,
+			SecurityConfiguration.BASIC_AUTH,
+			replyTo.getRef(),
+			mocks));
+
+		mocks.schemaProbe.expectMessage(Schema.Start.INSTANCE);
+		mocks.schemaAdapter.get().tell(new Schema.Success("schema"));
+		mocks.ingressProbe.expectMessage(Ingress.Start.INSTANCE);
+		mocks.ingressAdapter.get().tell(Ingress.Success.INSTANCE);
+		mocks.realmProbe.expectNoMessage();
+
+		replyTo.expectMessageClass(TenantProvisioningSaga.Success.class);
+
+		// Assert: captured tenant has realmProvisioned = false
+		Tenant tenant = captor.getValue().tenant();
+		assertFalse(tenant.isRealmProvisioned());
 	}
 
 	// --- Mock Factory Helper ---
