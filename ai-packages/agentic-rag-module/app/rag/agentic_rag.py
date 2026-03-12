@@ -422,7 +422,7 @@ class RagGraph:
             score = doc.metadata["score"]
             if score >= 0.5:
                 llm_guardrail = self._llm_input_guardrail(query)
-                if llm_guardrail != "NESSUNA":
+                if llm_guardrail != "NONE":
                     state.guardrail_check = True
                     state.guardrail_category = llm_guardrail
                 break
