@@ -307,29 +307,15 @@ class RagGraph:
             )
         else:
             rephrase_prompt_template = """
-                Analyze the current query in relation to the previous query and previous response, and rewrite it in a form optimized for information retrieval.
+                Rewrite the current query as a self-contained, context-resolved version optimized for information retrieval, given that it is a follow-up to a previous query and response.
 
-                **REWRITING PROTOCOL:**
+                **FOLLOW-UP REWRITING GUIDELINES:**
 
-                INITIAL ANALYSIS:
-                - Determine whether the current query is a follow-up or a new independent question.
-                - Identify anaphoric references, vague terms, and dependencies on previous context.
-
-                If it is a FOLLOW-UP:
-                - Resolve all anaphoric references ("this", "that", "he", "she", "it", "such", etc.).
-                - Replace vague terms with specific entities derived from the context.
-                - Add missing information to make the query completely self-sufficient.
-                - Maintain thematic continuity with the previous query.
-
-                If it is a NEW QUESTION:
-                - Preserve the semantic core of the query intact.
-                - Increase specificity and relevant keyword density.
-
-                CROSS-CUTTING GUIDELINES:
-                - Optimize for clarity, precision, and effective information retrieval.
-                - Use technical terminology when relevant.
-                - Maintain the interrogative form.
-                - Preserve the primary informational intent.
+                1. **Resolve all references**: Replace pronouns (e.g., "it", "they", "this"), demonstratives (e.g., "these", "that"), and vague terms with the specific entities, concepts, or examples mentioned in the prior exchange.
+                2. **Inject missing context**: Include any relevant background, assumptions, or details from the previous query and response that are necessary to make the query fully understandable on its own.
+                3. **Enhance clarity and specificity**: Use precise language, domain-relevant terminology, and well-defined phrases to improve searchability and reduce ambiguity.
+                4. **Preserve interrogative structure**: Keep the rewritten query in question form, reflecting the user's original intent and information need.
+                5. **Maintain thematic continuity**: Ensure the rewritten query logically follows from the prior context while standing alone as an independent, retrievable query.
             """
 
             rewrite_query_prompt = rephrase_prompt_template + (
