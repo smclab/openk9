@@ -112,6 +112,17 @@ Configure these when database type is oracle
 | `oracle.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `oracle-user-password`                    |
 | `oracle.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
 
+### Configure Security
+
+Openk9 Tenant Manager uses HTTP Basic Authentication as the default authentication method for its API endpoints.
+
+| Name                                | Description                                                        | Value                            |
+| ----------------------------------- | ------------------------------------------------------------------ | -------------------------------- |
+| `security.adminPasswordSecretName`  | K8s Secret name containing the admin password for Basic Auth       | `tenant-manager-admin-password`  |
+| `security.adminPasswordSecretKey`   | Key within the Secret holding the password                         | `password`                       |
+
+The password is injected as the `OPENK9_SECURITY_ADMIN_PASSWORD` environment variable.
+
 ### Configure Rabbitmq
 
 Openk9 Tenant Manager needs Rabbitmq to work starting from 3.1.0 version.
@@ -399,6 +410,10 @@ rabbitmq:
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"
 ```
+
+### To 2026.1.0
+
+- **Breaking:** the environment variable for the admin password secret was renamed from `OPENK9_TENANT_MANAGER_SECURITY_ADMIN_PASSWORD` to `OPENK9_SECURITY_ADMIN_PASSWORD` to match the Quarkus property `openk9.security.admin.password`. No changes to `values.yaml` keys are needed — only the injected env var name changed. If you have custom deployment overlays or Kustomize patches that reference the old env var name, update them accordingly.
 
 ### Previous versions
 

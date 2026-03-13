@@ -99,6 +99,12 @@ Openk9 Datasource service handles query parser and query construction. Following
 | `search.page.from` | Enforce a maximum value for search from pagination parameter              | `10000` |
 | `search.page.size` | Enforce a maximum value for search size pagination parameter | `200` |
 
+### Basic Auth (super-admin mode)
+
+The Datasource module supports HTTP Basic Authentication via the `OPENK9_SECURITY_ADMIN_PASSWORD` environment variable. When enabled, a single password grants the `k9-admin` role and access to **all** tenant administration panels (GraphQL, data-index, schedulers, etc.).
+
+> **Note:** This property is intentionally **not exposed** in the Helm chart. The current implementation acts as a super-admin mode with no tenant-level scoping — it needs a security review before being enabled in Kubernetes. It is available in Docker Compose development mode only.
+
 ### Datasource specific configurations
 
 Openk9 Datasource service has specific configurations that can be customized to control its behavior.

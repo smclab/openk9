@@ -115,9 +115,15 @@ To configure connection to these services following parameters are available:
 | `openk9.datasource.host`                    | Datasource service host                                                                                  | `openk9-datasource`        |
 | `openk9.datasource.port`                    | Datasource service port                                                                                  | `8080`                     |
 
+### Security and Basic Auth
+
+The API Gateway has a property `io.openk9.apigw.reject-basic-auth` (env var `IO_OPENK9_APIGW_REJECT_BASIC_AUTH`) that controls whether HTTP Basic Authentication credentials are rejected at the gateway level. The default is `true` (reject). When set to `false`, Basic Auth headers are forwarded to upstream services (tenant-manager, datasource) where the super-admin identity provider can authenticate them.
+
+> **Note:** This property is intentionally **not exposed** in the Helm chart. In Kubernetes environments, the super-admin mode (direct Basic Auth to backend services) is not yet fully supported. It is available only in Docker Compose development mode via `compose.yaml`.
+
 ### Service account
 
-Openk9 API Gateway doesn't need particular Service Account. 
+Openk9 API Gateway doesn't need particular Service Account.
 
 But if you want for some reasons associate a pre-created Service Account to Openk9 API Gateway you can do using following parameters:
 

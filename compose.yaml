@@ -127,6 +127,13 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: openk9
       SPRING_RABBITMQ_PASSWORD: openk9
+      # Basic Auth passthrough: set to 'false' to allow HTTP Basic Auth
+      # credentials to reach upstream services (tenant-manager, datasource).
+      # Default is 'true' (reject Basic Auth at the gateway). In Docker
+      # Compose dev mode we set it to 'false' so that the super-admin
+      # identity provider on backend services can authenticate requests.
+      # NOTE: In Kubernetes the super-admin mode is not yet fully supported
+      # — this property is intentionally NOT exposed in the Helm chart.
       IO_OPENK9_APIGW_REJECT_BASIC_AUTH: 'false'
     healthcheck:
       test: "curl --silent --fail http://localhost:8081/actuator/health"

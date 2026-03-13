@@ -72,7 +72,7 @@ spec:
           {{- end }}
           ############################################################
           env:
-            - name: OPENK9_TENANT_MANAGER_SECURITY_ADMIN_PASSWORD
+            - name: OPENK9_SECURITY_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.security.adminPasswordSecretName }}
