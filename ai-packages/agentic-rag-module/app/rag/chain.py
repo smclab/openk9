@@ -88,8 +88,7 @@ def get_agentic_rag(
         enable_real_time_evaluation = rag_configuration.get(
             "enable_real_time_evaluation"
         )
-
-        bypass_rag = False
+        bypass_rag = rag_configuration.get("bypass_rag")
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")

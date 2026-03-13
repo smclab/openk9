@@ -195,6 +195,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         enable_real_time_evaluation = json_config.get(
             "enable_real_time_evaluation", False
         )
+        bypass_rag = json_config.get("bypass_rag", False)
 
         configuration = {
             "prompt": prompt,
@@ -206,6 +207,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "chunk_window": chunk_window,
             "reformulate": reformulate,
             "enable_conversation_title": enable_conversation_title,
+            "bypass_rag": bypass_rag,
             "rerank": rerank,
             "metadata": metadata,
         }
