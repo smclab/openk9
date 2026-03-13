@@ -298,6 +298,8 @@ public class TenantDbService {
 			.clientId(row.getString("client_id"))
 			.clientSecret(row.getString("client_secret"))
 			.issuerUri(row.getString("issuer_uri"))
+			.securityConfiguration(SecurityConfiguration.valueOf(
+				row.getString("security_configuration")))
 			.realmProvisioned(row.getBoolean("realm_provisioned"))
 			.build();
 	}

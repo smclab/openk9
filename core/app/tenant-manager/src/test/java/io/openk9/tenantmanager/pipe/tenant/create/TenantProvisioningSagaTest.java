@@ -132,6 +132,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
+			SecurityConfiguration.LEGACY,
 			true);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -185,6 +186,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
+			SecurityConfiguration.LEGACY,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -250,6 +252,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
+			SecurityConfiguration.LEGACY,
 			true);
 
 		Message<TenantResponseDTO> tenantMsg = mock(Message.class);
@@ -301,6 +304,7 @@ class TenantProvisioningSagaTest {
 			null,
 			null,
 			null,
+			SecurityConfiguration.BASIC_AUTH,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -352,6 +356,7 @@ class TenantProvisioningSagaTest {
 			null,
 			null,
 			null,
+			SecurityConfiguration.BASIC_AUTH,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -426,7 +431,8 @@ class TenantProvisioningSagaTest {
 		ArgumentCaptor<CreateEntityRequest> captor =
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
-			"1", "s", "s-liq", "vh", null, null, null, true);
+			"1", "s", "s-liq", "vh", null, null, null,
+			SecurityConfiguration.LEGACY, true);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);
@@ -474,7 +480,8 @@ class TenantProvisioningSagaTest {
 		ArgumentCaptor<CreateEntityRequest> captor =
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
-			"1", "s", "s-liq", "vh", "cid", "csec", "iss", false);
+			"1", "s", "s-liq", "vh", "cid", "csec", "iss",
+			SecurityConfiguration.LEGACY, false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);
@@ -522,7 +529,8 @@ class TenantProvisioningSagaTest {
 		ArgumentCaptor<CreateEntityRequest> captor =
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
-			"1", "s", "s-liq", "vh", null, null, null, false);
+			"1", "s", "s-liq", "vh", null, null, null,
+			SecurityConfiguration.BASIC_AUTH, false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);

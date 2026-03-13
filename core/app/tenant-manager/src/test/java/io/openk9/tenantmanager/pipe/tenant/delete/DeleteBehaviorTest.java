@@ -29,6 +29,7 @@ import io.openk9.app.manager.grpc.DeleteAllResourcesResponse;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.actor.TypedActor;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
+import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.pipe.tenant.delete.message.DeleteMessage;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.smallrye.mutiny.Uni;
@@ -58,7 +59,8 @@ class DeleteBehaviorTest {
 		// Arrange
 		TenantResponseDTO tenant = new TenantResponseDTO(
 			"42", "schema1", "schema1-liq", "host1.local",
-			"cid", "csec", "issuer", true);
+			"cid", "csec", "issuer",
+			SecurityConfiguration.LEGACY, true);
 
 		mockFindTenant("host1.local", tenant);
 		mockDeleteSchema();
@@ -95,7 +97,8 @@ class DeleteBehaviorTest {
 		// Arrange
 		TenantResponseDTO tenant = new TenantResponseDTO(
 			"43", "schema2", "schema2-liq", "host2.local",
-			null, null, null, false);
+			null, null, null,
+			SecurityConfiguration.BASIC_AUTH, false);
 
 		mockFindTenant("host2.local", tenant);
 		mockDeleteSchema();

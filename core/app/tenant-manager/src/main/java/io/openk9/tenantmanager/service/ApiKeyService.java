@@ -193,13 +193,13 @@ public class ApiKeyService {
 	public Uni<Boolean> revoke(String apiKeyId) {
 		var id = Long.parseLong(apiKeyId);
 		return pool.withTransaction(conn -> getApiKeyIdentifier(conn, id)
-			.flatMap(apiKeyResponse -> {
-				if (apiKeyResponse == null) {
+			.flatMap(apiKeyIdentifier -> {
+				if (apiKeyIdentifier == null) {
 					return Uni.createFrom().item(false);
 				}
 
-				var tenantName = apiKeyResponse.tenantName();
-				var hash = apiKeyResponse.hash();
+				var tenantName = apiKeyIdentifier.tenantName();
+				var hash = apiKeyIdentifier.hash();
 
 				return conn.preparedQuery(REVOKE_SQL)
 					.execute(Tuple.of(ApiKey.Status.REVOKED, id))
@@ -207,10 +207,11 @@ public class ApiKeyService {
 						producer,
 						res.rowCount(),
 						new TenantEvent.ApiKeyRevoked(tenantName, hash)
-					));
+					))
+					.map(v -> true);
 				}
 			)
-			.map(v -> true));
+		);
 	}
 
 	private static ApiKeyResponse mapApiKeyResponse(Row row) {

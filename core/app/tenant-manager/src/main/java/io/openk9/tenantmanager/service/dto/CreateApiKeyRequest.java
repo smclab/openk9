@@ -27,7 +27,7 @@ public record CreateApiKeyRequest(
 	@NonNull String tenantName,
 	@NonNull String name,
 	@NonNull ApiGroup apiGroup,
-	@NonNull OffsetDateTime expirationDate
+	OffsetDateTime expirationDate
 ) {
 
 	public static CreateApiKeyRequest of(

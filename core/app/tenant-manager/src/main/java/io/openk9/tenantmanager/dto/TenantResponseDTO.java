@@ -17,6 +17,8 @@
 
 package io.openk9.tenantmanager.dto;
 
+import io.openk9.tenantmanager.model.SecurityConfiguration;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import lombok.Builder;
 
@@ -30,5 +32,6 @@ public record TenantResponseDTO(
 	String clientId,
 	String clientSecret,
 	String issuerUri,
+	SecurityConfiguration securityConfiguration,
 	boolean realmProvisioned) {
 }
