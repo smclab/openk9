@@ -188,14 +188,14 @@ public class ApiKeyService {
 	 *
 	 * @param apiKeyId the identifier of this api key.
 	 *
-	 * @return nothing.
+	 * @return a boolean indicating true if a record was deleted, false otherwise.
 	 */
-	public Uni<Void> revoke(String apiKeyId) {
-		var id = Long.valueOf(apiKeyId);
+	public Uni<Boolean> revoke(String apiKeyId) {
+		var id = Long.parseLong(apiKeyId);
 		return pool.withTransaction(conn -> getApiKeyIdentifier(conn, id)
 			.flatMap(apiKeyResponse -> {
 				if (apiKeyResponse == null) {
-					return Uni.createFrom().voidItem();
+					return Uni.createFrom().item(false);
 				}
 
 				var tenantName = apiKeyResponse.tenantName();
@@ -209,8 +209,8 @@ public class ApiKeyService {
 						new TenantEvent.ApiKeyRevoked(tenantName, hash)
 					));
 				}
-			).replaceWithVoid()
-		);
+			)
+			.map(v -> true));
 	}
 
 	private static ApiKeyResponse mapApiKeyResponse(Row row) {

@@ -43,9 +43,6 @@ public class ApiKeyGraphqlResource {
 	@Inject
 	ApiKeyService apiKeyService;
 
-	@Inject
-	TenantDbService tenantDbService;
-
 	@Query
 	public Uni<List<ApiKeyResponse>> getApiKeys(@NonNull String tenantId) {
 		return apiKeyService.findAllByTenantId(Long.parseLong(tenantId));
@@ -62,7 +59,7 @@ public class ApiKeyGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Void> revokeApiKey(@NonNull @Id String id) {
+	public Uni<Boolean> revokeApiKey(@NonNull @Id String id) {
 		return apiKeyService.revoke(id);
 	}
 
