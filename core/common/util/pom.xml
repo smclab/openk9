@@ -36,7 +36,7 @@
 	<profiles>
 		<profile>
 			<!-- enable junit long-running tests -->
-			<id>long-running-test</id>
+			<id>performance-test</id>
 			<properties>
 				<junit-excluded-groups/>
 			</properties>
