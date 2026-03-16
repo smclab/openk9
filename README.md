@@ -16,54 +16,88 @@ OpenK9 is a new Cognitive Search Engine that allows you to build next generation
 
 ## Quickstart
 
-To make Openk9 run on your machine with latest stable release, you just need [docker](https://docs.docker.com/get-started/get-docker/) installed and run:
+To run OpenK9 on your machine with the latest stable release, you just need [Docker](https://docs.docker.com/get-started/get-docker/) installed.
 
 ```bash
 docker compose up -d
 ```
 
-Monitor logs of *openk9-initializer* container to check when all is started:
+Once started, OpenK9 is running at **https://demo.openk9.localhost**.
+
+### Access
+
+| Panel | URL | Credentials |
+|---|---|---|
+| Admin UI | [https://demo.openk9.localhost/admin](https://demo.openk9.localhost/admin) | `admin` / `admin` |
+| Tenant UI | [https://demo.openk9.localhost/tenant](https://demo.openk9.localhost/tenant) | `admin` / `admin` |
+| Search | [https://demo.openk9.localhost](https://demo.openk9.localhost) | — |
+
+All administration panels use **HTTP Basic Authentication** with `admin` / `admin`.
+
+### Compose profiles
+
+The default `compose.yaml` starts the core stack (PostgreSQL, OpenSearch, RabbitMQ, API Gateway, backend services, frontends, and Caddy reverse proxy). Additional capabilities are available as compose overlays:
+
+| Profile | Compose file | What it adds |
+|---|---|---|
+| File handling | `compose-with-file-handling.yaml` | MinIO, File Manager, Tika, MinIO Connector |
+| Gen AI | `compose-with-gen-ai.yaml` | RAG module, Embedding module, Talk-To chat |
+| OAuth2 server | `compose-with-oauth2-server.yaml` | Keycloak identity provider (optional) |
+
+To add overlays, pass extra `-f` flags:
 
 ```bash
-docker logs -f openk9-initializer
+# Core + File Handling + Gen AI
+docker compose -f compose.yaml -f compose-with-file-handling.yaml -f compose-with-gen-ai.yaml up -d
+
+# Everything (core + all overlays)
+docker compose -f compose.yaml -f compose-with-file-handling.yaml -f compose-with-gen-ai.yaml -f compose-with-oauth2-server.yaml up -d
 ```
 
-Following message is displayed when all is started:
+With the Gen AI profile, conversational search is available at [https://demo.openk9.localhost/chat](https://demo.openk9.localhost/chat).
+
+## Development with k9.sh
+
+For developers building from source, the `k9.sh` script wraps Maven, Docker, and Docker Compose into a single CLI.
+
+### Prerequisites
+
+- Docker (with Compose v2)
+- Java 21+ and Maven (via bundled `mvnw`)
+- Node.js / Yarn (for frontend builds)
+
+### Quick start
 
 ```bash
-🚀 Starting Data Seeder...
-1️⃣  Creating Tenant...
-✅ 1/4 Tenant Created. Schema: grookey
-🕵️  Hunting for password in logs...
-🔎 Scanning logs for password (Attempt 1/10)...
-2️⃣  Initializing Default Data...
-✅ 2/4 Tenant Initialized.
-3️⃣  Configures Connectors...
-✅ 3/4 Web Connector configured.
-✅ 4/4 Minio Connector configured.
-🔐 FOUND PASSWORD: 52c1d7c5-2e50-471d-8b3f-12d286dafae3
-🎉 Done.
+./k9.sh start                                    # Start core services (pulls images)
+./k9.sh start --build                            # Build from source, then start
+./k9.sh start --profile=with-gen-ai --build      # Build and start with AI services
+./k9.sh start --profile=all                      # Start everything
 ```
 
-After all components have been started, openk9 is runinng with initial configuration at address *https://demo.openk9.localhost*.
-
-To access to admin panel go to [https://demo.openk9.localhost/admin](https://demo.openk9.localhost/admin). Access with username *k9admin* and using password founded in openk9-initizializer logs.
-
-Search frontend is available here:
-
-- [Standalone search frontend](http://demo.openk9.localhost) to test search on indexed data.
-
-If you want to try Openk9 with also File Handling and Gen Ai components use [compose-all.yaml](compose-all.yaml) file:
+### Common workflows
 
 ```bash
-docker compose -f compose.yaml -f compose-all.yaml up -d
+./k9.sh build datasource                         # Build a single service
+./k9.sh build datasource --skip-mvn-shared-deps  # Skip shared deps if unchanged
+./k9.sh restart datasource --build               # Rebuild and restart one service
+./k9.sh logs tenant-manager                      # Follow logs for a service
+./k9.sh down                                     # Tear down (removes volumes)
 ```
 
-To test conversational search:
+### Profiles
 
-- [Conversational search frontend](http://demo.openk9.localhost/chat) to chat with indexed data
+Profiles are additive. Core services are always included.
 
-Enjoy Openk9!
+| Profile | Services added |
+|---|---|
+| `core` (default) | PostgreSQL, OpenSearch, RabbitMQ, API Gateway, Datasource, Tenant Manager, Ingestion, Searcher, frontends, Caddy |
+| `with-file-handling` | MinIO, File Manager, Tika, MinIO Connector |
+| `with-gen-ai` | RAG module, Embedding module, Talk-To |
+| `with-oauth2-server` | Keycloak OAuth2/OIDC identity provider |
+| `all` | All of the above |
+
+Run `./k9.sh` without arguments for full usage information.
 
 ## Installation for production
 
