@@ -26,7 +26,6 @@ data:
   
   QUARKUS_DATASOURCE_REACTIVE_IDLE_TIMEOUT : {{ .Values.quarkus.ReactiveIdleTimeout | quote }}
   QUARKUS_DATASOURCE_REACTIVE_MAX_SIZE : {{ .Values.quarkus.ReactiveMaxSize | quote }}
-  QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: 'none'
   QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
   QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
 

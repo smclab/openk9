@@ -34,7 +34,6 @@ data:
     "unknown"
   {{- end }}
 
-  QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: {{ .Values.hibernate.orm.databaseGeneration | quote }}
   QUARKUS_HIBERNATE_ORM_LOG_SQL: {{ .Values.hibernate.orm.logSql | quote }}
 
   # Quarkus env generic variables

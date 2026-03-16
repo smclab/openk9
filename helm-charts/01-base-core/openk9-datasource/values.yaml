@@ -122,7 +122,6 @@ messaging:
 ## Hibernate ORM configuration
 hibernate:
   orm:
-    databaseGeneration: "none"
     logSql: false
     logLevel: 'ERROR'
 
