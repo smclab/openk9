@@ -944,19 +944,17 @@ class RagGraph:
 
     def response_evaluation_node(self, state: GraphState) -> GraphState:
         clarity_llm_judge_prompt = """
-                In questa attività, ti verranno presentati una domanda e una risposta. Il tuo obiettivo è valutare la chiarezza della risposta nell'affrontare la domanda. Una risposta chiara è precisa, coerente e affronta direttamente la domanda senza introdurre complessità o ambiguità non necessarie. Una risposta non chiara è vaga, disorganizzata o difficile da capire, anche se potrebbe essere fattualmente corretta.
+                In this task, you will be presented with a question and an answer. Your goal is to evaluate the clarity of the answer in addressing the question. A clear answer is precise, coherent, and directly addresses the question without introducing unnecessary complexity or ambiguity. An unclear answer is vague, disorganized, or difficult to understand, even if it might be factually correct.
+                After analyzing the question and the answer, you must provide the following structured output in three parts, in this order and separated by a blank line:
+                - judgment: A single word: "CLEAR" or "UNCLEAR".
+                - vote: An integer score from 0 to 10 that quantifies the degree of clarity, where 0 indicates a total lack of clarity and 10 indicates perfect clarity.
+                - explanation: A detailed explanation of your reasoning. Analyze how the answer does or does not meet the criteria for clarity (precision, coherence, structure, language, relevance). The explanation must be self-contained and must not repeat the terms "JUDGMENT" or "VOTE". Avoid anticipating the final judgment at the beginning of the explanation.
 
-                Dopo aver analizzato la domanda e la risposta, devi fornire il seguente output strutturato in tre parti, in questo ordine e separati da una riga vuota:
-
-                1. **judgment:** Una singola parola: "CLEAR" o "UNCLEAR".
-                2. **vote:** Un punteggio numerico intero da 0 a 10 che quantifica il grado di chiarezza, dove 0 indica assenza totale di chiarezza e 10 indica chiarezza perfetta.
-                3. **explanation:** Una spiegazione dettagliata del tuo ragionamento. Analizza come la risposta soddisfi o meno i criteri di chiarezza (precisione, coerenza, struttura, linguaggio, pertinenza). La spiegazione deve essere autonoma e non deve ripetere i termini "GIUDIZIO" o "VOTO". Evita di anticipare il giudizio finale all'inizio della spiegazione.
-
-                Considera attentamente la domanda e la risposta prima di determinare la tua valutazione.
+                Carefully consider the question and the answer before determining your evaluation.
 
                 [BEGIN DATA]
-                Domanda: {query}
-                Risposta: {response}
+                Question: {query}
+                Answer: {response}
                 [END DATA]
                 """
 
