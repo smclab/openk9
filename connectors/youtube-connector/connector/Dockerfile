@@ -1,19 +1,24 @@
-FROM python:3.13-slim
+FROM python:3.12
 
-COPY requirements.txt /requirements.txt
+COPY ./connector/requirements.txt /requirements.txt
 
 # Install utils
-RUN  apt-get update \
-    && apt-get install -y wget \
-    && apt-get install -y unzip \
-    && apt-get install -y dos2unix \
+RUN apt-get update && apt-get install -y \
+    wget \
+    unzip \
+    dos2unix \
+    curl \
+    ffmpeg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install -r requirements.txt
 
-ADD docker-entrypoint.sh /etc/docker-entrypoint.sh
+ADD ./connector/docker-entrypoint.sh /etc/docker-entrypoint.sh
 
-COPY app /app
+COPY ./connector/app /app
 
 WORKDIR /app
 

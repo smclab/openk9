@@ -1,0 +1,19 @@
+services:
+  youtube-connector:
+    networks:
+      - ytdlp-net
+    environment:
+      POT_PROVIDER_URL: "http://bgutil-provider:4416"
+    depends_on:
+      - bgutil-provider
+  bgutil-provider:
+    image: brainicism/bgutil-ytdlp-pot-provider:1.3.1
+    container_name: bgutil-provider
+    networks:
+      - ytdlp-net
+    ports:
+      - "4416:4416"
+
+networks:
+  ytdlp-net:
+    driver: bridge

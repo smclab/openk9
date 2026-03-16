@@ -5,7 +5,7 @@ import json
 
 from typing import Dict, Optional
 from fastapi import FastAPI
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from starlette import status
 from logging.config import dictConfig
 
@@ -21,26 +21,62 @@ app = FastAPI()
 class YoutubeRequest(BaseModel):
 	youtubeChannelUrl: str
 	subtitleLang: list
+	doExtractAudio: bool = False
 	audioFormat: str = "m4a"
+	doExtractComments: bool = False
+	maxTotalComments: int = None
+	maxRootComments: int = None
+	maxTotalReplies: int = None
+	maxRootCommentsReplies: int = None
+	socketTimeout: int = 20
+	sleepIntervalRequests: int = 5
+	sleepInterval: int = 5
+	doUseRandomWaitTime: bool = True
+	maxSleepInterval: int = 30
+	retriesCount: int = 10
+	maxReadBytesSize: int = 2048
 	timestamp: int
 	datasourceId: int
 	scheduleId: str
 	tenantId: str
 
+	@model_validator(mode='after')
+	def validate(self) -> 'YoutubeRequest':
+		if self.doUseRandomWaitTime and self.maxSleepInterval < self.sleepInterval:
+			logger.warning(f"maxSleepInterval less than sleepInterval: Setting maxSleepInterval to sleepInterval + 5 seconds")
+			self.maxSleepInterval = self.sleepInterval + 5
+		return self
 
-@app.post('/execute')
+
+@app.post('/getData')
 def get_data(request: YoutubeRequest):
 	request = request.dict()
 
 	youtube_channel_url = request['youtubeChannelUrl']
 	subtitle_lang = request['subtitleLang']
+	do_extract_audio = request['doExtractAudio']
 	audio_format = request['audioFormat']
 	timestamp = request["timestamp"]
 	datasource_id = request["datasourceId"]
 	schedule_id = request['scheduleId']
 	tenant_id = request['tenantId']
 
-	data_extraction = DataExtraction(youtube_channel_url, subtitle_lang, audio_format, timestamp, datasource_id, schedule_id, tenant_id)
+	socket_timeout = request['socketTimeout']
+	sleep_interval_requests = request['sleepIntervalRequests']
+	sleep_interval = request['sleepInterval']
+	do_use_random_wait_time = request['doUseRandomWaitTime']
+	max_sleep_interval = request['maxSleepInterval']
+	retries_count = request['retriesCount']
+	max_read_bytes_size = request['maxReadBytesSize']
+
+	do_extract_comments = request['doExtractComments']
+	max_total_comments = request['maxTotalComments']
+	max_root_comments = request['maxRootComments']
+	max_total_replies = request['maxTotalReplies']
+	max_root_comments_replies = request['maxRootCommentsReplies']
+	max_comments = [str(max_total_comments or 'all'), str(max_root_comments or 'all'), str(max_total_replies or 'all'), str(max_root_comments_replies or 'all')]
+
+	data_extraction = DataExtraction(youtube_channel_url, subtitle_lang, do_extract_audio, audio_format, do_extract_comments, max_comments, socket_timeout, sleep_interval_requests, sleep_interval, do_use_random_wait_time, max_sleep_interval, retries_count, max_read_bytes_size, timestamp, datasource_id, schedule_id, tenant_id)
 
 	thread = threading.Thread(target=data_extraction.extract_recent)
 	thread.start()

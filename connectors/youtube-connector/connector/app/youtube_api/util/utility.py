@@ -1,3 +1,6 @@
+import base64
+import hashlib
+
 import requests
 import logging
 from logging.config import dictConfig
@@ -51,4 +54,20 @@ def format_raw_content(model):
 
     return raw_content.replace('\t', ' ').replace("\n", " ").replace("\\", " ") \
         .replace("..", "").replace("__", "").replace(";", "").replace(",", "").lower().strip()
+
+
+def hash_str_to_int(s: str) -> int:
+    """
+    Args:
+        s: String to be hashed
+
+    Returns:
+        String hashed to int
+    """
+    return int(hashlib.sha1(s.encode()).hexdigest(), 16)
+
+
+def get_as_base64(response):
+    data = base64.b64encode(response).decode()
+    return data
 

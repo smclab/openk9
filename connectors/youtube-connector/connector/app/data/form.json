@@ -40,6 +40,26 @@
         }
       },
     {
+      "label": "Do Extract Audio?",
+      "name": "doExtractAudio",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "true, false",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
       "label": "Audio Format",
       "name": "audioFormat",
       "type": "text",
@@ -53,6 +73,246 @@
       ],
       "placeholder": "mp4, m4a...",
       "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Socket Timeout",
+      "name": "socketTimeout",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 20,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Time to wait for unresponsive hosts, in seconds (optional, if not specified waits 20 seconds)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Sleep Interval Requests",
+      "name": "sleepIntervalRequests",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 5,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Number of seconds to sleep between requests during extraction (optional, if not specified waits 5 seconds)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Sleep Interval",
+      "name": "sleepInterval",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 5,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Number of seconds to sleep between downloads during extraction (optional, if not specified waits 5 seconds)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Use Random Wait Time",
+      "name": "doUseRandomWaitTime",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "True uses random sleep time between sleepInterval and maxSleepInterval, false sleep time is sleepInterval",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Sleep Interval",
+      "name": "maxSleepInterval",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 30,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Maximum number of seconds to sleep between downloads during extraction (optional, used if 'Use Random Wait Time' is set to True)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Retries Count",
+      "name": "retriesCount",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 10,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Times to retry during extraction, value used for generic errors and download errors (optional, if not specified do retry 10 times)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Read Bytes Size",
+      "name": "maxReadBytesSize",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 2048,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Download speed limit, in bytes/sec (optional, if not specified downloads 2048 bytes/sec)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Do Extract Comments?",
+      "name": "doExtractComments",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "true, false",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Total Comments",
+      "name": "maxTotalComments",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": null,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Root Comments",
+      "name": "maxRootComments",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": null,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Total Replies",
+      "name": "maxTotalReplies",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": null,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Max Root Comments Replies",
+      "name": "maxRootCommentsReplies",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": null,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Maximum number of replies per root comment to extract",
       "validator": {
         "min": 0,
         "max": 100,
