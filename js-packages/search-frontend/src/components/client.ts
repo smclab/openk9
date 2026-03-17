@@ -395,7 +395,7 @@ export function OpenK9Client({
         const jsURL = tenant + `/api/datasource/templates/${id}/compiled`;
         // @ts-ignore
 
-        const code = await import(/* @vite-ignore */ jsURL);
+        const code = await import(/* @vite-ignore */ /* webpackIgnore: true */ jsURL);
         return code.exports.template;
       } catch (err) {
         console.warn(err);

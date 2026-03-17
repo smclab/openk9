@@ -63,6 +63,7 @@
     "@types/react-date-range": "^1.4.10",
     "@types/react-dates": "^21.8.7",
     "react": "^19.2.0",
+    "react-query": "^3.38.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
