@@ -24,14 +24,6 @@ from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
-from dotenv import load_dotenv
-from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-from opensearchpy import OpenSearch
-from phoenix.otel import register
-from sse_starlette.sse import EventSourceResponse
-
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
     get_tenant_manager_configuration,
@@ -45,7 +37,14 @@ from app.utils.embedding import documents_embedding
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
-from app.utils.scheduler import start_document_deletion_scheduler
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from google.protobuf.struct_pb2 import Struct
+from opensearchpy import OpenSearch
+from phoenix.otel import register
+from sse_starlette.sse import EventSourceResponse
 
 load_dotenv()
 
@@ -1593,6 +1592,127 @@ async def upload_files(
                 "failed_files": failed_files,
             },
         )
+
+
+def save_domains_documents(opensearch_host: str, documents: list, vector_size: int):
+    open_search_client = OpenSearch(
+        hosts=[opensearch_host],
+    )
+    guardrails_documents_index = "domain-documents-index"
+
+    index_actions = []
+    for doc in documents:
+        index_actions.append({"index": {"_index": guardrails_documents_index}})
+        index_actions.append(doc)
+
+    if not open_search_client.indices.exists(index=guardrails_documents_index):
+        index_body = {
+            "settings": {"index": {"knn": True}},
+            "mappings": {
+                "properties": {
+                    "timestamp": {"type": "date"},
+                    "chunkText": {"type": "text"},
+                    "domain": {"type": "keyword"},
+                    "vector": {
+                        "type": "knn_vector",
+                        "dimension": vector_size,
+                    },
+                }
+            },
+        }
+
+        open_search_client.indices.create(
+            index=guardrails_documents_index,
+            body=index_body,
+        )
+
+        pipeline_body = {
+            "description": "Post processor for hybrid search",
+            "phase_results_processors": [
+                {
+                    "normalization-processor": {
+                        "normalization": {"technique": "min_max"},
+                        "combination": {
+                            "technique": "arithmetic_mean",
+                            "parameters": {"weights": [0.5, 0.5]},
+                        },
+                    }
+                }
+            ],
+        }
+
+        open_search_client.transport.perform_request(
+            "PUT", f"/_search/pipeline/{SEARCH_PIPELINE}", body=pipeline_body
+        )
+
+        open_search_client.indices.put_settings(
+            index=guardrails_documents_index,
+            body={"index": {"search": {"default_pipeline": SEARCH_PIPELINE}}},
+        )
+
+    if index_actions:
+        try:
+            logger.info(f"Indexing {len(documents)} documents in bulk")
+            response = open_search_client.bulk(body=index_actions)
+
+            if response.get("errors"):
+                logger.error("Some documents failed to index:")
+                for item in response.get("items", []):
+                    if "error" in item.get("index", {}):
+                        logger.error(
+                            f"Failed to index document: {item['index']['error']}"
+                        )
+            else:
+                logger.info(f"Successfully indexed {len(documents)} documents")
+                return f"Successfully indexed {len(documents)} documents"
+
+        except Exception as e:
+            print(f"Bulk indexing failed: {e}")
+            return f"Bulk indexing failed: {e}"
+
+
+@app.post("/api/rag/embed-domains")
+async def embed_domains(
+    documents: list[dict],
+    request: Request,
+    headers: Annotated[models.CommonHeadersMinimal, Header()],
+):
+    if headers.x_forwarded_host:
+        virtual_host = headers.x_forwarded_host.split(",")[0]
+    else:
+        logger.error("x_forwarded_host header is missing or empty.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing x_forwarded_host header.",
+        )
+
+    embedding_model_configuration = get_embedding_model_configuration(
+        grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
+    )
+    vector_size = embedding_model_configuration.get("vector_size")
+
+    embedded_documents = []
+
+    for doc in documents:
+        text = doc.get("text")
+        domain = doc.get("domain", "unknown")  # default safe
+
+        document = {
+            "text": text,
+        }
+
+        embedded_document = documents_embedding(
+            grpc_host_embedding=GRPC_EMBEDDING_MODULE_HOST,
+            embedding_model_configuration=embedding_model_configuration,
+            document=document,
+        )
+
+        for chunk in embedded_document:
+            chunk["domain"] = domain
+
+        embedded_documents.extend(embedded_document)
+
+    return save_domains_documents(OPENSEARCH_HOST, embedded_documents, vector_size)
 
 
 @app.get(
