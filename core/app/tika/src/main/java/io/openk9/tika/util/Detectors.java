@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import jakarta.enterprise.context.ApplicationScoped;
 
-import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
@@ -40,6 +39,6 @@ public class Detectors {
 
 	}
 
-	private final Detector _detector = new DefaultDetector();
+	private final Detector _detector = new SafeDetector();
 
 }
