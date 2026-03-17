@@ -100,6 +100,26 @@
       }
     },
     {
+      "label": "Sleep Interval Subtitles",
+      "name": "sleepIntervalSubtitles",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": 60,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Number of seconds to sleep between requests during extraction (optional, if not specified waits 60 seconds)",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
       "label": "Sleep Interval Requests",
       "name": "sleepIntervalRequests",
       "type": "number",
@@ -313,6 +333,26 @@
       ],
       "placeholder": "",
       "info": "Maximum number of replies per root comment to extract",
+      "validator": {
+        "min": 0,
+        "max": 100,
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Verbose Logs",
+      "name": "verbose",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "true, false",
+      "info": "",
       "validator": {
         "min": 0,
         "max": 100,

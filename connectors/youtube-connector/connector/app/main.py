@@ -29,12 +29,14 @@ class YoutubeRequest(BaseModel):
 	maxTotalReplies: int = None
 	maxRootCommentsReplies: int = None
 	socketTimeout: int = 20
+	sleepIntervalSubtitles: int = 60
 	sleepIntervalRequests: int = 5
 	sleepInterval: int = 5
 	doUseRandomWaitTime: bool = True
 	maxSleepInterval: int = 30
 	retriesCount: int = 10
 	maxReadBytesSize: int = 2048
+	verbose: bool = True
 	timestamp: int
 	datasourceId: int
 	scheduleId: str
@@ -62,12 +64,15 @@ def get_data(request: YoutubeRequest):
 	tenant_id = request['tenantId']
 
 	socket_timeout = request['socketTimeout']
+	sleep_interval_subtitles = request['sleepIntervalSubtitles']
 	sleep_interval_requests = request['sleepIntervalRequests']
 	sleep_interval = request['sleepInterval']
 	do_use_random_wait_time = request['doUseRandomWaitTime']
 	max_sleep_interval = request['maxSleepInterval']
 	retries_count = request['retriesCount']
 	max_read_bytes_size = request['maxReadBytesSize']
+
+	verbose = request['verbose']
 
 	do_extract_comments = request['doExtractComments']
 	max_total_comments = request['maxTotalComments']
@@ -76,7 +81,7 @@ def get_data(request: YoutubeRequest):
 	max_root_comments_replies = request['maxRootCommentsReplies']
 	max_comments = [str(max_total_comments or 'all'), str(max_root_comments or 'all'), str(max_total_replies or 'all'), str(max_root_comments_replies or 'all')]
 
-	data_extraction = DataExtraction(youtube_channel_url, subtitle_lang, do_extract_audio, audio_format, do_extract_comments, max_comments, socket_timeout, sleep_interval_requests, sleep_interval, do_use_random_wait_time, max_sleep_interval, retries_count, max_read_bytes_size, timestamp, datasource_id, schedule_id, tenant_id)
+	data_extraction = DataExtraction(youtube_channel_url, subtitle_lang, do_extract_audio, audio_format, do_extract_comments, max_comments, socket_timeout, sleep_interval_subtitles, sleep_interval_requests, sleep_interval, do_use_random_wait_time, max_sleep_interval, retries_count, max_read_bytes_size, verbose, timestamp, datasource_id, schedule_id, tenant_id)
 
 	thread = threading.Thread(target=data_extraction.extract_recent)
 	thread.start()

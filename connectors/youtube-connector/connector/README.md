@@ -24,7 +24,9 @@ This endpoint takes different arguments in JSON raw body:
 - **audioFormat**: audio format extracted (optional, if not specified extract "m4a" format)
   - **example**: m4a, mp4
 - **socketTimeout**: Time to wait for unresponsive hosts, in seconds (optional, if not specified waits 20 seconds)
-- **sleepIntervalRequests**: Number of seconds to sleep between requests during extraction (optioanl, if not specified waits 5 seconds)
+- **sleepIntervalSubtitles**: Number of seconds to sleep between subtitles request (optional, if not specified waits 60 seconds)
+  - **optimal**: 60 seconds (can be lowered)
+- **sleepIntervalRequests**: Number of seconds to sleep between requests during extraction (optional, if not specified waits 5 seconds)
   - **optimal**: Between 5 and 10 seconds (more if needed)
 - **sleepInterval**: Number of seconds to sleep between downloads during extraction (optional, if not specified waits 5 seconds)
 - **doUseRandomWaitTime**: True uses random sleep time between sleepInterval and maxSleepInterval, false sleep time is sleepInterval (optional, default True)
@@ -40,6 +42,7 @@ This endpoint takes different arguments in JSON raw body:
   - **values**: [null] extract all, [int] extract until the specified number
 - **maxRootCommentsReplies**: Maximum number of replies per root comment to extract (optional, if not specified extract all)
   - **values**: [null] extract all, [int] extract until the specified number
+- **verbose**: Do use verbose logs yt-dlp (optional, default True)
 - **datasourceId**: id of datasource
 - **tenantId**: id of tenant
 - **scheduleId**: id of schedulation
@@ -56,6 +59,7 @@ curl --location --request POST 'http://localhost:5000/getData' \
     "doExtractAudio": true,
     "audioFormat": "m4a",
     "socketTimeout": 20,
+    "sleepIntervalSubtitles": 60,
     "sleepIntervalRequests": 5,
     "sleepInterval": 5,
     "doUseRandomWaitTime": true,
@@ -67,6 +71,7 @@ curl --location --request POST 'http://localhost:5000/getData' \
     "maxRootComments": null,
     "maxTotalReplies": 500,
     "maxRootCommentsReplies": 100,
+    "verbose": true,
     "datasourceId": 1,
     "tenantId": "1",
     "scheduleId": "1",

@@ -29,7 +29,7 @@ MAX_WORKERS = 5
 
 
 class DataExtraction(threading.Thread):
-	def __init__(self, youtube_channel_url, subtitle_lang, do_extract_audio, audio_format, do_extract_comments, max_comments, socket_timeout, sleep_interval_requests, sleep_interval, do_use_random_wait_time, max_sleep_interval, retries_count, max_read_bytes_size, timestamp, datasource_id, schedule_id, tenant_id):
+	def __init__(self, youtube_channel_url, subtitle_lang, do_extract_audio, audio_format, do_extract_comments, max_comments, socket_timeout, sleep_interval_subtitles, sleep_interval_requests, sleep_interval, do_use_random_wait_time, max_sleep_interval, retries_count, max_read_bytes_size, verbose, timestamp, datasource_id, schedule_id, tenant_id):
 
 		super(DataExtraction, self).__init__()
 		self.youtube_channel_url = youtube_channel_url
@@ -42,12 +42,15 @@ class DataExtraction(threading.Thread):
 		self.tenant_id = tenant_id
 
 		self.socket_timeout = socket_timeout
+		self.sleep_interval_subtitles = sleep_interval_subtitles
 		self.sleep_interval_requests = sleep_interval_requests
 		self.sleep_interval = sleep_interval
 		self.do_use_random_wait_time = do_use_random_wait_time
 		self.max_sleep_interval = max_sleep_interval
 		self.retries_count = retries_count
 		self.max_read_bytes_size = max_read_bytes_size
+
+		self.verbose = verbose
 
 		self.do_extract_comments = do_extract_comments
 		self.max_comments = max_comments
@@ -88,6 +91,8 @@ class DataExtraction(threading.Thread):
 				'preferredcodec': self.audio_format,  # Final extension
 			})
 
+		# TODO: Add as request parameter (bool)
+		do_write_subtitles = self.subtitle_lang is not None and len(self.subtitle_lang) > 0
 		self.ydl_options_download = {
 			'skip_download': not self.do_extract_audio,  # Skips download if not extract audio
 			'format': 'bestaudio/best',  # Download audio only
@@ -95,8 +100,8 @@ class DataExtraction(threading.Thread):
 			'ignoreerrors': True,
 
 			# --- Subtitles Download ---
-			'writesubtitles': True,  # User generated subtitles
-			'writeautomaticsub': True,  # Automatic subtitles
+			'writesubtitles': do_write_subtitles,  # User generated subtitles
+			'writeautomaticsub': do_write_subtitles,  # Automatic subtitles
 			'subtitleslangs': self.subtitle_lang,  # list on languages
 			# TODO: Add as request parameter (Enum)
 			'subtitlesformat': 'srv1',
@@ -127,13 +132,11 @@ class DataExtraction(threading.Thread):
 			'sleep_interval': self.sleep_interval,  # Wait time between downloads
 			'max_sleep_interval': self.max_sleep_interval if self.do_use_random_wait_time else self.sleep_interval,  # Random wait time
 			'sleep_interval_requests': self.sleep_interval_requests,  # Wait time between HTTP requests
-			# TODO: Add as request parameter
-			'sleep_interval_subtitles': 30,  # Sleep for subtitles: suggested 60
+			'sleep_interval_subtitles': self.sleep_interval_subtitles,  # Sleep for subtitles: suggested 60
 			# ----------------
 
 			'ratelimit': self.max_read_bytes_size,  # Download speed limit, in bytes/sec.
-			# TODO: Could be added as request parameter
-			'verbose': True,  # Verbose logs
+			'verbose': self.verbose,  # Verbose logs
 		}
 
 		if self.do_extract_audio:
