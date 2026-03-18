@@ -63,9 +63,7 @@ class DataExtraction(threading.Thread):
 			# 'player_client': ['default'],
 		}
 
-		data_range_start = datetime.date.fromtimestamp(self.timestamp).strftime('%Y%m%d')
-
-		http_headers = {}
+		data_range_start = datetime.date.fromtimestamp(self.timestamp/1000).strftime('%Y%m%d')
 
 		pot_args = {}
 		if pot_provider_url:
