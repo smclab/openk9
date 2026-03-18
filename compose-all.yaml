@@ -2,6 +2,8 @@ include:
   - path:
       - compose.yaml
   - path:
-      - compose-files.yaml
+      - compose-with-file-handling.yaml
   - path:
-      - compose-ai.yaml
+      - compose-with-gen-ai.yaml
+  - path:
+      - compose-with-oauth2-server.yaml
