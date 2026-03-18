@@ -76,7 +76,7 @@ class DataExtraction(threading.Thread):
 		self.ydl_options_flat = {
 			'ignoreerrors': True,
 			'extract_flat': 'in_playlist',  # Gets only video urls
-			'daterange': DateRange(start=data_range_start),
+			'dateafter': data_range_start,
 			'extractor_args': {'youtube': common_youtube_args},
 			'socket_timeout': self.socket_timeout,
 			'js_runtimes': {'node': {}},
