@@ -1,7 +1,6 @@
 ###################### RAG MODULE CHILD PIPELINE ######################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
-  # NEW: Include standardized child rules
   - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
@@ -10,6 +9,8 @@ stages:
 - restart
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
+
+#################
 # Fetch Config  #
 #################
 Fetch config:
@@ -18,9 +19,7 @@ Fetch config:
   script:
   - apk add --no-cache grep
   - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
-  # Extract PYTHON_BASE_DOCKER_IMAGE value from config file
   - PYTHON_BASE_DOCKER_IMAGE=$(grep '^PYTHON_BASE_DOCKER_IMAGE=' python_modules_config.txt | cut -d '=' -f2)
-  # Write results to .env file
   - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
   - echo "PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE" >> "$CI_PROJECT_DIR/config.env"
   artifacts:
@@ -28,7 +27,6 @@ Fetch config:
     - config.env
     expire_in: 1 day
   rules:
-    # Always run if triggered
     - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD RAG IMAGE (KANIKO) ########################
@@ -36,7 +34,7 @@ Build Rag Image:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [ "" ]
+    entrypoint: [""]
   needs:
   - job: Fetch config
     artifacts: true
@@ -53,63 +51,41 @@ Build Rag Image:
   - echo "=== Configuring Kaniko credentials ==="
   - mkdir -p /kaniko/.docker
   - |
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}\" \
     > /kaniko/.docker/config.json
   - |
+    # ── Kaniko layer cache flags ──────────────────────────────────────────────────
+    # --cache=true          enables Docker layer cache
+    # --cache-repo          registry:2 on MinIO (bucket: kaniko-cache)
+    # --cache-ttl=168h      layers older than 7 days are ignored
+    # --snapshot-mode=redo  uses mtime instead of sha256 → avoids ~900s filesystem snapshots
+    # --compressed-caching=false  prevents OOM (exit 137) on large layers (e.g. PyTorch)
+    # ─────────────────────────────────────────────────────────────────────────────
+    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/rag-module --dockerfile ${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile"
+
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
       echo "[RAG] Build & push as :$VERSION"
-      # ── Kaniko layer cache (added 2026-02) ────────────────────────────────────────
-      # --cache=true         abilita il Docker layer cache
-      # --cache-repo         registry:2 su MinIO (k9-requirements, bucket: kaniko-cache)
-      #                      evita di riempire il registry SMC con layer temporanei
-      # --cache-ttl=168h     layer più vecchi di 7 giorni vengono ignorati
-      #                      coerente con il MinIO lifecycle TTL sul bucket
-      # --snapshot-mode=redo usa mtime invece di sha256 per rilevare cambiamenti
-      #                      riduce "Taking snapshot of full filesystem" da ~900s a ~5s
-      # --compressed-caching=false evita l'errore OOM (exit code 137) disabilitando
-      #                      la compressione in RAM dei layer giganti (es. PyTorch)
-      # ──────────────────────────────────────────────────────────────────────────────
-      /kaniko/executor \
-        --cache=true \
-        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
-        --cache-ttl=168h \
-        --snapshot-mode=redo \
-        --compressed-caching=false \
-        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
-    elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ]; then
-      echo "[RAG] Build & push as :merge-request"
-      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
-      /kaniko/executor \
-        --cache=true \
-        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
-        --cache-ttl=168h \
-        --snapshot-mode=redo \
-        --compressed-caching=false \
-        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
+
+    elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
+         [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; then
+      # MR: build only, no push
+      echo "[RAG] MR: build only, no push"
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
+
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
-      # Feature branch - check user
-      if [ "$GITLAB_USER_LOGIN" = "luca.callocchia" ]; then
-        echo "[RAG] Feature branch (Luca) => build & push :997-SNAPSHOT"
+      if [ "$USER_TYPE" = "designated" ]; then
+        echo "[RAG] Feature (designated) => build & push :997-SNAPSHOT"
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+          --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:997-SNAPSHOT"
       else
-        echo "[RAG] Feature branch => build & push :997-SNAPSHOT"
+        echo "[RAG] Feature (generic) => build only, no push"
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
       fi
-      # ── Kaniko layer cache: vedi prima occorrenza per spiegazione flag ──
-      /kaniko/executor \
-        --cache=true \
-        --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
-        --cache-ttl=168h \
-        --snapshot-mode=redo \
-        --compressed-caching=false \
-        --context "${CI_PROJECT_DIR}/ai-packages/rag-module" \
-        --dockerfile "${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile" \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:997-SNAPSHOT"
     fi
   rules:
-    # Always run build if parent triggered us
     - !reference [.rules:child-build-always, rules]
 
 ######################## CONTAINER SCANNING RAG #########################
@@ -142,11 +118,8 @@ Container Scanning Rag:
   script:
   - gtcs scan
   rules:
-    # Run only on Main and Feature Branches (as per original logic, seemingly scanning feature too?)
-    # Original rule was: - if: '$CI_COMMIT_BRANCH == "main"' OR feature regex.
-    # So yes, scan on feature branch too.
+    # Container scanning only on main/tag (not on feature branches)
     - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
 
 ######################## TRIGGER RESTART RAG #########################
 Trigger Restart:
@@ -160,6 +133,6 @@ Trigger Restart:
   - job: Build Rag Image
     artifacts: false
   rules:
-    # Run on Main and Feature Branches
+    # Run only on main/tag or designated feature branch
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]

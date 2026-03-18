@@ -23,6 +23,7 @@ include:
   - local: '/.gitlab/ci/backend.yaml'
   - local: '/.gitlab/ci/frontend.yaml'
   - local: '/.gitlab/ci/ai.yaml'
+  - local: '/.gitlab/ci/enrichers.yaml'
   - local: '/.gitlab/ci/common.yaml'
   
   # 3. Global Quality & Security Checks

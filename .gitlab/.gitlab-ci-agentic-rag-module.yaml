@@ -1,4 +1,4 @@
-###################### DOCLING PROCESSOR CHILD PIPELINE ######################
+###################### AGENTIC RAG MODULE CHILD PIPELINE ######################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/ci/child-rules.yaml'
@@ -7,6 +7,9 @@ stages:
 - build
 - container-scanning
 - restart
+
+variables:
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
 
 #################
 # Fetch Config  #
@@ -27,8 +30,8 @@ Fetch config:
   rules:
     - !reference [.rules:child-build-always, rules]
 
-######################## BUILD DOCLING IMAGE (KANIKO) ########################
-Build Docling Image:
+######################## BUILD AGENTIC RAG IMAGE (KANIKO) ########################
+Build Agentic Rag Image:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug
@@ -36,6 +39,14 @@ Build Docling Image:
   needs:
   - job: Fetch config
     artifacts: true
+  cache:
+    key: "agentic-rag-module-${CI_COMMIT_REF_SLUG}"
+    paths:
+    - .pip-cache/
+    policy: pull-push
+    when: always
+  before_script:
+  - mkdir -p .pip-cache
   script:
   - source $CI_PROJECT_DIR/config.env
   - echo "=== Configuring Kaniko credentials ==="
@@ -52,46 +63,45 @@ Build Docling Image:
     # --compressed-caching=false  prevents OOM (exit 137) on large layers (e.g. PyTorch)
     # ─────────────────────────────────────────────────────────────────────────────
     KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/enrichers/docling-processor/enricher --dockerfile ${CI_PROJECT_DIR}/enrichers/docling-processor/enricher/Dockerfile"
-    BUILD_ARG="--build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE"
+    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/agentic-rag-module --dockerfile ${CI_PROJECT_DIR}/ai-packages/agentic-rag-module/Dockerfile"
 
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[DOCLING] Build & push as :$VERSION"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$VERSION"
+      echo "[AGENTIC-RAG] Build & push as :$VERSION"
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-agentic-rag-module:$VERSION"
 
     elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
          [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; then
-      echo "[DOCLING] MR: build only, no push"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push
+      echo "[AGENTIC-RAG] MR: build only, no push"
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
 
     elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
       if [ "$USER_TYPE" = "designated" ]; then
-        echo "[DOCLING] Feature (designated) => build & push :997-SNAPSHOT"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG \
-          --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:997-SNAPSHOT"
+        echo "[AGENTIC-RAG] Feature (designated) => build & push :997-SNAPSHOT"
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+          --destination "${CI_REGISTRY_NAME}/openk9/openk9-agentic-rag-module:997-SNAPSHOT"
       else
-        echo "[DOCLING] Feature (generic) => build only, no push"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG --no-push
+        echo "[AGENTIC-RAG] Feature (generic) => build only, no push"
+        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
       fi
     fi
   rules:
     - !reference [.rules:child-build-always, rules]
 
-######################## CONTAINER SCANNING DOCLING #########################
-Container Scanning Docling:
+######################## CONTAINER SCANNING AGENTIC RAG #########################
+Container Scanning Agentic Rag:
   stage: container-scanning
   image: $CS_ANALYZER_IMAGE
   needs:
   - job: Fetch config
     artifacts: true
-  - job: Build Docling Image
+  - job: Build Agentic Rag Image
     artifacts: false
   variables:
     CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
     CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     GIT_STRATEGY: fetch
-    REGISTRY_COMPONENT_NAME: "openk9-docling-processor"
+    REGISTRY_COMPONENT_NAME: "openk9-agentic-rag-module"
   allow_failure: true
   artifacts:
     reports:
@@ -111,16 +121,16 @@ Container Scanning Docling:
     # Container scanning only on main/tag (not on feature branches)
     - !reference [.rules:child-deploy-main-tag, rules]
 
-######################## TRIGGER RESTART DOCLING #########################
+######################## TRIGGER RESTART AGENTIC RAG #########################
 Trigger Restart:
   extends: .restart_job_template
   variables:
-    COMPONENT_NAME: "docling-processor"
+    COMPONENT_NAME: "agentic-rag-module"
     COMPONENT_TYPE: "ai"
   needs:
   - job: Fetch config
     artifacts: true
-  - job: Build Docling Image
+  - job: Build Agentic Rag Image
     artifacts: false
   rules:
     # Run only on main/tag or designated feature branch
