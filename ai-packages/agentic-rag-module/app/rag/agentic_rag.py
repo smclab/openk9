@@ -19,6 +19,23 @@ import json
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
+from app.rag.retrievers.domain_documents_retriever import (
+    OpenSearchDomainDocumentsRetriever,
+)
+from app.rag.retrievers.guardrail_documents_retriever import (
+    OpenSearchGuardrailDocumentsRetriever,
+)
+from app.rag.retrievers.retriever import OpenSearchRetriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
+from app.utils.authentication import unauthorized_response
+from app.utils.guardrails import GuardrailType, initialize_guardrail
+from app.utils.llm import generate_conversation_title
+from app.utils.logger import logger
 from IPython.display import Image
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -33,21 +50,6 @@ from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
 from pydantic import BaseModel, Field
-
-from app.external_services.grpc.grpc_client import (
-    get_embedding_model_configuration,
-)
-from app.rag.retrievers.guardrail_documents_retriever import (
-    OpenSearchGuardrailDocumentsRetriever,
-)
-from app.rag.retrievers.retriever import OpenSearchRetriever
-from app.rag.retrievers.uploaded_documents_retriever import (
-    OpenSearchUploadedDocumentsRetriever,
-)
-from app.utils.authentication import unauthorized_response
-from app.utils.guardrails import GuardrailType, initialize_guardrail
-from app.utils.llm import generate_conversation_title
-from app.utils.logger import logger
 
 
 class GraphState(BaseModel):
@@ -446,6 +448,33 @@ class RagGraph:
                     state.guardrail_check = True
                     state.guardrail_category = llm_guardrail
                 break
+
+        return state
+
+    def input_domain_node(self, state: GraphState) -> GraphState:
+        query = state.current_query
+
+        embedding_model_configuration = get_embedding_model_configuration(
+            grpc_host=self.configuration.get("grpc_host_datasource"),
+            virtual_host=self.configuration.get("virtual_host"),
+        )
+
+        retriever = OpenSearchDomainDocumentsRetriever(
+            opensearch_host=self.opensearch_host,
+            grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
+            embedding_model_configuration=embedding_model_configuration,
+            uploaded_documents_index="domain-documents-index",
+            retrieve_type="HYBRID",
+            search_text=query,
+        )
+
+        retrieved_docs = retriever.invoke(query)
+
+        for doc in retrieved_docs:
+            document_id = doc.metadata["document_id"]
+            score = doc.metadata["score"]
+            if score >= 0.7:
+                print(doc)
 
         return state
 
@@ -1056,6 +1085,7 @@ class RagGraph:
             workflow.add_edge("response_evaluation", END)
         else:
             workflow.add_node("input_guardrail", self.input_guardrail_node)
+            workflow.add_node("input_domain", self.input_domain_node)
             workflow.add_node(
                 "guardrail_violation_response", self.guardrail_violation_response_node
             )
@@ -1068,7 +1098,7 @@ class RagGraph:
             workflow.add_node("llm_response", self.llm_response_node)
             workflow.add_node("history_saver", self.history_saver_node)
 
-            workflow.set_entry_point("input_guardrail")
+            workflow.set_entry_point("input_domain")
 
             workflow.add_conditional_edges(
                 "input_guardrail",
