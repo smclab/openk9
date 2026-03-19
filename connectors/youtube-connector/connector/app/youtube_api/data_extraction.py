@@ -9,6 +9,7 @@ from logging.config import dictConfig
 from typing import Dict
 
 import requests
+from twisted.web.server import date_time_string
 from yt_dlp import YoutubeDL
 
 from .util.log_config import LogConfig
@@ -76,7 +77,6 @@ class DataExtraction(threading.Thread):
 		self.ydl_options_flat = {
 			'ignoreerrors': True,
 			'extract_flat': 'in_playlist',  # Gets only video urls
-			'dateafter': data_range_start,
 			'extractor_args': {'youtube': common_youtube_args},
 			'socket_timeout': self.socket_timeout,
 			'js_runtimes': {'node': {}},
@@ -92,6 +92,10 @@ class DataExtraction(threading.Thread):
 		# TODO: Add as request parameter (bool)
 		do_write_subtitles = self.subtitle_lang is not None and len(self.subtitle_lang) > 0
 		self.ydl_options_download = {
+			# Does not process the item if not in daterange
+			'break_on_reject': True,
+			'daterange': DateRange(data_range_start),
+			
 			'skip_download': not self.do_extract_audio,  # Skips download if not extract audio
 			'format': 'bestaudio/best',  # Download audio only
 			'outtmpl': OUTPUT_TEMPLATE,
@@ -162,7 +166,6 @@ class DataExtraction(threading.Thread):
 		end_timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000
 
 		try:
-			self.status_logger.info(f"keys: {entry.keys()}")
 			video_id = entry['id']
 			title = entry['title']
 			thumbnail = entry['thumbnail']
