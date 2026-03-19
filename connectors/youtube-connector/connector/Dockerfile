@@ -1,6 +1,6 @@
 FROM python:3.12
 
-COPY ./connector/requirements.txt /requirements.txt
+COPY ./requirements.txt /requirements.txt
 
 # Install utils
 RUN apt-get update && apt-get install -y \
@@ -16,9 +16,9 @@ RUN apt-get update && apt-get install -y \
 
 RUN pip3 install -r requirements.txt
 
-ADD ./connector/docker-entrypoint.sh /etc/docker-entrypoint.sh
+ADD ./docker-entrypoint.sh /etc/docker-entrypoint.sh
 
-COPY ./connector/app /app
+COPY ./app /app
 
 WORKDIR /app
 
