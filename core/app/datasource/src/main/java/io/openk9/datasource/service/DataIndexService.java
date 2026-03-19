@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import io.openk9.datasource.index.exception.DeleteDataIndexException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -59,6 +61,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.groups.UniJoin;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import org.hibernate.HibernateException;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -67,7 +70,7 @@ public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
 
 	public static final String DETAILS_FIELD = "details";
-	private static final Logger log = Logger.getLogger(DataIndexService.class);
+	private static final Logger LOGGER = Logger.getLogger(DataIndexService.class);
 
 	@Inject
 	DocTypeService docTypeService;
@@ -90,7 +93,7 @@ public class DataIndexService
 			settingsMap = settingsJsonObj.getMap();
 		}
 		catch (Exception exception) {
-			log.warnf(exception, "Cannot decode settingsJson %s", settingsJson);
+			LOGGER.warnf("Cannot decode settingsJson %s", settingsJson);
 			settingsMap = Map.of();
 		}
 
@@ -169,7 +172,7 @@ public class DataIndexService
 		)
 		.onFailure()
 		.invoke(throwable ->
-			log.debug(String.format("Error retrieving cat for index with id %d", id), throwable)
+			LOGGER.debug(String.format("Error retrieving cat for index with id %d", id), throwable)
 		);
 	}
 
@@ -256,7 +259,7 @@ public class DataIndexService
 		return sessionFactory.withTransaction(
 				(session, transaction) -> create(session, datasourceId, dataIndexDTO))
 			.onFailure()
-			.invoke(throwable -> log.errorf(
+			.invoke(throwable -> LOGGER.errorf(
 				throwable,
 				"DataIndexDTO %s cannot be created.",
 				dataIndexDTO
@@ -304,7 +307,7 @@ public class DataIndexService
 			.flatMap(dataIndices -> {
 
 				if (dataIndices.isEmpty()) {
-					log.warnf("No dataIndex founds for datasource with id %s", datasourceId);
+					LOGGER.warnf("No dataIndex founds for datasource with id %s", datasourceId);
 
 					return Uni.createFrom().item(new ArrayList<>());
 				}
@@ -363,12 +366,13 @@ public class DataIndexService
 				.call(dataIndex -> indexService.deleteIndex(
 					IndexName.from(tenant, dataIndex)))
 				.call(dataIndex -> s.fetch(dataIndex.getDocTypes()))
-				.flatMap(dataIndex -> {
-					dataIndex.getDocTypes().clear();
-					return s.persist(dataIndex);
-				})
-				.flatMap(ignore -> deleteById(s, entityId)))
-		);
+				.flatMap(dataIndex -> deleteById(s, entityId))
+			))
+			.onFailure(HibernateException.class)
+			.transform(throwable -> {
+				LOGGER.errorf("Failed to delete DataIndex, it could be associated with a DataSource", throwable);
+				throw new DeleteDataIndexException(throwable);
+			});
 	}
 
 	public Uni<Long> getCountIndexDocuments(long dataIndexId) {
@@ -481,7 +485,7 @@ public class DataIndexService
 							.flatMap(dts -> {
 								if (dts.remove(docType)) {
 									dataIndex.setDocTypes(dts);
-									return create(s, dataIndex)
+									return merge(s, dataIndex)
 										.map(di -> Tuple2.of(di, docType));
 								}
 								return Uni.createFrom().nullItem();
