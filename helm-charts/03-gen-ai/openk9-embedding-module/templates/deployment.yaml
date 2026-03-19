@@ -36,6 +36,8 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.rabbitmq.password.secretName }}
                   key: {{ .Values.rabbitmq.password.secretKey }}
+            - name: DO_EVAL
+              value: {{ .Values.env.doEval | quote }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: grpc

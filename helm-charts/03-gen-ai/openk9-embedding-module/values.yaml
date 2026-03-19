@@ -74,6 +74,9 @@ rabbitmq:
     secretName: "rabbitmq-password"
     secretKey: "rabbitmq-password"
 
+env:
+  doEval: false
+
 # One of Ingress or Route is mandatory
 ingress:
   enabled: false
