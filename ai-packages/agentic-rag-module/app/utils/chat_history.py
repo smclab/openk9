@@ -14,13 +14,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-from datetime import date
+import json
+from datetime import datetime, timezone
 
 from langchain.schema import AIMessage, HumanMessage
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from opensearchpy import OpenSearch
+from opensearchpy import OpenSearch, helpers
 
 from app.utils.logger import logger
 
@@ -204,40 +204,57 @@ def delete_documents(opensearch_host, interval_in_days=180):
     Delete documents from OpenSearch indices that are older than a specified number of days.
 
     This function connects to an OpenSearch instance, retrieves all indices, and for each index
-    that contains 'chat_id' field, it identifies documents grouped by `chat_id`. It checks the
-    latest document for each group and deletes all documents associated with that `chat_id` if
-    the latest document is older than the specified interval in days.
+    that contains 'thread_id', 'checkpoint_id', and 'checkpoint' fields, it identifies documents
+    grouped by `thread_id`. It checks the latest document for each group (based on the step number
+    in metadata) and deletes all documents associated with that `thread_id` if the latest document
+    is older than the specified interval in days.
 
     Parameters
     ----------
     opensearch_host : str
-        The host URL of the OpenSearch instance (e.g., "http://localhost:9200").
+        The host URL of the OpenSearch instance (e.g., "http://localhost:9200"). This should include
+        the protocol (http/https), hostname, and port if not using default ports.
 
     interval_in_days : int, optional
         The number of days to use as a threshold for deletion. Documents older than this
-        value will be deleted. Default is 180 days.
+        value will be deleted. For example, if set to 180, any thread whose most recent document
+        is more than 180 days old will have all its documents deleted. Default is 180 days.
 
     Returns
     -------
     None
-        This function does not return any value. It performs deletions directly on the OpenSearch instance.
+        This function does not return any value. It performs deletions directly on the OpenSearch instance
+        and logs the progress and results of the operation.
 
     Raises
     ------
-    Exception
+    opensepy.exceptions.OpenSearchException
         Raises an exception if there are errors during the connection to OpenSearch or during
-        the execution of search or delete operations.
+        the execution of search or delete operations. Common exceptions include connection errors,
+        authentication failures, or permission issues.
 
     Notes
     -----
-    - The function logs the number of indices found and the number of documents deleted.
-    - It performs bulk deletions to optimize the deletion process.
+    - The function logs the number of indices found, indices being processed, and the number of
+        documents deleted using the configured logger.
+    - It performs bulk deletions using the `helpers.bulk` method to optimize the deletion process
+        and minimize the number of API calls.
+    - The function identifies the latest document for each thread by sorting on the
+        'metadata.step.keyword' field using a Painless script.
+    - Documents are only considered for deletion if their index contains all required fields:
+        'thread_id', 'checkpoint_id', and 'checkpoint'.
+    - The checkpoint field is expected to contain a JSON string with a 'ts' (timestamp) field
+        that is used to determine document age.
     - Ensure that the OpenSearch client is properly configured and that the necessary permissions
-        are in place to delete documents.
+        are in place to delete documents from the indices.
 
     Examples
     --------
-    >>> delete_documents("http://localhost:9200", interval_in_days=180)
+    >>> # Delete threads older than 180 days from local OpenSearch instance
+    >>> delete_documents("http://localhost:9200")
+
+    >>> # Delete threads older than 90 days from a remote OpenSearch instance
+    >>> delete_documents("https://opensearch.example.com:9200", interval_in_days=90)
     """
 
     open_search_client = OpenSearch(
@@ -246,10 +263,10 @@ def delete_documents(opensearch_host, interval_in_days=180):
 
     all_indices = open_search_client.indices.get(index="*")
     all_indices = list(all_indices.keys())
-    index_field_names = {"user_id", "chat_id", "chat_sequence_number"}
+    index_field_names = {"thread_id", "checkpoint_id", "checkpoint"}
     indices_to_process = []
 
-    today = date.today()
+    today = datetime.now(timezone.utc)
     delete_actions = []
 
     for index in all_indices:
@@ -263,64 +280,91 @@ def delete_documents(opensearch_host, interval_in_days=180):
     for index_to_process in indices_to_process:
         logger.info(f"Processing index: {index_to_process}")
 
-        # Query to group documents by chat_id and get the latest document for each group
         query = {
-            "size": 0,
             "aggs": {
-                "group_by_chat_id": {
+                "threads": {
                     "terms": {
-                        "field": "chat_id.keyword",
-                        "size": 10000,
+                        "field": "thread_id",
+                        "order": {"_key": "asc"},
                     },
                     "aggs": {
-                        "latest_document": {
+                        "max_step_doc": {
                             "top_hits": {
                                 "size": 1,
-                                "sort": [{"chat_sequence_number": {"order": "desc"}}],
-                                "_source": [
-                                    "timestamp",
-                                    "chat_sequence_number",
-                                    "chat_id",
+                                "sort": [
+                                    {
+                                        "_script": {
+                                            "type": "number",
+                                            "script": {
+                                                "source": """
+                                            if (doc['metadata.step.keyword'].size() > 0) {
+                                                return Long.parseLong(doc['metadata.step.keyword'].value);
+                                            }
+                                            return -1;
+                                        """,
+                                                "lang": "painless",
+                                            },
+                                            "order": "desc",
+                                        }
+                                    }
                                 ],
                             }
-                        }
+                        },
                     },
                 }
             },
         }
+
         response = open_search_client.search(index=index_to_process, body=query)
-        buckets = response["aggregations"]["group_by_chat_id"]["buckets"]
+        documents = response.get("aggregations").get("threads").get("buckets")
 
-        for bucket in buckets:
-            latest_document = bucket["latest_document"]["hits"]["hits"][0]
-            index_id = latest_document["_index"]
-            chat_id = latest_document["_source"]["chat_id"]
-            document_timestamp = int(latest_document["_source"]["timestamp"]) / 1000
-            document_date = date.fromtimestamp(document_timestamp)
-            delta = (today - document_date).days
+        for item in documents:
+            hits = item.get("max_step_doc", {}).get("hits", {}).get("hits", [])
 
-            if delta > interval_in_days:
-                query = {"query": {"match": {"chat_id.keyword": chat_id}}}
-                response = open_search_client.search(
-                    index=index_id, body=query, size=10000
+            for hit in hits:
+                source = hit.get("_source", {})
+                checkpoint_data = json.loads(source.get("checkpoint", "{}"))
+                document_timestamp = checkpoint_data.get("ts")
+                document_date = datetime.fromisoformat(document_timestamp)
+
+                delta = (today - document_date).days
+
+                if delta > interval_in_days:
+                    thread_id = source.get("thread_id")
+                    query = {"query": {"match": {"thread_id": thread_id}}}
+                    response = open_search_client.search(
+                        index=index_to_process, body=query, size=10000
+                    )
+                    documents_to_delete = response["hits"]["hits"]
+
+                    for document_to_delete in documents_to_delete:
+                        document_id = document_to_delete["_id"]
+                        delete_action = {
+                            "_op_type": "delete",
+                            "_index": index_to_process,
+                            "_id": document_id,
+                        }
+                        delete_actions.append(delete_action)
+
+        if delete_actions:
+            logger.info(f"Deleting {len(delete_actions)} documents in bulk")
+
+            try:
+                success, failed = helpers.bulk(
+                    open_search_client,
+                    delete_actions,
+                    stats_only=False,
+                    raise_on_error=False,
                 )
-                documents_to_delete = response["hits"]["hits"]
 
-                for document_to_delete in documents_to_delete:
-                    document_id = document_to_delete["_id"]
-                    delete_action = {"delete": {"_index": index_id, "_id": document_id}}
-                    delete_actions.append(delete_action)
+                logger.info(f"Successfully deleted {success} documents")
+                if failed:
+                    logger.error(f"Failed to delete {len(failed)} documents")
+                    for item in failed:
+                        logger.error(f"Failed delete: {item}")
 
-    if delete_actions:
-        logger.info(f"Deleting {len(delete_actions)} documents in bulk")
-        bulk_delete = open_search_client.bulk(delete_actions)
-        if bulk_delete.get("errors"):
-            logger.error("Errors occurred during bulk delete:")
-            for item in bulk_delete["items"]:
-                if "delete" in item and item["delete"].get("error"):
-                    logger.error(f"Failed to delete document: {item['delete']}")
-        else:
-            logger.info("Bulk delete completed successfully")
+            except Exception as e:
+                logger.error(f"Bulk delete error: {e}")
 
 
 def save_uploaded_documents(
