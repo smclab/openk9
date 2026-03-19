@@ -112,7 +112,7 @@ public class TikaProcessor {
                     TikaMetadata metadata = tikaContent.getMetadata();
 
                     String lastModified =
-                            metadata.getSingleValue("Last-Modified");
+                        _getLastModified(metadata);
 
                     String xParsedBy =
                             metadata.getSingleValue("X-Parsed-By");
@@ -255,6 +255,25 @@ public class TikaProcessor {
         long estimatedTime = System.currentTimeMillis() - startTime;
         logger.info(estimatedTime);
 
+    }
+
+    /**
+     * Extracts the last-modified date from Tika metadata using a fallback
+     * chain: {@code Last-Modified} (general), {@code dcterms:modified}
+     * (Microsoft Office/OOXML), {@code pdf:docinfo:modified} (PDF).
+     */
+    private static String _getLastModified(TikaMetadata metadata) {
+        var lastModified = metadata.getSingleValue("Last-Modified");
+
+        if (lastModified == null) {
+            lastModified = metadata.getSingleValue("dcterms:modified");
+        }
+
+        if (lastModified == null) {
+            lastModified = metadata.getSingleValue("pdf:docinfo:modified");
+        }
+
+        return lastModified;
     }
 
     @Inject
