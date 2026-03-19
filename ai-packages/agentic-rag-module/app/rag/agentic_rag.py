@@ -37,6 +37,7 @@ from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 from IPython.display import Image
+from langchain.output_parsers import PydanticOutputParser
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers.string import StrOutputParser
@@ -93,6 +94,7 @@ class GraphState(BaseModel):
     guardrail_category: Optional[str] = Field(
         default=None, description="guardrail check category"
     )
+    # domain: Optional[str] = Field(default=None, description="Detected domain")
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -173,6 +175,10 @@ class RetrieverEvaluationResponseList(BaseModel):
     evaluations: list[RetrieverEvaluationResponse] = Field(
         ..., description="List of evaluations"
     )
+
+
+class Domain(BaseModel):
+    domain: str = Field(default=None, description="Detected domain")
 
 
 class RagGraph:
@@ -451,6 +457,55 @@ class RagGraph:
 
         return state
 
+    def _llm_input_domain(self, query, possible_domains):
+        parser = PydanticOutputParser(pydantic_object=Domain)
+        format_instructions = parser.get_format_instructions()
+        domain_prompt = """
+        Sei un sistema di classificazione degli intenti utente.
+
+        Il tuo compito è:
+        1. Analizzare la query dell'utente
+        2. Identificare l'intento principale
+        3. Assegnare la query a UNO SOLO dei domini disponibili
+
+        ---
+
+        DOMINI DISPONIBILI:
+        {possible_domains}
+
+        ---
+
+        REGOLE:
+        - Devi scegliere ESATTAMENTE un dominio tra quelli forniti
+        - Non inventare nuovi domini
+        - Se la query è ambigua, scegli il dominio più probabile
+        - Se la query non è chiaramente classificabile, scegli il dominio più generico o "other" (se presente)
+        - Non aggiungere testo extra fuori dal formato richiesto
+
+        ---
+
+        QUERY UTENTE:
+        {query}
+
+        ---
+
+        {format_instructions}
+        """
+
+        domain_prompt_template = PromptTemplate.from_template(domain_prompt)
+        chain = domain_prompt_template | self.llm
+        raw_output = chain.invoke(
+            {
+                "query": query,
+                "possible_domains": possible_domains,
+                "format_instructions": format_instructions,
+            }
+        )
+
+        domain_response = parser.parse(raw_output.content)
+
+        return domain_response
+
     def input_domain_node(self, state: GraphState) -> GraphState:
         query = state.current_query
 
@@ -467,14 +522,36 @@ class RagGraph:
             retrieve_type="HYBRID",
             search_text=query,
         )
-
+        print("Retrieving ...")
         retrieved_docs = retriever.invoke(query)
 
+        high_score_docs = []
+        found_domains = set()
         for doc in retrieved_docs:
-            document_id = doc.metadata["document_id"]
             score = doc.metadata["score"]
             if score >= 0.7:
+                high_score_docs.append(doc)
+                found_domains.add(doc.metadata["domain"])
                 print(doc)
+
+        if len(high_score_docs) >= 1 and len(found_domains) <= 1:
+            print("OpenSearch judge")
+            print(list(found_domains)[0])
+            # state.domain = list(found_domains)[0]
+        else:
+            print("LLM judge")
+            if not found_domains:
+                INTENTS = [
+                    "Troubleshooting",
+                    "How-to",
+                    "Billing",
+                    "Feature information",
+                    "Account management",
+                ]
+                found_domains = set(INTENTS)
+            llm_domain = self._llm_input_domain(query, found_domains)
+            print(llm_domain.domain)
+            # state.domain = llm_domain.domain
 
         return state
 
