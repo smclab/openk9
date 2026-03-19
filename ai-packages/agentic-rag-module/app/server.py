@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import asyncio
+import json
 import os
 from contextlib import asynccontextmanager
 from enum import Enum
@@ -629,7 +629,6 @@ async def get_user_chats(
         - Uses OpenSearch for chat history storage
         - Results are sorted by timestamp in descending order
     """
-    chat_sequence_number = user_chats.chatSequenceNumber
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
 
@@ -667,20 +666,44 @@ async def get_user_chats(
     index_name = f"{tenant_id}-{user_id}"
 
     query = {
-        "from": pagination_from,
-        "size": pagination_size,
-        "query": {
-            "bool": {
-                "must": [
-                    {"match": {"user_id.keyword": user_id}},
-                    {"match": {"chat_sequence_number": chat_sequence_number}},
-                ]
+        "aggs": {
+            "threads": {
+                "terms": {
+                    "field": "thread_id",
+                    "size": pagination_size,
+                    "order": {"_key": "asc"},
+                },
+                "aggs": {
+                    "bucket_sort": {
+                        "bucket_sort": {
+                            "from": pagination_from,
+                            "size": pagination_size,
+                        }
+                    },
+                    "max_step_doc": {
+                        "top_hits": {
+                            "size": 1,
+                            "sort": [
+                                {
+                                    "_script": {
+                                        "type": "number",
+                                        "script": {
+                                            "source": """
+                                            if (doc['metadata.step.keyword'].size() > 0) {
+                                                return Long.parseLong(doc['metadata.step.keyword'].value);
+                                            }
+                                            return -1;
+                                        """,
+                                            "lang": "painless",
+                                        },
+                                        "order": "desc",
+                                    }
+                                }
+                            ],
+                        }
+                    },
+                },
             }
-        },
-        "sort": [{"timestamp": {"order": "desc"}}],
-        "_source": {
-            "includes": ["title", "question", "timestamp", "chat_id"],
-            "excludes": [],
         },
     }
 
@@ -689,8 +712,24 @@ async def get_user_chats(
     if open_search_client.indices.exists(index=index_name):
         response = open_search_client.search(body=query, index=index_name)
 
-        for chat in response["hits"]["hits"]:
-            result["result"].append(chat["_source"])
+        for bucket in response.get("aggregations").get("threads").get("buckets"):
+            chat_id = bucket.get("key")
+            max_step_document = (
+                bucket.get("max_step_doc").get("hits").get("hits")[0].get("_source")
+            )
+            checkpoint = json.loads(max_step_document.get("checkpoint"))
+            timestamp = checkpoint.get("ts")
+            channel_values = checkpoint.get("channel_values", {})
+            question = channel_values.get("current_query")
+            title = channel_values.get("conversation_title")
+            result["result"].append(
+                {
+                    "title": title,
+                    "question": question,
+                    "timestamp": timestamp,
+                    "chat_id": chat_id,
+                }
+            )
 
     return result
 
@@ -770,40 +809,70 @@ async def get_chat(
 
     index_name = f"{tenant_id}-{user_id}"
 
-    query = {
-        "query": {"match": {"chat_id.keyword": chat_id}},
-        "sort": [{"chat_sequence_number": {"order": "asc"}}],
-        "_source": {
-            "includes": [],
-            "excludes": ["chat_id", "user_id", "sources.page_content"],
-        },
-    }
+    query = {"size": 1000, "query": {"match": {"thread_id": chat_id}}}
 
     if open_search_client.indices.exists(index=index_name) and (
         open_search_response := open_search_client.search(body=query, index=index_name)
         .get("hits", {})
         .get("hits", [])
     ):
-        result = {
-            "chat_id": chat_id,
-            "retrieve_from_uploaded_documents": open_search_response[0]
-            .get("_source", {})
-            .get("retrieve_from_uploaded_documents", False),
-            "messages": [
-                {
-                    "question": chat.get("_source", {}).get("question"),
-                    "answer": chat.get("_source", {}).get("answer"),
-                    "timestamp": chat.get("_source", {}).get("timestamp"),
-                    "chat_sequence_number": chat.get("_source", {}).get(
-                        "chat_sequence_number"
-                    ),
-                    "sources": chat.get("_source", {}).get("sources", []),
-                }
-                for chat in open_search_response
-            ],
-        }
+        latest_steps = {}
 
-        return result
+        for doc in open_search_response:
+            source = doc.get("_source", {})
+            checkpoint = json.loads(source.get("checkpoint", "{}"))
+            timestamp = checkpoint.get("ts")
+            channel_values = checkpoint.get("channel_values", {})
+            question = channel_values.get("current_query")
+            answer = channel_values.get("response")
+            # title = channel_values.get("conversation_title")
+            chat_sequence_number = channel_values.get("chat_sequence_number")
+            context = channel_values.get("context", [])
+            metadata = source.get("metadata", {})
+            step = int(metadata.get("step", 0))
+
+            if step <= 0:
+                continue
+
+            sources = []
+
+            for context_source in context:
+                kwargs = context_source.get("kwargs")
+                metadata = kwargs.get("metadata")
+                document_id = metadata.get("document_id")
+                score = metadata.get("score")
+                title = metadata.get("title")
+                url = metadata.get("url")
+
+                context_document = {
+                    "document_id": document_id,
+                    "score": score,
+                    "title": title,
+                    "url": url,
+                }
+
+                sources.append(context_document)
+
+            message = {
+                "question": question,
+                "answer": answer,
+                "timestamp": timestamp,
+                "chat_sequence_number": chat_sequence_number,
+                "sources": sources,
+                "step": step,
+            }
+
+            if (
+                chat_sequence_number not in latest_steps
+                or step > latest_steps[chat_sequence_number][0]
+            ):
+                latest_steps[chat_sequence_number] = (step, message)
+
+        messages = [msg for _, msg in latest_steps.values()]
+
+        messages.sort(key=lambda m: int(m["chat_sequence_number"]))
+
+        return messages
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -894,7 +963,7 @@ async def delete_chat(
             detail="Item not found.",
         )
 
-    delete_messages_query = {"query": {"match": {"chat_id.keyword": chat_id}}}
+    delete_messages_query = {"query": {"match": {"thread_id": chat_id}}}
 
     try:
         response = open_search_client.delete_by_query(
@@ -1019,14 +1088,25 @@ async def rename_chat(
         )
 
     query = {
-        "query": {
-            "bool": {
-                "must": [
-                    {"match": {"chat_id.keyword": chat_id}},
-                    {"match": {"chat_sequence_number": 1}},
-                ]
+        "size": 1,
+        "query": {"bool": {"must": [{"term": {"thread_id": chat_id}}]}},
+        "sort": [
+            {
+                "_script": {
+                    "type": "number",
+                    "script": {
+                        "source": """
+                        if (doc['metadata.step.keyword'].size() > 0) {
+                            return Long.parseLong(doc['metadata.step.keyword'].value);
+                        }
+                        return -1;
+                    """,
+                        "lang": "painless",
+                    },
+                    "order": "desc",
+                }
             }
-        }
+        ],
     }
 
     try:
@@ -1037,20 +1117,27 @@ async def rename_chat(
             detail=f"OpenSearch search error: {str(e)}",
         )
 
-    hits = response["hits"]["hits"]
+    hits = response.get("hits", {}).get("hits", [])
     if not hits:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Chat document not found.",
         )
 
-    document_id = hits[0]["_id"]
+    document_id = hits[0].get("_id")
+    current_doc = hits[0].get("_source")
+    current_checkpoint = json.loads(current_doc.get("checkpoint"))
+    current_checkpoint["channel_values"]["conversation_title"] = chat_message.newTitle
+
+    updated_checkpoint = json.dumps(current_checkpoint)
+
+    update_query = {"doc": {"checkpoint": updated_checkpoint}}
 
     try:
         open_search_client.update(
             index=index_name,
             id=document_id,
-            body={"doc": {"title": chat_message.newTitle}},
+            body=update_query,
             refresh=True,
         )
     except Exception as e:
