@@ -64,8 +64,8 @@ data:
   # Liquibase env variables. Use when database is Oracle
 
   {{- if eq .Values.database.type "oracle" -}}
-    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_LOCK_TABLE_NAME : {{ .Values.liquibase.changeLogLockTable | quote }}
-    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_TABLE_NAME : {{ .Values.liquibase.changeLogTable | quote }}
+    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_LOCK_TABLE_NAME : {{ .Values.database.oracle.liquibase.changeLogLockTable | quote }}
+    OPENK9_DATASOURCE_LIQUIBASE_DATABASE_CHANGE_LOG_TABLE_NAME : {{ .Values.database.oracle.liquibase.changeLogTable | quote }}
   {{- end }}
 
 
