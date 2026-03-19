@@ -94,7 +94,7 @@ class GraphState(BaseModel):
     guardrail_category: Optional[str] = Field(
         default=None, description="guardrail check category"
     )
-    # domain: Optional[str] = Field(default=None, description="Detected domain")
+    domain: Optional[str] = Field(default=None, description="Detected domain")
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -537,7 +537,7 @@ class RagGraph:
         if len(high_score_docs) >= 1 and len(found_domains) <= 1:
             print("OpenSearch judge")
             print(list(found_domains)[0])
-            # state.domain = list(found_domains)[0]
+            state.domain = list(found_domains)[0]
         else:
             print("LLM judge")
             if not found_domains:
@@ -551,7 +551,7 @@ class RagGraph:
                 found_domains = set(INTENTS)
             llm_domain = self._llm_input_domain(query, found_domains)
             print(llm_domain.domain)
-            # state.domain = llm_domain.domain
+            state.domain = llm_domain.domain
 
         return state
 
