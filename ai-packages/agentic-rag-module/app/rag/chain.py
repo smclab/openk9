@@ -49,7 +49,7 @@ def get_agentic_rag(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
-    embedding_model_configuration,
+    guardrail_configuration,
     opensearch_host,
     grpc_host_embedding,
     grpc_host_datasource,
@@ -144,7 +144,7 @@ def get_agentic_rag(
             "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
             "analyze_query_prompt_template": analyze_query_prompt_template,
             "enable_real_time_evaluation": enable_real_time_evaluation,
-            "embedding_model_configuration": embedding_model_configuration,
+            "guardrail_configuration": guardrail_configuration,
         }
 
         router = RagGraph(llm, graph_configuration)

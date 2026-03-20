@@ -230,6 +230,7 @@ async def rag_generate(
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
+    guardrail_configuration = configurations["guardrail_configuration"]
 
     chat_id = None
     user_id = None
@@ -262,7 +263,7 @@ async def rag_generate(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
-        None,
+        guardrail_configuration,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
@@ -394,6 +395,7 @@ async def rag_chat(
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
+    guardrail_configuration = configurations["guardrail_configuration"]
 
     search_query = None
 
@@ -420,7 +422,7 @@ async def rag_chat(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
-        embedding_model_configuration,
+        guardrail_configuration,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
@@ -553,6 +555,7 @@ async def rag_chat_tool(
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
+    guardrail_configuration = configurations["guardrail_configuration"]
 
     search_query = None
 
@@ -579,7 +582,7 @@ async def rag_chat_tool(
         chat_sequence_number,
         rag_configuration,
         llm_configuration,
-        embedding_model_configuration,
+        guardrail_configuration,
         OPENSEARCH_HOST,
         GRPC_EMBEDDING_MODULE_HOST,
         GRPC_DATASOURCE_HOST,
