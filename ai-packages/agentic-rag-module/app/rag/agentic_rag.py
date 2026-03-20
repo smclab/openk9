@@ -41,7 +41,7 @@ from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
 from app.rag.retrievers.retriever import OpenSearchRetriever
-from app.utils.guardrails import initialize_guardrail
+from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 
@@ -376,13 +376,19 @@ class RagGraph:
 
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
 
-        if self.guardrail_configuration.get("model_type") == "aws_bedrock":
+        if (
+            self.guardrail_configuration.get("model_type")
+            == GuardrailType.AWS_BEDROCK.value
+        ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
             guardrail_chain = guardrail_prompt_template | llm_guardrail
             guardrail_response = guardrail_chain.invoke({"query": query})
 
             return guardrail_response.content[0].get("text")
-        elif self.guardrail_configuration.get("model_type") == "google_model_armor":
+        elif (
+            self.guardrail_configuration.get("model_type")
+            == GuardrailType.GOOGLE_MODEL_ARMOR.value
+        ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
             try:
                 guardrail_response = llm_guardrail.invoke({"query": query})
@@ -392,7 +398,10 @@ class RagGraph:
                     return "UNSAFE"
                 else:
                     raise e
-        elif self.guardrail_configuration.get("model_type") == "openai_moderation":
+        elif (
+            self.guardrail_configuration.get("model_type")
+            == GuardrailType.OPENAI_MODERATION.value
+        ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
             guardrail_response = llm_guardrail.invoke({"input": query})
             if guardrail_response.get("input") == guardrail_response.get("output"):
