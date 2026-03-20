@@ -29,7 +29,7 @@ DEFAULT_MODEL_TYPE = "aws_bedrock"
 DEFAULT_MODEL = "qwen.qwen3-32b-v1:0"
 
 
-class ModelType(Enum):
+class GuardrailType(Enum):
     AWS_BEDROCK = "aws_bedrock"
     GOOGLE_MODEL_ARMOR = "google_model_armor"
     OPENAI_MODERATION = "openai_moderation"
@@ -53,7 +53,7 @@ def initialize_guardrail(configuration):
         Common keys:
             - "model_type": str
                 The type of guardrail to instantiate. Should match one of the values defined
-                in the ModelType enumeration (e.g., 'AWS_BEDROCK', 'GOOGLE_MODEL_ARMOR',
+                in the GuardrailType enumeration (e.g., 'AWS_BEDROCK', 'GOOGLE_MODEL_ARMOR',
                 'OPENAI_MODERATION').
             - "api_key": str
                 API key for authentication (required for AWS_BEDROCK and OPENAI_MODERATION).
@@ -150,7 +150,7 @@ def initialize_guardrail(configuration):
     region = configuration.get("region")
 
     match model_type:
-        case ModelType.AWS_BEDROCK.value:
+        case GuardrailType.AWS_BEDROCK.value:
             os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
             aws_bedrock = configuration.get("aws_bedrock")
             guardrail_identifier = aws_bedrock.get("guardrail_identifier")
@@ -164,7 +164,7 @@ def initialize_guardrail(configuration):
                     "guardrailVersion": guardrail_version,
                 },
             )
-        case ModelType.GOOGLE_MODEL_ARMOR.value:
+        case GuardrailType.GOOGLE_MODEL_ARMOR.value:
             google_model_armor_credentials = configuration.get("google_credentials")
             save_google_application_credentials(google_model_armor_credentials)
             project_id = configuration.get("project_id")
@@ -176,7 +176,7 @@ def initialize_guardrail(configuration):
                 template_id=template_id,
                 fail_open=False,
             )
-        case ModelType.OPENAI_MODERATION.value:
+        case GuardrailType.OPENAI_MODERATION.value:
             os.environ["OPENAI_API_KEY"] = api_key
 
             guardrail = OpenAIModerationChain()
