@@ -604,13 +604,14 @@ export function useInfiniteResults<E>(
 ) {
   const pageSize = numberOfResults;
   const client = useOpenK9Client();
-  const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
   const { setRange } = useRange();
+  const hasSortData = sort && sort.length > 0;
+  const sortData = hasSortData ? sort[0] : undefined;
 
   return useInfiniteQuery(
     [
       "results",
-      searchQueryData,
+      searchQuery,
       sortData,
       language,
       overrideSearchWithCorrection?.renderingCorrection,
@@ -622,7 +623,7 @@ export function useInfiniteResults<E>(
 
       const remappingSearchQuery =
         overrideSearchWithCorrection?.isAutocorrection === false
-          ? searchQuery.map((token) =>
+          ? searchQuery.map((token: any) =>
               token.tokenType === "TEXT" && token.search
                 ? { ...token, overrideSearchWithCorrection: false }
                 : token,
@@ -633,7 +634,7 @@ export function useInfiniteResults<E>(
         range: RangePage,
         language,
         searchQuery: remappingSearchQuery,
-        sort: sortData && [sortData],
+        sort: sortData ? [sortData] : [],
         sortAfterKey: (sortData && pageParam > 0 && sortAfterKey) || "",
       });
       if (overrideSearchWithCorrection?.isAutocorrection === false) {

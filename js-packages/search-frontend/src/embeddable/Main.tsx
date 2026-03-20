@@ -449,6 +449,7 @@ export function Main({
             searchQuery={searchQuery}
             language={languageSelect}
             sortAfterKey={sortAfterKey}
+            sort={completelySort}
           />
         ) : null,
         configuration.generateResponse,
@@ -1376,20 +1377,20 @@ function useSearch({
     [filterTokens],
   );
 
-  const sortField = React.useMemo(
-    () => ({
-      sort: {
-        [infoSort?.field || ""]: {
-          sort: infoSort?.type as "asc" | "desc",
-          missing: "_last",
-        },
-      },
-      isSort: true,
-    }),
-    [infoSort?.field, infoSort?.type],
+  const completelySort = React.useMemo(
+    () =>
+      infoSort?.field
+        ? [
+            {
+              [infoSort.field]: {
+                sort: infoSort.type as "asc" | "desc",
+                missing: "_last" as const,
+              },
+            },
+          ]
+        : sort || [],
+    [infoSort?.field, infoSort?.type, sort],
   );
-
-  const completelySort = React.useMemo(() => sort, [sort]);
 
   const searchQueryMemo = React.useMemo(
     () => [
@@ -1398,17 +1399,8 @@ function useSearch({
       ...newTokenFilter,
       ...newSearch,
       ...dateTokens,
-      ...(tabTokens?.sort ? [sortField] : []),
     ],
-    [
-      defaultTokens,
-      tabTokens?.tabToken,
-      newTokenFilter,
-      newSearch,
-      dateTokens,
-      tabTokens?.sort,
-      sortField,
-    ],
+    [defaultTokens, tabTokens?.tabToken, newTokenFilter, newSearch, dateTokens],
   );
 
   const searchQuery = useDebounce(searchQueryMemo, debounceTimeSearch);
@@ -1550,7 +1542,7 @@ function useTabs(
   );
   const sortList = tabSelected?.sortings || undefined;
 
-  const tabTokens = React.useMemo(() => {
+  const defaultTabTokens = React.useMemo(() => {
     const createTab = tabs[selectedTabIndex]?.tokens;
     const sort =
       sortList && sortList.find((sortElement) => sortElement.isDefault);
@@ -1563,18 +1555,33 @@ function useTabs(
         : undefined,
     };
   }, [selectedTabIndex, tabs, language]);
-  const [tabsValue, setTabsValue] = React.useState(tabTokens);
-  React.useEffect(() => {
-    setTabsValue(tabTokens);
-  }, [tabTokens]);
+
+  const [sortOverride, setSortOverride] = React.useState<
+    | { sort: { field: string; type: "asc" | "desc" }; isSort: boolean }
+    | undefined
+    | null
+  >(null);
+
+  const prevTabIndexRef = React.useRef(selectedTabIndex);
+  if (prevTabIndexRef.current !== selectedTabIndex) {
+    prevTabIndexRef.current = selectedTabIndex;
+    if (sortOverride !== null) {
+      setSortOverride(null);
+    }
+  }
+
+  const tabsValue = React.useMemo(
+    () => ({
+      tabTokens: defaultTabTokens.tabTokens,
+      sort: sortOverride !== null ? sortOverride : defaultTabTokens.sort,
+    }),
+    [defaultTabTokens, sortOverride],
+  );
 
   const setSort = (
     sortField: { field: string; type: "asc" | "desc" } | null | undefined,
   ) => {
-    setTabsValue({
-      ...tabTokens,
-      sort: sortField ? { sort: sortField, isSort: true } : undefined,
-    });
+    setSortOverride(sortField ? { sort: sortField, isSort: true } : undefined);
   };
   return {
     tabTokens: tabsValue,
