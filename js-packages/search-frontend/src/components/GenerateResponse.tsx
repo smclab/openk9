@@ -20,15 +20,16 @@ import Markdown from "react-markdown";
 import styled, { keyframes } from "styled-components";
 import { css } from "styled-components";
 import { DeleteLogo } from "./DeleteLogo";
-import { recoverySearchQueryAndSort } from "./ResultList";
 import useGenerateResponse, { Message } from "./useGenerateResponse";
 import { useRange } from "./useRange";
+import { SortField } from "./client";
 
 type Props = {
   question: string;
   searchQuery: any[];
   language: string;
   sortAfterKey: string;
+  sort?: SortField[];
 };
 
 export default function GenerateResponse({
@@ -36,8 +37,9 @@ export default function GenerateResponse({
   searchQuery,
   language,
   sortAfterKey,
+  sort,
 }: Props) {
-  const { searchQueryData, sortData } = recoverySearchQueryAndSort(searchQuery);
+  const sortData = sort && sort.length > 0 ? sort[0] : undefined;
   const { range } = useRange();
   const [loadingSearch, setLoadingSearch] = React.useState<boolean>(false);
 
@@ -48,7 +50,7 @@ export default function GenerateResponse({
     });
 
   const [prevSearchQuery, setPrevSearchQuery] =
-    React.useState<any[]>(searchQueryData);
+    React.useState<any[]>(searchQuery);
   const [prevRange, setPrevRange] = React.useState<[number, number]>(
     range as [number, number],
   );
