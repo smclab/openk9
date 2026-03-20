@@ -41,10 +41,7 @@ from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
 from app.rag.retrievers.retriever import OpenSearchRetriever
-from app.rag.retrievers.uploaded_documents_retriever import (
-    OpenSearchUploadedDocumentsRetriever,
-)
-from app.utils.authentication import unauthorized_response
+from app.utils.guardrails import initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 
@@ -189,6 +186,7 @@ class RagGraph:
         self.open_search_client = OpenSearch(
             hosts=[self.opensearch_host],
         )
+        self.guardrail_configuration = self.configuration.get("guardrail_configuration")
         self.config = {
             "configurable": {
                 "thread_id": self.chat_id if self.chat_id else "not_logged_user"
@@ -378,11 +376,34 @@ class RagGraph:
 
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
 
-        guardrail_chain = guardrail_prompt_template | self.llm
+        if self.guardrail_configuration.get("model_type") == "aws_bedrock":
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            guardrail_chain = guardrail_prompt_template | llm_guardrail
+            guardrail_response = guardrail_chain.invoke({"query": query})
 
-        guardrail_response = guardrail_chain.invoke({"query": query})
+            return guardrail_response.content[0].get("text")
+        elif self.guardrail_configuration.get("model_type") == "google_model_armor":
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            try:
+                guardrail_response = llm_guardrail.invoke({"query": query})
+                return "NESSUNA"
+            except Exception as e:
+                if "flagged as unsafe" in str(e):
+                    return "UNSAFE"
+                else:
+                    raise e
+        elif self.guardrail_configuration.get("model_type") == "openai_moderation":
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            guardrail_response = llm_guardrail.invoke({"input": query})
+            if guardrail_response.get("input") == guardrail_response.get("output"):
+                return "NESSUNA"
+            else:
+                return "UNSAFE"
+        else:
+            guardrail_chain = guardrail_prompt_template | self.llm
+            guardrail_response = guardrail_chain.invoke({"query": query})
 
-        return guardrail_response.content
+            return guardrail_response.content
 
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         query = state.current_query
