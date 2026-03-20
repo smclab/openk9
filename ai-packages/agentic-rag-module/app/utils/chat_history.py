@@ -17,9 +17,6 @@
 import json
 from datetime import datetime, timezone
 
-from langchain.schema import AIMessage, HumanMessage
-from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.chat_history import BaseChatMessageHistory
 from opensearchpy import OpenSearch, helpers
 
 from app.utils.logger import logger
