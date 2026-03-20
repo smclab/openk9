@@ -396,7 +396,7 @@ class RagGraph:
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
             try:
                 guardrail_response = llm_guardrail.invoke({"query": query})
-                return "NESSUNA"
+                return "NONE"
             except Exception as e:
                 if "flagged as unsafe" in str(e):
                     return "UNSAFE"
@@ -409,7 +409,7 @@ class RagGraph:
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
             guardrail_response = llm_guardrail.invoke({"input": query})
             if guardrail_response.get("input") == guardrail_response.get("output"):
-                return "NESSUNA"
+                return "NONE"
             else:
                 return "UNSAFE"
         else:
@@ -1165,6 +1165,7 @@ class RagGraph:
                 if result_answer == "":
                     yield json.dumps({"chunk": "", "type": "START"})
                 result_answer += chunk.content
+
                 yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
         if last_state := self.graph.get_state(self.config):
