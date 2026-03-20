@@ -18,8 +18,8 @@
 from typing import List, Optional
 
 import requests
-from langchain.schema import Document
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 

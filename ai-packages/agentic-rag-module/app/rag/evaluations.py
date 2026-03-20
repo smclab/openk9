@@ -18,8 +18,8 @@
 import json
 from enum import Enum
 
-from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.prompts import PromptTemplate
 from phoenix.client import Client
 from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,

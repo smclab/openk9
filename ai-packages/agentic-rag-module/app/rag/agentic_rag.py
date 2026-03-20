@@ -20,10 +20,10 @@ from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
 from IPython.display import Image
-from langchain.prompts import ChatPromptTemplate, PromptTemplate
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.opensearch import OpenSearchSaver
 from langgraph.graph import END, START, StateGraph
