@@ -1,7 +1,10 @@
 aiofiles==24.1.0
 aiohttp==3.13.3
 apscheduler==3.11.0
+arize-phoenix-client==2.1.0
+arize-phoenix-evals==2.11.0
 arize-phoenix-otel==0.15.0
+arize-phoenix==13.15.0
 authlib==1.6.5
 cryptography==44.0.1
 fastapi==0.128.0
@@ -9,6 +12,7 @@ filelock==3.20.1
 grpcio-tools==1.78.0
 grpcio==1.78.0
 h11==0.16.0
+ipython==9.11.0
 langchain-aws==1.4.0
 langchain-classic==1.0.3
 langchain-core==1.2.19
@@ -34,3 +38,5 @@ python-dotenv==1.2.2
 python-multipart==0.0.22
 requests==2.32.5
 setuptools==82.0.1
+sse-starlette==3.3.3
+uvicorn==0.42.0
