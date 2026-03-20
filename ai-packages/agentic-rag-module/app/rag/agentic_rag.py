@@ -41,6 +41,10 @@ from app.rag.retrievers.guardrail_documents_retriever import (
     OpenSearchGuardrailDocumentsRetriever,
 )
 from app.rag.retrievers.retriever import OpenSearchRetriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
+from app.utils.authentication import unauthorized_response
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
