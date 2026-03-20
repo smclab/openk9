@@ -25,8 +25,7 @@ from langchain_google_community.model_armor import ModelArmorSanitizePromptRunna
 
 from app.utils.llm import save_google_application_credentials
 
-DEFAULT_MODEL_TYPE = "aws_bedrock"
-DEFAULT_MODEL = "qwen.qwen3-32b-v1:0"
+DEFAULT_GUARDRAIL_TYPE = "aws_bedrock"
 
 
 class GuardrailType(Enum):
@@ -51,7 +50,7 @@ def initialize_guardrail(configuration):
         Expected keys vary based on the guardrail type:
 
         Common keys:
-            - "model_type": str
+            - "guardrail_type": str
                 The type of guardrail to instantiate. Should match one of the values defined
                 in the GuardrailType enumeration (e.g., 'AWS_BEDROCK', 'GOOGLE_MODEL_ARMOR',
                 'OPENAI_MODERATION').
@@ -97,7 +96,7 @@ def initialize_guardrail(configuration):
     --------
     >>> # Initialize AWS Bedrock guardrail
     >>> config = {
-            "model_type": "aws_bedrock",
+            "guardrail_type": "aws_bedrock",
             "api_key": "your-aws-api-key",
             "region": "us-east-1",
             "model": "anthropic.claude-v2",
@@ -110,7 +109,7 @@ def initialize_guardrail(configuration):
 
     >>> # Initialize Google Model Armor
     >>> config = {
-            "model_type": "google_model_armor",
+            "guardrail_type": "google_model_armor",
             "region": "region",
             "project_id": "project_id",
             "template_id": "template_id",
@@ -127,7 +126,7 @@ def initialize_guardrail(configuration):
 
     >>> # Initialize OpenAI Moderation
     >>> config = {
-            "model_type": "openai_moderation",
+            "guardrail_type": "openai_moderation",
             "api_key": "your-openai-api-key"
         }
     >>> guardrail = initialize_guardrail(config)
@@ -137,19 +136,19 @@ def initialize_guardrail(configuration):
     - For AWS_BEDROCK, the API key is set in the AWS_BEARER_TOKEN_BEDROCK environment variable.
     - For GOOGLE_MODEL_ARMOR, credentials are saved using save_google_application_credentials().
     - For OPENAI_MODERATION, the API key is set in the OPENAI_API_KEY environment variable.
-    - If no matching model_type is provided, the function defaults to OPENAI_MODERATION.
+    - If no matching guardrail_type is provided, the function defaults to OPENAI_MODERATION.
     """
 
-    model_type = (
-        configuration.get("model_type")
-        if configuration.get("model_type")
-        else DEFAULT_MODEL_TYPE
+    guardrail_type = (
+        configuration.get("guardrail_type")
+        if configuration.get("guardrail_type")
+        else DEFAULT_GUARDRAIL_TYPE
     )
-    model = configuration.get("model") if configuration.get("model") else DEFAULT_MODEL
+    model = configuration.get("model")
     api_key = configuration.get("api_key")
     region = configuration.get("region")
 
-    match model_type:
+    match guardrail_type:
         case GuardrailType.AWS_BEDROCK.value:
             os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
             aws_bedrock = configuration.get("aws_bedrock")

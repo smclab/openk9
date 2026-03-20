@@ -377,7 +377,7 @@ class RagGraph:
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
 
         if (
-            self.guardrail_configuration.get("model_type")
+            self.guardrail_configuration.get("guardrail_type")
             == GuardrailType.AWS_BEDROCK.value
         ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
@@ -386,7 +386,7 @@ class RagGraph:
 
             return guardrail_response.content[0].get("text")
         elif (
-            self.guardrail_configuration.get("model_type")
+            self.guardrail_configuration.get("guardrail_type")
             == GuardrailType.GOOGLE_MODEL_ARMOR.value
         ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
@@ -399,7 +399,7 @@ class RagGraph:
                 else:
                     raise e
         elif (
-            self.guardrail_configuration.get("model_type")
+            self.guardrail_configuration.get("guardrail_type")
             == GuardrailType.OPENAI_MODERATION.value
         ):
             llm_guardrail = initialize_guardrail(self.guardrail_configuration)
