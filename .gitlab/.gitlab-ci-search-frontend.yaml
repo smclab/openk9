@@ -50,10 +50,10 @@ Build Search Frontend:
 
   # Conditional logic to determine which tag to use
   - |
-    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-      # For main, use version from package.json
+    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
+      # For main or tag, use version from package.json
       source $CI_PROJECT_DIR/version.env
-      echo "=== Building Search Frontend with VERSION=$VERSION ==="
+      echo "=== Building Search Frontend with VERSION=$VERSION (Main/Tag) ==="
       DOCKER_TAG="$VERSION"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       # For feature branch, determine tag based on user
@@ -61,9 +61,12 @@ Build Search Frontend:
         DOCKER_TAG="996-SNAPSHOT"
         echo "=== Building Search Frontend with VERSION=$DOCKER_TAG for frontend developer ==="
       else
-        DOCKER_TAG="999-SNAPSHOT"
-        echo "=== Building Search Frontend with VERSION=$DOCKER_TAG for feature branch ==="
+        DOCKER_TAG="latest"
+        echo "=== Building Search Frontend with VERSION=$DOCKER_TAG for generic feature branch ==="
       fi
+    else
+      echo "⚠️ Unknown branch type, setting tag to generic latest"
+      DOCKER_TAG="latest"
     fi
 
   # Run build with the determined tag

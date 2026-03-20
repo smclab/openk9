@@ -57,6 +57,11 @@ variables:
       echo "🚀 Build type: OFFICIAL (Main/Tag)"
       FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true"
       
+    # Identificazione di una Merge Request (MR):
+    # 1. CI_MERGE_REQUEST_IID: Se esiste, siamo sicuramente in una MR
+    # 2. CI_PIPELINE_SOURCE == "merge_request_event": Trigger da webhook MR
+    # 3. parent_pipeline && no branch && no tag: Identifica l'esecuzione di una child pipeline
+    #    scatenata durante una MR (GitLab non formatta bene Branch/Tag nelle MR delle Downstream e passano nudi)
     elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" || ("$CI_PIPELINE_SOURCE" == "parent_pipeline" && -z "$CI_COMMIT_BRANCH" && -z "$CI_COMMIT_TAG") ]]; then
       # 🧪 MR: Build Only (No Push)
       echo "🧪 Build type: TEST (Merge Request)"
@@ -174,6 +179,11 @@ variables:
         -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
         -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
 
+    # Identificazione di una Merge Request (MR):
+    # 1. CI_MERGE_REQUEST_IID: Presenza di un ID di Merge Request
+    # 2. CI_PIPELINE_SOURCE == "merge_request_event": Evento diretto di pipeline GitLab su MR
+    # 3. parent_pipeline && no branch && no tag: Condizione fondamentale per intercettare l'evento di MR 
+    #    dall'interno di una Child Pipeline (dove le macro del branch spariscono nei context di Merge Request).
     elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" || \
             ("$CI_PIPELINE_SOURCE" == "parent_pipeline" && -z "$CI_COMMIT_BRANCH" && -z "$CI_COMMIT_TAG") ]]; then
       echo "Build type: TEST (Merge Request) — compile only, no push"
@@ -258,13 +268,10 @@ variables:
     paths:
     - gl-dependency-scanning-report.json
   rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/**/*
-  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
-    changes:
-    - js-packages/**/*
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - js-packages/**/*
+  - if: '$CI_COMMIT_TAG'
     changes:
     - js-packages/**/*
 
