@@ -42,6 +42,48 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class TikaProcessor {
 
+    private static final String[] LAST_MODIFIED_ORDERED_KEYS = {
+        "Last-Modified",
+        "dcterms:modified",
+        "pdf:docinfo:modified",
+        "dcterms:created",
+        "pdf:docinfo:created"
+    };
+
+    @Inject
+    Detectors _detectors;
+    @Inject
+    TikaParser _tikaParser;
+    @Inject
+    @RestClient
+    DatasourceClient datasourceClient;
+    @Inject
+    @RestClient
+    FileManagerClient fileManagerClient;
+    @Inject
+    Logger logger;
+
+    /**
+     * Extracts the last-modified date from Tika metadata using a fallback
+     * chain defined by {@link #LAST_MODIFIED_ORDERED_KEYS}. The array order
+     * determines the priority: modified-date keys are checked first
+     * ({@code Last-Modified}, {@code dcterms:modified},
+     * {@code pdf:docinfo:modified}), then creation-date keys as a
+     * last resort ({@code dcterms:created}, {@code pdf:docinfo:created}).
+     * Returns the first non-null value, or {@code null} if none is found.
+     */
+    private static String _getLastModified(TikaMetadata metadata) {
+        for (String key : LAST_MODIFIED_ORDERED_KEYS) {
+            String value = metadata.getSingleValue(key);
+
+            if (value != null) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
     public void process(JsonObject jsonObject) {
 
         long startTime = System.currentTimeMillis();
@@ -256,41 +298,5 @@ public class TikaProcessor {
         logger.info(estimatedTime);
 
     }
-
-    /**
-     * Extracts the last-modified date from Tika metadata using a fallback
-     * chain: {@code Last-Modified} (general), {@code dcterms:modified}
-     * (Microsoft Office/OOXML), {@code pdf:docinfo:modified} (PDF).
-     */
-    private static String _getLastModified(TikaMetadata metadata) {
-        var lastModified = metadata.getSingleValue("Last-Modified");
-
-        if (lastModified == null) {
-            lastModified = metadata.getSingleValue("dcterms:modified");
-        }
-
-        if (lastModified == null) {
-            lastModified = metadata.getSingleValue("pdf:docinfo:modified");
-        }
-
-        return lastModified;
-    }
-
-    @Inject
-    TikaParser _tikaParser;
-
-    @Inject
-    Detectors _detectors;
-
-    @Inject
-    Logger logger;
-
-    @Inject
-    @RestClient
-    FileManagerClient fileManagerClient;
-
-    @Inject
-    @RestClient
-    DatasourceClient datasourceClient;
 
 }
