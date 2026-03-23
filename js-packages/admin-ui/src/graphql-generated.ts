@@ -5898,7 +5898,7 @@ export type EnrichItemQueryVariables = Exact<{
 }>;
 
 
-export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, script?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null };
+export type EnrichItemQuery = { __typename?: 'Query', enrichItem?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null, description?: string | null, type?: EnrichItemType | null, script?: string | null, jsonConfig?: string | null, behaviorMergeType?: BehaviorMergeType | null, jsonPath?: string | null, behaviorOnError?: BehaviorOnError | null, requestTimeout?: any | null, resourceUri?: { __typename?: 'ResourceUri', baseUri?: string | null, path?: string | null } | null } | null };
 
 export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -5907,6 +5907,7 @@ export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
   type: EnrichItemType;
   resourceUri: ResourceUriInput;
   script?: InputMaybe<Scalars['String']>;
+  jsonConfig?: InputMaybe<Scalars['String']>;
   behaviorMergeType: BehaviorMergeType;
   jsonPath: Scalars['String'];
   behaviorOnError: BehaviorOnError;
@@ -9597,6 +9598,7 @@ export const EnrichItemDocument = gql`
       path
     }
     script
+    jsonConfig
     behaviorMergeType
     jsonPath
     behaviorOnError
@@ -9633,10 +9635,10 @@ export type EnrichItemQueryHookResult = ReturnType<typeof useEnrichItemQuery>;
 export type EnrichItemLazyQueryHookResult = ReturnType<typeof useEnrichItemLazyQuery>;
 export type EnrichItemQueryResult = Apollo.QueryResult<EnrichItemQuery, EnrichItemQueryVariables>;
 export const CreateOrUpdateEnrichItemDocument = gql`
-    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $resourceUri: ResourceUriInput!, $script: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
+    mutation CreateOrUpdateEnrichItem($id: ID, $name: String!, $description: String, $type: EnrichItemType!, $resourceUri: ResourceUriInput!, $script: String, $jsonConfig: String, $behaviorMergeType: BehaviorMergeType!, $jsonPath: String!, $behaviorOnError: BehaviorOnError!, $requestTimeout: BigInteger!) {
   enrichItem(
     id: $id
-    enrichItemDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, script: $script, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
+    enrichItemDTO: {name: $name, description: $description, type: $type, resourceUri: $resourceUri, script: $script, jsonConfig: $jsonConfig, behaviorMergeType: $behaviorMergeType, jsonPath: $jsonPath, behaviorOnError: $behaviorOnError, requestTimeout: $requestTimeout}
   ) {
     entity {
       id
@@ -9670,6 +9672,7 @@ export type CreateOrUpdateEnrichItemMutationFn = Apollo.MutationFunction<CreateO
  *      type: // value for 'type'
  *      resourceUri: // value for 'resourceUri'
  *      script: // value for 'script'
+ *      jsonConfig: // value for 'jsonConfig'
  *      behaviorMergeType: // value for 'behaviorMergeType'
  *      jsonPath: // value for 'jsonPath'
  *      behaviorOnError: // value for 'behaviorOnError'
@@ -16092,4 +16095,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-03-06T10:37:13+01:00
+// Generated on 2026-03-23T12:22:59+01:00

@@ -46,6 +46,7 @@ gql`
         path
       }
       script
+      jsonConfig
       behaviorMergeType
       jsonPath
       behaviorOnError
@@ -62,6 +63,7 @@ gql`
     $type: EnrichItemType!
     $resourceUri: ResourceUriInput!
     $script: String
+    $jsonConfig: String
     $behaviorMergeType: BehaviorMergeType!
     $jsonPath: String!
     $behaviorOnError: BehaviorOnError!
@@ -75,6 +77,7 @@ gql`
         type: $type
         resourceUri: $resourceUri
         script: $script
+        jsonConfig: $jsonConfig
         behaviorMergeType: $behaviorMergeType
         jsonPath: $jsonPath
         behaviorOnError: $behaviorOnError

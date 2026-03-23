@@ -154,7 +154,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         variables: {
           id: enrichItemId !== "new" ? enrichItemId : undefined,
           ...data,
-          script: dynamicFormJson || data.script,
+          jsonConfig: dynamicFormJson || undefined,
           resourceUri: {
             baseUri: data.baseUri,
             path: data.path,
@@ -192,7 +192,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
 
   const { dynamicTemplate, changeValueTemplate, dynamicFormJson } = useDynamicForm({
     template: dynamicTemplateState,
-    jsonConfig: form.inputProps("script").value,
+    jsonConfig: enrichItemQuery.data?.enrichItem?.jsonConfig || "",
   });
 
   const handleNextStep = async () => {
@@ -265,7 +265,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "behaviorMergeType", label: "Behavior Merge Type" },
           { key: "behaviorOnError", label: "Behavior On Error" },
           {
-            key: "script",
+            key: "jsonConfig",
             label: "Configuration",
             jsonView: true,
           },
@@ -274,7 +274,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       },
     ],
     valueOverride: {
-      script: dynamicFormJson || form.inputProps("script").value,
+      jsonConfig: dynamicFormJson || enrichItemQuery.data?.enrichItem?.jsonConfig || "",
     },
   });
 
