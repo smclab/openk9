@@ -17,6 +17,7 @@
 
 package io.openk9.apigw.r2dbc;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -66,8 +67,8 @@ public class TenantWriteServiceR2dbc {
 		VALUES (:id, :tenantId, :route, :authorizationScheme)
 		""";
 	private static final String INSERT_API_KEY_SQL = """
-		INSERT INTO api_key (id, tenant_id, api_key_hash, checksum)
-		VALUES (:id, :tenantId, :apiKeyHash, :checksum)
+		INSERT INTO api_key (id, tenant_id, api_key_hash, checksum, api_group, expiration_date)
+		VALUES (:id, :tenantId, :apiKeyHash, :checksum, :apiGroup, :expirationDate)
 		""";
 	private static final String UPDATE_TENANT_SQL = """
 		UPDATE tenant
@@ -150,14 +151,18 @@ public class TenantWriteServiceR2dbc {
 	 * @param tenantId the tenant identifier
 	 * @param apiKeyHash the hashed API key
 	 * @param checksum the checksum value
+	 * @param apiGroup the API group
+	 * @param expirationDate the expiration date (nullable for non-expiring keys)
 	 * @return Mono that completes when insertion is done
 	 */
 	public Mono<Void> insertApiKey(
-		String tenantId, String apiKeyHash, String checksum) {
+		String tenantId, String apiKeyHash, String checksum,
+		String apiGroup, OffsetDateTime expirationDate) {
 
 		Objects.requireNonNull(tenantId);
 		Objects.requireNonNull(apiKeyHash);
 		Objects.requireNonNull(checksum);
+		Objects.requireNonNull(apiGroup);
 
 		log.debug("Inserting an API key for tenantId: {}, ", tenantId);
 
@@ -167,7 +172,13 @@ public class TenantWriteServiceR2dbc {
 			.bind("id", id)
 			.bind("tenantId", tenantId)
 			.bind("apiKeyHash", apiKeyHash)
-			.bind("checksum", checksum);
+			.bind("checksum", checksum)
+			.bind("apiGroup", apiGroup)
+			.bindNull("expirationDate", OffsetDateTime.class);
+
+		if (expirationDate != null) {
+			stmt = stmt.bind("expirationDate", expirationDate);
+		}
 
 		return stmt.then()
 			.doOnSuccess(v -> log.info(
@@ -343,23 +354,10 @@ public class TenantWriteServiceR2dbc {
 	}
 
 	private static List<String> mapApiGroup(ApiGroup apiGroup) {
-		return (switch (apiGroup) {
-			case ADMINISTRATION -> List.of(
-				ApiRoute.DATASOURCE.name()
-			);
-			case SEARCH -> List.of(
-				ApiRoute.SEARCHER.name(),
-				ApiRoute.RAG.name()
-			);
-			case INGESTION -> List.of(
-				ApiRoute.INGESTION.name()
-			);
-			case PUBLIC -> List.of(
-				ApiRoute.DATASOURCE_CURRENT_BUCKET.name(),
-				ApiRoute.DATASOURCE_OAUTH2_SETTINGS.name(),
-				ApiRoute.DATASOURCE_TEMPLATES.name()
-			);
-		});
+		return ApiRoute.routesFor(apiGroup)
+			.stream()
+			.map(ApiRoute::name)
+			.toList();
 	}
 
 	private static String mapAuthorization(AuthorizationScheme authorizationScheme) {

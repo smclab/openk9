@@ -20,7 +20,10 @@ package io.openk9.apigw.security;
 import java.util.EnumMap;
 import java.util.Map;
 
+import io.openk9.apigw.security.apikey.ApiKeyAuthenticationToken;
+
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 
 public final class RouteAuthorizationMap {
 
@@ -48,11 +51,26 @@ public final class RouteAuthorizationMap {
 		this.tenantMappings = new EnumMap<>(tenantMappings);
 	}
 
+	/**
+	 * Creates a {@link RouteAuthorizationMap} using only the
+	 * default fallback mappings.
+	 *
+	 * @return a new map with fallback authorization schemes
+	 */
 	public static RouteAuthorizationMap of() {
 		return new RouteAuthorizationMap(FALLBACKS);
 	}
 
-	public static RouteAuthorizationMap of(Map<ApiRoute, AuthorizationSchemeToken> tenantMappings) {
+	/**
+	 * Creates a {@link RouteAuthorizationMap} with tenant-specific
+	 * route authorization overrides.
+	 *
+	 * @param tenantMappings route-to-scheme overrides
+	 * @return a new map merging overrides with fallbacks
+	 */
+	public static RouteAuthorizationMap of(
+		Map<ApiRoute, AuthorizationSchemeToken> tenantMappings) {
+
 		return new RouteAuthorizationMap(tenantMappings);
 	}
 
@@ -60,7 +78,16 @@ public final class RouteAuthorizationMap {
 		return tenantMappings.getOrDefault(apiRoute, FALLBACKS.get(apiRoute));
 	}
 
-	public boolean allows(ApiRoute apiRoute, Authentication authentication) {
+	/**
+	 * Checks whether the given authentication is allowed to access
+	 * the specified route.
+	 *
+	 * @param apiRoute the route being accessed
+	 * @param authentication the current authentication token
+	 * @return {@code true} if access is allowed
+	 */
+	public boolean allows(
+		ApiRoute apiRoute, Authentication authentication) {
 		AuthorizationSchemeToken authSchemeToken = schemeFor(apiRoute);
 
 		// allows access when authScheme not defined or explicitly not required
@@ -71,7 +98,22 @@ public final class RouteAuthorizationMap {
 		}
 
 		// allows access when required authentication match
-		return authSchemeToken.match(authentication.getClass());
+		if (!authSchemeToken.match(authentication.getClass())) {
+			return false;
+		}
+
+		// for API key authentication, verify the key's ApiGroup
+		// covers the requested route
+		if (authentication instanceof ApiKeyAuthenticationToken) {
+			String requiredAuthority = "ROUTE_" + apiRoute.name();
+
+			return authentication.getAuthorities()
+				.stream()
+				.map(GrantedAuthority::getAuthority)
+				.anyMatch(requiredAuthority::equals);
+		}
+
+		return true;
 	}
 
 }

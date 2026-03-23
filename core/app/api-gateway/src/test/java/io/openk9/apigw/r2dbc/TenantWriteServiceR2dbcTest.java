@@ -67,7 +67,7 @@ public class TenantWriteServiceR2dbcTest {
 		).verifyComplete();
 
 		StepVerifier.create(
-			service.insertApiKey("tenant2", "hash123", "chk")
+			service.insertApiKey("tenant2", "hash123", "chk", "ADMINISTRATION", null)
 		).verifyComplete();
 	}
 
@@ -143,7 +143,7 @@ public class TenantWriteServiceR2dbcTest {
 					ApiGroup.ADMINISTRATION,
 					AuthorizationScheme.NO_AUTH
 				))
-				.then(service.insertApiKey(tenantId, "hash123", "chk"))
+				.then(service.insertApiKey(tenantId, "hash123", "chk", "ADMINISTRATION", null))
 				.then(service.deleteTenant(tenantId))
 		).verifyComplete();
 
@@ -190,8 +190,8 @@ public class TenantWriteServiceR2dbcTest {
 		var checksum = "chk";
 
 		StepVerifier.create(
-			service.insertApiKey(tenantId, hash, checksum)
-				.then(service.insertApiKey(tenantId, hash, checksum))
+			service.insertApiKey(tenantId, hash, checksum, "ADMINISTRATION", null)
+				.then(service.insertApiKey(tenantId, hash, checksum, "ADMINISTRATION", null))
 		).verifyComplete();
 
 

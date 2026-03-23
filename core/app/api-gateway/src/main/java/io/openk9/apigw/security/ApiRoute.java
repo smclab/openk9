@@ -17,6 +17,10 @@
 
 package io.openk9.apigw.security;
 
+import java.util.List;
+
+import io.openk9.event.tenant.ApiGroup;
+
 import lombok.Getter;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
@@ -120,6 +124,11 @@ public enum ApiRoute {
 		throw new IllegalArgumentException();
 	}
 
+	/**
+	 * Returns all Ant path patterns as a string array.
+	 *
+	 * @return cached array of all route patterns
+	 */
 	public static String[] antPatterns() {
 		if (ANT_PATTERNS != null) {
 			return ANT_PATTERNS;
@@ -134,6 +143,26 @@ public enum ApiRoute {
 		ANT_PATTERNS = patterns;
 
 		return ANT_PATTERNS;
+	}
+
+	/**
+	 * Returns the list of {@link ApiRoute}s that belong to the given
+	 * {@link ApiGroup}.
+	 *
+	 * @param apiGroup the API group
+	 * @return unmodifiable list of routes for the group
+	 */
+	public static List<ApiRoute> routesFor(ApiGroup apiGroup) {
+		return switch (apiGroup) {
+			case ADMINISTRATION -> List.of(DATASOURCE);
+			case SEARCH -> List.of(SEARCHER, RAG);
+			case INGESTION -> List.of(INGESTION);
+			case PUBLIC -> List.of(
+				DATASOURCE_CURRENT_BUCKET,
+				DATASOURCE_OAUTH2_SETTINGS,
+				DATASOURCE_TEMPLATES
+			);
+		};
 	}
 
 	private final static PathMatcher ANT_PATH_MATCHER = new AntPathMatcher();

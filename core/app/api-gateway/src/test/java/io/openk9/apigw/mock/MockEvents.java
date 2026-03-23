@@ -17,6 +17,7 @@
 
 package io.openk9.apigw.mock;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -98,11 +99,15 @@ public class MockEvents {
 				.tenantId("loguetown")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
+				.apiGroup(ApiGroup.ADMINISTRATION)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
 				.build(),
 			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("loguetown")
 				.apiKeyHash("05a4f803d7b05d2308c586494db1d869eb14f1629dbda655fb62df72cfac75f6")
 				.checksum("4679e9c9")
+				.apiGroup(ApiGroup.ADMINISTRATION)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
 				.build(),
 
 			// Drum API key
@@ -110,25 +115,52 @@ public class MockEvents {
 				.tenantId("drum")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
+				.apiGroup(ApiGroup.ADMINISTRATION)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
 				.build(),
 
-			// Alabasta API key
+			// Alabasta API key (SEARCH — used on searcher routes)
 			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("alabasta")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
+				.apiGroup(ApiGroup.SEARCH)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
 				.build(),
 
-			// Sabaody API keys
+			// Sabaody: ADMINISTRATION key (for datasource routes)
 			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("sabaody")
 				.apiKeyHash("54a0fac2b6c83ac31a1af4a33b81f80e67659f3f4b3083d6f36ac04cd376e374")
 				.checksum("a9d05b90")
+				.apiGroup(ApiGroup.ADMINISTRATION)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
 				.build(),
+			// Sabaody: SEARCH key (for searcher routes)
 			TenantEvent.ApiKeyCreated.builder()
 				.tenantId("sabaody")
 				.apiKeyHash("dc94fddbae55ea98995b28eca222f934de35bc05eb8af91cc6956c0c3dcc233f")
 				.checksum("bd0a32e2")
+				.apiGroup(ApiGroup.SEARCH)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
+				.build(),
+
+			// Sabaody: INGESTION key (for ApiGroup tests)
+			TenantEvent.ApiKeyCreated.builder()
+				.tenantId("sabaody")
+				.apiKeyHash("ce9acc4d057d2c94788c2943d1b09079e594f7965a92763f285a31ebfda19d26")
+				.checksum("f079ba95")
+				.apiGroup(ApiGroup.INGESTION)
+				.expirationDate(OffsetDateTime.now().plusYears(1))
+				.build(),
+
+			// Sabaody: expired SEARCH key (for expiration tests)
+			TenantEvent.ApiKeyCreated.builder()
+				.tenantId("sabaody")
+				.apiKeyHash("8a92ca186d01804f7766bff613df9613996b868c6ee975eca040a269d7fcccff")
+				.checksum("d4504e06")
+				.apiGroup(ApiGroup.SEARCH)
+				.expirationDate(OffsetDateTime.now().minusHours(1))
 				.build()
 		);
 	}

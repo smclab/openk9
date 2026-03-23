@@ -96,7 +96,9 @@ public class ReactiveTenantEventDbWriter
 		return writeService
 			.insertApiKey(
 				event.tenantId(), event.apiKeyHash(),
-				event.checksum())
+				event.checksum(),
+				event.apiGroup().name(),
+				event.expirationDate())
 			.doOnSuccess(v -> {
 				evictCache();
 				log.info(

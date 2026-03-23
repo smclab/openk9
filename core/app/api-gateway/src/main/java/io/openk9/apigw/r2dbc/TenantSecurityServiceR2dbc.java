@@ -17,13 +17,17 @@
 
 package io.openk9.apigw.r2dbc;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.ChecksumValidationException;
+import io.openk9.apigw.security.ExpiredApiKeyException;
 import io.openk9.apigw.security.Keychain;
 import io.openk9.apigw.security.NoAuthenticationToken;
 import io.openk9.apigw.security.RouteAuthorizationMap;
@@ -34,6 +38,7 @@ import io.openk9.apigw.security.TenantSecurityService;
 import io.openk9.apigw.security.apikey.ApiKeyAuthenticationToken;
 import io.openk9.apigw.security.apikey.ApiKeyMalformedException;
 import io.openk9.apigw.security.oauth2.OAuth2Settings;
+import io.openk9.event.tenant.ApiGroup;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
@@ -103,21 +108,35 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 
 	private Mono<Keychain> getKeychain(String tenantId) {
 		return db.sql("""
-                    SELECT api_key_hash, checksum
+                    SELECT api_key_hash, checksum, api_group, expiration_date
                     FROM api_key
                     WHERE tenant_id = :tenantId
                     """)
 			.bind("tenantId", tenantId)
 			.map((row, meta) -> {
-				var apiKeyHash = row.get("api_key_hash", String.class);
-				var lastDigits = row.get("checksum", String.class);
+				String apiKeyHash = row.get("api_key_hash", String.class);
+				String checksum = row.get("checksum", String.class);
+				String apiGroupStr = row.get("api_group", String.class);
+				OffsetDateTime expirationDate = row.get(
+					"expiration_date", OffsetDateTime.class);
+
 				Objects.requireNonNull(apiKeyHash);
-				Objects.requireNonNull(lastDigits);
-				return Keychain.Key.of(apiKeyHash, lastDigits);
+				Objects.requireNonNull(checksum);
+				Objects.requireNonNull(apiGroupStr);
+
+				ApiGroup apiGroup = ApiGroup
+					.valueOf(apiGroupStr);
+
+				Instant expInstant = expirationDate != null
+					? expirationDate.toInstant()
+					: null;
+
+				return Keychain.Key.of(
+					apiKeyHash, checksum, apiGroup, expInstant);
 			})
 			.all()
 			.collectList()
-			.map(Keychain::new);
+			.map(Keychain::of);
 	}
 
 	private Mono<RouteAuthorizationMap> getRouteAuthorizationMap(String tenantId) {
@@ -179,14 +198,31 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 
 		return getTenantAggregate(tenantId)
 			.<List<String>>handle((tenant, sink) -> {
-				var keychain = tenant.keychain();
+				Keychain keychain = tenant.keychain();
+				// no keychain configured for this tenant
+				if (keychain == null) {
+					sink.complete();
+					return;
+				}
 				try {
-					if (keychain != null && keychain.contains(apiKey)) {
-						sink.next(List.of("ADMIN"));
-					}
-					else {
+					Optional<Keychain.Key> found = keychain.find(apiKey);
+
+					// no apiKey found with the same hash 
+					if (found.isEmpty()) {
 						sink.complete();
+						return;
 					}
+
+					Keychain.Key key = found.get();
+
+					if (key.isExpired()) {
+						sink.error(new ExpiredApiKeyException(
+							"API key has expired"));
+						return;
+					}
+
+					sink.next(mapApiGroupToAuthorities(
+						key.getApiGroup()));
 				}
 				catch (ChecksumValidationException e) {
 					sink.error(e);
@@ -196,6 +232,21 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 				ChecksumValidationException.class,
 				ApiKeyMalformedException::new
 			);
+	}
+
+	/**
+	 * Maps an API group name to the list of route authority strings
+	 * that the key is allowed to access.
+	 *
+	 * @param apiGroup the API group name
+	 * @return list of authority strings in the form {@code "ROUTE_<ApiRoute>"}
+	 */
+	static List<String> mapApiGroupToAuthorities(ApiGroup apiGroup) {
+
+		return ApiRoute.routesFor(apiGroup)
+			.stream()
+			.map(route -> "ROUTE_" + route.name())
+			.toList();
 	}
 
 	@Override

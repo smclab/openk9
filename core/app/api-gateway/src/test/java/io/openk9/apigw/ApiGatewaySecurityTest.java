@@ -80,8 +80,13 @@ class ApiGatewaySecurityTest {
 
 	private static final String INVALID_API_KEY = "ApiKey sk_9a6ef1042afe82404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667";
 	private static final String ALABASTA_VALID_API_KEY = "ApiKey sk_f5b4136fd3449f94f7d60b11180bd7b63eef073b84e3b34d6098b0c71f3cc930_a9d05b90";
-	private static final String SABAODY_VALID_API_KEY = "ApiKey sk_814f53a1a84a67dbe128ba2b072fbb268bf84b04234ea286aa237262c33f38fa_bd0a32e2";
 	private static final String LOGUETOWN_VALID_API_KEY = "ApiKey sk_e5d2dc591d339bd6dbc26c9e63ee79e1ff97de58f1a17803feba35f2ac3e1efb_4679e9c9";
+
+	// Sabaody scoped keys
+	private static final String SABAODY_ADMIN_API_KEY = "ApiKey sk_f5b4136fd3449f94f7d60b11180bd7b63eef073b84e3b34d6098b0c71f3cc930_a9d05b90";
+	private static final String SABAODY_SEARCH_API_KEY = "ApiKey sk_814f53a1a84a67dbe128ba2b072fbb268bf84b04234ea286aa237262c33f38fa_bd0a32e2";
+	private static final String SABAODY_INGESTION_API_KEY = "ApiKey sk_594ef73f11b55aa0937b5f85458a407a714ca6d6b235d903eb4fb951232b3813_f079ba95";
+	private static final String SABAODY_EXPIRED_API_KEY = "ApiKey sk_318d3d8e3319d99b8a8ebd46ab5385b5d2b780e366ce18ad1bac2b310c358371_d4504e06";
 
 	// virtual hosts
     private static final String ALABASTA_HOST = "alabasta.localhost";
@@ -294,12 +299,12 @@ class ApiGatewaySecurityTest {
     class SabaodyTenantTests {
 
         @Test
-        @DisplayName("Datasource route with valid API key should succeed")
+        @DisplayName("Datasource route with ADMINISTRATION API key should succeed")
         void testDatasourceWithValidApiKey() {
             webTestClient.get()
 				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
-				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_ADMIN_API_KEY)
 				.exchange()
 				.expectAll(
 					res -> res.expectStatus().isOk(),
@@ -329,12 +334,12 @@ class ApiGatewaySecurityTest {
         }
 
         @Test
-        @DisplayName("Searcher route with valid API key should succeed")
+        @DisplayName("Searcher route with SEARCH API key should succeed")
         void testSearcherWithValidApiKey() {
             webTestClient.get()
 				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
-				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
 				.exchange()
 				.expectAll(
 					res -> res.expectStatus().isOk(),
@@ -607,12 +612,12 @@ class ApiGatewaySecurityTest {
         }
 
         @Test
-        @DisplayName("PUT request to Sabaody searcher with API key")
+        @DisplayName("PUT request to Sabaody searcher with SEARCH API key")
         void testPutRequestSabaodySearcher() {
             webTestClient.put()
 				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
-				.header(HttpHeaders.AUTHORIZATION, SABAODY_VALID_API_KEY)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
 				.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 				.bodyValue("{\"update\": \"data\"}")
 				.exchange()
@@ -699,11 +704,95 @@ class ApiGatewaySecurityTest {
 			webTestClient.get()
 				.uri("/api/datasource/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
-				.header(HttpHeaders.AUTHORIZATION, "ApiKey sk_9a6efxxxxxxxxx404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667")
+				.header(
+				HttpHeaders.AUTHORIZATION,
+				"ApiKey sk_9a6efxxxxxxxxx404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667")
 				.exchange()
 				.expectStatus().isBadRequest();
 		}
 
+	}
+
+	@Nested
+	@DisplayName("API Key ApiGroup Authorization Tests")
+	class ApiGroupTests {
+
+		@Test
+		@DisplayName("ADMINISTRATION key should access datasource route")
+		void testAdminKeyOnDatasource() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_ADMIN_API_KEY)
+				.exchange()
+				.expectStatus().isOk();
+		}
+
+		@Test
+		@DisplayName("ADMINISTRATION key should be blocked on searcher route")
+		void testAdminKeyOnSearcher() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_ADMIN_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("SEARCH key should access searcher route")
+		void testSearchKeyOnSearcher() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
+				.exchange()
+				.expectStatus().isOk();
+		}
+
+		@Test
+		@DisplayName("SEARCH key should be blocked on datasource route")
+		void testSearchKeyOnDatasource() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("INGESTION key should be blocked on datasource route")
+		void testIngestionKeyOnDatasource() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_INGESTION_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("INGESTION key should be blocked on searcher route")
+		void testIngestionKeyOnSearcher() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_INGESTION_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("Expired SEARCH key should be rejected")
+		void testExpiredKeyRejected() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_EXPIRED_API_KEY)
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
 	}
 
     @Nested
@@ -729,7 +818,7 @@ class ApiGatewaySecurityTest {
         void testTenantSwitching() {
             List<Tuple2<String, String>> confs = List.of(
 				Tuples.of(ALABASTA_HOST, ALABASTA_VALID_JWT_TOKEN),
-				Tuples.of(SABAODY_HOST, SABAODY_VALID_API_KEY),
+				Tuples.of(SABAODY_HOST, SABAODY_ADMIN_API_KEY),
 				Tuples.of(LOGUETOWN_HOST, LOGUETOWN_VALID_API_KEY)
 			);
 
