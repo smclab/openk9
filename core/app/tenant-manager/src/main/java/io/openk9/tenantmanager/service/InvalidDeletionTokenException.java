@@ -15,16 +15,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.pipe.tenant.delete.message;
+package io.openk9.tenantmanager.service;
 
-import io.openk9.tenantmanager.actor.TypedActor;
+/**
+ * Thrown when a deletion confirmation token is invalid or
+ * expired.
+ */
+public class InvalidDeletionTokenException
+	extends RuntimeException {
 
-import java.time.Duration;
-
-public sealed interface TimeoutMessage {
-
-	record Start(TypedActor.Address<DeleteMessage> deleteActor, Duration duration) implements TimeoutMessage {}
-	record Wait() implements TimeoutMessage {}
-	record Stop() implements TimeoutMessage {}
-
+	public InvalidDeletionTokenException(String virtualHost) {
+		super("Invalid or expired deletion token for "
+			+ virtualHost);
+	}
 }

@@ -15,21 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.pipe.tenant.delete.message;
+package io.openk9.tenantmanager.service;
 
-import io.openk9.app.manager.grpc.AppManager;
+/**
+ * Thrown when a tenant cannot be found by virtual host.
+ */
+public class TenantNotFoundException extends RuntimeException {
 
-public sealed interface DeleteGroupMessage {
-
-	record addDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
-
-	record TellDelete(
-		String virtualHost,
-		String token,
-		AppManager appManager,
-		String applicationVersion
-	) implements DeleteGroupMessage {}
-
-	record RemoveDeleteRequest(String virtualHost) implements DeleteGroupMessage {}
-
+	public TenantNotFoundException(String virtualHost) {
+		super("Tenant does not exist: " + virtualHost);
+	}
 }

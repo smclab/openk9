@@ -30,6 +30,8 @@ import jakarta.ws.rs.core.Response;
 
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.DuplicateVirtualHostException;
+import io.openk9.tenantmanager.service.InvalidDeletionTokenException;
+import io.openk9.tenantmanager.service.TenantNotFoundException;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
 import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
@@ -63,19 +65,39 @@ public class TenantManagerResource {
 			.transform(WebApplicationException::new);
 	}
 
+	/**
+	 * Requests a tenant deletion and returns a confirmation
+	 * token.
+	 */
 	@POST
 	@Path("/delete")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Uni<DeleteTenantResponse> deleteTenant(DeleteTenantRequest deleteTenantRequest) {
-		return provisioningService.requestDeletion(deleteTenantRequest);
+	public Uni<DeleteTenantResponse> deleteTenant(
+		DeleteTenantRequest deleteTenantRequest) {
+
+		return provisioningService
+			.requestDeletion(deleteTenantRequest)
+			.onFailure(TenantNotFoundException.class)
+			.transform(cause ->
+				new WebApplicationException(
+					cause, Response.Status.BAD_REQUEST));
 	}
 
+	/**
+	 * Confirms and executes a tenant deletion using the
+	 * previously issued token.
+	 */
 	@DELETE
 	@Path("/delete")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<DeleteTenantResponse> deleteTenant(
-		EffectiveDeleteTenantRequest effectiveDeleteTenantRequest) {
-		return provisioningService.delete(effectiveDeleteTenantRequest);
+		EffectiveDeleteTenantRequest request) {
+
+		return provisioningService.delete(request)
+			.onFailure(InvalidDeletionTokenException.class)
+			.transform(cause ->
+				new WebApplicationException(
+					cause, Response.Status.FORBIDDEN));
 	}
 
 	@Inject

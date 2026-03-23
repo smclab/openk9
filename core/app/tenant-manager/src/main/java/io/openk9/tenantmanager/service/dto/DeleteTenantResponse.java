@@ -21,5 +21,8 @@ import jakarta.annotation.Nullable;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
+/**
+ * Response returned by the tenant deletion endpoints.
+ */
 @RegisterForReflection
 public record DeleteTenantResponse(@Nullable String message) {}

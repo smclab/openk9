@@ -17,14 +17,19 @@
 
 package io.openk9.tenantmanager.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
 
 import io.openk9.app.manager.grpc.AppManager;
+import io.openk9.app.manager.grpc.AppManifest;
+import io.openk9.app.manager.grpc.AppManifestList;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
@@ -33,11 +38,11 @@ import io.openk9.common.util.RandomGenerator;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
 import io.openk9.datasource.grpc.InitTenantResponse;
+import io.openk9.datasource.grpc.PresetPluginDrivers;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.Tenant;
 import io.openk9.tenantmanager.pipe.tenant.create.TenantManagerActorSystem;
-import io.openk9.tenantmanager.pipe.tenant.delete.DeleteTenantActorSystem;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
 import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
 import io.openk9.tenantmanager.service.dto.DeleteTenantRequest;
@@ -49,6 +54,7 @@ import io.quarkus.vertx.ConsumeEvent;
 import io.quarkus.vertx.VertxContextSupport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.Message;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -65,15 +71,18 @@ public class TenantProvisioningService {
 	public static final String DELETE_REALM = "TenantProvisioningService#deleteRealm";
 	public static final String DELETE_SCHEMA = "TenantProvisioningService#deleteSchema";
 	public static final String DELETE_INGRESS = "TenantProvisioningService#deleteIngress";
-	public static final String DELETE_ENTITY = "TenantProvisioningService#deleteEntity";
-	public static final String FIND_TENANT_BY_VIRTUAL_HOST =
-		"TenantProvisioningService#findTenantByVirtualHost";
+	public static final String EXECUTE_DELETION =
+		"TenantProvisioningService#executeDeletion";
 	public static final String GENERATE_RANDOM_TENANT_NAME =
 		"TenantProvisioningService#generateRandomTenantName";
 	public static final String IS_REALM_CONFIGURED =
 		"TenantProvisioningService#isRealmConfigured";
 
 	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
+
+	@Inject
+	@ConfigProperty(name = "quarkus.application.version")
+	String applicationVersion;
 
 	// ========================================================================
 	// Aggregated services.
@@ -92,15 +101,18 @@ public class TenantProvisioningService {
 	Datasource datasourceService;
 
 	// ========================================================================
-	// Actor systems.
-	// These are the components that create the Actor systems whose handle
-	// the provisioning/deprovisioning of a Tenant.
+	// Provisioning Actor system.
 	// ========================================================================
 
 	@Inject
 	TenantManagerActorSystem tenantManagerActorSystem;
-	@Inject
-	DeleteTenantActorSystem deleteTenantActorSystem;
+
+	// ========================================================================
+	// Deletion token storage.
+	// ========================================================================
+
+	private final ConcurrentMap<String, String> deletionTokens =
+		new ConcurrentHashMap<>();
 
 	// ========================================================================
 	// Event Bus requests.
@@ -152,14 +164,6 @@ public class TenantProvisioningService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<Void> deleteEntity(String tenantId) {
-
-		return EventBusInstanceHolder.request(
-				DELETE_ENTITY, DeleteEntityRequest.of(tenantId))
-			.replaceWithVoid()
-			.subscribeAsCompletionStage();
-	}
-
 	public static CompletionStage<DeleteIngressResponse> deleteIngress(
 		String virtualHost, String tenantId) {
 
@@ -187,15 +191,6 @@ public class TenantProvisioningService {
 		return EventBusInstanceHolder.request(
 				DELETE_SCHEMA, DeleteSchemaRequest.of(schemaName))
 			.replaceWithVoid().subscribeAsCompletionStage();
-	}
-
-	public static CompletionStage<TenantResponseDTO> findTenant(
-		String virtualHost) {
-
-		return EventBusInstanceHolder.<TenantResponseDTO>request(
-				FIND_TENANT_BY_VIRTUAL_HOST, FindTenantRequest.of(virtualHost))
-			.map(Message::body)
-			.subscribeAsCompletionStage();
 	}
 
 	public static CompletionStage<String> generateRandomSchemaName() {
@@ -226,17 +221,37 @@ public class TenantProvisioningService {
 			.flatMap(n -> tenantManagerActorSystem.startCreateTenant(request));
 	}
 
+	/**
+	 * Confirms and executes a pending tenant deletion.
+	 * <p>
+	 * Validates the token against the stored value for the given
+	 * virtualHost. If valid, removes the token and runs the
+	 * deletion asynchronously.
+	 *
+	 * @param request the confirmation request with virtualHost
+	 *        and token
+	 * @return a response confirming the deletion has started
+	 */
 	public Uni<DeleteTenantResponse> delete(
 		EffectiveDeleteTenantRequest request) {
 
-		deleteTenantActorSystem.runDelete(
-			request.virtualHost(),
-			request.token()
-		);
+		String virtualHost = request.virtualHost();
+		String token = request.token();
 
-		return Uni
-			.createFrom()
-			.item(new DeleteTenantResponse("delete tenant started"));
+		String stored = deletionTokens.remove(virtualHost);
+
+		if (stored == null || !stored.equals(token)) {
+			return Uni.createFrom().failure(
+				new InvalidDeletionTokenException(virtualHost)
+			);
+		}
+
+		EventBusInstanceHolder.getEventBus()
+			.send(EXECUTE_DELETION, virtualHost);
+
+		return Uni.createFrom()
+			.item(new DeleteTenantResponse(
+				"delete tenant started"));
 	}
 
 	public Uni<CreateTablesResponse> populateSchema(long tenantId) {
@@ -258,34 +273,6 @@ public class TenantProvisioningService {
 
 						return new CreateTablesResponse(message);
 					});
-				}
-			});
-
-	}
-
-	public Uni<DeleteTenantResponse> requestDeletion(
-		DeleteTenantRequest request) {
-
-		String virtualHost = request.virtualHost();
-
-		return dbService
-			.findByVirtualHost(virtualHost)
-			.flatMap(tenant -> {
-				if (tenant == null) {
-					return Uni
-						.createFrom()
-						.failure(
-							new WebApplicationException(
-								"Tenant not exist with virtualHost: " + virtualHost,
-								Response.Status.NOT_FOUND
-							)
-						);
-				}
-				else {
-					deleteTenantActorSystem.startDeleteTenant(virtualHost);
-					return Uni
-						.createFrom()
-						.item(new DeleteTenantResponse("delete tenant started...read logs"));
 				}
 			});
 
@@ -338,12 +325,6 @@ public class TenantProvisioningService {
 		return appManagerService.createIngress(request);
 	}
 
-	@ConsumeEvent(DELETE_ENTITY)
-	Uni<Void> deleteEntity(DeleteEntityRequest request) {
-
-		return dbService.deleteTenant(Long.parseLong(request.tenantId));
-	}
-
 	@ConsumeEvent(DELETE_INGRESS)
 	Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
 
@@ -374,11 +355,6 @@ public class TenantProvisioningService {
 		});
 	}
 
-	@ConsumeEvent(FIND_TENANT_BY_VIRTUAL_HOST)
-	Uni<TenantResponseDTO> findTenant(FindTenantRequest request) {
-		return dbService.findByVirtualHost(request.virtualHost());
-	}
-
 	@ConsumeEvent(GENERATE_RANDOM_TENANT_NAME)
 	Uni<String> generateRandomTenantName(Object none) {
 
@@ -389,6 +365,107 @@ public class TenantProvisioningService {
 	@ConsumeEvent(IS_REALM_CONFIGURED)
 	Uni<Boolean> checkRealmConfigured(Object none) {
 		return Uni.createFrom().item(realmService.isConfigured());
+	}
+
+	/**
+	 * Executes all tenant deletion operations in parallel.
+	 * <p>
+	 * Finds the tenant by virtualHost, then runs deleteSchema,
+	 * deleteRealm (if provisioned), deleteEntity, deleteIngress,
+	 * and deleteAllResources concurrently. Failures from
+	 * individual operations are collected, not short-circuited.
+	 */
+	@ConsumeEvent(value = EXECUTE_DELETION, blocking = true)
+	void executeDeletion(String virtualHost) {
+		dbService.findByVirtualHost(virtualHost)
+			.flatMap(tenant -> {
+				List<Uni<Void>> ops = new ArrayList<>();
+
+				ops.add(Uni.createFrom()
+					.<Void>item(() -> {
+						schemaService
+							.rollbackRunLiquibaseMigration(
+								tenant.schemaName());
+						log.infof(
+							"Schema %s deleted for %s",
+							tenant.schemaName(),
+							virtualHost);
+						return null;
+					}));
+
+				if (tenant.realmProvisioned()) {
+					ops.add(realmService
+						.deleteRealm(tenant.schemaName())
+						.invoke(() -> log.infof(
+							"Realm deleted for %s",
+							virtualHost)));
+				}
+				else {
+					log.infof(
+						"Skipping realm deletion for %s"
+							+ " (not self-provisioned)",
+						virtualHost);
+				}
+
+				ops.add(dbService
+					.deleteTenant(
+						Long.parseLong(tenant.id()))
+					.invoke(() -> log.infof(
+						"Entity %s deleted for %s",
+						tenant.id(), virtualHost)));
+
+				ops.add(appManagerService
+					.deleteIngress(
+						DeleteIngressRequest.newBuilder()
+							.setVirtualHost(virtualHost)
+							.setSchemaName(
+								tenant.schemaName())
+							.build())
+					.replaceWithVoid()
+					.invoke(() -> log.infof(
+						"Ingress deleted for %s",
+						virtualHost)));
+
+				var manifests = PresetPluginDrivers
+					.getAllPluginDrivers()
+					.stream()
+					.map(preset -> AppManifest.newBuilder()
+						.setSchemaName(tenant.schemaName())
+						.setChart(preset)
+						.setVersion(applicationVersion)
+						.build())
+					.toList();
+
+				ops.add(appManagerService
+					.deleteAllResources(
+						AppManifestList.newBuilder()
+							.addAllAppManifests(manifests)
+							.build())
+					.invoke(resp -> resp
+						.getDeleteResourceStatusList()
+						.forEach(s -> log.infof(
+							"Resource %s: %s for %s",
+							s.getResourceName(),
+							s.getStatus(),
+							virtualHost)))
+					.replaceWithVoid());
+
+				return Uni.join()
+					.all(ops)
+					.andCollectFailures()
+					.replaceWithVoid();
+			})
+			.onItem().invoke(() -> log.infof(
+				"Tenant deletion completed: %s",
+				virtualHost))
+			.onFailure().recoverWithUni(t -> {
+				log.errorf(t,
+					"Tenant deletion failed: %s",
+					virtualHost);
+				return Uni.createFrom().voidItem();
+			})
+			.await()
+			.indefinitely();
 	}
 
 	// ========================================================================
@@ -403,6 +480,42 @@ public class TenantProvisioningService {
 				.build()
 			)
 			.map(InitTenantResponse::getBucketId);
+	}
+
+	/**
+	 * Requests a tenant deletion by generating a confirmation
+	 * token. The token is returned to the client and must be
+	 * sent back via {@link #delete(EffectiveDeleteTenantRequest)}
+	 * to confirm the operation.
+	 *
+	 * @param request the deletion request with virtualHost
+	 * @return a response containing the deletion token
+	 */
+	public Uni<DeleteTenantResponse> requestDeletion(
+		DeleteTenantRequest request) {
+
+		String virtualHost = request.virtualHost();
+
+		return dbService
+			.findByVirtualHost(virtualHost)
+			.flatMap(tenant -> {
+				if (tenant == null) {
+					return Uni.createFrom().failure(
+						new TenantNotFoundException(
+							virtualHost)
+					);
+				}
+
+				String token = UUID.randomUUID().toString();
+				deletionTokens.put(virtualHost, token);
+
+				log.infof(
+					"Deletion token generated for %s",
+					virtualHost);
+
+				return Uni.createFrom().item(
+					new DeleteTenantResponse(token));
+			});
 	}
 
 	// ========================================================================
@@ -430,13 +543,6 @@ public class TenantProvisioningService {
 		}
 	}
 
-	private record DeleteEntityRequest(String tenantId) {
-
-		public static DeleteEntityRequest of(String tenantId) {
-			return new DeleteEntityRequest(tenantId);
-		}
-	}
-
 	private record DeleteRealmRequest(String realmName) {
 
 		public static DeleteRealmRequest of(String realmName) {
@@ -451,10 +557,4 @@ public class TenantProvisioningService {
 		}
 	}
 
-	private record FindTenantRequest(String virtualHost) {
-
-		public static FindTenantRequest of(String virtualHost) {
-			return new FindTenantRequest(virtualHost);
-		}
-	}
 }
