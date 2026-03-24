@@ -262,3 +262,7 @@ volumes:
   opensearch-data:
   postgres-data:
   caddy-data:
+
+networks:
+  default:
+    name: openk9

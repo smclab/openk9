@@ -412,8 +412,27 @@ Access:
   services (rag-module, embedding-module, talk-to) start together
   with the with-gen-ai profile.
 
+Custom overlays:
+  After starting the stack with k9.sh, you can attach
+  additional services (seeders, connectors, debug tools)
+  using docker compose directly:
+
+    docker compose -f my-overlay.yaml up -d
+
+  Declare the openk9 network as external in your file
+  so the containers join the same network as the stack:
+
+    networks:
+      openk9:
+        external: true
+        name: openk9
+
+  The network must be declared external because it is
+  created and owned by the k9.sh compose project. A
+  separate compose invocation cannot create or manage
+  it — it can only join an existing one.
+
 Examples:
-  ./k9.sh start                            Start core services
   ./k9.sh start                            Start core services
   ./k9.sh start --build                    Build core, then start
   ./k9.sh start --profile=with-gen-ai --build
