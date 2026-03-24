@@ -22,6 +22,7 @@ from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
+from app.models import models
 from app.rag.retrievers.domain_documents_retriever import (
     OpenSearchDomainDocumentsRetriever,
 )
@@ -576,7 +577,6 @@ class RagGraph:
         return state
 
     def analyze_and_rewrite_query_node(self, state: GraphState) -> GraphState:
-        print(state.domain)
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             query = state.current_query
             messages = state.messages
@@ -687,18 +687,18 @@ class RagGraph:
 
             rag_router_prompt_template = PromptTemplate.from_template(rag_router_prompt)
 
-            rag_router_chain = (
-                rag_router_prompt_template
-                | self.llm.with_structured_output(
-                    schema=RouterResponse, include_raw=False, method="function_calling"
-                )
-            )
+        #     rag_router_chain = (
+        #         rag_router_prompt_template
+        #         | self.llm.with_structured_output(
+        #             schema=RouterResponse, include_raw=False, method="function_calling"
+        #         )
+        #     )
 
-            decision = rag_router_chain.invoke(
-                {"query": query, "context": conversation_context}
-            )
-
-            state.use_rag = "RAG" in decision.response.value
+        #     decision = rag_router_chain.invoke(
+        #         {"query": query, "context": conversation_context}
+        #     )
+        #     print(decision.response.value)
+        state.use_rag = True  # "RAG" in decision.response.value
 
         return state
 
@@ -765,27 +765,46 @@ class RagGraph:
         ):
             unauthorized_response()
         else:
-            retriever = OpenSearchRetriever(
-                search_query=self.configuration.get("search_query"),
-                search_text=query,
-                rerank=self.configuration.get("rerank"),
-                chunk_window=self.configuration.get("chunk_window"),
-                range_values=self.configuration.get("range_values"),
-                after_key=self.configuration.get("after_key"),
-                suggest_keyword=self.configuration.get("suggest_keyword"),
-                suggestion_category_id=self.configuration.get("suggestion_category_id"),
-                virtual_host=self.configuration.get("virtual_host"),
-                jwt=self.configuration.get("jwt"),
-                extra=self.configuration.get("extra"),
-                sort=self.configuration.get("sort"),
-                sort_after_key=self.configuration.get("sort_after_key"),
-                language=self.configuration.get("language"),
-                context_window=self.configuration.get("context_window"),
-                metadata=self.configuration.get("metadata"),
-                retrieve_type=self.configuration.get("retrieve_type"),
-                opensearch_host=self.configuration.get("opensearch_host"),
-                grpc_host=self.configuration.get("grpc_host_datasource"),
+            search_query = self.configuration.get("search_query")
+
+            domain_filter = models.SearchToken(
+                tokenType="TEXT",
+                keywordKey="domain",
+                values=[state.domain],
+                filter=True,
+                entityType="",
+                entityName="",
+                extra={},
             )
+
+            if self.configuration.get("search_query"):
+                search_query.append(domain_filter)
+            else:
+                search_query = [domain_filter]
+
+                retriever = OpenSearchRetriever(
+                    search_query=search_query,
+                    search_text=query,
+                    rerank=self.configuration.get("rerank"),
+                    chunk_window=self.configuration.get("chunk_window"),
+                    range_values=self.configuration.get("range_values"),
+                    after_key=self.configuration.get("after_key"),
+                    suggest_keyword=self.configuration.get("suggest_keyword"),
+                    suggestion_category_id=self.configuration.get(
+                        "suggestion_category_id"
+                    ),
+                    virtual_host=self.configuration.get("virtual_host"),
+                    jwt=self.configuration.get("jwt"),
+                    extra=self.configuration.get("extra"),
+                    sort=self.configuration.get("sort"),
+                    sort_after_key=self.configuration.get("sort_after_key"),
+                    language=self.configuration.get("language"),
+                    context_window=self.configuration.get("context_window"),
+                    metadata=self.configuration.get("metadata"),
+                    retrieve_type=self.configuration.get("retrieve_type"),
+                    opensearch_host=self.configuration.get("opensearch_host"),
+                    grpc_host=self.configuration.get("grpc_host_datasource"),
+                )
 
         retrieved_docs = retriever.invoke(query)
         state.context = retrieved_docs
@@ -1163,7 +1182,7 @@ class RagGraph:
         else:
             workflow.add_node("input_guardrail", self.input_guardrail_node)
             workflow.add_node("input_domain_pre", self.input_domain_node)
-            workflow.add_node("input_domain_post", self.input_domain_node)
+            # workflow.add_node("input_domain_post", self.input_domain_node)
 
             workflow.add_node(
                 "guardrail_violation_response", self.guardrail_violation_response_node
@@ -1181,7 +1200,7 @@ class RagGraph:
                 "input_domain_pre"
             )  # ATTENZIONE, non sta iniziando da input_guardrail al momento
             workflow.add_edge("input_domain_pre", "history_handler")
-            workflow.add_edge("analyze_and_rewrite_query", "input_domain_post")
+            # workflow.add_edge("analyze_and_rewrite_query", "input_domain_post")
 
             workflow.add_conditional_edges(
                 "input_guardrail",
@@ -1203,7 +1222,7 @@ class RagGraph:
 
             workflow.add_edge("guardrail_violation_response", END)
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
-            # workflow.add_edge("analyze_and_rewrite_query", "rag_router")
+            workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "llm_response")
             workflow.add_edge("llm_response", "history_saver")
             workflow.add_edge("history_saver", END)
