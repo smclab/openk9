@@ -18,13 +18,12 @@
 from typing import List, Optional
 
 import requests
+from app.external_services.grpc.grpc_client import query_parser
+from app.rag.chunk_window import get_context_window_merged
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
-
-from app.external_services.grpc.grpc_client import query_parser
-from app.rag.chunk_window import get_context_window_merged
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
@@ -133,6 +132,7 @@ class OpenSearchRetriever(BaseRetriever):
                 document_source = row.get("_source")
                 document_id = document_source.get("contentId")
                 document_types = document_source.get("documentTypes", [])
+                document_domain = document_source.get("domain")
                 dynamic_metadata = {}
 
                 for document_type in document_types:
@@ -164,6 +164,7 @@ class OpenSearchRetriever(BaseRetriever):
                         "chunk_idx": chunk_idx,
                         "prev": previous_chunk,
                         "next": next_chunk,
+                        "domain": document_domain,
                     }
 
                 else:
