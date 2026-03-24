@@ -20,6 +20,8 @@ package io.openk9.tenantmanager.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+import io.openk9.common.util.security.SecurityProperties;
+
 import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.IdentityProvider;
@@ -40,7 +42,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class AdminIdentityProvider
 	implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-	@ConfigProperty(name = "openk9.security.admin.password")
+	@ConfigProperty(name = SecurityProperties.ADMIN_PASSWORD)
 	String adminPassword;
 
 	private byte[] adminPasswordBytes;
