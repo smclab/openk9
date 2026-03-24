@@ -27,9 +27,6 @@ import java.util.List;
 import java.util.Objects;
 
 import io.openk9.common.util.CompactSnowflakeIdGenerator;
-import io.openk9.event.tenant.AuthorizationScheme;
-import io.openk9.event.tenant.ApiGroup;
-import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -53,7 +50,6 @@ import org.eclipse.microprofile.config.ConfigProvider;
  * fetched {@code tenant} rows, and they are persisted in the {@code outbox_event} table.
  */
 public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
-
 
 	@Override
 	public void execute(Database database) throws CustomChangeException {
@@ -156,9 +152,14 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 					// Regarding the authorization check:
 					//  - Datasource APIs were authorized for user with admin roles;
 					//  - Searcher APIs were allowed to everyone.
-					objectNode.set("routeAuthorizationMap", OBJ_MAPPER.createObjectNode()
-						.put(ApiGroup.ADMINISTRATION.name(), AuthorizationScheme.OAUTH2.name())
-						.put(ApiGroup.SEARCH.name(), AuthorizationScheme.NO_AUTH.name())
+					// Raw strings frozen to match the original
+					// Route and Authorization enums at the time
+					// this changelog was created.
+					// See: ApiGroup, AuthorizationScheme
+					objectNode.set("routeAuthorizationMap",
+						OBJ_MAPPER.createObjectNode()
+							.put("DATASOURCE", "OAUTH2")
+							.put("SEARCHER", "NO_AUTH")
 					);
 
 					var payload = objectNode.toString();
@@ -190,7 +191,6 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 			for (BackfillEvent backfillEvent : backfillEvents) {
 
 				long id = ID_GENERATOR.nextId();
-
 
 				stmt.setLong(1, id);
 				stmt.setString(2, EVENT_TYPE);
@@ -237,7 +237,6 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 		// Not needed for this change
 	}
 
-
 	@Override
 	public ValidationErrors validate(Database database) {
 		return new ValidationErrors();
@@ -248,7 +247,8 @@ public class BackfillTenantCreatedEventsTask implements CustomTaskChange {
 
 	private final static CompactSnowflakeIdGenerator ID_GENERATOR =
 		new CompactSnowflakeIdGenerator();
-	private static final String EVENT_TYPE = TenantEvent.TENANT_CREATED;
+	// See: TenantEvent.TENANT_CREATED
+	private static final String EVENT_TYPE = "TenantCreated";
 	private static final ObjectMapper OBJ_MAPPER = new ObjectMapper();
 
 	private record BackfillEvent(String payload, Timestamp createDate) {}
