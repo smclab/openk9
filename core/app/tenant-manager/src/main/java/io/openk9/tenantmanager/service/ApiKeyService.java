@@ -28,7 +28,7 @@ import io.openk9.common.util.CompactSnowflakeIdGenerator;
 import io.openk9.event.tenant.TenantEvent;
 import io.openk9.event.tenant.TenantEventProducer;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
-import io.openk9.tenantmanager.model.ApiKey;
+import io.openk9.tenantmanager.model.ApiKeyStatus;
 import io.openk9.tenantmanager.service.dto.ApiKeyResponse;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 import io.openk9.tenantmanager.service.dto.CreateApiKeyResponse;
@@ -76,7 +76,7 @@ public class ApiKeyService {
 					.preparedQuery(INSERT_SQL)
 					.execute(Tuple.from(new Object[]{
 						id, tenantIdentifier,
-						hash, name, ApiKey.Status.ACTIVE,
+						hash, name, ApiKeyStatus.ACTIVE,
 						prefix, suffix, apiGroup,
 						creationDate, expirationDate
 					}))
@@ -202,7 +202,7 @@ public class ApiKeyService {
 				var hash = apiKeyIdentifier.hash();
 
 				return conn.preparedQuery(REVOKE_SQL)
-					.execute(Tuple.of(ApiKey.Status.REVOKED, id))
+					.execute(Tuple.of(ApiKeyStatus.REVOKED, id))
 					.flatMap(res -> TenantEventProducerUtils.sendEvent(
 						producer,
 						res.rowCount(),
@@ -235,7 +235,6 @@ public class ApiKeyService {
 			row.getString("schema_name"),
 			row.getString("hash"));
 	}
-
 
 	private static final String DELETE_SQL = "DELETE FROM api_key WHERE id = $1";
 
