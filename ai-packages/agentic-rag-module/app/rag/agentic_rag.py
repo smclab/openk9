@@ -428,7 +428,6 @@ class RagGraph:
 
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         query = state.current_query
-
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
             virtual_host=self.configuration.get("virtual_host"),
@@ -508,7 +507,7 @@ class RagGraph:
 
     def input_domain_node(self, state: GraphState) -> GraphState:
         query = state.current_query
-
+        print(f"Si lavora sulla query '{query}'")
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
             virtual_host=self.configuration.get("virtual_host"),
@@ -542,11 +541,11 @@ class RagGraph:
             print("LLM judge")
             if not found_domains:
                 INTENTS = [
-                    "Troubleshooting",
-                    "How-to",
-                    "Billing",
-                    "Feature information",
-                    "Account management",
+                    "troubleshooting",
+                    "how-to",
+                    "billing",
+                    "feature-information",
+                    "account-management",
                 ]
                 found_domains = set(INTENTS)
             llm_domain = self._llm_input_domain(query, found_domains)
@@ -577,6 +576,7 @@ class RagGraph:
         return state
 
     def analyze_and_rewrite_query_node(self, state: GraphState) -> GraphState:
+        print(state.domain)
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             query = state.current_query
             messages = state.messages
@@ -1162,7 +1162,9 @@ class RagGraph:
             workflow.add_edge("response_evaluation", END)
         else:
             workflow.add_node("input_guardrail", self.input_guardrail_node)
-            workflow.add_node("input_domain", self.input_domain_node)
+            workflow.add_node("input_domain_pre", self.input_domain_node)
+            workflow.add_node("input_domain_post", self.input_domain_node)
+
             workflow.add_node(
                 "guardrail_violation_response", self.guardrail_violation_response_node
             )
@@ -1175,7 +1177,11 @@ class RagGraph:
             workflow.add_node("llm_response", self.llm_response_node)
             workflow.add_node("history_saver", self.history_saver_node)
 
-            workflow.set_entry_point("input_domain")
+            workflow.set_entry_point(
+                "input_domain_pre"
+            )  # ATTENZIONE, non sta iniziando da input_guardrail al momento
+            workflow.add_edge("input_domain_pre", "history_handler")
+            workflow.add_edge("analyze_and_rewrite_query", "input_domain_post")
 
             workflow.add_conditional_edges(
                 "input_guardrail",
@@ -1197,7 +1203,7 @@ class RagGraph:
 
             workflow.add_edge("guardrail_violation_response", END)
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
-            workflow.add_edge("analyze_and_rewrite_query", "rag_router")
+            # workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "llm_response")
             workflow.add_edge("llm_response", "history_saver")
             workflow.add_edge("history_saver", END)
