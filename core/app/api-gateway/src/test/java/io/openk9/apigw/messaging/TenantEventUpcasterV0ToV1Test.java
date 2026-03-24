@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,162 +31,210 @@ class TenantEventUpcasterV0ToV1Test {
 
 	private ObjectMapper mapper;
 
+	// -- Shared JSON payloads --
+
+	private static final String V0_TENANT_FULL = """
+		{
+			"tenantId": "t1",
+			"routeAuthorizationMap": {
+				"SEARCHER": "API_KEY",
+				"DATASOURCE": "OAUTH2"
+			}
+		}""";
+
+	private static final String V0_TENANT_NO_MAP = """
+		{ "tenantId": "some-tenant" }""";
+
+	private static final String V0_TENANT_NO_SEARCHER = """
+		{
+			"tenantId": "t1",
+			"routeAuthorizationMap": {
+				"DATASOURCE": "OAUTH2"
+			}
+		}""";
+
+	private static final String V1_TENANT = """
+		{
+			"tenantId": "t1",
+			"routeAuthorizationMap": {
+				"ADMINISTRATION": "OAUTH2",
+				"SEARCH": "OAUTH2"
+			}
+		}""";
+
+	private static final String V0_API_KEY_NO_GROUP = """
+		{
+			"tenantId": "t1",
+			"expirationDate": "2025-01-01T00:00:00Z"
+		}""";
+
+	private static final String V0_API_KEY_NO_EXPIRATION = """
+		{
+			"tenantId": "t1",
+			"apiGroup": "SEARCH"
+		}""";
+
+	private static final String V0_API_KEY_EMPTY = """
+		{ "tenantId": "t1" }""";
+
+	private static final String V1_API_KEY = """
+		{
+			"tenantId": "t1",
+			"apiGroup": "SEARCH",
+			"expirationDate": "2025-01-01T00:00:00Z"
+		}""";
+
 	@BeforeEach
 	void setUp() {
 		mapper = new ObjectMapper();
 	}
 
 	@Nested
-	@DisplayName("upcastRouteAuthorizationMap")
-	class UpcastRouteAuthorizationMapTests {
+	@DisplayName("TenantCreated Event")
+	class TenantCreatedEventTests {
 
 		@Test
-		@DisplayName("Modern map with ADMINISTRATION is not modified")
-		void modernMap_isUnchanged() {
-			// build a v1 routeAuthorizationMap (4 modern keys)
-			ObjectNode node = mapper.createObjectNode();
-			ObjectNode authMap = mapper.createObjectNode();
-			authMap.put("ADMINISTRATION", "OAUTH2");
-			authMap.put("SEARCH", "OAUTH2");
-			authMap.put("INGESTION", "OAUTH2");
-			authMap.put("PUBLIC", "NO_AUTH");
-			node.set("routeAuthorizationMap", authMap);
+		@DisplayName(
+			"DATASOURCE + SEARCHER is replaced by v1 map"
+		)
+		void v0_appliesTransformations() throws Exception {
+			JsonNode root = mapper.readTree(V0_TENANT_FULL);
 
-			// upcast
-			JsonNode result =
-				TenantEventUpcaster
-					.upcastRouteAuthorizationMap(node);
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, root);
 
-			// verify the map is unchanged
-			JsonNode resultMap = result.get("routeAuthorizationMap");
-			assertThat(resultMap.has("DATASOURCE")).isFalse();
-			assertThat(resultMap.get("ADMINISTRATION").asText())
+			assertThat(result).isNotNull();
+			JsonNode m = result.get("routeAuthorizationMap");
+			assertThat(m.has("DATASOURCE")).isFalse();
+			assertThat(m.has("SEARCHER")).isFalse();
+			assertThat(m.get("ADMINISTRATION").asText())
 				.isEqualTo("OAUTH2");
-			assertThat(resultMap.get("PUBLIC").asText())
-				.isEqualTo("NO_AUTH");
-		}
-
-		@Test
-		@DisplayName("Legacy map with DATASOURCE is transformed")
-		void legacyMap_isTransformed() {
-			// build a v0 routeAuthorizationMap (DATASOURCE marker)
-			ObjectNode node = mapper.createObjectNode();
-			ObjectNode authMap = mapper.createObjectNode();
-			authMap.put("SEARCH", "API_KEY");
-			authMap.put("DATASOURCE", "OAUTH2");
-			node.set("routeAuthorizationMap", authMap);
-
-			// upcast
-			JsonNode result =
-				TenantEventUpcaster
-					.upcastRouteAuthorizationMap(node);
-
-			// verify DATASOURCE is removed and modern keys are set
-			JsonNode resultMap = result.get("routeAuthorizationMap");
-			assertThat(resultMap.has("DATASOURCE")).isFalse();
-			assertThat(resultMap.get("ADMINISTRATION").asText())
-				.isEqualTo("OAUTH2");
-			assertThat(resultMap.get("PUBLIC").asText())
+			assertThat(m.get("SEARCH").asText())
 				.isEqualTo("API_KEY");
-			assertThat(resultMap.get("INGESTION").asText())
+			assertThat(m.get("INGESTION").asText())
 				.isEqualTo("API_KEY");
-		}
-
-		@Test
-		@DisplayName("Missing field leaves node unchanged")
-		void missingField_isUnchanged() {
-			// build a node without routeAuthorizationMap
-			ObjectNode node = mapper.createObjectNode();
-			node.put("tenantId", "some-tenant");
-
-			// upcast
-			JsonNode result =
-				TenantEventUpcaster
-					.upcastRouteAuthorizationMap(node);
-
-			// verify no field was added
-			assertThat(result.has("routeAuthorizationMap")).isFalse();
+			assertThat(m.get("PUBLIC").asText())
+				.isEqualTo("API_KEY");
+			assertThat(m).hasSize(4);
 		}
 
 		@Test
 		@DisplayName(
-			"Missing SEARCH key defaults all routes to OAUTH2 "
-			+ "and backfills SEARCH"
+			"Missing routeAuthorizationMap falls back to "
+			+ "safe default"
 		)
-		void missingSearchKey_defaultsToOAuth2() {
-			// build a v0 map with DATASOURCE but no SEARCH key
-			ObjectNode node = mapper.createObjectNode();
-			ObjectNode authMap = mapper.createObjectNode();
-			authMap.put("DATASOURCE", "OAUTH2");
-			node.set("routeAuthorizationMap", authMap);
+		void missingMap_fallsBackToDefault() throws Exception {
+			JsonNode root = mapper.readTree(V0_TENANT_NO_MAP);
 
-			// upcast
-			JsonNode result =
-				TenantEventUpcaster
-					.upcastRouteAuthorizationMap(node);
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, root);
 
-			// verify all 4 modern keys default to OAUTH2
-			JsonNode resultMap = result.get("routeAuthorizationMap");
-			assertThat(resultMap.has("DATASOURCE")).isFalse();
-			assertThat(resultMap.get("ADMINISTRATION").asText())
+			JsonNode m = result.get("routeAuthorizationMap");
+			assertThat(m).isNotNull();
+			assertThat(m.get("ADMINISTRATION").asText())
 				.isEqualTo("OAUTH2");
-			assertThat(resultMap.get("PUBLIC").asText())
+			assertThat(m.get("SEARCH").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m.get("INGESTION").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m.get("PUBLIC").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m).hasSize(4);
+		}
+
+		@Test
+		@DisplayName(
+			"Missing SEARCHER defaults SEARCH, INGESTION, "
+			+ "PUBLIC to NO_AUTH"
+		)
+		void missingSearcher_defaultsToNoAuth()
+			throws Exception {
+
+			JsonNode root = mapper.readTree(
+				V0_TENANT_NO_SEARCHER);
+
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, root);
+
+			JsonNode m = result.get("routeAuthorizationMap");
+			assertThat(m.get("ADMINISTRATION").asText())
 				.isEqualTo("OAUTH2");
-			assertThat(resultMap.get("INGESTION").asText())
-				.isEqualTo("OAUTH2");
-			assertThat(resultMap.get("SEARCH").asText())
-				.isEqualTo("OAUTH2");
-			assertThat(resultMap).hasSize(4);
+			assertThat(m.get("SEARCH").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m.get("INGESTION").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m.get("PUBLIC").asText())
+				.isEqualTo("NO_AUTH");
+			assertThat(m).hasSize(4);
+		}
+
+		@Test
+		@DisplayName("schemaVersion 1 skips transformations")
+		void v1_skipsTransformations() throws Exception {
+			JsonNode root = mapper.readTree(V1_TENANT);
+
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 1, root);
+
+			// migration skipped — PUBLIC not added
+			assertThat(result).isNotNull();
+			assertThat(result.get("routeAuthorizationMap")
+				.has("ADMINISTRATION")).isTrue();
+			assertThat(result.get("routeAuthorizationMap")
+				.has("PUBLIC")).isFalse();
+		}
+
+		@Test
+		@DisplayName("null root is propagated")
+		void null_isPropagated() {
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, null);
+
+			assertThat(result).isNull();
 		}
 	}
 
 	@Nested
-	@DisplayName("isLegacyApiKeyCreated")
-	class IsLegacyApiKeyCreatedTests {
+	@DisplayName("ApiKeyCreated Event")
+	class ApiKeyCreatedEventTests {
 
 		@Test
-		@DisplayName("Missing apiGroup is legacy")
-		void missingApiGroup_isLegacy() {
-			// only expirationDate, no apiGroup
-			ObjectNode node = mapper.createObjectNode();
-			node.put("expirationDate", "2025-01-01T00:00:00Z");
+		@DisplayName("Missing apiGroup is not v1")
+		void missingApiGroup_isNotV1() throws Exception {
+			JsonNode root = mapper.readTree(V0_API_KEY_NO_GROUP);
 
 			assertThat(TenantEventUpcaster
-				.isLegacyApiKeyCreated(node)).isTrue();
+				.isV1ApiKeyCreated(root)).isFalse();
 		}
 
 		@Test
-		@DisplayName("Missing expirationDate is legacy")
-		void missingExpirationDate_isLegacy() {
-			// only apiGroup, no expirationDate
-			ObjectNode node = mapper.createObjectNode();
-			node.put("apiGroup", "SEARCH");
+		@DisplayName("Missing expirationDate is not v1")
+		void missingExpirationDate_isNotV1()
+			throws Exception {
+
+			JsonNode root = mapper.readTree(
+				V0_API_KEY_NO_EXPIRATION);
 
 			assertThat(TenantEventUpcaster
-				.isLegacyApiKeyCreated(node)).isTrue();
+				.isV1ApiKeyCreated(root)).isFalse();
 		}
 
 		@Test
-		@DisplayName("Both fields missing is legacy")
-		void bothMissing_isLegacy() {
-			// neither apiGroup nor expirationDate
-			ObjectNode node = mapper.createObjectNode();
-			node.put("tenantId", "t1");
+		@DisplayName("Both fields missing is not v1")
+		void bothMissing_isNotV1() throws Exception {
+			JsonNode root = mapper.readTree(V0_API_KEY_EMPTY);
 
 			assertThat(TenantEventUpcaster
-				.isLegacyApiKeyCreated(node)).isTrue();
+				.isV1ApiKeyCreated(root)).isFalse();
 		}
 
 		@Test
-		@DisplayName("Both fields present is modern")
-		void bothPresent_isModern() {
-			// both apiGroup and expirationDate present
-			ObjectNode node = mapper.createObjectNode();
-			node.put("apiGroup", "SEARCH");
-			node.put("expirationDate", "2025-01-01T00:00:00Z");
+		@DisplayName("Both fields present is v1")
+		void bothPresent_isV1() throws Exception {
+			JsonNode root = mapper.readTree(V1_API_KEY);
 
 			assertThat(TenantEventUpcaster
-				.isLegacyApiKeyCreated(node)).isFalse();
+				.isV1ApiKeyCreated(root)).isTrue();
 		}
 	}
 }

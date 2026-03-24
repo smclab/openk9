@@ -35,9 +35,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * Example event listener for handling tenant-related events in an event-driven architecture.
- * This demonstrates how to use the TenantDataInsertService when receiving messages
- * from a message broker (e.g., Kafka, RabbitMQ, etc.).
+ * Persists tenant lifecycle events to the gateway's local R2DBC
+ * database and evicts the tenant cache after each write.
  */
 @Slf4j
 @Component

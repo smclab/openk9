@@ -51,7 +51,7 @@ class TenantManagementEventMessageConverterTest {
 			"hostName": "v0.localhost",
 			"schemaName": "v0_tenant",
 			"routeAuthorizationMap": {
-				"SEARCH": "API_KEY",
+				"SEARCHER": "API_KEY",
 				"DATASOURCE": "OAUTH2"
 			}
 		}""";
@@ -62,7 +62,7 @@ class TenantManagementEventMessageConverterTest {
 			"hostName": "v0.localhost",
 			"schemaName": "v0_tenant",
 			"routeAuthorizationMap": {
-				"SEARCH": "OAUTH2",
+				"SEARCHER": "OAUTH2",
 				"DATASOURCE": "OAUTH2"
 			}
 		}""";
@@ -119,11 +119,19 @@ class TenantManagementEventMessageConverterTest {
 		converter = new TenantManagementEventMessageConverter(mapper);
 	}
 
-	private Message createMessage(String json, String eventType) {
+	private Message createMessage(
+		String json, String eventType, Integer schemaVersion) {
+
+		// Setting message headers
+		
 		MessageProperties props = new MessageProperties();
 		if (eventType != null) {
 			props.setHeader("x-event-type", eventType);
 		}
+		if (schemaVersion != null) {
+			props.setHeader("x-schema-version", schemaVersion);
+		}
+
 		return new Message(json.getBytes(), props);
 	}
 
@@ -137,20 +145,21 @@ class TenantManagementEventMessageConverterTest {
 
 		@Test
 		@DisplayName(
-			"Legacy TenantCreated with DATASOURCE is upcasted"
+			"v0 TenantCreated is upcasted"
 		)
-		void legacyTenantCreated_isUpcasted() {
-			// convert a v0 tenant event with DATASOURCE key
+		void v0TenantCreated_isUpcasted() {
+			// convert a v0 tenant event
+			// with DATASOURCE=OAUTH2
+			// and SEARCHER=API_KEY
 			Object result = converter.fromMessage(
-				createMessage(V0_TENANT_API_KEY, TENANT_CREATED));
+				createMessage(V0_TENANT_API_KEY, TENANT_CREATED, null));
 
 			// verify the event is deserialized as TenantCreated
 			assertThat(result)
 				.isInstanceOf(TenantEvent.TenantCreated.class);
 			var event = (TenantEvent.TenantCreated) result;
 
-			// verify the routeAuthorizationMap is upcasted
-			// to 4 modern keys
+			// verify the map is upcasted
 			assertThat(event.tenantId()).isEqualTo("v0-tenant");
 			assertThat(event.routeAuthorizationMap())
 				.containsEntry(
@@ -169,11 +178,12 @@ class TenantManagementEventMessageConverterTest {
 		}
 
 		@Test
-		@DisplayName("Modern TenantCreated is deserialized as-is")
-		void modernTenantCreated_isDeserializedAsIs() {
-			// convert a v1 tenant event
+		@DisplayName("v1 TenantCreated is deserialized as-is")
+		void v1TenantCreated_isDeserializedAsIs() {
+			// convert a v1 tenant event with schema version 1
 			Object result = converter.fromMessage(
-				createMessage(V1_TENANT, TENANT_CREATED));
+				createMessage(
+					V1_TENANT, TENANT_CREATED, 1));
 
 			// verify it passes through without transformation
 			assertThat(result)
@@ -184,25 +194,25 @@ class TenantManagementEventMessageConverterTest {
 		}
 
 		@Test
-		@DisplayName("Legacy ApiKeyCreated is filtered out")
-		void legacyApiKeyCreated_isFilteredOut() {
-			// convert a v0 ApiKeyCreated (missing apiGroup
-			// and expirationDate)
+		@DisplayName("v0 ApiKeyCreated is filtered out")
+		void v0ApiKeyCreated_isFilteredOut() {
+			// convert a v0 ApiKeyCreated 
+			// (missing apiGroup and expirationDate)
 			Object result = converter.fromMessage(
 				createMessage(
-					V0_API_KEY_CREATED, API_KEY_CREATED));
+					V0_API_KEY_CREATED, API_KEY_CREATED, null));
 
 			// verify it is silently discarded
 			assertThat(result).isNull();
 		}
 
 		@Test
-		@DisplayName("Modern ApiKeyCreated is deserialized")
-		void modernApiKeyCreated_isDeserialized() {
-			// convert a v1 ApiKeyCreated with all fields
+		@DisplayName("v1 ApiKeyCreated is deserialized")
+		void v1ApiKeyCreated_isDeserialized() {
+			// convert a v1 ApiKeyCreated with schema version 1
 			Object result = converter.fromMessage(
 				createMessage(
-					V1_API_KEY_CREATED, API_KEY_CREATED));
+					V1_API_KEY_CREATED, API_KEY_CREATED, 1));
 
 			// verify it is deserialized with all fields
 			assertThat(result)
@@ -215,75 +225,11 @@ class TenantManagementEventMessageConverterTest {
 		}
 
 		@Test
-		@DisplayName(
-			"Legacy TenantUpdated with OAUTH2 SEARCH is upcasted"
-		)
-		void legacyTenantUpdated_oauth2Search_isUpcasted() {
-			// convert a v0 TenantUpdated where SEARCH = OAUTH2
-			Object result = converter.fromMessage(
-				createMessage(
-					V0_TENANT_OAUTH2, TENANT_UPDATED));
-
-			assertThat(result)
-				.isInstanceOf(TenantEvent.TenantUpdated.class);
-			var event = (TenantEvent.TenantUpdated) result;
-
-			// verify all routes inherit the OAUTH2 scheme
-			assertThat(event.tenantId()).isEqualTo("v0-tenant");
-			assertThat(event.routeAuthorizationMap())
-				.containsEntry(
-					ApiGroup.ADMINISTRATION,
-					AuthorizationScheme.OAUTH2)
-				.containsEntry(
-					ApiGroup.SEARCH,
-					AuthorizationScheme.OAUTH2)
-				.containsEntry(
-					ApiGroup.PUBLIC,
-					AuthorizationScheme.OAUTH2)
-				.containsEntry(
-					ApiGroup.INGESTION,
-					AuthorizationScheme.OAUTH2)
-				.hasSize(4);
-		}
-
-		@Test
-		@DisplayName(
-			"Legacy TenantUpdated with API_KEY SEARCH is upcasted"
-		)
-		void legacyTenantUpdated_apiKeySearch_isUpcasted() {
-			// convert a v0 TenantUpdated where SEARCH = API_KEY
-			Object result = converter.fromMessage(
-				createMessage(
-					V0_TENANT_API_KEY, TENANT_UPDATED));
-
-			assertThat(result)
-				.isInstanceOf(TenantEvent.TenantUpdated.class);
-			var event = (TenantEvent.TenantUpdated) result;
-
-			// verify PUBLIC and INGESTION inherit API_KEY
-			// from SEARCH
-			assertThat(event.routeAuthorizationMap())
-				.containsEntry(
-					ApiGroup.ADMINISTRATION,
-					AuthorizationScheme.OAUTH2)
-				.containsEntry(
-					ApiGroup.SEARCH,
-					AuthorizationScheme.API_KEY)
-				.containsEntry(
-					ApiGroup.PUBLIC,
-					AuthorizationScheme.API_KEY)
-				.containsEntry(
-					ApiGroup.INGESTION,
-					AuthorizationScheme.API_KEY)
-				.hasSize(4);
-		}
-
-		@Test
 		@DisplayName("Missing x-event-type header returns null")
 		void missingEventTypeHeader_returnsNull() {
 			// convert a message without x-event-type header
 			Object result = converter.fromMessage(
-				createMessage(MINIMAL_JSON, null));
+				createMessage(MINIMAL_JSON, null, null));
 
 			// verify it is silently discarded
 			assertThat(result).isNull();
@@ -294,12 +240,12 @@ class TenantManagementEventMessageConverterTest {
 			"Modern map with only ADMINISTRATION is not "
 			+ "treated as legacy"
 		)
-		void partialModernMap_isNotTreatedAsLegacy() {
+		void partialV1Map_isNotTreatedAsV0Map() {
 			// convert a v1 tenant with a partial map
-			// (only ADMINISTRATION)
+			// (only ADMINISTRATION), schema version 1
 			Object result = converter.fromMessage(
 				createMessage(
-					V1_TENANT_PARTIAL, TENANT_CREATED));
+					V1_TENANT_PARTIAL, TENANT_CREATED, 1));
 
 			assertThat(result)
 				.isInstanceOf(TenantEvent.TenantCreated.class);

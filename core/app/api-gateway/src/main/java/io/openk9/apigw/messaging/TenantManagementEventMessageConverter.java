@@ -22,7 +22,6 @@ import java.io.IOException;
 import io.openk9.event.tenant.TenantEvent;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -31,18 +30,39 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.support.converter.MessageConversionException;
 import org.springframework.amqp.support.converter.MessageConverter;
 
+/**
+ * Deserializes AMQP messages into {@link TenantEvent} records.
+ *
+ * <p>On the inbound path ({@link #fromMessage}), the converter
+ * reads the {@code x-event-type} and {@code x-schema-version}
+ * headers, delegates schema migration to
+ * {@link TenantEventUpcaster}, and then binds the (possibly
+ * transformed) JSON to the appropriate record type. Returns
+ * {@code null} when the upcaster signals that the event should
+ * be discarded.
+ */
 @Slf4j
 public class TenantManagementEventMessageConverter implements MessageConverter {
 
 	private static final String X_EVENT_TYPE = "x-event-type";
+	private static final String X_SCHEMA_VERSION =
+		"x-schema-version";
 	private final ObjectMapper mapper;
 
-	public TenantManagementEventMessageConverter(ObjectMapper mapper) {
+	/**
+	 * Creates a converter backed by the given
+	 * {@link ObjectMapper}.
+	 */
+	public TenantManagementEventMessageConverter(
+		ObjectMapper mapper) {
+
 		this.mapper = mapper;
 	}
 
 	@Override
-	public Message toMessage(Object object, MessageProperties messageProperties)
+	public Message toMessage(
+		Object object,
+		MessageProperties messageProperties)
 		throws MessageConversionException {
 
 		try {
@@ -55,7 +75,11 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 				default -> throw new MessageConversionException("invalid type");
 			};
 
-			messageProperties.setHeader(X_EVENT_TYPE, eventType);
+			messageProperties.setHeader(
+				X_EVENT_TYPE, eventType);
+			messageProperties.setHeader(
+				X_SCHEMA_VERSION,
+				TenantEvent.CURRENT_SCHEMA_VERSION);
 
 			byte[] body = mapper.writeValueAsBytes(object);
 			Message message = new Message(body, messageProperties);
@@ -89,24 +113,39 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 				return null;
 			}
 
+			int schemaVersion = schemaVersion(messageProperties);
+
 			JsonNode root = TenantEventUpcaster.upcast(
-				eventType, mapper.readTree(body));
+				eventType, schemaVersion, mapper.readTree(body));
 
 			if (root == null) {
 				return null;
 			}
 
 			Object event = switch (eventType) {
-				case TenantEvent.API_KEY_CREATED -> mapper.treeToValue(root, TenantEvent.ApiKeyCreated.class);
-				case TenantEvent.API_KEY_REVOKED -> mapper.treeToValue(root, TenantEvent.ApiKeyRevoked.class);
-				case TenantEvent.TENANT_CREATED -> mapper.treeToValue(root, TenantEvent.TenantCreated.class);
-				case TenantEvent.TENANT_DELETED -> mapper.treeToValue(root, TenantEvent.TenantDeleted.class);
-				case TenantEvent.TENANT_UPDATED -> mapper.treeToValue(root, TenantEvent.TenantUpdated.class);
-				default -> throw new MessageConversionException("unknown x-event-type value");
+				case TenantEvent.API_KEY_CREATED ->
+					mapper.treeToValue(
+						root, TenantEvent.ApiKeyCreated.class);
+				case TenantEvent.API_KEY_REVOKED ->
+					mapper.treeToValue(
+						root, TenantEvent.ApiKeyRevoked.class);
+				case TenantEvent.TENANT_CREATED ->
+					mapper.treeToValue(
+						root, TenantEvent.TenantCreated.class);
+				case TenantEvent.TENANT_DELETED ->
+					mapper.treeToValue(
+						root, TenantEvent.TenantDeleted.class);
+				case TenantEvent.TENANT_UPDATED ->
+					mapper.treeToValue(
+						root, TenantEvent.TenantUpdated.class);
+				default -> throw new MessageConversionException(
+					"unknown x-event-type value");
 			};
 
 			if (log.isDebugEnabled()) {
-				log.debug("deserialized props: {} event: {}", messageProperties, event);
+				log.debug(
+					"deserialized props: {} event: {}",
+					messageProperties, event);
 			}
 
 			return event;
@@ -114,6 +153,17 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 		catch (IOException e) {
 			throw new MessageConversionException("Error during message deserialization", e);
 		}
+	}
+
+	/**
+	 * Extract the schema version from the message headers.
+	 * Legacy messages without the header default to {@code 0}.
+	 */
+	private static int schemaVersion(
+		MessageProperties properties) {
+
+		Integer version = properties.getHeader(X_SCHEMA_VERSION);
+		return (version != null) ? version : 0;
 	}
 
 }

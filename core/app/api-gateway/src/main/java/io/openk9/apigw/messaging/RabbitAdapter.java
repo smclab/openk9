@@ -26,6 +26,13 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.annotation.Payload;
 
+/**
+ * Listens to the tenant event stream queue and dispatches
+ * deserialized {@link TenantEvent} instances to the
+ * {@link TenantEventConsumer}. 
+ * <p>
+ * Null payloads are silently skipped.
+ */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
@@ -33,11 +40,19 @@ public class RabbitAdapter {
 
 	private final TenantEventConsumer consumer;
 
+	/**
+	 * Receives a tenant event from the stream queue.
+	 *
+	 * @param payload the deserialized event, or {@code null}
+	 *                if the message was discarded by the
+	 *                upcaster
+	 */
 	@RabbitListener(
 		queues = TenantEvent.TOPIC,
 		containerFactory = "replayContainerFactory"
 	)
-	public void adapter(@Payload(required = false) TenantEvent payload) {
+	public void adapter(
+		@Payload(required = false) TenantEvent payload) {
 		if (payload == null) {
 			return;
 		}

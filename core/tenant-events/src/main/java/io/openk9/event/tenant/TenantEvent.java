@@ -29,6 +29,13 @@ sealed public interface TenantEvent {
 
 	String TOPIC = "tenant.events";
 
+	/**
+	 * Current schema version stamped on every outbound message.
+	 * Increment this when introducing a breaking schema change
+	 * and add a matching upcaster on the consumer side.
+	 */
+	int CURRENT_SCHEMA_VERSION = 1;
+
 	// x-event-type header values
 	String TENANT_CREATED = "TenantCreated";
 	String TENANT_UPDATED = "TenantUpdated";

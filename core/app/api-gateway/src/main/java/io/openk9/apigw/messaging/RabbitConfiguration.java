@@ -31,6 +31,16 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configures the RabbitMQ stream queue and listener factory for
+ * tenant lifecycle events.
+ * <p>
+ * The queue is a <em>stream</em> (append-only log). The
+ * listener factory replays from the beginning of the stream on
+ * every startup ({@code x-stream-offset: first}), so the
+ * gateway rebuilds its local tenant table from the full event
+ * history.
+ */
 @Slf4j
 @Configuration
 public class RabbitConfiguration {
@@ -44,8 +54,11 @@ public class RabbitConfiguration {
 	}
 
 	@Bean
-	public MessageConverter tenantManagementEventMessageConverter(ObjectMapper objectMapper) {
-		return new TenantManagementEventMessageConverter(objectMapper);
+	public MessageConverter tenantManagementEventMessageConverter(
+		ObjectMapper objectMapper) {
+
+		return new TenantManagementEventMessageConverter(
+			objectMapper);
 	}
 
 	@Bean
@@ -53,13 +66,13 @@ public class RabbitConfiguration {
 		ConnectionFactory connectionFactory,
 		MessageConverter tenantManagementEventMessageConverter) {
 
-		SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
+		SimpleRabbitListenerContainerFactory factory =
+			new SimpleRabbitListenerContainerFactory();
 
 		factory.setConnectionFactory(connectionFactory);
 		factory.setMessageConverter(tenantManagementEventMessageConverter);
-		factory.setContainerCustomizer(container ->
-			container.setConsumerArguments(Map.of("x-stream-offset", "first"))
-		);
+		factory.setContainerCustomizer(c -> c.setConsumerArguments(
+			Map.of("x-stream-offset", "first")));
 
 		return factory;
 	}
