@@ -61,7 +61,6 @@ class TenantManagementEventMessageConverterTest {
 			"tenantId": "v0-tenant",
 			"hostName": "v0.localhost",
 			"schemaName": "v0_tenant",
-			"securityConfiguration": "API_KEY_ONLY",
 			"routeAuthorizationMap": {
 				"SEARCH": "OAUTH2",
 				"DATASOURCE": "OAUTH2"

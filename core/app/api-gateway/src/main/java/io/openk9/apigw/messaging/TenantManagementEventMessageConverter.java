@@ -38,8 +38,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 	private final ObjectMapper mapper;
 
 	public TenantManagementEventMessageConverter(ObjectMapper mapper) {
-		this.mapper = mapper.copy()
-			.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		this.mapper = mapper;
 	}
 
 	@Override

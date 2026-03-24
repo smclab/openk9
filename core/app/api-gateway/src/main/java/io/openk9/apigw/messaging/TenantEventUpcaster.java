@@ -68,19 +68,7 @@ final class TenantEventUpcaster {
 		if (!(root instanceof ObjectNode node)) {
 			return root;
 		}
-		upcastSecurityConfiguration(node);
 		upcastRouteAuthorizationMap(node);
-		return node;
-	}
-
-	static JsonNode upcastSecurityConfiguration(ObjectNode node) {
-		if (!node.has("securityConfiguration")) {
-			return node;
-		}
-		String value = node.get("securityConfiguration").asText();
-		if ("API_KEY_ONLY".equals(value)) {
-			node.put("securityConfiguration", "LEGACY");
-		}
 		return node;
 	}
 
