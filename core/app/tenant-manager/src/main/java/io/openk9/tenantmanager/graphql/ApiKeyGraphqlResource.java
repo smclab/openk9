@@ -63,8 +63,4 @@ public class ApiKeyGraphqlResource {
 		return apiKeyService.revoke(id);
 	}
 
-	@Mutation
-	public Uni<Boolean> deleteApiKey(@NonNull @Id String id) {
-		return apiKeyService.delete(id);
-	}
 }
