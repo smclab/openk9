@@ -41,15 +41,20 @@
 
 	</changeSet>
 
-	<changeSet id="1769505783-3" author="openk9">
-		<customChange class="io.openk9.tenantmanager.init.BackfillTenantIssuerUriTask"/>
-	</changeSet>
-
 	<changeSet id="1769505783-4" author="openk9">
 
 		<dropColumn tableName="tenant">
 			<column name="realm_name"/>
 		</dropColumn>
+
+	</changeSet>
+
+	<changeSet id="1769505783-5" author="openk9">
+
+		<dropNotNullConstraint
+			tableName="tenant"
+			columnName="client_id"
+			columnDataType="VARCHAR(255)"/>
 
 	</changeSet>
 
