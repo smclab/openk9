@@ -41,16 +41,6 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>io.smallrye</groupId>
-				<artifactId>jandex-maven-plugin</artifactId>
-				<version>3.3.1</version>
-			</plugin>
-		</plugins>
-	</build>
-
 	<properties>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
