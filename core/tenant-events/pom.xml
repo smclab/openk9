@@ -41,6 +41,24 @@
 		</dependency>
 	</dependencies>
 
+	<!--
+	  Jandex index is required so that Quarkus modules depending on
+	  tenant-events (e.g. tenant-manager) can discover classes like
+	  ApiGroup and AuthorizationScheme at build time. Without it
+	  Quarkus logs: "Class [io.openk9.event.tenant.ApiGroup] is
+	  not indexed in Jandex. Can not scan Object Type, might not
+	  be mapped correctly."
+	-->
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>io.smallrye</groupId>
+				<artifactId>jandex-maven-plugin</artifactId>
+				<version>3.3.1</version>
+			</plugin>
+		</plugins>
+	</build>
+
 	<properties>
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
