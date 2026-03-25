@@ -24,10 +24,13 @@ interface ChatState {
 	chats: Chat[];
 	activeChat: number | string | null;
 	isLoading: boolean;
+	hasMoreChats: boolean;
 }
 
 type ChatAction =
 	| { type: "SET_CHATS"; payload: ChatHistory[] }
+	| { type: "APPEND_CHATS"; payload: ChatHistory[] }
+	| { type: "SET_HAS_MORE_CHATS"; payload: boolean }
 	| { type: "ADD_CHAT"; payload: ChatHistory }
 	| { type: "DELETE_CHAT"; payload: string }
 	| { type: "SET_ACTIVE_CHAT"; payload: number | string | null }
@@ -40,12 +43,17 @@ const initialState: ChatState = {
 	chats: [],
 	activeChat: null,
 	isLoading: false,
+	hasMoreChats: true,
 };
 
 function chatReducer(state: ChatState, action: ChatAction): ChatState {
 	switch (action.type) {
 		case "SET_CHATS":
 			return { ...state, chatHistory: action.payload };
+		case "APPEND_CHATS":
+			return { ...state, chatHistory: [...state.chatHistory, ...action.payload] };
+		case "SET_HAS_MORE_CHATS":
+			return { ...state, hasMoreChats: action.payload };
 		case "ADD_CHAT":
 			return { ...state, chatHistory: [action.payload, ...state.chatHistory] };
 		case "DELETE_CHAT":
