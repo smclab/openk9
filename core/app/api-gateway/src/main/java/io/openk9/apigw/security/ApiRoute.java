@@ -60,14 +60,14 @@ public enum ApiRoute {
 	DATASOURCE_OAUTH2_SETTINGS("/api/datasource/oauth2/settings.js"),
 
 	/**
-	 * Route for the datasource service, that doesn't need to be protected.
+	 * Route for the current bucket configuration.
 	 * Matches requests under {@code /api/datasource/buckets/current/**}
 	 */
 	DATASOURCE_CURRENT_BUCKET("/api/datasource/buckets/current/**"),
 
 	/**
-	 * Route for the datasource service, that doesn't need to be protected.
-	 * Matches requests under {@code /api/datasource/templates/current/**}
+	 * Route for search templates.
+	 * Matches requests under {@code /api/datasource/templates/**}
 	 */
 	DATASOURCE_TEMPLATES("/api/datasource/templates/**"),
 
@@ -155,13 +155,13 @@ public enum ApiRoute {
 	public static List<ApiRoute> routesFor(ApiGroup apiGroup) {
 		return switch (apiGroup) {
 			case ADMINISTRATION -> List.of(DATASOURCE);
-			case SEARCH -> List.of(SEARCHER, RAG);
+			case SEARCH -> List.of(
+				SEARCHER, RAG,
+				DATASOURCE_CURRENT_BUCKET,
+				DATASOURCE_TEMPLATES);
 			case INGESTION -> List.of(INGESTION);
 			case PUBLIC -> List.of(
-				DATASOURCE_CURRENT_BUCKET,
-				DATASOURCE_OAUTH2_SETTINGS,
-				DATASOURCE_TEMPLATES
-			);
+				DATASOURCE_OAUTH2_SETTINGS);
 		};
 	}
 

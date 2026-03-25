@@ -171,13 +171,23 @@ class ApiGatewaySecurityTest {
     class AlabastaTenantTests {
 
 		@Test
-		@DisplayName("DatasourcePublic route without authorization header should succeed")
-		void testDatasourcePublicValid() {
+		@DisplayName("OAuth2 settings route is public")
+		void testOauth2SettingsIsPublic() {
+			webTestClient.get()
+				.uri("/api/datasource/oauth2/settings.js")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.exchange()
+				.expectStatus().isOk();
+		}
+
+		@Test
+		@DisplayName("Buckets/current route requires SEARCH auth")
+		void testBucketsCurrentRequiresAuth() {
 			webTestClient.get()
 				.uri("/api/datasource/buckets/current")
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.exchange()
-				.expectStatus().isOk();
+				.expectStatus().isUnauthorized();
 		}
 
 		@Test
