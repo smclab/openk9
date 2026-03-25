@@ -20,6 +20,7 @@ package io.openk9.datasource.graphql;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
+import io.openk9.datasource.model.dto.base.RangeDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.quarkus.test.junit.QuarkusTest;
@@ -103,13 +104,20 @@ public class RAGConfigurationGraphqlTest {
 		" faucibus nibh et fermentum. Pellentesque ipsum tortor, volutpat eu porta nec, imperdiet in elit. Proin" +
 		" pellentesque neque tincidunt enim bibendum bibendum. Vestibulum ante ipsum primis in faucibus orci luctus " +
 		"et ultrices posuere cubilia curae; Morbi consequat et leo sed faucibus.";
+	private static final String END = "end";
 	private static final String PROMPT_NO_RAG = "promptNoRag";
 	private static final String RAG_CONFIGURATION_DTO = "ragConfigurationDTO";
+	private static final String RANGE = "range";
+	private static final int RANGE_START_VALUE = 1;
+	private static final int RANGE_START_VALUE_UPDATED = 2;
+	private static final int RANGE_END_VALUE = 10;
+	private static final int RANGE_END_VALUE_UPDATED = 20;
 	private static final String RAG_CONFIGURATION_ONE_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 1 ";
 	private static final String RAG_CONFIGURATION_TWO_NAME = ENTITY_NAME_PREFIX + "RAG Configuration 2 ";
 	private static final String RAG_TOOL_DESCRIPTION = "ragToolDescription";
 	private static final String REPHRASE_PROMPT = "rephrasePrompt";
 	private static final String REFORMULATE = "reformulate";
+	private static final String START = "start";
 	private static final String TYPE = "type";
 	private static final String UPDATE_RAG_CONFIGURATION = "updateRAGConfiguration";
 	private static final Logger log = Logger.getLogger(RAGConfigurationGraphqlTest.class);
@@ -137,6 +145,10 @@ public class RAGConfigurationGraphqlTest {
 			.reformulate(true)
 			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_SHORT)
+			.range(RangeDTO.builder()
+				.start(RANGE_START_VALUE)
+				.end(RANGE_END_VALUE)
+				.build())
 			.build();
 
 		EntitiesUtils.createRAGConfiguration(ragConfigurationService, ragConfigurationDTOTwo);
@@ -163,7 +175,11 @@ public class RAGConfigurationGraphqlTest {
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE),
 								prop(REFORMULATE, true),
 								prop(ENABLE_CONVERSATION_TITLE, true),
-								prop(JSON_CONFIG, JSON_CONFIG_SHORT)
+								prop(JSON_CONFIG, JSON_CONFIG_SHORT),
+								prop(RANGE, inputObject(
+									prop(START, RANGE_START_VALUE),
+									prop(END, RANGE_END_VALUE)
+								))
 							)
 						)
 					),
@@ -178,7 +194,11 @@ public class RAGConfigurationGraphqlTest {
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
 						field(ENABLE_CONVERSATION_TITLE),
-						field(JSON_CONFIG)
+						field(JSON_CONFIG),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -217,6 +237,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(ragConfigurationOne.getReformulate());
 		assertTrue(ragConfigurationOne.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationOne.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, ragConfigurationOne.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, ragConfigurationOne.getRange().getEnd());
 
 		EntitiesUtils.removeEntity(
 			RAG_CONFIGURATION_ONE_NAME,
@@ -252,7 +274,11 @@ public class RAGConfigurationGraphqlTest {
 						field(RAG_TOOL_DESCRIPTION),
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
-						field(ENABLE_CONVERSATION_TITLE)
+						field(ENABLE_CONVERSATION_TITLE),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -294,6 +320,8 @@ public class RAGConfigurationGraphqlTest {
 			ragConfigurationOne.getEnableConversationTitle()
 		);
 		assertNull(ragConfigurationOne.getJsonConfig());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getStart(), ragConfigurationOne.getRange().getStart());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getEnd(), ragConfigurationOne.getRange().getEnd());
 
 		EntitiesUtils.removeEntity(
 			RAG_CONFIGURATION_ONE_NAME,
@@ -323,6 +351,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(initialRagConfigurationTwo.getReformulate());
 		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, initialRagConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, initialRagConfigurationTwo.getRange().getEnd());
 
 		var mutation = document(
 			operation(
@@ -343,7 +373,11 @@ public class RAGConfigurationGraphqlTest {
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
 								prop(REFORMULATE, false),
 								prop(ENABLE_CONVERSATION_TITLE, false),
-								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY),
+								prop(RANGE, inputObject(
+									prop(START, RANGE_START_VALUE_UPDATED),
+									prop(END, RANGE_END_VALUE_UPDATED)
+								))
 							)
 						)
 					),
@@ -358,7 +392,11 @@ public class RAGConfigurationGraphqlTest {
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
 						field(ENABLE_CONVERSATION_TITLE),
-						field(JSON_CONFIG)
+						field(JSON_CONFIG),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -398,6 +436,8 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(ragConfigurationTwo.getReformulate());
 		assertFalse(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE_UPDATED, ragConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE_UPDATED, ragConfigurationTwo.getRange().getEnd());
 	}
 
 	@Test
@@ -421,6 +461,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(initialRagConfigurationTwo.getReformulate());
 		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, initialRagConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, initialRagConfigurationTwo.getRange().getEnd());
 
 		var mutation = document(
 			operation(
@@ -448,7 +490,11 @@ public class RAGConfigurationGraphqlTest {
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
 						field(ENABLE_CONVERSATION_TITLE),
-						field(JSON_CONFIG)
+						field(JSON_CONFIG),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -487,6 +533,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(ragConfigurationTwo.getReformulate());
 		assertTrue(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, ragConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, ragConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, ragConfigurationTwo.getRange().getEnd());
 	}
 
 	@Test
@@ -510,6 +558,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(initialRagConfigurationTwo.getReformulate());
 		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, initialRagConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, initialRagConfigurationTwo.getRange().getEnd());
 
 		var mutation = document(
 			operation(
@@ -530,7 +580,11 @@ public class RAGConfigurationGraphqlTest {
 								prop(CHUNK_WINDOW, CHUNK_WINDOW_VALUE_UPDATED),
 								prop(REFORMULATE, false),
 								prop(ENABLE_CONVERSATION_TITLE, false),
-								prop(JSON_CONFIG, JSON_CONFIG_EMPTY)
+								prop(JSON_CONFIG, JSON_CONFIG_EMPTY),
+								prop(RANGE, inputObject(
+									prop(START, RANGE_START_VALUE_UPDATED),
+									prop(END, RANGE_END_VALUE_UPDATED)
+								))
 							)
 						)
 					),
@@ -545,7 +599,11 @@ public class RAGConfigurationGraphqlTest {
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
 						field(ENABLE_CONVERSATION_TITLE),
-						field(JSON_CONFIG)
+						field(JSON_CONFIG),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -585,6 +643,8 @@ public class RAGConfigurationGraphqlTest {
 		assertFalse(ragConfigurationTwo.getReformulate());
 		assertFalse(ragConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE_UPDATED, ragConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE_UPDATED, ragConfigurationTwo.getRange().getEnd());
 	}
 
 	@Test
@@ -608,6 +668,8 @@ public class RAGConfigurationGraphqlTest {
 		assertTrue(initialRagConfigurationTwo.getReformulate());
 		assertTrue(initialRagConfigurationTwo.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_SHORT, initialRagConfigurationTwo.getJsonConfig());
+		assertEquals(RANGE_START_VALUE, initialRagConfigurationTwo.getRange().getStart());
+		assertEquals(RANGE_END_VALUE, initialRagConfigurationTwo.getRange().getEnd());
 
 		var mutation = document(
 			operation(
@@ -635,7 +697,11 @@ public class RAGConfigurationGraphqlTest {
 						field(CHUNK_WINDOW),
 						field(REFORMULATE),
 						field(ENABLE_CONVERSATION_TITLE),
-						field(JSON_CONFIG)
+						field(JSON_CONFIG),
+						field(RANGE,
+							field(START),
+							field(END)
+						)
 					),
 					field(FIELD_VALIDATORS,
 						field(FIELD),
@@ -677,6 +743,8 @@ public class RAGConfigurationGraphqlTest {
 			ragConfigurationTwo.getEnableConversationTitle()
 		);
 		assertNull(ragConfigurationTwo.getJsonConfig());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getStart(), ragConfigurationTwo.getRange().getStart());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getEnd(), ragConfigurationTwo.getRange().getEnd());
 	}
 
 	@AfterEach

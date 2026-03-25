@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import io.openk9.datasource.validation.ValidRange;
 import io.openk9.datasource.validation.json.Json;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -64,6 +65,9 @@ public class RAGConfigurationDTO extends K9EntityDTO {
 			"""
 	)
 	private Boolean reformulate;
+	@ValidRange
+	@Description("The range filter configuration with start and end values (default are [0, 5]).")
+	private RangeDTO range;
 	@Description("Prompt template used if reformulate is set to true.")
 	private String rephrasePrompt;
 }

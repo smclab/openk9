@@ -18,7 +18,10 @@
 package io.openk9.datasource.model;
 
 import io.openk9.datasource.model.util.K9Entity;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -41,6 +44,7 @@ public class RAGConfiguration extends K9Entity {
 
 	public static final Integer DEFAULT_CHUNK_WINDOW = 0;
 	public static final Boolean DEFAULT_ENABLE_CONVERSATION_TITLE = false;
+	public static final Range DEFAULT_RANGE = new Range(0, 5);
 	public static final Boolean DEFAULT_REFORMULATE = false;
 	public static final String EMPTY_STRING = "";
 
@@ -69,6 +73,12 @@ public class RAGConfiguration extends K9Entity {
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "rephrase_prompt")
 	private String rephrasePrompt = EMPTY_STRING;
+	@Embedded
+	@AttributeOverrides({
+		@AttributeOverride(name = "start", column = @Column(name = "range_start")),
+		@AttributeOverride(name = "end", column = @Column(name = "range_end"))
+	})
+	private Range range = DEFAULT_RANGE;
 	@Column(name = "type", updatable = false)
 	@Immutable
 	@Enumerated(EnumType.STRING)
@@ -102,6 +112,10 @@ public class RAGConfiguration extends K9Entity {
 
 	public void setRephrasePrompt(String rephrasePrompt) {
 		this.rephrasePrompt = Objects.requireNonNullElse(rephrasePrompt, EMPTY_STRING);
+	}
+
+	public void setRange(Range range) {
+		this.range = Objects.requireNonNullElse(range, DEFAULT_RANGE);
 	}
 
 	public void setType(RAGType type) {

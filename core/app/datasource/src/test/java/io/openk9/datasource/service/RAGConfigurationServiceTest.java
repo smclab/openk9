@@ -20,6 +20,7 @@ package io.openk9.datasource.service;
 import io.openk9.datasource.model.RAGConfiguration;
 import io.openk9.datasource.model.RAGType;
 import io.openk9.datasource.model.dto.base.RAGConfigurationDTO;
+import io.openk9.datasource.model.dto.base.RangeDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -41,6 +42,8 @@ public class RAGConfigurationServiceTest {
 	private static final String ENTITY_NAME_PREFIX = "RAGConfigurationServiceTest - ";
 	private static final int CHUNK_WINDOW = 1500;
 	private static final int DEFAULT_VALUE_CHUNK_WINDOW = 0;
+	private static final int RANGE_START = 1;
+	private static final int RANGE_END = 10;
 	private static final String JSON_CONFIG_EMPTY = "{}";
 	private static final String PROMPT_EXAMPLE = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris sit" +
 		" amet diam a lorem aliquam pellentesque. Morbi dapibus porttitor quam, id porta elit ultrices vel." +
@@ -85,6 +88,11 @@ public class RAGConfigurationServiceTest {
 
 	@Test
 	void should_create_rag_configuration_one() {
+		var rangeDTO = RangeDTO.builder()
+			.start(RANGE_START)
+			.end(RANGE_END)
+			.build();
+
 		var dto = CreateRAGConfigurationDTO.builder()
 			.name(RAG_CONFIGURATION_ONE_NAME)
 			.type(RAGType.CHAT_RAG)
@@ -96,6 +104,7 @@ public class RAGConfigurationServiceTest {
 			.reformulate(true)
 			.enableConversationTitle(true)
 			.jsonConfig(JSON_CONFIG_EMPTY)
+			.range(rangeDTO)
 			.build();
 
 		createRAGConfiguration(dto);
@@ -111,6 +120,8 @@ public class RAGConfigurationServiceTest {
 		assertTrue(ragConfigurationOne.getReformulate());
 		assertTrue(ragConfigurationOne.getEnableConversationTitle());
 		assertEquals(JSON_CONFIG_EMPTY, ragConfigurationOne.getJsonConfig());
+		assertEquals(RANGE_START, ragConfigurationOne.getRange().getStart());
+		assertEquals(RANGE_END, ragConfigurationOne.getRange().getEnd());
 
 		removeRAGConfigurationOne();
 	}
@@ -142,6 +153,10 @@ public class RAGConfigurationServiceTest {
 			ragConfigurationOne.getEnableConversationTitle()
 		);
 		assertNull(ragConfigurationOne.getJsonConfig());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getStart(),
+			ragConfigurationOne.getRange().getStart());
+		assertEquals(RAGConfiguration.DEFAULT_RANGE.getEnd(),
+			ragConfigurationOne.getRange().getEnd());
 
 		removeRAGConfigurationOne();
 	}
