@@ -58,6 +58,9 @@ public class RAGConfigurationDTO extends K9EntityDTO {
 			"""
 	)
 	private String ragToolDescription;
+	@ValidRange
+	@Description("The range filter configuration with start and end values (default are [0, 5]).")
+	private RangeDTO range;
 	@Description(
 		"""
 			Boolean flag that controls whether a large language model should reformulate
@@ -65,9 +68,6 @@ public class RAGConfigurationDTO extends K9EntityDTO {
 			"""
 	)
 	private Boolean reformulate;
-	@ValidRange
-	@Description("The range filter configuration with start and end values (default are [0, 5]).")
-	private RangeDTO range;
 	@Description("Prompt template used if reformulate is set to true.")
 	private String rephrasePrompt;
 }

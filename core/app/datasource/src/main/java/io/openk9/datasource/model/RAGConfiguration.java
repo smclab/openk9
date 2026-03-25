@@ -68,17 +68,17 @@ public class RAGConfiguration extends K9Entity {
 	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
 	@Column(name = "rag_tool_description")
 	private String ragToolDescription = EMPTY_STRING;
-	@Column(name = "reformulate")
-	private Boolean reformulate = DEFAULT_REFORMULATE;
-	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
-	@Column(name = "rephrase_prompt")
-	private String rephrasePrompt = EMPTY_STRING;
 	@Embedded
 	@AttributeOverrides({
 		@AttributeOverride(name = "start", column = @Column(name = "range_start")),
 		@AttributeOverride(name = "end", column = @Column(name = "range_end"))
 	})
 	private Range range = DEFAULT_RANGE;
+	@Column(name = "reformulate")
+	private Boolean reformulate = DEFAULT_REFORMULATE;
+	@JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+	@Column(name = "rephrase_prompt")
+	private String rephrasePrompt = EMPTY_STRING;
 	@Column(name = "type", updatable = false)
 	@Immutable
 	@Enumerated(EnumType.STRING)
@@ -106,16 +106,16 @@ public class RAGConfiguration extends K9Entity {
 			Objects.requireNonNullElse(ragToolDescription, EMPTY_STRING);
 	}
 
+	public void setRange(Range range) {
+		this.range = Objects.requireNonNullElse(range, DEFAULT_RANGE);
+	}
+
 	public void setReformulate(Boolean reformulate) {
 		this.reformulate = Objects.requireNonNullElse(reformulate, DEFAULT_REFORMULATE);
 	}
 
 	public void setRephrasePrompt(String rephrasePrompt) {
 		this.rephrasePrompt = Objects.requireNonNullElse(rephrasePrompt, EMPTY_STRING);
-	}
-
-	public void setRange(Range range) {
-		this.range = Objects.requireNonNullElse(range, DEFAULT_RANGE);
 	}
 
 	public void setType(RAGType type) {

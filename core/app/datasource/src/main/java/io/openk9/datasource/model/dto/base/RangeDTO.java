@@ -31,9 +31,9 @@ import org.eclipse.microprofile.graphql.Description;
 @Embeddable
 public class RangeDTO {
 
-	@Description("The start value of the range.")
-	private Integer start;
 	@Description("The end value of the range.")
 	private Integer end;
+	@Description("The start value of the range.")
+	private Integer start;
 
 }

@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class Range {
 
-	private Integer start;
 	private Integer end;
+	private Integer start;
 
 }
