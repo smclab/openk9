@@ -251,7 +251,7 @@ public class TenantProvisioningService {
 
 		return Uni.createFrom()
 			.item(new DeleteTenantResponse(
-				"delete tenant started"));
+				"Tenant deletion started."));
 	}
 
 	public Uni<CreateTablesResponse> populateSchema(long tenantId) {
@@ -514,7 +514,10 @@ public class TenantProvisioningService {
 					virtualHost);
 
 				return Uni.createFrom().item(
-					new DeleteTenantResponse(token));
+					new DeleteTenantResponse(
+						"Deletion token: " + token
+						+ ". Send it back with a DELETE"
+						+ " request to confirm."));
 			});
 	}
 
