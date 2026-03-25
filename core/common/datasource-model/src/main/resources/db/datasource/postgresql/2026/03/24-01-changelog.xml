@@ -29,7 +29,7 @@
 		<addColumn tableName="rag_configuration">
 			<column
 				name="range_start"
-				type="INTEGER" valueNumeric="0"
+				type="INTEGER" defaultValueNumeric="0"
 			/>
 		</addColumn>
 	</changeSet>
@@ -38,7 +38,7 @@
 		<addColumn tableName="rag_configuration">
 			<column
 				name="range_end"
-				type="INTEGER" valueNumeric="5"
+				type="INTEGER" defaultValueNumeric="5"
 			/>
 		</addColumn>
 	</changeSet>
