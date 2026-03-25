@@ -39,7 +39,6 @@ import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -52,10 +51,6 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(
-	name = "io.openk9.apigw.reject-basic-auth",
-	havingValue = "true",
-	matchIfMissing = true)
 public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 
 	private static OctetSequenceKey JWK;
