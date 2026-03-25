@@ -2,6 +2,7 @@ import { Check, Close, DeleteOutline, DriveFileRenameOutline, MoreVert } from "@
 import {
 	Box,
 	Button,
+	CircularProgress,
 	Dialog,
 	DialogActions,
 	DialogContent,
@@ -47,11 +48,19 @@ export function HistoryChat({
 	>;
 	userId: string | null | undefined;
 }) {
+	const PAGE_SIZE = 10;
 	const [loading, setLoading] = React.useState(true);
+	const [loadingMore, setLoadingMore] = React.useState(false);
+	const loadingMoreRef = React.useRef(false);
+	const hasMoreRef = React.useRef(true);
+	const paginationFromRef = React.useRef(0);
+	const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+	const listRef = React.useRef<HTMLUListElement | null>(null);
+
 	const { t } = useTranslation();
 	const { state, dispatch } = useChatContext();
 	const { chatHistory } = state;
-	const client = OpenK9Client();
+	const client = React.useMemo(() => OpenK9Client(), []);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [selectedChatId, setSelectedChatId] = React.useState<string | null>(null);
 	const [editingChatId, setEditingChatId] = React.useState<string | null>(null);
@@ -66,11 +75,14 @@ export function HistoryChat({
 				const json: jsonObjPost = {
 					userId,
 					paginationFrom: 0,
-					paginationSize: 10,
+					paginationSize: PAGE_SIZE,
 				};
 				try {
 					const result = await client.getHistoryChat(json);
-					dispatch({ type: "SET_CHATS", payload: result?.result });
+					const chats = result?.result ?? [];
+					dispatch({ type: "SET_CHATS", payload: chats });
+					paginationFromRef.current = chats.length;
+					hasMoreRef.current = chats.length >= PAGE_SIZE;
 				} catch (error) {
 					console.log(error);
 				} finally {
@@ -80,6 +92,61 @@ export function HistoryChat({
 		};
 		fetchData();
 	}, [userId]);
+
+	const loadMore = React.useCallback(async () => {
+		if (!userId || loadingMoreRef.current || !hasMoreRef.current) return;
+		loadingMoreRef.current = true;
+		setLoadingMore(true);
+		try {
+			const json: jsonObjPost = {
+				userId,
+				paginationFrom: paginationFromRef.current,
+				paginationSize: PAGE_SIZE,
+			};
+			const result = await client.getHistoryChat(json);
+			const chats = result?.result ?? [];
+			if (chats.length > 0) {
+				dispatch({ type: "APPEND_CHATS", payload: chats });
+				paginationFromRef.current += chats.length;
+			}
+			hasMoreRef.current = chats.length >= PAGE_SIZE;
+		} catch (error) {
+			console.log(error);
+		} finally {
+			loadingMoreRef.current = false;
+			setLoadingMore(false);
+		}
+	}, [userId, client, dispatch]);
+
+	React.useEffect(() => {
+		if (loading) return;
+		const list = listRef.current;
+		if (!list) return;
+
+		let observer: IntersectionObserver | null = null;
+
+		const onScroll = () => {
+			const sentinel = sentinelRef.current;
+			if (!sentinel || observer) return;
+
+			observer = new IntersectionObserver(
+				(entries) => {
+					if (entries[0].isIntersecting) {
+						loadMore();
+					}
+				},
+				{ root: list, threshold: 0.1 },
+			);
+			observer.observe(sentinel);
+			list.removeEventListener("scroll", onScroll);
+		};
+
+		list.addEventListener("scroll", onScroll);
+		return () => {
+			list.removeEventListener("scroll", onScroll);
+			observer?.disconnect();
+		};
+	}, [loadMore, loading]);
 
 	const handleDeleteChat = async (chatId: string) => {
 		try {
@@ -169,6 +236,7 @@ export function HistoryChat({
 		>
 			<Typography variant="subtitle1">{t("recents-chat", { defaultValue: "Recents chat" })}</Typography>
 			<List
+				ref={listRef}
 				sx={{ px: 1 }}
 				style={{
 					display: "flex",
@@ -183,115 +251,129 @@ export function HistoryChat({
 						{t("no-chats", { defaultValue: "No chats available" })}
 					</Typography>
 				) : (
-					chatHistory.map((item) => {
-						return (
-							<ListItem sx={{ padding: "4px 0" }} key={item.chat_id}>
-								<ListItemButton
-									sx={{
-										borderRadius: "10px",
-										"&:hover": { bgcolor: "rgba(0, 0, 0, 0.1)" },
-										py: 0.5,
-										px: 2,
-										zIndex: 10,
-										width: "100%",
-									}}
-								>
-									<ListItemText
-										onClick={() => setChatId({ id: item?.chat_id, isNew: false })}
-										primary={
-											editingChatId === item.chat_id ? (
-												<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-													<TextField
-														size="small"
-														value={newTitle}
-														onChange={(e) => setNewTitle(e.target.value)}
-														autoFocus
-														placeholder={item?.title ?? item?.question}
-														sx={{
-															"& .MuiInputBase-input": {
-																fontSize: "13px",
-																padding: "4px 8px",
-																borderRadius: "0",
-																lineHeight: "1.2",
-																height: "40px",
-															},
-															"& .MuiOutlinedInput-notchedOutline": {
-																border: "none",
-																borderBottom: "1px solid rgba(0, 0, 0, 0.42)",
-																borderRadius: "0",
-															},
-															"& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-																borderBottom: "1px solid rgba(0, 0, 0, 0.87)",
-															},
-															"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-																borderBottom: "1px solid #c0272b",
-															},
-															flex: 1,
-														}}
-														onClick={(e) => e.stopPropagation()}
-													/>
-													<IconButton
-														size="small"
-														onClick={(e) => {
-															e.stopPropagation();
-															item.chat_id && handleConfirmRename(item.chat_id);
-														}}
-													>
-														<Check sx={{ fontSize: "16px" }} />
-													</IconButton>
-													<IconButton
-														size="small"
-														onClick={(e) => {
-															e.stopPropagation();
-															setEditingChatId(null);
-														}}
-													>
-														<Close sx={{ fontSize: "16px" }} />
-													</IconButton>
-												</Box>
-											) : (
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														justifyContent: "space-between",
-														"& > span": {
-															display: "-webkit-box",
-															WebkitLineClamp: "2",
-															WebkitBoxOrient: "vertical",
-															overflow: "hidden",
-															textOverflow: "ellipsis",
-														},
-													}}
-												>
-													<span>{item?.title ?? item?.question}</span>
-													<IconButton size="small" onClick={(e) => item.chat_id && handleMenuOpen(e, item.chat_id)}>
-														<MoreVert sx={{ fontSize: "18px" }} />
-													</IconButton>
-												</Box>
-											)
-										}
+					<>
+						{chatHistory.map((item) => {
+							return (
+								<ListItem sx={{ padding: "4px 0" }} key={item.chat_id}>
+									<ListItemButton
 										sx={{
-											animation: `${fadeInExpand} 1s ease-out forwards`,
-											opacity: 0,
-											maxHeight: 0,
-											overflow: "hidden",
-											transition: "opacity 0.7s ease-in-out, max-height 1s ease-out",
-											"& .MuiListItemText-primary": {
-												color: "rgba(0, 0, 0, 0.7)",
-												fontSize: "13px",
-												display: "-webkit-box",
-												WebkitLineClamp: "2",
-												WebkitBoxOrient: "vertical",
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-											},
+											borderRadius: "10px",
+											"&:hover": { bgcolor: "rgba(0, 0, 0, 0.1)" },
+											py: 0.5,
+											px: 2,
+											zIndex: 10,
+											width: "100%",
 										}}
-									/>
-								</ListItemButton>
-							</ListItem>
-						);
-					})
+									>
+										<ListItemText
+											onClick={() => setChatId({ id: item?.chat_id, isNew: false })}
+											primary={
+												editingChatId === item.chat_id ? (
+													<Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+														<TextField
+															size="small"
+															value={newTitle}
+															onChange={(e) => setNewTitle(e.target.value)}
+															autoFocus
+															placeholder={item?.title ?? item?.question}
+															sx={{
+																"& .MuiInputBase-input": {
+																	fontSize: "13px",
+																	padding: "4px 8px",
+																	borderRadius: "0",
+																	lineHeight: "1.2",
+																	height: "40px",
+																},
+																"& .MuiOutlinedInput-notchedOutline": {
+																	border: "none",
+																	borderBottom: "1px solid rgba(0, 0, 0, 0.42)",
+																	borderRadius: "0",
+																},
+																"& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+																	borderBottom: "1px solid rgba(0, 0, 0, 0.87)",
+																},
+																"& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+																	borderBottom: "1px solid #c0272b",
+																},
+																flex: 1,
+															}}
+															onClick={(e) => e.stopPropagation()}
+														/>
+														<IconButton
+															size="small"
+															onClick={(e) => {
+																e.stopPropagation();
+																item.chat_id && handleConfirmRename(item.chat_id);
+															}}
+														>
+															<Check sx={{ fontSize: "16px" }} />
+														</IconButton>
+														<IconButton
+															size="small"
+															onClick={(e) => {
+																e.stopPropagation();
+																setEditingChatId(null);
+															}}
+														>
+															<Close sx={{ fontSize: "16px" }} />
+														</IconButton>
+													</Box>
+												) : (
+													<Box
+														sx={{
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "space-between",
+															"& > span": {
+																display: "-webkit-box",
+																WebkitLineClamp: "2",
+																WebkitBoxOrient: "vertical",
+																overflow: "hidden",
+																textOverflow: "ellipsis",
+															},
+														}}
+													>
+														<span>{item?.title ?? item?.question}</span>
+														<IconButton size="small" onClick={(e) => item.chat_id && handleMenuOpen(e, item.chat_id)}>
+															<MoreVert sx={{ fontSize: "18px" }} />
+														</IconButton>
+													</Box>
+												)
+											}
+											sx={{
+												animation: `${fadeInExpand} 1s ease-out forwards`,
+												opacity: 0,
+												maxHeight: 0,
+												overflow: "hidden",
+												transition: "opacity 0.7s ease-in-out, max-height 1s ease-out",
+												"& .MuiListItemText-primary": {
+													color: "rgba(0, 0, 0, 0.7)",
+													fontSize: "13px",
+													display: "-webkit-box",
+													WebkitLineClamp: "2",
+													WebkitBoxOrient: "vertical",
+													overflow: "hidden",
+													textOverflow: "ellipsis",
+												},
+											}}
+										/>
+									</ListItemButton>
+								</ListItem>
+							);
+						})}
+						<div
+							ref={sentinelRef}
+							style={{
+								width: "100%",
+								display: "flex",
+								justifyContent: "center",
+								padding: "12px 0",
+								minHeight: loadingMore ? "48px" : "1px",
+							}}
+						>
+							{loadingMore && <CircularProgress size={28} sx={{ color: "rgba(0, 0, 0, 0.4)" }} />}
+						</div>
+					</>
 				)}
 			</List>
 

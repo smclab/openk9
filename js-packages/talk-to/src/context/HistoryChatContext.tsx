@@ -28,6 +28,7 @@ interface ChatState {
 
 type ChatAction =
 	| { type: "SET_CHATS"; payload: ChatHistory[] }
+	| { type: "APPEND_CHATS"; payload: ChatHistory[] }
 	| { type: "ADD_CHAT"; payload: ChatHistory }
 	| { type: "DELETE_CHAT"; payload: string }
 	| { type: "SET_ACTIVE_CHAT"; payload: number | string | null }
@@ -46,6 +47,8 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 	switch (action.type) {
 		case "SET_CHATS":
 			return { ...state, chatHistory: action.payload };
+		case "APPEND_CHATS":
+			return { ...state, chatHistory: [...state.chatHistory, ...action.payload] };
 		case "ADD_CHAT":
 			return { ...state, chatHistory: [action.payload, ...state.chatHistory] };
 		case "DELETE_CHAT":
