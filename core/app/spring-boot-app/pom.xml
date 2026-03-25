@@ -88,6 +88,14 @@
 				<groupId>com.google.cloud.tools</groupId>
 				<artifactId>jib-maven-plugin</artifactId>
 				<configuration>
+					<from>
+						<platforms>
+							<platform>
+								<architecture>${jib.platform.architecture}</architecture>
+								<os>linux</os>
+							</platform>
+						</platforms>
+					</from>
 					<to>
 						<image>openk9/${project.artifactId}</image>
 					</to>

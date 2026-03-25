@@ -25,6 +25,13 @@ set -e
 TAG="local-dev"
 PROFILES=()
 
+# Detect host architecture for container image builds
+HOST_ARCH=$(uname -m)
+case "$HOST_ARCH" in
+    aarch64|arm64) JIB_PLATFORM="linux/arm64"; JIB_ARCH="arm64" ;;
+    *)             JIB_PLATFORM="linux/amd64"; JIB_ARCH="amd64" ;;
+esac
+
 # Detect docker compose command
 if docker compose version >/dev/null 2>&1; then
     DOCKER_COMPOSE="docker compose"
@@ -170,6 +177,7 @@ build_core() {
         echo "Building Spring Boot services..."
         ./mvnw package -DskipTests jib:dockerBuild \
             -Djib.to.image=smclab/openk9-api-gateway:$TAG \
+            -Djib.platform.architecture=$JIB_ARCH \
             -f app/api-gateway/pom.xml
 
         echo "Building Quarkus services..."
@@ -177,6 +185,7 @@ build_core() {
             echo "Building $SVC..."
             ./mvnw package -DskipTests \
                 -Dquarkus.profile=prod \
+                -Dquarkus.jib.platforms=$JIB_PLATFORM \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=false \
                 -Dquarkus.container-image.group=smclab \
@@ -209,6 +218,7 @@ build_file_handling() {
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
             -Dquarkus.profile=prod \
+            -Dquarkus.jib.platforms=$JIB_PLATFORM \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=false \
             -Dquarkus.container-image.group=smclab \

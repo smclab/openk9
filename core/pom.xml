@@ -116,6 +116,7 @@
 		<spring-cloud.version>2025.0.0</spring-cloud.version>
 		<spring-boot.version>3.5.8</spring-boot.version>
 		<jib-plugin.version>3.5.1</jib-plugin.version>
+		<jib.platform.architecture>amd64</jib.platform.architecture>
 
 	</properties>
 
