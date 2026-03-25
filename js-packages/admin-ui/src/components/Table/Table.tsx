@@ -16,10 +16,12 @@
 */
 import { QueryResult } from "@apollo/client";
 import SearchIcon from "@mui/icons-material/Search";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   Box,
   Button,
   Container,
+  IconButton,
   InputAdornment,
   TableBody,
   TableCell,
@@ -80,6 +82,7 @@ export function Table<
   deleted,
   edgesPath = "queryResult.data.edges",
   pageInfoPath = "queryResult.data.pageInfo",
+  maxVisibleActions,
 }: {
   data: {
     queryResult: QueryResult<Query, Parameters>;
@@ -109,11 +112,13 @@ export function Table<
   edgesPath?: string;
   pageInfoPath?: string;
   rowActions: Array<{ label: string; action(suggestionCategory?: any): void; isDisabled?: (dat: any) => boolean }>;
+  maxVisibleActions?: number;
 }) {
   const [searchText, setSearchText] = React.useState("");
   const searchTextDebounced = useDebounced(searchText);
   const [showSelectedItemsTable] = React.useState(false);
   const [viewDeleteModal, setViewDeleteModal] = React.useState({ isView: false, name: "", id: "" });
+  const [openMenuIndex, setOpenMenuIndex] = React.useState<number | null>(null);
 
   const loadMoreResults = () => {
     const pageInfo = getByPath(data, pageInfoPath);
@@ -261,58 +266,120 @@ export function Table<
                       gap: "30px",
                     }}
                   >
-                    {rowActions.map((rowAction, indexMap) => {
-                      const row = rowAction.isDisabled === undefined;
-                      const isActive =
-                        row || (rowAction?.isDisabled && rowAction.isDisabled(field(data)?.edges?.[index]?.node));
-                      return (
-                        <Button
-                          key={indexMap}
-                          sx={{
-                            border: "none",
-                            background: "none",
-                            padding: "0",
-                            textDecoration: "none",
-                            cursor: !isActive ? "not-allowed" : "pointer",
-                            color: !isActive ? "gray" : "unset",
-                            "&:hover": {
-                              textDecoration: !isActive ? "none" : "underline",
+                    {(() => {
+                      const allActions = [
+                        ...rowActions.map((rowAction, indexMap) => {
+                          const isActive = !rowAction.isDisabled || Boolean(rowAction.isDisabled(row));
+                          return {
+                            key: indexMap,
+                            label: rowAction.label,
+                            isActive,
+                            onClick: () => {
+                              if (isActive) rowAction.action(row);
                             },
-                            fontSize: "14px",
-                            fontWeight: "400",
-                            minWidth: "unset",
-                            textTransform: "none",
-                          }}
-                          onClick={() => {
-                            if (isActive) {
-                              rowAction.action(field(data)?.edges?.[index]?.node);
-                            }
-                          }}
-                        >
-                          {rowAction.label}
-                        </Button>
+                          };
+                        }),
+                        ...(deleted
+                          ? [
+                              {
+                                key: "delete" as const,
+                                label: "Delete",
+                                isActive: true,
+                                onClick: () => {
+                                  setViewDeleteModal({
+                                    isView: true,
+                                    name: row?.name || "Unnamed",
+                                    id: row?.id || "",
+                                  });
+                                },
+                              },
+                            ]
+                          : []),
+                      ];
+
+                      const shouldCollapse =
+                        maxVisibleActions !== undefined && allActions.length > maxVisibleActions;
+                      const visibleActions = shouldCollapse
+                        ? allActions.slice(0, maxVisibleActions)
+                        : allActions;
+
+                      return (
+                        <>
+                          {visibleActions.map((action) => (
+                            <Button
+                              key={action.key}
+                              sx={{
+                                border: "none",
+                                background: "none",
+                                padding: "0",
+                                textDecoration: "none",
+                                cursor: !action.isActive ? "not-allowed" : "pointer",
+                                color: !action.isActive ? "gray" : "unset",
+                                "&:hover": {
+                                  textDecoration: !action.isActive ? "none" : "underline",
+                                },
+                                fontSize: "14px",
+                                fontWeight: "400",
+                                minWidth: "unset",
+                                textTransform: "none",
+                              }}
+                              onClick={action.onClick}
+                            >
+                              {action.label}
+                            </Button>
+                          ))}
+                          {shouldCollapse && (
+                            <Box sx={{ position: "relative", display: "inline-block" }}>
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  setOpenMenuIndex(openMenuIndex === index ? null : index)
+                                }
+                              >
+                                <MoreVertIcon fontSize="small" />
+                              </IconButton>
+                              {openMenuIndex === index && (
+                                <Box
+                                  sx={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    right: 0,
+                                    zIndex: 1300,
+                                    bgcolor: "background.paper",
+                                    borderRadius: "4px",
+                                    boxShadow: 3,
+                                    py: 0.5,
+                                    minWidth: "120px",
+                                  }}
+                                >
+                                  {allActions.slice(maxVisibleActions).map((action) => (
+                                    <Box
+                                      key={action.key}
+                                      sx={{
+                                        px: 2,
+                                        py: 1,
+                                        cursor: !action.isActive ? "not-allowed" : "pointer",
+                                        color: !action.isActive ? "text.disabled" : "text.primary",
+                                        fontSize: "14px",
+                                        "&:hover": {
+                                          bgcolor: action.isActive ? "action.hover" : "transparent",
+                                        },
+                                      }}
+                                      onClick={() => {
+                                        if (action.isActive) action.onClick();
+                                        setOpenMenuIndex(null);
+                                      }}
+                                    >
+                                      {action.label}
+                                    </Box>
+                                  ))}
+                                </Box>
+                              )}
+                            </Box>
+                          )}
+                        </>
                       );
-                    })}
-                    {deleted && (
-                      <Box
-                        sx={{
-                          border: "none",
-                          background: "none",
-                          padding: "0",
-                          textDecoration: "none",
-                          cursor: "pointer",
-                          color: "unset",
-                          "&:hover": {
-                            textDecoration: "underline",
-                          },
-                        }}
-                        onClick={() => {
-                          setViewDeleteModal({ isView: true, name: row?.name || "Unnamed", id: row?.id || "" });
-                        }}
-                      >
-                        Delete
-                      </Box>
-                    )}
+                    })()}
                   </Box>
                 </TableCell>
               </React.Fragment>
