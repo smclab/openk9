@@ -73,6 +73,7 @@ export function Datasources() {
               field: (data) => data?.datasources,
             }}
             onCreatePath="/data-source/new/mode/edit"
+            maxVisibleActions={2}
             onDelete={(datasources) => {}}
             edgesPath="datasources.edges"
             pageInfoPath="datasources.pageInfo"

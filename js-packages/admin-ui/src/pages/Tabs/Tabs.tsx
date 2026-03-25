@@ -80,6 +80,7 @@ export function Tabs() {
             field: (data) => data?.tabs,
           }}
           edgesPath="tabs.edges"
+          maxVisibleActions={2}
           pageInfoPath="tabs.pageInfo"
           onCreatePath="/suggestion-categories/new"
           onDelete={(tabs) => {
