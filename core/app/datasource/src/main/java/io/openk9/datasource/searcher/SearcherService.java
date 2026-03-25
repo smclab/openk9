@@ -27,7 +27,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -786,7 +785,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							.setPrompt(ragConfiguration.getPrompt())
 							.setPromptNoRag(ragConfiguration.getPromptNoRag())
 							.setRagToolDescription(ragConfiguration.getRagToolDescription())
-							.setRephrasePrompt(ragConfiguration.getRephrasePrompt());
+							.setRephrasePrompt(ragConfiguration.getRephrasePrompt())
+							.addAllRange(java.util.List.of(
+								ragConfiguration.getRange().getStart(),
+								ragConfiguration.getRange().getEnd()
+							));
 
 						if (ragConfiguration.getJsonConfig() != null) {
 							responseBuilder

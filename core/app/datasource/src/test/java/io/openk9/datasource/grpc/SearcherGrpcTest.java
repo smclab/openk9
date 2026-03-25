@@ -47,6 +47,7 @@ import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.ProviderModelDTO;
+import io.openk9.datasource.model.dto.base.RangeDTO;
 import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 import io.openk9.datasource.model.util.Fuzziness;
 import io.openk9.datasource.service.AutocompleteService;
@@ -97,6 +98,8 @@ public class SearcherGrpcTest {
 	private static final String EM_API_URL = "http://EMST.embeddingapi.local";
 	private static final int EM_VECTOR_SIZE = 1330;
 	private static final boolean ENABLE_CONVERSATION_TITLE = true;
+	private static final int RANGE_START = 1;
+	private static final int RANGE_END = 10;
 	private static final String JSON_CONFIG = "{\n" +
 		"  \"object1\": {\n" +
 		"    \"id\": 1,\n" +
@@ -227,6 +230,10 @@ public class SearcherGrpcTest {
 				.reformulate(REFORMULATE)
 				.enableConversationTitle(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
+				.range(RangeDTO.builder()
+					.start(RANGE_START)
+					.end(RANGE_END)
+					.build())
 				.build()
 		);
 		EntitiesUtils.createRAGConfiguration(
@@ -242,6 +249,10 @@ public class SearcherGrpcTest {
 				.reformulate(REFORMULATE)
 				.reformulate(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
+				.range(RangeDTO.builder()
+					.start(RANGE_START)
+					.end(RANGE_END)
+					.build())
 				.build()
 		);
 		EntitiesUtils.createRAGConfiguration(
@@ -257,6 +268,10 @@ public class SearcherGrpcTest {
 				.reformulate(REFORMULATE)
 				.reformulate(ENABLE_CONVERSATION_TITLE)
 				.jsonConfig(JSON_CONFIG)
+				.range(RangeDTO.builder()
+					.start(RANGE_START)
+					.end(RANGE_END)
+					.build())
 				.build()
 		);
 
@@ -428,6 +443,7 @@ public class SearcherGrpcTest {
 				assertEquals(REFORMULATE, response.getReformulate());
 				assertEquals(ENABLE_CONVERSATION_TITLE, response.getEnableConversationTitle());
 				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				assertEquals(java.util.List.of(RANGE_START, RANGE_END), response.getRangeList());
 			}
 		);
 
@@ -453,6 +469,7 @@ public class SearcherGrpcTest {
 				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
 				assertEquals(REFORMULATE, response.getReformulate());
 				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				assertEquals(java.util.List.of(RANGE_START, RANGE_END), response.getRangeList());
 			}
 		);
 
@@ -478,6 +495,7 @@ public class SearcherGrpcTest {
 				assertEquals(PROMPT_TEST, response.getRephrasePrompt());
 				assertEquals(REFORMULATE, response.getReformulate());
 				assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
+				assertEquals(java.util.List.of(RANGE_START, RANGE_END), response.getRangeList());
 			}
 		);
 	}
