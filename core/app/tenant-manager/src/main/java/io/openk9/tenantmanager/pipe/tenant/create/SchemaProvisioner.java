@@ -24,7 +24,12 @@ import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 
-public class Schema {
+/**
+ * Pekko actor that provisions (or rolls back) a PostgreSQL schema
+ * for a tenant. Communicates with the Quarkus service layer via
+ * the Vert.x EventBus using {@code pipeToSelf}.
+ */
+public class SchemaProvisioner {
 
 	public sealed interface Command {}
 	public enum Start implements Command { INSTANCE }
@@ -38,23 +43,41 @@ public class Schema {
 
 	public sealed interface Response {}
 
-	public record Success(String schemaName) implements Response {}
+	public record Success(String tenantName) implements Response {}
 	public record Error(String message) implements Response {}
 
 	// Setup Behaviors
 
+	/**
+	 * Creates a provisioning behavior that creates a PostgreSQL
+	 * schema.
+	 *
+	 * @param virtualHost the tenant virtual host
+	 * @param tenantName  the tenant name (used as schema name)
+	 * @param replyTo     the actor to reply to
+	 * @return the provisioning behavior
+	 */
 	public static Behavior<Command> create(
-		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
+		String virtualHost,
+		String tenantName,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(context ->
-			initial(context, virtualHost, schemaName, replyTo));
+			initial(context, virtualHost, tenantName, replyTo));
 	}
 
+	/**
+	 * Creates a rollback behavior that drops a PostgreSQL schema.
+	 *
+	 * @param tenantName the tenant name (schema to drop)
+	 * @param replyTo    the actor to reply to
+	 * @return the rollback behavior
+	 */
 	public static Behavior<Command> createRollback(
-		String schemaName, ActorRef<Response> replyTo) {
+		String tenantName, ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(context ->
-			rollback(context, replyTo, schemaName));
+			rollback(context, replyTo, tenantName));
 	}
 
 	// Creation behaviors
@@ -62,51 +85,54 @@ public class Schema {
 	private static Behavior<Command> initial(
 		ActorContext<Command> context,
 		String virtualHost,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
 				Start.INSTANCE,
-				() -> onStart(context, virtualHost, schemaName, replyTo))
+				() -> onStart(
+					context, virtualHost, tenantName, replyTo))
 			.build();
 	}
 
 	private static Behavior<Command> onStart(
 		ActorContext<Command> context,
 		String virtualHost,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		context.pipeToSelf(
-			TenantProvisioningService.createSchema(virtualHost, schemaName),
+			TenantProvisioningService.createSchema(
+				virtualHost, tenantName),
 			CreateSchemaResponse::new
 		);
 
-		return awaitCreateSchemaResponse(schemaName, replyTo);
+		return awaitCreateSchemaResponse(tenantName, replyTo);
 	}
 
 	private static Behavior<Command> awaitCreateSchemaResponse(
-		String schemaName, ActorRef<Response> replyTo) {
+		String tenantName, ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(
 				CreateSchemaResponse.class,
-				msg -> onCreateSchemaResponse(msg, schemaName, replyTo)
+				msg -> onCreateSchemaResponse(
+					msg, tenantName, replyTo)
 			)
 			.build();
 	}
 
 	private static Behavior<Command> onCreateSchemaResponse(
 		CreateSchemaResponse msg,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		if (msg.error() != null) {
 			replyTo.tell(new Error(msg.error().getMessage()));
 		}
 		else {
-			replyTo.tell(new Success(schemaName));
+			replyTo.tell(new Success(tenantName));
 		}
 
 		return Behaviors.stopped();
@@ -117,49 +143,50 @@ public class Schema {
 	private static Behavior<Command> rollback(
 		ActorContext<Command> context,
 		ActorRef<Response> replyTo,
-		String schemaName) {
+		String tenantName) {
 
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
 				Rollback.INSTANCE,
-				() -> onRollback(context, schemaName, replyTo))
+				() -> onRollback(context, tenantName, replyTo))
 			.build();
 	}
 
 	private static Behavior<Command> onRollback(
 		ActorContext<Command> context,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		context.pipeToSelf(
-			TenantProvisioningService.deleteSchema(schemaName),
+			TenantProvisioningService.deleteSchema(tenantName),
 			DeleteSchemaResponse::new
 		);
 
-		return awaitDeleteSchemaResponse(schemaName, replyTo);
+		return awaitDeleteSchemaResponse(tenantName, replyTo);
 	}
 
 	private static Behavior<Command> awaitDeleteSchemaResponse(
-		String schemaName, ActorRef<Response> replyTo) {
+		String tenantName, ActorRef<Response> replyTo) {
 
 		return Behaviors.receive(Command.class)
 			.onMessage(
 				DeleteSchemaResponse.class,
-				(msg) -> onDeleteSchemaResponse(msg, schemaName, replyTo)
+				(msg) -> onDeleteSchemaResponse(
+					msg, tenantName, replyTo)
 			)
 			.build();
 	}
 
 	private static Behavior<Command> onDeleteSchemaResponse(
 		DeleteSchemaResponse response,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		if (response.error() != null) {
 			replyTo.tell(new Error(response.error().getMessage()));
 		}
 		else {
-			replyTo.tell(new Success(schemaName));
+			replyTo.tell(new Success(tenantName));
 		}
 
 		return Behaviors.stopped();

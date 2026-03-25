@@ -17,14 +17,15 @@
 
 package io.openk9.apigw.messaging;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("v0 → v1 upcasting")
 class TenantEventUpcasterV0ToV1Test {
@@ -191,6 +192,107 @@ class TenantEventUpcasterV0ToV1Test {
 				.upcastV0toV1("TenantCreated", 0, null);
 
 			assertThat(result).isNull();
+		}
+	}
+
+	@Nested
+	@DisplayName("Field rename: schemaName → tenantName")
+	class FieldRenameTests {
+
+		@Test
+		@DisplayName("schemaName is renamed to tenantName in v0 payload")
+		void schemaName_isRenamedToTenantName() throws Exception {
+			// a v0 payload with schemaName field
+			JsonNode root = mapper.readTree("""
+				{
+					"tenantId": "t1",
+					"schemaName": "my_schema",
+					"routeAuthorizationMap": {
+						"SEARCHER": "OAUTH2",
+						"DATASOURCE": "OAUTH2"
+					}
+				}""");
+
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, root);
+
+			// schemaName should be renamed to tenantName
+			assertThat(result.has("schemaName")).isFalse();
+			assertThat(result.get("tenantName").asText())
+				.isEqualTo("my_schema");
+		}
+
+		@Test
+		@DisplayName(
+			"Missing schemaName field is handled gracefully")
+		void missingSchemaName_isHandledGracefully()
+			throws Exception {
+
+			// a v0 payload without schemaName
+			JsonNode root = mapper.readTree("""
+				{
+					"tenantId": "t1",
+					"routeAuthorizationMap": {}
+				}""");
+
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 0, root);
+
+			// no schemaName, no tenantName — just passes through
+			assertThat(result.has("schemaName")).isFalse();
+			assertThat(result.has("tenantName")).isFalse();
+		}
+
+		@Test
+		@DisplayName(
+			"renameSchemaNameToTenantName renames the field")
+		void renameSchemaNameToTenantName_renamesField()
+			throws Exception {
+
+			ObjectNode node = mapper.createObjectNode();
+			node.put("tenantId", "t1");
+			node.put("schemaName", "my_schema");
+
+			JsonNode result = TenantEventUpcaster
+				.renameSchemaNameToTenantName(node);
+
+			// verify rename
+			assertThat(result.has("schemaName")).isFalse();
+			assertThat(result.get("tenantName").asText())
+				.isEqualTo("my_schema");
+		}
+
+		@Test
+		@DisplayName(
+			"renameSchemaNameToTenantName with null is safe")
+		void renameSchemaNameToTenantName_withNull_isSafe() {
+			JsonNode result = TenantEventUpcaster
+				.renameSchemaNameToTenantName(null);
+
+			// null propagated unchanged
+			assertThat(result).isNull();
+		}
+
+		@Test
+		@DisplayName(
+			"v1 payload preserves tenantName without transformation")
+		void v1Payload_preservesTenantName() throws Exception {
+			JsonNode root = mapper.readTree("""
+				{
+					"tenantId": "t1",
+					"tenantName": "already_v1",
+					"routeAuthorizationMap": {
+						"ADMINISTRATION": "OAUTH2"
+					}
+				}""");
+
+			// schemaVersion=1 skips the migration
+			JsonNode result = TenantEventUpcaster
+				.upcastV0toV1("TenantCreated", 1, root);
+
+			// tenantName untouched
+			assertThat(result.get("tenantName").asText())
+				.isEqualTo("already_v1");
 		}
 	}
 

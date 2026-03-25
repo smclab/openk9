@@ -15,27 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package io.openk9.tenantmanager.model;
+package io.openk9.tenantmanager.service;
 
-public enum SecurityConfiguration {
-
-	LEGACY,
-	PROFILED_LEGACY,
-	PROFILED,
-	PUBLIC_USAGE,
-	BASIC_AUTH;
+/**
+ * Thrown when a tenant name does not conform to PostgreSQL
+ * identifier rules: must start with a lowercase letter,
+ * contain only lowercase letters, digits, and underscores,
+ * and be at most 63 characters long.
+ */
+public class InvalidTenantNameException extends RuntimeException {
 
 	/**
-	 * Whether this security configuration requires an OAuth2
-	 * identity provider (Keycloak or external). Returns
-	 * {@code true} for all configurations except
-	 * {@code BASIC_AUTH}, which uses HTTP Basic authentication
-	 * for all routes.
+	 * Creates a new exception for the given invalid tenant name.
 	 *
-	 * @return true if OAuth2 is needed
+	 * @param tenantName the invalid name that was rejected
 	 */
-	public boolean requiresOAuth2() {
-		return this != BASIC_AUTH;
+	public InvalidTenantNameException(String tenantName) {
+		super(String.format(
+			"Invalid tenant name '%s'. Must match [a-z][a-z0-9_]{0,62}: "
+			+ "start with a lowercase letter, contain only lowercase "
+			+ "letters, digits, and underscores, max 63 characters.",
+			tenantName));
 	}
-
 }

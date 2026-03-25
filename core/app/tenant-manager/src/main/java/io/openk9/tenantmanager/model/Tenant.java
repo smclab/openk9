@@ -69,11 +69,8 @@ public class Tenant implements GraphqlId {
 	@JdbcTypeCode(SqlTypes.TIMESTAMP)
 	private OffsetDateTime modifiedDate;
 
-	@Column(name = "schema_name", nullable = false)
-	private String schemaName;
-
-	@Column(name = "liquibase_schema_name", nullable = false)
-	private String liquibaseSchemaName;
+	@Column(name = "tenant_name", nullable = false)
+	private String tenantName;
 
 	@Column(name = "virtual_host", nullable = false, unique = true)
 	private String virtualHost;

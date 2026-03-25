@@ -35,7 +35,6 @@ import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.AuthorizationScheme;
 import io.openk9.event.tenant.TenantEvent;
 import io.openk9.event.tenant.TenantEventProducer;
-import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.dto.TenantRequestDTO;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.mapper.TenantMapper;
@@ -60,23 +59,25 @@ public class TenantDbService {
 	private static final String INSERT_SQL = """
 		INSERT INTO tenant (
 			id, virtual_host,
-			schema_name, liquibase_schema_name,
+			tenant_name,
 			issuer_uri, client_id, client_secret, security_configuration,
 			create_date, modified_date, realm_provisioned
 		)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		""";
-	private static final String FETCH_BY_ID_SQL = "SELECT * FROM tenant WHERE id = $1";
+	private static final String FETCH_BY_ID_SQL =
+		"SELECT * FROM tenant WHERE id = $1";
 	private static final String FETCH_ALL_SQL = "SELECT * FROM tenant";
 	private static final String FETCH_BY_VIRTUAL_HOST_SQL =
 		"SELECT * FROM tenant WHERE virtual_host = $1";
-	private static final String FETCH_BY_SCHEMA_NAME_SQL =
-		"SELECT * FROM tenant WHERE schema_name = $1";
-	private static final String FETCH_ALL_SCHEMA_NAME_SQL = "SELECT schema_name FROM tenant";
-	private static final String FETCH_ALL_SCHEMA_NAMES_SQL =
-		"SELECT schema_name, liquibase_schema_name FROM tenant";
-	private static final String DELETE_SQL = "DELETE FROM tenant WHERE id = $1";
-	private static final Logger log = Logger.getLogger(TenantDbService.class);
+	private static final String FETCH_BY_TENANT_NAME_SQL =
+		"SELECT * FROM tenant WHERE tenant_name = $1";
+	private static final String FETCH_ALL_TENANT_NAME_SQL =
+		"SELECT tenant_name FROM tenant";
+	private static final String DELETE_SQL =
+		"DELETE FROM tenant WHERE id = $1";
+	private static final Logger log =
+		Logger.getLogger(TenantDbService.class);
 
 	@Inject
 	Pool pool;
@@ -87,12 +88,22 @@ public class TenantDbService {
 	@Inject
 	TenantEventProducer producer;
 
-	public Uni<Response<TenantResponseDTO>> create(TenantRequestDTO tenantRequestDTO) {
+	/**
+	 * Validates and persists a new tenant from the given DTO.
+	 *
+	 * @param tenantRequestDTO the request DTO with tenant data
+	 * @return a response containing the created tenant DTO,
+	 *         or validation errors
+	 */
+	public Uni<Response<TenantResponseDTO>> create(
+		TenantRequestDTO tenantRequestDTO) {
+
 		Set<ConstraintViolation<TenantRequestDTO>> violations =
 			validator.validate(tenantRequestDTO);
 
 		if (!violations.isEmpty()) {
-			var fieldValidators = ResponseUtil.toFieldValidators(violations);
+			var fieldValidators =
+				ResponseUtil.toFieldValidators(violations);
 			return Uni.createFrom().item(Response.error(fieldValidators));
 		}
 
@@ -100,6 +111,13 @@ public class TenantDbService {
 			.map(Response::success);
 	}
 
+	/**
+	 * Deletes a tenant by its numeric ID and publishes a
+	 * {@code TenantDeleted} event.
+	 *
+	 * @param id the tenant's numeric identifier
+	 * @return a void item on success, or null on failure
+	 */
 	public Uni<Void> deleteTenant(long id) {
 
 		return findById(id)
@@ -108,22 +126,29 @@ public class TenantDbService {
 					.preparedQuery(DELETE_SQL)
 					.execute(Tuple.of(id))
 					.map(SqlResult::rowCount)
-					.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
+					.flatMap(rowCount ->
+						TenantEventProducerUtils.sendEvent(
 							producer,
 							rowCount,
 							TenantEvent.TenantDeleted
 								.builder()
-								.tenantId(tenant.schemaName())
+								.tenantId(tenant.tenantName())
 								.build()
 						)
 					)
 				)
 			)
 			.onFailure()
-			.invoke((e) -> log.error("An error occurred, tx is rolled back", e))
+			.invoke((e) -> log.error(
+				"An error occurred, tx is rolled back", e))
 			.onFailure().recoverWithNull();
 	}
 
+	/**
+	 * Returns all tenants as DTOs.
+	 *
+	 * @return list of all tenant response DTOs
+	 */
 	public Uni<List<TenantResponseDTO>> findAll() {
 		return pool.preparedQuery(FETCH_ALL_SQL)
 			.execute()
@@ -132,44 +157,39 @@ public class TenantDbService {
 			.map(rows -> {
 				List<TenantResponseDTO> tenants = new ArrayList<>();
 				while (rows.hasNext()) {
-					tenants.add(mapTenantResponseDTO((Row) rows.next()));
+					tenants.add(
+						mapTenantResponseDTO((Row) rows.next()));
 				}
 				return tenants;
 			});
 	}
 
-	public Uni<List<SchemaTuple>> findAllDatasourceSchemaTuples() {
-		return pool.preparedQuery(FETCH_ALL_SCHEMA_NAMES_SQL)
+	/**
+	 * Returns all tenant names.	
+	 *
+	 * @return list of tenant name strings
+	 */
+	public Uni<List<String>> findAllTenantName() {
+		return pool.preparedQuery(FETCH_ALL_TENANT_NAME_SQL)
 			.execute()
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
 			.map(rows -> {
-				List<SchemaTuple> schemas = new ArrayList<>();
+				List<String> names = new ArrayList<>();
 				while (rows.hasNext()) {
 					Row row = (Row) rows.next();
-					String schemaName = row.getString("schema_name");
-					String liquibaseSchemaName = row.getString("liquibase_schema_name");
-					schemas.add(new SchemaTuple(schemaName, liquibaseSchemaName));
+					names.add(row.getString("tenant_name"));
 				}
-				return schemas;
+				return names;
 			});
 	}
 
-	public Uni<List<String>> findAllSchemaName() {
-		return pool.preparedQuery(FETCH_ALL_SCHEMA_NAME_SQL)
-			.execute()
-			.map(RowSet::getDelegate)
-			.map(io.vertx.sqlclient.RowSet::iterator)
-			.map(rows -> {
-				List<String> schemas = new ArrayList<>();
-				while (rows.hasNext()) {
-					Row row = (Row) rows.next();
-					schemas.add(row.getString("schema_name"));
-				}
-				return schemas;
-			});
-	}
-
+	/**
+	 * Finds a tenant by its numeric ID.
+	 *
+	 * @param id the tenant's numeric identifier
+	 * @return the tenant DTO, or null if not found
+	 */
 	public Uni<TenantResponseDTO> findById(Long id) {
 
 		return pool.preparedQuery(FETCH_BY_ID_SQL)
@@ -183,26 +203,61 @@ public class TenantDbService {
 			);
 	}
 
-	public Uni<TenantResponseDTO> findByTenantName(String tenantId) {
-		return pool.preparedQuery(FETCH_BY_SCHEMA_NAME_SQL)
-			.execute(Tuple.of(tenantId))
+	/**
+	 * Finds a tenant by its tenant name.
+	 *
+	 * @param tenantName the tenant name to look up
+	 * @return the tenant DTO, or null if not found
+	 */
+	public Uni<TenantResponseDTO> findByTenantName(String tenantName) {
+		return pool.preparedQuery(FETCH_BY_TENANT_NAME_SQL)
+			.execute(Tuple.of(tenantName))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
-			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row) it.next()) : null);
+			.map(it ->
+				it.hasNext()
+					? mapTenantResponseDTO((Row) it.next())
+					: null);
 	}
 
+	/**
+	 * Finds a tenant by its virtual host name.
+	 *
+	 * @param virtualHost the virtual host to look up
+	 * @return the tenant DTO, or null if not found
+	 */
 	public Uni<TenantResponseDTO> findByVirtualHost(String virtualHost) {
 		return pool.preparedQuery(FETCH_BY_VIRTUAL_HOST_SQL)
 			.execute(Tuple.of(virtualHost))
 			.map(RowSet::getDelegate)
 			.map(io.vertx.sqlclient.RowSet::iterator)
-			.map(it -> it.hasNext() ? mapTenantResponseDTO((Row) it.next()) : null);
+			.map(it ->
+				it.hasNext()
+					? mapTenantResponseDTO((Row) it.next())
+					: null);
 	}
 
+	/**
+	 * Persists a new tenant row in the database and publishes a
+	 * {@code TenantCreated} event.
+	 *
+	 * @param virtualHost          the virtual host for the tenant
+	 * @param tenantName           the name of the tenant,
+	 * 				used for schema name and
+	 * 				eventually for realm name
+	 * @param issuerUri            the OAuth2 issuer URI
+	 * @param clientId             the OAuth2 client ID
+	 * @param clientSecret         the OAuth2 client secret
+	 * @param securityConfiguration the tenant's security model
+	 * @param createDate           the creation timestamp
+	 * @param modifiedDate         the modification timestamp
+	 * @param realmProvisioned     whether a Keycloak realm was
+	 *                             auto-provisioned
+	 * @return the created tenant response DTO, or null on failure
+	 */
 	public Uni<TenantResponseDTO> persist(
 		String virtualHost,
-		String schemaName,
-		String liquibaseSchemaName,
+		String tenantName,
 		String issuerUri,
 		String clientId,
 		String clientSecret,
@@ -218,28 +273,34 @@ public class TenantDbService {
 				.execute(Tuple.from(new Object[]{
 					id,
 					virtualHost,
-					schemaName,
-					liquibaseSchemaName,
+					tenantName,
 					issuerUri,
 					clientId,
 					clientSecret,
 					securityConfiguration.name(),
-					createDate != null ? createDate : OffsetDateTime.now(),
-					modifiedDate != null ? modifiedDate : OffsetDateTime.now(),
+					createDate != null
+						? createDate
+						: OffsetDateTime.now(),
+					modifiedDate != null
+						? modifiedDate
+						: OffsetDateTime.now(),
 					realmProvisioned
 				}))
 				.map(SqlResult::rowCount)
-				.flatMap(rowCount -> TenantEventProducerUtils.sendEvent(
+				.flatMap(rowCount ->
+					TenantEventProducerUtils.sendEvent(
 						producer,
 						rowCount,
 						TenantEvent.TenantCreated.builder()
-							.tenantId(schemaName)
-							.schemaName(schemaName)
+							.tenantId(tenantName)
+							.tenantName(tenantName)
 							.hostName(virtualHost)
 							.clientId(clientId)
 							.clientSecret(clientSecret)
 							.issuerUri(issuerUri)
-							.routeAuthorizationMap(fromSecurityConfiguration(securityConfiguration))
+							.routeAuthorizationMap(
+								fromSecurityConfiguration(
+									securityConfiguration))
 							.build()
 					)
 				)
@@ -247,8 +308,7 @@ public class TenantDbService {
 			.map(done -> TenantResponseDTO.builder()
 				.id(String.valueOf(id))
 				.virtualHost(virtualHost)
-				.schemaName(schemaName)
-				.liquibaseSchemaName(liquibaseSchemaName)
+				.tenantName(tenantName)
 				.issuerUri(issuerUri)
 				.clientId(clientId)
 				.clientSecret(clientSecret)
@@ -256,17 +316,23 @@ public class TenantDbService {
 				.build()
 			)
 			.onFailure()
-			.invoke((e) -> log.error("An error occurred, tx is rolled back", e))
+			.invoke((e) -> log.error(
+				"An error occurred, tx is rolled back", e))
 			.onFailure().recoverWithNull();
 
 	}
 
+	/**
+	 * Persists a new tenant from a {@link Tenant} entity instance.
+	 *
+	 * @param tenant the tenant entity to persist
+	 * @return the created tenant response DTO, or null on failure
+	 */
 	public Uni<TenantResponseDTO> persist(Tenant tenant) {
 
 		return persist(
 			tenant.getVirtualHost(),
-			tenant.getSchemaName(),
-			tenant.getLiquibaseSchemaName(),
+			tenant.getTenantName(),
 			tenant.getIssuerUri(),
 			tenant.getClientId(),
 			tenant.getClientSecret(),
@@ -277,11 +343,14 @@ public class TenantDbService {
 		);
 	}
 
-	private static Map<ApiGroup, AuthorizationScheme> fromSecurityConfiguration(SecurityConfiguration securityConfiguration) {
+	private static Map<ApiGroup, AuthorizationScheme>
+		fromSecurityConfiguration(
+			SecurityConfiguration securityConfiguration) {
 
 		Map<ApiGroup, AuthorizationScheme> map = new HashMap<>();
 		for (Preconfiguration.Config config :
-			Preconfiguration.PRECONFIGURATION_MAP.get(securityConfiguration)) {
+			Preconfiguration.PRECONFIGURATION_MAP
+				.get(securityConfiguration)) {
 
 			map.put(config.apiGroup(), config.authScheme());
 		}
@@ -292,8 +361,7 @@ public class TenantDbService {
 	private static TenantResponseDTO mapTenantResponseDTO(Row row) {
 		return TenantResponseDTO.builder()
 			.id(String.valueOf(row.getLong("id")))
-			.schemaName(row.getString("schema_name"))
-			.liquibaseSchemaName(row.getString("liquibase_schema_name"))
+			.tenantName(row.getString("tenant_name"))
 			.virtualHost(row.getString("virtual_host"))
 			.clientId(row.getString("client_id"))
 			.clientSecret(row.getString("client_secret"))

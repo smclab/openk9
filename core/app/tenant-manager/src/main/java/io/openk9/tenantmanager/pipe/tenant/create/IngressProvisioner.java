@@ -31,49 +31,82 @@ import org.apache.pekko.actor.typed.javadsl.Behaviors;
 import org.apache.pekko.actor.typed.javadsl.Receive;
 import org.eclipse.microprofile.config.ConfigProvider;
 
-public class Ingress extends AbstractBehavior<Ingress.Command> {
+/**
+ * Pekko actor that provisions (or rolls back) a Kubernetes Ingress
+ * for a tenant. If no Kubernetes namespace is configured, the
+ * operation is skipped gracefully.
+ */
+public class IngressProvisioner
+	extends AbstractBehavior<IngressProvisioner.Command> {
 
-	private final String schemaName;
+	private final String tenantName;
 	private final String virtualHost;
 	private final boolean defaultBehavior;
-	private final ActorRef<Ingress.Response> replyTo;
+	private final ActorRef<IngressProvisioner.Response> replyTo;
 
-	public Ingress(
+	public IngressProvisioner(
 		ActorContext<Command> context,
 		String virtualHost,
-		String schemaName,
+		String tenantName,
 		boolean defaultBehavior,
 		ActorRef<Response> replyTo
 	) {
 
 		super(context);
-		this.schemaName = schemaName;
+		this.tenantName = tenantName;
 		this.virtualHost = virtualHost;
 		this.defaultBehavior = defaultBehavior;
 		this.replyTo = replyTo;
 	}
 
+	/**
+	 * Creates a provisioning behavior that creates a Kubernetes
+	 * Ingress.
+	 *
+	 * @param virtualHost the tenant virtual host
+	 * @param tenantName  the tenant name
+	 * @param replyTo     the actor to reply to
+	 * @return the provisioning behavior
+	 */
 	public static Behavior<Command> create(
 		String virtualHost,
-		String schemaName,
+		String tenantName,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, virtualHost, schemaName, true, replyTo));
+			new IngressProvisioner(
+				ctx, virtualHost, tenantName, true, replyTo));
 	}
 
+	/**
+	 * Creates a rollback behavior that deletes a Kubernetes Ingress.
+	 *
+	 * @param virtualHost the tenant virtual host
+	 * @param tenantName  the tenant name
+	 * @param replyTo     the actor to reply to
+	 * @return the rollback behavior
+	 */
 	public static Behavior<Command> rollback(
-		String virtualHost, String schemaName, ActorRef<Response> replyTo) {
+		String virtualHost,
+		String tenantName,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
-			new Ingress(ctx, virtualHost, schemaName, false, replyTo));
+			new IngressProvisioner(
+				ctx, virtualHost, tenantName, false, replyTo));
 	}
 
 	@Override
 	public Receive<Command> createReceive() {
 		return newReceiveBuilder()
-			.onMessage(Start.class, this::isDefaultBehavior, this::onStartDefault)
-			.onMessage(Start.class, this::isRollbackBehavior, this::onStartRollback)
+			.onMessage(
+				Start.class,
+				this::isDefaultBehavior,
+				this::onStartDefault)
+			.onMessage(
+				Start.class,
+				this::isRollbackBehavior,
+				this::onStartRollback)
 			.build();
 	}
 
@@ -88,7 +121,8 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 			);
 	}
 
-	private Behavior<Command> onHandleRollback(HandleRollback handleRollback) {
+	private Behavior<Command> onHandleRollback(
+		HandleRollback handleRollback) {
 		return Behaviors.stopped();
 	}
 
@@ -100,7 +134,9 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 		return !isDefaultBehavior(command);
 	}
 
-	private Behavior<Command> onHandleCreate(HandleCreate handleCreate) {
+	private Behavior<Command> onHandleCreate(
+		HandleCreate handleCreate) {
+
 		var throwable = handleCreate.throwable;
 
 		if (throwable == null) {
@@ -118,25 +154,31 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 		if (k8sNamespace().isPresent()) {
 
 			getContext().pipeToSelf(
-				TenantProvisioningService.deleteIngress(virtualHost, schemaName),
+				TenantProvisioningService.deleteIngress(
+					virtualHost, tenantName),
 				(result, throwable) -> {
 					IngressException exception = null;
 					if (throwable != null) {
-						exception = new IngressException(throwable);
+						exception =
+							new IngressException(throwable);
 					}
 
-					return new HandleRollback(result, exception);
+					return new HandleRollback(
+						result, exception);
 				}
 			);
 		}
 		else {
 
-			getContext().getLog().info("Skipped. Kubernetes namespace not defined.");
+			getContext().getLog().info(
+				"Skipped. Kubernetes namespace not defined.");
 			replyTo.tell(Success.INSTANCE);
 		}
 
 		return newReceiveBuilder()
-			.onMessage(HandleRollback.class, this::onHandleRollback)
+			.onMessage(
+				HandleRollback.class,
+				this::onHandleRollback)
 			.build();
 	}
 
@@ -144,14 +186,16 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 
 		if (k8sNamespace().isPresent()) {
 			getContext().pipeToSelf(
-				TenantProvisioningService.createIngress(virtualHost, schemaName),
+				TenantProvisioningService.createIngress(
+					virtualHost, tenantName),
 				HandleCreate::new
 			);
 		}
 		else {
 
 			getContext().getLog().info(
-				"Skipping ingress creation. No kubernetes namespace defined.");
+				"Skipping ingress creation."
+				+ " No kubernetes namespace defined.");
 			replyTo.tell(Success.INSTANCE);
 		}
 
@@ -163,14 +207,16 @@ public class Ingress extends AbstractBehavior<Ingress.Command> {
 	public sealed interface Response {}
 	public sealed interface Command {}
 
-	public enum Start implements Command {INSTANCE}
+	public enum Start implements Command { INSTANCE }
+
 	private record HandleCreate(
 		CreateIngressResponse response,
 		Throwable throwable) implements Command {}
 
-	public enum Success implements Response {INSTANCE}
+	public enum Success implements Response { INSTANCE }
 
-	public record Error(IngressException exception) implements Response {}
+	public record Error(IngressException exception)
+		implements Response {}
 
 	private record HandleRollback(
 		DeleteIngressResponse response,

@@ -48,7 +48,7 @@ sealed public interface TenantEvent {
 	 *
 	 * @param tenantId  the unique identifier of the tenant
 	 * @param hostName  the host name associated with the tenant
-	 * @param schemaName  the db schema associated with the tenant
+	 * @param tenantName  the db schema associated with the tenant
 	 * @param issuerUri the issuer URI for the tenant’s authentication domain
 	 * @param routeAuthorizationMap the mapping of the routes and the authorizationScheme
 	 */
@@ -56,7 +56,7 @@ sealed public interface TenantEvent {
 	record TenantCreated(
 		String tenantId,
 		String hostName,
-		String schemaName,
+		String tenantName,
 		String issuerUri,
 		String clientId,
 		String clientSecret,
@@ -95,7 +95,7 @@ sealed public interface TenantEvent {
 	 *
 	 * @param tenantId  the unique identifier of the tenant
 	 * @param hostName  the updated host name of the tenant
-	 * @param schemaName  the updated db schema associated with the tenant
+	 * @param tenantName  the updated db schema associated with the tenant
 	 * @param issuerUri the updated issuer URI for the tenant’s authentication domain
 	 * @param routeAuthorizationMap the mapping of the routes and the authorizationScheme
 	 */
@@ -103,7 +103,7 @@ sealed public interface TenantEvent {
 	record TenantUpdated(
 		String tenantId,
 		String hostName,
-		String schemaName,
+		String tenantName,
 		String issuerUri,
 		String clientId,
 		String clientSecret,

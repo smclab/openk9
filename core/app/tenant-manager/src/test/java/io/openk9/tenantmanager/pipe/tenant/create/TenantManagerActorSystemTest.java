@@ -30,7 +30,7 @@ class TenantManagerActorSystemTest {
 
 		Assertions.assertEquals(
 			"testStartCreateTenantSuccess",
-			tenant.schemaName());
+			tenant.tenantName());
 	}
 
     @Test
@@ -46,7 +46,7 @@ class TenantManagerActorSystemTest {
 			.await().indefinitely();
 
 		Assertions.assertEquals(
-			"testBasicAuth", tenant.schemaName());
+			"testBasicAuth", tenant.tenantName());
 		Assertions.assertNull(tenant.issuerUri());
 		Assertions.assertNull(tenant.clientId());
 	}

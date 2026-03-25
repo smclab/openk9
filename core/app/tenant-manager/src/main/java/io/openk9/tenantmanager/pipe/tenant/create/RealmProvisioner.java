@@ -25,16 +25,21 @@ import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
 import org.apache.pekko.actor.typed.javadsl.Behaviors;
 
-public class Realm {
+/**
+ * Pekko actor that provisions (or rolls back) a Keycloak realm
+ * for a tenant. Communicates with the Quarkus service layer via
+ * the Vert.x EventBus using {@code pipeToSelf}.
+ */
+public class RealmProvisioner {
 
 	public sealed interface Command {}
-	public enum Start implements Command { INSTANCE } 
-	
+	public enum Start implements Command { INSTANCE }
+
 	private record CreateRealmResponse(
 		TenantRealmService.CreatedRealm createdRealm,
 		Throwable error
 	) implements Command {}
-	
+
 	private record DeleteRealmResponse(
 		Void result,
 		Throwable error
@@ -58,45 +63,69 @@ public class Realm {
 	public enum SuccessRollback implements Response { INSTANCE }
 
 	// Setup behaviors
-	
+
+	/**
+	 * Creates a provisioning behavior that creates a Keycloak realm.
+	 *
+	 * @param virtualHost the tenant virtual host
+	 * @param realmName   the realm name to provision
+	 * @param replyTo     the actor to reply to
+	 * @return the provisioning behavior
+	 */
 	public static Behavior<Command> create(
-		String virtualHost, String realmName, ActorRef<Response> replyTo) {
+		String virtualHost,
+		String realmName,
+		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(context ->
 			initial(context, replyTo, virtualHost, realmName));
 	}
 
+	/**
+	 * Creates a rollback behavior that deletes a Keycloak realm.
+	 *
+	 * @param realmName the realm name to delete
+	 * @param replyTo   the actor to reply to
+	 * @return the rollback behavior
+	 */
 	public static Behavior<Command> createRollback(
 		String realmName, ActorRef<Response> replyTo) {
 
-		return Behaviors.setup(context -> rollback(context, replyTo, realmName));
+		return Behaviors.setup(context ->
+			rollback(context, replyTo, realmName));
 	}
 
 	// Creation behaviors
-	
+
 	private static Behavior<Command> initial(
-		ActorContext<Command> context, ActorRef<Response> replyTo,
-		String virtualHost, String realmName) {
+		ActorContext<Command> context,
+		ActorRef<Response> replyTo,
+		String virtualHost,
+		String realmName) {
 
 		return Behaviors.receive(Command.class)
 			.onMessageEquals(
 				Start.INSTANCE,
-				() -> onStart(context, replyTo, virtualHost, realmName))
+				() -> onStart(
+					context, replyTo, virtualHost, realmName))
 			.build();
 	}
 
 	private static Behavior<Command> onStart(
-		ActorContext<Command> context, ActorRef<Response> replyTo,
-		String virtualHost, String realmName) {
+		ActorContext<Command> context,
+		ActorRef<Response> replyTo,
+		String virtualHost,
+		String realmName) {
 
 		context.pipeToSelf(
-			TenantProvisioningService.createRealm(virtualHost, realmName),
+			TenantProvisioningService.createRealm(
+				virtualHost, realmName),
 			CreateRealmResponse::new
 		);
 
 		return awaitCreateRealm(replyTo);
 	}
-	
+
 	private static Behavior<Command> awaitCreateRealm(
 		ActorRef<Response> replyTo) {
 
@@ -108,7 +137,8 @@ public class Realm {
 	}
 
 	private static Behavior<Command> onCreateRealmResponse(
-		ActorRef<Response> replyTo, CreateRealmResponse message) {
+		ActorRef<Response> replyTo,
+		CreateRealmResponse message) {
 
 		if (message.error() != null) {
 			var e = message.error();
@@ -133,7 +163,7 @@ public class Realm {
 	}
 
 	// Deletion behaviors
-	
+
 	private static Behavior<Command> rollback(
 		ActorContext<Command> context,
 		ActorRef<Response> replyTo,
@@ -163,9 +193,9 @@ public class Realm {
 			.build();
 	}
 
-
 	private static Behavior<Command> onDeleteRealmResponse(
-		ActorRef<Response> replyTo, DeleteRealmResponse message) {
+		ActorRef<Response> replyTo,
+		DeleteRealmResponse message) {
 
 		if (message.error() != null) {
 			var e = message.error();

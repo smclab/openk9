@@ -41,6 +41,33 @@ public class TenantRealmService {
 
 	private static final Logger log = Logger.getLogger(TenantRealmService.class);
 
+	private static volatile boolean keycloakAvailable = false;
+
+	/**
+	 * Returns whether Keycloak is available for realm
+	 * provisioning. This value is set once at startup and
+	 * is safe to read from any thread (including Pekko
+	 * dispatcher threads).
+	 *
+	 * @return true if Keycloak admin client is configured
+	 */
+	public static boolean isKeycloakAvailable() {
+		return keycloakAvailable;
+	}
+
+	/**
+	 * Sets the keycloak availability flag. Exposed for
+	 * testing — production code sets this in
+	 * {@link #setup(Object)}.
+	 *
+	 * @param available the new availability value
+	 */
+	public static void setKeycloakAvailable(
+		boolean available) {
+
+		keycloakAvailable = available;
+	}
+
 	@Inject
 	KeycloakDefaultRealmRepresentationFactory defaultRepresentationFactory;
 	@Inject
@@ -66,6 +93,7 @@ public class TenantRealmService {
 
 		this.baseIssuerUri = mayBaseIssuerUri.get();
 		this.keycloakClient = createKeycloakClient(keycloakAdminClientConfig);
+		keycloakAvailable = true;
 	}
 
 	private static Keycloak createKeycloakClient(KeycloakAdminClientConfig config) {

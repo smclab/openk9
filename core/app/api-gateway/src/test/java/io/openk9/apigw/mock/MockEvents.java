@@ -32,7 +32,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("loguetown")
-				.schemaName("loguetown")
+				.tenantName("loguetown")
 				.hostName("loguetown.localhost")
 				.routeAuthorizationMap(Map.of(
 					ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY
@@ -41,7 +41,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("drum")
-				.schemaName("drum")
+				.tenantName("drum")
 				.hostName("drum.localhost")
 				.issuerUri("http://drum.localhost:9090/realms/drum")
 				.clientId("openk9")
@@ -52,7 +52,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("alabasta")
-				.schemaName("alabasta")
+				.tenantName("alabasta")
 				.hostName("alabasta.localhost")
 				.issuerUri("http://alabasta.localhost:9090/realms/alabasta")
 				.clientId("openk9")
@@ -63,7 +63,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("sabaody")
-				.schemaName("sabaody")
+				.tenantName("sabaody")
 				.hostName("sabaody.localhost")
 				.issuerUri("http://sabaody.localhost:9090/realms/sabaody")
 				.clientId("openk9")
@@ -74,7 +74,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("skypea")
-				.schemaName("skypea")
+				.tenantName("skypea")
 				.hostName("skypea.localhost")
 				.issuerUri("http://skypea.localhost:9090/realms/skypea")
 				.clientId("openk9")
@@ -83,7 +83,7 @@ public class MockEvents {
 
 			TenantEvent.TenantCreated.builder()
 				.tenantId("waterseven")
-				.schemaName("waterseven")
+				.tenantName("waterseven")
 				.hostName("waterseven.localhost")
 				.issuerUri("http://waterseven.localhost:9090/realms/waterseven")
 				.clientId("openk9")

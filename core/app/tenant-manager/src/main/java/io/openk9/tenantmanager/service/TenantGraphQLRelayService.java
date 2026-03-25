@@ -41,7 +41,7 @@ public class TenantGraphQLRelayService extends GraphQLRelayService<Tenant> {
 		return new String[] {
 			Tenant_.VIRTUAL_HOST,
 			Tenant_.CLIENT_ID,
-			Tenant_.SCHEMA_NAME
+			Tenant_.TENANT_NAME
 		};
 	}
 

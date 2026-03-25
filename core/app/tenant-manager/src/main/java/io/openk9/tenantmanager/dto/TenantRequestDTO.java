@@ -34,10 +34,7 @@ import lombok.NoArgsConstructor;
 public class TenantRequestDTO {
 	@NotBlank
 	@NotNull
-	private String schemaName;
-	@NotBlank
-	@NotNull
-	private String liquibaseSchemaName;
+	private String tenantName;
 	@NotBlank
 	@NotNull
 	private String virtualHost;

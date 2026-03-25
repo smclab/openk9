@@ -24,7 +24,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 import io.openk9.quarkus.common.EventBusInstanceHolder;
-import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.pipe.liquibase.validate.LiquibaseValidatorActorSystem;
 import io.openk9.tenantmanager.pipe.liquibase.validate.util.Params;
 import io.openk9.tenantmanager.service.TenantSchemaService;
@@ -38,8 +37,10 @@ import org.jboss.logging.Logger;
 @Singleton
 public class TenantManagerInitializer {
 
-	public static final String INITIALIZED = "TenantManagerInitializer#INITIALIZED";
-	public static final String ERROR = "TenantManagerInitializer#ERROR";
+	public static final String INITIALIZED =
+		"TenantManagerInitializer#INITIALIZED";
+	public static final String ERROR =
+		"TenantManagerInitializer#ERROR";
 
 	private static final Logger logger =
 		Logger.getLogger(TenantManagerInitializer.class);
@@ -57,6 +58,13 @@ public class TenantManagerInitializer {
 	@Inject
 	EventBus eventBus;
 
+	/**
+	 * Runs Liquibase schema upgrades for all existing tenants at
+	 * startup, then publishes the {@link #INITIALIZED} event on
+	 * success or {@link #ERROR} on failure.
+	 *
+	 * @param startup the CDI startup event
+	 */
 	public void onStart(@Observes Startup startup) {
 
 		logger.info("Check for schema upgrades...");
@@ -64,29 +72,39 @@ public class TenantManagerInitializer {
 		EventBusInstanceHolder.setEventBus(eventBus);
 
 		try {
-			VertxContextSupport.subscribeAndAwait(() -> tenantDbService
-				.findAllDatasourceSchemaTuples()
-				.flatMap((schemas) -> {
-						LinkedList<Params> schemaParamList = new LinkedList<>();
+			VertxContextSupport.subscribeAndAwait(
+				() -> tenantDbService
+					.findAllTenantName()
+					.flatMap(tenantNames -> {
+						LinkedList<Params> schemaParamList =
+							new LinkedList<>();
 
-						for (SchemaTuple schema : schemas) {
+						for (String tenantName : tenantNames) {
+							// Liquibase schema is always
+							// tenantName + "_liquibase"
+							String liquibaseSchema =
+								tenantName + "_liquibase";
 							schemaParamList.add(
 								new Params(
-									schema.schemaName(),
-									schema.liquibaseSchemaName(),
-									liquibaseService.getChangeLogLocation(),
-									liquibaseService.getChangeLogLockTableName(),
-									liquibaseService.getChangeLogTableName(),
-									liquibaseService.getDatasourceJdbcUrl(),
+									tenantName,
+									liquibaseSchema,
+									liquibaseService
+										.getChangeLogLocation(),
+									liquibaseService
+										.getChangeLogLockTableName(),
+									liquibaseService
+										.getChangeLogTableName(),
+									liquibaseService
+										.getDatasourceJdbcUrl(),
 									datasourceUsername,
 									datasourcePassword
 								)
 							);
 						}
 
-						return liquibaseValidatorActorSystem.validateSchemas(schemaParamList);
-					}
-				)
+						return liquibaseValidatorActorSystem
+							.validateSchemas(schemaParamList);
+					})
 			);
 
 			logger.info("Tenant Upgrade Finished");

@@ -71,7 +71,7 @@ class TenantManagementEventMessageConverterTest {
 		{
 			"tenantId": "v1-tenant",
 			"hostName": "v1.localhost",
-			"schemaName": "v1_tenant",
+			"tenantName": "v1_tenant",
 			"issuerUri": "http://keycloak/realms/test",
 			"routeAuthorizationMap": {
 				"ADMINISTRATION": "OAUTH2",
@@ -85,7 +85,7 @@ class TenantManagementEventMessageConverterTest {
 		{
 			"tenantId": "partial-tenant",
 			"hostName": "partial.localhost",
-			"schemaName": "partial_schema",
+			"tenantName": "partial_schema",
 			"routeAuthorizationMap": {
 				"ADMINISTRATION": "OAUTH2"
 			}

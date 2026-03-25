@@ -20,6 +20,7 @@ package io.openk9.tenantmanager.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
@@ -75,14 +76,16 @@ public class TenantProvisioningService {
 		"TenantProvisioningService#executeDeletion";
 	public static final String GENERATE_RANDOM_TENANT_NAME =
 		"TenantProvisioningService#generateRandomTenantName";
-	public static final String IS_REALM_CONFIGURED =
-		"TenantProvisioningService#isRealmConfigured";
 
 	private static final Logger log = Logger.getLogger(TenantProvisioningService.class);
 
 	@Inject
 	@ConfigProperty(name = "quarkus.application.version")
 	String applicationVersion;
+
+	@Inject
+	@ConfigProperty(name = "quarkus.kubernetes.namespace")
+	Optional<String> k8sNamespace;
 
 	// ========================================================================
 	// Aggregated services.
@@ -200,12 +203,6 @@ public class TenantProvisioningService {
 			.subscribeAsCompletionStage();
 	}
 
-	public static CompletionStage<Boolean> isRealmConfigured() {
-		return EventBusInstanceHolder.getEventBus()
-			.<Boolean>request(IS_REALM_CONFIGURED, null)
-			.map(Message::body)
-			.subscribeAsCompletionStage();
-	}
 
 	// ========================================================================
 	// Provisioning / Deprovisioning.
@@ -267,9 +264,10 @@ public class TenantProvisioningService {
 				else {
 					return VertxContextSupport.executeBlocking(() -> {
 						schemaService.runInitialization(
-							t.schemaName(), t.virtualHost(), false);
+							t.tenantName(), t.virtualHost(), false);
 						String message = String.format(
-							"Tables for schema %s created", t.schemaName());
+							"Tables for schema %s created",
+							t.tenantName());
 
 						return new CreateTablesResponse(message);
 					});
@@ -312,7 +310,8 @@ public class TenantProvisioningService {
 			}
 			catch (Exception e) {
 				log.errorf(
-					e, "An error occurred while deleting schema %s", schemaName);
+					e, "Schema creation failed for %s", schemaName);
+				throw e;
 			}
 
 			return null;
@@ -358,14 +357,11 @@ public class TenantProvisioningService {
 	@ConsumeEvent(GENERATE_RANDOM_TENANT_NAME)
 	Uni<String> generateRandomTenantName(Object none) {
 
-		return dbService.findAllSchemaName()
-			.map(schemas -> RandomGenerator.generate(schemas.toArray(String[]::new)));
+		return dbService.findAllTenantName()
+			.map(names ->
+				RandomGenerator.generate(names.toArray(String[]::new)));
 	}
 
-	@ConsumeEvent(IS_REALM_CONFIGURED)
-	Uni<Boolean> checkRealmConfigured(Object none) {
-		return Uni.createFrom().item(realmService.isConfigured());
-	}
 
 	/**
 	 * Executes all tenant deletion operations in parallel.
@@ -385,17 +381,17 @@ public class TenantProvisioningService {
 					.<Void>item(() -> {
 						schemaService
 							.rollbackRunLiquibaseMigration(
-								tenant.schemaName());
+								tenant.tenantName());
 						log.infof(
 							"Schema %s deleted for %s",
-							tenant.schemaName(),
+							tenant.tenantName(),
 							virtualHost);
 						return null;
 					}));
 
 				if (tenant.realmProvisioned()) {
 					ops.add(realmService
-						.deleteRealm(tenant.schemaName())
+						.deleteRealm(tenant.tenantName())
 						.invoke(() -> log.infof(
 							"Realm deleted for %s",
 							virtualHost)));
@@ -414,41 +410,49 @@ public class TenantProvisioningService {
 						"Entity %s deleted for %s",
 						tenant.id(), virtualHost)));
 
-				ops.add(appManagerService
-					.deleteIngress(
-						DeleteIngressRequest.newBuilder()
-							.setVirtualHost(virtualHost)
-							.setSchemaName(
-								tenant.schemaName())
-							.build())
-					.replaceWithVoid()
-					.invoke(() -> log.infof(
-						"Ingress deleted for %s",
-						virtualHost)));
+				if (k8sNamespace.isPresent()) {
+					ops.add(appManagerService
+						.deleteIngress(
+							DeleteIngressRequest.newBuilder()
+								.setVirtualHost(virtualHost)
+								.setSchemaName(
+									tenant.tenantName())
+								.build())
+						.replaceWithVoid()
+						.invoke(() -> log.infof(
+							"Ingress deleted for %s",
+							virtualHost)));
 
-				var manifests = PresetPluginDrivers
-					.getAllPluginDrivers()
-					.stream()
-					.map(preset -> AppManifest.newBuilder()
-						.setSchemaName(tenant.schemaName())
-						.setChart(preset)
-						.setVersion(applicationVersion)
-						.build())
-					.toList();
-
-				ops.add(appManagerService
-					.deleteAllResources(
-						AppManifestList.newBuilder()
-							.addAllAppManifests(manifests)
+					var manifests = PresetPluginDrivers
+						.getAllPluginDrivers()
+						.stream()
+						.map(preset -> AppManifest.newBuilder()
+							.setSchemaName(tenant.tenantName())
+							.setChart(preset)
+							.setVersion(applicationVersion)
 							.build())
-					.invoke(resp -> resp
-						.getDeleteResourceStatusList()
-						.forEach(s -> log.infof(
-							"Resource %s: %s for %s",
-							s.getResourceName(),
-							s.getStatus(),
-							virtualHost)))
-					.replaceWithVoid());
+						.toList();
+
+					ops.add(appManagerService
+						.deleteAllResources(
+							AppManifestList.newBuilder()
+								.addAllAppManifests(manifests)
+								.build())
+						.invoke(resp -> resp
+							.getDeleteResourceStatusList()
+							.forEach(s -> log.infof(
+								"Resource %s: %s for %s",
+								s.getResourceName(),
+								s.getStatus(),
+								virtualHost)))
+						.replaceWithVoid());
+				}
+				else {
+					log.infof(
+						"Skipping ingress and resource deletion"
+						+ " for %s (no Kubernetes namespace"
+						+ " configured)", virtualHost);
+				}
 
 				return Uni.join()
 					.all(ops)

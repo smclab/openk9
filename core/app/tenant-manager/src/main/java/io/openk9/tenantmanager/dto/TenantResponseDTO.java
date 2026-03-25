@@ -26,8 +26,7 @@ import lombok.Builder;
 @RegisterForReflection
 public record TenantResponseDTO(
 	String id,
-	String schemaName,
-	String liquibaseSchemaName,
+	String tenantName,
 	String virtualHost,
 	String clientId,
 	String clientSecret,

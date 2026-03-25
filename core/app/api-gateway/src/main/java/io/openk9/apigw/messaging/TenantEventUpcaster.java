@@ -17,13 +17,14 @@
 
 package io.openk9.apigw.messaging;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import lombok.extern.slf4j.Slf4j;
+
 import static io.openk9.event.tenant.TenantEvent.API_KEY_CREATED;
 import static io.openk9.event.tenant.TenantEvent.TENANT_CREATED;
 import static io.openk9.event.tenant.TenantEvent.TENANT_UPDATED;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Transforms legacy tenant event JSON payloads into the current
@@ -92,6 +93,7 @@ final class TenantEventUpcaster {
 	//   DATASOURCE and SEARCHER keys. DATASOURCE is replaced
 	//   by ADMINISTRATION. SEARCHER is replaced by SEARCH,
 	//   PUBLIC, and INGESTION (all copy the SEARCHER value).
+	//   Also: legacy field "schemaName" renamed to "tenantName".
 	// ApiKeyCreated: lacked apiGroup and expirationDate fields;
 	//   these events are discarded.
 
@@ -108,8 +110,11 @@ final class TenantEventUpcaster {
 		}
 
 		return switch (eventType) {
-			case TENANT_CREATED, TENANT_UPDATED ->
-				upcastRouteAuthorizationMap(root);
+			case TENANT_CREATED, TENANT_UPDATED -> {
+				JsonNode node = upcastRouteAuthorizationMap(root);
+				node = renameSchemaNameToTenantName(node);
+				yield node;
+			}
 			case API_KEY_CREATED -> {
 				if (!isV1ApiKeyCreated(root)) {
 					log.warn(
@@ -153,6 +158,24 @@ final class TenantEventUpcaster {
 		v1Map.put("SEARCH", searchScheme);
 		v1Map.put("INGESTION", searchScheme);
 		v1Map.put("PUBLIC", searchScheme);
+
+		return node;
+	}
+
+	/**
+	 * Renames the legacy {@code schemaName} field to
+	 * {@code tenantName} in the v0 payload. If the field is
+	 * absent, the node is returned unchanged.
+	 */
+	static JsonNode renameSchemaNameToTenantName(JsonNode root) {
+		if (!(root instanceof ObjectNode node)) {
+			return root;
+		}
+
+		JsonNode schemaNameNode = node.remove("schemaName");
+		if (schemaNameNode != null) {
+			node.set("tenantName", schemaNameNode);
+		}
 
 		return node;
 	}

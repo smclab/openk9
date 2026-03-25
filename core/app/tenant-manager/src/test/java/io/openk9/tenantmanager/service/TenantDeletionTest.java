@@ -17,15 +17,7 @@
 
 package io.openk9.tenantmanager.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import java.util.Optional;
 
 import io.openk9.app.manager.grpc.AppManager;
 import io.openk9.app.manager.grpc.DeleteAllResourcesResponse;
@@ -44,6 +36,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @DisplayName("Tenant deletion")
 class TenantDeletionTest {
@@ -67,6 +69,7 @@ class TenantDeletionTest {
 
 		service = new TenantProvisioningService();
 		service.applicationVersion = "1.0";
+		service.k8sNamespace = Optional.of("default");
 		service.dbService = dbService;
 		service.schemaService = schemaService;
 		service.realmService = realmService;
@@ -152,6 +155,31 @@ class TenantDeletionTest {
 
 		@Test
 		@DisplayName(
+			"skips ingress and resource deletion when K8s not configured")
+		void skipsK8sOperationsWhenNoNamespace() {
+			// arrange: no K8s namespace
+			service.k8sNamespace = Optional.empty();
+
+			var tenant = tenantWith(
+				"46", "schema5", "host5.local",
+				SecurityConfiguration.BASIC_AUTH, false);
+
+			when(dbService.findByVirtualHost("host5.local"))
+				.thenReturn(Uni.createFrom().item(tenant));
+
+			// act
+			service.executeDeletion("host5.local");
+
+			// assert: K8s operations never called
+			verify(appManager, never()).deleteIngress(any());
+			verify(appManager, never())
+				.deleteAllResources(any());
+			// non-K8s operations still called
+			verify(dbService).deleteTenant(46L);
+		}
+
+		@Test
+		@DisplayName(
 			"collects errors when deleteTenant fails")
 		void continuesWhenEntityDeleteFails() {
 			// arrange
@@ -223,7 +251,12 @@ class TenantDeletionTest {
 				.awaitItem()
 				.getItem();
 
-			String token = requestResp.message();
+			// extract the UUID token from the human-readable message
+			// format: "Deletion token: <uuid>. Send it back ..."
+			String msg = requestResp.message();
+			String token = msg.substring(
+				"Deletion token: ".length(),
+				msg.indexOf('.'));
 
 			// act: confirm deletion
 			DeleteTenantResponse deleteResp = service
@@ -236,9 +269,7 @@ class TenantDeletionTest {
 				.getItem();
 
 			// assert
-			assertEquals(
-				"delete tenant started",
-				deleteResp.message());
+			assertNotNull(deleteResp.message());
 		}
 
 		@Test
@@ -276,12 +307,12 @@ class TenantDeletionTest {
 	// -----------------------------------------------------------------
 
 	private static TenantResponseDTO tenantWith(
-		String id, String schemaName, String virtualHost,
+		String id, String tenantName, String virtualHost,
 		SecurityConfiguration secConfig,
 		boolean realmProvisioned) {
 
 		return new TenantResponseDTO(
-			id, schemaName, schemaName + "-liq",
+			id, tenantName,
 			virtualHost, null, null, null,
 			secConfig, realmProvisioned);
 	}

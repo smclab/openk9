@@ -31,6 +31,7 @@ import jakarta.ws.rs.core.Response;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.service.DuplicateVirtualHostException;
 import io.openk9.tenantmanager.service.InvalidDeletionTokenException;
+import io.openk9.tenantmanager.service.InvalidTenantNameException;
 import io.openk9.tenantmanager.service.TenantNotFoundException;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 import io.openk9.tenantmanager.service.dto.CreateTablesResponse;
@@ -51,7 +52,9 @@ public class TenantManagerResource {
 
 		return provisioningService.create(createTenantRequest)
 			.onFailure(DuplicateVirtualHostException.class)
-			.transform(cause -> new WebApplicationException(cause, Response.Status.CONFLICT));
+			.transform(cause -> new WebApplicationException(cause, Response.Status.CONFLICT))
+			.onFailure(InvalidTenantNameException.class)
+			.transform(cause -> new WebApplicationException(cause, Response.Status.BAD_REQUEST));
 	}
 
 	@POST

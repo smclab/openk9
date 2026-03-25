@@ -35,11 +35,11 @@ INSERT INTO "tenant" (
 	1,
 	'2024-11-16:00:00',
 	'2024-11-16:00:00',
-	'shiny-charmender',
-	'shiny-charmender-liquibase',
-	'shiny-charmender.openk9.local',
-	'shiny-charmender',
-	'shiny-charmender'
+	'shinycharmender',
+	'shinycharmender_liquibase',
+	'shinycharmender.openk9.local',
+	'shinycharmender',
+	'shinycharmender'
 );
 
 INSERT INTO "tenant" (
@@ -55,10 +55,9 @@ INSERT INTO "tenant" (
 	2,
 	'2025-11-16:00:00',
 	'2025-11-16:00:00',
-	'shiny-pikachu',
-	'shiny-pikachu-liquibase',
-	'shiny-pikachu.openk9.local',
-	'shiny-pikachu',
-	'shiny-pikachu'
+	'shinypikachu',
+	'shinypikachu_liquibase',
+	'shinypikachu.openk9.local',
+	'shinypikachu',
+	'shinypikachu'
 );
-

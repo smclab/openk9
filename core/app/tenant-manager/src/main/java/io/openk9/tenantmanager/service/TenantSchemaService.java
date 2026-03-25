@@ -24,7 +24,6 @@ import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.tenantmanager.dto.SchemaTuple;
 import io.openk9.tenantmanager.util.CustomClassLoaderResourceAccessor;
 
 import liquibase.Contexts;
@@ -54,46 +53,83 @@ public class TenantSchemaService {
 	@ConfigProperty(name = "openk9.datasource.liquibase.change-log")
 	String changeLogLocation;
 
-	@ConfigProperty(name = "openk9.datasource.liquibase.database-change-log-lock-table-name")
+	@ConfigProperty(
+		name = "openk9.datasource.liquibase"
+			+ ".database-change-log-lock-table-name")
 	String changeLogLockTableName;
 
-	@ConfigProperty(name = "openk9.datasource.liquibase.database-change-log-table-name")
+	@ConfigProperty(
+		name = "openk9.datasource.liquibase"
+			+ ".database-change-log-table-name")
 	String changeLogTableName;
 
+	/**
+	 * Returns the Liquibase changelog location.
+	 *
+	 * @return the configured changelog path
+	 */
 	public String getChangeLogLocation() {
 		return changeLogLocation;
 	}
 
+	/**
+	 * Returns the Liquibase change log lock table name.
+	 *
+	 * @return the configured lock table name
+	 */
 	public String getChangeLogLockTableName() {
 		return changeLogLockTableName;
 	}
 
+	/**
+	 * Returns the Liquibase change log table name.
+	 *
+	 * @return the configured change log table name
+	 */
 	public String getChangeLogTableName() {
 		return changeLogTableName;
 	}
 
-	public void runInitialization(String schemaName, String virtualHost)
+	/**
+	 * Runs schema initialization, always creating the schema
+	 * (equivalent to {@code createSchema = true}).
+	 *
+	 * @param tenantName  the tenant schema name
+	 * @param virtualHost the virtual host for the tenant binding
+	 * @throws LiquibaseException if migration fails
+	 */
+	public void runInitialization(String tenantName, String virtualHost)
 		throws LiquibaseException {
 
-		runInitialization(schemaName, virtualHost, true);
+		runInitialization(tenantName, virtualHost, true);
 	}
 
+	/**
+	 * Runs schema initialization, optionally creating the schema
+	 * and its Liquibase shadow schema first.
+	 *
+	 * @param tenantName   the tenant schema name
+	 * @param virtualHost  the virtual host for the tenant binding
+	 * @param createSchema if true, creates the schemas before
+	 *                     running Liquibase
+	 * @throws LiquibaseException if migration fails
+	 */
 	public void runInitialization(
-		String schemaName, String virtualHost, boolean createSchema)
+		String tenantName, String virtualHost, boolean createSchema)
 		throws LiquibaseException {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
-		String liquibaseSchema = schemaName;
+		String liquibaseSchema = tenantName;
 
 		if (createSchema) {
 			liquibaseSchema += "_liquibase";
 		}
 
-		DatabaseConnection connection = DatabaseFactory.getInstance()
-			.openConnection(
+		DatabaseConnection connection =
+			DatabaseFactory.getInstance().openConnection(
 				toJdbcUrl(openk9DatasourceUrl),
 				datasourceUsername,
 				datasourcePassword,
@@ -101,21 +137,24 @@ public class TenantSchemaService {
 				resourceAccessor);
 
 		Database database = _createDatabase(
-			connection, schemaName, liquibaseSchema);
+			connection, tenantName, liquibaseSchema);
 
-		try(Liquibase liquibase = new Liquibase(
+		try (Liquibase liquibase = new Liquibase(
 			changeLogLocation, resourceAccessor, database)) {
 
 			if (createSchema) {
-				_createSchemas(connection, schemaName, liquibaseSchema);
+				_createSchemas(
+					connection, tenantName, liquibaseSchema);
 			}
 
 			liquibase.validate();
 			liquibase.update(new Contexts(), new LabelExpression());
 
-			_insertIntoTenantBinding(connection, schemaName, virtualHost);
+			_insertIntoTenantBinding(
+				connection, tenantName, virtualHost);
 
-		} catch (Exception ex) {
+		}
+		catch (Exception ex) {
 			if (ex instanceof LiquibaseException) {
 				throw (LiquibaseException) ex;
 			}
@@ -123,56 +162,91 @@ public class TenantSchemaService {
 		}
 	}
 
-	public void runUpdate(List<SchemaTuple> schemaNames) throws LiquibaseException {
+	/**
+	 * Runs Liquibase update for all given tenant names.
+	 * The Liquibase schema is derived as
+	 * {@code tenantName + "_liquibase"}.
+	 *
+	 * @param tenantNames list of tenant name strings
+	 * @throws LiquibaseException if any migration fails
+	 */
+	public void runUpdate(List<String> tenantNames)
+		throws LiquibaseException {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
-		for (SchemaTuple t2 : schemaNames) {
+		for (String tenantName : tenantNames) {
 
-			String schemaName = t2.schemaName();
-			String liquibaseSchema = t2.liquibaseSchemaName();
+			String liquibaseSchema = tenantName + "_liquibase";
 
-			DatabaseConnection connection = DatabaseFactory.getInstance().openConnection(
-				toJdbcUrl(openk9DatasourceUrl), datasourceUsername, datasourcePassword,
-				null, resourceAccessor);
+			DatabaseConnection connection =
+				DatabaseFactory.getInstance().openConnection(
+					toJdbcUrl(openk9DatasourceUrl),
+					datasourceUsername,
+					datasourcePassword,
+					null,
+					resourceAccessor);
 
 			Database database = _createDatabase(
-				connection, schemaName, liquibaseSchema);
+				connection, tenantName, liquibaseSchema);
 
-			try(Liquibase liquibase = new Liquibase(changeLogLocation, resourceAccessor, database)) {
+			try (Liquibase liquibase =
+					new Liquibase(
+						changeLogLocation, resourceAccessor,
+						database)) {
+
 				liquibase.validate();
-				liquibase.update(new Contexts(), new LabelExpression());
-
-			} catch (Exception ex) {
+				liquibase.update(
+					new Contexts(), new LabelExpression());
+			}
+			catch (Exception ex) {
 				if (ex instanceof LiquibaseException) {
 					throw (LiquibaseException) ex;
 				}
 				throw new LiquibaseException(ex);
 			}
 
-			logger.info("Liquibase update for schema " + schemaName + " completed");
-
+			logger.info(
+				"Liquibase update for schema "
+				+ tenantName + " completed");
 		}
 
 	}
 
+	/**
+	 * Drops the tenant schema and its Liquibase shadow schema.
+	 * Derives the liquibase schema name as
+	 * {@code schemaName + "_liquibase"}.
+	 *
+	 * @param schemaName the tenant schema name to drop
+	 */
 	public void rollbackRunLiquibaseMigration(String schemaName) {
-		rollbackRunLiquibaseMigration(schemaName, schemaName + "_liquibase");
+		rollbackRunLiquibaseMigration(
+			schemaName, schemaName + "_liquibase");
 	}
 
-	public void rollbackRunLiquibaseMigration(String schemaName, String liquibaseSchema) {
+	/**
+	 * Drops the tenant schema and its Liquibase shadow schema.
+	 *
+	 * @param schemaName      the tenant schema name to drop
+	 * @param liquibaseSchema the liquibase shadow schema to drop
+	 */
+	public void rollbackRunLiquibaseMigration(
+		String schemaName, String liquibaseSchema) {
 
 		CustomClassLoaderResourceAccessor resourceAccessor =
 			new CustomClassLoaderResourceAccessor(
 				Thread.currentThread().getContextClassLoader());
 
 		try (DatabaseConnection connection =
-				 DatabaseFactory.getInstance().openConnection(
-					 toJdbcUrl(openk9DatasourceUrl), datasourceUsername,
-					 datasourcePassword,
-					 null, resourceAccessor);) {
+				DatabaseFactory.getInstance().openConnection(
+					toJdbcUrl(openk9DatasourceUrl),
+					datasourceUsername,
+					datasourcePassword,
+					null,
+					resourceAccessor)) {
 
 			_dropSchemas(connection, schemaName, liquibaseSchema);
 
@@ -184,11 +258,16 @@ public class TenantSchemaService {
 	}
 
 	private Database _createDatabase(
-		DatabaseConnection connection, String schemaName, String liquibaseSchema) throws DatabaseException {
+		DatabaseConnection connection,
+		String schemaName,
+		String liquibaseSchema)
+		throws DatabaseException {
 
-		Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(connection);
+		Database database = DatabaseFactory.getInstance()
+			.findCorrectDatabaseImplementation(connection);
 
-		database.setDatabaseChangeLogLockTableName(changeLogLockTableName);
+		database.setDatabaseChangeLogLockTableName(
+			changeLogLockTableName);
 		database.setDatabaseChangeLogTableName(changeLogTableName);
 		database.setDefaultSchemaName(schemaName);
 		database.setLiquibaseSchemaName(liquibaseSchema);
@@ -198,23 +277,31 @@ public class TenantSchemaService {
 	}
 
 	private void _insertIntoTenantBinding(
-		DatabaseConnection connection, String schemaName, String virtualHost)
+		DatabaseConnection connection,
+		String schemaName,
+		String virtualHost)
 		throws Exception {
 
-		JdbcConnection jdbcConnection = (JdbcConnection)connection;
+		JdbcConnection jdbcConnection = (JdbcConnection) connection;
 
 		String query;
 
-		if (jdbcConnection.getDatabaseProductName().equals("Oracle")) {
-			query = "ALTER SESSION SET CURRENT_SCHEMA = '" + schemaName + "';";
+		if (jdbcConnection.getDatabaseProductName()
+			.equals("Oracle")) {
+			query =
+				"ALTER SESSION SET CURRENT_SCHEMA = '"
+				+ schemaName + "';";
 		}
 		else {
 			query = "SET LOCAL SCHEMA '" + schemaName + "';";
 		}
 
-		query += "INSERT INTO tenant_binding(id, virtual_host, create_date, modified_date) VALUES(?, ?, ?, ?);";
+		query += "INSERT INTO tenant_binding"
+			+ "(id, virtual_host, create_date, modified_date)"
+			+ " VALUES(?, ?, ?, ?);";
 
-		try (PreparedStatement statement2 = jdbcConnection.prepareStatement(query)) {
+		try (PreparedStatement statement2 =
+				jdbcConnection.prepareStatement(query)) {
 
 			statement2.setLong(1, 1);
 			statement2.setString(2, virtualHost);
@@ -231,16 +318,21 @@ public class TenantSchemaService {
 	}
 
 	private void _createSchemas(
-			DatabaseConnection databaseConnection, String schemaName, String liquibaseSchema)
+		DatabaseConnection databaseConnection,
+		String schemaName,
+		String liquibaseSchema)
 		throws Exception {
 
-		JdbcConnection jdbcConnection = (JdbcConnection)databaseConnection;
+		JdbcConnection jdbcConnection =
+			(JdbcConnection) databaseConnection;
 
 		try (Statement statement1 = jdbcConnection.createStatement();
-			 Statement statement2 = jdbcConnection.createStatement();) {
+			Statement statement2 = jdbcConnection.createStatement()) {
 
-			statement1.executeUpdate("CREATE SCHEMA " + schemaName);
-			statement2.executeUpdate("CREATE SCHEMA " + liquibaseSchema);
+			statement1.executeUpdate(
+				"CREATE SCHEMA " + schemaName);
+			statement2.executeUpdate(
+				"CREATE SCHEMA " + liquibaseSchema);
 
 			jdbcConnection.commit();
 		}
@@ -248,26 +340,39 @@ public class TenantSchemaService {
 	}
 
 	private void _dropSchemas(
-			DatabaseConnection databaseConnection, String schemaName, String liquibaseSchema)
+		DatabaseConnection databaseConnection,
+		String schemaName,
+		String liquibaseSchema)
 		throws Exception {
 
-		JdbcConnection jdbcConnection = (JdbcConnection)databaseConnection;
+		JdbcConnection jdbcConnection =
+			(JdbcConnection) databaseConnection;
 
 		try (Statement statement1 = jdbcConnection.createStatement();
-			 Statement statement2 = jdbcConnection.createStatement();) {
+			Statement statement2 = jdbcConnection.createStatement()) {
 
-			statement1.executeUpdate("DROP SCHEMA " + schemaName + " CASCADE");
-			statement2.executeUpdate("DROP SCHEMA " + liquibaseSchema + " CASCADE");
+			statement1.executeUpdate(
+				"DROP SCHEMA " + schemaName + " CASCADE");
+			statement2.executeUpdate(
+				"DROP SCHEMA " + liquibaseSchema
+				+ " CASCADE");
 
 			jdbcConnection.commit();
 		}
 
 	}
 
+	/**
+	 * Converts a reactive/JDBC URL to a JDBC URL for Liquibase.
+	 *
+	 * @param datasourceUrl the raw datasource URL
+	 * @return the JDBC URL
+	 */
 	public String toJdbcUrl(String datasourceUrl) {
 
 		if (datasourceUrl.startsWith("vertx-reactive:")) {
-			datasourceUrl = datasourceUrl.replace("vertx-reactive:", "jdbc:");
+			datasourceUrl =
+				datasourceUrl.replace("vertx-reactive:", "jdbc:");
 		}
 		else {
 			datasourceUrl = "jdbc:" + datasourceUrl;
@@ -277,6 +382,11 @@ public class TenantSchemaService {
 
 	}
 
+	/**
+	 * Returns the JDBC URL derived from the datasource URL.
+	 *
+	 * @return the JDBC URL string
+	 */
 	public String getDatasourceJdbcUrl() {
 		return toJdbcUrl(openk9DatasourceUrl);
 	}
