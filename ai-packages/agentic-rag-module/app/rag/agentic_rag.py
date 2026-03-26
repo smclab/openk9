@@ -457,6 +457,52 @@ class RagGraph:
 
             return guardrail_response.content
 
+    def _llm_output_guardrail(self, result_answer):
+        guardrail_prompt = """
+            You are a guardrail system specialized in text classification.
+            Your task is to analyze the sentence provided by the user and classify it
+            exclusively into one of the following categories.
+
+            CATEGORIES:
+            1. SELF-HARM/SUICIDE - Content that describes, encourages, instructs, or refers to acts of self-harm, cutting, eating disorders, suicidal thoughts, methods of suicide, incitement to suicide, or implicit/explicit requests for help related to these issues.
+            2. VIOLENCE/WEAPONS - Content that describes, glorifies, instructs, or threatens acts of physical violence against people or animals, misuse of firearms, bladed weapons, blunt objects, fights, torture, murder, assault, or instructions for building/obtaining weapons.
+            3. EXPLOSIVES - Content that describes, instructs, or provides detailed information on the production, assembly, detonation, or use of explosive devices, bombs, explosive materials, incendiaries, or components for manufacturing explosives.
+            4. HATE/HARASSMENT - Content that expresses incitement to hatred, discrimination, harassment, bullying, or derogatory language based on race, ethnicity, nationality, religion, gender, gender identity, sexual orientation, disability, age, or socioeconomic status; includes targeted insults, negative stereotypes, dehumanization, advocacy of genocide, racial superiority, repeated personal attacks, doxxing, verbal sexual harassment, or calls for exclusion/harm against protected individuals or groups.
+            5. SEXUAL_CONTENT - Explicit sexual content, detailed descriptions of sexual acts, obscene or vulgar language with sexual connotations, pornographic material, requests for sexual interactions, sexting, or content that sexualizes minors (with maximum priority).
+
+            RULES:
+            - If the sentence DOES NOT FALL INTO any of the categories listed above, return exactly: NONE
+            - If the sentence falls into one of the categories, return ONLY the category name in UPPERCASE
+            - If the sentence falls into multiple categories, choose the predominant or most severe one
+            - Do not add explanations, comments, or punctuation
+
+            SENTENCE TO CLASSIFY:
+            {result_answer}
+
+            CATEGORY:
+            """
+
+        guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
+
+        if (
+            self.guardrail_configuration.get("guardrail_type")
+            == GuardrailType.AWS_BEDROCK.value
+        ):
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            guardrail_chain = guardrail_prompt_template | llm_guardrail
+            guardrail_response = guardrail_chain.invoke(
+                {"result_answer": result_answer}
+            )
+
+            return guardrail_response.content
+        else:
+            guardrail_chain = guardrail_prompt_template | self.llm
+            guardrail_response = guardrail_chain.invoke(
+                {"result_answer": result_answer}
+            )
+
+            return guardrail_response.content
+
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         query = state.current_query
         embedding_model_configuration = get_embedding_model_configuration(
