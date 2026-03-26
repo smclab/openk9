@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { CodeInput, CustomSelect, NumberInput } from "@components/Form";
 import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
@@ -100,6 +116,7 @@ export default function DataIndexFormsource({
   const restClient = useRestClient();
   const [documentTypes, setDocumentTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [nameError, setNameError] = useState(false);
   const { docTypesQuery } = useOptions();
 
   React.useEffect(() => {
@@ -210,8 +227,13 @@ export default function DataIndexFormsource({
                 id="name-create-data-index"
                 disabled={isDisabled}
                 value={microForm.name || ""}
+                error={nameError && !microForm.name?.trim()}
+                helperText={nameError && !microForm.name?.trim() ? "Name is required" : ""}
                 onChange={(e) => {
                   setDataIndexForm({ key: "name", value: e.target.value });
+                  if (e.target.value.trim()) {
+                    setNameError(false);
+                  }
                 }}
               />
               <Box sx={{ marginBottom: 1 }}>
@@ -341,9 +363,10 @@ export default function DataIndexFormsource({
       )}
       <Box
         sx={{
-          marginTop: "10px",
+          marginBlock: "10px",
           display: "flex",
           justifyContent: "space-between",
+          marginBottom: "80px",
         }}
       >
         <Button
@@ -360,8 +383,17 @@ export default function DataIndexFormsource({
           variant="contained"
           aria-label="Recap"
           onClick={() => {
-            isCreated && setIsRecap(true);
-            setActiveTab("dataIndex");
+            if (isCreated) {
+              if (!microForm.name?.trim()) {
+                setNameError(true);
+                document
+                  .getElementById("name-create-data-index")
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                document.getElementById("name-create-data-index")?.focus();
+                return;
+              }
+              setIsRecap(true);
+            }
           }}
         >
           Recap
