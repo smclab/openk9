@@ -14,9 +14,9 @@ set -e
 #   - Node.js / Yarn (only if building frontend images)
 #
 # Quick start:
-#   ./k9.sh start                        # start core services (pulls images)
-#   ./k9.sh start --build                # build from source, then start
-#   ./k9.sh start --with=gen-ai --build   # build and start with AI services
+#   ./k9.sh up                            # start core services (pulls images)
+#   ./k9.sh up --build                    # build from source, then start
+#   ./k9.sh up --with=gen-ai --build      # build and start with AI services
 #
 # Run ./k9.sh without arguments for full usage information.
 #
@@ -89,17 +89,17 @@ parse_args() {
     OTHER_ARGS=()
 
     for arg in "$@"; do
-        if [ "$arg" == "--build" ]; then
+        if [ "$arg" == "--build" ] || [ "$arg" == "-b" ]; then
             BUILD=true
-        elif [ "$arg" == "--skip-mvn-shared-deps" ]; then
+        elif [ "$arg" == "--skip-shared-core" ]; then
             SKIP_MVN_SHARED_DEPS=true
         elif [[ "$arg" == --tag=* ]]; then
             TAG="${arg#--tag=}"
+        elif [ "$arg" == "--all" ] || [ "$arg" == "-a" ]; then
+            PROFILES+=(file-handling gen-ai oauth2)
         elif [[ "$arg" == --with=* ]]; then
             local p="${arg#--with=}"
-            if [ "$p" == "all" ]; then
-                PROFILES+=(file-handling gen-ai oauth2)
-            elif profile_to_file "$p" >/dev/null; then
+            if profile_to_file "$p" >/dev/null; then
                 PROFILES+=("$p")
             else
                 echo "Error: unknown profile '$p'"
@@ -267,6 +267,7 @@ build_single() {
         api-gateway)
             (cd core && ./mvnw package -DskipTests jib:dockerBuild \
                 -Djib.to.image=smclab/openk9-api-gateway:$TAG \
+                -Djib.platform.architecture=$JIB_ARCH \
                 -f app/api-gateway/pom.xml)
             ;;
         tenant-manager|datasource|ingestion|searcher|file-manager|tika)
@@ -340,22 +341,21 @@ Usage: ./k9.sh <command> [services...] [options]
 
 Commands:
   build   [services...]   Build Docker images from source
-  start   [services...]   Start the Docker Compose stack
+  up      [services...]   Start the Docker Compose stack
   stop    [services...]   Stop running containers
   down    [services...]   Stop and remove containers and volumes
   restart [services...]   Restart containers
   logs    [services...]   Follow container logs
 
 Options:
-  --build              Build images before starting/restarting
+  -b, --build          Build images before starting/restarting
   --tag=TAG            Docker image tag (default: local-dev)
   --with=PROFILE       Enable a compose profile (repeatable)
-  --skip-mvn-shared-deps
-                       Skip Maven Shared Dependencies build (clean,
-                       install root POM, vendored hibernate, shared
-                       modules). Useful when dependencies haven't
-                       changed and you only need to rebuild the
-                       service itself.
+  -a, --all            Shorthand for --with all profiles
+  --skip-shared-core   Skip Java core shared dependencies
+                       (root POM, hibernate-rx-multitenancy,
+                       common/, client/, tenant-events/).
+                       Useful when only the service code changed.
 
 Profiles (--with):
   core           Base services: PostgreSQL, OpenSearch, RabbitMQ,
@@ -364,7 +364,6 @@ Profiles (--with):
   file-handling  Core + file handling: MinIO, Tika, File Manager
   gen-ai         Core + AI services: RAG module, Embedding, Talk-To
   oauth2         Core + Keycloak OAuth2/OIDC identity provider
-  all            Shorthand for: file-handling + gen-ai + oauth2
 
   Profiles are additive. Combine multiple --with flags to
   compose the stack you need.
@@ -382,14 +381,14 @@ Build details:
   ./k9.sh build                       Build core images
   ./k9.sh build --with=gen-ai         Build core + AI images
   ./k9.sh build --with=file-handling  Build core + file images
-  ./k9.sh build --with=all            Build everything
+  ./k9.sh build --all                 Build everything
 
-  Maven Shared Dependencies (clean, install root POM, vendored
-  hibernate, shared modules) are built automatically. Skip
-  with --skip-mvn-shared-deps.
+  Java core shared dependencies (root POM, hibernate-rx-
+  multitenancy, common/, client/, tenant-events/) are built
+  automatically. Skip with --skip-shared-core.
 
   A single-service build (./k9.sh build datasource) automatically
-  builds Maven Shared Dependencies for Java services.
+  builds shared core dependencies for Java services.
 
 Startup behavior:
   On every start, the initializer container is rebuilt and runs
@@ -438,12 +437,12 @@ Custom overlays:
   it — it can only join an existing one.
 
 Examples:
-  ./k9.sh start                       Start core services
-  ./k9.sh start --build               Build core, then start
-  ./k9.sh start --with=gen-ai --build Build core + AI, then start
-  ./k9.sh start --with=oauth2         Start core + Keycloak
+  ./k9.sh up                          Start core services
+  ./k9.sh up --build                  Build core, then start
+  ./k9.sh up --with=gen-ai --build    Build core + AI, then start
+  ./k9.sh up --with=oauth2            Start core + Keycloak
   ./k9.sh build --with=gen-ai         Build core + AI images
-  ./k9.sh build --with=all            Build all profiles
+  ./k9.sh build --all                 Build all profiles
   ./k9.sh build datasource --tag=test Build datasource with custom tag
   ./k9.sh restart datasource --build  Rebuild and restart datasource
   ./k9.sh logs datasource             Follow datasource logs
@@ -459,7 +458,7 @@ case "$CMD" in
     build)
         do_build
         ;;
-    start)
+    up)
         if [ "$BUILD" = true ]; then
             do_build
         fi
