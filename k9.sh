@@ -16,7 +16,7 @@ set -e
 # Quick start:
 #   ./k9.sh start                        # start core services (pulls images)
 #   ./k9.sh start --build                # build from source, then start
-#   ./k9.sh start --profile=with-gen-ai --build  # build and start with AI services
+#   ./k9.sh start --with=gen-ai --build   # build and start with AI services
 #
 # Run ./k9.sh without arguments for full usage information.
 #
@@ -46,15 +46,15 @@ cd "$(dirname "$0")"
 
 profile_to_file() {
     case "$1" in
-        core)     echo "" ;;
-        with-file-handling) echo "compose-with-file-handling.yaml" ;;
-        with-gen-ai)       echo "compose-with-gen-ai.yaml" ;;
-        with-oauth2-server) echo "compose-with-oauth2-server.yaml" ;;
-        *)        return 1 ;;
+        core)           echo "" ;;
+        file-handling)  echo "compose-with-file-handling.yaml" ;;
+        gen-ai)         echo "compose-with-gen-ai.yaml" ;;
+        oauth2)         echo "compose-with-oauth2-server.yaml" ;;
+        *)              return 1 ;;
     esac
 }
 
-VALID_PROFILES="core with-file-handling with-gen-ai with-oauth2-server all"
+VALID_PROFILES="core file-handling gen-ai oauth2 all"
 
 # --- Profile to services mapping ---
 
@@ -71,9 +71,9 @@ VALID_SERVICES=(
 
 services_for_profile() {
     case "$1" in
-        core)               echo "${CORE_SERVICES[*]}" ;;
-        with-gen-ai)        echo "${GEN_AI_SERVICES[*]}" ;;
-        with-file-handling) echo "${FILE_HANDLING_SERVICES[*]}" ;;
+        core)           echo "${CORE_SERVICES[*]}" ;;
+        gen-ai)         echo "${GEN_AI_SERVICES[*]}" ;;
+        file-handling)  echo "${FILE_HANDLING_SERVICES[*]}" ;;
     esac
 }
 
@@ -95,10 +95,10 @@ parse_args() {
             SKIP_MVN_SHARED_DEPS=true
         elif [[ "$arg" == --tag=* ]]; then
             TAG="${arg#--tag=}"
-        elif [[ "$arg" == --profile=* ]]; then
-            local p="${arg#--profile=}"
+        elif [[ "$arg" == --with=* ]]; then
+            local p="${arg#--with=}"
             if [ "$p" == "all" ]; then
-                PROFILES+=(with-file-handling with-gen-ai with-oauth2-server)
+                PROFILES+=(file-handling gen-ai oauth2)
             elif profile_to_file "$p" >/dev/null; then
                 PROFILES+=("$p")
             else
@@ -244,9 +244,9 @@ build_by_profiles() {
 
     for p in "${profiles_to_build[@]}"; do
         case "$p" in
-            core)  build_core ;;
-            with-gen-ai)       build_gen_ai ;;
-            with-file-handling) build_file_handling ;;
+            core)           build_core ;;
+            gen-ai)         build_gen_ai ;;
+            file-handling)  build_file_handling ;;
         esac
     done
 
@@ -349,7 +349,7 @@ Commands:
 Options:
   --build              Build images before starting/restarting
   --tag=TAG            Docker image tag (default: local-dev)
-  --profile=PROFILE    Enable a compose profile (repeatable)
+  --with=PROFILE       Enable a compose profile (repeatable)
   --skip-mvn-shared-deps
                        Skip Maven Shared Dependencies build (clean,
                        install root POM, vendored hibernate, shared
@@ -357,20 +357,16 @@ Options:
                        changed and you only need to rebuild the
                        service itself.
 
-Profiles:
-  core       Base services: PostgreSQL, OpenSearch, RabbitMQ,
-             API Gateway, Datasource, Tenant Manager, Ingestion,
-             Searcher, frontends, Caddy reverse proxy (default)
-  with-file-handling
-             Core + file handling: MinIO, Tika, File Manager
-  with-gen-ai
-             Core + AI services: RAG module, Embedding, Talk-To
-  with-oauth2-server
-             Core + Keycloak OAuth2/OIDC identity provider
-  all        Shorthand for: with-file-handling + with-gen-ai
-             + with-oauth2-server
+Profiles (--with):
+  core           Base services: PostgreSQL, OpenSearch, RabbitMQ,
+                 API Gateway, Datasource, Tenant Manager, Ingestion,
+                 Searcher, frontends, Caddy reverse proxy (default)
+  file-handling  Core + file handling: MinIO, Tika, File Manager
+  gen-ai         Core + AI services: RAG module, Embedding, Talk-To
+  oauth2         Core + Keycloak OAuth2/OIDC identity provider
+  all            Shorthand for: file-handling + gen-ai + oauth2
 
-  Profiles are additive. Combine multiple --profile flags to
+  Profiles are additive. Combine multiple --with flags to
   compose the stack you need.
 
 Services (for targeted build/restart):
@@ -383,11 +379,10 @@ Build details:
   Core images are always built. Additional profiles add extra
   services on top of core.
 
-  ./k9.sh build                            Build core images
-  ./k9.sh build --profile=with-gen-ai      Build core + AI images
-  ./k9.sh build --profile=with-file-handling
-                                           Build core + file images
-  ./k9.sh build --profile=all             Build everything
+  ./k9.sh build                       Build core images
+  ./k9.sh build --with=gen-ai         Build core + AI images
+  ./k9.sh build --with=file-handling  Build core + file images
+  ./k9.sh build --with=all            Build everything
 
   Maven Shared Dependencies (clean, install root POM, vendored
   hibernate, shared modules) are built automatically. Skip
@@ -413,7 +408,7 @@ Access:
     Admin UI:    https://demo.openk9.localhost/admin
     Search:      https://demo.openk9.localhost
 
-  With --profile=with-gen-ai, the Talk-To conversational
+  With --with=gen-ai, the Talk-To conversational
   interface is also available at:
     Talk-To:     https://demo.openk9.localhost/chat
 
@@ -443,18 +438,16 @@ Custom overlays:
   it — it can only join an existing one.
 
 Examples:
-  ./k9.sh start                            Start core services
-  ./k9.sh start --build                    Build core, then start
-  ./k9.sh start --profile=with-gen-ai --build
-                                           Build core + AI, then start
-  ./k9.sh start --profile=with-oauth2-server
-                                           Start core + Keycloak
-  ./k9.sh build --profile=with-gen-ai      Build core + AI images
-  ./k9.sh build --profile=all             Build all profiles
-  ./k9.sh build datasource --tag=test     Build only datasource with custom tag
-  ./k9.sh restart datasource --build      Rebuild and restart datasource
-  ./k9.sh logs datasource                 Follow datasource logs
-  ./k9.sh down                            Tear down everything (with volumes)
+  ./k9.sh start                       Start core services
+  ./k9.sh start --build               Build core, then start
+  ./k9.sh start --with=gen-ai --build Build core + AI, then start
+  ./k9.sh start --with=oauth2         Start core + Keycloak
+  ./k9.sh build --with=gen-ai         Build core + AI images
+  ./k9.sh build --with=all            Build all profiles
+  ./k9.sh build datasource --tag=test Build datasource with custom tag
+  ./k9.sh restart datasource --build  Rebuild and restart datasource
+  ./k9.sh logs datasource             Follow datasource logs
+  ./k9.sh down                        Tear down (with volumes)
 USAGE
 }
 
