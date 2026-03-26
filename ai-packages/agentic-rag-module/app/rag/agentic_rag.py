@@ -51,7 +51,7 @@ from opensearchpy import OpenSearch
 from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class GraphState(BaseModel):
@@ -95,7 +95,7 @@ class GraphState(BaseModel):
     guardrail_category: Optional[str] = Field(
         default=None, description="guardrail check category"
     )
-    domain: Optional[str] = Field(default=None, description="Detected domain")
+    domain: Optional[List[str]] = Field(default=None, description="Detected domain")
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -179,7 +179,16 @@ class RetrieverEvaluationResponseList(BaseModel):
 
 
 class Domain(BaseModel):
-    domain: str = Field(default=None, description="Detected domain")
+    domain: Optional[List[str]] = Field(default=None, description="Detected domain")
+
+    @field_validator("domain", mode="before")
+    @classmethod
+    def force_list(cls, v):
+        if v is None:
+            return ["nullo"]
+        if isinstance(v, str):
+            return [v]
+        return v
 
 
 class RagGraph:
@@ -536,8 +545,8 @@ class RagGraph:
 
         if len(high_score_docs) >= 1 and len(found_domains) <= 1:
             print("OpenSearch judge")
-            print(list(found_domains)[0])
-            state.domain = list(found_domains)[0]
+            print(list(found_domains))
+            state.domain = list(found_domains)
         else:
             print("LLM judge")
             if not found_domains:
@@ -770,7 +779,7 @@ class RagGraph:
             domain_filter = models.SearchToken(
                 tokenType="TEXT",
                 keywordKey="domain",
-                values=[state.domain],
+                values=state.domain,
                 filter=True,
                 entityType="",
                 entityName="",
