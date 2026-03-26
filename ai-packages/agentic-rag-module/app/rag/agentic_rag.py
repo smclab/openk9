@@ -1346,7 +1346,7 @@ class RagGraph:
             config=self.config,
         )
 
-    def _stream_title(self, title: str) -> Iterator[Dict[str, Any]]:
+    def _stream_title(self, title: str):
         yield json.dumps(
             {
                 "chunk": title,
@@ -1354,7 +1354,7 @@ class RagGraph:
             }
         )
 
-    def _stream_documents(self, documents: List[Document]) -> Iterator[Dict[str, Any]]:
+    def _stream_documents(self, documents: List[Document]):
         documents_id = set()
         for document in documents:
             metadata = document.metadata
@@ -1378,23 +1378,110 @@ class RagGraph:
                     }
                 )
 
-    def stream(self, query: str) -> Iterator[Dict[str, Any]]:
-        result_answer = ""
+    def stream(self, query: str):
+        if self.guardrail_configuration.get("output_guardrail_type", 0) == 0:
+            result_answer = ""
 
-        for chunk, metadata in self.graph.stream(
-            {
-                "current_query": query,
-                "chat_sequence_number": self.chat_sequence_number,
-            },
-            config=self.config,
-            stream_mode="messages",
-        ):
-            if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                if result_answer == "":
-                    yield json.dumps({"chunk": "", "type": "START"})
-                result_answer += chunk.content
+            for chunk, metadata in self.graph.stream(
+                {
+                    "current_query": query,
+                    "chat_sequence_number": self.chat_sequence_number,
+                },
+                config=self.config,
+                stream_mode="messages",
+            ):
+                if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                    if result_answer == "":
+                        yield json.dumps({"chunk": "", "type": "START"})
+                    result_answer += chunk.content
 
-                yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+
+        if self.guardrail_configuration.get("output_guardrail_type", 0) == 1:
+            result_answer = ""
+            chunk_interval = self.guardrail_configuration.get(
+                "output_guardrail_chunk_interval", 10
+            )
+            chunk_batch = []
+
+            for chunk, metadata in self.graph.stream(
+                {
+                    "current_query": query,
+                    "chat_sequence_number": self.chat_sequence_number,
+                },
+                config=self.config,
+                stream_mode="messages",
+            ):
+                if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                    if result_answer == "":
+                        yield json.dumps({"chunk": "", "type": "START"})
+                    result_answer += chunk.content
+                    chunk_batch.append({"chunk": chunk.content, "type": "CHUNK"})
+
+                    if len(chunk_batch) == chunk_interval:
+                        llm_output_guardrail = self._llm_output_guardrail(result_answer)
+
+                        if llm_output_guardrail != "NONE":
+                            yield json.dumps({"chunk": "", "type": "END"})
+                            return
+
+                        else:
+                            for chunk in chunk_batch:
+                                yield json.dumps(chunk)
+                            chunk_batch = []
+
+            if chunk_batch:
+                llm_output_guardrail = self._llm_output_guardrail(result_answer)
+
+                if llm_output_guardrail != "NONE":
+                    yield json.dumps({"chunk": "", "type": "END"})
+                    return
+                else:
+                    for chunk in chunk_batch:
+                        yield json.dumps(chunk)
+                    chunk_batch = []
+
+        elif self.guardrail_configuration.get("output_guardrail_type", 0) == 2:
+            result_answer = ""
+            chunk_interval = self.guardrail_configuration.get(
+                "output_guardrail_chunk_interval", 10
+            )
+            chunk_number = 0
+
+            for chunk, metadata in self.graph.stream(
+                {
+                    "current_query": query,
+                    "chat_sequence_number": self.chat_sequence_number,
+                },
+                config=self.config,
+                stream_mode="messages",
+            ):
+                if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                    chunk_number += 1
+                    if result_answer == "":
+                        yield json.dumps({"chunk": "", "type": "START"})
+                    result_answer += chunk.content
+
+                    if chunk_number == chunk_interval:
+                        chunk_number = 0
+                        llm_output_guardrail = self._llm_output_guardrail(result_answer)
+
+                        if llm_output_guardrail != "NONE":
+                            yield json.dumps(
+                                {"chunk": "Inappropriate content", "type": "CANCEL"}
+                            )
+                            return
+
+                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+
+            if chunk_number > 0:
+                llm_output_guardrail = self._llm_output_guardrail(result_answer)
+
+                if llm_output_guardrail != "NONE":
+                    yield json.dumps(
+                        {"chunk": "Inappropriate content", "type": "CANCEL"}
+                    )
+                    return
 
         if last_state := self.graph.get_state(self.config):
             if all(
