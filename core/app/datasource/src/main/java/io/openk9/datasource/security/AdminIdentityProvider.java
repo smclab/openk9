@@ -19,6 +19,7 @@ package io.openk9.datasource.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Optional;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -59,8 +60,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class AdminIdentityProvider
 	implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-	@ConfigProperty(name = SecurityProperties.ADMIN_PASSWORD, defaultValue = "")
-	String adminPassword;
+	@ConfigProperty(name = SecurityProperties.ADMIN_PASSWORD)
+	Optional<String> passwordProperty;
 
 	private boolean enabled;
 	private byte[] adminPasswordBytes;
@@ -111,9 +112,10 @@ public class AdminIdentityProvider
 
 	@PostConstruct
 	void init() {
-		this.enabled = adminPassword != null && !adminPassword.isBlank();
+		String passwordValue = passwordProperty.orElse("");
+		this.enabled = !passwordValue.isBlank();
 		this.adminPasswordBytes = enabled
-			? adminPassword.getBytes(StandardCharsets.UTF_8)
+			? passwordValue.getBytes(StandardCharsets.UTF_8)
 			: new byte[0];
 	}
 
