@@ -566,6 +566,16 @@ class RagGraph:
 
         return state
 
+    def intent_detection_decision(
+        self, state: GraphState
+    ) -> Literal["input_domain", "rag_router"]:
+        if not state.domain:
+            return "input_domain"
+        if "NEW_QUESTION" in state.domain:
+            return "input_domain"
+        else:
+            return "rag_router"
+
     def input_guardrail_route_decision(
         self, state: GraphState
     ) -> Literal["guardrail_violation_response", "history_handler"]:
@@ -669,6 +679,8 @@ class RagGraph:
                     query, previous_query, previous_response
                 )
                 state.current_query = rewrited_query
+            else:
+                state.domain = ["NEW_QUESTION"]
 
         return state
 
@@ -1192,8 +1204,7 @@ class RagGraph:
             workflow.add_edge("response_evaluation", END)
         else:
             workflow.add_node("input_guardrail", self.input_guardrail_node)
-            workflow.add_node("input_domain_pre", self.input_domain_node)
-            # workflow.add_node("input_domain_post", self.input_domain_node)
+            workflow.add_node("input_domain", self.input_domain_node)
 
             workflow.add_node(
                 "guardrail_violation_response", self.guardrail_violation_response_node
@@ -1207,10 +1218,9 @@ class RagGraph:
             workflow.add_node("llm_response", self.llm_response_node)
             workflow.add_node("history_saver", self.history_saver_node)
 
-            workflow.set_entry_point(
-                "input_domain_pre"
-            )  # ATTENZIONE, non sta iniziando da input_guardrail al momento
-            workflow.add_edge("input_domain_pre", "history_handler")
+            workflow.set_entry_point("input_guardrail")
+            workflow.add_edge("input_domain", "rag_router")
+
             # workflow.add_edge("analyze_and_rewrite_query", "input_domain_post")
 
             workflow.add_conditional_edges(
@@ -1219,6 +1229,15 @@ class RagGraph:
                 {
                     "guardrail_violation_response": "guardrail_violation_response",
                     "history_handler": "history_handler",
+                },
+            )
+            workflow.add_conditional_edges(
+                "analyze_and_rewrite_query",
+                self.intent_detection_decision,
+                {
+                    "input_domain": "input_domain",
+                    "opensearch_retriever": "opensearch_retriever",
+                    "llm_response": "llm_response",
                 },
             )
 
@@ -1233,7 +1252,7 @@ class RagGraph:
 
             workflow.add_edge("guardrail_violation_response", END)
             workflow.add_edge("history_handler", "analyze_and_rewrite_query")
-            workflow.add_edge("analyze_and_rewrite_query", "rag_router")
+            # workflow.add_edge("analyze_and_rewrite_query", "rag_router")
             workflow.add_edge("opensearch_retriever", "llm_response")
             workflow.add_edge("llm_response", "history_saver")
             workflow.add_edge("history_saver", END)
