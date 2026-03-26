@@ -543,21 +543,22 @@ class RagGraph:
                 found_domains.add(doc.metadata["domain"])
                 print(doc)
 
-        if len(high_score_docs) >= 1 and len(found_domains) <= 1:
+        if len(found_domains) > 0:
             print("OpenSearch judge")
             print(list(found_domains))
             state.domain = list(found_domains)
         else:
             print("LLM judge")
-            if not found_domains:
-                INTENTS = [
-                    "troubleshooting",
-                    "how-to",
-                    "billing",
-                    "feature-information",
-                    "account-management",
-                ]
-                found_domains = set(INTENTS)
+            INTENTS = [
+                "troubleshooting",
+                "how-to",
+                "billing",
+                "feature-information",
+                "account-management",
+                "''",
+            ]
+            found_domains = set(INTENTS)
+
             llm_domain = self._llm_input_domain(query, found_domains)
             print(llm_domain.domain)
             state.domain = llm_domain.domain
