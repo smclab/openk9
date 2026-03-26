@@ -49,8 +49,8 @@ async function ensureTenant() {
 
   if (response.ok) {
     const data = await response.json();
-    console.log(`1/6 Tenant created. Schema: ${data.schemaName}`);
-    return data.schemaName;
+    console.log(`1/6 Tenant created. Schema: ${data.tenantName}`);
+    return data.tenantName;
   }
 
   if (response.status === 409) {
