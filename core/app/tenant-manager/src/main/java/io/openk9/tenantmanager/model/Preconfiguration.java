@@ -44,28 +44,28 @@ public record Preconfiguration(
 
 	public static final Map<SecurityConfiguration, List<Config>> PRECONFIGURATION_MAP =
 			Map.of(
-				SecurityConfiguration.LEGACY,
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 				List.of(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
 					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 				),
-				SecurityConfiguration.PROFILED_LEGACY,
+				SecurityConfiguration.OAUTH2_SEARCH,
 				List.of(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
 				),
-				SecurityConfiguration.PROFILED,
+				SecurityConfiguration.OAUTH2_SEARCH_WITH_API_KEY,
 				List.of(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
-				SecurityConfiguration.PUBLIC_USAGE,
+				SecurityConfiguration.OAUTH2_ADMIN_WITH_API_KEY,
 				List.of(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.API_KEY),

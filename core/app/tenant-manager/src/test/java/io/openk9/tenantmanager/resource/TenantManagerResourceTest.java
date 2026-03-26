@@ -34,10 +34,14 @@ class TenantManagerResourceTest {
 
 		given()
 			.contentType(ContentType.JSON)
-			.header(Constants.AUTHORIZATION_HEADER, Constants.BASIC_CREDENTIALS)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
 			.body(JsonObject.of(
-				"virtualHost", "my.openk9.local",
-				"securityConfiguration", "LEGACY"
+				"virtualHost", 
+				"my.openk9.local",
+				"securityConfiguration", 
+				"OAUTH2_ADMIN_ONLY"
 			).toString())
 			.log().everything()
 			.post()

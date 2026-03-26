@@ -75,7 +75,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks
 		));
@@ -131,7 +131,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			true);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -150,7 +150,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks));
 
@@ -188,7 +188,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -208,7 +208,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", settings,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -257,7 +257,7 @@ class TenantProvisioningSagaTest {
 			"cid",
 			"sec",
 			"issuer",
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			true);
 
 		Message<TenantResponseDTO> tenantMsg = mock(Message.class);
@@ -276,7 +276,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", null, null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(), mocks));
 
 		mocks.realmProbe.expectMessage(
@@ -416,7 +416,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -438,14 +438,14 @@ class TenantProvisioningSagaTest {
 		"realmProvisioned is true when Keycloak auto-provisions the realm")
 	void realmProvisioned_isTrueWhenKeycloakAutoProvisions() {
 
-		// Arrange: Keycloak is configured, no oAuth2Settings, LEGACY
+		// Arrange: Keycloak is configured, no oAuth2Settings, OAUTH2_ADMIN_ONLY
 		TenantRealmService.setKeycloakAvailable(true);
 
 		ArgumentCaptor<CreateEntityRequest> captor =
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
 			"1", "s", "vh", null, null, null,
-			SecurityConfiguration.LEGACY, true);
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY, true);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);
@@ -463,7 +463,7 @@ class TenantProvisioningSagaTest {
 		// Act
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks));
 
@@ -502,7 +502,7 @@ class TenantProvisioningSagaTest {
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
 			"1", "s", "vh", "cid", "csec", "iss",
-			SecurityConfiguration.LEGACY, false);
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY, false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);
@@ -522,7 +522,7 @@ class TenantProvisioningSagaTest {
 		// Act
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", settings,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks));
 
@@ -608,7 +608,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "my-tenant", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -634,7 +634,7 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
-			SecurityConfiguration.LEGACY,
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 			replyTo.getRef(),
 			mocks
 		));

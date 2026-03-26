@@ -74,7 +74,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
-				SecurityConfiguration.LEGACY,
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now(),
 				true
@@ -148,7 +148,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
-				SecurityConfiguration.LEGACY,
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now(),
 				true
@@ -181,7 +181,7 @@ public class TenantDbServiceTest {
 				parameters.realmName(),
 				CLIENT_ID,
 				null,
-				SecurityConfiguration.LEGACY,
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY,
 				OffsetDateTime.now(),
 				OffsetDateTime.now(),
 				true

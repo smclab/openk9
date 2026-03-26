@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	logicalFilePath="db/tenant-manager/2026/03/26-changelog.xml">
+
+	<!-- Rename SecurityConfiguration enum values. -->
+	<changeSet id="1774780800-1" author="openk9">
+
+		<update tableName="tenant">
+			<column name="security_configuration" value="OAUTH2_ADMIN_ONLY"/>
+			<where>security_configuration = 'LEGACY'</where>
+		</update>
+
+		<update tableName="tenant">
+			<column name="security_configuration" value="OAUTH2_SEARCH"/>
+			<where>security_configuration = 'PROFILED_LEGACY'</where>
+		</update>
+
+		<update tableName="tenant">
+			<column name="security_configuration" value="OAUTH2_SEARCH_WITH_API_KEY"/>
+			<where>security_configuration = 'PROFILED'</where>
+		</update>
+
+		<update tableName="tenant">
+			<column name="security_configuration" value="OAUTH2_ADMIN_WITH_API_KEY"/>
+			<where>security_configuration = 'PUBLIC_USAGE'</where>
+		</update>
+
+		<update tableName="tenant">
+			<column name="security_configuration" value="NO_GATEWAY_AUTH"/>
+			<where>security_configuration = 'BASIC_AUTH'</where>
+		</update>
+
+	</changeSet>
+
+	<changeSet id="1774780800-2" author="openk9">
+		<addDefaultValue tableName="tenant"
+			columnName="security_configuration"
+			defaultValue="OAUTH2_ADMIN_ONLY"/>
+	</changeSet>
+
+</databaseChangeLog>

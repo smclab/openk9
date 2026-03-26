@@ -17,25 +17,82 @@
 
 package io.openk9.tenantmanager.model;
 
+import org.eclipse.microprofile.graphql.Description;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+
+/**
+ * Defines the gateway-level authorization model for a tenant.
+ * Each value maps to a {@link Preconfiguration} that assigns
+ * an {@link io.openk9.event.tenant.AuthorizationScheme} per
+ * {@link io.openk9.event.tenant.ApiGroup}.
+ */
 public enum SecurityConfiguration {
 
-	LEGACY,
-	PROFILED_LEGACY,
-	PROFILED,
-	PUBLIC_USAGE,
+	/** Admin routes require OAuth2. Public, search, and
+	 *  ingestion are open (NO_AUTH). */
+	@Schema(description = Desc.OAUTH2_ADMIN_ONLY)
+	@Description(Desc.OAUTH2_ADMIN_ONLY)
+	OAUTH2_ADMIN_ONLY,
+
+	/** Admin and search require OAuth2. Public and
+	 *  ingestion are open (NO_AUTH). */
+	@Schema(description = Desc.OAUTH2_SEARCH)
+	@Description(Desc.OAUTH2_SEARCH)
+	OAUTH2_SEARCH,
+
+	/** Admin and search require OAuth2. Public and
+	 *  ingestion require API keys. */
+	@Schema(description = Desc.OAUTH2_SEARCH_WITH_API_KEY)
+	@Description(Desc.OAUTH2_SEARCH_WITH_API_KEY)
+	OAUTH2_SEARCH_WITH_API_KEY,
+
+	/** Admin requires OAuth2. Public, search, and
+	 *  ingestion require API keys. */
+	@Schema(description = Desc.OAUTH2_ADMIN_WITH_API_KEY)
+	@Description(Desc.OAUTH2_ADMIN_WITH_API_KEY)
+	OAUTH2_ADMIN_WITH_API_KEY,
+
+	/** No gateway-level authorization on any route. */
+	@Schema(description = Desc.NO_GATEWAY_AUTH)
+	@Description(Desc.NO_GATEWAY_AUTH)
 	NO_GATEWAY_AUTH;
 
 	/**
 	 * Whether this security configuration requires an OAuth2
 	 * identity provider (Keycloak or external). Returns
 	 * {@code true} for all configurations except
-	 * {@code NO_GATEWAY_AUTH}, which uses HTTP Basic authentication
-	 * for all routes.
+	 * {@code NO_GATEWAY_AUTH}, which bypasses gateway
+	 * authentication entirely.
 	 *
 	 * @return true if OAuth2 is needed
 	 */
 	public boolean requiresOAuth2() {
 		return this != NO_GATEWAY_AUTH;
+	}
+
+	/** Constant values shared by {@code @Schema} and
+	 *  {@code @Description} annotations. */
+	interface Desc {
+
+		String OAUTH2_ADMIN_ONLY =
+			"OAuth2 for admin only, "
+			+ "search and data access are open";
+
+		String OAUTH2_SEARCH =
+			"OAuth2 for admin and search, "
+			+ "data access is open";
+
+		String OAUTH2_SEARCH_WITH_API_KEY =
+			"OAuth2 for admin and search, "
+			+ "API keys for data and ingestion";
+
+		String OAUTH2_ADMIN_WITH_API_KEY =
+			"OAuth2 for admin only, "
+			+ "API keys for all other routes";
+
+		String NO_GATEWAY_AUTH =
+			"No gateway auth, "
+			+ "downstream services handle security";
 	}
 
 }

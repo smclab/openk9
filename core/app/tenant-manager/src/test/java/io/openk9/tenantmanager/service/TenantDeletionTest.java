@@ -98,7 +98,7 @@ class TenantDeletionTest {
 			// arrange
 			var tenant = tenantWith(
 				"42", "schema1", "host1.local",
-				SecurityConfiguration.LEGACY, true);
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY, true);
 
 			when(dbService.findByVirtualHost("host1.local"))
 				.thenReturn(Uni.createFrom().item(tenant));
@@ -138,7 +138,7 @@ class TenantDeletionTest {
 			// arrange
 			var tenant = tenantWith(
 				"44", "schema3", "host3.local",
-				SecurityConfiguration.LEGACY, true);
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY, true);
 
 			when(dbService.findByVirtualHost("host3.local"))
 				.thenReturn(Uni.createFrom().item(tenant));

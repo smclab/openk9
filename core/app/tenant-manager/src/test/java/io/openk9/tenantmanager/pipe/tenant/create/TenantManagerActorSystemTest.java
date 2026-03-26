@@ -19,7 +19,7 @@ class TenantManagerActorSystemTest {
     @Test
     void testStartCreateTenant_Success() {
         SecurityConfiguration securityConfig =
-			SecurityConfiguration.LEGACY;
+			SecurityConfiguration.OAUTH2_ADMIN_ONLY;
         CreateTenantRequest request = new CreateTenantRequest(
 			"vh", securityConfig, null,
 			"testStartCreateTenantSuccess");
