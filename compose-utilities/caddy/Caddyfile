@@ -1,14 +1,6 @@
 localhost, *.localhost, *.*.localhost {
     tls internal
 
-    @datasourceBasicAuth {
-        path /api/datasource/*
-        header Authorization Basic*
-    }
-    handle @datasourceBasicAuth {
-        reverse_proxy openk9-datasource:8080
-    }
-
     handle /api/datasource/* {
         reverse_proxy openk9-api-gateway:8080
     }

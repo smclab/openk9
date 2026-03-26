@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
 import jakarta.annotation.PostConstruct;
 
 import io.openk9.apigw.security.TenantIdResolverFilter;
@@ -39,6 +40,7 @@ import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.io.DefaultResourceLoader;
@@ -49,9 +51,29 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/**
+ * Spring Cloud Gateway {@link GlobalFilter} that re-signs incoming
+ * Bearer tokens as internal HMAC-signed JWTs, adding tenant and
+ * group claims for downstream MicroProfile JWT consumption.
+ * <p>
+ * Non-Bearer authorization schemes (e.g. Basic) are either
+ * stripped or passed through depending on the
+ * {@code io.openk9.apigw.passthrough-non-bearer-auth} property.
+ */
 @Slf4j
 @Component
 public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
+
+	/**
+	 * When {@code false} (default, production), any Authorization header
+	 * that was not re-signed as an internal JWT is stripped before the
+	 * request reaches downstream services.
+	 * When {@code true} (local dev), non-re-signed Authorization headers
+	 * (e.g. Basic) are preserved so downstream services can authenticate
+	 * them directly.
+	 */
+	@Value("${io.openk9.apigw.passthrough-non-bearer-auth:false}")
+	private boolean passthroughNonBearerAuth;
 
 	private static OctetSequenceKey JWK;
 	private static JWSSigner SIGNER;
@@ -90,8 +112,15 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		}
 	}
 
+	/**
+	 * Replaces a valid Bearer token with an internal JWT,
+	 * strips failed Bearer tokens, and optionally passes
+	 * non-Bearer schemes through unchanged.
+	 */
 	@Override
-	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+	public Mono<Void> filter(
+		ServerWebExchange exchange,
+		GatewayFilterChain chain) {
 
 		String internalToken = createInternalToken(exchange);
 		return chain.filter(exchange.mutate()
@@ -100,9 +129,10 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 					if (internalToken != null) {
 						httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + internalToken);
 					}
-					else {
+					else if (!passthroughNonBearerAuth) {
 						httpHeaders.remove(HttpHeaders.AUTHORIZATION);
 					}
+					// else: passthrough enabled, preserve original header
 				}).build()
 			).build()
 		);

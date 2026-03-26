@@ -20,6 +20,9 @@ package io.openk9.datasource.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import io.openk9.common.util.security.SecurityProperties;
 
 import io.quarkus.security.AuthenticationFailedException;
@@ -30,13 +33,18 @@ import io.quarkus.security.identity.request.UsernamePasswordAuthenticationReques
 import io.quarkus.security.runtime.QuarkusPrincipal;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Quarkus Security {@link IdentityProvider} that validates HTTP Basic
  * Authentication credentials against a configured admin password.
+ * <p>
+ * Basic Auth is <strong>enabled</strong> only when the
+ * {@value SecurityProperties#ADMIN_PASSWORD} property is set to a
+ * non-blank value. When the property is absent or blank, every
+ * Basic Auth attempt is rejected with
+ * {@link AuthenticationFailedException}, effectively disabling
+ * this mechanism at runtime without requiring a separate feature flag.
  * <p>
  * This provides direct admin access to the datasource service for
  * simple installations, port-forwarding, and no-Keycloak setups.
@@ -51,15 +59,29 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class AdminIdentityProvider
 	implements IdentityProvider<UsernamePasswordAuthenticationRequest> {
 
-	@ConfigProperty(name = SecurityProperties.ADMIN_PASSWORD)
+	@ConfigProperty(name = SecurityProperties.ADMIN_PASSWORD, defaultValue = "")
 	String adminPassword;
 
+	private boolean enabled;
 	private byte[] adminPasswordBytes;
 
+	/**
+	 * Authenticates a Basic Auth request against the configured
+	 * admin credentials. Returns a failure if Basic Auth is
+	 * disabled or if the credentials are invalid.
+	 */
 	@Override
 	public Uni<SecurityIdentity> authenticate(
 		UsernamePasswordAuthenticationRequest request,
 		AuthenticationRequestContext context) {
+
+		if (!enabled) {
+			return Uni.createFrom().failure(
+				new AuthenticationFailedException(
+					"Basic authentication is disabled: "
+					+ SecurityProperties.ADMIN_PASSWORD
+					+ " is not configured"));
+		}
 
 		if (!"admin".equals(request.getUsername())) {
 			return Uni.createFrom().failure(
@@ -81,6 +103,7 @@ public class AdminIdentityProvider
 				.build());
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	public Class<UsernamePasswordAuthenticationRequest> getRequestType() {
 		return UsernamePasswordAuthenticationRequest.class;
@@ -88,7 +111,10 @@ public class AdminIdentityProvider
 
 	@PostConstruct
 	void init() {
-		this.adminPasswordBytes = adminPassword.getBytes(StandardCharsets.UTF_8);
+		this.enabled = adminPassword != null && !adminPassword.isBlank();
+		this.adminPasswordBytes = enabled
+			? adminPassword.getBytes(StandardCharsets.UTF_8)
+			: new byte[0];
 	}
 
 }

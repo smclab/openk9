@@ -127,6 +127,7 @@ services:
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_USERNAME: openk9
       SPRING_RABBITMQ_PASSWORD: openk9
+      IO_OPENK9_APIGW_PASSTHROUGH_NON_BEARER_AUTH: 'true'
     healthcheck:
       test: "curl --silent --fail http://localhost:8081/actuator/health"
       interval: 10s
@@ -148,7 +149,6 @@ services:
       OPENK9_DATASOURCE_QUERY_PARSER_MAX_TEXT_QUERY_LENGTH: '0'
       OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: '30'
       OPENK9_SECURITY_ADMIN_PASSWORD: 'admin'
-      QUARKUS_HTTP_AUTH_BASIC: 'true'
       QUARKUS_DATASOURCE_PASSWORD: 'openk9'
       QUARKUS_DATASOURCE_REACTIVE_URL: 'postgresql://postgresql/openk9'
       QUARKUS_DATASOURCE_USERNAME: 'openk9'
