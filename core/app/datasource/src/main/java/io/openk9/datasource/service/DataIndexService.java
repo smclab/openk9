@@ -70,7 +70,7 @@ public class DataIndexService
 	extends BaseK9EntityService<DataIndex, DataIndexDTO> {
 
 	public static final String DETAILS_FIELD = "details";
-	private static final Logger LOGGER = Logger.getLogger(DataIndexService.class);
+	private static final Logger log = Logger.getLogger(DataIndexService.class);
 
 	@Inject
 	DocTypeService docTypeService;
@@ -93,7 +93,7 @@ public class DataIndexService
 			settingsMap = settingsJsonObj.getMap();
 		}
 		catch (Exception exception) {
-			LOGGER.warnf("Cannot decode settingsJson %s", settingsJson);
+			log.warnf("Cannot decode settingsJson %s", settingsJson);
 			settingsMap = Map.of();
 		}
 
@@ -172,7 +172,7 @@ public class DataIndexService
 		)
 		.onFailure()
 		.invoke(throwable ->
-			LOGGER.debug(String.format("Error retrieving cat for index with id %d", id), throwable)
+			log.debug(String.format("Error retrieving cat for index with id %d", id), throwable)
 		);
 	}
 
@@ -259,7 +259,7 @@ public class DataIndexService
 		return sessionFactory.withTransaction(
 				(session, transaction) -> create(session, datasourceId, dataIndexDTO))
 			.onFailure()
-			.invoke(throwable -> LOGGER.errorf(
+			.invoke(throwable -> log.errorf(
 				throwable,
 				"DataIndexDTO %s cannot be created.",
 				dataIndexDTO
@@ -307,7 +307,7 @@ public class DataIndexService
 			.flatMap(dataIndices -> {
 
 				if (dataIndices.isEmpty()) {
-					LOGGER.warnf("No dataIndex founds for datasource with id %s", datasourceId);
+					log.warnf("No dataIndex founds for datasource with id %s", datasourceId);
 
 					return Uni.createFrom().item(new ArrayList<>());
 				}
@@ -370,7 +370,7 @@ public class DataIndexService
 			))
 			.onFailure(HibernateException.class)
 			.transform(throwable -> {
-				LOGGER.errorf("Failed to delete DataIndex, it could be associated with a DataSource", throwable);
+				log.errorf("Failed to delete DataIndex, it could be associated with a DataSource", throwable);
 				throw new DeleteDataIndexException(throwable);
 			});
 	}
