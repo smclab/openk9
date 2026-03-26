@@ -137,8 +137,14 @@ public class TenantWriteServiceR2dbc {
 				"Successfully inserted tenant { id: {}, tenantId: {}, hostName: {} }",
 				id, tenantId, hostName)
 			)
-			.doOnError(DuplicateKeyException.class, e -> log.warn(
-				"Insert discarded because a Tenant with tenantId: {} is already created", tenantId))
+			.doOnError(DuplicateKeyException.class, e -> {
+				log.debug(
+					"Event already processed, skipping Tenant insert: tenantId={}",
+					tenantId);
+				if (log.isTraceEnabled()) {
+					log.trace("DuplicateKeyException detail", e);
+				}
+			})
 			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
 				"Failed to insert tenant { id: {}, tenantId: {}, hostName: {} }",
@@ -183,9 +189,14 @@ public class TenantWriteServiceR2dbc {
 		return stmt.then()
 			.doOnSuccess(v -> log.info(
 				"Successfully inserted API key for tenantId: {}", tenantId))
-			.doOnError(DuplicateKeyException.class, e -> log.warn(
-				"Insert discarded because an ApiKey with tenantId: {} and apiKeyHash: {} is already created",
-				tenantId, apiKeyHash))
+			.doOnError(DuplicateKeyException.class, e -> {
+				log.debug(
+					"Event already processed, skipping ApiKey insert: tenantId={}, apiKeyHash={}",
+					tenantId, apiKeyHash);
+				if (log.isTraceEnabled()) {
+					log.trace("DuplicateKeyException detail", e);
+				}
+			})
 			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
 			.doOnError(e -> log.error(
 				"Failed to insert API key for tenantId: {}", tenantId, e));
@@ -228,18 +239,22 @@ public class TenantWriteServiceR2dbc {
 				.bind("route", route)
 				.bind("authorizationScheme", authScheme);
 
-			stmts.add(stmt.then());
+			stmts.add(stmt.then()
+				.doOnError(DuplicateKeyException.class, e -> {
+					log.debug(
+						"Event already processed, skipping RouteSecurity insert: tenantId={}, route={}",
+						tenantId, route);
+					if (log.isTraceEnabled()) {
+						log.trace("DuplicateKeyException detail", e);
+					}
+				})
+				.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
+			);
 		}
 
 		return Mono.whenDelayError(stmts)
-			.doOnSuccess(v -> log.info(
-				"Successfully inserted apiGroup security config for tenantId: {}", tenantId))
-			.doOnError(DuplicateKeyException.class, e -> log.warn(
-				"Insert discarded because RouteSecurity with tenantId: {} and apiGroup: {} is already created",
-				tenantId,
-				apiGroup
-			))
-			.onErrorResume(DuplicateKeyException.class, e -> Mono.empty())
+			.doOnSuccess(v -> log.debug(
+				"Completed apiGroup security config for tenantId: {}", tenantId))
 			.doOnError(e -> log.error(
 				"Failed to insert apiGroup security for tenantId: {}", tenantId, e));
 	}
