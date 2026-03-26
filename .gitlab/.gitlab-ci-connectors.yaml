@@ -27,10 +27,10 @@ Build Web Connector image:
 
     echo "=== Building Docker image with Kaniko ==="
     # ── Kaniko layer cache ────────────────────────────────────────────────────────
-    # --cache=true / --cache-repo / --cache-ttl=168h / --snapshot-mode=redo / --compressed-caching=false
+    # --cache=true / --cache-repo / --cache-ttl=72h / --snapshot-mode=redo / --compressed-caching=false
     # See first occurrence in other pipelines for full explanation.
     # ──────────────────────────────────────────────────────────────────────────────
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector --dockerfile ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
@@ -79,7 +79,7 @@ Build Email Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/email-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
@@ -128,7 +128,7 @@ Build Database Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/database-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
@@ -177,7 +177,7 @@ Build YouTube Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/youtube-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
@@ -226,7 +226,7 @@ Build GitLab Connector image:
     > /kaniko/.docker/config.json
 
     echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile"
 
     if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \

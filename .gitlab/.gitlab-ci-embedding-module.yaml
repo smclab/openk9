@@ -41,7 +41,7 @@ Build Embedding ST:
   - job: Fetch config
     artifacts: true
   cache:
-    key: "embedding-modules-st-${CI_COMMIT_REF_SLUG}"
+    key: "embedding-modules-st"
     paths:
     - .pip-cache/
     policy: pull-push
@@ -61,11 +61,11 @@ Build Embedding ST:
     # ── Kaniko layer cache flags ──────────────────────────────────────────────────
     # --cache=true          enables Docker layer cache
     # --cache-repo          registry:2 on MinIO (bucket: kaniko-cache)
-    # --cache-ttl=168h      layers older than 7 days are ignored
+    # --cache-ttl=72h      layers older than 7 days are ignored
     # --snapshot-mode=redo  uses mtime instead of sha256 → avoids ~900s filesystem snapshots
     # --compressed-caching=false  prevents OOM (exit 137) on large layers (e.g. PyTorch)
     # ─────────────────────────────────────────────────────────────────────────────
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/embedding-modules --dockerfile ${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile"
 
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
@@ -101,7 +101,7 @@ Build Embedding OpenAI:
   - job: Fetch config
     artifacts: true
   cache:
-    key: "embedding-modules-oa-${CI_COMMIT_REF_SLUG}"
+    key: "embedding-modules-oa"
     paths:
     - .pip-cache/
     policy: pull-push
@@ -118,7 +118,7 @@ Build Embedding OpenAI:
     printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
       "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
   - |
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/embedding-modules --dockerfile ${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile"
 
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then

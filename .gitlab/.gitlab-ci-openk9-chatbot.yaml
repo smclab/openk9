@@ -101,9 +101,10 @@ Dependency Check OpenK9-Chatbot:
     optional: true
   extends: .dependency_check_frontend_template
   allow_failure: true
+  variables:
+    DS_PROJECT_DIR: "js-packages/openk9-chatbot"
   script:
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
-  - cd js-packages/openk9-chatbot
   - /analyzer run
   # No explicit rules: inherits .dependency_check_frontend_template rules (MR + main/tag)

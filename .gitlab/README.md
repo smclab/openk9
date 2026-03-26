@@ -247,7 +247,7 @@ All Kaniko jobs use a pinned image (`gcr.io/kaniko-project/executor:v1.23.2-debu
 /kaniko/executor \
   --cache=true \
   --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
-  --cache-ttl=168h \
+  --cache-ttl=72h \
   --snapshot-mode=redo \
   --compressed-caching=false \
   --context "..." \

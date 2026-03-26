@@ -53,11 +53,11 @@ Build Docling Image:
     # ── Kaniko layer cache flags ──────────────────────────────────────────────────
     # --cache=true          enables Docker layer cache
     # --cache-repo          registry:2 on MinIO (bucket: kaniko-cache)
-    # --cache-ttl=168h      layers older than 7 days are ignored
+    # --cache-ttl=72h      layers older than 7 days are ignored
     # --snapshot-mode=redo  uses mtime instead of sha256 → avoids ~900s filesystem snapshots
     # --compressed-caching=false  prevents OOM (exit 137) on large layers (e.g. PyTorch)
     # ─────────────────────────────────────────────────────────────────────────────
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=168h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
     KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/enrichers/docling-processor/enricher --dockerfile ${CI_PROJECT_DIR}/enrichers/docling-processor/enricher/Dockerfile"
     BUILD_ARG="--build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE"
 
