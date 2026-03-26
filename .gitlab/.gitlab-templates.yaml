@@ -68,21 +68,21 @@ variables:
       FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false"
       
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # 🌿 Feature: Build & Push Snapshot
-      TAG="999-SNAPSHOT" # Default catch-all & Mirko
-      
-      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then 
+      # 🌿 Feature: designated → build + push; generic → build only (no push)
+      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
         TAG="998-SNAPSHOT"
         echo "👤 User: Michele ($TAG)"
-      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then 
+        echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
+        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
+      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
         TAG="999-SNAPSHOT"
         echo "👤 User: Mirko ($TAG)"
+        echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
+        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
       else
-        echo "👤 User: Generic ($TAG)"
+        echo "👤 User: Generic — build only, no push"
+        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=false"
       fi
-      
-      echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
-      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
     else
       echo "⚠️ Unknown branch type, skipping build command construction"
       FINAL_CMD="echo 'Skipping build'"
@@ -155,7 +155,7 @@ variables:
 #
 # Branch behaviour:
 #   main / tag  -> mvn install + jib:build (versioned image)
-#   feature     -> mvn install + jib:build (snapshot tag per user)
+#   feature     -> designated: mvn install + jib:build (998/999-SNAPSHOT); generic: mvn install only (no push)
 #   MR          -> mvn install only (compile check, no push)
 
 .springboot-build-logic:
@@ -190,22 +190,31 @@ variables:
       eval "$BASE_INSTALL"
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      TAG="999-SNAPSHOT"
+      # Feature: designated → build + push; generic → compile only (no push)
       if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
         TAG="998-SNAPSHOT"
         echo "User: Michele ($TAG)"
+        echo "Build type: FEATURE SNAPSHOT ($TAG)"
+        eval "$BASE_INSTALL"
+        mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
+          -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
+          -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
+          -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
+          -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
       elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
+        TAG="999-SNAPSHOT"
         echo "User: Mirko ($TAG)"
+        echo "Build type: FEATURE SNAPSHOT ($TAG)"
+        eval "$BASE_INSTALL"
+        mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
+          -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
+          -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
+          -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
+          -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
       else
-        echo "User: Generic ($TAG)"
+        echo "User: Generic — compile only, no push"
+        eval "$BASE_INSTALL"
       fi
-      echo "Build type: FEATURE SNAPSHOT ($TAG)"
-      eval "$BASE_INSTALL"
-      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-        -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
-        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
     else
       echo "Unknown branch type — compile only"
       eval "$BASE_INSTALL"
@@ -252,7 +261,7 @@ variables:
     paths: [ gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json" ]
   #dependencies: [$DEPENDS_ON]
   before_script:
-  - export VERSION=$(cat $CI_PROJECT_DIR/.version | grep -oE '^[^=]+$')
+  - export VERSION=$(cat $CI_PROJECT_DIR/.version)
   - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
   - echo "Using version $VERSION"
   script:
@@ -369,9 +378,6 @@ variables:
           else
             IMAGE_TAG="999-SNAPSHOT"
           fi
-          ;;
-        "backend-oracle")
-          IMAGE_TAG="999-SNAPSHOT"
           ;;
         "ai")
           IMAGE_TAG="997-SNAPSHOT"

@@ -6,7 +6,7 @@
 #   "designated" → developer with a personal k8s env (mirko, michele, lorenzo, etc.)
 #                  → full pipeline: build + push + restart
 #   "generic"    → any other developer
-#                  → build verifier only (compile check, no push, no restart)
+#                  → Build job (no push) on feature branches; Build Verifier on MR
 #   (unset)      → main / tag / MR pipeline (standard behaviour)
 
 .rules:child-build-always:
@@ -18,14 +18,19 @@
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
 
-# Restart and full build run only for DESIGNATED developers on feature branches
+# Restart and full build+push run only for DESIGNATED developers on feature branches
 .rules:child-restart-feature:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $USER_TYPE == "designated"'
 
-# Build Verifier runs on:
-#  - Merge Requests (any user)
-#  - Feature branches for GENERIC users (compile check only, no push)
+# Build (no push) for GENERIC users on feature branches
+.rules:child-build-feature-generic:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $USER_TYPE == "generic"'
+
+# Build Verifier runs on Merge Requests only (any user).
+# Generic users on feature branches run the Build job (no push) via child-build-feature-generic —
+# running Build Verifier on top would be redundant since the full Docker build already compiles.
 .rules:child-verify-mr:
   rules:
     - if: '$CI_MERGE_REQUEST_IID'
@@ -34,9 +39,10 @@
     # Since predefined MR variables (like CI_MERGE_REQUEST_IID) are NOT passed to children,
     # we detect an MR child pipeline by the ABSENCE of a branch/tag
     - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
-    # Generic user on feature branch → Build Verifier only
-    - if: '$USER_TYPE == "generic"'
 
+# NOTE: child-publish and child-deploy-main-tag are currently identical.
+# They are kept separate for semantic clarity (npm publish vs Docker deploy)
+# and to allow future divergence (e.g. publish only on main, not on tag).
 .rules:child-publish:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'

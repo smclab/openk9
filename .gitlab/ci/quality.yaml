@@ -9,6 +9,7 @@
   - pom.xml
 
 # Define Anchor for all-source files list (Java, JS, Python/AI)
+# Used by SonarQube so it triggers on any source change, not just Java.
 .all_source_files_list: &all_source_files_list
   - core/**/*
   - vendor/**/*
@@ -20,6 +21,11 @@
   - "*.js"
   - "*.ts"
   - "*.tsx"
+
+# Define Anchor for Python files list
+.python_files_list: &python_files_list
+  - ai-packages/**/*
+  - enrichers/**/*
 
 # Maven Dependency Check
 Maven Dependency Check:
@@ -49,9 +55,8 @@ Maven Dependency Check:
     # 2. Merge Request
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes: *java_files_list
-    # 3. Tag
+    # 3. Tag — no changes: filter (tags have no reliable diff baseline in GitLab)
     - if: "$CI_COMMIT_TAG"
-      changes: *java_files_list
 
 # SonarQube Check
 SonarQube Check:
@@ -63,7 +68,7 @@ SonarQube Check:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
     GIT_DEPTH: "0"
   cache:
-    key: "${CI_JOB_NAME}"
+    key: "sonar-cache"
     paths:
     - .sonar/cache
   before_script:
@@ -72,12 +77,47 @@ SonarQube Check:
   - sonar-scanner -Dsonar.qualitygate.wait=true
   allow_failure: true
   rules:
-    # 1. Main Branch
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes: *all_source_files_list
-    # 2. Merge Request
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *all_source_files_list
-    # 3. Tag
-    - if: "$CI_COMMIT_TAG"
-      changes: *all_source_files_list
+  # Block first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # 1. Main Branch - trigger on any source change
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes: *all_source_files_list
+  # 2. Merge Request - trigger on any source change
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *all_source_files_list
+  # 3. Tag
+  - if: "$CI_COMMIT_TAG"
+
+# Python Dependency Check (pip-audit)
+Python Dependency Check:
+  stage: dependency-check
+  image: python:3.12-slim
+  allow_failure: true
+  script:
+  - pip install --quiet pip-audit
+  - |
+    echo "=== Python Dependency Check (pip-audit) ===" | tee pip-audit-report.txt
+    OVERALL=0
+    for req in $(find ai-packages enrichers -name "requirements*.txt" | sort); do
+      echo "--- Scanning: $req ---" | tee -a pip-audit-report.txt
+      pip-audit -r "$req" --progress-spinner off --skip-editable 2>&1 | tee -a pip-audit-report.txt || OVERALL=1
+    done
+    exit $OVERALL
+  artifacts:
+    paths:
+    - pip-audit-report.txt
+    expire_in: 1 week
+    when: always
+  rules:
+  # Block on new branch creation
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # 1. Main Branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes: *python_files_list
+  # 2. Merge Request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *python_files_list
+  # 3. Tag — no changes: filter (tags have no reliable diff baseline in GitLab)
+  - if: "$CI_COMMIT_TAG"

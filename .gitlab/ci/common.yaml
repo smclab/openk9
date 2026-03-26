@@ -13,6 +13,9 @@ Trigger Connectors Build:
         - connectors/**/*
         - .gitlab/.gitlab-ci-connectors.yaml
     - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes:
+        - connectors/**/*
   trigger:
     include: "/.gitlab/.gitlab-ci-connectors.yaml"
     strategy: depend
@@ -35,6 +38,7 @@ Trigger Helm Base Core:
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml"
+    strategy: depend
 
 # 2. File Handling (File Manager, Tika)
 Trigger Helm File Handling:
@@ -48,6 +52,7 @@ Trigger Helm File Handling:
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml"
+    strategy: depend
 
 # 3. Gen AI (RAG, Chatbot, etc.)
 Trigger Helm Gen AI:
@@ -57,10 +62,11 @@ Trigger Helm Gen AI:
       when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - helm-charts/03-gen-ai/**/* 
+        - helm-charts/03-gen-ai/**/*
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
+    strategy: depend
 
 # 4. Connectors (Helm Charts)
 Trigger Helm Connectors:
@@ -70,11 +76,11 @@ Trigger Helm Connectors:
       when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - helm-charts/05-connectors/**/* 
-        - helm-charts/**/*connectors/**/*
+        - helm-charts/05-connectors/**/*
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-05-connectors.yaml"
+    strategy: depend
 
 # 5. Utilities
 Trigger Helm Utilities:
@@ -88,6 +94,7 @@ Trigger Helm Utilities:
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
+    strategy: depend
 
 # 6. Knowledge Handling
 Trigger Helm Knowledge Handling:
@@ -101,3 +108,4 @@ Trigger Helm Knowledge Handling:
     - if: '$CI_COMMIT_TAG'
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
+    strategy: depend

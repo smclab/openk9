@@ -22,9 +22,10 @@ Build Resources-Validator Image:
     - .version
     expire_in: 24 hours
   rules:
-    # Push image only on main/tag/feature branch - NOT on MR
+    # main/tag: push versione; designated feature: push snapshot; generic feature: build no push
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+    - !reference [.rules:child-build-feature-generic, rules]
 
 ######################## BUILD VERIFIER ########################
 Build Verifier Resources-Validator:
