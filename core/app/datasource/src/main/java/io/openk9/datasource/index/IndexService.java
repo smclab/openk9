@@ -69,7 +69,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 @ApplicationScoped
 public class IndexService {
 
-	private final static Logger LOGGER = Logger.getLogger(IndexService.class);
+	private final static Logger log = Logger.getLogger(IndexService.class);
 	public static final String TEMPLATE_SUFFIX = "-template";
 
 	@Inject
@@ -95,7 +95,7 @@ public class IndexService {
 					return null;
 				}
 				else {
-					LOGGER.errorf(
+					log.errorf(
 						"indexTemplate %s creation is not acknowledged",
 						templateName
 					);
@@ -107,11 +107,11 @@ public class IndexService {
 				throw k9Exception;
 			}
 			catch (OpenSearchStatusException osse) {
-				LOGGER.errorf(osse, "Cannot create indexTemplate %s", templateName);
+				log.errorf(osse, "Cannot create indexTemplate %s", templateName);
 				throw new CannotCreateIndexTemplateException(osse);
 			}
 			catch (Exception e) {
-				LOGGER.errorf(
+				log.errorf(
 					e,
 					"Error occurred when trying to create indexTemplate %s",
 					templateName
@@ -132,7 +132,7 @@ public class IndexService {
 					.ignoreUnavailable(true));
 
 				if (!delete.acknowledged()) {
-					LOGGER.errorf(
+					log.errorf(
 						"Error deleting index %s, cluster didn't acknowledge",
 						indexName
 					);
@@ -149,7 +149,7 @@ public class IndexService {
 				throw k9Exception;
 			}
 			catch (Exception e) {
-				LOGGER.errorf(e, "Error deleting index %s", indexName.value());
+				log.errorf(e, "Error deleting index %s", indexName.value());
 
 				throw new DeleteIndexException(e);
 			}
@@ -196,7 +196,7 @@ public class IndexService {
 					.transform((exist, t) -> {
 
 						if (t != null) {
-							LOGGER.error("Error while checking index exist", t);
+							log.error("Error while checking index exist", t);
 							return false;
 						}
 
@@ -300,10 +300,10 @@ public class IndexService {
 				.name(indexTemplateName));
 		}
 		catch (OpenSearchException e) {
-			LOGGER.debugf(e, "Index-template: %s was already deleted or does not exist", indexTemplateName);
+			log.debugf(e, "Index-template: %s was already deleted or does not exist", indexTemplateName);
 		}
 		catch (Exception e) {
-			LOGGER.warnf(e, "Error deleting index-template %s", indexTemplateName);
+			log.warnf(e, "Error deleting index-template %s", indexTemplateName);
 		}
 	}
 
@@ -427,7 +427,7 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((countResponse, throwable) -> {
 				if (throwable != null) {
-					LOGGER.error("Error getting index count", throwable);
+					log.error("Error getting index count", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(countResponse.getCount());
@@ -444,7 +444,7 @@ public class IndexService {
 			.onItemOrFailure()
 			.transformToUni((response, throwable) -> {
 				if (throwable != null) {
-					LOGGER.error("Error getting index exist", throwable);
+					log.error("Error getting index exist", throwable);
 					return Uni.createFrom().nullItem();
 				}
 				return Uni.createFrom().item(response);
@@ -463,8 +463,8 @@ public class IndexService {
 					cluster.putComponentTemplate(putComponentTemplateRequest);
 
 				if (response.acknowledged()) {
-					if (LOGGER.isDebugEnabled()) {
-						LOGGER.debugf(
+					if (log.isDebugEnabled()) {
+						log.debugf(
 							"componentTemplate %s successfully created.",
 							componentTemplateName
 						);
@@ -473,7 +473,7 @@ public class IndexService {
 					return null;
 				}
 				else {
-					LOGGER.errorf(
+					log.errorf(
 						"Cluster didn't acknowledge the operation for componentTemplate %s",
 						componentTemplateName
 					);
@@ -482,7 +482,7 @@ public class IndexService {
 				}
 			}
 			catch (IOException e) {
-				LOGGER.errorf(
+				log.errorf(
 					e,
 					"Error when trying to create a componentTemplate %s.",
 					componentTemplateName
