@@ -312,7 +312,7 @@ class TenantProvisioningSagaTest {
 			null,
 			null,
 			null,
-			SecurityConfiguration.BASIC_AUTH,
+			SecurityConfiguration.NO_GATEWAY_AUTH,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -330,12 +330,12 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
-			SecurityConfiguration.BASIC_AUTH,
+			SecurityConfiguration.NO_GATEWAY_AUTH,
 			replyTo.getRef(),
 			mocks)
 		);
 
-		// Realm skipped (BASIC_AUTH)
+		// Realm skipped (NO_GATEWAY_AUTH)
 		mocks.schemaProbe.expectMessage(
 			SchemaProvisioner.Start.INSTANCE);
 		mocks.schemaAdapter.get().tell(
@@ -366,7 +366,7 @@ class TenantProvisioningSagaTest {
 			null,
 			null,
 			null,
-			SecurityConfiguration.BASIC_AUTH,
+			SecurityConfiguration.NO_GATEWAY_AUTH,
 			false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
@@ -384,12 +384,12 @@ class TenantProvisioningSagaTest {
 
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
-			SecurityConfiguration.BASIC_AUTH,
+			SecurityConfiguration.NO_GATEWAY_AUTH,
 			replyTo.getRef(),
 			mocks)
 		);
 
-		// Realm skipped (BASIC_AUTH even with keycloakAvailable=true)
+		// Realm skipped (NO_GATEWAY_AUTH even with keycloakAvailable=true)
 		mocks.schemaProbe.expectMessage(
 			SchemaProvisioner.Start.INSTANCE);
 		mocks.schemaAdapter.get().tell(
@@ -547,17 +547,17 @@ class TenantProvisioningSagaTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	@DisplayName(
-		"realmProvisioned is false when securityConfiguration is BASIC_AUTH")
+		"realmProvisioned is false when securityConfiguration is NO_GATEWAY_AUTH")
 	void realmProvisioned_isFalseWithBasicAuth() {
 
-		// Arrange: BASIC_AUTH — no realm regardless of Keycloak
+		// Arrange: NO_GATEWAY_AUTH — no realm regardless of Keycloak
 		TenantRealmService.setKeycloakAvailable(true);
 
 		ArgumentCaptor<CreateEntityRequest> captor =
 			ArgumentCaptor.forClass(CreateEntityRequest.class);
 		TenantResponseDTO stubDto = new TenantResponseDTO(
 			"1", "s", "vh", null, null, null,
-			SecurityConfiguration.BASIC_AUTH, false);
+			SecurityConfiguration.NO_GATEWAY_AUTH, false);
 
 		Message<TenantResponseDTO> mockMsg = mock(Message.class);
 		when(mockMsg.body()).thenReturn(stubDto);
@@ -575,7 +575,7 @@ class TenantProvisioningSagaTest {
 		// Act
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", null,
-			SecurityConfiguration.BASIC_AUTH,
+			SecurityConfiguration.NO_GATEWAY_AUTH,
 			replyTo.getRef(),
 			mocks));
 

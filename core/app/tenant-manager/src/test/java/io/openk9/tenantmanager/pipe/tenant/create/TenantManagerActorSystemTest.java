@@ -36,7 +36,7 @@ class TenantManagerActorSystemTest {
     @Test
     void testStartCreateTenant_BasicAuth() {
         SecurityConfiguration securityConfig =
-			SecurityConfiguration.BASIC_AUTH;
+			SecurityConfiguration.NO_GATEWAY_AUTH;
         CreateTenantRequest request = new CreateTenantRequest(
 			"vh-basic", securityConfig, null,
 			"testBasicAuth");

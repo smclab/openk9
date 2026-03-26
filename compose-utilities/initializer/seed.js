@@ -40,7 +40,7 @@ async function ensureTenant() {
       },
       body: JSON.stringify({
         virtualHost: VIRTUAL_HOST,
-        securityConfiguration: 'BASIC_AUTH',
+        securityConfiguration: 'NO_GATEWAY_AUTH',
         tenantName: TENANT_NAME
       })
     },

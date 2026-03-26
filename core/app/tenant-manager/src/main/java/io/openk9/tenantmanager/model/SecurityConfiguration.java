@@ -23,19 +23,19 @@ public enum SecurityConfiguration {
 	PROFILED_LEGACY,
 	PROFILED,
 	PUBLIC_USAGE,
-	BASIC_AUTH;
+	NO_GATEWAY_AUTH;
 
 	/**
 	 * Whether this security configuration requires an OAuth2
 	 * identity provider (Keycloak or external). Returns
 	 * {@code true} for all configurations except
-	 * {@code BASIC_AUTH}, which uses HTTP Basic authentication
+	 * {@code NO_GATEWAY_AUTH}, which uses HTTP Basic authentication
 	 * for all routes.
 	 *
 	 * @return true if OAuth2 is needed
 	 */
 	public boolean requiresOAuth2() {
-		return this != BASIC_AUTH;
+		return this != NO_GATEWAY_AUTH;
 	}
 
 }

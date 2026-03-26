@@ -17,8 +17,8 @@
 
 package io.openk9.tenantmanager.service.dto;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 
@@ -26,8 +26,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public record CreateTenantRequest(
-	@Nonnull String virtualHost,
-	@Nonnull SecurityConfiguration securityConfiguration,
-	@Nullable OAuth2Settings oAuth2Settings,
-	@Nullable String tenantName
+	@NotEmpty String virtualHost,
+	@NotNull SecurityConfiguration securityConfiguration,
+	OAuth2Settings oAuth2Settings,
+	String tenantName
 ) {}

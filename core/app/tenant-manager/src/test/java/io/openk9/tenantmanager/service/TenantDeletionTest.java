@@ -118,7 +118,7 @@ class TenantDeletionTest {
 			// arrange
 			var tenant = tenantWith(
 				"43", "schema2", "host2.local",
-				SecurityConfiguration.BASIC_AUTH, false);
+				SecurityConfiguration.NO_GATEWAY_AUTH, false);
 
 			when(dbService.findByVirtualHost("host2.local"))
 				.thenReturn(Uni.createFrom().item(tenant));
@@ -162,7 +162,7 @@ class TenantDeletionTest {
 
 			var tenant = tenantWith(
 				"46", "schema5", "host5.local",
-				SecurityConfiguration.BASIC_AUTH, false);
+				SecurityConfiguration.NO_GATEWAY_AUTH, false);
 
 			when(dbService.findByVirtualHost("host5.local"))
 				.thenReturn(Uni.createFrom().item(tenant));
@@ -185,7 +185,7 @@ class TenantDeletionTest {
 			// arrange
 			var tenant = tenantWith(
 				"45", "schema4", "host4.local",
-				SecurityConfiguration.BASIC_AUTH, false);
+				SecurityConfiguration.NO_GATEWAY_AUTH, false);
 
 			when(dbService.findByVirtualHost("host4.local"))
 				.thenReturn(Uni.createFrom().item(tenant));
@@ -214,7 +214,7 @@ class TenantDeletionTest {
 				.thenReturn(Uni.createFrom().item(
 					tenantWith("50", "schema5",
 						"host5.local",
-						SecurityConfiguration.BASIC_AUTH,
+						SecurityConfiguration.NO_GATEWAY_AUTH,
 						false)));
 
 			// act
@@ -237,7 +237,7 @@ class TenantDeletionTest {
 			// arrange
 			var tenant = tenantWith(
 				"51", "schema6", "host6.local",
-				SecurityConfiguration.BASIC_AUTH, false);
+				SecurityConfiguration.NO_GATEWAY_AUTH, false);
 
 			when(dbService.findByVirtualHost("host6.local"))
 				.thenReturn(Uni.createFrom().item(tenant));
@@ -281,7 +281,7 @@ class TenantDeletionTest {
 				.thenReturn(Uni.createFrom().item(
 					tenantWith("52", "schema7",
 						"host7.local",
-						SecurityConfiguration.BASIC_AUTH,
+						SecurityConfiguration.NO_GATEWAY_AUTH,
 						false)));
 
 			// request a token

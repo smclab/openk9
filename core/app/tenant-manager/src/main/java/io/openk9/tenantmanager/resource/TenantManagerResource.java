@@ -19,6 +19,7 @@ package io.openk9.tenantmanager.resource;
 
 import java.util.NoSuchElementException;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -48,7 +49,7 @@ public class TenantManagerResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<TenantResponseDTO> createTenant(
-		CreateTenantRequest createTenantRequest) {
+		@Valid CreateTenantRequest createTenantRequest) {
 
 		return provisioningService.create(createTenantRequest)
 			.onFailure(DuplicateVirtualHostException.class)
