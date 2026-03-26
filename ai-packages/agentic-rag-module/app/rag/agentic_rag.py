@@ -474,8 +474,9 @@ class RagGraph:
 
         Il tuo compito è:
         1. Analizzare la query dell'utente
-        2. Identificare l'intento principale
-        3. Assegnare la query a UNO SOLO dei domini disponibili
+        2. Identificare gli intenti principali
+        3. Assegnare la query a uno o più dei domini disponibili
+        4. Se nessun dominio sembra corretto rispondi con una stringa vuota
 
         ---
 
@@ -488,7 +489,7 @@ class RagGraph:
         - Devi scegliere ESATTAMENTE un dominio tra quelli forniti
         - Non inventare nuovi domini
         - Se la query è ambigua, scegli il dominio più probabile
-        - Se la query non è chiaramente classificabile, scegli il dominio più generico o "other" (se presente)
+        - Se la query non è chiaramente classificabile rispondi con una stringa vuota
         - Non aggiungere testo extra fuori dal formato richiesto
 
         ---
