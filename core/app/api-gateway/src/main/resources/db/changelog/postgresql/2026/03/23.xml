@@ -28,7 +28,10 @@
 		</addColumn>
 	</changeSet>
 
+	<!-- Delete legacy api_key rows that lack api_group/expiration_date.
+	     Event replay will re-insert them with the correct values. -->
 	<changeSet id="1774486800-2" author="openk9">
+		<delete tableName="api_key"/>
 		<addColumn tableName="api_key">
 			<column name="api_group" type="VARCHAR(32)">
 				<constraints nullable="false"/>
