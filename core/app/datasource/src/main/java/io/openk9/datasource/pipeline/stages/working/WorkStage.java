@@ -151,6 +151,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 				if (contentId == null) {
 					this.replyTo.tell(new Invalid("content-id is null", requester));
+					return this;
 				}
 
 				if (this.writer == null) {
