@@ -65,7 +65,7 @@ public class DocTypeField extends BaseDocTypeField {
 	@Column(name = "description", length = 4096)
 	private String description;
 
-	@Column(name = "field_name", nullable = false, updatable = false, length = 4096)
+	@Column(name = "field_name", nullable = false, length = 4096)
 	private String fieldName;
 
 	@ToString.Exclude
@@ -84,7 +84,7 @@ public class DocTypeField extends BaseDocTypeField {
 	private Double boost;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "field_type", nullable = false, updatable = false)
+	@Column(name = "field_type", nullable = false)
 	private FieldType fieldType;
 
 	@Column(name="exclude")
