@@ -119,6 +119,9 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 				eventType, schemaVersion, mapper.readTree(body));
 
 			if (root == null) {
+				log.warn(
+					"Message was ignored during upcasting, skipping: {}",
+					messageProperties.getMessageId());
 				return null;
 			}
 
