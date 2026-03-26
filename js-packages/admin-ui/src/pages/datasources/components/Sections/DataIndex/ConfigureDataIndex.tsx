@@ -116,6 +116,7 @@ export default function DataIndexFormsource({
   const restClient = useRestClient();
   const [documentTypes, setDocumentTypes] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [nameError, setNameError] = useState(false);
   const { docTypesQuery } = useOptions();
 
   React.useEffect(() => {
@@ -226,8 +227,13 @@ export default function DataIndexFormsource({
                 id="name-create-data-index"
                 disabled={isDisabled}
                 value={microForm.name || ""}
+                error={nameError && !microForm.name?.trim()}
+                helperText={nameError && !microForm.name?.trim() ? "Name is required" : ""}
                 onChange={(e) => {
                   setDataIndexForm({ key: "name", value: e.target.value });
+                  if (e.target.value.trim()) {
+                    setNameError(false);
+                  }
                 }}
               />
               <Box sx={{ marginBottom: 1 }}>
@@ -377,7 +383,15 @@ export default function DataIndexFormsource({
           variant="contained"
           aria-label="Recap"
           onClick={() => {
-            isCreated && setIsRecap(true);
+            if (isCreated) {
+              if (!microForm.name?.trim()) {
+                setNameError(true);
+                document.getElementById("name-create-data-index")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                document.getElementById("name-create-data-index")?.focus();
+                return;
+              }
+              setIsRecap(true);
+            }
           }}
         >
           Recap
