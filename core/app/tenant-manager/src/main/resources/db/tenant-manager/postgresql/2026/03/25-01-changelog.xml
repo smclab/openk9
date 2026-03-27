@@ -23,7 +23,7 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 	logicalFilePath="db/tenant-manager/2026/03/25-01-changelog.xml">
 
-	<changeSet id="phase3-rename-schema_name-to-tenant_name" author="openk9">
+	<changeSet id="1774612935-1" author="openk9">
 		<renameColumn
 			tableName="tenant"
 			oldColumnName="schema_name"
@@ -31,7 +31,7 @@
 			columnDataType="VARCHAR(255)"/>
 	</changeSet>
 
-	<changeSet id="phase3-drop-liquibase_schema_name" author="openk9">
+	<changeSet id="1774612935-2" author="openk9">
 		<dropColumn tableName="tenant" columnName="liquibase_schema_name"/>
 	</changeSet>
 
