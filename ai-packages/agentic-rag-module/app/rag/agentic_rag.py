@@ -571,7 +571,7 @@ class RagGraph:
     ) -> Literal["input_domain", "rag_router"]:
         if not state.domain:
             return "input_domain"
-        if "NEW_QUESTION" in state.domain:
+        elif "NEW_QUESTION" in state.domain:
             return "input_domain"
         else:
             return "rag_router"
