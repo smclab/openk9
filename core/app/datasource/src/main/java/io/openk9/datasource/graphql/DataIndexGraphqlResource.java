@@ -35,7 +35,6 @@ import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.graphql.api.Subscription;
-import io.smallrye.graphql.api.Deprecated;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
@@ -152,6 +151,7 @@ public class DataIndexGraphqlResource {
 			.getMappings(dataIndex.getId());
 	}
 
+	@Mutation
 	@Deprecated
 	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(@Id long dataIndexId, @Id long docTypeId) {
 		return dataIndexService.removeDocType(dataIndexId, docTypeId);
