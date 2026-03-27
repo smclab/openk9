@@ -110,6 +110,16 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Mutation
+	@Description("""
+		Deletes a DocTypeField entity by its ID after validating the provided name matches the entity.
+		Requires both the docTypeFieldId and docTypeFieldName (as a confirmation mechanism) to prevent
+		accidental deletions.
+		""")
+	public Uni<DocTypeField> deleteDocTypeField(@Id long docTypeFieldId, String docTypeFieldName) {
+		return docTypeFieldService.deleteById(docTypeFieldId, docTypeFieldName);
+	}
+
+	@Mutation
 	public Uni<Tuple2<String, String>> deleteDocTypeFieldTranslation(
 		@Id @Name("docTypeFieldId") long docTypeFieldId,
 		String language, String key) {

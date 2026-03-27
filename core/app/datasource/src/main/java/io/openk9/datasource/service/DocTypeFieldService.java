@@ -33,6 +33,7 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
@@ -143,6 +144,35 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		}
 
 		return docTypeField;
+	}
+
+	/**
+	 * Deletes a DocTypeField entity by its ID after verifying the provided name matches the entity's name.
+	 *
+	 * <p>This method adds a validation step to the deletion process by requiring the caller to provide
+	 * the correct name of the DocTypeField being deleted. This serves as a safety mechanism to prevent
+	 * accidental deletions by confirming the caller has knowledge of the entity they intend to remove.
+	 *
+	 * <p>The validation flow:
+	 * <ol>
+	 *   <li>Retrieves the DocTypeField entity by the provided ID</li>
+	 *   <li>Validates that the provided name exactly matches the entity's name</li>
+	 *   <li>If validation passes, proceeds with the deletion process</li>
+	 * </ol>
+	 *
+	 * @param id   The ID of the DocTypeField to delete
+	 * @param validationName The name of the DocTypeField to verify before deletion
+	 * @return A {@link io.smallrye.mutiny.Uni} containing the deleted DocTypeField if successful
+	 * @throws ValidationException If the provided name doesn't match the entity's actual name
+	 * @see #deleteById(long) The underlying deletion method called after validation
+	 */
+	public Uni<DocTypeField> deleteById(long id, String validationName) {
+		return findById(id)
+			.flatMap(docTypeField -> {
+				verifyNameMatches(docTypeField.getName(), validationName);
+
+				return deleteById(id);
+			});
 	}
 
 	public Uni<Collection<DocType>> expandDocTypes(
