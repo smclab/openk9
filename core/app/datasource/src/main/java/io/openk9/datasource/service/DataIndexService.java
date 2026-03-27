@@ -382,10 +382,7 @@ public class DataIndexService
 	public Uni<DataIndex> deleteById(long dataIndexId, String dataIndexName) {
 		return findById(dataIndexId)
 			.flatMap(dataIndex -> {
-				if (!dataIndex.getName().equalsIgnoreCase(dataIndexName)) {
-					throw new ValidationException("dataIndexName is not the same");
-				}
-
+				verifyNameMatches(dataIndex.getName(), dataIndexName);
 				return deleteById(dataIndexId);
 			});
 	}
