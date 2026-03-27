@@ -541,6 +541,22 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return sessionFactory.withTransaction(tenantId, (s, t) -> upsert(s, dto));
 	}
 
+	/**
+	 * Verifies that the provided validation name matches the entity's actual name,
+	 * ignoring case differences. This acts as a confirmation guard for sensitive
+	 * operations such as deletion or modification, ensuring the caller explicitly
+	 * acknowledges the target entity by name before proceeding.
+	 *
+	 * @param entityName     the actual name of the entity being operated on
+	 * @param validationName the name provided by the caller as confirmation
+	 * @throws ValidationException if the names do not match (case-insensitive)
+	 */
+	public void verifyNameMatches(String entityName, String validationName) {
+		if (!entityName.equalsIgnoreCase(validationName)) {
+			throw new ValidationException("entity name is not the same");
+		}
+	}
+
 	@Override
 	protected Mutiny.SessionFactory getSessionFactory() {
 		return sessionFactory;
