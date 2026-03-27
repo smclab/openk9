@@ -622,15 +622,24 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		return findById(s, id)
 			.onItem().ifNotNull()
 			.transformToUni(
-				(prev) -> persist(s, mapperFunction.apply(prev, dto))
-					.invoke(newEntity -> processor.onNext(
-						K9EntityEvent.of(
-							K9EntityEvent.EventType.UPDATE, newEntity, prev))))
+				(prev) -> mapAndPersist(s, prev, dto, mapperFunction))
 			.onItem().ifNull()
 			.failWith(
 				() -> new IllegalStateException(
 					"dto: " + dto.getClass().getSimpleName() + " with id: " +
 					id + " not found"));
+	}
+
+	protected Uni<ENTITY> mapAndPersist(
+		Mutiny.Session s,
+		ENTITY prev,
+		DTO dto,
+		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
+
+		return persist(s, mapperFunction.apply(prev, dto))
+			.invoke(newEntity -> processor.onNext(
+				K9EntityEvent.of(
+					K9EntityEvent.EventType.UPDATE, newEntity, prev)));
 	}
 
 	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
