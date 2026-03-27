@@ -497,7 +497,30 @@ class RagGraph:
                 {"result_answer": result_answer}
             )
 
-            return guardrail_response.content
+            return guardrail_response.content[0].get("text")
+        elif (
+            self.guardrail_configuration.get("guardrail_type")
+            == GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value
+        ):
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            try:
+                guardrail_response = llm_guardrail.invoke({"query": result_answer})
+                return "NONE"
+            except Exception as e:
+                if "flagged as unsafe" in str(e):
+                    return "UNSAFE"
+                else:
+                    raise e
+        elif (
+            self.guardrail_configuration.get("guardrail_type")
+            == GuardrailType.OPENAI_MODERATION.value
+        ):
+            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            guardrail_response = llm_guardrail.invoke({"input": result_answer})
+            if guardrail_response.get("input") == guardrail_response.get("output"):
+                return "NONE"
+            else:
+                return "UNSAFE"
         else:
             guardrail_chain = guardrail_prompt_template | self.llm
             guardrail_response = guardrail_chain.invoke(
