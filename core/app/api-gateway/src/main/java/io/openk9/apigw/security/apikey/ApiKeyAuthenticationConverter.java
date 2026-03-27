@@ -42,36 +42,45 @@ public class ApiKeyAuthenticationConverter implements ServerAuthenticationConver
 		Pattern.CASE_INSENSITIVE);
 
 	@Override
-	public Mono<Authentication> convert(ServerWebExchange exchange) {
+	public Mono<Authentication> convert(
+		ServerWebExchange exchange) {
 
 		return Mono.create(sink -> {
-
-			// get the required objects to evaluate the request
 			ServerHttpRequest request = exchange.getRequest();
 
 			// tenant has to be recognized
-			String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+			String tenantId =
+				TenantIdResolverFilter.getTenantId(exchange);
+
 			if (tenantId == null) {
 				sink.success();
+				return;
 			}
 
 			HttpHeaders headers = request.getHeaders();
-			var authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
+			var authorization =
+				headers.getFirst(HttpHeaders.AUTHORIZATION);
 
 			// authorization scheme has to be ApiKey
-			if (!StringUtils.startsWithIgnoreCase(authorization, "apikey")) {
+			if (!StringUtils.startsWithIgnoreCase(
+				authorization, "apikey")) {
+
 				sink.success();
+				return;
 			}
 
-			Matcher matcher = authorizationPattern.matcher(authorization);
+			Matcher matcher =
+				authorizationPattern.matcher(authorization);
+
 			if (!matcher.matches()) {
-				sink.error(new ApiKeyMalformedException("ApiKey is malformed"));
+				sink.error(new ApiKeyMalformedException(
+					"ApiKey is malformed"));
+				return;
 			}
 
 			var apiKey = matcher.group("apikey");
-
-			sink.success(new ApiKeyAuthenticationToken(tenantId, apiKey));
-
+			sink.success(
+				new ApiKeyAuthenticationToken(tenantId, apiKey));
 		});
 	}
 

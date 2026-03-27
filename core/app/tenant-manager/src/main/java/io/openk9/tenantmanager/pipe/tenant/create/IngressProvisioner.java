@@ -123,6 +123,16 @@ public class IngressProvisioner
 
 	private Behavior<Command> onHandleRollback(
 		HandleRollback handleRollback) {
+
+		var exception = handleRollback.exception();
+
+		if (exception == null) {
+			replyTo.tell(Success.INSTANCE);
+		}
+		else {
+			replyTo.tell(new Error(exception));
+		}
+
 		return Behaviors.stopped();
 	}
 

@@ -232,7 +232,7 @@ public class ApiKeyService {
 
 	private static ApiKeyIdentifier mapApiKeyIdentifier(Row row) {
 		return new ApiKeyIdentifier(
-			row.getString("schema_name"),
+			row.getString("tenant_name"),
 			row.getString("hash"));
 	}
 
@@ -257,7 +257,8 @@ public class ApiKeyService {
 		""";
 
 	private static final String FETCH_TENANT_NAME_AND_HASH_BY_ID_SQL = """
-		SELECT ap.id as id, t.schema_name as schema_name, ap.hash as hash
+		SELECT ap.id as id, t.tenant_name as tenant_name,
+			ap.hash as hash
 		FROM api_key ap
 		INNER JOIN tenant t ON ap.tenant_id = t.id
 		WHERE ap.id = $1
