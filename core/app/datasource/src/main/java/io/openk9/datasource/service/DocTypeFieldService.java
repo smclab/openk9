@@ -269,36 +269,39 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 		);
 	}
 
-	@Override
-	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto) {
+	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
 		return sessionFactory.withTransaction((session, transaction) ->
-			patch(session, id, dto));
+			findById(id)
+				.flatMap(entity -> {
+					verifyNameMatches(entity.getName(), docTypeFieldName);
+					return patch(session, entity, dto);
+				})
+		);
 	}
 
-	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
-		return findById(id)
-			.flatMap(entity -> {
-				verifyNameMatches(entity.getName(), docTypeFieldName);
+	public Uni<DocTypeField> patch(
+		Mutiny.Session s, DocTypeField prev, DocTypeFieldDTO dto) {
 
-				return sessionFactory.withTransaction((session, transaction) ->
-					patch(session, id, dto));
-			});
+		return mapAndPersist(
+			s, prev, dto, (docTypeField, docTypeFieldDTO) ->
+				patchMapper(s, docTypeField, docTypeFieldDTO));
 	}
 
 	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
-		return findById(id)
-			.flatMap(entity -> {
-				verifyNameMatches(entity.getName(), docTypeFieldName);
-
-				return sessionFactory.withTransaction((session, transaction) ->
-					update(session, id, dto));
-			});
+		return sessionFactory.withTransaction((session, transaction) ->
+			findById(id)
+				.flatMap(entity -> {
+					verifyNameMatches(entity.getName(), docTypeFieldName);
+					return update(session, entity, dto);
+				})
+		);
 	}
 
-	@Override
-	public Uni<DocTypeField> update(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
-		return findThenMapAndPersist(
-			s, id, dto, (docTypeField, docTypeFieldDTO) ->
+	public Uni<DocTypeField> update(
+			Mutiny.Session s, DocTypeField prev, DocTypeFieldDTO dto) {
+
+		return mapAndPersist(
+			s, prev, dto, (docTypeField, docTypeFieldDTO) ->
 			updateMapper(s, docTypeField, docTypeFieldDTO));
 	}
 
