@@ -21,7 +21,10 @@ from enum import Enum
 
 from langchain_aws import ChatBedrockConverse
 from langchain_classic.chains import OpenAIModerationChain
-from langchain_google_community.model_armor import ModelArmorSanitizePromptRunnable
+from langchain_google_community.model_armor import (
+    ModelArmorSanitizePromptRunnable,
+    ModelArmorSanitizeResponseRunnable,
+)
 
 from app.utils.llm import save_google_application_credentials
 
@@ -31,6 +34,7 @@ DEFAULT_GUARDRAIL_TYPE = "aws_bedrock"
 class GuardrailType(Enum):
     AWS_BEDROCK = "aws_bedrock"
     GOOGLE_MODEL_ARMOR = "google_model_armor"
+    GOOGLE_MODEL_ARMOR_RESPONSE = "google_model_armor_response"
     OPENAI_MODERATION = "openai_moderation"
 
 
@@ -53,7 +57,7 @@ def initialize_guardrail(configuration):
             - "guardrail_type": str
                 The type of guardrail to instantiate. Should match one of the values defined
                 in the GuardrailType enumeration (e.g., 'AWS_BEDROCK', 'GOOGLE_MODEL_ARMOR',
-                'OPENAI_MODERATION').
+                'GOOGLE_MODEL_ARMOR_RESPONSE', 'OPENAI_MODERATION').
             - "api_key": str
                 API key for authentication (required for AWS_BEDROCK and OPENAI_MODERATION).
             - "region": str
@@ -69,7 +73,7 @@ def initialize_guardrail(configuration):
             - "model": str
                 Name of the model to use with the guardrail.
 
-        For GOOGLE_MODEL_ARMOR:
+        For GOOGLE_MODEL_ARMOR and GOOGLE_MODEL_ARMOR_RESPONSE:
             - "google_model_armor": dict
                 Google Model Armor credentials containing:
                     - "quota_project_id": str
@@ -86,6 +90,7 @@ def initialize_guardrail(configuration):
         An instance of a guardrail mechanism corresponding to the specified type:
             - For AWS_BEDROCK: Returns a ChatBedrockConverse instance with guardrail config
             - For GOOGLE_MODEL_ARMOR: Returns a ModelArmorSanitizePromptRunnable instance
+            - For GOOGLE_MODEL_ARMOR_RESPONSE: Returns a ModelArmorSanitizeResponseRunnable instance
             - For OPENAI_MODERATION: Returns an OpenAIModerationChain instance
             - Default: Returns an OpenAIModerationChain instance
 
@@ -134,7 +139,7 @@ def initialize_guardrail(configuration):
     Notes:
     -----
     - For AWS_BEDROCK, the API key is set in the AWS_BEARER_TOKEN_BEDROCK environment variable.
-    - For GOOGLE_MODEL_ARMOR, credentials are saved using save_google_application_credentials().
+    - For GOOGLE_MODEL_ARMOR, GOOGLE_MODEL_ARMOR_RESPONSE, credentials are saved using save_google_application_credentials().
     - For OPENAI_MODERATION, the API key is set in the OPENAI_API_KEY environment variable.
     - If no matching guardrail_type is provided, the function defaults to OPENAI_MODERATION.
     """
@@ -170,6 +175,18 @@ def initialize_guardrail(configuration):
             template_id = configuration.get("template_id")
 
             guardrail = ModelArmorSanitizePromptRunnable(
+                project=project_id,
+                location=region,
+                template_id=template_id,
+                fail_open=False,
+            )
+        case GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value:
+            google_model_armor_credentials = configuration.get("google_credentials")
+            save_google_application_credentials(google_model_armor_credentials)
+            project_id = configuration.get("project_id")
+            template_id = configuration.get("template_id")
+
+            guardrail = ModelArmorSanitizeResponseRunnable(
                 project=project_id,
                 location=region,
                 template_id=template_id,
