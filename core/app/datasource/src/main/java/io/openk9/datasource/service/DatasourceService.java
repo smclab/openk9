@@ -265,10 +265,7 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 		return findById(datasourceId)
 			.flatMap(datasource -> {
-				if (!datasource.getName().equals(datasourceName)) {
-					throw new ValidationException(
-						"datasourceName is not the same");
-				}
+				verifyNameMatches(datasource.getName(), datasourceName);
 				return deleteById(datasourceId);
 			});
 	}

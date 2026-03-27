@@ -109,10 +109,7 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<DocType> deleteById(long docTypeId, String docTypeName) {
 		return findById(docTypeId)
 			.flatMap(docType -> {
-				if (!docType.getName().equals(docTypeName)) {
-					throw new ValidationException("docTypeName is not the same");
-				}
-
+				verifyNameMatches(docType.getName(), docTypeName);
 				return deleteById(docTypeId);
 			});
 	}
