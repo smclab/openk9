@@ -22,14 +22,14 @@ class TenantManagerActorSystemTest {
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY;
         CreateTenantRequest request = new CreateTenantRequest(
 			"vh", securityConfig, null,
-			"testStartCreateTenantSuccess");
+			"testcreatetenant");
 
         TenantResponseDTO tenant = actorSystem
 			.startCreateTenant(request)
 			.await().indefinitely();
 
 		Assertions.assertEquals(
-			"testStartCreateTenantSuccess",
+			"testcreatetenant",
 			tenant.tenantName());
 	}
 
@@ -38,15 +38,15 @@ class TenantManagerActorSystemTest {
         SecurityConfiguration securityConfig =
 			SecurityConfiguration.NO_GATEWAY_AUTH;
         CreateTenantRequest request = new CreateTenantRequest(
-			"vh-basic", securityConfig, null,
-			"testBasicAuth");
+			"vh_basic", securityConfig, null,
+			"testbasicauth");
 
         TenantResponseDTO tenant = actorSystem
 			.startCreateTenant(request)
 			.await().indefinitely();
 
 		Assertions.assertEquals(
-			"testBasicAuth", tenant.tenantName());
+			"testbasicauth", tenant.tenantName());
 		Assertions.assertNull(tenant.issuerUri());
 		Assertions.assertNull(tenant.clientId());
 	}

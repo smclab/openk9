@@ -27,8 +27,7 @@ import io.openk9.tenantmanager.service.InvalidTenantNameException;
  * <p>A valid tenant name must:
  * <ul>
  *   <li>Start with a lowercase letter</li>
- *   <li>Contain only lowercase letters, digits, and
- *       underscores</li>
+ *   <li>Contain only lowercase letters and digits</li>
  *   <li>Be at most 63 characters long (PostgreSQL limit)</li>
  * </ul>
  *
@@ -40,10 +39,10 @@ public final class TenantNameValidator {
 	/**
 	 * PostgreSQL unquoted identifier pattern: starts with a
 	 * lowercase letter, followed by up to 62 lowercase
-	 * alphanumeric or underscore characters.
+	 * alphanumeric characters.
 	 */
 	private static final Pattern VALID_NAME =
-		Pattern.compile("^[a-z][a-z0-9_]{0,62}$");
+		Pattern.compile("^[a-z][a-z0-9]{0,62}$");
 
 	private TenantNameValidator() {}
 

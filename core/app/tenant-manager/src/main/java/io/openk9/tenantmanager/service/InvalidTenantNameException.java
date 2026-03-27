@@ -20,7 +20,7 @@ package io.openk9.tenantmanager.service;
 /**
  * Thrown when a tenant name does not conform to PostgreSQL
  * identifier rules: must start with a lowercase letter,
- * contain only lowercase letters, digits, and underscores,
+ * contain only lowercase letters and digits,
  * and be at most 63 characters long.
  */
 public class InvalidTenantNameException extends RuntimeException {
@@ -32,9 +32,9 @@ public class InvalidTenantNameException extends RuntimeException {
 	 */
 	public InvalidTenantNameException(String tenantName) {
 		super(String.format(
-			"Invalid tenant name '%s'. Must match [a-z][a-z0-9_]{0,62}: "
+			"Invalid tenant name '%s'. Must match [a-z][a-z0-9]{0,62}: "
 			+ "start with a lowercase letter, contain only lowercase "
-			+ "letters, digits, and underscores, max 63 characters.",
+			+ "letters and digits, max 63 characters.",
 			tenantName));
 	}
 }

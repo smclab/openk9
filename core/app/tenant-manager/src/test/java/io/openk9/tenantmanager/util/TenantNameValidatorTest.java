@@ -35,10 +35,9 @@ class TenantNameValidatorTest {
 	@ValueSource(strings = {
 		"pikachu",
 		"demo",
-		"tenant_1",
+		"tenant1",
 		"a",
 		"abc123",
-		"my_tenant_name",
 	})
 	@DisplayName("accepts valid tenant names")
 	void acceptsValidNames(String name) {
@@ -53,6 +52,7 @@ class TenantNameValidatorTest {
 		"UPPER",
 		"123abc",
 		"_leading_underscore",
+		"has_underscore",
 		"has space",
 		"has.dot",
 		"schema; DROP TABLE",
