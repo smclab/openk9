@@ -94,20 +94,18 @@ public class DeleteDocTypeFieldTest {
 	}
 
 	@Test
-	@DisplayName("Should delete DocTypeField with the same name in different case")
-	void should_delete_with_correct_name_case_insensitive() {
+	@DisplayName("Should throw ValidationException deleting DocTypeField with the same name in different case")
+	void should_fail_deleting_with_correct_name_case_insensitive() {
 		var docTypeField = EntitiesUtils.getEntity(
 			DOC_TYPE_FIELD_NAME, docTypeFieldService, sf);
 
-		docTypeFieldService.deleteById(
-				docTypeField.getId(), DOC_TYPE_FIELD_NAME.toUpperCase())
-			.await()
-			.indefinitely();
-
 		assertThrows(
-			NoResultException.class,
-			() -> EntitiesUtils.getEntity(
-				DOC_TYPE_FIELD_NAME, docTypeFieldService, sf)
+			ValidationException.class,
+			() -> docTypeFieldService.deleteById(
+					docTypeField.getId(),
+					DOC_TYPE_FIELD_NAME.toUpperCase())
+				.await()
+				.indefinitely()
 		);
 	}
 
