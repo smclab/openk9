@@ -6,6 +6,19 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig(({ mode }) => ({
   base: "/",
   plugins: [
+    {
+      name: "redirect-root-to-admin",
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === "/" || req.url === "") {
+            res.writeHead(302, { Location: "/admin/" });
+            res.end();
+            return;
+          }
+          next();
+        });
+      },
+    },
     react(),
     tsconfigPaths(),
     viteCompression({
