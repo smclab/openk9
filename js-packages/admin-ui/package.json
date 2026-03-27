@@ -75,9 +75,9 @@
   "devDependencies": {
     "@graphql-codegen/time": "^3.2.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0",
+    "vite": "^7.3.1",
     "vite-plugin-compression": "^0.5.1",
-    "vite-tsconfig-paths": "^5.1.0",
-    "vitest": "^3.0.0"
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18"
   }
 }
