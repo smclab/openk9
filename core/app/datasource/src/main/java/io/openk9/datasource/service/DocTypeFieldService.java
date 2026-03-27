@@ -275,18 +275,24 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			patch(session, id, dto));
 	}
 
-	@Override
-	protected Uni<DocTypeField> patch(Mutiny.Session s, long id, DocTypeFieldDTO dto) {
-		return findThenMapAndPersist(
-			s, id, dto, (docTypeField, docTypeFieldDTO) ->
-				patchMapper(s, docTypeField, docTypeFieldDTO)
-		);
+	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
+		return findById(id)
+			.flatMap(entity -> {
+				verifyNameMatches(entity.getName(), docTypeFieldName);
+
+				return sessionFactory.withTransaction((session, transaction) ->
+					patch(session, id, dto));
+			});
 	}
 
-	@Override
-	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto) {
-		return sessionFactory.withTransaction((session, transaction) ->
-			update(session, id, dto));
+	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
+		return findById(id)
+			.flatMap(entity -> {
+				verifyNameMatches(entity.getName(), docTypeFieldName);
+
+				return sessionFactory.withTransaction((session, transaction) ->
+					update(session, id, dto));
+			});
 	}
 
 	@Override
