@@ -162,8 +162,11 @@ public class UpdateDocTypeFieldTest {
 	}
 
 	@Test
-	@DisplayName("Should update DocTypeField with the correct validation name in different case")
-	void should_update_with_correct_name_case_insensitive() {
+	@DisplayName("""
+		Should throw ValidationException updating DocTypeField with the correct validation name 
+		in different case
+		""")
+	void should_fail_updating_with_correct_name_case_insensitive() {
 		var docTypeField = EntitiesUtils.getEntity(
 			DOC_TYPE_FIELD_NAME, docTypeFieldService, sf);
 
@@ -176,13 +179,15 @@ public class UpdateDocTypeFieldTest {
 			.boost(1.0)
 			.build();
 
-		var updated = docTypeFieldService.update(
-				docTypeField.getId(), updateDto,
-				DOC_TYPE_FIELD_NAME.toUpperCase())
-			.await()
-			.indefinitely();
-
-		assertEquals(UPDATED_FIELD_NAME, updated.getFieldName());
+		assertThrows(
+			ValidationException.class,
+			() -> docTypeFieldService.update(
+					docTypeField.getId(),
+					updateDto,
+					DOC_TYPE_FIELD_NAME.toUpperCase())
+				.await()
+				.indefinitely()
+		);
 	}
 
 	@AfterEach
