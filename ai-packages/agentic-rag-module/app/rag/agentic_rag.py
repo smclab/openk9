@@ -241,6 +241,21 @@ class RagGraph:
 
         return list(messages.values())
 
+    def _load_domain_from_checkpoints(self) -> List[Any]:
+        """Load messages from OpenSearch checkpoints"""
+        domain: Domain = None
+
+        try:
+            states = list(self.graph.get_state_history(self.config))
+
+            for state in states:
+                domain = state.values.get("domain")
+
+        except Exception as e:
+            logger.error(f"Error loading domain from checkpoints: {e}")
+
+        return domain
+
     def _load_messages_from_frontend(self) -> List[Any]:
         """Load messages from frontend"""
         messages = []
@@ -594,6 +609,8 @@ class RagGraph:
             )
         else:
             state.messages = []
+
+        state.domain = self._load_domain_from_checkpoints()
 
         return state
 
