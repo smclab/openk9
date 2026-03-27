@@ -20,18 +20,30 @@ package io.openk9.tenantmanager.init;
 import java.util.List;
 import jakarta.inject.Inject;
 
-import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.service.OutboxEventService;
 import io.openk9.tenantmanager.service.TenantDbService;
 
 import io.quarkus.test.junit.QuarkusTest;
-import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+/**
+ * Verifies that {@link BackfillTenantCreatedEventsTask} correctly
+ * generates TenantCreated outbox events from pre-existing tenant
+ * rows.
+ * <p>
+ * The backfill task produces v0 event payloads (with
+ * {@code schemaName} and legacy {@code routeAuthorizationMap}
+ * keys). This test deserializes the raw JSON rather than mapping
+ * to {@code TenantEvent.TenantCreated} to avoid coupling to the
+ * current v1 schema.
+ */
 @QuarkusTest
 public class OutboxBackfillTest {
 
@@ -39,36 +51,42 @@ public class OutboxBackfillTest {
 	TenantDbService tenantDbService;
 	@Inject
 	OutboxEventService outboxEventService;
-	@ConfigProperty(name = "openk9.tenant-manager.keycloak-base-issuer-uri")
+	@ConfigProperty(
+		name = "openk9.tenant-manager.keycloak-base-issuer-uri")
 	String baseIssuerUri;
 
 	@Test
 	void should_backfill_outbox_table() {
 
 		// fetch pre-existing tenants
-		TenantResponseDTO charmender = tenantDbService.findById(1L).await().indefinitely();
-		TenantResponseDTO pikachu = tenantDbService.findById(2L).await().indefinitely();
+		TenantResponseDTO charmender =
+			tenantDbService.findById(1L)
+				.await().indefinitely();
+		TenantResponseDTO pikachu =
+			tenantDbService.findById(2L)
+				.await().indefinitely();
 
-		Assertions.assertNotNull(charmender);
-		Assertions.assertNotNull(pikachu);
+		assertNotNull(charmender);
+		assertNotNull(pikachu);
 
-		List<OutboxEvent> backfilledEvents = outboxEventService.lastEvents(2).await().indefinitely();
+		List<OutboxEvent> backfilledEvents = outboxEventService
+			.lastEvents(2).await().indefinitely();
 
-		Assertions.assertEquals(2, backfilledEvents.size());
+		assertEquals(2, backfilledEvents.size());
 
 		// verify that issuer uris are correct
+		// (v0 payload uses schemaName as tenantId)
 		for (OutboxEvent event : backfilledEvents) {
-			var tenantCreatedEvent = Json.decodeValue(
-				event.getPayload(),
-				TenantEvent.TenantCreated.class
-			);
+			JsonObject payload =
+				new JsonObject(event.getPayload());
 
-			String tenantId  = tenantCreatedEvent.tenantId();
-			String issuerUri = tenantCreatedEvent.issuerUri();
+			String tenantId = payload.getString("tenantId");
+			String issuerUri = payload.getString("issuerUri");
 
-			Assertions.assertEquals(baseIssuerUri + tenantId, issuerUri);
+			assertNotNull(tenantId);
+			assertEquals(
+				baseIssuerUri + tenantId, issuerUri);
 		}
-
 	}
 
 }
