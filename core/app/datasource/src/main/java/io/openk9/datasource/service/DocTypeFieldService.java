@@ -362,10 +362,14 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			searchText, sortByList, notEqual);
 	}
 
-	@Override
-	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto) {
-		return sessionFactory.withTransaction((session, transaction) ->
-			patch(session, id, dto));
+	public Uni<DocTypeField> patch(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
+		return findById(id)
+			.flatMap(entity -> {
+				verifyNameMatches(entity.getName(), docTypeFieldName);
+
+				return sessionFactory.withTransaction((session, transaction) ->
+					patch(session, id, dto));
+			});
 	}
 
 	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzer(long docTypeFieldId) {
@@ -378,10 +382,14 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			}));
 	}
 
-	@Override
-	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto) {
-		return sessionFactory.withTransaction((session, transaction) ->
-			update(session, id, dto));
+	public Uni<DocTypeField> update(long id, DocTypeFieldDTO dto, String docTypeFieldName) {
+		return findById(id)
+			.flatMap(entity -> {
+				verifyNameMatches(entity.getName(), docTypeFieldName);
+
+				return sessionFactory.withTransaction((session, transaction) ->
+					update(session, id, dto));
+			});
 	}
 
 	@Override

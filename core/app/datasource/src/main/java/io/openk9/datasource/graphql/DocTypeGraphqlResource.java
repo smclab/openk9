@@ -186,18 +186,33 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
+	@Description("""
+		Creates or updates a DocTypeField entity with an associated Analyzer.
+		If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
+		Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+		Requires validationName (as a confirmation mechanism) to prevent accidental modifications
+		when updating or patching an existing DocTypeField.
+		""")
 	public Uni<Response<DocTypeField>> docTypeFieldWithAnalyzer(
 		@Id long docTypeId, @Id Long docTypeFieldId,
 		DocTypeFieldWithAnalyzerDTO docTypeFieldWithAnalyzerDTO,
-		@DefaultValue("false") boolean patch) {
+		@DefaultValue("false") boolean patch, String validationName) {
 
-		return docTypeField(docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch);
+		return docTypeField(docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch, validationName);
 	}
 
 	@Mutation
+	@Description("""
+		Creates or updates a DocTypeField entity under the specified DocType.
+		If docTypeFieldId is null, a new DocTypeField is created.
+		Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+		Returns validation errors if the provided DTO fails validation.
+		Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+		when updating or patching an existing DocTypeField.
+		""")
 	public Uni<Response<DocTypeField>> docTypeField(
 		@Id long docTypeId, @Id Long docTypeFieldId, DocTypeFieldDTO docTypeFieldDTO,
-		@DefaultValue("false") boolean patch) {
+		@DefaultValue("false") boolean patch, String docTypeFieldName) {
 
 		return Uni.createFrom().deferred(() -> {
 
@@ -212,8 +227,10 @@ public class DocTypeGraphqlResource {
 				} else {
 					return (
 						patch
-							? docTypeFieldService.patch(docTypeFieldId, docTypeFieldDTO)
-							: docTypeFieldService.update(docTypeFieldId, docTypeFieldDTO)
+							? docTypeFieldService.patch(
+								docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
+							: docTypeFieldService.update(
+								docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
 					).map(e -> Response.of(e, null));
 				}
 
