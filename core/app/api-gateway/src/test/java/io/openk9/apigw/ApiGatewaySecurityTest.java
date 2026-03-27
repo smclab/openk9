@@ -499,6 +499,20 @@ class ApiGatewaySecurityTest {
 				.expectStatus().isBadRequest();
         }
 
+		@Test
+		@DisplayName("Injected X-TENANT-ID header should be overwritten by gateway")
+		void testTenantIdHeaderInjection() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
+				.header("X-TENANT-ID", "injected-tenant")
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.tenantId").isEqualTo("alabasta");
+		}
+
     }
 
     @Nested
