@@ -986,6 +986,15 @@ ingress:
     secretName: openk9-tls-star-secret   ## Change if secret name is not the default
 ```
 
+#### Nginx Reverse Proxy (backendHost)
+
+The `backendHost` parameter enables an optional nginx reverse proxy. When set, the container proxies `/api/` requests to the specified backend host. When empty (default), the container serves only static files.
+
+```bash
+## Optional nginx reverse proxy configuration
+backendHost: "tenant-manager.openk9.svc.cluster.local:8080"  ## Set to enable proxy, leave empty to disable
+```
+
 For advanced configurations read [README.md](./01-base-core/openk9-tenant-ui/README.md) inside Tenant UI chart folder.
 
 #### Installation
@@ -1010,6 +1019,15 @@ Learn more on how to use and configure all needed to access to Tenant UI on [off
 
 The Admin UI is used to configure and manage configurations of single tenant.
 
+#### Nginx Reverse Proxy (backendHost)
+
+The `backendHost` parameter enables an optional nginx reverse proxy. When set, the container proxies `/api/` requests to the specified backend host. When empty (default), the container serves only static files.
+
+```bash
+## Optional nginx reverse proxy configuration
+backendHost: "tenant-manager.openk9.svc.cluster.local:8080"  ## Set to enable proxy, leave empty to disable
+```
+
 For advanced configurations read [README.md](./01-base-core/openk9-admin-ui/README.md) inside Admin UI chart folder.
 
 #### Installation
@@ -1033,6 +1051,15 @@ Learn more on how to use and configure all needed to access to Admin UI on [offi
 ### Search Frontend
 
 The Search Frontend is used to access to standard search interface of Openk9.
+
+#### Nginx Reverse Proxy (backendHost)
+
+The `backendHost` parameter enables an optional nginx reverse proxy. When set, the container proxies `/api/` requests to the specified backend host. When empty (default), the container serves only static files.
+
+```bash
+## Optional nginx reverse proxy configuration
+backendHost: "tenant-manager.openk9.svc.cluster.local:8080"  ## Set to enable proxy, leave empty to disable
+```
 
 For advanced configurations read [README.md](./01-base-core/openk9-search-frontend/README.md) inside Search Frontend chart folder.
 
@@ -1154,6 +1181,15 @@ Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is r
 Talk To is used to access to Generative search interface of Openk9.
 
 To learn more on how to use Talk To, read [official documentation]().
+
+#### Nginx Reverse Proxy (backendHost)
+
+The `backendHost` parameter enables an optional nginx reverse proxy. When set, the container proxies `/api/` requests to the specified backend host. When empty (default), the container serves only static files.
+
+```bash
+## Optional nginx reverse proxy configuration
+backendHost: "tenant-manager.openk9.svc.cluster.local:8080"  ## Set to enable proxy, leave empty to disable
+```
 
 For advanced configurations read [README.md](./03-gen-ai/openk9-talk-to/README.md) inside Talk To chart folder.
 
