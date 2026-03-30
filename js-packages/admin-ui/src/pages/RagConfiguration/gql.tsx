@@ -33,6 +33,11 @@ export const RagConfigurationQuery = gql`
       jsonConfig
       ragToolDescription
       promptNoRag
+      enableConversationTitle
+      range {
+        start
+        end
+      }
     }
   }
 `;
@@ -91,6 +96,8 @@ export const CreateRagConfiguration = gql`
     $jsonConfig: String
     $ragToolDescription: String
     $promptNoRag: String
+    $enableConversationTitle: Boolean
+    $range: RangeDTOInput
   ) {
     createRAGConfiguration(
       createRAGConfigurationDTO: {
@@ -104,6 +111,8 @@ export const CreateRagConfiguration = gql`
         jsonConfig: $jsonConfig
         ragToolDescription: $ragToolDescription
         promptNoRag: $promptNoRag
+        enableConversationTitle: $enableConversationTitle
+        range: $range
       }
     ) {
       entity {
@@ -131,6 +140,8 @@ export const UpdateRagConfiguration = gql`
     $jsonConfig: String
     $ragToolDescription: String
     $promptNoRag: String
+    $enableConversationTitle: Boolean
+    $range: RangeDTOInput
     $patch: Boolean
   ) {
     updateRAGConfiguration(
@@ -146,6 +157,8 @@ export const UpdateRagConfiguration = gql`
         jsonConfig: $jsonConfig
         ragToolDescription: $ragToolDescription
         promptNoRag: $promptNoRag
+        enableConversationTitle: $enableConversationTitle
+        range: $range
       }
     ) {
       entity {
