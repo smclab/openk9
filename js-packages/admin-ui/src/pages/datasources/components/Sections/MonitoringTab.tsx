@@ -202,7 +202,7 @@ export function MonitoringTab({ id }: { id: string }) {
       setDocsDeleted(Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.docsDeleted || "0"));
       setStoreSize(
         Number(
-          (Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.priStoreSize || "0") / 1024).toFixed(2),
+          (Number(dataSourceInformationQuery.data?.datasource?.dataIndex?.cat?.priStoreSize || "0") / 1048576).toFixed(2),
         ),
       );
     }
