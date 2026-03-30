@@ -27,6 +27,7 @@ import {
   useDataSourcesQuery,
   useLanguagesQuery,
   useSuggestionCategoriesQuery,
+  useLanguagesQuery,
   useTabsQuery,
   useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
