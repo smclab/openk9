@@ -187,6 +187,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         chunk_window = response.chunkWindow
         reformulate = response.reformulate
         enable_conversation_title = response.enableConversationTitle
+        range_values = response.range
         json_config = json_format.MessageToDict(response.jsonConfig)
         rerank = json_config.get("rerank")
         metadata = json_config.get("metadata")
@@ -207,6 +208,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "reformulate": reformulate,
             "enable_conversation_title": enable_conversation_title,
             "bypass_rag": bypass_rag,
+            "range_values": range_values,
             "rerank": rerank,
             "metadata": metadata,
         }

@@ -29,7 +29,6 @@ UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 def get_agentic_rag(
     rag_type,
     search_query,
-    range_values,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -68,6 +67,7 @@ def get_agentic_rag(
         chunk_window = rag_configuration.get("chunk_window")
         enable_conversation_title = rag_configuration.get("enable_conversation_title")
         metadata = rag_configuration.get("metadata")
+        range_values = rag_configuration.get("range_values")
         rag_tool_description = rag_configuration.get("rag_tool_description")
         enable_real_time_evaluation = rag_configuration.get(
             "enable_real_time_evaluation"
