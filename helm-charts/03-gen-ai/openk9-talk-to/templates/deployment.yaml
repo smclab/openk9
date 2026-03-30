@@ -26,6 +26,11 @@ spec:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.backendHost }}
+          env:
+            - name: ENV_HOST
+              value: {{ .Values.backendHost | quote }}
+          {{- end }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
