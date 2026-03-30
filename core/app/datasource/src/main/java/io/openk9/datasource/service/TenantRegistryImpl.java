@@ -40,7 +40,7 @@ public class TenantRegistryImpl implements TenantRegistry {
 		return tenantManager.findTenant(TenantRequest.newBuilder()
 				.setVirtualHost(virtualHost)
 				.build())
-			.map(TenantResponse::getSchemaName);
+			.map(TenantResponse::getTenantName);
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class TenantRegistryImpl implements TenantRegistry {
 		return tenantManager.findTenantList(Empty.newBuilder().build())
 			.map(TenantListResponse::getTenantResponseList)
 			.map(tenantResponses -> tenantResponses.stream()
-				.map(TenantResponse::getSchemaName)
+				.map(TenantResponse::getTenantName)
 				.toList()
 			);
 	}

@@ -38,8 +38,8 @@ message TenantListResponse {
 }
 
 message TenantResponse {
-  reserved 3, 4, 5;
-  reserved "clientId", "clientSecret", "realmName";
-  string schemaName = 1;
+  reserved 1, 3, 4, 5;
+  reserved "schemaName", "clientId", "clientSecret", "realmName";
+  string tenantName = 6;
   string virtualHost = 2;
 }

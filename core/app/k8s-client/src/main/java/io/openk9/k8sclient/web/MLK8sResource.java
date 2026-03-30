@@ -125,7 +125,7 @@ public class MLK8sResource {
 		TenantResponse tenantResponse = tenantmanager
 			.findTenant(TenantRequest.newBuilder().setVirtualHost(_request.host()).build());
 
-		return tenantResponse.getSchemaName();
+		return tenantResponse.getTenantName();
 	}
 
 	@GET
