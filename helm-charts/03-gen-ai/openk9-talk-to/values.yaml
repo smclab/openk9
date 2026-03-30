@@ -9,11 +9,6 @@
 ##
 replicaCount: 1
 
-## @param backendHost Optional backend host for nginx reverse proxy (e.g. tenant-manager.namespace.svc.cluster.local:8080).
-## If empty, nginx serves only static files (default behaviour).
-##
-backendHost: ""
-
 ## @section Talk To Image parameters
 ## Docker Rag Module image version
 ## ref: https://hub.docker.com/u/smclab
@@ -164,6 +159,11 @@ route:
 ##     memory: 1024Mi
 ##
 resources: {}
+
+## @param backendHost Optional backend host for nginx reverse proxy (e.g. tenant-manager.namespace.svc.cluster.local:8080).
+## If empty, nginx serves only static files (default behaviour).
+##
+backendHost: ""
 
 autoscaling:
   enabled: false

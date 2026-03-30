@@ -10,11 +10,6 @@
 ##
 replicaCount: 1
 
-## @param backendHost Optional backend host for nginx reverse proxy (e.g. tenant-manager.namespace.svc.cluster.local:8080).
-## If empty, nginx serves only static files (default behaviour).
-##
-backendHost: ""
-
 ## @section Admin Ui Image parameters
 ## Docker Admin Ui image version
 ## ref: https://hub.docker.com/u/smclab
@@ -170,6 +165,11 @@ resources:
   requests:
     cpu: 100m
     memory: 256Mi
+
+## @param backendHost Optional backend host for nginx reverse proxy (e.g. tenant-manager.namespace.svc.cluster.local:8080).
+## If empty, nginx serves only static files (default behaviour).
+##
+backendHost: ""
 
 autoscaling:
   enabled: false
