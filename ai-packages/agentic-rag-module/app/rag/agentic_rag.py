@@ -533,7 +533,6 @@ class RagGraph:
 
     def input_domain_node(self, state: GraphState) -> GraphState:
         query = state.current_query
-        print(f"Si lavora sulla query '{query}'")
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
             virtual_host=self.configuration.get("virtual_host"),
@@ -547,7 +546,6 @@ class RagGraph:
             retrieve_type="HYBRID",
             search_text=query,
         )
-        print("Retrieving ...")
         retrieved_docs = retriever.invoke(query)
 
         high_score_docs = []
@@ -557,14 +555,10 @@ class RagGraph:
             if score >= 0.7:
                 high_score_docs.append(doc)
                 found_domains.add(doc.metadata["domain"])
-                print(doc)
 
         if len(found_domains) > 0:
-            print("OpenSearch judge")
-            print(list(found_domains))
             state.domain = list(found_domains)
         else:
-            print("LLM judge")
             INTENTS = [
                 "troubleshooting",
                 "how-to",
@@ -576,7 +570,6 @@ class RagGraph:
             found_domains = set(INTENTS)
 
             llm_domain = self._llm_input_domain(query, found_domains)
-            print(llm_domain.domain)
             state.domain = llm_domain.domain
 
         return state
@@ -721,24 +714,28 @@ class RagGraph:
             Contesto della conversazione: {context}
             Domanda corrente: {query}
 
-            Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
-            """
+        Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
+        """
             )
 
+        no_rag = self.configuration.get("no_rag")
+
+        if no_rag:
+            state.use_rag = False
+        else:
             rag_router_prompt_template = PromptTemplate.from_template(rag_router_prompt)
 
-        #     rag_router_chain = (
-        #         rag_router_prompt_template
-        #         | self.llm.with_structured_output(
-        #             schema=RouterResponse, include_raw=False, method="function_calling"
-        #         )
-        #     )
+            rag_router_chain = (
+                rag_router_prompt_template
+                | self.llm.with_structured_output(
+                    schema=RouterResponse, include_raw=False, method="function_calling"
+                )
+            )
 
-        #     decision = rag_router_chain.invoke(
-        #         {"query": query, "context": conversation_context}
-        #     )
-        #     print(decision.response.value)
-        state.use_rag = True  # "RAG" in decision.response.value
+            decision = rag_router_chain.invoke(
+                {"query": query, "context": conversation_context}
+            )
+        state.use_rag = "RAG" in decision.response.value
 
         return state
 
