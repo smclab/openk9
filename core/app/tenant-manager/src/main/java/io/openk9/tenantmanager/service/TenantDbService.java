@@ -48,7 +48,6 @@ import io.vertx.mutiny.sqlclient.RowSet;
 import io.vertx.mutiny.sqlclient.SqlResult;
 import io.vertx.mutiny.sqlclient.Tuple;
 import io.vertx.sqlclient.Row;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class TenantDbService {
@@ -76,8 +75,6 @@ public class TenantDbService {
 		"SELECT tenant_name FROM tenant";
 	private static final String DELETE_SQL =
 		"DELETE FROM tenant WHERE id = $1";
-	private static final Logger log =
-		Logger.getLogger(TenantDbService.class);
 
 	@Inject
 	Pool pool;
@@ -116,7 +113,7 @@ public class TenantDbService {
 	 * {@code TenantDeleted} event.
 	 *
 	 * @param id the tenant's numeric identifier
-	 * @return a void item on success, or null on failure
+	 * @return a void item on success
 	 */
 	public Uni<Void> deleteTenant(long id) {
 
@@ -137,11 +134,7 @@ public class TenantDbService {
 						)
 					)
 				)
-			)
-			.onFailure()
-			.invoke((e) -> log.error(
-				"An error occurred, tx is rolled back", e))
-			.onFailure().recoverWithNull();
+			);
 	}
 
 	/**
@@ -253,7 +246,7 @@ public class TenantDbService {
 	 * @param modifiedDate         the modification timestamp
 	 * @param realmProvisioned     whether a Keycloak realm was
 	 *                             auto-provisioned
-	 * @return the created tenant response DTO, or null on failure
+	 * @return the created tenant response DTO
 	 */
 	public Uni<TenantResponseDTO> persist(
 		String virtualHost,
@@ -314,11 +307,7 @@ public class TenantDbService {
 				.clientSecret(clientSecret)
 				.realmProvisioned(realmProvisioned)
 				.build()
-			)
-			.onFailure()
-			.invoke((e) -> log.error(
-				"An error occurred, tx is rolled back", e))
-			.onFailure().recoverWithNull();
+			);
 
 	}
 
@@ -326,7 +315,7 @@ public class TenantDbService {
 	 * Persists a new tenant from a {@link Tenant} entity instance.
 	 *
 	 * @param tenant the tenant entity to persist
-	 * @return the created tenant response DTO, or null on failure
+	 * @return the created tenant response DTO
 	 */
 	public Uni<TenantResponseDTO> persist(Tenant tenant) {
 

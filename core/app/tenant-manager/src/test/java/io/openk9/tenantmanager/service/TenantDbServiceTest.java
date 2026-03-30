@@ -130,7 +130,7 @@ public class TenantDbServiceTest {
 	void should_rollback_persist_tx_on_outboxService_error() {
 
 		// makes outboxService throw an error on persist
-		doThrow(new RuntimeException())
+		doThrow(new RuntimeException("outbox failure"))
 			.when(outboxService)
 			.persist(argThat(StubOnceMatcher.TENANT_CREATED_INSTANCE));
 
@@ -141,9 +141,10 @@ public class TenantDbServiceTest {
 		TenantParameters parameters =
 			generateTenantParameters("shinysquirtle");
 
-		// create tenant will be rolled back
-		TenantResponseDTO tenantCreated = tenantDbService.persist(
-				parameters.virtualHost,
+		// create tenant must fail and propagate the error
+		Assertions.assertThrows(RuntimeException.class, () ->
+			tenantDbService.persist(
+				parameters.virtualHost(),
 				parameters.tenantName(),
 				parameters.realmName(),
 				CLIENT_ID,
@@ -154,14 +155,14 @@ public class TenantDbServiceTest {
 				true
 			)
 			.await()
-			.indefinitely();
+			.indefinitely()
+		);
 
 		int outboxUnsentSizeAfter
 			= outboxService.unsentEvents()
 				.await().indefinitely().size();
 
 		// verify that creation is rolled back
-		Assertions.assertNull(tenantCreated);
 		Assertions.assertEquals(
 			outboxUnsentSizeFirst, outboxUnsentSizeAfter);
 	}
@@ -196,14 +197,16 @@ public class TenantDbServiceTest {
 				.await().indefinitely().size();
 
 		// makes outboxService throw an error on persist
-		doThrow(new RuntimeException())
+		doThrow(new RuntimeException("outbox failure"))
 			.when(outboxService)
 			.persist(argThat(StubOnceMatcher.TENANT_DELETED_INSTANCE));
 
-		// deletes the tenant, this operation will be rolled back
-		tenantDbService.deleteTenant(tenantId)
-			.await()
-			.indefinitely();
+		// deletes the tenant, must fail and propagate the error
+		Assertions.assertThrows(RuntimeException.class, () ->
+			tenantDbService.deleteTenant(tenantId)
+				.await()
+				.indefinitely()
+		);
 
 		int outboxUnsentSizeAfter =
 			outboxService.unsentEvents()
