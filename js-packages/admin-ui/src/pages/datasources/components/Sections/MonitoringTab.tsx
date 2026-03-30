@@ -142,7 +142,7 @@ export function MonitoringTab({ id }: { id: string }) {
       navigate(`/notificationInfo/${item.node.id}`);
     };
 
-    if (item?.node?.status === SchedulerStatus.Running) {
+    if (item?.node?.status === SchedulerStatus.Running || item?.node?.status === SchedulerStatus.Stale) {
       return (
         <>
           <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>Close</Button>
