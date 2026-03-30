@@ -137,6 +137,9 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
         jsonConfig: ragConfigQuery.data?.ragConfiguration?.jsonConfig || "{}",
         ragToolDescription: ragConfigQuery.data?.ragConfiguration?.ragToolDescription || "",
         promptNoRag: ragConfigQuery.data?.ragConfiguration?.promptNoRag || "",
+        enableConversationTitle: ragConfigQuery.data?.ragConfiguration?.enableConversationTitle || false,
+        rangeStart: ragConfigQuery.data?.ragConfiguration?.range?.start ?? 0,
+        rangeEnd: ragConfigQuery.data?.ragConfiguration?.range?.end ?? 0,
       }),
       [ragConfigQuery.data?.ragConfiguration],
     ),
@@ -179,6 +182,9 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           { key: "rephrasePrompt", label: "Rephrase Prompt" },
           { key: "chunkWindow" },
           { key: "jsonConfig", label: "JSON Config", jsonView: true },
+          { key: "enableConversationTitle", label: "Enable Conversation Title" },
+          { key: "rangeStart", label: "Range Start" },
+          { key: "rangeEnd", label: "Range End" },
           ...(form.inputProps("type").value === RagType.ChatRagTool
             ? [
               { key: "ragToolDescription", label: "RAG Tool Description" },
@@ -269,6 +275,34 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         disabled={view === "view" || page === 1}
                         description="JSON configuration for the RAG system"
                       />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            name="EnableConversationTitle"
+                            checked={form.inputProps("enableConversationTitle").value}
+                            onChange={(e: any, checked: any) => form.inputProps("enableConversationTitle").onChange(checked)}
+                            disabled={view === "view" || page === 1}
+                          />
+                        }
+                        sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
+                        label="Enable Conversation Title"
+                        labelPlacement="start"
+                      />
+
+                      <Box sx={{ display: "flex", gap: 2 }}>
+                        <NumberInput
+                          label="Range Start"
+                          {...form.inputProps("rangeStart")}
+                          disabled={view === "view" || page === 1}
+                          description="Start of range (must be >= 0 and less than end)"
+                        />
+                        <NumberInput
+                          label="Range End"
+                          {...form.inputProps("rangeEnd")}
+                          disabled={view === "view" || page === 1}
+                          description="End of range (must be > start)"
+                        />
+                      </Box>
 
                       {selectedType === RagType.ChatRagTool && (
                         <>
