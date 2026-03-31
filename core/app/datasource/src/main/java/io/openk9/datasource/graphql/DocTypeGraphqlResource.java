@@ -190,15 +190,16 @@ public class DocTypeGraphqlResource {
 		Creates or updates a DocTypeField entity with an associated Analyzer.
 		If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
 		Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
-		Requires validationName (as a confirmation mechanism) to prevent accidental modifications
+		Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
 		when updating or patching an existing DocTypeField.
 		""")
 	public Uni<Response<DocTypeField>> docTypeFieldWithAnalyzer(
 		@Id long docTypeId, @Id Long docTypeFieldId,
 		DocTypeFieldWithAnalyzerDTO docTypeFieldWithAnalyzerDTO,
-		@DefaultValue("false") boolean patch, String validationName) {
+		@DefaultValue("false") boolean patch, String docTypeFieldName) {
 
-		return docTypeField(docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch, validationName);
+		return docTypeField(
+			docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch, docTypeFieldName);
 	}
 
 	@Mutation
