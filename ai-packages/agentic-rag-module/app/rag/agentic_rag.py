@@ -485,31 +485,31 @@ class RagGraph:
         parser = PydanticOutputParser(pydantic_object=Domain)
         format_instructions = parser.get_format_instructions()
         domain_prompt = """
-        Sei un sistema di classificazione degli intenti utente.
+        You are a user intent classification system.
 
-        Il tuo compito è:
-        1. Analizzare la query dell'utente
-        2. Identificare gli intenti principali
-        3. Assegnare la query a uno o più dei domini disponibili
-        4. Se nessun dominio sembra corretto rispondi con una stringa vuota
+        Your task is to:
+        1. Analyze the user's query
+        2. Identify the main intents
+        3. Assign the query to one or more of the available domains
+        4. If no domain seems appropriate, return an empty string
 
         ---
 
-        DOMINI DISPONIBILI:
+        AVAILABLE DOMAINS:
         {possible_domains}
 
         ---
 
-        REGOLE:
-        - Devi scegliere ESATTAMENTE un dominio tra quelli forniti
-        - Non inventare nuovi domini
-        - Se la query è ambigua, scegli il dominio più probabile
-        - Se la query non è chiaramente classificabile rispondi con una stringa vuota
-        - Non aggiungere testo extra fuori dal formato richiesto
+        RULES:
+        - You must choose EXACTLY one domain from the provided ones
+        - Do not invent new domains
+        - If the query is ambiguous, choose the most likely domain
+        - If the query cannot be clearly classified, return an empty string
+        - Do not add any extra text outside the required format
 
         ---
 
-        QUERY UTENTE:
+        USER QUERY:
         {query}
 
         ---
