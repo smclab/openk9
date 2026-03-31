@@ -1,0 +1,35 @@
+server {
+    listen       8080;
+    server_name  localhost;
+
+    root  /usr/share/nginx/html/tenant/;
+    index index.html;
+
+    location /tenant/static/ {
+      root /usr/share/nginx/html/;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Proxy api to backend configured by ENV_HOST
+    location /api/ {
+        proxy_pass http://${ENV_HOST};
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location ~* \.(?:jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {
+        expires 1M;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
