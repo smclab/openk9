@@ -37,6 +37,7 @@ from app.utils.embedding import documents_embedding
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
+from app.utils.scheduler import start_document_deletion_scheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware

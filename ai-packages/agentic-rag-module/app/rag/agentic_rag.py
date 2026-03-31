@@ -38,9 +38,9 @@ from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
 from IPython.display import Image
-from langchain.output_parsers import PydanticOutputParser
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langgraph.checkpoint.memory import InMemorySaver

@@ -1,8 +1,8 @@
 from typing import List
 
 from app.utils.embedding import documents_embedding
-from langchain.schema import Document
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
 
