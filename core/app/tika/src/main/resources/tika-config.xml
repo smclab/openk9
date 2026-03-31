@@ -33,9 +33,6 @@
   ~ limitations under the License.
   -->
 <properties>
-	<detectors>
-		<detector class="io.openk9.tika.util.SafeDetector"/>
-	</detectors>
 	<parsers>
 
 		<!-- OCR on Rendered Pages -->
