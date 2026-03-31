@@ -16,6 +16,7 @@
 #
 
 import json
+import os
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
@@ -37,6 +38,7 @@ from app.utils.authentication import unauthorized_response
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
+from dotenv import load_dotenv
 from IPython.display import Image
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -52,6 +54,10 @@ from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
 from pydantic import BaseModel, Field, field_validator
+
+load_dotenv()
+
+DOMAIN_TRESHOLD = os.getenv("DOMAIN_TRESHOLD", 0.7)
 
 
 class GraphState(BaseModel):
@@ -552,7 +558,7 @@ class RagGraph:
         found_domains = set()
         for doc in retrieved_docs:
             score = doc.metadata["score"]
-            if score >= 0.7:
+            if score >= DOMAIN_TRESHOLD:
                 high_score_docs.append(doc)
                 found_domains.add(doc.metadata["domain"])
 
