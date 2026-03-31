@@ -57,12 +57,7 @@ public class MockDownstreams {
 			"jwt", jwt != null ? jwt : "unknown"
 		);
 
-		try {
-			return objMapper.writeValueAsString(mapJson);
-		}
-		catch (JacksonException e) {
-			throw new RuntimeException(e);
-		}
+		return objMapper.writeValueAsString(mapJson);
 	}
 
 	@Bean(destroyMethod = "dispose")
