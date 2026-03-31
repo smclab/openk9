@@ -25,10 +25,13 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Range {
 
 	private Integer end;
 	private Integer start;
 
+	public Range(Integer start, Integer end) {
+		this.start = start;
+		this.end = end;
+	}
 }
