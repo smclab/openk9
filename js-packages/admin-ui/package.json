@@ -77,7 +77,6 @@
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^7.3.1",
     "vite-plugin-compression": "^0.5.1",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }
