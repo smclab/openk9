@@ -38,7 +38,7 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
 
     .. code-block:: python
 
-        retriever = OpenSearchGuardrailDocumentsRetriever(
+        retriever = OpenSearchDomainDocumentsRetriever(
             opensearch_host="http://localhost:9200",
             grpc_host_embedding="localhost:50053",
             embedding_model_configuration={
