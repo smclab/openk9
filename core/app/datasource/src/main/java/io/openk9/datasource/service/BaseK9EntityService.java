@@ -74,16 +74,151 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	@Inject
 	protected Mutiny.SessionFactory sessionFactory;
 	@Inject
+	protected TenantRegistry tenantRegistry;
+	@Inject
 	protected Validator validator;
 	@Inject
 	Logger logger;
-	@Inject
-	protected TenantRegistry tenantRegistry;
-
 	private AtomicReference<EntityServiceValidatorWrapper<ENTITY, DTO>> validatorWrapper =
 		new AtomicReference<>();
 
-	public abstract Class<ENTITY> getEntityClass();
+	private static <T extends K9Entity>
+	Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
+		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery<Long> countQuery,
+		Mutiny.Session s) {
+
+		Uni<List<T>> resultList = (limit >= 0
+			? s.createQuery(criteriaQuery).setMaxResults(limit)
+			: s.createQuery(criteriaQuery)).getResultList();
+
+		Uni<Long> count = s.createQuery(countQuery).getSingleResult();
+
+		return count.flatMap(counted -> resultList
+			.map(results -> Tuple2.of(counted, results)));
+
+	}
+
+	private static <T> Response<T> mapResponseFromConstraintViolation(ConstraintViolationException e) {
+		var fieldValidators = e.getConstraintViolations().stream()
+			.map(constraintViolation -> FieldValidator.of(
+				constraintViolation
+					.getPropertyPath()
+					.toString(), constraintViolation.getMessage()
+			))
+			.collect(Collectors.toList());
+
+		return Response.error(fieldValidators);
+	}
+
+	protected static <T> Response<T> toResponse(T entity, Throwable throwable) {
+		if (throwable != null) {
+			return switch (throwable) {
+				case ConstraintViolationException e -> mapResponseFromConstraintViolation(e);
+				case ValidationException e -> Response.error(
+					List.of(FieldValidator.of("error", e.getMessage())));
+				default -> throw new K9EntityServiceException(throwable);
+			};
+		}
+		else {
+			return Response.success(entity);
+		}
+	}
+
+	@Override
+	public Uni<Long> count() {
+
+		return sessionFactory.withTransaction(s -> s.createQuery(
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
+			.getSingleResult());
+
+	}
+
+	@Override
+	public Uni<Long> count(String tenantId) {
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> s.createQuery(
+				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
+			.getSingleResult());
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(DTO dto) {
+
+		return create(mapper.create(dto));
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(String tenantId, DTO dto) {
+
+		return create(tenantId, mapper.create(dto));
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(ENTITY entity) {
+
+		return persist(entity)
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(String tenantId, ENTITY entity) {
+
+		return persist(tenantId, entity)
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(Mutiny.Session s, ENTITY entity) {
+
+		return persist(s, entity)
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
+
+	}
+
+	@Override
+	public Uni<ENTITY> create(Mutiny.Session s, DTO dto) {
+		var entity = mapper.create(dto);
+
+		return create(s, entity);
+	}
+
+	@Override
+	public Uni<ENTITY> deleteById(long entityId) {
+
+		return sessionFactory.withTransaction((s) -> deleteById(s, entityId));
+
+	}
+
+	@Override
+	public Uni<ENTITY> deleteById(String tenantId, long entityId) {
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> deleteById(s, entityId));
+
+	}
+
+	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
+
+		return findById(s, entityId)
+			.onItem().ifNotNull()
+			.call(entity -> remove(s, entity))
+			.invoke(e -> processor.onNext(
+				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
+			.onItem().ifNull()
+			.failWith(() -> new IllegalStateException(
+				"entity with id: " + entityId
+				+ " for service: " + getClass().getSimpleName()
+				+ " not found"
+			));
+
+	}
 
 	@Override
 	public Uni<List<ENTITY>> findAll() {
@@ -147,6 +282,40 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<Page<ENTITY>> findAllPaginated(String tenantId, Pageable pageable) {
 
 		return findAllPaginated(tenantId, pageable, Filter.DEFAULT);
+
+	}
+
+	@Override
+	public Uni<Page<ENTITY>> findAllPaginated(
+		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
+
+		return findAllPaginated(null, limit, sortBy, afterId, beforeId, filter);
+
+	}
+
+	@Override
+	public Uni<Page<ENTITY>> findAllPaginated(
+		String tenantId, int limit, String sortBy, long afterId, long beforeId, Filter filter) {
+
+		return Uni.createFrom().deferred(() -> {
+
+			CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<ENTITY> criteriaQuery =
+				builder.createQuery(getEntityClass());
+			Root<ENTITY> root = criteriaQuery.from(getEntityClass());
+
+			CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
+			var countRoot = countQuery.from(getEntityClass());
+
+			countQuery.select(builder.count(countRoot));
+
+			return _pageCriteriaQuery(
+				tenantId, limit, sortBy, afterId, beforeId,
+				filter == null ? Filter.DEFAULT : filter, builder, root,
+				criteriaQuery, countRoot, countQuery
+			);
+		});
 
 	}
 
@@ -225,47 +394,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	}
 
 	@Override
-	public Uni<Page<ENTITY>> findAllPaginated(
-		int limit, String sortBy, long afterId, long beforeId, Filter filter) {
-
-		return findAllPaginated(null, limit, sortBy, afterId, beforeId, filter);
-
-	}
-
-	@Override
-	public Uni<Page<ENTITY>> findAllPaginated(
-		String tenantId, int limit, String sortBy, long afterId, long beforeId, Filter filter) {
-
-		return Uni.createFrom().deferred(() -> {
-
-			CriteriaBuilder builder = sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<ENTITY> criteriaQuery =
-				builder.createQuery(getEntityClass());
-			Root<ENTITY> root = criteriaQuery.from(getEntityClass());
-
-			CriteriaQuery<Long> countQuery = builder.createQuery(Long.class);
-			var countRoot = countQuery.from(getEntityClass());
-
-			countQuery.select(builder.count(countRoot));
-
-			return _pageCriteriaQuery(
-				tenantId, limit, sortBy, afterId, beforeId,
-				filter == null ? Filter.DEFAULT : filter, builder, root,
-				criteriaQuery, countRoot, countQuery
-			);
-		});
-
-	}
-
-	@Override
-	public String[] getSearchFields() {
-
-		return new String[]{};
-
-	}
-
-	@Override
 	public Uni<ENTITY> findById(long id) {
 
 		return sessionFactory.withTransaction((s) -> findById(s, id));
@@ -276,6 +404,12 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 	public Uni<ENTITY> findById(String tenantId, long id) {
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> findById(s, id));
+
+	}
+
+	public Uni<ENTITY> findById(Mutiny.Session s, long id) {
+
+		return s.find(getEntityClass(), id);
 
 	}
 
@@ -301,124 +435,49 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	@Override
-	public Uni<ENTITY> patch(long id, DTO dto) {
+	public Uni<ENTITY> findByName(String tenantId, String name) {
+		return sessionFactory.withTransaction(tenantId, (s, t) -> findByName(s, name));
+	}
 
-		return sessionFactory.withTransaction((s) -> patch(s, id, dto));
+	public Uni<ENTITY> findByName(Mutiny.Session session, String name) {
+		var criteriaBuilder = sessionFactory.getCriteriaBuilder();
+		var query = criteriaBuilder.createQuery(getEntityClass());
+		var root = query.from(getEntityClass());
+		query.where(criteriaBuilder.equal(
+				criteriaBuilder.lower(root.get("name")),
+				name.toLowerCase()
+			)
+		);
 
+		return session.createQuery(query).getSingleResult();
 	}
 
 	@Override
-	public Uni<ENTITY> patch(String tenantId, long id, DTO dto) {
+	public final CriteriaBuilder getCriteriaBuilder() {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> patch(s, id, dto));
+		return sessionFactory.getCriteriaBuilder();
 
 	}
+
+	public abstract Class<ENTITY> getEntityClass();
 
 	@Override
-	public Uni<ENTITY> update(long id, DTO dto) {
+	public final SingularAttribute<K9Entity, Long> getIdAttribute() {
 
-		return sessionFactory.withTransaction((s) -> update(s, id, dto));
-
-	}
-
-	@Override
-	public Uni<ENTITY> update(String tenantId, long id, DTO dto) {
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> update(s, id, dto));
+		return K9Entity_.id;
 
 	}
 
-	@Override
-	public Uni<ENTITY> create(DTO dto) {
+	public BroadcastProcessor<K9EntityEvent<ENTITY>> getProcessor() {
 
-		return create(mapper.create(dto));
-
-	}
-
-	protected Uni<String> getCurrentTenant(Mutiny.Session session) {
-		return session.find(TenantBinding.class, 1L)
-			.map(TenantBinding::getVirtualHost)
-			.flatMap(tenantRegistry::getTenantId);
+		return (BroadcastProcessor<K9EntityEvent<ENTITY>>) processor;
 
 	}
 
 	@Override
-	public Uni<ENTITY> create(String tenantId, DTO dto) {
+	public String[] getSearchFields() {
 
-		return create(tenantId, mapper.create(dto));
-
-	}
-
-	public <T extends K9Entity> Uni<T> merge(T entity) {
-
-		return sessionFactory.withTransaction((s, t) -> merge(s, entity));
-
-	}
-
-	public <T extends K9Entity> Uni<T> merge(String tenantId, T entity) {
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> merge(s, entity));
-
-	}
-
-	public <T extends K9Entity> Uni<T> persist(T entity) {
-
-		return sessionFactory.withTransaction((s, t) -> persist(s, entity));
-
-	}
-
-	public <T extends K9Entity> Uni<T> persist(String tenantId, T entity) {
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> persist(s, entity));
-
-	}
-
-	@Override
-	public Uni<ENTITY> create(ENTITY entity) {
-
-		return persist(entity)
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
-
-	}
-
-	@Override
-	public Uni<ENTITY> create(String tenantId, ENTITY entity) {
-
-		return persist(tenantId, entity)
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
-
-	}
-
-	@Override
-	public Uni<ENTITY> create(Mutiny.Session s, ENTITY entity) {
-
-		return persist(s, entity)
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.CREATE, e)));
-
-	}
-
-	@Override
-	public Uni<ENTITY> create(Mutiny.Session s, DTO dto) {
-		var entity = mapper.create(dto);
-
-		return create(s, entity);
-	}
-
-	@Override
-	public Uni<ENTITY> deleteById(long entityId) {
-
-		return sessionFactory.withTransaction((s) -> deleteById(s, entityId));
-
-	}
-
-	@Override
-	public Uni<ENTITY> deleteById(String tenantId, long entityId) {
-
-		return sessionFactory.withTransaction(tenantId, (s, t) -> deleteById(s, entityId));
+		return new String[]{};
 
 	}
 
@@ -435,47 +494,41 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	@Override
-	public Uni<Long> count() {
+	public <T extends K9Entity> Uni<T> merge(T entity) {
 
-		return sessionFactory.withTransaction(s -> s.createQuery(
-				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
-			.getSingleResult());
+		return sessionFactory.withTransaction((s, t) -> merge(s, entity));
+
+	}
+
+	public <T extends K9Entity> Uni<T> merge(String tenantId, T entity) {
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> merge(s, entity));
 
 	}
 
 	@Override
-	public Uni<Long> count(String tenantId) {
+	public Uni<ENTITY> patch(long id, DTO dto) {
 
-		return sessionFactory.withTransaction(tenantId, (s, t) -> s.createQuery(
-				"SELECT COUNT(*) FROM " + getEntityClass().getName(), Long.class)
-			.getSingleResult());
-
-	}
-
-	public BroadcastProcessor<K9EntityEvent<ENTITY>> getProcessor() {
-
-		return (BroadcastProcessor<K9EntityEvent<ENTITY>>) processor;
+		return sessionFactory.withTransaction((s) -> patch(s, id, dto));
 
 	}
 
 	@Override
-	public final SingularAttribute<K9Entity, Long> getIdAttribute() {
+	public Uni<ENTITY> patch(String tenantId, long id, DTO dto) {
 
-		return K9Entity_.id;
-
-	}
-
-	@Override
-	public final CriteriaBuilder getCriteriaBuilder() {
-
-		return sessionFactory.getCriteriaBuilder();
+		return sessionFactory.withTransaction(tenantId, (s, t) -> patch(s, id, dto));
 
 	}
 
-	public Uni<ENTITY> findById(Mutiny.Session s, long id) {
+	public <T extends K9Entity> Uni<T> persist(T entity) {
 
-		return s.find(getEntityClass(), id);
+		return sessionFactory.withTransaction((s, t) -> persist(s, entity));
+
+	}
+
+	public <T extends K9Entity> Uni<T> persist(String tenantId, T entity) {
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> persist(s, entity));
 
 	}
 
@@ -486,37 +539,22 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 			.call(s::flush);
 	}
 
-	public Uni<ENTITY> deleteById(Mutiny.Session s, long entityId) {
+	@Override
+	public Uni<ENTITY> update(long id, DTO dto) {
 
-		return findById(s, entityId)
-			.onItem().ifNotNull()
-			.call(entity -> remove(s, entity))
-			.invoke(e -> processor.onNext(
-				K9EntityEvent.of(K9EntityEvent.EventType.DELETE, e)))
-			.onItem().ifNull()
-			.failWith(() -> new IllegalStateException(
-				"entity with id: " + entityId
-				+ " for service: " + getClass().getSimpleName()
-				+ " not found"
-			));
+		return sessionFactory.withTransaction((s) -> update(s, id, dto));
 
 	}
 
-	public Uni<ENTITY> findByName(String tenantId, String name) {
-		return sessionFactory.withTransaction(tenantId, (s, t) -> findByName(s, name));
+	@Override
+	public Uni<ENTITY> update(String tenantId, long id, DTO dto) {
+
+		return sessionFactory.withTransaction(tenantId, (s, t) -> update(s, id, dto));
+
 	}
 
-	public Uni<ENTITY> findByName(Mutiny.Session session, String name) {
-		var criteriaBuilder = sessionFactory.getCriteriaBuilder();
-		var query = criteriaBuilder.createQuery(getEntityClass());
-		var root = query.from(getEntityClass());
-		query.where(criteriaBuilder.equal(
-				criteriaBuilder.lower(root.get("name")),
-				name.toLowerCase()
-			)
-		);
-
-		return session.createQuery(query).getSingleResult();
+	public Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
+		return findThenMapAndPersist(s, id, dto, mapper::update);
 	}
 
 	public Uni<ENTITY> upsert(Mutiny.Session session, DTO dto) {
@@ -553,123 +591,6 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 		if (!entityName.equals(validationName)) {
 			throw new ValidationException("entity name is not the same");
 		}
-	}
-
-	@Override
-	protected Mutiny.SessionFactory getSessionFactory() {
-		return sessionFactory;
-	}
-
-	protected String getEntityIdField() {
-
-		return K9Entity_.ID;
-
-	}
-
-	protected Filter searchTextToFilter(String searchText) {
-
-		if (searchText == null || searchText.isEmpty()) {
-			return Filter.DEFAULT;
-		}
-
-		List<FilterField> filterFields =
-			Arrays
-				.stream(getSearchFields())
-				.map(s -> FilterField
-					.builder()
-					.fieldName(s)
-					.value(searchText)
-					.operator(FilterField.Operator.contains)
-					.build()
-				)
-				.collect(Collectors.toList());
-
-		return Filter.of(false, filterFields);
-
-	}
-
-	protected Uni<Void> remove(ENTITY entity) {
-
-		return sessionFactory.withTransaction((s, t) -> remove(s, entity));
-
-	}
-
-	protected Uni<List<ENTITY>> findAll(Mutiny.Session s) {
-
-		CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
-
-		CriteriaQuery<ENTITY> query =
-			criteriaBuilder.createQuery(getEntityClass());
-
-		query.from(getEntityClass());
-
-		return s.createQuery(query)
-			.getResultList();
-
-	}
-
-	public Uni<ENTITY> update(Mutiny.Session s, long id, DTO dto) {
-		return findThenMapAndPersist(s, id, dto, mapper::update);
-	}
-
-	protected Uni<ENTITY> findThenMapAndPersist(
-		Mutiny.Session s,
-		long id,
-		DTO dto,
-		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
-
-		return findById(s, id)
-			.onItem().ifNotNull()
-			.transformToUni(
-				(prev) -> mapAndPersist(s, prev, dto, mapperFunction))
-			.onItem().ifNull()
-			.failWith(
-				() -> new IllegalStateException(
-					"dto: " + dto.getClass().getSimpleName() + " with id: " +
-					id + " not found"));
-	}
-
-	protected Uni<ENTITY> mapAndPersist(
-		Mutiny.Session s,
-		ENTITY prev,
-		DTO dto,
-		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
-
-		return persist(s, mapperFunction.apply(prev, dto))
-			.invoke(newEntity -> processor.onNext(
-				K9EntityEvent.of(
-					K9EntityEvent.EventType.UPDATE, newEntity, prev)));
-	}
-
-	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
-		return findThenMapAndPersist(s, id, dto, mapper::patch);
-	}
-
-	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
-
-		return s.merge(entity)
-			.call(s::flush);
-	}
-
-	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
-
-		return s.remove(entity);
-	}
-
-	private static <T extends K9Entity>
-	Uni<io.smallrye.mutiny.tuples.Tuple2<Long, List<T>>> _executePagedQuery(
-		int limit, CriteriaQuery<T> criteriaQuery, CriteriaQuery<Long> countQuery,
-		Mutiny.Session s) {
-
-		Uni<List<T>> resultList = (limit >= 0
-			? s.createQuery(criteriaQuery).setMaxResults(limit)
-			: s.createQuery(criteriaQuery)).getResultList();
-
-		Uni<Long> count = s.createQuery(countQuery).getSingleResult();
-
-		return count.flatMap(counted -> resultList
-			.map(results -> Tuple2.of(counted, results)));
-
 	}
 
 	private <T extends K9Entity> Uni<Page<T>> _pageCriteriaQuery(
@@ -786,30 +707,108 @@ public abstract class BaseK9EntityService<ENTITY extends K9Entity, DTO extends K
 
 	}
 
-	protected static <T> Response<T> toResponse(T entity, Throwable throwable) {
-		if (throwable != null) {
-			return switch (throwable) {
-				case ConstraintViolationException e -> mapResponseFromConstraintViolation(e);
-				case ValidationException e -> Response.error(
-					List.of(FieldValidator.of("error", e.getMessage())));
-				default -> throw new K9EntityServiceException(throwable);
-			};
-		}
-		else {
-			return Response.success(entity);
-		}
+	protected Uni<List<ENTITY>> findAll(Mutiny.Session s) {
+
+		CriteriaBuilder criteriaBuilder = sessionFactory.getCriteriaBuilder();
+
+		CriteriaQuery<ENTITY> query =
+			criteriaBuilder.createQuery(getEntityClass());
+
+		query.from(getEntityClass());
+
+		return s.createQuery(query)
+			.getResultList();
+
 	}
 
-	private static <T> Response<T> mapResponseFromConstraintViolation(ConstraintViolationException e) {
-		var fieldValidators = e.getConstraintViolations().stream()
-			.map(constraintViolation -> FieldValidator.of(
-				constraintViolation
-					.getPropertyPath()
-					.toString(), constraintViolation.getMessage()
-			))
-			.collect(Collectors.toList());
+	protected Uni<ENTITY> findThenMapAndPersist(
+		Mutiny.Session s,
+		long id,
+		DTO dto,
+		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
 
-		return Response.error(fieldValidators);
+		return findById(s, id)
+			.onItem().ifNotNull()
+			.transformToUni(
+				(prev) -> mapAndPersist(s, prev, dto, mapperFunction))
+			.onItem().ifNull()
+			.failWith(
+				() -> new IllegalStateException(
+					"dto: " + dto.getClass().getSimpleName() + " with id: " +
+					id + " not found"));
+	}
+
+	protected Uni<String> getCurrentTenant(Mutiny.Session session) {
+		return session.find(TenantBinding.class, 1L)
+			.map(TenantBinding::getVirtualHost)
+			.flatMap(tenantRegistry::getTenantId);
+
+	}
+
+	protected String getEntityIdField() {
+
+		return K9Entity_.ID;
+
+	}
+
+	@Override
+	protected Mutiny.SessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+
+	protected Uni<ENTITY> mapAndPersist(
+		Mutiny.Session s,
+		ENTITY prev,
+		DTO dto,
+		BiFunction<ENTITY, DTO, ENTITY> mapperFunction) {
+
+		return persist(s, mapperFunction.apply(prev, dto))
+			.invoke(newEntity -> processor.onNext(
+				K9EntityEvent.of(
+					K9EntityEvent.EventType.UPDATE, newEntity, prev)));
+	}
+
+	protected <T extends K9Entity> Uni<T> merge(Mutiny.Session s, T entity) {
+
+		return s.merge(entity)
+			.call(s::flush);
+	}
+
+	protected Uni<ENTITY> patch(Mutiny.Session s, long id, DTO dto) {
+		return findThenMapAndPersist(s, id, dto, mapper::patch);
+	}
+
+	protected Uni<Void> remove(ENTITY entity) {
+
+		return sessionFactory.withTransaction((s, t) -> remove(s, entity));
+
+	}
+
+	protected Uni<Void> remove(Mutiny.Session s, ENTITY entity) {
+
+		return s.remove(entity);
+	}
+
+	protected Filter searchTextToFilter(String searchText) {
+
+		if (searchText == null || searchText.isEmpty()) {
+			return Filter.DEFAULT;
+		}
+
+		List<FilterField> filterFields =
+			Arrays
+				.stream(getSearchFields())
+				.map(s -> FilterField
+					.builder()
+					.fieldName(s)
+					.value(searchText)
+					.operator(FilterField.Operator.contains)
+					.build()
+				)
+				.collect(Collectors.toList());
+
+		return Filter.of(false, filterFields);
+
 	}
 
 }

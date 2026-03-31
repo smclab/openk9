@@ -64,12 +64,33 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
+	@Inject
+	DocTypeFieldMapper docTypeFieldMapper;
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+	@Inject
+	DocTypeTemplateService docTypeTemplateService;
+
 	DocTypeService(DocTypeMapper mapper) {
 		this.mapper = mapper;
 	}
-	@Override
-	public String[] getSearchFields() {
-		return new String[] {DocType_.NAME, DocType_.DESCRIPTION};
+
+	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
+
+		return sessionFactory.withTransaction((s) -> findById(s, id)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+
+				DocTypeField docTypeField =
+					docTypeFieldService.createTransient(s, docTypeFieldDTO);
+
+				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
+					return persist(s, docType)
+						.map(dt -> Tuple2.of(dt, docTypeField));
+				}
+				return Uni.createFrom().nullItem();
+			})));
 	}
 
 	@Override
@@ -84,7 +105,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 
 		return super.create(session, entity);
 	}
-
 
 	/**
 	 * Deletes a DocType entity by its ID after verifying the provided name matches the entity's name.
@@ -237,31 +257,49 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		);
 	}
 
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
-		Long id, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+	public Uni<Boolean> existsByName(String name) {
+		return sessionFactory.withTransaction(s -> {
 
-		return findJoinConnection(
-			id, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
-			docTypeFieldService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual);
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			Class<DocType> entityClass = getEntityClass();
+
+			CriteriaQuery<Long> query = cb.createQuery(Long.class);
+
+			Root<DocType> from = query.from(entityClass);
+
+			query.select(cb.count(from));
+
+			query.where(cb.equal(from.get(DocType_.name), name));
+
+			return s
+				.createQuery(query)
+				.getSingleResult()
+				.map(count -> count > 0);
+
+		});
 	}
 
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnectionByParent(
-		long docTypeId, long parentId, String after, String before, Integer first, Integer last,
-		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+	public Uni<DocType> findByName(String name) {
+		return sessionFactory.withTransaction((s) -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
+			Root<DocType> root = cq.from(DocType.class);
+			cq.where(cb.equal(root.get(DocType_.name), name));
+			return s.createQuery(cq)
+				.setFlushMode(FlushMode.MANUAL)
+				.getSingleResultOrNull();
+		});
+	}
 
-		return findJoinConnection(
-			docTypeId, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
-			docTypeFieldService.getSearchFields(), after, before, first, last,
-			searchText, sortByList, notEqual,
-			(criteriaBuilder, join) -> {
-				Path<DocTypeField> parentField = join.get(DocTypeField_.parentDocTypeField);
+	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds, Mutiny.Session session) {
 
-				return parentId > 0
-					? criteriaBuilder.equal(parentField.get(DocTypeField_.id), parentId)
-					: criteriaBuilder.isNull(parentField);
-			});
+		return getDocTypesAndDocTypeFields(session, docTypeIds).map(LinkedList::new);
+	}
+
+	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
+
+		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
@@ -295,22 +333,123 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		return sessionFactory.withTransaction(s -> s.fetch(docType.getDocTypeFields()));
 	}
 
-	public Uni<Tuple2<DocType, DocTypeField>> addDocTypeField(long id, DocTypeFieldDTO docTypeFieldDTO) {
+	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
+		return sessionFactory.withTransaction((s) -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
+			Root<DocType> root = cq.from(DocType.class);
+			cq.select(root.join(DocType_.docTypeFields));
+			cq.where(cb.equal(root.get(DocType_.name), docTypeName));
+			return s.createQuery(cq).getResultList();
+		});
+	}
 
-		return sessionFactory.withTransaction((s) -> findById(s, id)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(docType -> s.fetch(docType.getDocTypeFields()).flatMap(docTypeFields -> {
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(
+		Long id, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
 
-				DocTypeField docTypeField =
-					docTypeFieldService.createTransient(s, docTypeFieldDTO);
+		return findJoinConnection(
+			id, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual);
+	}
 
-				if (docType.addDocTypeField(docTypeFields, docTypeField)) {
-					return persist(s, docType)
-						.map(dt -> Tuple2.of(dt, docTypeField));
-				}
-				return Uni.createFrom().nullItem();
-			})));
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnectionByParent(
+		long docTypeId, long parentId, String after, String before, Integer first, Integer last,
+		String searchText, Set<SortBy> sortByList, boolean notEqual) {
+
+		return findJoinConnection(
+			docTypeId, DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
+			docTypeFieldService.getSearchFields(), after, before, first, last,
+			searchText, sortByList, notEqual,
+			(criteriaBuilder, join) -> {
+				Path<DocTypeField> parentField = join.get(DocTypeField_.parentDocTypeField);
+
+				return parentId > 0
+					? criteriaBuilder.equal(parentField.get(DocTypeField_.id), parentId)
+					: criteriaBuilder.isNull(parentField);
+			});
+	}
+
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(
+		Mutiny.Session session, Collection<Long> ids) {
+		return findByIds(session, Set.copyOf(ids))
+			.chain(dts -> docTypeFieldService.expandDocTypes(
+				session, dts));
+	}
+
+	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
+		Mutiny.Session session, Collection<String> docTypeNames) {
+
+		return getDocTypesInDocTypeNames(
+			session, docTypeNames.toArray(String[]::new))
+			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
+	}
+
+	public Uni<List<DocType>> getDocTypesInDocTypeNames(
+		Mutiny.Session session, String[] docTypeNames) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+		Class<DocType> entityClass = getEntityClass();
+
+		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
+
+		Root<DocType> from = query.from(entityClass);
+
+		query.where(from.get(DocType_.name).in(List.of(docTypeNames)));
+
+		return session
+			.createQuery(query)
+			.getResultList();
+	}
+
+	public Uni<List<DocType>> getDocTypesNotInDocTypeNames(
+		Mutiny.Session session, String[] docTypeNames) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+		Class<DocType> entityClass = getEntityClass();
+
+		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
+
+		Root<DocType> from = query.from(entityClass);
+
+		query.where(
+			from.get(DocType_.name)
+				.in(List.of(docTypeNames))
+				.not()
+		);
+
+		return session
+			.createQuery(query)
+			.getResultList();
+	}
+
+	@Override
+	public Class<DocType> getEntityClass() {
+		return DocType.class;
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[] {DocType_.NAME, DocType_.DESCRIPTION};
+	}
+
+	@Override
+	public Uni<DocType> patch(long id, DocTypeDTO dto) {
+
+		return sessionFactory.withTransaction(
+			(session, transaction) -> patch(session, id, dto));
+	}
+
+	@Override
+	public Uni<DocType> patch(Mutiny.Session session, long id, DocTypeDTO dto) {
+
+		return findThenMapAndPersist(
+			session,
+			id,
+			dto,
+			(docType, docTypeDTO) -> patchMapper(session, docType, docTypeDTO)
+		);
 	}
 
 	public Uni<Tuple2<DocType, Long>> removeDocTypeField(long id, long docTypeFieldId) {
@@ -353,134 +492,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 				docType.setDocTypeTemplate(null);
 				return persist(s, docType);
 			})
-		);
-	}
-
-	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
-		return sessionFactory.withTransaction((s) -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
-			Root<DocType> root = cq.from(DocType.class);
-			cq.select(root.join(DocType_.docTypeFields));
-			cq.where(cb.equal(root.get(DocType_.name), docTypeName));
-			return s.createQuery(cq).getResultList();
-		});
-	}
-
-	public Uni<DocType> findByName(String name) {
-		return sessionFactory.withTransaction((s) -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-			CriteriaQuery<DocType> cq = cb.createQuery(DocType.class);
-			Root<DocType> root = cq.from(DocType.class);
-			cq.where(cb.equal(root.get(DocType_.name), name));
-			return s.createQuery(cq)
-				.setFlushMode(FlushMode.MANUAL)
-				.getSingleResultOrNull();
-		});
-	}
-
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFieldsByNames(
-		Mutiny.Session session, Collection<String> docTypeNames) {
-
-		return getDocTypesInDocTypeNames(
-			session, docTypeNames.toArray(String[]::new))
-			.chain(dts -> docTypeFieldService.expandDocTypes(session, dts));
-	}
-
-	public Uni<List<DocType>> getDocTypesInDocTypeNames(
-		Mutiny.Session session, String[] docTypeNames) {
-		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-		Class<DocType> entityClass = getEntityClass();
-
-		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
-
-		Root<DocType> from = query.from(entityClass);
-
-		query.where(from.get(DocType_.name).in(List.of(docTypeNames)));
-
-		return session
-			.createQuery(query)
-			.getResultList();
-	}
-
-	public Uni<Boolean> existsByName(String name) {
-		return sessionFactory.withTransaction(s -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			Class<DocType> entityClass = getEntityClass();
-
-			CriteriaQuery<Long> query = cb.createQuery(Long.class);
-
-			Root<DocType> from = query.from(entityClass);
-
-			query.select(cb.count(from));
-
-			query.where(cb.equal(from.get(DocType_.name), name));
-
-			return s
-				.createQuery(query)
-				.getSingleResult()
-				.map(count -> count > 0);
-
-		});
-	}
-
-	public Uni<Collection<DocType>> getDocTypesAndDocTypeFields(
-		Mutiny.Session session, Collection<Long> ids) {
-		return findByIds(session, Set.copyOf(ids))
-			.chain(dts -> docTypeFieldService.expandDocTypes(
-				session, dts));
-	}
-
-	public Uni<List<DocType>> getDocTypesNotInDocTypeNames(
-		Mutiny.Session session, String[] docTypeNames) {
-		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-		Class<DocType> entityClass = getEntityClass();
-
-		CriteriaQuery<DocType> query = cb.createQuery(entityClass);
-
-		Root<DocType> from = query.from(entityClass);
-
-		query.where(
-			from.get(DocType_.name)
-				.in(List.of(docTypeNames))
-				.not()
-		);
-
-		return session
-			.createQuery(query)
-			.getResultList();
-	}
-
-	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds, Mutiny.Session session) {
-
-		return getDocTypesAndDocTypeFields(session, docTypeIds).map(LinkedList::new);
-	}
-
-
-	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
-
-		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
-	}
-
-	@Override
-	public Uni<DocType> patch(long id, DocTypeDTO dto) {
-
-		return sessionFactory.withTransaction(
-			(session, transaction) -> patch(session, id, dto));
-	}
-
-	@Override
-	public Uni<DocType> patch(Mutiny.Session session, long id, DocTypeDTO dto) {
-
-		return findThenMapAndPersist(
-			session,
-			id,
-			dto,
-			(docType, docTypeDTO) -> patchMapper(session, docType, docTypeDTO)
 		);
 	}
 
@@ -564,20 +575,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		}
 
 		return docType;
-	}
-
-	@Inject
-	DocTypeFieldService docTypeFieldService;
-
-	@Inject
-	DocTypeTemplateService docTypeTemplateService;
-
-	@Inject
-	DocTypeFieldMapper docTypeFieldMapper;
-
-	@Override
-	public Class<DocType> getEntityClass() {
-		return DocType.class;
 	}
 
 }

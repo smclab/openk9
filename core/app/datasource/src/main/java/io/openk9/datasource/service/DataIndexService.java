@@ -548,6 +548,20 @@ public class DataIndexService
 		throw new UnsupportedOperationException("update not supported for DataIndex");
 	}
 
+	private void checkKnnIndex(DataIndexDTO dataIndexDTO)
+		throws ValidationException {
+
+		var knnIndex = dataIndexDTO.getKnnIndex();
+		var embeddingDocTypeFieldId = dataIndexDTO.getEmbeddingDocTypeFieldId();
+
+		if (knnIndex != null && knnIndex && embeddingDocTypeFieldId == null) {
+			throw new ValidationException(
+				"Ambiguous Request: knnIndex is set to true but embeddingDocTypeFieldId is not defined." +
+					" Add an embeddingDocTypeFieldId or disable knnIndex");
+		}
+
+	}
+
 	private Uni<DataIndex> createDataIndexTransient(
 		Mutiny.Session session, long datasourceId, DataIndexDTO dto) {
 
@@ -591,20 +605,6 @@ public class DataIndexService
 		// a dataIndex cannot be updated
 
 		throw new UnsupportedOperationException("patch not supported for DataIndex");
-	}
-
-	private void checkKnnIndex(DataIndexDTO dataIndexDTO)
-		throws ValidationException {
-
-		var knnIndex = dataIndexDTO.getKnnIndex();
-		var embeddingDocTypeFieldId = dataIndexDTO.getEmbeddingDocTypeFieldId();
-
-		if (knnIndex != null && knnIndex && embeddingDocTypeFieldId == null) {
-			throw new ValidationException(
-				"Ambiguous Request: knnIndex is set to true but embeddingDocTypeFieldId is not defined." +
-					" Add an embeddingDocTypeFieldId or disable knnIndex");
-		}
-
 	}
 
 }

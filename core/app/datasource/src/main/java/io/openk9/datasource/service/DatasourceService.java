@@ -66,11 +66,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 	@Inject
 	EnrichPipelineService enrichPipelineService;
 	@Inject
+	EventBus eventBus;
+	@Inject
 	PluginDriverService pluginDriverService;
 	@Inject
 	SchedulerService schedulerService;
-	@Inject
-	EventBus eventBus;
 
 	DatasourceService(DatasourceMapper mapper) {
 		this.mapper = mapper;
@@ -101,6 +101,72 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 					)
 				)
 			);
+	}
+
+	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
+		DatasourceDTO datasourceDTO, long pluginDriverId) {
+
+		return sessionFactory.withTransaction(s -> pluginDriverService
+			.findById(s, pluginDriverId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(pluginDriver -> {
+				Datasource dataSource = mapper.create(datasourceDTO);
+				dataSource.setPluginDriver(pluginDriver);
+				return create(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
+			}));
+
+	}
+
+	public Uni<Response<Datasource>> createDatasourceConnection(
+		CreateDatasourceDTO datasourceConnection) {
+
+		return Uni.createFrom().item(() -> {
+				checkExclusiveFields(datasourceConnection);
+
+				var constraintViolations = validator.validate(datasourceConnection);
+
+				if (!constraintViolations.isEmpty()) {
+					throw new ConstraintViolationException(constraintViolations);
+				}
+
+				return datasourceConnection;
+			})
+			.flatMap(createDatasourceDTO -> sessionFactory
+				.withTransaction((session, transaction) ->
+					getOrCreateEnrichPipeline(
+						session,
+						datasourceConnection
+					).flatMap(enrichPipeline -> {
+						var datasource = mapper.create(datasourceConnection);
+
+						var pluginDriverId = datasourceConnection.getPluginDriverId();
+						var pluginDriver = session.getReference(PluginDriver.class, pluginDriverId);
+
+						datasource.setPluginDriver(pluginDriver);
+						datasource.setEnrichPipeline(enrichPipeline);
+
+						return create(session, datasource);
+					}).flatMap(datasource -> {
+
+						var datasourceId = datasource.getId();
+						var dataIndexDTO = createDatasourceDTO.getDataIndex();
+
+						return dataIndexService.create(session, datasourceId, dataIndexDTO)
+							.invoke(datasource::setDataIndex)
+							.flatMap(ignored -> create(session, datasource));
+						}
+					)
+
+				))
+			.onFailure()
+			.invoke(throwable -> log.errorf(
+				throwable, "datasourceConnection %s cannot be created.", datasourceConnection)
+			)
+			.onItemOrFailure()
+			.transform(BaseK9EntityService::toResponse)
+			.onFailure()
+			.transform(K9Error::new);
 	}
 
 	@Override
@@ -185,82 +251,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 
 	}
 
-	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
-	}
-
-	public Uni<Tuple2<Datasource, PluginDriver>> createDatasourceAndAddPluginDriver(
-		DatasourceDTO datasourceDTO, long pluginDriverId) {
-
-		return sessionFactory.withTransaction(s -> pluginDriverService
-			.findById(s, pluginDriverId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(pluginDriver -> {
-				Datasource dataSource = mapper.create(datasourceDTO);
-				dataSource.setPluginDriver(pluginDriver);
-				return create(s, dataSource).map(d -> Tuple2.of(d, pluginDriver));
-			}));
-
-	}
-
-	public Uni<Response<Datasource>> createDatasourceConnection(
-		CreateDatasourceDTO datasourceConnection) {
-
-		return Uni.createFrom().item(() -> {
-				checkExclusiveFields(datasourceConnection);
-
-				var constraintViolations = validator.validate(datasourceConnection);
-
-				if (!constraintViolations.isEmpty()) {
-					throw new ConstraintViolationException(constraintViolations);
-				}
-
-				return datasourceConnection;
-			})
-			.flatMap(createDatasourceDTO -> sessionFactory
-				.withTransaction((session, transaction) ->
-					getOrCreateEnrichPipeline(
-						session,
-						datasourceConnection
-					).flatMap(enrichPipeline -> {
-						var datasource = mapper.create(datasourceConnection);
-
-						var pluginDriverId = datasourceConnection.getPluginDriverId();
-						var pluginDriver = session.getReference(PluginDriver.class, pluginDriverId);
-
-						datasource.setPluginDriver(pluginDriver);
-						datasource.setEnrichPipeline(enrichPipeline);
-
-						return create(session, datasource);
-					}).flatMap(datasource -> {
-
-						var datasourceId = datasource.getId();
-						var dataIndexDTO = createDatasourceDTO.getDataIndex();
-
-						return dataIndexService.create(session, datasourceId, dataIndexDTO)
-							.invoke(datasource::setDataIndex)
-							.flatMap(ignored -> create(session, datasource));
-						}
-					)
-
-				))
-			.onFailure()
-			.invoke(throwable -> log.errorf(
-				throwable, "datasourceConnection %s cannot be created.", datasourceConnection)
-			)
-			.onItemOrFailure()
-			.transform(BaseK9EntityService::toResponse)
-			.onFailure()
-			.transform(K9Error::new);
-	}
-
-	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getPluginDriver())));
-	}
-
 	public Uni<Datasource> deleteById(long datasourceId, String datasourceName) {
 
 		return findById(datasourceId)
@@ -285,11 +275,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			.getSingleResult();
 	}
 
-	@Override
-	public Class<Datasource> getEntityClass() {
-		return Datasource.class;
-	}
-
 	public Uni<DataIndex> getDataIndex(Datasource datasource) {
 		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndex()));
 	}
@@ -299,22 +284,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			s,
 			datasourceId
 		).flatMap(datasource -> s.fetch(datasource.getDataIndex())));
-	}
-
-	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))
-			.map(ArrayList::new));
-	}
-
-	public Uni<List<DataIndex>> getDataIndexOrphans(long datasourceId) {
-		return sessionFactory.withTransaction((s) -> s.createQuery(
-			"select di "
-			+ "from DataIndex di "
-			+ "inner join di.datasource d on di.datasource = d and d.dataIndex <> di "
-			+ "where d.id = :id",
-			DataIndex.class
-		).setParameter("id", datasourceId).getResultList());
 	}
 
 	public Uni<Connection<DataIndex>> getDataIndexConnection(
@@ -342,42 +311,43 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		);
 	}
 
-	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
-		return sessionFactory.withTransaction(s -> s.fetch(datasource.getEnrichPipeline()));
+	public Uni<List<DataIndex>> getDataIndexOrphans(long datasourceId) {
+		return sessionFactory.withTransaction((s) -> s.createQuery(
+			"select di "
+			+ "from DataIndex di "
+			+ "inner join di.datasource d on di.datasource = d and d.dataIndex <> di "
+			+ "where d.id = :id",
+			DataIndex.class
+		).setParameter("id", datasourceId).getResultList());
 	}
 
-	@Override
-	public Uni<Datasource> update(
-		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
-
-		return getCurrentTenant(s)
-			.flatMap(tenantId -> super.update(s, datasourceId, datasourceDTO)
-				.invoke(datasource -> eventBus.send(
-						SchedulerInitializer.UPDATE_SCHEDULER,
-						new SchedulerInitializer.SchedulerRequest(
-							tenantId, datasource)
-					)
-				)
-			);
+	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))
+			.map(ArrayList::new));
 	}
 
 	public Uni<Set<DataIndex>> getDataIndexes(Datasource datasource) {
 		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndexes()));
 	}
 
-	@Override
-	protected Uni<Datasource> patch(
-		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
+	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
+	}
 
-		return getCurrentTenant(s)
-			.flatMap(tenantId -> super.patch(s, datasourceId, datasourceDTO)
-				.invoke(datasource -> eventBus.send(
-						SchedulerInitializer.UPDATE_SCHEDULER,
-						new SchedulerInitializer.SchedulerRequest(
-							tenantId, datasource)
-					)
-				)
-			);
+	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
+		return sessionFactory.withTransaction(s -> s.fetch(datasource.getEnrichPipeline()));
+	}
+
+	@Override
+	public Class<Datasource> getEntityClass() {
+		return Datasource.class;
+	}
+
+	public Uni<PluginDriver> getPluginDriver(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.flatMap(datasource -> s.fetch(datasource.getPluginDriver())));
 	}
 
 	public Uni<Connection<Scheduler>> getSchedulerConnection(
@@ -403,6 +373,11 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			sortByList,
 			notEqual
 		);
+	}
+
+	@Override
+	public String[] getSearchFields() {
+		return new String[]{Datasource_.NAME, Datasource_.DESCRIPTION};
 	}
 
 	public Uni<Tuple2<Datasource, DataIndex>> setDataIndex(
@@ -456,9 +431,14 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				})));
 	}
 
-	@Override
-	public String[] getSearchFields() {
-		return new String[]{Datasource_.NAME, Datasource_.DESCRIPTION};
+	public Uni<Datasource> unsetDataIndex(long datasourceId) {
+		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(datasource -> {
+				datasource.setDataIndex(null);
+				return persist(s, datasource);
+			}));
 	}
 
 	public Uni<Datasource> unsetEnrichPipeline(long datasourceId) {
@@ -471,16 +451,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 			}));
 	}
 
-	public Uni<Datasource> unsetDataIndex(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(datasource -> {
-				datasource.setDataIndex(null);
-				return persist(s, datasource);
-			}));
-	}
-
 	public Uni<Datasource> unsetPluginDriver(long datasourceId) {
 		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.onItem()
@@ -489,6 +459,21 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 				datasource.setPluginDriver(null);
 				return persist(s, datasource);
 			}));
+	}
+
+	@Override
+	public Uni<Datasource> update(
+		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
+
+		return getCurrentTenant(s)
+			.flatMap(tenantId -> super.update(s, datasourceId, datasourceDTO)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenantId, datasource)
+					)
+				)
+			);
 	}
 
 	public Uni<Response<Datasource>> updateDatasourceConnection(
@@ -642,6 +627,21 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		else {
 			return Uni.createFrom().nullItem();
 		}
+	}
+
+	@Override
+	protected Uni<Datasource> patch(
+		Mutiny.Session s, long datasourceId, DatasourceDTO datasourceDTO) {
+
+		return getCurrentTenant(s)
+			.flatMap(tenantId -> super.patch(s, datasourceId, datasourceDTO)
+				.invoke(datasource -> eventBus.send(
+						SchedulerInitializer.UPDATE_SCHEDULER,
+						new SchedulerInitializer.SchedulerRequest(
+							tenantId, datasource)
+					)
+				)
+			);
 	}
 
 	private Uni<EnrichPipeline> updateOrCreateEnrichPipeline(

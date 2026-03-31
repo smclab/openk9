@@ -57,65 +57,32 @@ import org.hibernate.reactive.mutiny.Mutiny;
 @CircuitBreaker
 public class DocTypeGraphqlResource {
 
-	@Query
-	public Uni<Connection<DocType>> getDocTypes(
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before, 
-		@Description("fetching only the first certain number of nodes") Integer first, 
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList) {
-		return docTypeService.findConnection(
-			after, before, first, last, searchText, sortByList);
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+	@Inject
+	DocTypeService docTypeService;
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	@Mutation
+	public Uni<Tuple2<DocType, DocTypeTemplate>> bindDocTypeToDocTypeTemplate(
+		@Id @Name("docTypeId") long docTypeId,
+		@Id @Name("docTypeTemplateId") long docTypeTemplateId) {
+		return docTypeService.setDocTypeTemplate(docTypeId, docTypeTemplateId);
 	}
 
-	public Uni<Connection<DocTypeField>> docTypeFields(
-		@Source DocType docType,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-		return getDocTypeFieldsFromDocType(
-			docType.getId(), after, before, first, last, searchText, sortByList,
-			notEqual);
+	public Uni<Response<DocType>> createDocType(DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().create(docTypeDTO);
 	}
 
-	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsFromDocType(
-		@Id long docTypeId,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-		return docTypeService.getDocTypeFieldsConnection(
-			docTypeId, after, before, first, last, searchText, sortByList, notEqual);
-	}
-
-	@Query
-	public Uni<Connection<DocTypeField>> getDocTypeFieldsFromDocTypeByParent(
-		@Id long docTypeId,
-		@Description("id of the parent docTypeField (0 if root )") long parentId,
-		@Description("fetching only nodes after this node (exclusive)") String after,
-		@Description("fetching only nodes before this node (exclusive)") String before,
-		@Description("fetching only the first certain number of nodes") Integer first,
-		@Description("fetching only the last certain number of nodes") Integer last,
-		String searchText, Set<SortBy> sortByList,
-		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
-		return docTypeService.getDocTypeFieldsConnectionByParent(
-			docTypeId, parentId, after, before, first, last, searchText, sortByList, notEqual);
-	}
-
-	@Query
-	public Uni<DocType> getDocType(@Id long id) {
-		return docTypeService.findById(id);
-	}
-
-	@Query
-	public Uni<DocTypeField> getDocTypeField(@Id long id) {
-		return docTypeFieldService.findById(id);
+	@Mutation
+	@Description("""
+		Deletes a DocType entity by its ID after validating the provided name matches the entity.
+		Requires both the docTypeId and docTypeName (as a confirmation mechanism) to prevent
+		accidental deletions.
+		""")
+	public Uni<DocType> deleteDocType(@Id long docTypeId, String docTypeName) {
+		return docTypeService.deleteById(docTypeId, docTypeName);
 	}
 
 	public Uni<DocType> docType(@Source DocTypeField docTypeField) {
@@ -123,25 +90,6 @@ public class DocTypeGraphqlResource {
 			.merge(docTypeField)
 			.flatMap(merged -> s.fetch(merged.getDocType()))
 		);
-	}
-
-	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
-		return sessionFactory.withTransaction(s -> s
-			.merge(docType)
-			.flatMap(merged -> s.fetch(merged.getDocTypeTemplate()))
-		);
-	}
-
-	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {
-		return docTypeService.getValidator().patch(id, docTypeDTO);
-	}
-
-	public Uni<Response<DocType>> updateDocType(@Id long id, DocTypeDTO docTypeDTO) {
-		return docTypeService.getValidator().update(id, docTypeDTO);
-	}
-
-	public Uni<Response<DocType>> createDocType(DocTypeDTO docTypeDTO) {
-		return docTypeService.getValidator().create(docTypeDTO);
 	}
 
 	@Mutation
@@ -159,47 +107,20 @@ public class DocTypeGraphqlResource {
 
 	}
 
-	@Mutation
-	public Uni<Response<DocType>> docTypeWithTemplate(
-		@Id Long id, DocTypeWithTemplateDTO docTypeWithTemplateDTO,
-		@DefaultValue("false") boolean patch) {
-
-		if (id == null) {
-			return createDocType(docTypeWithTemplateDTO);
-		}
-		else {
-			return patch
-				? patchDocType(id, docTypeWithTemplateDTO)
-				: updateDocType(id, docTypeWithTemplateDTO);
-		}
-
+	@Subscription
+	public Multi<DocType> docTypeCreated() {
+		return docTypeService
+			.getProcessor()
+			.filter(K9EntityEvent::isCreate)
+			.map(K9EntityEvent::getEntity);
 	}
 
-	@Mutation
-	@Description("""
-		Deletes a DocType entity by its ID after validating the provided name matches the entity.
-		Requires both the docTypeId and docTypeName (as a confirmation mechanism) to prevent
-		accidental deletions.
-		""")
-	public Uni<DocType> deleteDocType(@Id long docTypeId, String docTypeName) {
-		return docTypeService.deleteById(docTypeId, docTypeName);
-	}
-
-	@Mutation
-	@Description("""
-		Creates or updates a DocTypeField entity with an associated Analyzer.
-		If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
-		Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
-		Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
-		when updating or patching an existing DocTypeField.
-		""")
-	public Uni<Response<DocTypeField>> docTypeFieldWithAnalyzer(
-		@Id long docTypeId, @Id Long docTypeFieldId,
-		DocTypeFieldWithAnalyzerDTO docTypeFieldWithAnalyzerDTO,
-		@DefaultValue("false") boolean patch, String docTypeFieldName) {
-
-		return docTypeField(
-			docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch, docTypeFieldName);
+	@Subscription
+	public Multi<DocType> docTypeDeleted() {
+		return docTypeService
+			.getProcessor()
+			.filter(K9EntityEvent::isDelete)
+			.map(K9EntityEvent::getEntity);
 	}
 
 	@Mutation
@@ -243,38 +164,40 @@ public class DocTypeGraphqlResource {
 	}
 
 	@Mutation
-	public Uni<Tuple2<DocType, Long>> removeDocTypeField(
-		@Id long docTypeId, @Id long docTypeFieldId) {
-		return docTypeService.removeDocTypeField(docTypeId, docTypeFieldId);
+	@Description("""
+		Creates or updates a DocTypeField entity with an associated Analyzer.
+		If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
+		Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+		Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+		when updating or patching an existing DocTypeField.
+		""")
+	public Uni<Response<DocTypeField>> docTypeFieldWithAnalyzer(
+		@Id long docTypeId, @Id Long docTypeFieldId,
+		DocTypeFieldWithAnalyzerDTO docTypeFieldWithAnalyzerDTO,
+		@DefaultValue("false") boolean patch, String docTypeFieldName) {
+
+		return docTypeField(
+			docTypeId, docTypeFieldId, docTypeFieldWithAnalyzerDTO, patch, docTypeFieldName);
 	}
 
-	@Mutation
-	public Uni<Tuple2<DocType, DocTypeTemplate>> bindDocTypeToDocTypeTemplate(
-		@Id @Name("docTypeId") long docTypeId,
-		@Id @Name("docTypeTemplateId") long docTypeTemplateId) {
-		return docTypeService.setDocTypeTemplate(docTypeId, docTypeTemplateId);
+	public Uni<Connection<DocTypeField>> docTypeFields(
+		@Source DocType docType,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+		return getDocTypeFieldsFromDocType(
+			docType.getId(), after, before, first, last, searchText, sortByList,
+			notEqual);
 	}
 
-	@Mutation
-	public Uni<DocType> unbindDocTypeTemplateFromDocType(
-		@Id @Name("docTypeId") long docTypeId) {
-		return docTypeService.unsetDocType(docTypeId);
-	}
-
-	@Subscription
-	public Multi<DocType> docTypeCreated() {
-		return docTypeService
-			.getProcessor()
-			.filter(K9EntityEvent::isCreate)
-			.map(K9EntityEvent::getEntity);
-	}
-
-	@Subscription
-	public Multi<DocType> docTypeDeleted() {
-		return docTypeService
-			.getProcessor()
-			.filter(K9EntityEvent::isDelete)
-			.map(K9EntityEvent::getEntity);
+	public Uni<DocTypeTemplate> docTypeTemplate(@Source DocType docType) {
+		return sessionFactory.withTransaction(s -> s
+			.merge(docType)
+			.flatMap(merged -> s.fetch(merged.getDocTypeTemplate()))
+		);
 	}
 
 	@Subscription
@@ -285,13 +208,88 @@ public class DocTypeGraphqlResource {
 			.map(K9EntityEvent::getEntity);
 	}
 
-	@Inject
-	DocTypeService docTypeService;
+	@Mutation
+	public Uni<Response<DocType>> docTypeWithTemplate(
+		@Id Long id, DocTypeWithTemplateDTO docTypeWithTemplateDTO,
+		@DefaultValue("false") boolean patch) {
 
-	@Inject
-	Mutiny.SessionFactory sessionFactory;
+		if (id == null) {
+			return createDocType(docTypeWithTemplateDTO);
+		}
+		else {
+			return patch
+				? patchDocType(id, docTypeWithTemplateDTO)
+				: updateDocType(id, docTypeWithTemplateDTO);
+		}
 
-	@Inject
-	DocTypeFieldService docTypeFieldService;
+	}
+
+	@Query
+	public Uni<DocType> getDocType(@Id long id) {
+		return docTypeService.findById(id);
+	}
+
+	@Query
+	public Uni<DocTypeField> getDocTypeField(@Id long id) {
+		return docTypeFieldService.findById(id);
+	}
+
+	@Query
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsFromDocType(
+		@Id long docTypeId,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+		return docTypeService.getDocTypeFieldsConnection(
+			docTypeId, after, before, first, last, searchText, sortByList, notEqual);
+	}
+
+	@Query
+	public Uni<Connection<DocTypeField>> getDocTypeFieldsFromDocTypeByParent(
+		@Id long docTypeId,
+		@Description("id of the parent docTypeField (0 if root )") long parentId,
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList,
+		@Description("if notEqual is true, it returns unbound entities") @DefaultValue("false") boolean notEqual) {
+		return docTypeService.getDocTypeFieldsConnectionByParent(
+			docTypeId, parentId, after, before, first, last, searchText, sortByList, notEqual);
+	}
+
+	@Query
+	public Uni<Connection<DocType>> getDocTypes(
+		@Description("fetching only nodes after this node (exclusive)") String after,
+		@Description("fetching only nodes before this node (exclusive)") String before,
+		@Description("fetching only the first certain number of nodes") Integer first,
+		@Description("fetching only the last certain number of nodes") Integer last,
+		String searchText, Set<SortBy> sortByList) {
+		return docTypeService.findConnection(
+			after, before, first, last, searchText, sortByList);
+	}
+
+	public Uni<Response<DocType>> patchDocType(@Id long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().patch(id, docTypeDTO);
+	}
+
+	@Mutation
+	public Uni<Tuple2<DocType, Long>> removeDocTypeField(
+		@Id long docTypeId, @Id long docTypeFieldId) {
+		return docTypeService.removeDocTypeField(docTypeId, docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<DocType> unbindDocTypeTemplateFromDocType(
+		@Id @Name("docTypeId") long docTypeId) {
+		return docTypeService.unsetDocType(docTypeId);
+	}
+
+	public Uni<Response<DocType>> updateDocType(@Id long id, DocTypeDTO docTypeDTO) {
+		return docTypeService.getValidator().update(id, docTypeDTO);
+	}
 
 }
