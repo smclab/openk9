@@ -119,8 +119,6 @@ export function SaveRagConfiguration() {
         ragToolDescription: ragConfigQuery.data?.ragConfiguration?.ragToolDescription || "",
         promptNoRag: ragConfigQuery.data?.ragConfiguration?.promptNoRag || "",
         enableConversationTitle: ragConfigQuery.data?.ragConfiguration?.enableConversationTitle || false,
-        rangeStart: ragConfigQuery.data?.ragConfiguration?.range?.start ?? 0,
-        rangeEnd: ragConfigQuery.data?.ragConfiguration?.range?.end ?? 0,
       }),
       [ragConfigQuery.data?.ragConfiguration],
     ),
@@ -241,21 +239,6 @@ export function SaveRagConfiguration() {
                         label="Enable Conversation Title"
                         labelPlacement="start"
                       />
-
-                      <Box sx={{ display: "flex", gap: 2 }}>
-                        <NumberInput
-                          label="Range Start"
-                          {...form.inputProps("rangeStart")}
-                          disabled={view === "view" || page === 1}
-                          description="Start of range (must be >= 0 and less than end)"
-                        />
-                        <NumberInput
-                          label="Range End"
-                          {...form.inputProps("rangeEnd")}
-                          disabled={view === "view" || page === 1}
-                          description="End of range (must be > start)"
-                        />
-                      </Box>
 
                       {selectedType === RagType.ChatRagTool && (
                         <>

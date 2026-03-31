@@ -5421,7 +5421,7 @@ export type RagConfigurationQueryVariables = Exact<{
 }>;
 
 
-export type RagConfigurationQuery = { __typename?: 'Query', ragConfiguration?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, description?: string | null, type?: RagType | null, reformulate?: boolean | null, chunkWindow?: number | null, rephrasePrompt?: string | null, prompt?: string | null, jsonConfig?: string | null, ragToolDescription?: string | null, promptNoRag?: string | null } | null };
+export type RagConfigurationQuery = { __typename?: 'Query', ragConfiguration?: { __typename?: 'RAGConfiguration', id?: string | null, name?: string | null, description?: string | null, type?: RagType | null, reformulate?: boolean | null, chunkWindow?: number | null, rephrasePrompt?: string | null, prompt?: string | null, jsonConfig?: string | null, ragToolDescription?: string | null, promptNoRag?: string | null, enableConversationTitle?: boolean | null } | null };
 
 export type CreateRagConfigMutationVariables = Exact<{
   name: Scalars['String'];
@@ -5434,6 +5434,7 @@ export type CreateRagConfigMutationVariables = Exact<{
   jsonConfig?: InputMaybe<Scalars['String']>;
   ragToolDescription?: InputMaybe<Scalars['String']>;
   promptNoRag?: InputMaybe<Scalars['String']>;
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -5450,6 +5451,7 @@ export type UpdateRagConfigurationMutationVariables = Exact<{
   jsonConfig?: InputMaybe<Scalars['String']>;
   ragToolDescription?: InputMaybe<Scalars['String']>;
   promptNoRag?: InputMaybe<Scalars['String']>;
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
   patch?: InputMaybe<Scalars['Boolean']>;
 }>;
 
@@ -6021,7 +6023,7 @@ export type BucketDataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null, languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null } | null } | null };
+export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
 
 export type CreateOrUpdateBucketMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6041,7 +6043,6 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   ragConfigurationChat?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationChatTool?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
-  languageIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
 }>;
 
 
@@ -9611,6 +9612,7 @@ export const RagConfigurationDocument = gql`
     jsonConfig
     ragToolDescription
     promptNoRag
+    enableConversationTitle
   }
 }
     `;
@@ -9643,9 +9645,9 @@ export type RagConfigurationQueryHookResult = ReturnType<typeof useRagConfigurat
 export type RagConfigurationLazyQueryHookResult = ReturnType<typeof useRagConfigurationLazyQuery>;
 export type RagConfigurationQueryResult = Apollo.QueryResult<RagConfigurationQuery, RagConfigurationQueryVariables>;
 export const CreateRagConfigDocument = gql`
-    mutation createRAGConfig($name: String!, $description: String, $type: RAGType!, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String) {
+    mutation createRAGConfig($name: String!, $description: String, $type: RAGType!, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String, $enableConversationTitle: Boolean) {
   createRAGConfiguration(
-    createRAGConfigurationDTO: {name: $name, description: $description, type: $type, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag}
+    createRAGConfigurationDTO: {name: $name, description: $description, type: $type, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag, enableConversationTitle: $enableConversationTitle}
   ) {
     entity {
       id
@@ -9684,6 +9686,7 @@ export type CreateRagConfigMutationFn = Apollo.MutationFunction<CreateRagConfigM
  *      jsonConfig: // value for 'jsonConfig'
  *      ragToolDescription: // value for 'ragToolDescription'
  *      promptNoRag: // value for 'promptNoRag'
+ *      enableConversationTitle: // value for 'enableConversationTitle'
  *   },
  * });
  */
@@ -9695,11 +9698,11 @@ export type CreateRagConfigMutationHookResult = ReturnType<typeof useCreateRagCo
 export type CreateRagConfigMutationResult = Apollo.MutationResult<CreateRagConfigMutation>;
 export type CreateRagConfigMutationOptions = Apollo.BaseMutationOptions<CreateRagConfigMutation, CreateRagConfigMutationVariables>;
 export const UpdateRagConfigurationDocument = gql`
-    mutation updateRAGConfiguration($id: ID!, $name: String!, $description: String, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String, $patch: Boolean) {
+    mutation updateRAGConfiguration($id: ID!, $name: String!, $description: String, $reformulate: Boolean, $chunkWindow: Int, $rephrasePrompt: String, $prompt: String, $jsonConfig: String, $ragToolDescription: String, $promptNoRag: String, $enableConversationTitle: Boolean, $patch: Boolean) {
   updateRAGConfiguration(
     id: $id
     patch: $patch
-    ragConfigurationDTO: {name: $name, description: $description, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag}
+    ragConfigurationDTO: {name: $name, description: $description, reformulate: $reformulate, chunkWindow: $chunkWindow, rephrasePrompt: $rephrasePrompt, prompt: $prompt, jsonConfig: $jsonConfig, ragToolDescription: $ragToolDescription, promptNoRag: $promptNoRag, enableConversationTitle: $enableConversationTitle}
   ) {
     entity {
       id
@@ -9738,6 +9741,7 @@ export type UpdateRagConfigurationMutationFn = Apollo.MutationFunction<UpdateRag
  *      jsonConfig: // value for 'jsonConfig'
  *      ragToolDescription: // value for 'ragToolDescription'
  *      promptNoRag: // value for 'promptNoRag'
+ *      enableConversationTitle: // value for 'enableConversationTitle'
  *      patch: // value for 'patch'
  *   },
  * });
@@ -12693,20 +12697,6 @@ export const BucketDataSourcesDocument = gql`
         endCursor
       }
     }
-    languages(
-      searchText: $searchText
-      first: 20
-      after: $cursor
-      notEqual: $unassociated
-    ) {
-      edges {
-        node {
-          id
-          name
-          value
-        }
-      }
-    }
   }
 }
     `;
@@ -12742,10 +12732,10 @@ export type BucketDataSourcesQueryHookResult = ReturnType<typeof useBucketDataSo
 export type BucketDataSourcesLazyQueryHookResult = ReturnType<typeof useBucketDataSourcesLazyQuery>;
 export type BucketDataSourcesQueryResult = Apollo.QueryResult<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $languageIds: [BigInteger]) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger) {
   bucketWithLists(
     id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, languageIds: $languageIds}
+    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate}
   ) {
     entity {
       id
@@ -12791,7 +12781,6 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      ragConfigurationChat: // value for 'ragConfigurationChat'
  *      ragConfigurationChatTool: // value for 'ragConfigurationChatTool'
  *      ragConfigurationSimpleGenerate: // value for 'ragConfigurationSimpleGenerate'
- *      languageIds: // value for 'languageIds'
  *   },
  * });
  */
@@ -14561,4 +14550,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-04-01T10:40:21+02:00
+// Generated on 2026-03-31T16:37:59+02:00
