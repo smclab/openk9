@@ -19,6 +19,7 @@ package io.openk9.apigw.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationResult;
 import org.springframework.security.authorization.ReactiveAuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authorization.AuthorizationContext;
@@ -38,7 +39,7 @@ public class TenantSecurityAuthorizationManager
 	private final TenantSecurityService service;
 
 	@Override
-	public Mono<AuthorizationDecision> check(
+	public Mono<AuthorizationResult> authorize(
 		Mono<Authentication> authentication, AuthorizationContext context) {
 		return service.isAuthorized(authentication, context.getExchange())
 			.map(AuthorizationDecision::new);

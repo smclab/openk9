@@ -17,13 +17,11 @@
 
 package io.openk9.apigw.messaging;
 
-import java.io.IOException;
-
 import io.openk9.event.tenant.TenantEvent;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -90,7 +88,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 			return message;
 		}
-		catch (JsonProcessingException e) {
+		catch (JacksonException e) {
 			throw new MessageConversionException("error during message creation", e);
 		}
 
@@ -153,7 +151,7 @@ public class TenantManagementEventMessageConverter implements MessageConverter {
 
 			return event;
 		}
-		catch (IOException e) {
+		catch (JacksonException e) {
 			throw new MessageConversionException("Error during message deserialization", e);
 		}
 	}

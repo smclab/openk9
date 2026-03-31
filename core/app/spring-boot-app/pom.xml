@@ -40,6 +40,18 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<!-- Override quarkus-bom's docker-java version (3.4.2) which is
+			     inherited from core/pom.xml. Testcontainers 2.0 needs 3.7.1+. -->
+			<dependency>
+				<groupId>com.github.docker-java</groupId>
+				<artifactId>docker-java-api</artifactId>
+				<version>3.7.1</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.docker-java</groupId>
+				<artifactId>docker-java-transport-zerodep</artifactId>
+				<version>3.7.1</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

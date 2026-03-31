@@ -25,7 +25,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.liquibase.autoconfigure.LiquibaseAutoConfiguration;
+import org.springframework.boot.data.r2dbc.test.autoconfigure.DataR2dbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ActiveProfiles;
@@ -33,6 +35,7 @@ import reactor.test.StepVerifier;
 
 @DataR2dbcTest
 @Import({ TenantWriteServiceR2dbc.class })
+@ImportAutoConfiguration(LiquibaseAutoConfiguration.class)
 @ActiveProfiles({"embedded", "test"})
 public class TenantWriteServiceR2dbcTest {
 

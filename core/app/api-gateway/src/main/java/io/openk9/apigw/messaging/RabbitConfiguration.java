@@ -21,7 +21,7 @@ import java.util.Map;
 
 import io.openk9.event.tenant.TenantEvent;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;

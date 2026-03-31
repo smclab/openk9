@@ -29,8 +29,7 @@ import io.openk9.event.tenant.AuthorizationScheme;
 import io.openk9.event.tenant.TenantEvent;
 import io.openk9.event.tenant.TenantEventConsumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -115,7 +114,6 @@ class TenantManagementEventMessageConverterTest {
 	@BeforeEach
 	void setUp() {
 		mapper = new ObjectMapper();
-		mapper.registerModule(new JavaTimeModule());
 		converter = new TenantManagementEventMessageConverter(mapper);
 	}
 
