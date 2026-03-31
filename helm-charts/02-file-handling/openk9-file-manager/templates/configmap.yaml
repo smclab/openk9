@@ -7,7 +7,7 @@ metadata:
 data:
   QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
   QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
-  QUARKUS_MINIO_URL: {{ .Values.minio.host | quote }}
+  QUARKUS_MINIO_HOST: {{ .Values.minio.host | quote }}
   QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: {{ .Values.limit.max.size | quote }}
   QUARKUS_GRPC_CLIENTS__FILEMANAGER__HOST: {{ include "helper.datasourceHost" . | quote }}
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
