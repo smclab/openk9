@@ -65,17 +65,24 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
   const { documentTypeId = "new" } = useParams();
   const topRef = useRef<HTMLDivElement>(null);
   const [search, setSearch] = useState<string>("");
+  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const PAGE_SIZE = 7;
   const documentTypesQuery = useDocTypeFieldsByParentQuery({
-    variables: { docTypeId: documentTypeId, parentId: 0, searchText: "" },
+    variables: { docTypeId: documentTypeId, parentId: 0, searchText: debouncedSearch, first: PAGE_SIZE },
   });
 
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [parentId, setParentId] = useState<number>(0);
   const [data, setData] = useState<TreeNode[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [processing, setProcessing] = useState<boolean>(false);
-  const [fetchedData, setFetchedData] = useState<TreeNode[]>([]);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [updateDoctype] = useCreateOrUpdateDocumentTypeFieldMutation({
     onCompleted: () => {},
   });
@@ -89,65 +96,48 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
   const theme = useTheme();
 
   useEffect(() => {
-    setLoading(true);
-    documentTypesQuery.refetch({ docTypeId: documentTypeId, parentId, searchText: "" });
-  }, [parentId]);
+    documentTypesQuery.refetch({ docTypeId: documentTypeId, parentId, searchText: debouncedSearch, first: PAGE_SIZE });
+  }, [parentId, debouncedSearch]);
+
+  const loading = documentTypesQuery.loading;
 
   useEffect(() => {
-    if (documentTypesQuery.loading) {
-      setLoading(true);
-    } else if (documentTypesQuery.data && documentTypesQuery.data.docTypeFieldsFromDocTypeByParent?.edges) {
-      const edges = documentTypesQuery.data.docTypeFieldsFromDocTypeByParent?.edges || [];
-      const formattedData = edges.map((edge: any) => ({
-        id: edge.node.id,
-        name: edge.node.name,
-        description: edge.node.description || "",
-        fieldType: edge.node.fieldType || "",
-        boost: edge.node.boost || 0,
-        jsonConfig: edge.node.jsonConfig || null,
-        fieldName: edge.node.fieldName || "",
-        chipProperties: {
-          sortable: edge.node.sortable || false,
-          exclude: edge.node.exclude || false,
-          searchable: edge.node.searchable || false,
-        },
-        children: [],
-      }));
+    if (loading || !documentTypesQuery.data) return;
 
-      setFetchedData(formattedData);
-      setLoading(false);
-    }
-  }, [documentTypesQuery.data, documentTypesQuery.loading]);
+    const edges = documentTypesQuery.data.docTypeFieldsFromDocTypeByParent?.edges || [];
+    const formattedData: TreeNode[] = edges.map((edge: any) => ({
+      id: edge.node.id,
+      name: edge.node.name,
+      description: edge.node.description || "",
+      fieldType: edge.node.fieldType || "",
+      boost: edge.node.boost || 0,
+      jsonConfig: edge.node.jsonConfig || null,
+      fieldName: edge.node.fieldName || "",
+      chipProperties: {
+        sortable: edge.node.sortable || false,
+        exclude: edge.node.exclude || false,
+        searchable: edge.node.searchable || false,
+      },
+      children: [],
+    }));
 
-  useEffect(() => {
-    if (!loading) {
-      setProcessing(true);
-      setData((prevData) => {
-        if (parentId === 0) {
-          const filteredData = fetchedData.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
-          setProcessing(false);
-          return filteredData;
-        }
+    setData((prevData) => {
+      if (parentId === 0) return formattedData;
 
-        const updateTree = (nodes: TreeNode[]): TreeNode[] =>
-          nodes.map((node) => {
-            if (node.id === String(parentId)) {
-              const filteredChildren = fetchedData.filter((item) =>
-                item.name.toLowerCase().includes(search.toLowerCase()),
-              );
-              return { ...node, children: filteredChildren.length > 0 ? filteredChildren : [] };
-            }
-            if (node.children) {
-              return { ...node, children: updateTree(node.children) };
-            }
-            return node;
-          });
+      const updateTree = (nodes: TreeNode[]): TreeNode[] =>
+        nodes.map((node) => {
+          if (node.id === String(parentId)) {
+            return { ...node, children: formattedData };
+          }
+          if (node.children) {
+            return { ...node, children: updateTree(node.children) };
+          }
+          return node;
+        });
 
-        setProcessing(false);
-        return updateTree(prevData);
-      });
-    }
-  }, [loading, fetchedData, parentId, search]);
+      return updateTree(prevData);
+    });
+  }, [loading, documentTypesQuery.data, parentId]);
 
   const findNodeByPath = (path: string[], nodes: TreeNode[]): TreeNode | TreeNode[] | undefined => {
     if (path.length === 0) return nodes;
@@ -202,6 +192,55 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     }
   };
 
+  const pageInfo = documentTypesQuery.data?.docTypeFieldsFromDocTypeByParent?.pageInfo;
+  const hasNextPage = pageInfo?.hasNextPage ?? false;
+
+  const loadMore = async () => {
+    if (!hasNextPage || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await documentTypesQuery.fetchMore({
+        variables: {
+          after: pageInfo?.endCursor,
+        },
+      });
+      const newEdges = result.data?.docTypeFieldsFromDocTypeByParent?.edges || [];
+      const newNodes: TreeNode[] = newEdges.map((edge: any) => ({
+        id: edge.node.id,
+        name: edge.node.name,
+        description: edge.node.description || "",
+        fieldType: edge.node.fieldType || "",
+        boost: edge.node.boost || 0,
+        jsonConfig: edge.node.jsonConfig || null,
+        fieldName: edge.node.fieldName || "",
+        chipProperties: {
+          sortable: edge.node.sortable || false,
+          exclude: edge.node.exclude || false,
+          searchable: edge.node.searchable || false,
+        },
+        children: [],
+      }));
+      setData((prev) => {
+        if (parentId === 0) return [...prev, ...newNodes];
+        const appendToParent = (nodes: TreeNode[]): TreeNode[] =>
+          nodes.map((node) => {
+            if (node.id === String(parentId)) {
+              return { ...node, children: [...node.children, ...newNodes] };
+            }
+            if (node.children) {
+              return { ...node, children: appendToParent(node.children) };
+            }
+            return node;
+          });
+        return appendToParent(prev);
+      });
+    } catch (error) {
+      console.error("Error loading more fields:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const currentNode = findNodeByPath(currentPath, data) as TreeNode | undefined;
   const children = Array.isArray(currentNode) ? currentNode : currentNode?.children || [];
 
@@ -238,13 +277,18 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
               parentId={idModal.parentId}
               isChild={idModal.isChild}
               callback={() => {
-                documentTypesQuery.refetch({ docTypeId: documentTypeId, parentId, searchText: "" });
+                documentTypesQuery.refetch({
+                  docTypeId: documentTypeId,
+                  parentId,
+                  searchText: debouncedSearch,
+                  first: PAGE_SIZE,
+                });
               }}
               setExtraFab={setExtraFab}
             />
           </ModalConfirm>
         )}
-        {!processing && (
+        {(
           <>
             <div
               style={{
@@ -461,6 +505,13 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                   </Box>
                 </Box>
               ))}
+              {hasNextPage && !loading && (
+                <Box display="flex" justifyContent="center" marginTop="16px">
+                  <Button variant="outlined" onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? "Loading..." : "Load more"}
+                  </Button>
+                </Box>
+              )}
             </Box>
           </>
         )}

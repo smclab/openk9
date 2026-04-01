@@ -5841,10 +5841,12 @@ export type DocTypeFieldsByParentQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   parentId: Scalars['BigInteger'];
   docTypeId: Scalars['ID'];
+  first?: InputMaybe<Scalars['Int']>;
+  after?: InputMaybe<Scalars['String']>;
 }>;
 
 
-export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
+export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   documentTypeId: Scalars['ID'];
@@ -9104,11 +9106,12 @@ export type DocumentTypeQueryHookResult = ReturnType<typeof useDocumentTypeQuery
 export type DocumentTypeLazyQueryHookResult = ReturnType<typeof useDocumentTypeLazyQuery>;
 export type DocumentTypeQueryResult = Apollo.QueryResult<DocumentTypeQuery, DocumentTypeQueryVariables>;
 export const DocTypeFieldsByParentDocument = gql`
-    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+    query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!, $first: Int, $after: String) {
   docTypeFieldsFromDocTypeByParent(
     parentId: $parentId
     searchText: $searchText
-    first: 30
+    first: $first
+    after: $after
     docTypeId: $docTypeId
   ) {
     edges {
@@ -9128,6 +9131,10 @@ export const DocTypeFieldsByParentDocument = gql`
           fieldName
         }
       }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
     }
   }
 }
