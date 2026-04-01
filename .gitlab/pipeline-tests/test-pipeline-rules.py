@@ -33,6 +33,18 @@ import argparse
 CI_FILE = ".gitlab/.gitlab-ci.yaml"
 TEST_FILENAME = ".pipeline-test-changes"
 
+# ── ANSI colors ────────────────────────────────────────────────────────────────
+GREEN  = "\033[32m"
+RED    = "\033[31m"
+YELLOW = "\033[33m"
+CYAN   = "\033[36m"
+BOLD   = "\033[1m"
+DIM    = "\033[2m"
+RESET  = "\033[0m"
+
+def c(color, text):
+    return f"{color}{text}{RESET}"
+
 # ── Users ──────────────────────────────────────────────────────────────────────
 BACKEND_DESIGNATED  = ["mirko.zizzari", "michele.bastianelli"]
 FRONTEND_DESIGNATED = ["lorenzo.venneri", "giorgio.bartolomeo"]
@@ -146,21 +158,37 @@ def check(label, jobs, should_fire, should_not_fire, verbose=False) -> bool:
 
     for j in should_fire:
         if j not in jobs:
-            failures.append(f"  MISSING  : {j}")
+            failures.append(f"    {c(RED, 'MISSING' )} : {j}")
             passed = False
 
     for j in should_not_fire:
         if j in jobs:
-            failures.append(f"  UNWANTED : {j}")
+            failures.append(f"    {c(YELLOW, 'UNWANTED')} : {j}")
             passed = False
 
-    status = "PASS" if passed else "FAIL"
-    print(f"[{status}] {label}")
+    if passed:
+        status = c(BOLD + GREEN, "PASS")
+    else:
+        status = c(BOLD + RED, "FAIL")
+
+    print(f"  [{status}] {label}")
     if verbose or not passed:
-        print(f"         fired: {jobs if jobs else '(none)'}")
+        fired_str = ", ".join(jobs) if jobs else c(DIM, "(none)")
+        print(f"         {c(DIM, 'fired:')} {fired_str}")
     for f in failures:
         print(f)
     return passed
+
+
+# ── Section header ─────────────────────────────────────────────────────────────
+
+_current_section = [None]
+
+def section(name):
+    if _current_section[0] != name:
+        _current_section[0] = name
+        print(f"\n{c(CYAN + BOLD, name)}")
+        print(c(DIM, "  " + "-" * 56))
 
 
 # ── Test runner ────────────────────────────────────────────────────────────────
@@ -168,10 +196,16 @@ def check(label, jobs, should_fire, should_not_fire, verbose=False) -> bool:
 def run_tests(verbose=False, user_filter=None):
     results = []
 
+    print(c(BOLD, "\nPipeline rules test matrix"))
+    print(c(DIM, "=" * 60))
+
     def t(label, user, source, domain, branch=None, tag=None,
-          should_fire=None, should_not_fire=None):
+          should_fire=None, should_not_fire=None, sec=None):
         if user_filter and user_filter not in user:
             return
+
+        if sec:
+            section(sec)
 
         filepaths = None
         try:
@@ -192,7 +226,8 @@ def run_tests(verbose=False, user_filter=None):
         t(f"{short} | feature branch | core/service → backend fires, FE+AI silent",
           user, "push", "backend", branch="1234-fix-something",
           should_fire=BACKEND_TRIGGERS,
-          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS)
+          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS,
+          sec=f"Backend designated — {short}")
 
         t(f"{short} | feature branch | frontend files → nothing fires",
           user, "push", "frontend", branch="1234-fix-something",
@@ -223,7 +258,8 @@ def run_tests(verbose=False, user_filter=None):
         t(f"{short} | feature branch | frontend files → frontend fires, BE+AI silent",
           user, "push", "frontend", branch="1234-fix-something",
           should_fire=FRONTEND_TRIGGERS,
-          should_not_fire=BACKEND_TRIGGERS + AI_TRIGGERS)
+          should_not_fire=BACKEND_TRIGGERS + AI_TRIGGERS,
+          sec=f"Frontend designated — {short}")
 
         t(f"{short} | feature branch | backend files → nothing fires",
           user, "push", "backend", branch="1234-fix-something",
@@ -252,7 +288,8 @@ def run_tests(verbose=False, user_filter=None):
         t(f"{short} | feature branch | AI files → AI fires, BE+FE silent",
           user, "push", "ai", branch="1234-fix-something",
           should_fire=AI_TRIGGERS,
-          should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS)
+          should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS,
+          sec=f"AI designated — {short}")
 
         t(f"{short} | feature branch | backend files → nothing fires",
           user, "push", "backend", branch="1234-fix-something",
@@ -281,7 +318,8 @@ def run_tests(verbose=False, user_filter=None):
         t(f"{short} | feature branch | backend files → backend fires (generic)",
           user, "push", "backend", branch="1234-fix-something",
           should_fire=BACKEND_TRIGGERS,
-          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS)
+          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS,
+          sec=f"Generic — {short}")
 
         t(f"{short} | feature branch | frontend files → frontend fires (generic)",
           user, "push", "frontend", branch="1234-fix-something",
@@ -302,13 +340,17 @@ def run_tests(verbose=False, user_filter=None):
     total  = len(results)
     passed = sum(results)
     failed = total - passed
-    print(f"\n{'='*60}")
-    print(f"Results: {passed}/{total} passed, {failed} failed")
+
+    print(f"\n{c(DIM, '=' * 60)}")
     if failed:
-        print("Some tests FAILED — review the pipeline rules.")
+        summary = c(BOLD + RED, f"{passed}/{total} passed, {failed} failed")
+        print(f"Results: {summary}")
+        print(c(RED, "Some tests FAILED — review the pipeline rules."))
         sys.exit(1)
     else:
-        print("All tests PASSED.")
+        summary = c(BOLD + GREEN, f"{passed}/{total} passed")
+        print(f"Results: {summary}")
+        print(c(GREEN, "All tests PASSED."))
 
 
 if __name__ == "__main__":
