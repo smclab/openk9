@@ -24,7 +24,7 @@ Trigger Rag Module:
       changes: *rag_module_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *rag_module_changes
       variables:
         USER_TYPE: "generic"
@@ -47,7 +47,7 @@ Trigger Agentic Rag Module:
       changes: *agentic_rag_module_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *agentic_rag_module_changes
       variables:
         USER_TYPE: "generic"
@@ -70,7 +70,7 @@ Trigger Embedding Modules:
       changes: *embedding_modules_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *embedding_modules_changes
       variables:
         USER_TYPE: "generic"
@@ -93,7 +93,7 @@ Trigger Chunk Evaluation Module:
       changes: *chunk_eval_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *chunk_eval_changes
       variables:
         USER_TYPE: "generic"
