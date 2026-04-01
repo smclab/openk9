@@ -48,7 +48,7 @@ def get_agentic_rag(
     chat_sequence_number,
     rag_configuration,
     llm_configuration,
-    guardrail_configuration,
+    guardrails_configuration,
     opensearch_host,
     grpc_host_embedding,
     grpc_host_datasource,
@@ -73,6 +73,7 @@ def get_agentic_rag(
             "enable_real_time_evaluation"
         )
         bypass_rag = rag_configuration.get("bypass_rag")
+        domain_threshold = rag_configuration.get("domain_threshold")
 
         api_url = llm_configuration.get("api_url")
         api_key = llm_configuration.get("api_key")
@@ -144,7 +145,8 @@ def get_agentic_rag(
             "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
             "analyze_query_prompt_template": analyze_query_prompt_template,
             "enable_real_time_evaluation": enable_real_time_evaluation,
-            "guardrail_configuration": guardrail_configuration,
+            "guardrails_configuration": guardrails_configuration,
+            "domain_threshold": domain_threshold,
         }
 
         router = RagGraph(llm, graph_configuration)
