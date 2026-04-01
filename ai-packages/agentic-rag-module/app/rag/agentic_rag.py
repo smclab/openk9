@@ -890,7 +890,7 @@ class RagGraph:
         ):
             unauthorized_response()
         else:
-            search_query = self.configuration.get("search_query")
+            search_query = self.configuration.get("search_query") or []
 
             domain_filter = models.SearchToken(
                 tokenType="TEXT",
@@ -902,10 +902,7 @@ class RagGraph:
                 extra={},
             )
 
-            if search_query:
-                search_query.append(domain_filter)
-            else:
-                search_query = [domain_filter]
+            search_query.append(domain_filter)
 
             retriever = OpenSearchRetriever(
                 search_query=search_query,
