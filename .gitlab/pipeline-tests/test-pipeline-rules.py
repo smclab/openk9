@@ -4,21 +4,25 @@ Pipeline rules test matrix for openk9.
 Tests which triggers fire for each user/branch/changed-files combination.
 
 Strategy:
-  - Creates a temporary file in a folder that matches the target domain
-  - Commits it locally (never pushed)
-  - Runs gitlab-ci-local --list (reads real git diff)
-  - Resets the commit and removes the file
+  - Creates temporary files in ALL folders that match the target domain
+    (so every trigger in that domain sees at least one changed file)
+  - Commits them locally (never pushed)
+  - Runs gitlab-ci-local --list (reads real git diff to evaluate `changes` rules)
+  - Resets the commit and removes the files
 
-Folder choices:
-  - backend:   core/service/  (common to ALL backend triggers)
-  - frontend:  js-packages/admin-ui/  (admin-ui trigger)
-  - ai:        ai-packages/rag-module/  (rag-module trigger)
-  - unrelated: helm-charts/  (no trigger)
+Domain → folders covered:
+  - backend:   core/common/resources-common/ + core/service/
+               (covers all backend triggers; core/service is needed for Datasource)
+  - frontend:  js-packages/admin-ui/ + search-frontend/ + tenant-ui/
+               + talk-to/ + openk9-chatbot/
+  - ai:        ai-packages/rag-module/ + agentic-rag-module/
+               + embedding-modules/ + chunk-evaluation-module/
+  - unrelated: helm-charts/  (no trigger should fire)
 
 Usage:
-  python3 .gitlab/test-pipeline-rules.py           # run all tests
-  python3 .gitlab/test-pipeline-rules.py -v        # verbose
-  python3 .gitlab/test-pipeline-rules.py -u mirko  # filter by user
+  python3 .gitlab/pipeline-tests/test-pipeline-rules.py           # run all tests
+  python3 .gitlab/pipeline-tests/test-pipeline-rules.py -v        # verbose
+  python3 .gitlab/pipeline-tests/test-pipeline-rules.py -u mirko  # filter by user
 """
 
 import subprocess
@@ -188,7 +192,7 @@ def run_tests(verbose=False, user_filter=None):
         t(f"{short} | feature branch | core/service → backend fires, FE+AI silent",
           user, "push", "backend", branch="1234-fix-something",
           should_fire=BACKEND_TRIGGERS,
-          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS + [])
+          should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS)
 
         t(f"{short} | feature branch | frontend files → nothing fires",
           user, "push", "frontend", branch="1234-fix-something",
