@@ -381,14 +381,6 @@ async def rag_chat(
         virtual_host=virtual_host,
     )
 
-    embedding_model_configuration = {}
-
-    if retrieve_from_uploaded_documents:
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=GRPC_DATASOURCE_HOST,
-            virtual_host=virtual_host,
-        )
-
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
     guardrails_configuration = rag_configuration.get("guardrails_configuration", {})
@@ -537,14 +529,6 @@ async def rag_chat_tool(
         grpc_host=GRPC_DATASOURCE_HOST,
         virtual_host=virtual_host,
     )
-
-    embedding_model_configuration = {}
-
-    if retrieve_from_uploaded_documents:
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=GRPC_DATASOURCE_HOST,
-            virtual_host=virtual_host,
-        )
 
     rag_configuration = configurations["rag_configuration"]
     llm_configuration = configurations["llm_configuration"]
