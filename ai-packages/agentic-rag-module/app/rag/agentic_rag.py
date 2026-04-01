@@ -870,12 +870,15 @@ class RagGraph:
         query = state.current_query
 
         if self.retrieve_from_uploaded_documents and self.user_id and self.tenant_id:
+            embedding_model_configuration = get_embedding_model_configuration(
+                grpc_host=self.configuration.get("grpc_host_datasource"),
+                virtual_host=self.configuration.get("virtual_host"),
+            )
+
             retriever = OpenSearchUploadedDocumentsRetriever(
                 opensearch_host=self.configuration.get("opensearch_host"),
                 grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
-                embedding_model_configuration=self.configuration.get(
-                    "embedding_model_configuration"
-                ),
+                embedding_model_configuration=embedding_model_configuration,
                 uploaded_documents_index=f"{self.tenant_id}-uploaded-documents-index",
                 retrieve_type=self.configuration.get("retrieve_type"),
                 user_id=self.user_id,
