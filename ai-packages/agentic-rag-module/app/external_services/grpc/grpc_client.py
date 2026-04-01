@@ -18,6 +18,10 @@
 import time
 
 import grpc
+from fastapi import HTTPException, status
+from google.protobuf import json_format
+from google.protobuf.json_format import ParseDict
+
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
@@ -26,9 +30,6 @@ from app.external_services.grpc.tenant_manager import (
     tenant_manager_pb2_grpc,
 )
 from app.utils.logger import logger
-from fastapi import HTTPException, status
-from google.protobuf import json_format
-from google.protobuf.json_format import ParseDict
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 
@@ -197,6 +198,59 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         )
         bypass_rag = json_config.get("bypass_rag", False)
 
+        bypass_input_guardrail = json_config.get("bypass_input_guardrail", False)
+        input_guardrail_threshold = json_config.get("input_guardrail_threshold", 0.5)
+        input_guardrail_provider = json_config.get("input_guardrail_provider", "")
+        input_guardrail_aws_bedrock = json_config.get("input_guardrail_aws_bedrock", {})
+        input_guardrail_google_model_armor = json_config.get(
+            "input_guardrail_google_model_armor", {}
+        )
+        input_guardrail_openai_moderation = json_config.get(
+            "input_guardrail_openai_moderation", {}
+        )
+
+        output_guardrail_type = json_config.get("output_guardrail_type", 0)
+        output_guardrail_chunk_interval = json_config.get(
+            "output_guardrail_chunk_interval", 10
+        )
+        output_guardrail_provider = json_config.get(
+            "output_guardrail_provider", "openai_moderation"
+        )
+        output_guardrail_aws_bedrock = json_config.get(
+            "output_guardrail_aws_bedrock", {}
+        )
+        output_guardrail_google_model_armor = json_config.get(
+            "output_guardrail_google_model_armor", {}
+        )
+        output_guardrail_openai_moderation = json_config.get(
+            "output_guardrail_openai_moderation", {}
+        )
+
+        domain_threshold = json_config.get("domain_threshold", 0.7)
+
+        input_guardrail = {
+            "bypass_input_guardrail": bypass_input_guardrail,
+            "input_guardrail_threshold": input_guardrail_threshold,
+            "input_guardrail_provider": input_guardrail_provider,
+            "input_guardrail_aws_bedrock": input_guardrail_aws_bedrock,
+            "input_guardrail_google_model_armor": input_guardrail_google_model_armor,
+            "input_guardrail_openai_moderation": input_guardrail_openai_moderation,
+        }
+
+        output_guardrail = {
+            "output_guardrail_type": output_guardrail_type,
+            "output_guardrail_chunk_interval": output_guardrail_chunk_interval,
+            "output_guardrail_provider": output_guardrail_provider,
+            "output_guardrail_aws_bedrock": output_guardrail_aws_bedrock,
+            "output_guardrail_google_model_armor": output_guardrail_google_model_armor,
+            "output_guardrail_openai_moderation": output_guardrail_openai_moderation,
+        }
+
+        guardrails_configuration = {
+            "input_guardrail": input_guardrail,
+            "output_guardrail": output_guardrail,
+        }
+
         configuration = {
             "prompt": prompt,
             "prompt_no_rag": prompt_no_rag,
@@ -211,6 +265,8 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "range_values": range_values,
             "rerank": rerank,
             "metadata": metadata,
+            "guardrails_configuration": guardrails_configuration,
+            "domain_threshold": domain_threshold,
         }
 
         return configuration

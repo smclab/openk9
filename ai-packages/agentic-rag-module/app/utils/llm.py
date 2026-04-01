@@ -94,12 +94,10 @@ def get_configurations(
 ):
     rag_configuration = get_rag_configuration(grpc_host, virtual_host, rag_type)
     llm_configuration = get_llm_configuration(grpc_host, virtual_host)
-    guardrail_configuration = {}
 
     configurations = {
         "rag_configuration": rag_configuration,
         "llm_configuration": llm_configuration,
-        "guardrail_configuration": guardrail_configuration,
     }
 
     return configurations
