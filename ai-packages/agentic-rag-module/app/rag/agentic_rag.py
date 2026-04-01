@@ -902,7 +902,7 @@ class RagGraph:
                 extra={},
             )
 
-            if self.configuration.get("search_query"):
+            if search_query:
                 search_query.append(domain_filter)
             else:
                 search_query = [domain_filter]
