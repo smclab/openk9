@@ -33,7 +33,7 @@ Trigger Datasource:
       changes: *datasource_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *datasource_changes
       variables:
         USER_TYPE: "generic"
@@ -61,7 +61,7 @@ Trigger Searcher:
       changes: *searcher_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *searcher_changes
       variables:
         USER_TYPE: "generic"
@@ -86,7 +86,7 @@ Trigger Ingestion:
       changes: *ingestion_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *ingestion_changes
       variables:
         USER_TYPE: "generic"
@@ -116,7 +116,7 @@ Trigger K8S-Client:
       changes: *k8s_client_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *k8s_client_changes
       variables:
         USER_TYPE: "generic"
@@ -141,7 +141,7 @@ Trigger File-Manager:
       changes: *file_manager_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *file_manager_changes
       variables:
         USER_TYPE: "generic"
@@ -172,7 +172,7 @@ Trigger Tenant-Manager:
       changes: *tenant_manager_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *tenant_manager_changes
       variables:
         USER_TYPE: "generic"
@@ -197,7 +197,7 @@ Trigger API-Gateway:
       changes: *api_gateway_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *api_gateway_changes
       variables:
         USER_TYPE: "generic"
@@ -221,7 +221,7 @@ Trigger Tika:
       changes: *tika_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *tika_changes
       variables:
         USER_TYPE: "generic"
@@ -246,7 +246,7 @@ Trigger Entity-Manager:
       changes: *entity_manager_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *entity_manager_changes
       variables:
         USER_TYPE: "generic"
@@ -270,7 +270,7 @@ Trigger Resources-Validator:
       changes: *resources_validator_changes
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *resources_validator_changes
       variables:
         USER_TYPE: "generic"

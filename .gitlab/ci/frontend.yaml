@@ -29,7 +29,7 @@ Trigger Search Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes:
         paths: *search_frontend_changes
         compare_to: 'refs/heads/main'
@@ -59,7 +59,7 @@ Trigger Admin Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes:
         paths: *admin_ui_changes
         compare_to: 'refs/heads/main'
@@ -89,7 +89,7 @@ Trigger Tenant Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes:
         paths: *tenant_ui_changes
         compare_to: 'refs/heads/main'
@@ -119,7 +119,7 @@ Trigger Talk-To Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes:
         paths: *talk_to_changes
         compare_to: 'refs/heads/main'
@@ -149,7 +149,7 @@ Trigger OpenK9-Chatbot:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes:
         paths: *chatbot_changes
         compare_to: 'refs/heads/main'
