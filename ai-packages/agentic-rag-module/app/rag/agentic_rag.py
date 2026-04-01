@@ -904,29 +904,27 @@ class RagGraph:
             else:
                 search_query = [domain_filter]
 
-                retriever = OpenSearchRetriever(
-                    search_query=search_query,
-                    search_text=query,
-                    rerank=self.configuration.get("rerank"),
-                    chunk_window=self.configuration.get("chunk_window"),
-                    range_values=self.configuration.get("range_values"),
-                    after_key=self.configuration.get("after_key"),
-                    suggest_keyword=self.configuration.get("suggest_keyword"),
-                    suggestion_category_id=self.configuration.get(
-                        "suggestion_category_id"
-                    ),
-                    virtual_host=self.configuration.get("virtual_host"),
-                    jwt=self.configuration.get("jwt"),
-                    extra=self.configuration.get("extra"),
-                    sort=self.configuration.get("sort"),
-                    sort_after_key=self.configuration.get("sort_after_key"),
-                    language=self.configuration.get("language"),
-                    context_window=self.configuration.get("context_window"),
-                    metadata=self.configuration.get("metadata"),
-                    retrieve_type=self.configuration.get("retrieve_type"),
-                    opensearch_host=self.configuration.get("opensearch_host"),
-                    grpc_host=self.configuration.get("grpc_host_datasource"),
-                )
+            retriever = OpenSearchRetriever(
+                search_query=search_query,
+                search_text=query,
+                rerank=self.configuration.get("rerank"),
+                chunk_window=self.configuration.get("chunk_window"),
+                range_values=self.configuration.get("range_values"),
+                after_key=self.configuration.get("after_key"),
+                suggest_keyword=self.configuration.get("suggest_keyword"),
+                suggestion_category_id=self.configuration.get("suggestion_category_id"),
+                virtual_host=self.configuration.get("virtual_host"),
+                jwt=self.configuration.get("jwt"),
+                extra=self.configuration.get("extra"),
+                sort=self.configuration.get("sort"),
+                sort_after_key=self.configuration.get("sort_after_key"),
+                language=self.configuration.get("language"),
+                context_window=self.configuration.get("context_window"),
+                metadata=self.configuration.get("metadata"),
+                retrieve_type=self.configuration.get("retrieve_type"),
+                opensearch_host=self.configuration.get("opensearch_host"),
+                grpc_host=self.configuration.get("grpc_host_datasource"),
+            )
 
         retrieved_docs = retriever.invoke(query)
         state.context = retrieved_docs
