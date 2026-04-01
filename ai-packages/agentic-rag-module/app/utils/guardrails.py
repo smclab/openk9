@@ -149,16 +149,15 @@ def initialize_guardrail(configuration):
         if configuration.get("guardrail_type")
         else DEFAULT_GUARDRAIL_TYPE
     )
-    model = configuration.get("model")
-    api_key = configuration.get("api_key")
-    region = configuration.get("region")
 
     match guardrail_type:
         case GuardrailType.AWS_BEDROCK.value:
+            api_key = configuration.get("api_key")
+            model = configuration.get("model")
+            region = configuration.get("region")
+            guardrail_identifier = configuration.get("guardrail_identifier")
+            guardrail_version = configuration.get("guardrail_version")
             os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
-            aws_bedrock = configuration.get("aws_bedrock")
-            guardrail_identifier = aws_bedrock.get("guardrail_identifier")
-            guardrail_version = aws_bedrock.get("guardrail_version")
 
             guardrail = ChatBedrockConverse(
                 model=model,
@@ -173,6 +172,7 @@ def initialize_guardrail(configuration):
             save_google_application_credentials(google_model_armor_credentials)
             project_id = configuration.get("project_id")
             template_id = configuration.get("template_id")
+            region = configuration.get("region")
 
             guardrail = ModelArmorSanitizePromptRunnable(
                 project=project_id,
@@ -185,6 +185,7 @@ def initialize_guardrail(configuration):
             save_google_application_credentials(google_model_armor_credentials)
             project_id = configuration.get("project_id")
             template_id = configuration.get("template_id")
+            region = configuration.get("region")
 
             guardrail = ModelArmorSanitizeResponseRunnable(
                 project=project_id,
@@ -193,10 +194,12 @@ def initialize_guardrail(configuration):
                 fail_open=False,
             )
         case GuardrailType.OPENAI_MODERATION.value:
+            api_key = configuration.get("api_key")
             os.environ["OPENAI_API_KEY"] = api_key
 
             guardrail = OpenAIModerationChain()
         case _:
+            api_key = configuration.get("api_key")
             os.environ["OPENAI_API_KEY"] = api_key
 
             guardrail = OpenAIModerationChain()
