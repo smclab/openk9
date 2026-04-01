@@ -209,7 +209,21 @@ class RagGraph:
         self.open_search_client = OpenSearch(
             hosts=[self.opensearch_host],
         )
-        self.guardrail_configuration = self.configuration.get("guardrail_configuration")
+        self.guardrails_configuration = self.configuration.get(
+            "guardrails_configuration"
+        )
+        self.input_guardrail = self.guardrails_configuration.get("input_guardrail")
+        self.input_guardrail_provider = self.input_guardrail.get(
+            "input_guardrail_provider"
+        )
+        self.output_guardrail = self.guardrails_configuration.get("output_guardrail")
+        self.output_guardrail_type = self.output_guardrail.get("output_guardrail_type")
+        self.output_guardrail_chunk_interval = self.output_guardrail.get(
+            "output_guardrail_chunk_interval"
+        )
+        self.output_guardrail_provider = self.output_guardrail.get(
+            "output_guardrail_provider"
+        )
         self.config = {
             "configurable": {
                 "thread_id": self.chat_id if self.chat_id else "not_logged_user"
@@ -416,20 +430,18 @@ class RagGraph:
 
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
 
-        if (
-            self.guardrail_configuration.get("guardrail_type")
-            == GuardrailType.AWS_BEDROCK.value
-        ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+        if self.input_guardrail_provider == GuardrailType.AWS_BEDROCK.value:
+            llm_guardrail = initialize_guardrail(
+                self.input_guardrail.get("input_guardrail_aws_bedrock")
+            )
             guardrail_chain = guardrail_prompt_template | llm_guardrail
             guardrail_response = guardrail_chain.invoke({"query": query})
 
             return guardrail_response.content[0].get("text")
-        elif (
-            self.guardrail_configuration.get("guardrail_type")
-            == GuardrailType.GOOGLE_MODEL_ARMOR.value
-        ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+        elif self.input_guardrail_provider == GuardrailType.GOOGLE_MODEL_ARMOR.value:
+            llm_guardrail = initialize_guardrail(
+                self.input_guardrail.get("input_guardrail_google_model_armor")
+            )
             try:
                 guardrail_response = llm_guardrail.invoke({"query": query})
                 return "NONE"
@@ -438,11 +450,10 @@ class RagGraph:
                     return "UNSAFE"
                 else:
                     raise e
-        elif (
-            self.guardrail_configuration.get("guardrail_type")
-            == GuardrailType.OPENAI_MODERATION.value
-        ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+        elif self.input_guardrail_provider == GuardrailType.OPENAI_MODERATION.value:
+            llm_guardrail = initialize_guardrail(
+                self.input_guardrail.get("input_guardrail_openai_moderation")
+            )
             guardrail_response = llm_guardrail.invoke({"input": query})
             if guardrail_response.get("input") == guardrail_response.get("output"):
                 return "NONE"
@@ -482,22 +493,23 @@ class RagGraph:
 
         guardrail_prompt_template = PromptTemplate.from_template(guardrail_prompt)
 
-        if (
-            self.guardrail_configuration.get("guardrail_type")
-            == GuardrailType.AWS_BEDROCK.value
-        ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+        if self.output_guardrail_provider == GuardrailType.AWS_BEDROCK.value:
+            llm_guardrail = initialize_guardrail(
+                self.output_guardrail.get("output_guardrail_aws_bedrock")
+            )
             guardrail_chain = guardrail_prompt_template | llm_guardrail
             guardrail_response = guardrail_chain.invoke(
                 {"result_answer": result_answer}
             )
 
-            return guardrail_response.content[0].get("text")
+            return guardrail_response.content
         elif (
-            self.guardrail_configuration.get("guardrail_type")
+            self.output_guardrail_provider
             == GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value
         ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+            llm_guardrail = initialize_guardrail(
+                self.output_guardrail.get("output_guardrail_google_model_armor")
+            )
             try:
                 guardrail_response = llm_guardrail.invoke({"query": result_answer})
                 return "NONE"
@@ -506,11 +518,10 @@ class RagGraph:
                     return "UNSAFE"
                 else:
                     raise e
-        elif (
-            self.guardrail_configuration.get("guardrail_type")
-            == GuardrailType.OPENAI_MODERATION.value
-        ):
-            llm_guardrail = initialize_guardrail(self.guardrail_configuration)
+        elif self.output_guardrail_provider == GuardrailType.OPENAI_MODERATION.value:
+            llm_guardrail = initialize_guardrail(
+                self.output_guardrail.get("output_guardrail_openai_moderation")
+            )
             guardrail_response = llm_guardrail.invoke({"input": result_answer})
             if guardrail_response.get("input") == guardrail_response.get("output"):
                 return "NONE"
@@ -525,32 +536,33 @@ class RagGraph:
             return guardrail_response.content
 
     def input_guardrail_node(self, state: GraphState) -> GraphState:
-        query = state.current_query
-        embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=self.configuration.get("grpc_host_datasource"),
-            virtual_host=self.configuration.get("virtual_host"),
-        )
+        if not self.input_guardrail.get("bypass_input_guardrail"):
+            query = state.current_query
+            embedding_model_configuration = get_embedding_model_configuration(
+                grpc_host=self.configuration.get("grpc_host_datasource"),
+                virtual_host=self.configuration.get("virtual_host"),
+            )
 
-        retriever = OpenSearchGuardrailDocumentsRetriever(
-            opensearch_host=self.opensearch_host,
-            grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
-            embedding_model_configuration=embedding_model_configuration,
-            uploaded_documents_index="guardrails-documents-index",
-            retrieve_type="HYBRID",
-            search_text=query,
-        )
+            retriever = OpenSearchGuardrailDocumentsRetriever(
+                opensearch_host=self.opensearch_host,
+                grpc_host_embedding=self.configuration.get("grpc_host_embedding"),
+                embedding_model_configuration=embedding_model_configuration,
+                uploaded_documents_index="guardrails-documents-index",
+                retrieve_type="HYBRID",
+                search_text=query,
+            )
 
-        retrieved_docs = retriever.invoke(query)
+            retrieved_docs = retriever.invoke(query)
 
-        for doc in retrieved_docs:
-            document_id = doc.metadata["document_id"]
-            score = doc.metadata["score"]
-            if score >= 0.5:
-                llm_guardrail = self._llm_input_guardrail(query)
-                if llm_guardrail != "NONE":
-                    state.guardrail_check = True
-                    state.guardrail_category = llm_guardrail
-                break
+            for doc in retrieved_docs:
+                document_id = doc.metadata["document_id"]
+                score = doc.metadata["score"]
+                if score >= self.input_guardrail.get("input_guardrail_threshold"):
+                    llm_guardrail = self._llm_input_guardrail(query)
+                    if llm_guardrail != "NONE":
+                        state.guardrail_check = True
+                        state.guardrail_category = llm_guardrail
+                    break
 
         return state
 
@@ -625,7 +637,7 @@ class RagGraph:
         found_domains = set()
         for doc in retrieved_docs:
             score = doc.metadata["score"]
-            if score >= DOMAIN_TRESHOLD:
+            if score >= self.configuration.get("domain_threshold"):
                 high_score_docs.append(doc)
                 found_domains.add(doc.metadata["domain"])
 
@@ -1400,7 +1412,7 @@ class RagGraph:
                 )
 
     def stream(self, query: str):
-        if self.guardrail_configuration.get("output_guardrail_type", 0) == 0:
+        if self.output_guardrail_type == 0:
             result_answer = ""
 
             for chunk, metadata in self.graph.stream(
@@ -1418,11 +1430,8 @@ class RagGraph:
 
                     yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
-        if self.guardrail_configuration.get("output_guardrail_type", 0) == 1:
+        if self.output_guardrail_type == 1:
             result_answer = ""
-            chunk_interval = self.guardrail_configuration.get(
-                "output_guardrail_chunk_interval", 10
-            )
             chunk_batch = []
 
             for chunk, metadata in self.graph.stream(
@@ -1439,7 +1448,7 @@ class RagGraph:
                     result_answer += chunk.content
                     chunk_batch.append({"chunk": chunk.content, "type": "CHUNK"})
 
-                    if len(chunk_batch) == chunk_interval:
+                    if len(chunk_batch) == self.output_guardrail_chunk_interval:
                         llm_output_guardrail = self._llm_output_guardrail(result_answer)
 
                         if llm_output_guardrail != "NONE":
@@ -1462,11 +1471,8 @@ class RagGraph:
                         yield json.dumps(chunk)
                     chunk_batch = []
 
-        elif self.guardrail_configuration.get("output_guardrail_type", 0) == 2:
+        elif self.output_guardrail_type == 2:
             result_answer = ""
-            chunk_interval = self.guardrail_configuration.get(
-                "output_guardrail_chunk_interval", 10
-            )
             chunk_number = 0
 
             for chunk, metadata in self.graph.stream(
@@ -1483,7 +1489,7 @@ class RagGraph:
                         yield json.dumps({"chunk": "", "type": "START"})
                     result_answer += chunk.content
 
-                    if chunk_number == chunk_interval:
+                    if chunk_number == self.output_guardrail_chunk_interval:
                         chunk_number = 0
                         llm_output_guardrail = self._llm_output_guardrail(result_answer)
 
