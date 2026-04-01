@@ -24,6 +24,15 @@ from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
+from dotenv import load_dotenv
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from google.protobuf.struct_pb2 import Struct
+from opensearchpy import OpenSearch
+from phoenix.otel import register
+from sse_starlette.sse import EventSourceResponse
+
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
     get_tenant_manager_configuration,
@@ -38,14 +47,6 @@ from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
 from app.utils.scheduler import start_document_deletion_scheduler
-from dotenv import load_dotenv
-from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
-from google.protobuf.struct_pb2 import Struct
-from opensearchpy import OpenSearch
-from phoenix.otel import register
-from sse_starlette.sse import EventSourceResponse
 
 load_dotenv()
 
