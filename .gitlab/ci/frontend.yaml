@@ -4,10 +4,25 @@
 # NOTE: YAML Anchors (&name) are used to define change lists once,
 # and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# USER_TYPE variable passed to child pipelines:
-#   "designated" → lorenzo/giorgio: full pipeline (build + push + restart)
-#   "generic"    → any other user: Build Verifier only (compile check, no push)
-# MR and main/tag rules do NOT set USER_TYPE (handled by child-rules defaults).
+# Each trigger has three feature-branch rules:
+#
+#   1. "designated" rule:
+#      Fires only for frontend-designated users (lorenzo.venneri, giorgio.bartolomeo).
+#      Runs the full pipeline: build + push image + restart deployment.
+#      USER_TYPE: "designated"
+#
+#   2. "generic" rule:
+#      Fires for any user who is NOT a designated user of any domain
+#      (i.e. not backend, frontend, or AI designated).
+#      Runs build/compile only — no push, no restart. Useful to catch
+#      compilation errors on branches touched by non-owner developers.
+#      USER_TYPE: "generic"
+#
+#   3. Designated users of OTHER domains (backend: mirko/michele, AI: luca)
+#      are excluded from both rules above — their pipelines do NOT trigger
+#      on frontend changes, since they are not responsible for this domain.
+#
+# MR and main rules do NOT set USER_TYPE (handled by child-rules defaults).
 
 Trigger Search Frontend:
   stage: trigger
