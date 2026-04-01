@@ -5,7 +5,8 @@ from docling.backend.json.docling_json_backend import DoclingJSONBackend
 from docling.backend.mets_gbs_backend import MetsGbsDocumentBackend
 from docling.backend.webvtt_backend import WebVTTDocumentBackend
 from docling.datamodel import asr_model_specs
-from docling.datamodel.backend_options import HTMLBackendOptions
+
+# from docling.datamodel.backend_options import HTMLBackendOptions
 from docling.datamodel.base_models import InputFormat
 from docling.document_converter import (
     AsciiDocFormatOption,
@@ -25,9 +26,9 @@ from docling.document_converter import (
 from docling.pipeline.simple_pipeline import SimplePipeline
 from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
 
-html_backend_options = HTMLBackendOptions(
-    source_uri="SOURCE",
-)
+# html_backend_options = HTMLBackendOptions(
+#     source_uri="SOURCE",
+# )
 
 all_formats = {
     InputFormat.CSV: CsvFormatOption(),
