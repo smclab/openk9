@@ -145,82 +145,6 @@ export type AnnotatorWithDocTypeFieldDtoInput = {
   type: AnnotatorType;
 };
 
-export type Autocorrection = {
-  __typename?: 'Autocorrection';
-  /**
-   * Retrieves the DocTypeField associated with an Autocorrection configuration.
-   *
-   * This field resolver fetches the document type field linked to the given Autocorrection.
-   *
-   * Returns:
-   * - The associated DocTypeField, or null if not found.
-   *
-   */
-  autocorrectionDocTypeField?: Maybe<DocTypeField>;
-  /** ISO-8601 */
-  createDate?: Maybe<Scalars['DateTime']>;
-  description?: Maybe<Scalars['String']>;
-  enableSearchWithCorrection: Scalars['Boolean'];
-  id?: Maybe<Scalars['ID']>;
-  maxEdit?: Maybe<Scalars['Int']>;
-  minWordLength?: Maybe<Scalars['Int']>;
-  /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
-  name?: Maybe<Scalars['String']>;
-  prefixLength?: Maybe<Scalars['Int']>;
-  sort?: Maybe<SortType>;
-  suggestMode?: Maybe<SuggestMode>;
-};
-
-export type AutocorrectionDtoInput = {
-  /**
-   * 	The field used in the autocorrection query,
-   * 	must be a valid docTypeFieldId.
-   *
-   */
-  autocorrectionDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
-  description?: InputMaybe<Scalars['String']>;
-  /**
-   * 	If enabled, the search query will automatically be replaced with the corrected version from the autocorrection suggester.
-   *
-   */
-  enableSearchWithCorrection?: InputMaybe<Scalars['Boolean']>;
-  /**
-   * 	The maximum allowed edit distance for suggestions. Valid values are in the range [1, 2].
-   * 	The default value is 2. Higher edit distances can lead to more suggestions, but also to less relevant ones.
-   *
-   */
-  maxEdit?: InputMaybe<Scalars['Int']>;
-  /**
-   * 	The minimum length of a word for it to be considered for suggestions.
-   * 	Terms shorter than this length will not generate suggestions.
-   *
-   */
-  minWordLength?: InputMaybe<Scalars['Int']>;
-  name: Scalars['String'];
-  /**
-   * 	An integer specifying the minimum length the matching prefix must have to start returning suggestions.
-   * 	For example, if 'prefix_length' is 3, an input of "ap" will not generate suggestions, while "app" will.
-   *
-   */
-  prefixLength?: InputMaybe<Scalars['Int']>;
-  /**
-   * 	Specifies how suggestions should be ordered in the response. Valid values are:
-   * 	- 'score' (Default): Orders by similarity score (edit distance), then by document frequency, and finally by the term itself.
-   * 	- 'frequency': Orders by document frequency, then by similarity score, and finally by the term itself.
-   *
-   */
-  sort?: InputMaybe<SortType>;
-  /**
-   * 	Controls for which terms suggestions should be included in the response. Valid values are:
-   * 	- 'missing' (Default): Returns suggestions only for input terms not found in the index.
-   * 	- 'popular': Returns suggestions only if the suggested terms appear more frequently in documents than the original query term.
-   * 	- 'always': Always returns matching suggestions for every term in the input text, regardless of its presence or frequency in the index.
-   *
-   */
-  suggestMode?: InputMaybe<SuggestMode>;
-};
-
 export enum BehaviorMergeType {
   Merge = 'MERGE',
   Replace = 'REPLACE'
@@ -234,7 +158,6 @@ export enum BehaviorOnError {
 
 export type Bucket = {
   __typename?: 'Bucket';
-  autocorrection?: Maybe<Autocorrection>;
   catIndices?: Maybe<Array<Maybe<CatResponse>>>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
@@ -330,10 +253,10 @@ export type BucketDtoInput = {
 };
 
 export type BucketWithListsDtoInput = {
-  autocorrection?: InputMaybe<Scalars['BigInteger']>;
   datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
   description?: InputMaybe<Scalars['String']>;
+  languageIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   name: Scalars['String'];
   queryAnalysisId?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationChat?: InputMaybe<Scalars['BigInteger']>;
@@ -404,14 +327,6 @@ export type Connection_Analyzer = {
 export type Connection_Annotator = {
   /** A list of edges. */
   edges?: Maybe<Array<Maybe<Edge_Annotator>>>;
-  /** details about this specific page */
-  pageInfo?: Maybe<PageInfo>;
-};
-
-/** A connection to a list of items. */
-export type Connection_Autocorrection = {
-  /** A list of edges. */
-  edges?: Maybe<Array<Maybe<Edge_Autocorrection>>>;
   /** details about this specific page */
   pageInfo?: Maybe<PageInfo>;
 };
@@ -662,6 +577,8 @@ export type CreateRagConfigurationDtoInput = {
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
+  /** Boolean to enable/disable the generation of the conversation title. */
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -836,12 +753,6 @@ export type DefaultConnection_Annotator = Connection_Annotator & {
   pageInfo?: Maybe<PageInfo>;
 };
 
-export type DefaultConnection_Autocorrection = Connection_Autocorrection & {
-  __typename?: 'DefaultConnection_Autocorrection';
-  edges?: Maybe<Array<Maybe<Edge_Autocorrection>>>;
-  pageInfo?: Maybe<PageInfo>;
-};
-
 export type DefaultConnection_Bucket = Connection_Bucket & {
   __typename?: 'DefaultConnection_Bucket';
   edges?: Maybe<Array<Maybe<Edge_Bucket>>>;
@@ -1008,12 +919,6 @@ export type DefaultEdge_Annotator = Edge_Annotator & {
   __typename?: 'DefaultEdge_Annotator';
   cursor?: Maybe<Scalars['String']>;
   node?: Maybe<Annotator>;
-};
-
-export type DefaultEdge_Autocorrection = Edge_Autocorrection & {
-  __typename?: 'DefaultEdge_Autocorrection';
-  cursor?: Maybe<Scalars['String']>;
-  node?: Maybe<Autocorrection>;
 };
 
 export type DefaultEdge_Bucket = Edge_Bucket & {
@@ -1349,14 +1254,6 @@ export type Edge_Annotator = {
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
   node?: Maybe<Annotator>;
-};
-
-/** An edge in a connection */
-export type Edge_Autocorrection = {
-  /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
-  /** The item at the end of the edge */
-  node?: Maybe<Autocorrection>;
 };
 
 /** An edge in a connection */
@@ -1884,39 +1781,8 @@ export type Mutation = {
   analyzerWithLists?: Maybe<Response_Analyzer>;
   annotator?: Maybe<Response_Annotator>;
   annotatorWithDocTypeField?: Maybe<Response_Annotator>;
-  /**
-   * Creates or updates an Autocorrection configuration.
-   *
-   * This mutation handles both creation and updates/patch of Autocorrection configurations based on the provided ID.
-   * If no ID is provided, a new Autocorrection is created. If an ID is provided, the existing Autocorrection
-   * is either fully updated or partially patched based on the patch parameter.
-   *
-   * Arguments:
-   * - `id` (ID): The ID of the Autocorrection to update. If null, creates a new Autocorrection.
-   * - `autocorrectionDTO` (AutocorrectionDTO!): The Autocorrection data to create or update.
-   * - `patch` (Boolean): If true, performs a partial update (patch). If false, performs a full update. Defaults to false.
-   *
-   * Returns:
-   * - A Response containing the created or updated Autocorrection configuration.
-   *
-   */
-  autocorrection?: Maybe<Response_Autocorrection>;
   bindAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   bindAnnotatorToDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
-  /**
-   * Binds an existing Autocorrection to a specified Bucket.
-   *
-   * Arguments:
-   * - `bucketId` (ID!): The ID of the Bucket to bind the Autocorrection to.
-   * - `autocorrectionId` (ID!): The ID of the Autocorrection to be bound.
-   *
-   * Returns:
-   * - A tuple containing:
-   *   - `bucket`: The updated Bucket with the linked Autocorrection.
-   *   - `autocorrection`: The linked Autocorrection.
-   *
-   */
-  bindAutocorrectionToBucket?: Maybe<Tuple2_Bucket_Autocorrection>;
   bindDataIndexToDatasource?: Maybe<Tuple2_Datasource_DataIndex>;
   bindDocTypeFieldToSorting?: Maybe<Tuple2_Sorting_DocTypeField>;
   bindDocTypeFieldToTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
@@ -1965,17 +1831,6 @@ export type Mutation = {
   datasource?: Maybe<Response_Datasource>;
   deleteAnalyzer?: Maybe<Analyzer>;
   deleteAnnotator?: Maybe<Annotator>;
-  /**
-   * Deletes an Autocorrection configuration by its ID.
-   *
-   * Arguments:
-   * - `id` (ID!): The ID of the Autocorrection to delete.
-   *
-   * Returns:
-   * - The deleted Autocorrection configuration.
-   *
-   */
-  deleteAutocorrection?: Maybe<Autocorrection>;
   deleteBucket?: Maybe<Bucket>;
   deleteCharFilter?: Maybe<CharFilter>;
   deleteDataIndex?: Maybe<DataIndex>;
@@ -2063,21 +1918,6 @@ export type Mutation = {
   tokenizer?: Maybe<Response_Tokenizer>;
   unbindAnalyzerFromDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
   unbindAnnotatorFromDocTypeField?: Maybe<Tuple2_Annotator_DocTypeField>;
-  /**
-   * Unbinds the Autocorrection from a specified Bucket.
-   *
-   * This mutation removes the link between a Autocorrection and a Bucket.
-   *
-   * Arguments:
-   * - `bucketId` (ID!): The ID of the Bucket from which the Autocorrection will be unbound.
-   *
-   * Returns:
-   * - A tuple containing:
-   *   - `bucket`: The updated Bucket after unbinding the Autocorrection.
-   *   - `autocorrection`: Always null.
-   *
-   */
-  unbindAutocorrectionFromBucket?: Maybe<Tuple2_Bucket_Autocorrection>;
   unbindDataIndexFromDatasource?: Maybe<Datasource>;
   unbindDocTypeFieldFromSorting?: Maybe<Tuple2_Sorting_DocTypeField>;
   /** This mutation replaces `removeDocTypeFieldFromSuggestionCategory`. It does not require the `docTypeFieldId` parameter and provides a more efficient implementation. */
@@ -2301,14 +2141,6 @@ export type MutationAnnotatorWithDocTypeFieldArgs = {
 
 
 /** Mutation root */
-export type MutationAutocorrectionArgs = {
-  autocorrectionDTO?: InputMaybe<AutocorrectionDtoInput>;
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
-};
-
-
-/** Mutation root */
 export type MutationBindAnalyzerToDocTypeFieldArgs = {
   analyzerId: Scalars['ID'];
   docTypeFieldId: Scalars['ID'];
@@ -2319,13 +2151,6 @@ export type MutationBindAnalyzerToDocTypeFieldArgs = {
 export type MutationBindAnnotatorToDocTypeFieldArgs = {
   docTypeFieldId: Scalars['ID'];
   id: Scalars['ID'];
-};
-
-
-/** Mutation root */
-export type MutationBindAutocorrectionToBucketArgs = {
-  autocorrectionId: Scalars['ID'];
-  bucketId: Scalars['ID'];
 };
 
 
@@ -2480,12 +2305,6 @@ export type MutationDeleteAnalyzerArgs = {
 /** Mutation root */
 export type MutationDeleteAnnotatorArgs = {
   annotatorId: Scalars['ID'];
-};
-
-
-/** Mutation root */
-export type MutationDeleteAutocorrectionArgs = {
-  id: Scalars['ID'];
 };
 
 
@@ -3053,12 +2872,6 @@ export type MutationUnbindAnnotatorFromDocTypeFieldArgs = {
 
 
 /** Mutation root */
-export type MutationUnbindAutocorrectionFromBucketArgs = {
-  bucketId: Scalars['ID'];
-};
-
-
-/** Mutation root */
 export type MutationUnbindDataIndexFromDatasourceArgs = {
   datasourceId: Scalars['ID'];
 };
@@ -3284,37 +3097,6 @@ export type Query = {
   analyzers?: Maybe<Connection_Analyzer>;
   annotator?: Maybe<Annotator>;
   annotators?: Maybe<Connection_Annotator>;
-  /**
-   * Retrieves an Autocorrection configuration by its ID.
-   *
-   * Arguments:
-   * - `id` (ID!): The ID of the Autocorrection to retrieve.
-   *
-   * Returns:
-   * - The requested Autocorrection configuration, or null if not found.
-   *
-   */
-  autocorrection?: Maybe<Autocorrection>;
-  /**
-   * Retrieves a paginated connection of Autocorrection configurations with optional filtering and sorting.
-   *
-   * This query supports cursor-based pagination following the Relay specification, allowing forward
-   * and backward traversal through the result set. Results can be filtered by search text and sorted
-   * by multiple criteria.
-   *
-   * Arguments:
-   * - `after` (String): Cursor for forward pagination - fetches nodes after this cursor (exclusive).
-   * - `before` (String): Cursor for backward pagination - fetches nodes before this cursor (exclusive).
-   * - `first` (Integer): Limits the number of nodes returned from the start.
-   * - `last` (Integer): Limits the number of nodes returned from the end.
-   * - `searchText` (String): Optional text to filter Autocorrection configurations.
-   * - `sortByList` (Set<SortBy>): Optional set of sorting criteria.
-   *
-   * Returns:
-   * - A Connection containing the requested Autocorrection configurations with pagination info.
-   *
-   */
-  autocorrections?: Maybe<Connection_Autocorrection>;
   bucket?: Maybe<Bucket>;
   buckets?: Maybe<Connection_Bucket>;
   charFilter?: Maybe<CharFilter>;
@@ -3385,19 +3167,6 @@ export type Query = {
   totalTokenTabs?: Maybe<Connection_TokenTab>;
   unboundAnalyzersByCharFilter?: Maybe<Array<Maybe<Analyzer>>>;
   unboundAnalyzersByTokenFilter?: Maybe<Array<Maybe<Analyzer>>>;
-  /**
-   * Retrieves all Autocorrection configurations that are not bound to a specific Bucket.
-   *
-   * This query returns Autocorrection configurations that are available to be bound to the specified Bucket.
-   *
-   * Arguments:
-   * - `bucketId` (ID!): The ID of the Bucket to check for unbound Autocorrections.
-   *
-   * Returns:
-   * - A list of unbound Autocorrection configurations available for the specified Bucket.
-   *
-   */
-  unboundAutocorrectionByBucket?: Maybe<Array<Maybe<Autocorrection>>>;
   unboundBucketsByDatasource?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsBySuggestionCategory?: Maybe<Array<Maybe<Bucket>>>;
   unboundBucketsByTab?: Maybe<Array<Maybe<Bucket>>>;
@@ -3450,23 +3219,6 @@ export type QueryAnnotatorArgs = {
 
 /** Query root */
 export type QueryAnnotatorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
-  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
-};
-
-
-/** Query root */
-export type QueryAutocorrectionArgs = {
-  id: Scalars['ID'];
-};
-
-
-/** Query root */
-export type QueryAutocorrectionsArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -4058,12 +3810,6 @@ export type QueryUnboundAnalyzersByTokenFilterArgs = {
 
 
 /** Query root */
-export type QueryUnboundAutocorrectionByBucketArgs = {
-  bucketId: Scalars['BigInteger'];
-};
-
-
-/** Query root */
 export type QueryUnboundBucketsByDatasourceArgs = {
   datasourceId: Scalars['BigInteger'];
 };
@@ -4196,6 +3942,7 @@ export type RagConfiguration = {
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
   description?: Maybe<Scalars['String']>;
+  enableConversationTitle?: Maybe<Scalars['Boolean']>;
   id?: Maybe<Scalars['ID']>;
   jsonConfig?: Maybe<Scalars['String']>;
   /** ISO-8601 */
@@ -4218,6 +3965,8 @@ export type RagConfigurationDtoInput = {
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
+  /** Boolean to enable/disable the generation of the conversation title. */
+  enableConversationTitle?: InputMaybe<Scalars['Boolean']>;
   /** A JSON that can be used to add additional configurations to the EmbeddingModel. */
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
@@ -4260,12 +4009,6 @@ export type Response_Analyzer = {
 export type Response_Annotator = {
   __typename?: 'Response_Annotator';
   entity?: Maybe<Annotator>;
-  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
-};
-
-export type Response_Autocorrection = {
-  __typename?: 'Response_Autocorrection';
-  entity?: Maybe<Autocorrection>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
@@ -4522,11 +4265,6 @@ export type SortByInput = {
   direction?: InputMaybe<Direction>;
 };
 
-export enum SortType {
-  Frequency = 'FREQUENCY',
-  Score = 'SCORE'
-}
-
 export type Sorting = {
   __typename?: 'Sorting';
   /** ISO-8601 */
@@ -4630,12 +4368,6 @@ export type Subscription = {
   tokenizerDeleted?: Maybe<Tokenizer>;
   tokenizerUpdated?: Maybe<Tokenizer>;
 };
-
-export enum SuggestMode {
-  Always = 'ALWAYS',
-  Missing = 'MISSING',
-  Popular = 'POPULAR'
-}
 
 export type SuggestionCategory = {
   __typename?: 'SuggestionCategory';
@@ -4874,12 +4606,6 @@ export type Tuple2_Annotator_DocTypeField = {
   __typename?: 'Tuple2_Annotator_DocTypeField';
   left?: Maybe<Annotator>;
   right?: Maybe<DocTypeField>;
-};
-
-export type Tuple2_Bucket_Autocorrection = {
-  __typename?: 'Tuple2_Bucket_Autocorrection';
-  left?: Maybe<Bucket>;
-  right?: Maybe<Autocorrection>;
 };
 
 export type Tuple2_Bucket_Datasource = {
@@ -6295,7 +6021,7 @@ export type BucketDataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null, languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateBucketMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6315,6 +6041,7 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   ragConfigurationChat?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationChatTool?: InputMaybe<Scalars['BigInteger']>;
   ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
+  languageIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
 }>;
 
 
@@ -10827,7 +10554,7 @@ export type UnboundDocTypeFieldsBySuggestionCategoryQueryHookResult = ReturnType
 export type UnboundDocTypeFieldsBySuggestionCategoryLazyQueryHookResult = ReturnType<typeof useUnboundDocTypeFieldsBySuggestionCategoryLazyQuery>;
 export type UnboundDocTypeFieldsBySuggestionCategoryQueryResult = Apollo.QueryResult<UnboundDocTypeFieldsBySuggestionCategoryQuery, UnboundDocTypeFieldsBySuggestionCategoryQueryVariables>;
 export const DocTypeFieldsDocument = gql`
-    query DocTypeFields($searchText: String, $first: Int = 20, $after: String) {
+    query DocTypeFields($searchText: String, $first: Int, $after: String) {
   docTypeFields(searchText: $searchText, first: $first, after: $after) {
     edges {
       node {
@@ -12966,6 +12693,20 @@ export const BucketDataSourcesDocument = gql`
         endCursor
       }
     }
+    languages(
+      searchText: $searchText
+      first: 20
+      after: $cursor
+      notEqual: $unassociated
+    ) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+    }
   }
 }
     `;
@@ -13001,10 +12742,10 @@ export type BucketDataSourcesQueryHookResult = ReturnType<typeof useBucketDataSo
 export type BucketDataSourcesLazyQueryHookResult = ReturnType<typeof useBucketDataSourcesLazyQuery>;
 export type BucketDataSourcesQueryResult = Apollo.QueryResult<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $languageIds: [BigInteger]) {
   bucketWithLists(
     id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate}
+    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, languageIds: $languageIds}
   ) {
     entity {
       id
@@ -13050,6 +12791,7 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      ragConfigurationChat: // value for 'ragConfigurationChat'
  *      ragConfigurationChatTool: // value for 'ragConfigurationChatTool'
  *      ragConfigurationSimpleGenerate: // value for 'ragConfigurationSimpleGenerate'
+ *      languageIds: // value for 'languageIds'
  *   },
  * });
  */
@@ -14819,4 +14561,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2025-10-20T16:31:08+02:00
+// Generated on 2026-04-01T10:40:21+02:00

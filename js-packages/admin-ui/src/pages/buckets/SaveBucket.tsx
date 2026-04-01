@@ -25,6 +25,7 @@ import {
   useBucketQuery,
   useCreateOrUpdateBucketMutation,
   useDataSourcesQuery,
+  useLanguagesQuery,
   useSuggestionCategoriesQuery,
   useTabsQuery,
   useUnboundRagConfigurationsByBucketQuery,
@@ -49,6 +50,7 @@ const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = 
     tooltip: "Suggestion Categories associated to current bucket",
   },
   { label: "tabs", id: "tabIds", tooltip: "Tabs associated to current bucket" },
+  { label: "language", id: "languageIds", tooltip: "Languages associated to current bucket" },
 ];
 
 const sxCheckbox = {
@@ -149,7 +151,7 @@ export function SaveBucket() {
     },
   });
 
-  const { datasources, suggestionCategories, tabs } = useBucketData({
+  const { datasources, suggestionCategories, tabs, languages } = useBucketData({
     bucketId,
     bucketQuery: bucketDataSources.data,
     associatedBucketQuery: bucketDataSourcesAssociated.data,
@@ -169,6 +171,7 @@ export function SaveBucket() {
         datasourceIds: datasources?.associated || [],
         suggestionCategoryIds: suggestionCategories?.associated || [],
         tabIds: tabs?.associated || [],
+        languageIds: languages?.associated || [],
         queryAnalysisId: bucketQuery.data?.bucket?.queryAnalysis?.id
           ? {
               id: bucketQuery.data?.bucket?.queryAnalysis?.id,
@@ -206,7 +209,7 @@ export function SaveBucket() {
             }
           : undefined,
       }),
-      [datasources, suggestionCategories, tabs, bucketQuery],
+      [datasources, suggestionCategories, tabs, languages, bucketQuery],
     ),
     originalValues: bucketQuery.data?.bucket,
     isLoading: bucketQuery.loading || createOrUpdateBucketMutation.loading,
@@ -224,6 +227,9 @@ export function SaveBucket() {
           }),
           tabIds: formatQueryToBE({
             information: data.tabIds,
+          }),
+          languageIds: formatQueryToBE({
+            information: data.languageIds,
           }),
           searchConfigId: data?.searchConfigId?.id ? data.searchConfigId.id : undefined,
           defaultLanguageId: data.defaultLanguageId?.id ? data?.defaultLanguageId?.id : undefined,
@@ -388,6 +394,30 @@ export function SaveBucket() {
                           }
                         }}
                       />
+                      <MultiAssociationCustomQuery
+                        list={{
+                          ...languages,
+                          associated: form.inputProps("languageIds").value,
+                        }}
+                        sx={selectedAssociationTabs === "languageIds" ? {} : { display: "none" }}
+                        isLoading={languages.isLoading}
+                        disabled={isRecap || view === "view"}
+                        isRecap={page === 1}
+                        onSelect={({ items, isAdd }) => {
+                          const data = form.inputProps("languageIds").value;
+
+                          if (isAdd) {
+                            const updatedData = [
+                              ...data,
+                              ...items.filter((item) => !data.some((d) => d.value === item.value)),
+                            ];
+                            form.inputProps("languageIds").onChange(updatedData);
+                          } else {
+                            const updatedData = data.filter((dat) => !items.some((item) => item.value === dat.value));
+                            form.inputProps("languageIds").onChange(updatedData);
+                          }
+                        }}
+                      />
                     </AssociationsLayout>
                     <Box display={"grid"} gridTemplateColumns={"1fr 1fr"} gap={"10px"} mt={"16px"}>
                       <AutocompleteDropdown
@@ -526,6 +556,7 @@ type ReturnUserBucketData = {
   datasources: AssociatedUnassociated;
   suggestionCategories: AssociatedUnassociated;
   tabs: AssociatedUnassociated;
+  languages: AssociatedUnassociated;
 };
 
 const useBucketData = ({
@@ -548,6 +579,10 @@ const useBucketData = ({
   });
 
   const tabsQuery = useTabsQuery({
+    skip: skipRecoveryAllInformation,
+  });
+
+  const languagesQuery = useLanguagesQuery({
     skip: skipRecoveryAllInformation,
   });
 
@@ -582,8 +617,17 @@ const useBucketData = ({
           informationId: associatedBucketQuery?.bucket?.tabs?.edges,
         }),
       },
+      languages: {
+        unassociated: formatQueryToFE({
+          informationId: languagesQuery.data?.languages?.edges || bucketQuery?.bucket?.languages?.edges,
+        }),
+        isLoading: languagesQuery.loading,
+        associated: formatQueryToFE({
+          informationId: associatedBucketQuery?.bucket?.languages?.edges,
+        }),
+      },
     }),
-    [datasourcesQuery, suggestionCategoriesQuery, tabsQuery, bucketQuery, associatedBucketQuery],
+    [datasourcesQuery, suggestionCategoriesQuery, tabsQuery, languagesQuery, bucketQuery, associatedBucketQuery],
   );
 
   return { ...data };

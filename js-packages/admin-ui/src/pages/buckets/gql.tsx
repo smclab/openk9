@@ -263,6 +263,15 @@ gql`
           endCursor
         }
       }
+      languages(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+        edges {
+          node {
+            id
+            name
+            value
+          }
+        }
+      }
     }
   }
 `;
@@ -286,6 +295,7 @@ export const CreateUpdateBucketRecap = gql`
     $ragConfigurationChat: BigInteger
     $ragConfigurationChatTool: BigInteger
     $ragConfigurationSimpleGenerate: BigInteger
+    $languageIds: [BigInteger]
   ) {
     bucketWithLists(
       id: $id
@@ -306,6 +316,7 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationChat: $ragConfigurationChat
         ragConfigurationChatTool: $ragConfigurationChatTool
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
+        languageIds: $languageIds
       }
     ) {
       entity {
