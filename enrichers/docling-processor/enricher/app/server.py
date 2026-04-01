@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import json
 import os
 import threading
 
@@ -84,7 +85,13 @@ def health_check():
     response_description="Form structure with field definitions",
 )
 def form():
-    response = {"fields": []}
+
+    with open("app/form/form_descr_tipi.json") as f:
+        data = json.load(f)
+
+    fields = data.get("fields", [])
+
+    response = {"fields": fields}
     return response
 
 

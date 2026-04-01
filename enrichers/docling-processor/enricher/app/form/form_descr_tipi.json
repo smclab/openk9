@@ -1,0 +1,952 @@
+{
+    "fields": [
+        {
+            "label": "Document Timeout",
+            "name": "pipeline_options.document_timeout",
+            "field": "pipeline_options.document_timeout",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "Maximum processing time in seconds before aborting document conversion. When exceeded, the pipeline stops processing and returns partial results with PARTIAL_SUCCESS status. If None, no timeout is enforced. Recommended: 90-120 seconds for production systems.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Num Threads",
+            "name": "pipeline_options.accelerator_options.num_threads",
+            "field": "pipeline_options.accelerator_options.num_threads",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Number of CPU threads to use for model inference. Higher values can improve throughput on multi-core systems but may increase memory usage. Can be set via DOCLING_NUM_THREADS or OMP_NUM_THREADS environment variables. Recommended: number of physical CPU cores.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 4,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Device",
+            "name": "pipeline_options.accelerator_options.device",
+            "field": "pipeline_options.accelerator_options.device",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "Hardware device for model inference. Options: `auto` (automatic detection), `cpu` (CPU only), `cuda` (NVIDIA GPU), `cuda:N` (specific GPU), `mps` (Apple Silicon), `xpu` (Intel GPU). Auto mode selects the best available device. Can be set via DOCLING_DEVICE environment variable.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": "auto",
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Cuda Use Flash Attention2",
+            "name": "pipeline_options.accelerator_options.cuda_use_flash_attention2",
+            "field": "pipeline_options.accelerator_options.cuda_use_flash_attention2",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable Flash Attention 2 optimization for CUDA devices. Provides significant speedup and memory reduction for transformer models on compatible NVIDIA GPUs (Ampere or newer). Requires flash-attn package installation. Can be set via DOCLING_CUDA_USE_FLASH_ATTENTION2 environment variable.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Enable Remote Services",
+            "name": "pipeline_options.enable_remote_services",
+            "field": "pipeline_options.enable_remote_services",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Allow pipeline to call external APIs or cloud services during processing. Required for API-based picture description models. Disabled by default for security and offline operation.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Allow External Plugins",
+            "name": "pipeline_options.allow_external_plugins",
+            "field": "pipeline_options.allow_external_plugins",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Allow loading external third-party plugins for OCR, layout, table structure, or picture description models. Enables custom model implementations via plugin system. Disabled by default for security.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Artifacts Path",
+            "name": "pipeline_options.artifacts_path",
+            "field": "pipeline_options.artifacts_path",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "Local directory containing pre-downloaded model artifacts (weights, configs). If None, models are fetched from remote sources on first use. Use `docling-tools models download` to pre-fetch artifacts for offline operation or faster initialization.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Kind",
+            "name": "pipeline_options.asr_options.kind",
+            "field": "pipeline_options.asr_options.kind",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "No description",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": "inline_model_options",
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Repo Id",
+            "name": "pipeline_options.asr_options.repo_id",
+            "field": "pipeline_options.asr_options.repo_id",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "HuggingFace model repository ID for the ASR model. Must be a Whisper-compatible model for automatic speech recognition.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": "tiny",
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Verbose",
+            "name": "pipeline_options.asr_options.verbose",
+            "field": "pipeline_options.asr_options.verbose",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable verbose logging output from the ASR model for debugging purposes.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": true,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Timestamps",
+            "name": "pipeline_options.asr_options.timestamps",
+            "field": "pipeline_options.asr_options.timestamps",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Generate timestamps for transcribed segments. When enabled, each transcribed segment includes start and end times for temporal alignment with the audio.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": true,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Temperature",
+            "name": "pipeline_options.asr_options.temperature",
+            "field": "pipeline_options.asr_options.temperature",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Sampling temperature for text generation. 0.0 uses greedy decoding (deterministic), higher values (e.g., 0.7-1.0) increase randomness. Recommended: 0.0 for consistent transcriptions.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 0.0,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Max New Tokens",
+            "name": "pipeline_options.asr_options.max_new_tokens",
+            "field": "pipeline_options.asr_options.max_new_tokens",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Maximum number of tokens to generate per transcription segment. Limits output length to prevent runaway generation. Adjust based on expected transcript length.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 256,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Max Time Chunk",
+            "name": "pipeline_options.asr_options.max_time_chunk",
+            "field": "pipeline_options.asr_options.max_time_chunk",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Maximum duration in seconds for each audio chunk processed by the model. Audio longer than this is split into chunks. Whisper models are typically trained on 30-second segments.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 30.0,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Torch Dtype",
+            "name": "pipeline_options.asr_options.torch_dtype",
+            "field": "pipeline_options.asr_options.torch_dtype",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "PyTorch data type for model weights. Options: `float32`, `float16`, `bfloat16`. Lower precision (float16/bfloat16) reduces memory usage and increases speed. If None, uses model default.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Supported Devices",
+            "name": "pipeline_options.asr_options.supported_devices",
+            "field": "pipeline_options.asr_options.supported_devices",
+            "type": "list",
+            "size": 4,
+            "required": false,
+            "info": "List of hardware accelerators supported by this ASR model configuration.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": [
+                        "cpu",
+                        "cuda"
+                    ],
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Picture Classification",
+            "name": "pipeline_options.do_picture_classification",
+            "field": "pipeline_options.do_picture_classification",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable picture classification to categorize images by type (photo, diagram, chart, etc.). Useful for downstream processing that requires image type awareness.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Picture Description",
+            "name": "pipeline_options.do_picture_description",
+            "field": "pipeline_options.do_picture_description",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable automatic generation of textual descriptions for pictures using vision-language models. Descriptions are added to the document for accessibility and searchability.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Batch Size",
+            "name": "pipeline_options.picture_description_options.batch_size",
+            "field": "pipeline_options.picture_description_options.batch_size",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Number of images to process in a single batch during picture description. Higher values improve throughput but increase memory usage. Adjust based on available GPU/CPU memory.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 8,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Scale",
+            "name": "pipeline_options.picture_description_options.scale",
+            "field": "pipeline_options.picture_description_options.scale",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Scaling factor for image resolution before processing. Higher values (e.g., 2.0) provide more detail for the vision model but increase processing time and memory. Range: 0.5-4.0 typical.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 2.0,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Picture Area Threshold",
+            "name": "pipeline_options.picture_description_options.picture_area_threshold",
+            "field": "pipeline_options.picture_description_options.picture_area_threshold",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Minimum picture area as fraction of page area (0.0-1.0) to trigger description. Pictures smaller than this threshold are skipped. Use lower values (e.g., 0.01) to describe small images.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 0.05,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Classification Allow",
+            "name": "pipeline_options.picture_description_options.classification_allow",
+            "field": "pipeline_options.picture_description_options.classification_allow",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "List of picture classification labels to allow for description. Only pictures classified with these labels will be processed. If None, all picture types are allowed unless explicitly denied. Use to focus description on specific image types (e.g., diagrams, charts).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Classification Deny",
+            "name": "pipeline_options.picture_description_options.classification_deny",
+            "field": "pipeline_options.picture_description_options.classification_deny",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "List of picture classification labels to exclude from description. Pictures classified with these labels will be skipped. If None, no picture types are denied unless not in allow list. Use to exclude unwanted image types (e.g., decorative images, logos).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Classification Min Confidence",
+            "name": "pipeline_options.picture_description_options.classification_min_confidence",
+            "field": "pipeline_options.picture_description_options.classification_min_confidence",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Minimum classification confidence score (0.0-1.0) required for a picture to be processed. Pictures with classification confidence below this threshold are skipped. Higher values ensure only confidently classified images are described. Range: 0.0 (no filtering) to 1.0 (maximum confidence).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 0.0,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Images Scale",
+            "name": "pipeline_options.images_scale",
+            "field": "pipeline_options.images_scale",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Scaling factor for generated images. Higher values produce higher resolution but increase processing time and storage requirements. Recommended values: 1.0 (standard quality), 2.0 (high resolution), 0.5 (lower resolution for previews).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 1.0,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Generate Page Images",
+            "name": "pipeline_options.generate_page_images",
+            "field": "pipeline_options.generate_page_images",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Generate rendered page images during extraction. Creates PNG representations of each page for visual preview, validation, or downstream image-based machine learning tasks.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Generate Picture Images",
+            "name": "pipeline_options.generate_picture_images",
+            "field": "pipeline_options.generate_picture_images",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Extract and save embedded images from the PDF. Exports individual images (figures, photos, diagrams, charts) found in the document as separate image files for downstream use.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Table Structure",
+            "name": "pipeline_options.do_table_structure",
+            "field": "pipeline_options.do_table_structure",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable table structure extraction and reconstruction. Detects table regions, extracts cell content with row/column relationships, and reconstructs the logical table structure for downstream processing.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": true,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Ocr",
+            "name": "pipeline_options.do_ocr",
+            "field": "pipeline_options.do_ocr",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable Optical Character Recognition for scanned or image-based PDFs. Replaces or supplements programmatic text extraction with OCR-detected text. Required for scanned documents with no embedded text layer. Note: OCR significantly increases processing time.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": true,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Code Enrichment",
+            "name": "pipeline_options.do_code_enrichment",
+            "field": "pipeline_options.do_code_enrichment",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable specialized processing for code blocks. Applies code-aware OCR and formatting to improve accuracy of programming language snippets, terminal output, and structured code content.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Do Formula Enrichment",
+            "name": "pipeline_options.do_formula_enrichment",
+            "field": "pipeline_options.do_formula_enrichment",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Enable mathematical formula recognition and LaTeX conversion. Uses specialized models to detect and extract mathematical expressions, converting them to LaTeX format for accurate representation.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Force Backend Text",
+            "name": "pipeline_options.force_backend_text",
+            "field": "pipeline_options.force_backend_text",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Force use of PDF backend's native text extraction instead of layout model predictions. When enabled, bypasses the layout model's text detection and uses the embedded text from the PDF file directly. Useful for PDFs with reliable programmatic text layers.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Lang",
+            "name": "pipeline_options.ocr_options.lang",
+            "field": "pipeline_options.ocr_options.lang",
+            "type": "list",
+            "size": 4,
+            "required": false,
+            "info": "List of OCR languages to use. The format must match the values of the OCR engine of choice.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": [],
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Force Full Page Ocr",
+            "name": "pipeline_options.ocr_options.force_full_page_ocr",
+            "field": "pipeline_options.ocr_options.force_full_page_ocr",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "If enabled, a full-page OCR is always applied.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Bitmap Area Threshold",
+            "name": "pipeline_options.ocr_options.bitmap_area_threshold",
+            "field": "pipeline_options.ocr_options.bitmap_area_threshold",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Percentage of the page area for a bitmap to be processed with OCR.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 0.05,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Keep Empty Clusters",
+            "name": "pipeline_options.layout_options.keep_empty_clusters",
+            "field": "pipeline_options.layout_options.keep_empty_clusters",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Retain empty clusters in layout analysis results. When False, clusters without content are removed. Enable for debugging or when empty regions are semantically important.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Skip Cell Assignment",
+            "name": "pipeline_options.layout_options.skip_cell_assignment",
+            "field": "pipeline_options.layout_options.skip_cell_assignment",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Skip assignment of cells to table structures during layout analysis. When True, cells are detected but not associated with tables. Use for performance optimization when table structure is not needed.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Generate Table Images",
+            "name": "pipeline_options.generate_table_images",
+            "field": "pipeline_options.generate_table_images",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "No description",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Generate Parsed Pages",
+            "name": "pipeline_options.generate_parsed_pages",
+            "field": "pipeline_options.generate_parsed_pages",
+            "type": "checkbox",
+            "size": 4,
+            "required": false,
+            "info": "Retain intermediate parsed page representations after processing. When enabled, keeps detailed page-level parsing data structures for debugging or advanced post-processing. Increases memory usage. Automatically disabled after document assembly unless explicitly enabled.",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": false,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Ocr Batch Size",
+            "name": "pipeline_options.ocr_batch_size",
+            "field": "pipeline_options.ocr_batch_size",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Batch size for OCR processing stage in threaded pipeline. Pages are grouped and processed together to improve throughput. Higher values increase GPU/CPU utilization but require more memory. Only used by `StandardPdfPipeline` (threaded mode).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 4,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Layout Batch Size",
+            "name": "pipeline_options.layout_batch_size",
+            "field": "pipeline_options.layout_batch_size",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Batch size for layout analysis stage in threaded pipeline. Pages are grouped and processed together by the layout model. Higher values improve throughput but increase memory usage. Only used by `StandardPdfPipeline` (threaded mode).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 4,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Table Batch Size",
+            "name": "pipeline_options.table_batch_size",
+            "field": "pipeline_options.table_batch_size",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Batch size for table structure extraction stage in threaded pipeline. Tables from multiple pages are processed together. Higher values improve throughput but increase memory usage. Only used by `StandardPdfPipeline` (threaded mode).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 4,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Batch Polling Interval Seconds",
+            "name": "pipeline_options.batch_polling_interval_seconds",
+            "field": "pipeline_options.batch_polling_interval_seconds",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Polling interval in seconds for batch collection in threaded pipeline stages. Each stage waits up to this duration to accumulate items before processing. Lower values reduce latency but may decrease batching efficiency. Only used by `StandardPdfPipeline` (threaded mode).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 0.5,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Queue Max Size",
+            "name": "pipeline_options.queue_max_size",
+            "field": "pipeline_options.queue_max_size",
+            "type": "number",
+            "size": 4,
+            "required": false,
+            "info": "Maximum queue size for inter-stage communication in threaded pipeline. Limits the number of items buffered between processing stages to prevent memory overflow. When full, upstream stages block until space is available. Only used by `StandardPdfPipeline` (threaded mode).",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": 100,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        },
+        {
+            "label": "Backend Options",
+            "name": "backend_options",
+            "field": "backend_options",
+            "type": "text",
+            "size": 4,
+            "required": false,
+            "info": "No description",
+            "placeholder": "",
+            "values": [
+                {
+                    "value": null,
+                    "isDefault": true
+                }
+            ],
+            "validator": {
+                "min": 0,
+                "max": 500,
+                "regex": "/.*/"
+            }
+        }
+    ]
+}
