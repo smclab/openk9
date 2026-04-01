@@ -2,10 +2,10 @@ server {
     listen       8080;
     server_name  localhost;
 
-    root  /usr/share/nginx/html/tenant/;
+    root  /usr/share/nginx/html/admin/;
     index index.html;
 
-    location /tenant/static/ {
+    location /admin/static/ {
       root /usr/share/nginx/html/;
     }
 
@@ -15,7 +15,9 @@ server {
 
     # Proxy api to backend configured by ENV_HOST
     location /api/ {
-        proxy_pass http://${ENV_HOST};
+        resolver ${RESOLVER} valid=10s;
+        set $backend http://${ENV_HOST};
+        proxy_pass $backend;
 
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
