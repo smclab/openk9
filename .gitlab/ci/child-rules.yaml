@@ -2,12 +2,27 @@
 # These rules assume the parent pipeline has already decided "IF" to run.
 # These rules decide "WHICH JOBS" to run within the child pipeline.
 #
-# USER_TYPE variable (set by the parent trigger job):
-#   "designated" → developer with a personal k8s env (mirko, michele, lorenzo, etc.)
-#                  → full pipeline: build + push + restart
-#   "generic"    → any other developer
-#                  → Build job (no push) on feature branches; Build Verifier on MR
-#   (unset)      → main / tag / MR pipeline (standard behaviour)
+# ── HOW USER_TYPE WORKS ────────────────────────────────────────────────────────
+#
+# USER_TYPE is set by the PARENT trigger job (backend.yaml / frontend.yaml / ai.yaml)
+# and passed down to the child pipeline as a variable. It controls what the child runs:
+#
+#   "designated" → set when the pusher is the domain owner (e.g. mirko/michele for backend,
+#                  lorenzo/giorgio for frontend, luca for AI).
+#                  Child runs: build Docker image + push to registry + restart deployment.
+#
+#   "generic"    → set when the pusher is NOT a designated user of ANY domain
+#                  (e.g. mario.rossi touching any module).
+#                  Child runs: build/compile only (no push, no restart).
+#                  Purpose: catch compilation errors early on non-owner branches.
+#
+#   (unset)      → no USER_TYPE means the pipeline was triggered by main, tag, or MR.
+#                  Child runs standard jobs as defined by child-deploy-main-tag / child-verify-mr.
+#
+# NOTE: designated users of OTHER domains are excluded entirely from the parent trigger
+# (e.g. lorenzo modifying backend files → no pipeline starts at all).
+# This avoids useless build-verifier runs for developers not responsible for that domain.
+# ──────────────────────────────────────────────────────────────────────────────
 
 .rules:child-build-always:
   rules:
