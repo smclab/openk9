@@ -747,6 +747,8 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 
 				log.warnf("Received an invalid payload to work: %s", invalid.errorMessage());
 
+				getContext().getSelf().tell(new PersistException(new WorkStageException(invalid.errorMessage())));
+
 				requester.tell(new Failure(invalid.errorMessage()));
 
 			}
