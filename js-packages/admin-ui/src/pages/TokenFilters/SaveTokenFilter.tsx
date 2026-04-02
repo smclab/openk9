@@ -70,7 +70,7 @@ export function SaveTokenFilter() {
       });
     },
   });
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: Filters,
     jsonConfig: tokenFilterQuery.data?.tokenFilter?.jsonConfig,
     type: tokenFilterQuery.data?.tokenFilter?.type,
@@ -100,6 +100,16 @@ export function SaveTokenFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
+
   const isRecap = page === 1;
   if (tokenFilterQuery.loading) {
     return <div></div>;

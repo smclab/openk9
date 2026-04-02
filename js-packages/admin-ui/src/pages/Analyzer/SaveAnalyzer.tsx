@@ -15,7 +15,7 @@ import { GenerateDynamicFieldsMemo } from "@components/Form/Form/GenerateDynamic
 import useTemplate, { createJsonString } from "@components/Form/Hook/Template";
 import AssociationsLayout from "@components/Form/Tabs/LayoutTab";
 import { Box, Button } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   AnalyzersAssociationsQuery,
@@ -113,7 +113,7 @@ export function SaveAnalyzer() {
     },
   });
 
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: TemplateAnalyzers,
     jsonConfig: analyzerQuery.data?.analyzer?.jsonConfig,
     type: analyzerQuery.data?.analyzer?.type,
@@ -156,6 +156,15 @@ export function SaveAnalyzer() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateAnalyzerMutation.data?.analyzerWithLists?.fieldValidators),
   });
+
+  useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
 
   if (analyzerQuery.loading) return null;
 

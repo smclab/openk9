@@ -40,7 +40,7 @@ export function SaveCharFilter() {
   });
   const [page, setPage] = React.useState(0);
   const toast = useToast();
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: CharFilters,
     jsonConfig: charFilterQuery.data?.charFilter?.jsonConfig,
     type: charFilterQuery.data?.charFilter?.type,
@@ -99,6 +99,16 @@ export function SaveCharFilter() {
     },
     getValidationMessages: fromFieldValidators(createOrUpdateCharFilterMutation.data?.charFilter?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
+
   const isRecap = page === 1;
   if (charFilterQuery.loading) {
     return <div></div>;

@@ -54,6 +54,11 @@ const useTemplate = ({
     },
     [setTemplate, template],
   );
+  const allTemplateDescriptions = React.useMemo(
+    () => templateSelected.map((t) => t.description).filter(Boolean),
+    [templateSelected],
+  );
+
   const changeType = useCallback(
     (type: string) => {
       setTypeSelected(type);
@@ -63,7 +68,7 @@ const useTemplate = ({
     [setTemplate, templateSelected],
   );
 
-  return { template, changeValueKey, changeType, typeSelected: typeSelected || "", setTypeSelected };
+  return { template, changeValueKey, changeType, typeSelected: typeSelected || "", setTypeSelected, allTemplateDescriptions };
 };
 
 export default useTemplate;
