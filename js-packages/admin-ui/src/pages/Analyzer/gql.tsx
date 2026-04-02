@@ -295,8 +295,8 @@ export const TemplateAnalyzers: TemplateType[] = [
       },
       {
         name: "stopwords",
-        value: ["a", "e", "i", "o", "u"],
-        type: "multi-select",
+        value: "_english_",
+        type: "string",
         description:
           "A pre-defined stop words list like _english_ or an array containing a list of stop words. Defaults to _none_.",
       },
@@ -365,8 +365,8 @@ export const TemplateAnalyzers: TemplateType[] = [
       },
       {
         name: "stopwords",
-        value: ["a", "e", "i", "o", "u"],
-        type: "multi-select",
+        value: "_english_",
+        type: "string",
         description:
           "A pre-defined stop words list like _english_ or an array containing a list of stop words. Defaults to _none_.",
       },
@@ -380,8 +380,8 @@ export const TemplateAnalyzers: TemplateType[] = [
     value: [
       {
         name: "stopwords",
-        value: ["a", "e", "i", "o", "u"],
-        type: "multi-select",
+        value: "_english_",
+        type: "string",
         description:
           "A pre-defined stop words list like _english_ or an array containing a list of stop words. Defaults to _none_.",
       },
