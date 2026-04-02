@@ -145,18 +145,20 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
     ),
     originalValues: ragConfigQuery.data?.ragConfiguration,
     isLoading: ragConfigQuery.loading || resultCreateRagConfigMutation.loading || resultUpdateRagConfigMutation.loading,
-    onSubmit(data) {
+    onSubmit({ rangeStart, rangeEnd, ...data }) {
       const isNew = ragConfigId === "new";
       isNew
         ? createRagConfigMutate({
           variables: {
             ...data,
+            ...(rangeStart === 0 && rangeEnd === 0 ? {} : { rangeStart, rangeEnd }),
           },
         })
         : updateRagConfigMutate({
           variables: {
             id: ragConfigId,
             ...data,
+            ...(rangeStart === 0 && rangeEnd === 0 ? {} : { rangeStart, rangeEnd }),
           },
         });
     },
