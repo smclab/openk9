@@ -198,7 +198,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         )
         bypass_rag = json_config.get("bypass_rag", False)
 
-        bypass_input_guardrail = json_config.get("bypass_input_guardrail", False)
+        enable_input_guardrail = json_config.get("enable_input_guardrail", True)
         input_guardrail_threshold = json_config.get("input_guardrail_threshold", 0.5)
         input_guardrail_provider = json_config.get("input_guardrail_provider", "")
         input_guardrail_aws_bedrock = json_config.get("input_guardrail_aws_bedrock", {})
@@ -229,7 +229,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         domain_threshold = json_config.get("domain_threshold", 0.7)
 
         input_guardrail = {
-            "bypass_input_guardrail": bypass_input_guardrail,
+            "enable_input_guardrail": enable_input_guardrail,
             "input_guardrail_threshold": input_guardrail_threshold,
             "input_guardrail_provider": input_guardrail_provider,
             "input_guardrail_aws_bedrock": input_guardrail_aws_bedrock,

@@ -536,7 +536,7 @@ class RagGraph:
             return guardrail_response.content
 
     def input_guardrail_node(self, state: GraphState) -> GraphState:
-        if not self.input_guardrail.get("bypass_input_guardrail"):
+        if self.input_guardrail.get("enable_input_guardrail"):
             query = state.current_query
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
