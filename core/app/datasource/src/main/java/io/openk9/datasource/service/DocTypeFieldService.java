@@ -225,6 +225,33 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 	}
 
 	/**
+	 * Retrieves all {@link DocTypeField} entities matching the given {@link FieldType}.
+	 *
+	 * <p>This method executes a criteria query that selects every {@code DocTypeField}
+	 * whose {@code fieldType} column is equal to the provided value.
+	 *
+	 * @param fieldType the {@link FieldType} to filter by; must not be {@code null}
+	 * @return a {@link Uni} that emits a list of matching {@link DocTypeField} entities,
+	 *         or an empty list if none match
+	 *
+	 * @see FieldType
+	 * @see DocTypeField
+	 */
+	public Uni<List<DocTypeField>> findDocTypeFieldByType(FieldType fieldType) {
+		return sessionFactory.withTransaction(s -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<DocTypeField> query = cb.createQuery(DocTypeField.class);
+			Root<DocTypeField> root = query.from(DocTypeField.class);
+
+			query.select(root)
+				.where(cb.equal(root.get(DocTypeField_.fieldType), fieldType));
+
+			return s.createQuery(query).getResultList();
+		});
+	}
+
+	/**
 	 * Retrieves a list of unbound DocTypeField entities that are boundable for autocomplete.
 	 *
 	 * <p>This method finds all DocTypeField that satisfy the following criteria:

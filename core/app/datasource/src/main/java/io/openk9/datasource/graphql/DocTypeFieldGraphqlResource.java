@@ -28,6 +28,7 @@ import io.openk9.common.util.web.FieldValidator;
 import io.openk9.common.util.web.Response;
 import io.openk9.datasource.model.Analyzer;
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.TranslationDTO;
@@ -149,6 +150,13 @@ public class DocTypeFieldGraphqlResource {
 		long parentId, String searchText, Set<SortBy> sortByList) {
 		return docTypeFieldService.findConnection(
 			parentId, after, before, first, last, searchText, sortByList);
+	}
+
+	@Description("Retrieves all DocTypeField entities whose fieldType matches the given value.")
+	@Query
+	public Uni<List<DocTypeField>> getDocTypeFieldsByType(
+		@Description("the FieldType to filter by") FieldType fieldType) {
+		return docTypeFieldService.findDocTypeFieldByType(fieldType);
 	}
 
 	public Uni<Set<TranslationDTO>> getTranslations(@Source DocTypeField docTypeField) {
