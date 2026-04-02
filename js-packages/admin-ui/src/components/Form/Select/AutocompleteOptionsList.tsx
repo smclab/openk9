@@ -96,7 +96,7 @@ export function AutocompleteOptionsList({
               <ListItem disablePadding role="none">
                 <ListItemButton
                   id={`doc-type-option-${index}`}
-                  ref={(el) => (itemRefs.current[index] = el)}
+                  ref={(el) => { itemRefs.current[index] = el; }}
                   selected={index === highlightedIndex}
                   role="option"
                   aria-selected={index === highlightedIndex}
@@ -208,7 +208,7 @@ export function AutocompleteOptionsListString({
               <ListItem disablePadding role="none">
                 <ListItemButton
                   id={`doc-type-option-${index}`}
-                  ref={(el) => (itemRefs.current[index] = el)}
+                  ref={(el) => { itemRefs.current[index] = el; }}
                   selected={index === highlightedIndex}
                   role="option"
                   aria-selected={index === highlightedIndex}

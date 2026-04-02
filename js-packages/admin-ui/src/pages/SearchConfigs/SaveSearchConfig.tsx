@@ -103,7 +103,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   const navigate = useNavigate();
   const [types, setTypes] = React.useState<Array<{ itemLabel: string; itemLabelId: string }>>([]);
   const [activeType, setActiveType] = React.useState<string | undefined | null>();
-  const openFormRef = React.useRef<() => void>();
+  const openFormRef = React.useRef<(() => void) | null>(null);
   const { openConfirmModal, ConfirmModal } = useConfirmModal({
     title: "Edit Search Config",
     body: "Are you sure you want to edit this Search Config?",

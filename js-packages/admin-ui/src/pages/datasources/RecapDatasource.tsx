@@ -80,7 +80,7 @@ function RecapDatasource({
             }}
             onClick={() => toggleCard(idx)}
           >
-            <CardContent ref={(el) => (contentRefs.current[idx] = el)} sx={{ p: forceFullScreen ? 3 : 2, flex: 1 }}>
+            <CardContent ref={(el) => { contentRefs.current[idx] = el; }} sx={{ p: forceFullScreen ? 3 : 2, flex: 1 }}>
               {area.length > 1 && section.title && (
                 <>
                   <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>

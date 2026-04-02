@@ -46,7 +46,7 @@ export function SaveSubDocType({
 }: {
   subDocTypesId: string;
   documentTypeId: string;
-  formRef: React.RefObject<HTMLFormElement>;
+  formRef: React.RefObject<HTMLFormElement | null>;
   callback(): void;
   parentId: string;
   isChild: boolean;
@@ -145,7 +145,7 @@ export function SaveSubDocType({
   return (
     <>
       <form
-        ref={formRef}
+        ref={formRef as React.RefObject<HTMLFormElement>}
         onSubmit={(event) => {
           event.preventDefault();
           form.submit();

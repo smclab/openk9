@@ -103,10 +103,11 @@ export function RecapData({
   const disableChildren = (element: React.ReactNode): React.ReactNode => {
     if (!React.isValidElement(element)) return element;
 
+    const props = element.props as Record<string, unknown>;
     return React.cloneElement(
-      element as any,
+      element as React.ReactElement<Record<string, unknown>>,
       { disabled: true, readOnly: true },
-      element.props.children ? React.Children.map(element.props.children, disableChildren) : element.props.children,
+      props.children ? React.Children.map(props.children as React.ReactNode, disableChildren) : props.children as React.ReactNode,
     );
   };
 
