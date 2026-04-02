@@ -57,6 +57,7 @@ export function CreateDataEntity({
   preSubmit,
   associationsMultiSelect,
   isFooterButton = true,
+  isValid,
 }: {
   page: number;
   id?: string;
@@ -121,8 +122,9 @@ export function CreateDataEntity({
   haveConfirmButton: boolean;
   fieldsControll?: Array<string>;
   isFooterButton?: boolean;
+  isValid?: boolean;
 }) {
-  const control = fieldsControll?.every((field) => form.inputProps(field).value);
+  const control = fieldsControll?.every((field) => form.inputProps(field).value) && (isValid ?? true);
   const Data: React.ReactNode = informationSuggestion.find((informationS) => informationS.page === page)?.content;
   const associateOneToOne = associations?.filter(
     (information) => information.level === page && information.multiAssociation === false,

@@ -24,7 +24,7 @@ import {
   useToast,
 } from "@components/Form";
 import { NumberInput, TextArea, TextInput } from "@components/Form/Inputs";
-import { Box, Button, Checkbox, FormControlLabel } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, FormHelperText } from "@mui/material";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -146,19 +146,21 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
     originalValues: ragConfigQuery.data?.ragConfiguration,
     isLoading: ragConfigQuery.loading || resultCreateRagConfigMutation.loading || resultUpdateRagConfigMutation.loading,
     onSubmit({ rangeStart, rangeEnd, ...data }) {
+      if ((rangeStart !== 0 || rangeEnd !== 0) && rangeEnd <= rangeStart) return;
       const isNew = ragConfigId === "new";
+      const range = rangeStart === 0 && rangeEnd === 0 ? undefined : { start: rangeStart, end: rangeEnd };
       isNew
         ? createRagConfigMutate({
           variables: {
             ...data,
-            ...(rangeStart === 0 && rangeEnd === 0 ? {} : { rangeStart, rangeEnd }),
+            range,
           },
         })
         : updateRagConfigMutate({
           variables: {
             id: ragConfigId,
             ...data,
-            ...(rangeStart === 0 && rangeEnd === 0 ? {} : { rangeStart, rangeEnd }),
+            range,
           },
         });
     },
@@ -170,6 +172,11 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
   if (ragConfigQuery.loading) return null;
 
   const selectedType = form.inputProps("type").value;
+  const rangeStartValue = form.inputProps("rangeStart").value;
+  const rangeEndValue = form.inputProps("rangeEnd").value;
+  const rangeError = rangeStartValue !== 0 || rangeEndValue !== 0
+    ? rangeEndValue <= rangeStartValue ? "Range End must be greater than Range Start" : ""
+    : "";
 
   const recapSections = mappingCardRecap({
     form: form as any,
@@ -222,6 +229,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
             pathBack="/rag-configurations/"
             setPage={setPage}
             haveConfirmButton={!view}
+            isValid={!rangeError}
             informationSuggestion={[
               {
                 content: (
@@ -305,6 +313,11 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                           description="End of range (must be > start)"
                         />
                       </Box>
+                      {rangeError && (
+                        <FormHelperText error sx={{ mt: -1, mb: 2 }}>
+                          {rangeError}
+                        </FormHelperText>
+                      )}
 
                       {selectedType === RagType.ChatRagTool && (
                         <>
