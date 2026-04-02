@@ -376,8 +376,18 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                   borderRadius="5px"
                   marginBottom="10px"
                 >
-                  <Box sx={{ width: "200px" }}>
-                    <Typography variant="body1">{child.name || "Unnamed"}</Typography>
+                  <Box sx={{ width: "200px", minWidth: 0 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      ref={(el: HTMLElement | null) => {
+                        if (el) {
+                          el.title = el.scrollWidth > el.clientWidth ? (child.name || "Unnamed") : "";
+                        }
+                      }}
+                    >
+                      {child.name || "Unnamed"}
+                    </Typography>
                   </Box>
                   <Box display="flex" gap="10px">
                     <Chip

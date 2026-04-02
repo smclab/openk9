@@ -255,7 +255,27 @@ export function Table<
             return (
               <React.Fragment>
                 {columns.map((column, colIndex) => (
-                  <TableCell key={colIndex}>{column.content(row)}</TableCell>
+                  <TableCell
+                    key={colIndex}
+                    sx={{
+                      maxWidth: 0,
+                      "& > *": {
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      },
+                    }}
+                    ref={(el: HTMLTableCellElement | null) => {
+                      if (el) {
+                        const child = el.firstElementChild as HTMLElement | null;
+                        if (child) {
+                          el.title = child.scrollWidth > child.clientWidth ? el.textContent || "" : "";
+                        }
+                      }
+                    }}
+                  >
+                    {column.content(row)}
+                  </TableCell>
                 ))}
                 <TableCell>
                   <Box
