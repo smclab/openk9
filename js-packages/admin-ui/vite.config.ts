@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("node_modules/@mui")) {
             return "mui";
           }
-          if (id.includes("node_modules/@apollo")) {
+          if (id.includes("node_modules/@apollo") || id.includes("node_modules/graphql")) {
             return "apollo-client";
           }
           if (
@@ -53,6 +53,24 @@ export default defineConfig(({ mode }) => ({
             id.includes("node_modules/react-router-dom")
           ) {
             return "react-vendors";
+          }
+          if (id.includes("node_modules/recharts") || id.includes("node_modules/d3-")) {
+            return "recharts";
+          }
+          if (id.includes("node_modules/react-flow-renderer")) {
+            return "react-flow";
+          }
+          if (id.includes("node_modules/@fortawesome")) {
+            return "fontawesome";
+          }
+          if (id.includes("node_modules/@babel")) {
+            return "babel";
+          }
+          if (id.includes("node_modules/prettier")) {
+            return "prettier";
+          }
+          if (id.includes("node_modules/keycloak-js")) {
+            return "keycloak";
           }
           if (id.includes("node_modules")) {
             return "vendors";

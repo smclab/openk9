@@ -22,4 +22,4 @@ export * from './NumberInputSimple';
 export * from './TextArea';
 export * from './TextInput';
 export * from './TextInputSimple';
-export * from './CodeInput';
+export * from './LazyCodeInput';

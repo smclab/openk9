@@ -16,10 +16,25 @@
  */
 import React from "react";
 import * as monaco from "monaco-editor";
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { BaseInputProps } from "..";
 import prettier from "prettier/standalone";
 import parserTypeScript from "prettier/parser-typescript";
 import { Box, Paper, Theme, Typography, useTheme } from "@mui/material";
+
+self.MonacoEnvironment = {
+  getWorker(_, label) {
+    if (label === "json") {
+      return new jsonWorker();
+    }
+    if (label === "typescript" || label === "javascript") {
+      return new tsWorker();
+    }
+    return new editorWorker();
+  },
+};
 
 // NICE TO HAVE: colorize JSX (see https://github.com/cancerberoSgx/jsx-alone/blob/master/jsx-explorer/HOWTO_JSX_MONACO.md)
 
