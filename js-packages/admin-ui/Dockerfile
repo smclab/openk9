@@ -5,7 +5,7 @@ ENV NODE_OPTIONS=${NODE_OPTIONS}
 WORKDIR /app
 
 # Copy only package files for better caching
-COPY ./js-packages/admin-ui/package.json ./js-packages/admin-ui/yarn.lock* ./js-packages/admin-ui/
+COPY ./yarn.lock ./js-packages/admin-ui/package.json ./js-packages/admin-ui/
 WORKDIR /app/js-packages/admin-ui
 RUN yarn config set registry https://registry.npmjs.org/ && \
 	yarn install --network-timeout 600000
