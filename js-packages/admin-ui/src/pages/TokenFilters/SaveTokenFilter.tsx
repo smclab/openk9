@@ -89,7 +89,7 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
       });
     },
   });
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: Filters,
     jsonConfig: tokenFilterQuery.data?.tokenFilter?.jsonConfig,
     type: tokenFilterQuery.data?.tokenFilter?.type,
@@ -119,6 +119,15 @@ export function SaveTokenFilter({ setExtraFab }: { setExtraFab: (fab: React.Reac
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenFilterMutation.data?.tokenFilter?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
 
   const computedJsonConfig = React.useMemo(
     () =>

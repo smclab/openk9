@@ -89,7 +89,7 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     },
   });
 
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: TemplateTokenizer,
     jsonConfig: tokenizerQuery.data?.tokenizer?.jsonConfig,
     type: tokenizerQuery.data?.tokenizer?.type,
@@ -120,6 +120,15 @@ export function SaveTokenizer({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     },
     getValidationMessages: fromFieldValidators(createOrUpdateTokenizerMutation.data?.tokenizer?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
 
   const computedJsonConfig = React.useMemo(
     () =>

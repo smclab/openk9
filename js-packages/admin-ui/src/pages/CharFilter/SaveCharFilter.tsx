@@ -52,7 +52,7 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
     skip: charFilterId === "new",
   });
 
-  const { template, typeSelected, changeType, changeValueKey } = useTemplate({
+  const { template, typeSelected, changeType, changeValueKey, allTemplateDescriptions } = useTemplate({
     templateSelected: CharFilters,
     jsonConfig: charFilterQuery.data?.charFilter?.jsonConfig,
     type: charFilterQuery.data?.charFilter?.type,
@@ -108,6 +108,15 @@ export function SaveCharFilter({ setExtraFab }: { setExtraFab: (fab: React.React
     },
     getValidationMessages: fromFieldValidators(mutation.data?.charFilter?.fieldValidators),
   });
+
+  React.useEffect(() => {
+    if (template?.description) {
+      const current = form.inputProps("description").value;
+      if (!current || allTemplateDescriptions.includes(current)) {
+        form.inputProps("description").onChange(template.description);
+      }
+    }
+  }, [template?.description]);
 
   const recapSections = React.useMemo(
     () =>
