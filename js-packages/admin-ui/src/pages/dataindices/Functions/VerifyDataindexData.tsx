@@ -73,16 +73,16 @@ export function VerifyDataindexData({
         <TextField label="Dataindex Name" value={dataindexData.name} disabled fullWidth />
         <TextField label="Description" value={dataindexData.description} disabled fullWidth />
         <TextField label="Datasource" value={dataindexData.datasourceId?.name || ""} disabled fullWidth />
-        <TextField
-          label="Embedding Doc Type Field"
-          value={dataindexData.embeddingDocTypeFieldId?.name || ""}
-          disabled
-          fullWidth
-        />
         <TextField label="Document Type" value={dataindexData.docTypeIds?.join(", ") || ""} disabled fullWidth />
 
         {dataindexData.knnIndex === true && (
           <>
+            <TextField
+              label="Embedding Doc Type Field"
+              value={dataindexData.embeddingDocTypeFieldId?.name || ""}
+              disabled
+              fullWidth
+            />
             <TextField label="Chunk Type" value={dataindexData.chunkType || ""} disabled fullWidth />
             <TextField label="Chunk Window Size" value={dataindexData.chunkWindowSize || ""} disabled fullWidth />
 
