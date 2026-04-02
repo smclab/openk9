@@ -179,8 +179,8 @@ export const DocumentTypeQuery = gql`
 `;
 
 export const DocumentTypeFieldsParentQuery = gql`
-  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
-    docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: 30, docTypeId: $docTypeId) {
+  query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!, $first: Int, $after: String) {
+    docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: $first, after: $after, docTypeId: $docTypeId) {
       edges {
         node {
           id
@@ -198,6 +198,10 @@ export const DocumentTypeFieldsParentQuery = gql`
             fieldName
           }
         }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }

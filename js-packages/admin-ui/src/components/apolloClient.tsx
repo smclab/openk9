@@ -26,6 +26,7 @@ export const apolloClient = new ApolloClient({
           pluginDrivers: relayStylePagination(["searchText"]),
           suggestionCategories: relayStylePagination(["searchText"]),
           docTypes: relayStylePagination(["searchText"]),
+          docTypeFieldsFromDocTypeByParent: relayStylePagination(["searchText", "parentId", "docTypeId"]),
         },
       },
       Tenant: {
