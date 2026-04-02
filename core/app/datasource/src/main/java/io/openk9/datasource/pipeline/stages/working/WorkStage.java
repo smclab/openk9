@@ -41,7 +41,7 @@ import org.jboss.logging.Logger;
 
 public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
-	private static final Logger LOGGER = Logger.getLogger(WorkStage.class);
+	private static final Logger log = Logger.getLogger(WorkStage.class);
 	private final ShardingKey shardingKey;
 	private final ActorRef<Response> replyTo;
 	private final ActorRef<Writer.Response> writerAdapter;
@@ -182,7 +182,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 				if (documentTypes == null || documentTypes.length == 0) {
 
-					LOGGER.infof("%s: Document with this contentId has to be deleted.", heldMessage);
+					log.infof("%s: Document with this contentId has to be deleted.", heldMessage);
 					writer.tell(new Writer.Start(null, heldMessage));
 
 					return this;
@@ -202,7 +202,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 			}
 			case LAST -> this.replyTo.tell(new Last(requester));
 			case HALT -> {
-				LOGGER.warnf(
+				log.warnf(
 					"The publisher has sent an HALT message. So %s will be cancelled.",
 					shardingKey
 				);
