@@ -1441,6 +1441,7 @@ class RagGraph:
 
     def stream(self, query: str):
         if self.output_guardrail_type == 0:
+            start_chunk = True
             result_answer = ""
 
             for chunk, metadata in self.graph.stream(
@@ -1452,13 +1453,15 @@ class RagGraph:
                 stream_mode="messages",
             ):
                 if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    if result_answer == "":
+                    if start_chunk:
                         yield json.dumps({"chunk": "", "type": "START"})
+                        start_chunk = False
                     result_answer += chunk.content
 
                     yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
         if self.output_guardrail_type == 1:
+            start_chunk = True
             result_answer = ""
             chunk_batch = []
 
@@ -1471,8 +1474,9 @@ class RagGraph:
                 stream_mode="messages",
             ):
                 if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    if result_answer == "":
+                    if start_chunk:
                         yield json.dumps({"chunk": "", "type": "START"})
+                        start_chunk = False
                     result_answer += chunk.content
                     chunk_batch.append({"chunk": chunk.content, "type": "CHUNK"})
 
@@ -1500,6 +1504,7 @@ class RagGraph:
                     chunk_batch = []
 
         elif self.output_guardrail_type == 2:
+            start_chunk = True
             result_answer = ""
             chunk_number = 0
 
@@ -1513,8 +1518,9 @@ class RagGraph:
             ):
                 if metadata["langgraph_node"] == "llm_response" and chunk.content:
                     chunk_number += 1
-                    if result_answer == "":
+                    if start_chunk:
                         yield json.dumps({"chunk": "", "type": "START"})
+                        start_chunk = False
                     result_answer += chunk.content
 
                     if chunk_number == self.output_guardrail_chunk_interval:
