@@ -1482,6 +1482,7 @@ class RagGraph:
 
                     if len(chunk_batch) == self.output_guardrail_chunk_interval:
                         llm_output_guardrail = self._llm_output_guardrail(result_answer)
+                        result_answer = ""
 
                         if llm_output_guardrail != "NONE":
                             yield json.dumps({"chunk": "", "type": "END"})
@@ -1524,15 +1525,15 @@ class RagGraph:
                     result_answer += chunk.content
 
                     if chunk_number == self.output_guardrail_chunk_interval:
-                        chunk_number = 0
                         llm_output_guardrail = self._llm_output_guardrail(result_answer)
+                        chunk_number = 0
+                        result_answer = ""
 
                         if llm_output_guardrail != "NONE":
                             yield json.dumps(
                                 {"chunk": "Inappropriate content", "type": "CANCEL"}
                             )
                             return
-
                     yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
             if chunk_number > 0:
