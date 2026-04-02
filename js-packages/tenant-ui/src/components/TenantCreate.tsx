@@ -187,7 +187,7 @@ export function TenantCreate() {
                         showToast({ displayType: "error", title: "Tenant not created", content: "" });
                       }
                     }
-                  : () => {}
+                  : undefined
               }
             >
               {tenantId === "new" ? "Create" : "Update"}
