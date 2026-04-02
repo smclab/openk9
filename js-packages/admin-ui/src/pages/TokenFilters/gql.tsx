@@ -159,8 +159,8 @@ export const Filters: TemplateType[] = [
     value: [
       {
         name: "stopwords",
-        value: ["a", "e", "i", "o", "u"],
-        type: "multi-select",
+        value: "_english_",
+        type: "string",
         description:
           "(Optional, string or array of strings) Language value, such as _arabic_ or _thai_. Defaults to _english_.",
       },
