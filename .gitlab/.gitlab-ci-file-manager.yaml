@@ -38,7 +38,7 @@ Build Verifier File-Manager:
   variables:
     COMPONENT: "file-manager"
   cache:
-    key: "file-manager-mvn"
+    key: "shared-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull

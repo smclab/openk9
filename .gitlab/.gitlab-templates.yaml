@@ -17,9 +17,10 @@ variables:
     MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress -DskipTests -Dquarkus.devservices.enabled=false"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   cache:
-    # Key includes '-mvn' suffix to isolate Maven repo cache from other caches
-    # (e.g. pip, yarn). pull-push: build jobs populate the cache on main/feature.
-    key: "$COMPONENT-mvn"
+    # Shared Maven cache across all backend components.
+    # Using a single key avoids replicating the same dependencies N times on the runner.
+    # pull-push on main/feature branch builds; MR and verifier jobs override to pull-only.
+    key: "shared-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull-push
@@ -134,7 +135,7 @@ variables:
 .maven-verifier-template:
   extends: .build_template
   cache:
-    key: "$COMPONENT-mvn"
+    key: "shared-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull  # MR: read-only - avoids overwriting shared cache with unreviewed code
@@ -239,7 +240,7 @@ variables:
 .springboot-verifier-template:
   extends: .build_template
   cache:
-    key: "$COMPONENT-mvn"
+    key: "shared-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull

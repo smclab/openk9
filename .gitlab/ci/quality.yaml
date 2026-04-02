@@ -44,10 +44,19 @@ Maven Dependency Check:
     - core/target/dependency-check-report.html
     expire_in: 1 week
   cache:
-    key: "owasp-nvd-db"   # fixed key: NVD database is not branch-specific.
-    paths:
-    - $CI_PROJECT_DIR/.m2/repository
-    policy: pull-push
+    # Two separate cache entries:
+    # 1. shared-mvn: reuses the same Maven repo cache as build jobs (pull-only here,
+    #    dependency-check does not need to write new artifacts to the Maven cache).
+    # 2. owasp-nvd-db: caches only the OWASP NVD database download, not the full .m2 repo.
+    #    Scoped to org/owasp to avoid growing the cache with unrelated Maven artifacts.
+    - key: "shared-mvn"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository
+      policy: pull
+    - key: "owasp-nvd-db"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository/org/owasp
+      policy: pull-push
   rules:
     # 1. Main Branch
     - if: '$CI_COMMIT_BRANCH == "main"'

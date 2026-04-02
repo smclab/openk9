@@ -89,14 +89,20 @@ Build Verifier:
   stage: build-verifier
   image: node:22.14.0
   cache:
-    key:
-      prefix: "talk-to"
-      files:
-        - yarn.lock
-    paths:
-    - js-packages/talk-to/node_modules
-    - .yarn-cache
-    policy: pull-push
+    - key:
+        prefix: "shared-yarn"
+        files:
+          - yarn.lock
+      paths:
+        - .yarn-cache
+      policy: pull-push
+    - key:
+        prefix: "talk-to-nm"
+        files:
+          - js-packages/talk-to/package.json
+      paths:
+        - js-packages/talk-to/node_modules
+      policy: pull-push
   script:
   - export NODE_OPTIONS="--max-old-space-size=8192"
   # Disable workspace strict root check to ensure Lerna aggregates smoothly

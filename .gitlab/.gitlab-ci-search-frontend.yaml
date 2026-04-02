@@ -89,14 +89,24 @@ Build Verifier:
   stage: build-verifier
   image: node:22.14.0
   cache:
-    key:
-      prefix: "search-frontend"
-      files:
-        - yarn.lock
-    paths:
-    - js-packages/search-frontend/node_modules
-    - .yarn-cache
-    policy: pull-push
+    # Two separate cache entries:
+    # 1. shared-yarn: global yarn download cache, shared across all frontend modules.
+    #    Key on yarn.lock so it invalidates when dependencies change globally.
+    # 2. search-frontend-nm: node_modules specific to this module, keyed on its package.json.
+    - key:
+        prefix: "shared-yarn"
+        files:
+          - yarn.lock
+      paths:
+        - .yarn-cache
+      policy: pull-push
+    - key:
+        prefix: "search-frontend-nm"
+        files:
+          - js-packages/search-frontend/package.json
+      paths:
+        - js-packages/search-frontend/node_modules
+      policy: pull-push
   artifacts:
     paths:
     - js-packages/search-frontend/dist/

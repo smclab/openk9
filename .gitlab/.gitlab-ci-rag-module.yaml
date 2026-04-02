@@ -40,11 +40,13 @@ Build Rag Image:
   - job: Fetch config
     artifacts: true
   cache:
-    key: "rag-module"
+    # Shared pip cache across all AI modules (rag, agentic-rag, embedding).
+    # These modules share many heavy dependencies (torch, transformers, etc.).
+    # Removed 'when: always' to avoid writing a partial/corrupt cache on job failure.
+    key: "shared-pip"
     paths:
     - .pip-cache/
     policy: pull-push
-    when: always
   before_script:
   - mkdir -p .pip-cache
   script:
