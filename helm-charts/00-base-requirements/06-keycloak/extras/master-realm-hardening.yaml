@@ -1,0 +1,99 @@
+# Keycloak Master Realm Hardening Job
+# Configures brute force protection, event logging, and password policy
+# on the master realm via the Keycloak Admin REST API.
+# Must run AFTER Keycloak is fully started and healthy.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-master-realm-hardening
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  ttlSecondsAfterFinished: 300
+  backoffLimit: 5
+  template:
+    spec:
+      containers:
+      - name: master-realm-hardening
+        image: curlimages/curl:8.11.1
+        command: [ "/bin/sh", "-c" ]
+        args:
+        - |
+          set -e
+
+          KC_URL="http://keycloak:8080"
+          KC_ADMIN_USER="${KEYCLOAK_ADMIN_USER}"
+          KC_ADMIN_PASS="${KEYCLOAK_ADMIN_PASS}"
+
+          echo "Waiting for Keycloak to be ready..."
+          for i in $(seq 1 60); do
+            if curl -sf "${KC_URL}/health/ready" > /dev/null 2>&1; then
+              echo "Keycloak is ready."
+              break
+            fi
+            echo "Attempt ${i}/60 - Keycloak not ready yet, waiting..."
+            sleep 5
+          done
+
+          echo "Obtaining admin access token..."
+          TOKEN=$(curl -sf -X POST "${KC_URL}/realms/master/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=${KC_ADMIN_USER}" \
+            -d "password=${KC_ADMIN_PASS}" \
+            -d "grant_type=password" \
+            -d "client_id=admin-cli" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+
+          if [ -z "${TOKEN}" ]; then
+            echo "ERROR: Failed to obtain admin token."
+            exit 1
+          fi
+
+          echo "Configuring master realm brute force protection and event logging..."
+          HTTP_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "${KC_URL}/admin/realms/master" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "bruteForceProtected": true,
+              "permanentLockout": true,
+              "failureFactor": 5,
+              "maxFailureWaitSeconds": 900,
+              "waitIncrementSeconds": 60,
+              "minimumQuickLoginWaitSeconds": 60,
+              "maxDeltaTimeSeconds": 43200,
+              "quickLoginCheckMilliSeconds": 1000,
+              "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(5) and forceExpiredPasswordChange(90)",
+              "eventsEnabled": true,
+              "eventsExpiration": 7776000,
+              "eventsListeners": ["jboss-logging"],
+              "enabledEventTypes": [
+                "LOGIN", "LOGIN_ERROR", "LOGOUT", "LOGOUT_ERROR",
+                "REGISTER", "REGISTER_ERROR",
+                "CODE_TO_TOKEN", "CODE_TO_TOKEN_ERROR",
+                "CLIENT_LOGIN", "CLIENT_LOGIN_ERROR",
+                "RESET_PASSWORD", "RESET_PASSWORD_ERROR",
+                "UPDATE_PASSWORD", "UPDATE_PASSWORD_ERROR",
+                "SEND_RESET_PASSWORD", "SEND_RESET_PASSWORD_ERROR",
+                "USER_DISABLED_BY_PERMANENT_LOCKOUT",
+                "USER_DISABLED_BY_TEMPORARY_LOCKOUT"
+              ],
+              "adminEventsEnabled": true,
+              "adminEventsDetailsEnabled": true
+            }')
+
+          if [ "${HTTP_STATUS}" = "204" ]; then
+            echo "Master realm hardening applied successfully."
+          else
+            echo "ERROR: Failed to update master realm (HTTP ${HTTP_STATUS})."
+            exit 1
+          fi
+        env:
+        - name: KEYCLOAK_ADMIN_USER
+          value: "k9-sysadmin"
+        - name: KEYCLOAK_ADMIN_PASS
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: admin-password
+      restartPolicy: OnFailure
