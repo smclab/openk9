@@ -1,25 +1,43 @@
-FROM node:18.18-alpine as react-build
+FROM node:20-alpine as deps
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
-RUN mkdir -p /app/js-packages/talk-to
+WORKDIR /app
 
-COPY ./js-packages/talk-to /app/js-packages/talk-to
+# Copy only package files for better caching
+COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/yarn.lock* ./js-packages/talk-to/
 WORKDIR /app/js-packages/talk-to
-RUN yarn install
-RUN NODE_ENV=production yarn build
+RUN yarn config set registry https://registry.npmjs.org/ && \
+    yarn install --network-timeout 600000
 
-# Stage 2 - the production environment
-FROM nginx:1.28.2-alpine
+# Stage 2 - Build
+FROM node:20-alpine as builder
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
-# Usiamo path custom per evitare che nginx processi automaticamente il template
-COPY ./js-packages/talk-to/nginx.conf.template /etc/nginx/nginx.conf.template
-COPY ./js-packages/talk-to/nginx.conf.default /etc/nginx/nginx.conf.default
+WORKDIR /app/js-packages/talk-to
 
+# Copy dependencies from deps stage
+COPY --from=deps /app/js-packages/talk-to/node_modules ./node_modules
+
+# Copy source code
+COPY ./js-packages/talk-to .
+
+# Build
+# CI=false prevents warnings (like outdated babel plugins) from being treated as errors
+# DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
+
+RUN CI=false NODE_ENV=production yarn build
+
+# Stage 3 - Production
+FROM nginx:stable-alpine3.23-slim
+COPY ./js-packages/talk-to/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/chat/
-COPY --from=react-build /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
+COPY --from=builder /app/js-packages/talk-to/build /usr/share/nginx/html/chat/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
-	&& chmod g+rw /var/cache/nginx /var/run
+    && rm -f /etc/nginx/conf.d/default.conf \
+    && mkdir -p /var/run \
+    && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
 EXPOSE 8080
-
-# Se ENV_HOST è fornito, compila il template col proxy. Altrimenti usa il config standard.
-# Usiamo envsubst '${ENV_HOST}' per evitare che sovrascriva le variabili interne di nginx come $host
-CMD ["sh", "-c", "if [ -z \"$ENV_HOST\" ]; then cp /etc/nginx/nginx.conf.default /etc/nginx/conf.d/default.conf; else envsubst '${ENV_HOST}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf; fi && nginx -g 'daemon off;'"]
+USER 1001
+CMD ["nginx", "-g", "daemon off;"]

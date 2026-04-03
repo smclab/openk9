@@ -1,33 +1,64 @@
 # Stage 1 - build environment
-FROM node:18-alpine as react-build
+FROM node:20-alpine AS react-build
+ARG BUILD_ENV=keycloak
+ARG NODE_OPTIONS
+ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 RUN mkdir -p /app/js-packages/search-frontend
 
-COPY ./package.json /app
-COPY ./yarn.lock /app
-COPY ./js-packages/search-frontend/package.json /app/js-packages/search-frontend/
+# Copy the package.json from the root
+COPY ./package.json /app/package.json
+COPY ./yarn.lock* /app
+# COPY ./.yarn/ /app/.yarn/
+# COPY ./.yarnrc.yml /app/
 
+# Copy the package.json.conf file from the search-frontend package (package.json with MUI library)
+COPY ./js-packages/search-frontend/package.json.conf /app/js-packages/search-frontend/package.json
+
+# Set the project root
 WORKDIR /app
-RUN yarn install --frozen-lockfile
+#Yarn v4 disabled in Docker
+# # Enable Corepack (required to manage modern Yarn versions)
+# RUN corepack enable
+
+# # Set the Yarn version specified in package.json
+# RUN corepack prepare yarn@4.10.0 --activate
+
+# Install all workspace dependencies - For Yarn v4: RUN yarn install --immutable --immutable-cache
+RUN yarn config set registry https://registry.npmjs.org/ && \
+  yarn install --network-timeout 600000
+
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend
-RUN NODE_ENV=production yarn build
+
+# Conditional building - BUILD_ENV
+# CI=false prevents warnings (like outdated babel plugins) from being treated as errors
+# DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
+
+RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
+  echo "Building for Keycloak environment..." && \
+  CI=false NODE_ENV=production yarn build:keycloak; \
+  elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
+  echo "Building for No-Keycloak environment..." && \
+  CI=false NODE_ENV=production yarn build:nokeycloak; \
+  elif [ "$BUILD_ENV" = "chatbot" ]; then \
+  echo "Building for Chatbot environment..." && \
+  CI=false NODE_ENV=production yarn build:chatbot; \
+  else \
+  echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
+  CI=false NODE_ENV=production yarn build:keycloak; \
+  fi
 
 # Stage 2 - the production environment
-FROM nginx:1.28.2-alpine
-
-# Usiamo path custom per evitare che nginx processi automaticamente il template
-COPY ./js-packages/search-frontend/nginx.conf.template /etc/nginx/nginx.conf.template
-COPY ./js-packages/search-frontend/nginx.conf.default /etc/nginx/nginx.conf.default
-
+FROM nginx:stable-alpine3.23-slim
+COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
+    && rm -f /etc/nginx/conf.d/default.conf \
     && mkdir -p /var/run \
-    && chmod g+rw /var/cache/nginx /var/run
+    && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
 EXPOSE 8080
-
-# Se ENV_HOST è fornito, compila il template col proxy. Altrimenti usa il config standard.
-# Usiamo envsubst '${ENV_HOST}' per evitare che sovrascriva le variabili interne di nginx come $host
-CMD ["sh", "-c", "if [ -z \"$ENV_HOST\" ]; then cp /etc/nginx/nginx.conf.default /etc/nginx/conf.d/default.conf; else envsubst '${ENV_HOST}' < /etc/nginx/nginx.conf.template > /etc/nginx/conf.d/default.conf; fi && nginx -g 'daemon off;'"]
+USER 1001
+CMD ["nginx", "-g", "daemon off;"]
