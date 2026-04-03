@@ -1,4 +1,0 @@
-search-frontend
-admin-ui
-talk-to
-tenant-ui
