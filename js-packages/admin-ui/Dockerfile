@@ -8,7 +8,7 @@ RUN yarn install
 RUN NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
-FROM nginx:1.28.2-alpine
+FROM nginx:stable-alpine3.23-slim
 
 # Usiamo path custom per evitare che nginx processi automaticamente il template
 COPY ./js-packages/admin-ui/nginx.conf.template /etc/nginx/nginx.conf.template
@@ -17,8 +17,11 @@ COPY ./js-packages/admin-ui/nginx.conf.default /etc/nginx/nginx.conf.default
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=react-build /app/js-packages/admin-ui/build /usr/share/nginx/html/admin/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
-	&& chmod g+rw /var/cache/nginx /var/run
+    && rm -f /etc/nginx/conf.d/default.conf \
+    && mkdir -p /var/run \
+    && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
 EXPOSE 8080
+USER 1001
 
 # Se ENV_HOST è fornito, compila il template col proxy. Altrimenti usa il config standard.
 # Usiamo envsubst '${ENV_HOST}' per evitare che sovrascriva le variabili interne di nginx come $host

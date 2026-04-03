@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.13
 
 # Install system deps (Playwright needs these)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,6 +42,8 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Copy your app
 COPY app /app
 WORKDIR /app
+
+USER 1001
 
 # Entrypoint
 ENTRYPOINT ["/etc/docker-entrypoint.sh"]

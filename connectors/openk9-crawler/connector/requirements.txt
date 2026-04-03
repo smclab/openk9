@@ -1,7 +1,7 @@
 beautifulsoup4==4.12.2
 dateparser==1.1.8
 fastapi==0.129.0
-pydantic==2.7.0
+pydantic==2.10.3
 requests==2.32.4
 scrapy-playwright==0.0.33
 scrapy-user-agents==0.1.1
