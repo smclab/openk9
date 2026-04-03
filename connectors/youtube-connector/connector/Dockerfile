@@ -26,6 +26,8 @@ RUN dos2unix /etc/docker-entrypoint.sh
 
 RUN chmod a+x /etc/docker-entrypoint.sh
 
+USER 1001
+
 ENTRYPOINT ["/bin/bash"]
 
 CMD ["/etc/docker-entrypoint.sh"]

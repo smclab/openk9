@@ -30,12 +30,14 @@ COPY ./js-packages/admin-ui .
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" yarn build
 
 # Stage 3 - Production
-FROM nginx:1.28.2-alpine
+FROM nginx:stable-alpine3.23-slim
 COPY ./js-packages/admin-ui/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=builder /app/js-packages/admin-ui/build /usr/share/nginx/html/admin/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
-	&& mkdir -p /var/run \
-	&& chmod g+rw /var/cache/nginx /var/run
+    && rm -f /etc/nginx/conf.d/default.conf \
+    && mkdir -p /var/run \
+    && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
 EXPOSE 8080
+USER 1001
 CMD ["nginx", "-g", "daemon off;"]
