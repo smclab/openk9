@@ -18,13 +18,23 @@
 package io.openk9.datasource.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+
+import io.openk9.datasource.mapper.BucketResourceMapper;
+import io.openk9.datasource.model.Sorting_;
+import io.openk9.datasource.model.TenantBinding_;
+import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.TokenTab_;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.web.dto.TabResponseDTO;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
@@ -67,7 +77,7 @@ import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
-	 BucketService(BucketMapper mapper) {
+	BucketService(BucketMapper mapper) {
 		 this.mapper = mapper;
 	}
 
@@ -798,6 +808,81 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			last, searchText, sortByList, notEqual);
 	}
 
+	public Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
+		return sessionFactory.withTransaction(session -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Tab> query = cb.createQuery(Tab.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Tab> tabsJoin = from.join(Bucket_.tabs);
+
+			Fetch<Tab, TokenTab> tokenTabFetch = tabsJoin.fetch(Tab_.tokenTabs, JoinType.LEFT);
+
+			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
+
+			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
+
+			sortingFetch.fetch(Sorting_.docTypeField, JoinType.LEFT);
+
+			query.select(tabsJoin);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			query.orderBy(cb.desc(tabsJoin.get(Tab_.priority)));
+
+			query.distinct(true);
+
+			return session
+				.createQuery(query)
+				.getResultList()
+				.chain(tabs -> {
+					if (translated) {
+						var sortings = tabs.stream()
+							.map(Tab::getSortings)
+							.flatMap(Collection::stream)
+							.map(K9Entity::getId)
+							.distinct()
+							.toList();
+
+
+						return translationService
+							.getTranslationMaps(
+								Tab.class,
+								tabs.stream()
+									.map(K9Entity::getId)
+									.toList())
+							.flatMap(tabTranslationMaps -> translationService.getTranslationMaps(
+										Sorting.class,
+										sortings
+									)
+									.map(sortingsTranslationMaps -> bucketResourceMapper.toTabResponseDtoList(
+										tabs,
+										tabTranslationMaps,
+										sortingsTranslationMaps
+									))
+							);
+					}
+					else {
+						return Uni
+							.createFrom()
+							.item(bucketResourceMapper.toTabResponseDtoList(tabs));
+					}
+				});
+		});
+
+	}
+
 	public Uni<Bucket> patch(long bucketId, BucketDTO bucketDTO) {
 		if ( bucketDTO instanceof BucketWithListsDTO bucketWithListsDTO ) {
 
@@ -1389,8 +1474,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	@Inject
 	IndexService indexService;
 
-	 @Inject
-	 LanguageService languageService;
+	@Inject
+	LanguageService languageService;
 
 	@Inject
 	Logger logger;
@@ -1412,5 +1497,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 	@Inject
 	TabService tabService;
+
+	@Inject
+	TranslationService translationService;
+
+	@Inject
+	BucketResourceMapper bucketResourceMapper;
 
 }
