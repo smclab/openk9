@@ -18,7 +18,6 @@
 package io.openk9.datasource.web;
 
 
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -32,7 +31,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
@@ -59,12 +57,8 @@ import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
-import io.openk9.datasource.model.Tab;
-import io.openk9.datasource.model.Tab_;
 import io.openk9.datasource.model.TenantBinding;
 import io.openk9.datasource.model.TenantBinding_;
-import io.openk9.datasource.model.TokenTab;
-import io.openk9.datasource.model.TokenTab_;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.datasource.service.BucketService;
 import io.openk9.datasource.service.TranslationService;
@@ -139,7 +133,7 @@ public class BucketResource {
 
 		return cache.getAsync(
 			new CompositeCacheKey(request.host(), "getTabs", translated),
-			key -> getTabList(request.host(), translated)
+			key -> bucketService.getTabList(request.host(), translated)
 		);
 	}
 
@@ -476,81 +470,6 @@ public class BucketResource {
 				.getResultList()
 				.map(mapper::toTemplateResponseDtoList);
 
-		});
-
-	}
-
-	private Uni<List<TabResponseDTO>> getTabList(String virtualhost, boolean translated) {
-		return sessionFactory.withTransaction(session -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			CriteriaQuery<Tab> query = cb.createQuery(Tab.class);
-
-			Root<Bucket> from = query.from(Bucket.class);
-
-			Join<Bucket, TenantBinding> tenantBindingJoin =
-				from.join(Bucket_.tenantBinding);
-
-			Join<Bucket, Tab> tabsJoin = from.join(Bucket_.tabs);
-
-			Fetch<Tab, TokenTab> tokenTabFetch = tabsJoin.fetch(Tab_.tokenTabs, JoinType.LEFT);
-
-			tokenTabFetch.fetch(TokenTab_.docTypeField, JoinType.LEFT);
-
-			Fetch<Tab, Sorting> sortingFetch = tabsJoin.fetch(Tab_.sortings, JoinType.LEFT);
-
-			sortingFetch.fetch(Sorting_.docTypeField, JoinType.LEFT);
-
-			query.select(tabsJoin);
-
-			query.where(
-				cb.equal(
-					tenantBindingJoin.get(TenantBinding_.virtualHost),
-					virtualhost
-				)
-			);
-
-			query.orderBy(cb.desc(tabsJoin.get(Tab_.priority)));
-
-			query.distinct(true);
-
-			return session
-				.createQuery(query)
-				.getResultList()
-				.chain(tabs -> {
-					if (translated) {
-						var sortings = tabs.stream()
-							.map(Tab::getSortings)
-							.flatMap(Collection::stream)
-							.map(K9Entity::getId)
-							.distinct()
-							.toList();
-
-
-						return translationService
-							.getTranslationMaps(
-								Tab.class,
-								tabs.stream()
-									.map(K9Entity::getId)
-									.toList())
-							.flatMap(tabTranslationMaps -> translationService.getTranslationMaps(
-										Sorting.class,
-										sortings
-									)
-									.map(sortingsTranslationMaps -> mapper.toTabResponseDtoList(
-										tabs,
-										tabTranslationMaps,
-										sortingsTranslationMaps
-									))
-							);
-					}
-					else {
-						return Uni
-							.createFrom()
-							.item(mapper.toTabResponseDtoList(tabs));
-					}
-				});
 		});
 
 	}
