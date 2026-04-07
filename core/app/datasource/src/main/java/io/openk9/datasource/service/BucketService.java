@@ -841,7 +841,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 
 			query.orderBy(cb.desc(tabsJoin.get(Tab_.priority)));
 
-			query.distinct(true);
 
 			return session
 				.createQuery(query)
