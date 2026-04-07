@@ -1440,27 +1440,10 @@ class RagGraph:
                 )
 
     def stream(self, query: str):
-        if self.output_guardrail_type == 0:
-            start_chunk = True
-            result_answer = ""
-
-            for chunk, metadata in self.graph.stream(
-                {
-                    "current_query": query,
-                    "chat_sequence_number": self.chat_sequence_number,
-                },
-                config=self.config,
-                stream_mode="messages",
-            ):
-                if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    if start_chunk:
-                        yield json.dumps({"chunk": "", "type": "START"})
-                        start_chunk = False
-                    result_answer += chunk.content
-
-                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
-
-        if self.output_guardrail_type == 1:
+        if (
+            self.output_guardrail.get("enable_output_guardrail")
+            and self.output_guardrail_type == 1
+        ):
             start_chunk = True
             result_answer = ""
             chunk_batch = []
@@ -1504,7 +1487,10 @@ class RagGraph:
                         yield json.dumps(chunk)
                     chunk_batch = []
 
-        elif self.output_guardrail_type == 2:
+        elif (
+            self.output_guardrail.get("enable_output_guardrail")
+            and self.output_guardrail_type == 2
+        ):
             start_chunk = True
             result_answer = ""
             chunk_number = 0
@@ -1544,6 +1530,26 @@ class RagGraph:
                         {"chunk": "Inappropriate content", "type": "CANCEL"}
                     )
                     return
+
+        else:
+            start_chunk = True
+            result_answer = ""
+
+            for chunk, metadata in self.graph.stream(
+                {
+                    "current_query": query,
+                    "chat_sequence_number": self.chat_sequence_number,
+                },
+                config=self.config,
+                stream_mode="messages",
+            ):
+                if metadata["langgraph_node"] == "llm_response" and chunk.content:
+                    if start_chunk:
+                        yield json.dumps({"chunk": "", "type": "START"})
+                        start_chunk = False
+                    result_answer += chunk.content
+
+                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
         if last_state := self.graph.get_state(self.config):
             if all(

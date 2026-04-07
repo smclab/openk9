@@ -209,7 +209,8 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             "input_guardrail_openai_moderation", {}
         )
 
-        output_guardrail_type = json_config.get("output_guardrail_type", 0)
+        enable_output_guardrail = json_config.get("enable_output_guardrail", True)
+        output_guardrail_type = json_config.get("output_guardrail_type", 1)
         output_guardrail_chunk_interval = json_config.get(
             "output_guardrail_chunk_interval", 10
         )
@@ -238,6 +239,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         }
 
         output_guardrail = {
+            "enable_output_guardrail": enable_output_guardrail,
             "output_guardrail_type": output_guardrail_type,
             "output_guardrail_chunk_interval": output_guardrail_chunk_interval,
             "output_guardrail_provider": output_guardrail_provider,
