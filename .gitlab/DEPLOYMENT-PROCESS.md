@@ -237,7 +237,7 @@ case "$COMPONENT_NAME" in
   *-ui|admin-ui|tenant-ui|search-frontend)
     NAMESPACES="k9-frontend" ;;
   # Backend components  
-  datasource|searcher|ingestion|tika-no-ocr|entity-manager)
+  datasource|searcher|ingestion|tika-no-ocr)
     NAMESPACES="k9-backend k9-backend01 k9-test" ;;
   # AI components
   *-ai|embedding-*|rag-*)

@@ -515,18 +515,6 @@ Trigger Helm Gen AI:
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
 
-Trigger Helm Knowledge Handling:
-  stage: trigger
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - helm-charts/**/*
-  # Block the first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
-  trigger:
-    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
-
 Trigger Helm Utilities:
   stage: trigger
   rules:

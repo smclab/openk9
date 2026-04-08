@@ -36,7 +36,6 @@
 		<module>datasource</module>
 		<module>tenant-manager</module>
 		<module>searcher</module>
-		<module>entity-manager</module>
 		<module>file-manager</module>
 		<module>ingestion</module>
 		<module>resources-validator</module>

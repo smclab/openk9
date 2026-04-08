@@ -16,7 +16,6 @@ This document describes the complete CI/CD pipeline architecture for the OpenK9 
 │   ├── .gitlab-ci-01-base-core.yaml
 │   ├── .gitlab-ci-02-file-handling.yaml
 │   ├── .gitlab-ci-03-gen-ai.yaml
-│   ├── .gitlab-ci-04-knowledge-handling.yaml
 │   └── .gitlab-ci-06-utilities.yaml
 └── Component-specific pipelines:
     ├── .gitlab-ci-datasource.yaml
@@ -26,7 +25,6 @@ This document describes the complete CI/CD pipeline architecture for the OpenK9 
     ├── .gitlab-ci-file-manager.yaml
     ├── .gitlab-ci-tenant-manager.yaml
     ├── .gitlab-ci-tika-no-ocr.yaml
-    ├── .gitlab-ci-entity-manager.yaml
     ├── .gitlab-ci-resources-validator.yaml
     ├── .gitlab-ci-search-frontend.yaml
     ├── .gitlab-ci-admin-frontend.yaml
@@ -91,7 +89,6 @@ This document describes the complete CI/CD pipeline architecture for the OpenK9 
 | **file-manager** | File management service | `openk9-file-manager` | k9-backend, k9-backend01, k9-test |
 | **tenant-manager** | Multi-tenancy management | `openk9-tenant-manager` | k9-backend, k9-backend01, k9-test |
 | **tika-no-ocr** | Document processing (no OCR) | `openk9-tika-no-ocr` | k9-backend, k9-backend01, k9-test |
-| **entity-manager** | Entity management service | `openk9-entity-manager` | k9-backend, k9-backend01, k9-test |
 | **resources-validator** | Resource validation service | `openk9-resources-validator` | k9-backend, k9-backend01, k9-test |
 
 ### 🤖 AI Components (Python)
