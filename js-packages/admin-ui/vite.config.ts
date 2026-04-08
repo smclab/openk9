@@ -4,7 +4,7 @@ import viteCompression from "vite-plugin-compression";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig(({ mode }) => ({
-  base: "/",
+  base: "/admin/",
   plugins: [
     {
       name: "redirect-root-to-admin",
