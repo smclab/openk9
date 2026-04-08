@@ -25,6 +25,9 @@ gql`
       minScore
       minScoreSuggestions
       minScoreSearch
+      maxSearchPageFrom
+      maxSearchPageSize
+      maxTextQueryLength
       queryParserConfigs {
         edges {
           node {
@@ -47,6 +50,9 @@ gql`
     $minScore: Float!
     $minScoreSuggestions: Boolean!
     $minScoreSearch: Boolean!
+    $maxSearchPageFrom: Int
+    $maxSearchPageSize: Int
+    $maxTextQueryLength: Int
     $queryParsersConfig: [QueryParserConfigDTOInput]
   ) {
     searchConfigWithQueryParsers(
@@ -57,6 +63,9 @@ gql`
         minScore: $minScore
         minScoreSuggestions: $minScoreSuggestions
         minScoreSearch: $minScoreSearch
+        maxSearchPageFrom: $maxSearchPageFrom
+        maxSearchPageSize: $maxSearchPageSize
+        maxTextQueryLength: $maxTextQueryLength
         queryParsers: $queryParsersConfig
       }
     ) {

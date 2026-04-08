@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { useQuery } from "@apollo/client";
 import {
   BooleanInput,
@@ -180,6 +180,9 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
         minScore: 0.0,
         minScoreSuggestions: false,
         minScoreSearch: false,
+        maxSearchPageFrom: 10000,
+        maxSearchPageSize: 200,
+        maxTextQueryLength: 0,
         jsonConfig: "",
         queryParserConfig: [],
       }),
@@ -289,6 +292,9 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
           { key: "minScore", label: "Min Score" },
           { key: "minScoreSuggestions", label: "Min Score Suggestions" },
           { key: "minScoreSearch", label: "Min Score Search" },
+          { key: "maxSearchPageFrom", label: "Max Search Page From" },
+          { key: "maxSearchPageSize", label: "Max Search Page Size" },
+          { key: "maxTextQueryLength", label: "Max Text Query Length" },
           // { key: "jsonConfig", label: "JSON Config" },
         ],
         label: "Search Config",
@@ -299,11 +305,11 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
       },
       ...(searchConfigId !== "new"
         ? [
-          {
-            cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
-            label: "Hybrid Search",
-          },
-        ]
+            {
+              cell: [{ key: "HybridSearch", label: "Hybrid Search Config" }],
+              label: "Hybrid Search",
+            },
+          ]
         : []),
     ],
     valueOverride: {
@@ -363,6 +369,21 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                           description="If use configured min score to filter suggestions"
                         />
                       </RefreshOptionsLayout>
+                      <NumberInput
+                        label="Max Search Page From"
+                        {...form.inputProps("maxSearchPageFrom")}
+                        description="Maximum value allowed for the 'from' pagination parameter"
+                      />
+                      <NumberInput
+                        label="Max Search Page Size"
+                        {...form.inputProps("maxSearchPageSize")}
+                        description="Maximum number of results per page"
+                      />
+                      <NumberInput
+                        label="Max Text Query Length"
+                        {...form.inputProps("maxTextQueryLength")}
+                        description="Maximum length allowed for text search queries"
+                      />
                       {/* </Box> */}
                       <TooltipDescription informationDescription="Set Hybrid Search after creation">
                         <Button
@@ -413,7 +434,7 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
                               return (
                                 <GenerateDynamicForm
                                   templates={dynamicObj?.dynamicTemplate ?? null}
-                                  changeValueKey={dynamicObj?.changeValueTemplate ?? (() => { })}
+                                  changeValueKey={dynamicObj?.changeValueTemplate ?? (() => {})}
                                   disabled={false}
                                 />
                               );
@@ -691,4 +712,3 @@ const SliderWithTooltip = ({
     </Box>
   );
 };
-
