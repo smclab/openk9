@@ -57,3 +57,41 @@ Trigger Restart Entity-Manager:
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+# --- RELEASE BRANCH JOBS ---
+
+Build Entity-Manager Release:
+  extends: .build_template
+  variables:
+    COMPONENT: "entity-manager"
+  stage: build
+  script:
+  - cd core
+  - !reference [.maven-build-logic-release, script]
+  artifacts:
+    paths:
+    - .version
+    expire_in: 24 hours
+  rules:
+    - !reference [.rules:child-deploy-release, rules]
+
+Build Verifier Entity-Manager Release MR:
+  extends: .maven-verifier-template
+  stage: build-verifier
+  variables:
+    COMPONENT: "entity-manager"
+  script:
+  - !reference [.maven-build-verifier-logic, script]
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+Trigger Restart Entity-Manager Release:
+  extends: .restart_job_template
+  dependencies:
+  - Build Entity-Manager Release
+  variables:
+    COMPONENT_NAME: "entity-manager"
+    COMPONENT_TYPE: "backend"
+    TARGET_ENV: "k9-stable-2"
+  rules:
+    - !reference [.rules:child-deploy-release, rules]

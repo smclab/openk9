@@ -152,3 +152,69 @@ Trigger Restart:
     # Run only on main/tag or designated feature branch
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+# --- RELEASE BRANCH JOBS ---
+
+Build Rag Release:
+  stage: build
+  image:
+    name: $KANIKO_IMAGE
+    entrypoint: [""]
+  needs:
+  - job: Fetch config
+    artifacts: true
+  cache:
+    key: "shared-pip"
+    paths:
+    - .pip-cache/
+    policy: pull-push
+  before_script:
+  - mkdir -p .pip-cache
+  script:
+  - source $CI_PROJECT_DIR/config.env
+  - mkdir -p /kaniko/.docker
+  - |
+    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
+    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
+    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
+      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
+  - |
+    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
+    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/rag-module --dockerfile ${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile"
+
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      echo "[RAG Release] Tag: push $VERSION"
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
+    else
+      SNAP_TAG="${VERSION}-SNAPSHOT"
+      echo "[RAG Release] Branch: push $SNAP_TAG"
+      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$SNAP_TAG"
+    fi
+  rules:
+    - !reference [.rules:child-deploy-release, rules]
+
+Build Verifier Rag Release MR:
+  stage: build-verifier
+  image: python:3.12-slim
+  script:
+  - echo "=== Python syntax check for rag-module (release MR) ==="
+  - find ai-packages/rag-module -name "*.py" -not -path "*/__pycache__/*" | xargs python3 -m py_compile
+  - echo "=== Syntax check passed ==="
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+Trigger Restart Rag Release:
+  extends: .restart_job_template
+  variables:
+    COMPONENT_NAME: "rag-module"
+    COMPONENT_TYPE: "ai"
+    TARGET_ENV: "k9-stable-2"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Rag Release
+    artifacts: false
+  rules:
+    - !reference [.rules:child-deploy-release, rules]

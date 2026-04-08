@@ -50,6 +50,14 @@ Trigger Search Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *search_frontend_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *search_frontend_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-search-frontend.yaml"
     strategy: depend
@@ -80,6 +88,12 @@ Trigger Admin Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *admin_ui_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *admin_ui_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-admin-frontend.yaml"
     strategy: depend
@@ -110,6 +124,12 @@ Trigger Tenant Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *tenant_ui_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *tenant_ui_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-frontend.yaml"
     strategy: depend
@@ -140,6 +160,12 @@ Trigger Talk-To Frontend:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *talk_to_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *talk_to_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-talk-to.yaml"
     strategy: depend

@@ -56,3 +56,41 @@ Trigger Restart Tika:
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+# --- RELEASE BRANCH JOBS ---
+
+Build Tika Release:
+  extends: .build_template
+  variables:
+    COMPONENT: "tika"
+  stage: build
+  script:
+  - cd core
+  - !reference [.maven-build-logic-release, script]
+  artifacts:
+    paths:
+    - .version
+    expire_in: 24 hours
+  rules:
+    - !reference [.rules:child-deploy-release, rules]
+
+Build Verifier Tika Release MR:
+  extends: .maven-verifier-template
+  stage: build-verifier
+  variables:
+    COMPONENT: "tika"
+  script:
+  - !reference [.maven-build-verifier-logic, script]
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+Trigger Restart Tika Release:
+  extends: .restart_job_template
+  dependencies:
+  - Build Tika Release
+  variables:
+    COMPONENT_NAME: "tika"
+    COMPONENT_TYPE: "backend"
+    TARGET_ENV: "k9-stable-2"
+  rules:
+    - !reference [.rules:child-deploy-release, rules]

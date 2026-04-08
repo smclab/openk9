@@ -43,6 +43,14 @@ Trigger Rag Module:
       changes: *rag_module_changes
       variables:
         USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *rag_module_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *rag_module_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-rag-module.yaml"
     strategy: depend

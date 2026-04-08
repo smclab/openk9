@@ -68,6 +68,29 @@ AI_TRIGGERS = [
     "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
 ]
 
+# Triggers that fire on release branch (Trigger K8S-Client and chatbot/agentic/embedding/chunk
+# are NOT in 3.0.x, so they must NOT fire on release branch).
+BACKEND_TRIGGERS_RELEASE = [
+    "Trigger Datasource", "Trigger Searcher", "Trigger Ingestion",
+    "Trigger File-Manager", "Trigger Tenant-Manager",
+    "Trigger API-Gateway", "Trigger Tika", "Trigger Entity-Manager",
+    "Trigger Resources-Validator",
+]
+FRONTEND_TRIGGERS_RELEASE = [
+    "Trigger Search Frontend", "Trigger Admin Frontend",
+    "Trigger Tenant Frontend", "Trigger Talk-To Frontend",
+]
+AI_TRIGGERS_RELEASE = [
+    "Trigger Rag Module",
+]
+
+# Triggers that must NOT fire on release branch
+BACKEND_TRIGGERS_RELEASE_EXCLUDED = ["Trigger K8S-Client"]
+FRONTEND_TRIGGERS_RELEASE_EXCLUDED = ["Trigger OpenK9-Chatbot"]
+AI_TRIGGERS_RELEASE_EXCLUDED = [
+    "Trigger Agentic Rag Module", "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
+]
+
 # ── Domain → folders (multiple files to cover all triggers in the domain) ──────
 # backend: core/common/resources-common/ covers ALL backend triggers except
 #   Datasource (which needs core/app/datasource/ or core/service/).
@@ -122,7 +145,8 @@ def reset_test_commit(filepaths: list):
 
 # ── gitlab-ci-local helper ─────────────────────────────────────────────────────
 
-def run_list(user: str, source: str, branch: str = None, tag: str = None) -> list:
+def run_list(user: str, source: str, branch: str = None, tag: str = None,
+             mr_target_branch: str = None) -> list:
     cmd = [
         "gitlab-ci-local",
         "--file", CI_FILE,
@@ -134,6 +158,8 @@ def run_list(user: str, source: str, branch: str = None, tag: str = None) -> lis
         cmd.append(f"--variable=CI_COMMIT_BRANCH={branch}")
     if tag:
         cmd.append(f"--variable=CI_COMMIT_TAG={tag}")
+    if mr_target_branch:
+        cmd.append(f"--variable=CI_MERGE_REQUEST_TARGET_BRANCH_NAME={mr_target_branch}")
 
     result = subprocess.run(cmd, capture_output=True, text=True)
     jobs = []
@@ -200,7 +226,7 @@ def run_tests(verbose=False, user_filter=None):
     print(c(DIM, "=" * 60))
 
     def t(label, user, source, domain, branch=None, tag=None,
-          should_fire=None, should_not_fire=None, sec=None):
+          mr_target_branch=None, should_fire=None, should_not_fire=None, sec=None):
         if user_filter and user_filter not in user:
             return
 
@@ -211,7 +237,8 @@ def run_tests(verbose=False, user_filter=None):
         try:
             if domain:
                 filepaths = create_test_commit(domain)
-            jobs = run_list(user, source, branch=branch, tag=tag)
+            jobs = run_list(user, source, branch=branch, tag=tag,
+                            mr_target_branch=mr_target_branch)
         finally:
             if filepaths:
                 reset_test_commit(filepaths)
@@ -335,6 +362,55 @@ def run_tests(verbose=False, user_filter=None):
           user, "push", "unrelated", branch="1234-fix-something",
           should_fire=[],
           should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
+
+    # ── RELEASE BRANCH (3.0.x) ─────────────────────────────────────────────────
+    # We use a generic user since release rules are user-agnostic.
+    release_user = "dmytro.moskovchenko"
+
+    t("release branch 3.0.x | backend files → release backend triggers fire (no k8s-client)",
+      release_user, "push", "backend", branch="3.0.x",
+      should_fire=BACKEND_TRIGGERS_RELEASE,
+      should_not_fire=BACKEND_TRIGGERS_RELEASE_EXCLUDED + FRONTEND_TRIGGERS + AI_TRIGGERS,
+      sec="Release branch — 3.0.x")
+
+    t("release branch 3.0.x | frontend files → release frontend triggers fire (no chatbot)",
+      release_user, "push", "frontend", branch="3.0.x",
+      should_fire=FRONTEND_TRIGGERS_RELEASE,
+      should_not_fire=FRONTEND_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + AI_TRIGGERS)
+
+    t("release branch 3.0.x | AI files → release AI trigger fires (rag only)",
+      release_user, "push", "ai", branch="3.0.x",
+      should_fire=AI_TRIGGERS_RELEASE,
+      should_not_fire=AI_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + FRONTEND_TRIGGERS)
+
+    t("release branch 3.0.x | unrelated files → nothing fires",
+      release_user, "push", "unrelated", branch="3.0.x",
+      should_fire=[],
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
+
+    # ── RELEASE MR (porting-* → 3.0.x) ────────────────────────────────────────
+    # We simulate CI_MERGE_REQUEST_TARGET_BRANCH_NAME=3.0.x via --variable.
+    # gitlab-ci-local evaluates `changes:` against the real git diff,
+    # so domain files must still be committed locally.
+
+    t("release MR (→3.0.x) | backend files → backend release triggers fire",
+      release_user, "merge_request_event", "backend",
+      mr_target_branch="3.0.x",
+      should_fire=BACKEND_TRIGGERS_RELEASE,
+      should_not_fire=BACKEND_TRIGGERS_RELEASE_EXCLUDED + FRONTEND_TRIGGERS + AI_TRIGGERS,
+      sec="Release MR — porting-* → 3.0.x")
+
+    t("release MR (→3.0.x) | frontend files → frontend release triggers fire",
+      release_user, "merge_request_event", "frontend",
+      mr_target_branch="3.0.x",
+      should_fire=FRONTEND_TRIGGERS_RELEASE,
+      should_not_fire=FRONTEND_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + AI_TRIGGERS)
+
+    t("release MR (→3.0.x) | AI files → AI release trigger fires",
+      release_user, "merge_request_event", "ai",
+      mr_target_branch="3.0.x",
+      should_fire=AI_TRIGGERS_RELEASE,
+      should_not_fire=AI_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + FRONTEND_TRIGGERS)
 
     # ── Summary ────────────────────────────────────────────────────────────────
     total  = len(results)

@@ -62,3 +62,26 @@
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
+
+# ── RELEASE BRANCH RULES ──────────────────────────────────────────────────────
+#
+# child-deploy-release: fires on push/merge to any release branch (3.0.x, 3.1.x, ...)
+#   or on a release tag (3.0.1, 3.0.2, ...).
+#   Used by: Build Release + Trigger Restart Release jobs.
+#
+# child-verify-release-mr: fires when the parent passes RELEASE_MR="true",
+#   which happens on MR from porting-* toward a release branch.
+#   Used by: Build Verifier Release MR jobs.
+#
+# The regex /^\d+\.\d+\.x$/ matches any future release branch automatically.
+# The regex /^\d+\.\d+\.\d+/ matches any semver release tag.
+# ──────────────────────────────────────────────────────────────────────────────
+
+.rules:child-deploy-release:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+
+.rules:child-verify-release-mr:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $RELEASE_MR == "true"'

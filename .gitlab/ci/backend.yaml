@@ -52,6 +52,14 @@ Trigger Datasource:
       changes: *datasource_changes
       variables:
         USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *datasource_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *datasource_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-datasource.yaml"
     strategy: depend
@@ -80,6 +88,12 @@ Trigger Searcher:
       changes: *searcher_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *searcher_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *searcher_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-searcher.yaml"
     strategy: depend
@@ -105,6 +119,12 @@ Trigger Ingestion:
       changes: *ingestion_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *ingestion_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *ingestion_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-ingestion.yaml"
     strategy: depend
@@ -160,6 +180,12 @@ Trigger File-Manager:
       changes: *file_manager_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *file_manager_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *file_manager_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-file-manager.yaml"
     strategy: depend
@@ -191,6 +217,12 @@ Trigger Tenant-Manager:
       changes: *tenant_manager_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *tenant_manager_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *tenant_manager_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
     strategy: depend
@@ -216,6 +248,12 @@ Trigger API-Gateway:
       changes: *api_gateway_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *api_gateway_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *api_gateway_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
     strategy: depend
@@ -240,6 +278,12 @@ Trigger Tika:
       changes: *tika_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *tika_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *tika_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
     strategy: depend
@@ -265,6 +309,12 @@ Trigger Entity-Manager:
       changes: *entity_manager_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *entity_manager_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *entity_manager_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
     strategy: depend
@@ -289,6 +339,12 @@ Trigger Resources-Validator:
       changes: *resources_validator_changes
       variables:
         USER_TYPE: "generic"
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *resources_validator_changes
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *resources_validator_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
     strategy: depend

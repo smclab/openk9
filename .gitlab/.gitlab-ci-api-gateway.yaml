@@ -64,3 +64,41 @@ Trigger Restart API-Gateway:
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+# --- RELEASE BRANCH JOBS ---
+
+Build API-Gateway Release:
+  extends: .build_template
+  image: maven:3.9.6-eclipse-temurin-21
+  variables:
+    COMPONENT: "api-gateway"
+    REGISTRY_IMAGE: "$CI_REGISTRY_NAME/openk9/openk9-api-gateway"
+  stage: build
+  script:
+  - !reference [.springboot-build-logic-release, script]
+  artifacts:
+    paths:
+    - .version
+    expire_in: 24 hours
+  rules:
+    - !reference [.rules:child-deploy-release, rules]
+
+Build Verifier API-Gateway Release MR:
+  extends: .springboot-verifier-template
+  image: maven:3.9.6-eclipse-temurin-21
+  stage: build-verifier
+  variables:
+    COMPONENT: "api-gateway"
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+Trigger Restart API-Gateway Release:
+  extends: .restart_job_template
+  dependencies:
+  - Build API-Gateway Release
+  variables:
+    COMPONENT_NAME: "api-gateway"
+    COMPONENT_TYPE: "backend"
+    TARGET_ENV: "k9-stable-2"
+  rules:
+    - !reference [.rules:child-deploy-release, rules]

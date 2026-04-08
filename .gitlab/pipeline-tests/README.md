@@ -27,14 +27,39 @@ python3 .gitlab/pipeline-tests/test-pipeline-rules.py
 # output verboso
 python3 .gitlab/pipeline-tests/test-pipeline-rules.py -v
 
-# filtra per utente
-python3 .gitlab/pipeline-tests/test-pipeline-rules.py -u mirko
+# filtra per utente (es. solo i test release)
+python3 .gitlab/pipeline-tests/test-pipeline-rules.py -u dmytro
+
+# filtra per utente con output verboso
+python3 .gitlab/pipeline-tests/test-pipeline-rules.py -u mirko -v
 ```
 
 ## Cosa viene testato
+
+### Branch feature / main / MR standard
 
 - **Backend designated** (mirko, michele): backend fires su file backend, niente su frontend/AI
 - **Frontend designated** (lorenzo, giorgio): frontend fires su file frontend, niente su backend/AI
 - **AI designated** (luca): AI fires su file AI, niente su backend/frontend
 - **Generic** (utenti non designati): fires solo sul dominio dei file modificati, niente altrove
-- Ogni dominio viene coperto creando file in tutte le cartelle rilevanti per attivare tutti i trigger
+
+### Release branch (`3.0.x`, `3.1.x`, ...)
+
+- Push su release branch con file backend → i 9 trigger backend release scattano; `Trigger K8S-Client` resta silenzioso (non presente in `3.0.x`)
+- Push su release branch con file frontend → i 4 trigger frontend release scattano; `Trigger OpenK9-Chatbot` resta silenzioso
+- Push su release branch con file AI → solo `Trigger Rag Module` scatta (agentic-rag, embedding, chunk-evaluation non in `3.0.x`)
+- Push su release branch con file unrelated → nessun trigger
+
+### Release MR (`porting-*` → release branch)
+
+- MR verso release branch con file backend/frontend/AI → i trigger release del dominio scattano (simulando `CI_MERGE_REQUEST_TARGET_BRANCH_NAME=3.0.x`)
+
+> **Nota:** i tag release (`3.0.2`, ecc.) non sono testati automaticamente — `gitlab-ci-local` non valuta `changes:` in modo affidabile con `CI_COMMIT_TAG`.
+
+## Moduli presenti in `3.0.x`
+
+| Dominio | Moduli inclusi | Moduli esclusi |
+|---------|---------------|----------------|
+| Backend | datasource, searcher, ingestion, file-manager, tenant-manager, api-gateway, tika, entity-manager, resources-validator | k8s-client |
+| Frontend | search-frontend, admin-ui, tenant-ui, talk-to | chatbot |
+| AI | rag-module | agentic-rag, embedding, chunk-evaluation |
