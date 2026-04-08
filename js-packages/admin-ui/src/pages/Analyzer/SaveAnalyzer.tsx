@@ -140,6 +140,7 @@ export function SaveAnalyzer() {
     isLoading: analyzerQuery.loading || createOrUpdateAnalyzerMutation.loading,
     onSubmit(data) {
       const jsonConfig = createJsonString({ template: template?.value, type: typeSelected });
+      const isCustomType = typeSelected === "custom";
       createOrUpdateAnalyzerMutate({
         variables: {
           id: !isNewAnalyzer ? analyzerId : undefined,
@@ -147,9 +148,9 @@ export function SaveAnalyzer() {
           type: typeSelected,
           name: data.name || "",
           description: data.description,
-          charFilterIds: formatQueryToBE({ information: data.charFilters }),
-          tokenFilterIds: formatQueryToBE({ information: data.tokenFilters }),
-          tokenizerId: data.tokenizerId.id !== "-1" ? data.tokenizerId.id : null,
+          charFilterIds: isCustomType ? formatQueryToBE({ information: data.charFilters }) : [],
+          tokenFilterIds: isCustomType ? formatQueryToBE({ information: data.tokenFilters }) : [],
+          tokenizerId: isCustomType && data.tokenizerId.id !== "-1" ? data.tokenizerId.id : null,
           jsonConfig,
         },
       });
