@@ -136,24 +136,3 @@ Trigger Helm Utilities:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
     strategy: depend
 
-# 6. Knowledge Handling
-Trigger Helm Knowledge Handling:
-  stage: trigger
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/04-knowledge-handling/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/04-knowledge-handling/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/04-knowledge-handling/**/*
-      variables:
-        RELEASE_MR: "true"
-  trigger:
-    include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-04-knowledge-handling.yaml"
-    strategy: depend

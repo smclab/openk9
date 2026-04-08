@@ -60,7 +60,6 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 │   ├── .gitlab-ci-01-base-core.yaml
 │   ├── .gitlab-ci-02-file-handling.yaml
 │   ├── .gitlab-ci-03-gen-ai.yaml
-│   ├── .gitlab-ci-04-knowledge-handling.yaml
 │   ├── .gitlab-ci-05-connectors.yaml
 │   └── .gitlab-ci-06-utilities.yaml
 │
@@ -68,7 +67,6 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 ├── .gitlab-ci-datasource.yaml
 ├── .gitlab-ci-searcher.yaml
 ├── .gitlab-ci-ingestion.yaml
-├── .gitlab-ci-entity-manager.yaml
 ├── .gitlab-ci-tenant-manager.yaml
 ├── .gitlab-ci-resources-validator.yaml
 ├── .gitlab-ci-k8s-client.yaml

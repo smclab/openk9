@@ -288,37 +288,6 @@ Trigger Tika:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
     strategy: depend
 
-Trigger Entity-Manager:
-  stage: trigger
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes: &entity_manager_changes
-        - core/app/entity-manager/**/*
-        - core/common/resources-common/**/*
-        - core/common/util/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *entity_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
-      changes: *entity_manager_changes
-      variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *entity_manager_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *entity_manager_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *entity_manager_changes
-      variables:
-        RELEASE_MR: "true"
-  trigger:
-    include: "/.gitlab/.gitlab-ci-entity-manager.yaml"
-    strategy: depend
-
 Trigger Resources-Validator:
   stage: trigger
   rules:

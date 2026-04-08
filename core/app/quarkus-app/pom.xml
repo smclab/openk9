@@ -55,7 +55,6 @@
 		<module>../resources-validator</module>
 		<module>../tika</module>
 		<module>../k8s-client</module>
-		<module>../entity-manager</module>
 	</modules>
 
 	<dependencies>
