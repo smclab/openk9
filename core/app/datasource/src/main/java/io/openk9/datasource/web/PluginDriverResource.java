@@ -24,9 +24,12 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import io.openk9.common.model.dto.Problem;
+import io.openk9.datasource.client.exception.FormEndpointException;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.form.FormTemplate;
@@ -88,6 +91,11 @@ public class PluginDriverResource {
 		return service.getDocTypes(id);
 	}
 
+	/**
+	 * Retrieves the dynamic form template from the connector.
+	 * Returns HTTP 502 with a {@link Problem} body when the
+	 * connector does not expose a form endpoint or is unreachable.
+	 */
 	@APIResponses(value = {
 		@APIResponse(
 			responseCode = "200",
@@ -99,6 +107,16 @@ public class PluginDriverResource {
 				)
 			}
 		),
+		@APIResponse(
+			responseCode = "502",
+			description = "Connector does not expose a form endpoint"
+				+ " or is unreachable",
+			content = @Content(
+				mediaType = "application/json+problem",
+				schema = @Schema(
+					implementation = Problem.class)
+			)
+		),
 		@APIResponse(ref = "#/components/responses/bad-request"),
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
@@ -109,7 +127,21 @@ public class PluginDriverResource {
 		@Parameter(description = "Plugin Driver's id")
 		@PathParam("id") long id) {
 
-		return service.getForm(id);
+		return service.getForm(id)
+			.onFailure(FormEndpointException.class)
+			.transform(cause -> new WebApplicationException(
+				cause, Response.status(502).entity(
+					formNotAvailableProblem()).build()));
+	}
+
+	private static Problem formNotAvailableProblem() {
+		var problem = new Problem();
+		problem.setStatus(502);
+		problem.setTitle("Form not available");
+		problem.setDetail(
+			"The connector associated with this plugin driver "
+				+ "does not expose a form endpoint");
+		return problem;
 	}
 
 	@APIResponses(value = {
