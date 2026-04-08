@@ -128,6 +128,14 @@ python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
+# Generate gRPC Python code (run after installing requirements)
+python -m grpc_tools.protoc -I. \
+  --python_out=. \
+  --grpc_python_out=. \
+  app/external_services/grpc/searcher/searcher.proto \
+  app/external_services/grpc/tenant_manager/tenant_manager.proto \
+  app/external_services/grpc/embedding/embedding.proto
+
 # 2. Start development server
 uvicorn app.server:app --host 0.0.0.0 --port 5000 --reload
 ```
