@@ -52,13 +52,13 @@ RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
 
 # Stage 2 - the production environment
 FROM nginx:stable-alpine3.23-slim
-COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && rm -f /etc/nginx/conf.d/default.conf \
     && mkdir -p /var/run \
     && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
+COPY ./js-packages/search-frontend/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 USER 1001
 CMD ["nginx", "-g", "daemon off;"]
