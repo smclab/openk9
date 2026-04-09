@@ -9,7 +9,7 @@
         <fileSet>
             <directory>src/test/java</directory>
         </fileSet>
-        <fileSet>
+        <fileSet filtered="true">
             <directory>src/main/resources</directory>
         </fileSet>
         <fileSet filtered="true">
