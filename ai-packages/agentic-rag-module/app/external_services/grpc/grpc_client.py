@@ -214,9 +214,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         output_guardrail_chunk_interval = json_config.get(
             "output_guardrail_chunk_interval", 10
         )
-        output_guardrail_provider = json_config.get(
-            "output_guardrail_provider", "openai_moderation"
-        )
+        output_guardrail_provider = json_config.get("output_guardrail_provider", "")
         output_guardrail_aws_bedrock = json_config.get(
             "output_guardrail_aws_bedrock", {}
         )
