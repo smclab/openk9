@@ -49,6 +49,7 @@ import "react-dates/lib/css/_datepicker.css";
 const isKeycloakEnabled = import.meta.env.VITE_KEYCLOAK_ENABLED === "true" && !!window.KEYCLOAK_URL && window.KEYCLOAK_URL !== "DISABLED";
 const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
 const isGenerativeEnabled = import.meta.env.VITE_GENERATIVE_ENABLED === "true";
+const isCalendarEnabled = import.meta.env.VITE_CALENDAR_ENABLED !== "false";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -311,88 +312,90 @@ export function App() {
             `}
             className="openk9-update-configuration"
           >
-            <div
-              css={css`
-                display: flex;
-                background-color: white;
-                border-radius: 50px;
-                border: 1px solid #ced4da;
-                justify-content: space-between;
-                align-items: center;
-                padding: 8px 12px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-              `}
-            >
+            {isCalendarEnabled && (
               <div
                 css={css`
                   display: flex;
+                  background-color: white;
+                  border-radius: 50px;
+                  border: 1px solid #ced4da;
+                  justify-content: space-between;
                   align-items: center;
-                  gap: 12px;
-                  flex: 1;
+                  padding: 8px 12px;
+                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
                 `}
-                onClick={() => setIsVisibleCalendar(true)}
               >
-                <CalendarMobileSvg />
                 <div
                   css={css`
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 12px;
                     flex: 1;
                   `}
                   onClick={() => setIsVisibleCalendar(true)}
                 >
+                  <CalendarMobileSvg />
                   <div
                     css={css`
-                      white-space: nowrap;
-                      color: #495057;
-                      font-size: 14px;
+                      display: flex;
+                      align-items: center;
+                      gap: 10px;
+                      flex: 1;
                     `}
+                    onClick={() => setIsVisibleCalendar(true)}
                   >
-                    {startDate === null
-                      ? t("choose-a-date")
-                      : moment(startDate).format("DD MMM YYYY")}
-                  </div>
-                  {endDate !== null && (
                     <div
                       css={css`
-                        height: 20px;
-                        width: 1px;
-                        background-color: #ced4da;
+                        white-space: nowrap;
+                        color: #495057;
+                        font-size: 14px;
                       `}
-                    />
-                  )}
-                  <div
-                    css={css`
-                      white-space: nowrap;
-                      color: #495057;
-                      font-size: 14px;
-                    `}
-                  >
-                    {endDate === null
-                      ? ""
-                      : moment(endDate).format("DD MMM YYYY")}
+                    >
+                      {startDate === null
+                        ? t("choose-a-date")
+                        : moment(startDate).format("DD MMM YYYY")}
+                    </div>
+                    {endDate !== null && (
+                      <div
+                        css={css`
+                          height: 20px;
+                          width: 1px;
+                          background-color: #ced4da;
+                        `}
+                      />
+                    )}
+                    <div
+                      css={css`
+                        white-space: nowrap;
+                        color: #495057;
+                        font-size: 14px;
+                      `}
+                    >
+                      {endDate === null
+                        ? ""
+                        : moment(endDate).format("DD MMM YYYY")}
+                    </div>
                   </div>
                 </div>
+                {startDate !== null && (
+                  <div
+                    onClick={() => {
+                      setStartDate(null);
+                      setEndDate(null);
+                      setIsClickReset(true);
+                    }}
+                    css={css`
+                      margin-left: 10px;
+                      cursor: pointer;
+                      display: flex;
+                      align-items: center;
+                    `}
+                  >
+                    <DeleteLogo />
+                  </div>
+                )}
               </div>
-              {startDate !== null && (
-                <div
-                  onClick={() => {
-                    setStartDate(null);
-                    setEndDate(null);
-                    setIsClickReset(true);
-                  }}
-                  css={css`
-                    margin-left: 10px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                  `}
-                >
-                  <DeleteLogo />
-                </div>
-              )}
-            </div>
+            )}
             <button
               css={css`
                 padding: 6px 10px;
@@ -909,26 +912,28 @@ export function App() {
         }
       </div>
 
-      <div
-        className="openk9-results-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            calendarMobile: {
-              element,
-              isVisible: isVisibleCalendar,
-              setIsVisible: setIsVisibleCalendar,
-              startDate,
-              setStartDate,
-              endDate,
-              setEndDate,
-              focusedInput,
-              setFocusedInput,
-              isCLickReset: isClickReset,
-              setIsCLickReset: setIsClickReset,
-            },
-          })
-        }
-      />
+      {isCalendarEnabled && (
+        <div
+          className="openk9-results-container openk9-box"
+          ref={(element) =>
+            openk9.updateConfiguration({
+              calendarMobile: {
+                element,
+                isVisible: isVisibleCalendar,
+                setIsVisible: setIsVisibleCalendar,
+                startDate,
+                setStartDate,
+                endDate,
+                setEndDate,
+                focusedInput,
+                setFocusedInput,
+                isCLickReset: isClickReset,
+                setIsCLickReset: setIsClickReset,
+              },
+            })
+          }
+        />
+      )}
 
       <div
         className="openk9-preview-container openk9-box"
