@@ -89,7 +89,7 @@ def query_parser(
         return configuration
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = f"QueryParser gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
@@ -274,7 +274,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
         return configuration
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = f"GetRAGConfigurations gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
@@ -327,7 +327,7 @@ def get_llm_configuration(grpc_host, virtual_host):
         return configuration
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = f"GetLLMConfigurations gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
@@ -367,7 +367,9 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
         return configuration
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = (
+            f"GetEmbeddingModelConfigurations gRPC communication failed: {e.details()}"
+        )
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
@@ -401,7 +403,7 @@ def get_tenant_manager_configuration(grpc_host, virtual_host):
             return configuration
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = f"FindTenant gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
@@ -527,7 +529,7 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
             return documents
 
     except grpc.RpcError as e:
-        error_message = f"gRPC communication failed: {e.details()}"
+        error_message = f"EmbeddingRequest gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
