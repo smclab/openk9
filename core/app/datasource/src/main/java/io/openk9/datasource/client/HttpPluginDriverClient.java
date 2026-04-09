@@ -41,16 +41,18 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 	@Inject
 	WebClient webClient;
 
+	/** Retrieves a sample payload from the connector. */
 	public Uni<IngestionPayload> getSample(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
-				HttpMethod.GET, resourceUri.getBaseUri() + SAMPLE_PATH
+				HttpMethod.GET,
+				resourceUri.getBaseUri() + SAMPLE_PATH
 			)
 			.timeout(10000)
 			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(IngestionPayload.class))
-			.flatMap(this::validateDto);
+			.flatMap(this::checkResponseStatus)
+			.flatMap(res -> parseBody(
+				res, IngestionPayload.class));
 	}
 
 	public Uni<HttpResponse<Buffer>> invoke(
@@ -73,7 +75,7 @@ public class HttpPluginDriverClient extends HttpDatasourceServiceClient {
 				HttpMethod.POST, baseUri + path
 			)
 			.sendJson(httpPluginDriverContext)
-			.flatMap(this::validateResponse);
+			.flatMap(this::checkResponseStatus);
 	}
 
 	public void invokeAndForget(

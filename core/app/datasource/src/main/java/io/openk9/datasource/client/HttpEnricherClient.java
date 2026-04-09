@@ -45,6 +45,6 @@ public class HttpEnricherClient extends HttpDatasourceServiceClient {
 			.requestAbs(HttpMethod.POST, resourceUri.getBaseUri() + path)
 			.timeout(timeout)
 			.sendJson(enricherInputDTO)
-			.flatMap(this::validateResponse);
+			.flatMap(this::checkResponseStatus);
 	}
 }

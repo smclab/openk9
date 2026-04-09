@@ -17,18 +17,22 @@
 
 package io.openk9.datasource.client;
 
+import jakarta.inject.Inject;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
+import jakarta.validation.Validator;
+
+import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.client.exception.UnexpectedResponseStatusException;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
+
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
-import jakarta.inject.Inject;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.ValidationException;
-import jakarta.validation.Validator;
 
 public abstract class HttpDatasourceServiceClient {
 
@@ -40,6 +44,13 @@ public abstract class HttpDatasourceServiceClient {
 	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
 
+	/**
+	 * Retrieves the form template from the remote service.
+	 * Returns a failed {@link Uni} with
+	 * {@link FormEndpointException} if the service does not
+	 * expose a form endpoint, is unreachable, or returns an
+	 * invalid response.
+	 */
 	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
@@ -47,11 +58,13 @@ public abstract class HttpDatasourceServiceClient {
 				resourceUri.getBaseUri() + FORM_PATH
 			)
 			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(FormTemplate.class))
-			.flatMap(this::validateDto);
+			.flatMap(this::checkResponseStatus)
+			.flatMap(res -> parseBody(res, FormTemplate.class))
+			.onFailure()
+			.transform(FormEndpointException::new);
 	}
 
+	/** Retrieves the health status from the remote service. */
 	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
 		return webClient
 			.requestAbs(
@@ -59,9 +72,8 @@ public abstract class HttpDatasourceServiceClient {
 				resourceUri.getBaseUri() + HEALTH_PATH
 			)
 			.send()
-			.flatMap(this::validateResponse)
-			.map(res -> res.bodyAsJson(HealthDTO.class))
-			.flatMap(this::validateDto)
+			.flatMap(this::checkResponseStatus)
+			.flatMap(res -> parseBody(res, HealthDTO.class))
 			.onFailure(ConstraintViolationException.class)
 			.recoverWithItem(HealthDTO
 				.builder()
@@ -70,27 +82,54 @@ public abstract class HttpDatasourceServiceClient {
 			);
 	}
 
-	protected Uni<HttpResponse<Buffer>> validateResponse(HttpResponse<Buffer> response) {
-		if (response.statusCode() >= 200 && response.statusCode() <= 299) {
+	/**
+	 * Checks that the HTTP response status is 2xx.
+	 * Returns a failed {@link Uni} with an
+	 * {@link UnexpectedResponseStatusException} otherwise.
+	 */
+	protected Uni<HttpResponse<Buffer>> checkResponseStatus(
+		HttpResponse<Buffer> response) {
+
+		if (response.statusCode() >= 200
+			&& response.statusCode() <= 299) {
+
 			return Uni.createFrom().item(response);
-		} else {
-			return Uni.createFrom().failure(new ValidationException(
-				String.format(
-					"Unexpected Response Status: %d, Message: %s",
-					response.statusCode(),
-					response.statusMessage()
-				))
-			);
 		}
+
+		return Uni.createFrom().failure(
+			new UnexpectedResponseStatusException(
+				response.statusCode(),
+				response.statusMessage()));
 	}
 
-	protected <T> Uni<T> validateDto(T dto) {
+	/**
+	 * Deserializes the response body into the given type and
+	 * validates it. Deserialization errors are wrapped as
+	 * {@link ValidationException}; bean validation failures
+	 * propagate as {@link ConstraintViolationException}.
+	 */
+	protected <T> Uni<T> parseBody(
+		HttpResponse<Buffer> response, Class<T> type) {
+
+		T dto;
+
+		try {
+			dto = response.bodyAsJson(type);
+		}
+		catch (Exception e) {
+			return Uni.createFrom().failure(
+				new ValidationException(
+					"Invalid response body", e));
+		}
+
 		var violations = validator.validate(dto);
+
 		if (violations.isEmpty()) {
 			return Uni.createFrom().item(dto);
-		} else {
-			return Uni.createFrom().failure(new ConstraintViolationException(violations));
 		}
+
+		return Uni.createFrom().failure(
+			new ConstraintViolationException(violations));
 	}
 
 }

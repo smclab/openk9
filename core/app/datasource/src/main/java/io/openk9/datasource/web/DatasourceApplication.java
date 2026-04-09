@@ -92,6 +92,23 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
                                         )
                                 )
                         ),
+                        @APIResponse(
+                                responseCode = "502",
+                                name = "form-endpoint-error",
+                                description = "The service does not expose"
+                                        + " a form endpoint or returned"
+                                        + " an invalid response",
+                                content = @Content(
+                                        mediaType = "application/json+problem",
+                                        schema = @Schema(
+                                                ref = "#/components/schemas/Problem",
+                                                externalDocs = @ExternalDocumentation(
+                                                        description = "More Info here",
+                                                        url = "https://opensource.zalando.com/problem"
+                                                )
+                                        )
+                                )
+                        ),
                 },
                 schemas = {
                         @Schema(

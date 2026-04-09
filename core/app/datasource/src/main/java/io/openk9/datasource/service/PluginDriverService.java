@@ -353,7 +353,8 @@ public class PluginDriverService
 	 * Retrieves the form template from the connector associated with
 	 * the given plugin driver. Returns a failed {@link Uni} with
 	 * {@link FormEndpointException} if the connector does not expose
-	 * a form endpoint or is unreachable.
+	 * a form endpoint, is unreachable, or returns an invalid
+	 * response.
 	 *
 	 * @param id the plugin driver identifier
 	 * @return the form template published by the connector
@@ -361,10 +362,11 @@ public class PluginDriverService
 	public Uni<FormTemplate> getForm(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
-					ResourceUri resourceUri = pluginDriver.getResourceUri();
-					return httpPluginDriverClient.getForm(resourceUri)
-						.onFailure()
-						.transform(FormEndpointException::new);
+					ResourceUri resourceUri = 
+						pluginDriver.getResourceUri();
+
+					return httpPluginDriverClient
+						.getForm(resourceUri);
 				}
 			);
 	}

@@ -18,26 +18,27 @@
 package io.openk9.datasource.client.exception;
 
 /**
- * Thrown when the HTTP call to a service's {@code /form} endpoint
- * fails. This includes cases where the service does not expose a
- * form endpoint (HTTP 404), is unreachable, or returns an invalid
- * response.
+ * Thrown when a remote service responds with a non-2xx HTTP
+ * status code.
  */
-public class FormEndpointException extends RuntimeException {
+public class UnexpectedResponseStatusException
+	extends RuntimeException {
 
-	/** Creates an exception with the given detail message. */
-	public FormEndpointException(String message) {
-		super(message);
+	private final int statusCode;
+
+	/** Creates an exception for the given status code and message. */
+	public UnexpectedResponseStatusException(
+		int statusCode, String statusMessage) {
+
+		super(String.format(
+			"Unexpected Response Status: %d, Message: %s",
+			statusCode, statusMessage));
+		this.statusCode = statusCode;
 	}
 
-	/** Creates an exception with the given detail message and cause. */
-	public FormEndpointException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	/** Creates an exception wrapping the given cause. */
-	public FormEndpointException(Throwable cause) {
-		super(cause);
+	/** Returns the HTTP status code. */
+	public int getStatusCode() {
+		return statusCode;
 	}
 
 }

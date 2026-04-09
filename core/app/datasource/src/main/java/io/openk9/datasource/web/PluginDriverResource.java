@@ -93,8 +93,6 @@ public class PluginDriverResource {
 
 	/**
 	 * Retrieves the dynamic form template from the connector.
-	 * Returns HTTP 502 with a {@link Problem} body when the
-	 * connector does not expose a form endpoint or is unreachable.
 	 */
 	@APIResponses(value = {
 		@APIResponse(
@@ -108,15 +106,7 @@ public class PluginDriverResource {
 			}
 		),
 		@APIResponse(
-			responseCode = "502",
-			description = "Connector does not expose a form endpoint"
-				+ " or is unreachable",
-			content = @Content(
-				mediaType = "application/json+problem",
-				schema = @Schema(
-					implementation = Problem.class)
-			)
-		),
+			ref = "#/components/responses/form-endpoint-error"),
 		@APIResponse(ref = "#/components/responses/bad-request"),
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
@@ -130,18 +120,11 @@ public class PluginDriverResource {
 		return service.getForm(id)
 			.onFailure(FormEndpointException.class)
 			.transform(cause -> new WebApplicationException(
-				cause, Response.status(502).entity(
-					formNotAvailableProblem()).build()));
-	}
-
-	private static Problem formNotAvailableProblem() {
-		var problem = new Problem();
-		problem.setStatus(502);
-		problem.setTitle("Form not available");
-		problem.setDetail(
-			"The connector associated with this plugin driver "
-				+ "does not expose a form endpoint");
-		return problem;
+				cause, 
+				Response.status(502)
+					.entity(Problems.formEndpointError(
+					(FormEndpointException) cause))
+					.build()));
 	}
 
 	@APIResponses(value = {
