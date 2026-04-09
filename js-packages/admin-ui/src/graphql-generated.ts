@@ -2154,6 +2154,13 @@ export type Mutation = {
    *
    */
   deleteDocType?: Maybe<DocType>;
+  /**
+   * Deletes a DocTypeField entity by its ID after validating the provided name matches the entity.
+   * Requires both the docTypeFieldId and docTypeFieldName (as a confirmation mechanism) to prevent
+   * accidental deletions.
+   *
+   */
+  deleteDocTypeField?: Maybe<DocTypeField>;
   deleteDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
   deleteDocTypeTemplate?: Maybe<DocTypeTemplate>;
   deleteEmbeddingModel?: Maybe<EmbeddingModel>;
@@ -2175,7 +2182,24 @@ export type Mutation = {
   deleteTokenTab?: Maybe<TokenTab>;
   deleteTokenizer?: Maybe<Tokenizer>;
   docType?: Maybe<Response_DocType>;
+  /**
+   * Creates or updates a DocTypeField entity under the specified DocType.
+   * If docTypeFieldId is null, a new DocTypeField is created.
+   * Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+   * Returns validation errors if the provided DTO fails validation.
+   * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+   * when updating or patching an existing DocTypeField.
+   *
+   */
   docTypeField?: Maybe<Response_DocTypeField>;
+  /**
+   * Creates or updates a DocTypeField entity with an associated Analyzer.
+   * If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
+   * Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+   * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+   * when updating or patching an existing DocTypeField.
+   *
+   */
   docTypeFieldWithAnalyzer?: Maybe<Response_DocTypeField>;
   docTypeTemplate?: Maybe<Response_DocTypeTemplate>;
   docTypeWithTemplate?: Maybe<Response_DocType>;
@@ -2726,6 +2750,13 @@ export type MutationDeleteDocTypeArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteDocTypeFieldArgs = {
+  docTypeFieldId: Scalars['ID'];
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
+};
+
+
+/** Mutation root */
 export type MutationDeleteDocTypeFieldTranslationArgs = {
   docTypeFieldId: Scalars['ID'];
   key?: InputMaybe<Scalars['String']>;
@@ -2865,6 +2896,7 @@ export type MutationDocTypeArgs = {
 export type MutationDocTypeFieldArgs = {
   docTypeFieldDTO?: InputMaybe<DocTypeFieldDtoInput>;
   docTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   docTypeId: Scalars['ID'];
   patch?: InputMaybe<Scalars['Boolean']>;
 };
@@ -2873,6 +2905,7 @@ export type MutationDocTypeFieldArgs = {
 /** Mutation root */
 export type MutationDocTypeFieldWithAnalyzerArgs = {
   docTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   docTypeFieldWithAnalyzerDTO?: InputMaybe<DocTypeFieldWithAnalyzerDtoInput>;
   docTypeId: Scalars['ID'];
   patch?: InputMaybe<Scalars['Boolean']>;
@@ -3569,6 +3602,8 @@ export type Query = {
   docTypeFieldNotInAnnotator?: Maybe<Connection_DocTypeField>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
   docTypeFieldsByParent?: Maybe<Connection_DocTypeField>;
+  /** Retrieves all DocTypeField entities whose fieldType matches the given value. */
+  docTypeFieldsByType?: Maybe<Array<Maybe<DocTypeField>>>;
   docTypeFieldsFromDocType?: Maybe<Connection_DocTypeField>;
   docTypeFieldsFromDocTypeByParent?: Maybe<Connection_DocTypeField>;
   docTypeFieldsNotInSorting?: Maybe<Connection_DocTypeField>;
@@ -3889,6 +3924,12 @@ export type QueryDocTypeFieldsByParentArgs = {
   parentId: Scalars['BigInteger'];
   searchText?: InputMaybe<Scalars['String']>;
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+};
+
+
+/** Query root */
+export type QueryDocTypeFieldsByTypeArgs = {
+  fieldType?: InputMaybe<FieldType>;
 };
 
 
@@ -6752,7 +6793,7 @@ export type BucketDataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type BucketDataSourcesQuery = { __typename?: 'Query', bucket?: { __typename?: 'Bucket', id?: string | null, tabs?: { __typename?: 'DefaultConnection_Tab', edges?: Array<{ __typename?: 'DefaultEdge_Tab', node?: { __typename?: 'Tab', name?: string | null, id?: string | null } | null } | null> | null } | null, suggestionCategories?: { __typename?: 'DefaultConnection_SuggestionCategory', edges?: Array<{ __typename?: 'DefaultEdge_SuggestionCategory', node?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null } | null> | null } | null, datasources?: { __typename?: 'DefaultConnection_Datasource', edges?: Array<{ __typename?: 'DefaultEdge_Datasource', node?: { __typename?: 'Datasource', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null, languages?: { __typename?: 'DefaultConnection_Language', edges?: Array<{ __typename?: 'DefaultEdge_Language', node?: { __typename?: 'Language', id?: string | null, name?: string | null, value?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateBucketMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6774,6 +6815,7 @@ export type CreateOrUpdateBucketMutationVariables = Exact<{
   ragConfigurationSimpleGenerate?: InputMaybe<Scalars['BigInteger']>;
   autocorrection?: InputMaybe<Scalars['BigInteger']>;
   autocomplete?: InputMaybe<Scalars['BigInteger']>;
+  languageIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
 }>;
 
 
@@ -13959,6 +14001,20 @@ export const BucketDataSourcesDocument = gql`
         endCursor
       }
     }
+    languages(
+      searchText: $searchText
+      first: 20
+      after: $cursor
+      notEqual: $unassociated
+    ) {
+      edges {
+        node {
+          id
+          name
+          value
+        }
+      }
+    }
   }
 }
     `;
@@ -13994,10 +14050,10 @@ export type BucketDataSourcesQueryHookResult = ReturnType<typeof useBucketDataSo
 export type BucketDataSourcesLazyQueryHookResult = ReturnType<typeof useBucketDataSourcesLazyQuery>;
 export type BucketDataSourcesQueryResult = Apollo.QueryResult<BucketDataSourcesQuery, BucketDataSourcesQueryVariables>;
 export const CreateOrUpdateBucketDocument = gql`
-    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $autocorrection: BigInteger, $autocomplete: BigInteger) {
+    mutation CreateOrUpdateBucket($id: ID, $name: String!, $description: String, $refreshOnDate: Boolean!, $refreshOnQuery: Boolean!, $refreshOnSuggestionCategory: Boolean!, $refreshOnTab: Boolean!, $retrieveType: RetrieveType!, $datasourceIds: [BigInteger], $suggestionCategoryIds: [BigInteger], $tabIds: [BigInteger], $queryAnalysisId: BigInteger, $defaultLanguageId: BigInteger, $searchConfigId: BigInteger, $ragConfigurationChat: BigInteger, $ragConfigurationChatTool: BigInteger, $ragConfigurationSimpleGenerate: BigInteger, $autocorrection: BigInteger, $autocomplete: BigInteger, $languageIds: [BigInteger]) {
   bucketWithLists(
     id: $id
-    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrectionId: $autocorrection, autocompleteId: $autocomplete}
+    bucketWithListsDTO: {name: $name, description: $description, refreshOnDate: $refreshOnDate, refreshOnQuery: $refreshOnQuery, refreshOnSuggestionCategory: $refreshOnSuggestionCategory, refreshOnTab: $refreshOnTab, retrieveType: $retrieveType, datasourceIds: $datasourceIds, suggestionCategoryIds: $suggestionCategoryIds, tabIds: $tabIds, queryAnalysisId: $queryAnalysisId, defaultLanguageId: $defaultLanguageId, searchConfigId: $searchConfigId, ragConfigurationChat: $ragConfigurationChat, ragConfigurationChatTool: $ragConfigurationChatTool, ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate, autocorrectionId: $autocorrection, autocompleteId: $autocomplete, languageIds: $languageIds}
   ) {
     entity {
       id
@@ -14045,6 +14101,7 @@ export type CreateOrUpdateBucketMutationFn = Apollo.MutationFunction<CreateOrUpd
  *      ragConfigurationSimpleGenerate: // value for 'ragConfigurationSimpleGenerate'
  *      autocorrection: // value for 'autocorrection'
  *      autocomplete: // value for 'autocomplete'
+ *      languageIds: // value for 'languageIds'
  *   },
  * });
  */
@@ -16127,4 +16184,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-03-27T18:28:34+01:00
+// Generated on 2026-04-09T17:14:06+02:00
