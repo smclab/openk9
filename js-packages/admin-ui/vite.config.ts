@@ -38,21 +38,17 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (!id.includes("node_modules")) return;
-
-          // exact-package match (trailing slash avoids react ≠ react-is)
           const pkg = (name: string) => id.includes(`node_modules/${name}/`);
 
           if (pkg("monaco-editor")) return "monaco-editor";
 
-          // core React runtime — must stay in one chunk
+          // core React runtime
           if (pkg("react") || pkg("react-dom") || pkg("react-is") || pkg("scheduler"))
             return "react-core";
 
           if (pkg("@apollo") || pkg("graphql")) return "apollo";
 
           if (pkg("recharts") || id.includes("node_modules/d3-")) return "recharts";
-
-          // no catch-all: let Vite handle the rest
         },
       },
     },
