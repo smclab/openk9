@@ -17,91 +17,100 @@
 
 package io.openk9.datasource.web;
 
-import java.time.Duration;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
-import jakarta.ws.rs.WebApplicationException;
+import io.openk9.datasource.client.HttpDatasourceServiceClient;
+import io.openk9.datasource.enricher.InjectWireMock;
+import io.openk9.datasource.enricher.WireMockEnricher;
 
-import io.openk9.datasource.client.exception.FormEndpointException;
-import io.openk9.datasource.model.ResourceUri;
-import io.openk9.datasource.model.form.FormField;
-import io.openk9.datasource.model.form.FormTemplate;
-import io.openk9.datasource.service.EnrichItemService;
-
-import io.smallrye.mutiny.Uni;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
+@QuarkusTest
+@QuarkusTestResource(WireMockEnricher.class)
+@TestHTTPEndpoint(EnricherResource.class)
 class EnricherResourceGetFormTest {
 
-	private EnricherResource resource;
-	private EnrichItemService service;
-	private ResourceUri resourceUri;
+	private static final String ENRICHER_URI =
+		"{\"baseUri\":\"" + WireMockEnricher.HOST
+			+ ":" + WireMockEnricher.PORT + "\"}";
 
-	@BeforeEach
-	void setUp() {
-		resource = new EnricherResource();
-		service = Mockito.mock(EnrichItemService.class);
-		resource.service = service;
-		resourceUri = ResourceUri.builder()
-			.baseUri("http://localhost:8080")
-			.build();
+	@InjectWireMock
+	WireMockServer wireMockServer;
+
+	@Test
+	void should_return_form_when_enricher_exposes_it() {
+		// action + verify: 200 with form fields
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(ENRICHER_URI)
+			.post("/form")
+			.then()
+			.statusCode(200)
+			.body("fields", notNullValue());
 	}
 
 	@Test
-	void should_return_form_template_when_enricher_exposes_form() {
-		// setup: enricher returns a valid form template
-		var expected = FormTemplate.builder()
-			.field(FormField.builder().name("threshold").build())
-			.build();
+	void should_return_502_when_enricher_has_no_form() {
+		// setup: enricher returns 404
+		var stub = wireMockServer.stubFor(WireMock
+			.get(HttpDatasourceServiceClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(404)
+				.withStatusMessage("Not Found")
+			)
+		);
 
-		Mockito.when(service.getForm(resourceUri))
-			.thenReturn(Uni.createFrom().item(expected));
+		// action + verify: 502 with Problem body
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(ENRICHER_URI)
+			.post("/form")
+			.then()
+			.statusCode(502)
+			.body("title", equalTo("Form not available"));
 
-		// action
-		FormTemplate result = resource.getForm(resourceUri)
-			.await().atMost(Duration.ofSeconds(5));
-
-		// verify the form template is returned as-is
-		Assertions.assertEquals(expected, result);
+		wireMockServer.removeStub(stub);
 	}
 
 	@Test
-	void should_throw_502_when_enricher_has_no_form() {
-		// setup: enricher does not expose /form (404)
-		Mockito.when(service.getForm(resourceUri))
-			.thenReturn(Uni.createFrom().failure(
-				new FormEndpointException(
-					"Enricher returned 404")));
+	void should_return_502_when_enricher_returns_invalid_body() {
+		// setup: enricher returns 200 with unparseable body
+		var stub = wireMockServer.stubFor(WireMock
+			.get(HttpDatasourceServiceClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(200)
+				.withHeader("Content-Type", "application/json")
+				.withBody("not json")
+			)
+		);
 
-		// action + verify 502 WebApplicationException
-		var exception = Assertions.assertThrows(
-			WebApplicationException.class,
-			() -> resource.getForm(resourceUri)
-				.await().atMost(Duration.ofSeconds(5)));
+		// action + verify: 502 with validation Problem detail
+		given()
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(ENRICHER_URI)
+			.post("/form")
+			.then()
+			.statusCode(502)
+			.body("title", equalTo("Form not available"))
+			.body("detail", equalTo(
+				"The service returned an invalid"
+					+ " form response"));
 
-		Assertions.assertEquals(
-			502, exception.getResponse().getStatus());
-	}
-
-	@Test
-	void should_throw_502_when_enricher_is_unreachable() {
-		// setup: enricher is unreachable
-		Mockito.when(service.getForm(resourceUri))
-			.thenReturn(Uni.createFrom().failure(
-				new FormEndpointException(
-					new java.net.ConnectException(
-						"Connection refused"))));
-
-		// action + verify 502 WebApplicationException
-		var exception = Assertions.assertThrows(
-			WebApplicationException.class,
-			() -> resource.getForm(resourceUri)
-				.await().atMost(Duration.ofSeconds(5)));
-
-		Assertions.assertEquals(
-			502, exception.getResponse().getStatus());
+		wireMockServer.removeStub(stub);
 	}
 
 }

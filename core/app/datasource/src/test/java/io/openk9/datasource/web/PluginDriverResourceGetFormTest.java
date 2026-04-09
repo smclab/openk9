@@ -17,86 +17,110 @@
 
 package io.openk9.datasource.web;
 
-import java.time.Duration;
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
 
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.inject.Inject;
 
-import io.openk9.datasource.client.exception.FormEndpointException;
-import io.openk9.datasource.model.form.FormField;
-import io.openk9.datasource.model.form.FormTemplate;
+import io.openk9.datasource.Initializer;
+import io.openk9.datasource.client.HttpDatasourceServiceClient;
+import io.openk9.datasource.plugindriver.InjectWireMock;
+import io.openk9.datasource.plugindriver.WireMockPluginDriver;
 import io.openk9.datasource.service.PluginDriverService;
 
-import io.smallrye.mutiny.Uni;
-import org.junit.jupiter.api.Assertions;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.common.http.TestHTTPEndpoint;
+import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
+@QuarkusTest
+@QuarkusTestResource(WireMockPluginDriver.class)
+@TestHTTPEndpoint(PluginDriverResource.class)
 class PluginDriverResourceGetFormTest {
 
-	private PluginDriverResource resource;
-	private PluginDriverService service;
+	@Inject
+	PluginDriverService pluginDriverService;
+
+	@InjectWireMock
+	WireMockServer wireMockServer;
+
+	private long pluginDriverId;
 
 	@BeforeEach
 	void setUp() {
-		resource = new PluginDriverResource();
-		service = Mockito.mock(PluginDriverService.class);
-		resource.service = service;
+		var pluginDriver = pluginDriverService
+			.findByName(
+				"public", Initializer.INIT_DATASOURCE_PLUGIN)
+			.await().indefinitely();
+
+		pluginDriverId = pluginDriver.getId();
 	}
 
 	@Test
-	void should_return_form_template_when_connector_exposes_form() {
-		// setup: connector returns a valid form template
-		var expected = FormTemplate.builder()
-			.field(FormField.builder().name("url").build())
-			.build();
-
-		Mockito.when(service.getForm(1L))
-			.thenReturn(Uni.createFrom().item(expected));
-
-		// action
-		FormTemplate result = resource.getForm(1L)
-			.await().atMost(Duration.ofSeconds(5));
-
-		// verify the form template is returned as-is
-		Assertions.assertEquals(expected, result);
+	void should_return_form_when_connector_exposes_it() {
+		// action + verify: 200 with form fields
+		given()
+			.accept(ContentType.JSON)
+			.get("/form/{id}", pluginDriverId)
+			.then()
+			.statusCode(200)
+			.body("fields", notNullValue());
 	}
 
 	@Test
-	void should_throw_502_when_connector_has_no_form() {
-		// setup: connector does not expose /form (404)
-		Mockito.when(service.getForm(1L))
-			.thenReturn(Uni.createFrom().failure(
-				new FormEndpointException(
-					"Connector returned 404")));
+	void should_return_502_when_connector_has_no_form() {
+		// setup: connector returns 404
+		var stub = wireMockServer.stubFor(WireMock
+			.get(HttpDatasourceServiceClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(404)
+				.withStatusMessage("Not Found")
+			)
+		);
 
-		// action + verify 502 WebApplicationException
-		var exception = Assertions.assertThrows(
-			WebApplicationException.class,
-			() -> resource.getForm(1L)
-				.await().atMost(Duration.ofSeconds(5)));
+		// action + verify: 502 with Problem body
+		given()
+			.accept(ContentType.JSON)
+			.get("/form/{id}", pluginDriverId)
+			.then()
+			.statusCode(502)
+			.body("title", equalTo("Form not available"));
 
-		Assertions.assertEquals(
-			502, exception.getResponse().getStatus());
+		wireMockServer.removeStub(stub);
 	}
 
 	@Test
-	void should_throw_502_when_connector_is_unreachable() {
-		// setup: connector is unreachable
-		Mockito.when(service.getForm(1L))
-			.thenReturn(Uni.createFrom().failure(
-				new FormEndpointException(
-					new java.net.ConnectException(
-						"Connection refused"))));
+	void should_return_502_when_connector_returns_invalid_body() {
+		// setup: connector returns 200 with unparseable body
+		var stub = wireMockServer.stubFor(WireMock
+			.get(HttpDatasourceServiceClient.FORM_PATH)
+			.willReturn(ResponseDefinitionBuilder
+				.responseDefinition()
+				.withStatus(200)
+				.withHeader("Content-Type", "application/json")
+				.withBody("not json")
+			)
+		);
 
-		// action + verify 502 WebApplicationException
-		var exception = Assertions.assertThrows(
-			WebApplicationException.class,
-			() -> resource.getForm(1L)
-				.await().atMost(Duration.ofSeconds(5)));
+		// action + verify: 502 with validation Problem detail
+		given()
+			.accept(ContentType.JSON)
+			.get("/form/{id}", pluginDriverId)
+			.then()
+			.statusCode(502)
+			.body("title", equalTo("Form not available"))
+			.body("detail", equalTo(
+				"The service returned an invalid"
+					+ " form response"));
 
-		Assertions.assertEquals(
-			502, exception.getResponse().getStatus());
+		wireMockServer.removeStub(stub);
 	}
 
 }
