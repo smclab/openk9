@@ -34,6 +34,7 @@ import lombok.NoArgsConstructor;
 public class PluginDrivers {
 
 	private static final Map<Preset, PresetConfiguration> CONFIGURATION_MAP = new EnumMap<>(Preset.class);
+	private static final String PROTOCOL = "http://";
 	private static final String PORT = "5000";
 
 	static {
@@ -146,7 +147,8 @@ public class PluginDrivers {
 	}
 
 	private static ResourceUri buildResourceUri(PresetConfiguration presetConfiguration, String schemaName) {
-		StringBuilder baseUri  = new StringBuilder(presetConfiguration.resourceUri.getBaseUri());
+		StringBuilder baseUri  = new StringBuilder(PROTOCOL)
+			.append(presetConfiguration.resourceUri.getBaseUri());
 
 		if (schemaName != null) {
 			baseUri.append("-");
