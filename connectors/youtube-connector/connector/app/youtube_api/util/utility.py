@@ -1,5 +1,7 @@
 import base64
+import dataclasses
 import hashlib
+from typing import Dict
 
 import requests
 import logging
@@ -70,4 +72,18 @@ def hash_str_to_int(s: str) -> int:
 def get_as_base64(response):
     data = base64.b64encode(response).decode()
     return data
+
+
+@dataclasses.dataclass
+class FileData:
+    name: str
+    data: bytes
+
+
+@dataclasses.dataclass
+class FutureResult:
+    url: str
+    video_info: Dict | None
+    audio_file_data: FileData | None
+    subtitle_files_data: Dict[str, FileData]
 

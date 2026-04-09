@@ -3,8 +3,8 @@ version: "3.9"
 services:
   youtube-connector:
     build:
-      context: ..
-      dockerfile: connector/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     image: youtube-connector:latest
     container_name: youtube-connector
     environment:

@@ -10,10 +10,9 @@ from typing import Dict
 
 import requests
 from yt_dlp import YoutubeDL
-from yt_dlp.utils import DateRange
 
 from .util.log_config import LogConfig
-from .util.utility import format_raw_content, post_message, hash_str_to_int, get_as_base64
+from .util.utility import format_raw_content, post_message, hash_str_to_int, get_as_base64, FutureResult, FileData
 from .util.yt_dlp_logger import YtDlpLogger
 
 dictConfig(LogConfig().dict())
@@ -70,7 +69,8 @@ class DataExtraction(threading.Thread):
 			# TODO: Check why bgutil never gets called
 			pot_args = {'youtubepot-bgutilhttp': {'base_url': [pot_provider_url]}}
 			common_youtube_args.update({
-				'pot_provider': ['bgutil']
+				'pot_provider': ['bgutil'],
+				'fetch_pot': ['always'],  # Forces PO Token
 			})
 
 		self.ydl_options_flat = {
@@ -158,7 +158,7 @@ class DataExtraction(threading.Thread):
 
 		self.max_workers = MAX_WORKERS
 
-	def manage_data(self, entry: Dict, audio_file_data: tuple[str, bytes] | None, subtitle_files_data: dict[str, tuple[str, bytes]]) -> bool:
+	def manage_data(self, entry: Dict, audio_file_data: FileData | None, subtitle_files_data: dict[str, FileData]) -> bool:
 		end_timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000
 
 		try:
@@ -213,12 +213,11 @@ class DataExtraction(threading.Thread):
 
 			if self.do_extract_audio and audio_file_data:
 				self.status_logger.info(f"Audio binary extraction")
-				file_name, data = audio_file_data
 				binary = {
-					"id": hash_str_to_int(file_name),
-					"name": file_name,
+					"id": hash_str_to_int(audio_file_data.name),
+					"name": audio_file_data.name,
 					"contentType": "",
-					"data": data,
+					"data": audio_file_data.data,
 				}
 				binaries.append(binary)
 				self.status_logger.info(f"Audio binary data extracted")
@@ -229,12 +228,11 @@ class DataExtraction(threading.Thread):
 					if not subtitle_file_data:
 						self.status_logger.warning(f"Skipped {lang}: Missing subtitles data")
 						continue
-					file_name, data = subtitle_file_data
 					binary = {
-						"id": hash_str_to_int(file_name),
-						"name": file_name,
+						"id": hash_str_to_int(subtitle_file_data.name),
+						"name": subtitle_file_data.name,
 						"contentType": "",
-						"data": data,
+						"data": subtitle_file_data.data,
 					}
 					binaries.append(binary)
 					self.status_logger.info(f"{lang}: Subtitles binary extracted")
@@ -308,7 +306,7 @@ class DataExtraction(threading.Thread):
 					raise Exception(f"Could not extract video: {url}")
 
 				# Extracts audio file data
-				audio_file_data: tuple[str, bytes] | None = None
+				audio_file_data: FileData | None = None
 				if self.do_extract_audio:
 					audio_file_path = video_info.get('filepath') or ""
 					if not audio_file_path or not os.path.exists(audio_file_path):
@@ -319,13 +317,16 @@ class DataExtraction(threading.Thread):
 
 					if os.path.exists(audio_file_path):
 						with open(audio_file_path, 'rb') as f:
-							audio_file_data = (os.path.basename(audio_file_path), get_as_base64(f.read()))
+							audio_file_data = FileData(
+								name=os.path.basename(audio_file_path),
+								data=get_as_base64(f.read())
+							)
 					else:
 						# Exits when no file
 						self.status_logger.error(f"Could not extract video audio: {url}")
 						raise Exception(f"Could not extract video audio: {url}")
 
-				subtitle_files_data: dict[str, tuple[str, bytes]] = {}
+				subtitle_files_data: dict[str, FileData] = {}
 				if self.subtitle_lang:
 					downloaded_subtitles = video_info.get('requested_subtitles') or {}
 					for lang, sub_info in downloaded_subtitles.items():
@@ -336,9 +337,17 @@ class DataExtraction(threading.Thread):
 
 						subtitle_files.append(sub_path)
 						with open(sub_path, 'rb') as f:
-							subtitle_files_data[lang] = (os.path.basename(sub_path), get_as_base64(f.read()))
+							subtitle_files_data[lang] = FileData(
+								name=os.path.basename(sub_path),
+								data=get_as_base64(f.read())
+							)
 
-				return url, video_info, audio_file_data, subtitle_files_data
+				return FutureResult(
+					url=url,
+					video_info=video_info,
+					audio_file_data=audio_file_data,
+					subtitle_files_data=subtitle_files_data
+				)
 			except Exception as e:
 				self.status_logger.warning(f"Extraction failed for {url}: {e}")
 				raise
@@ -379,14 +388,15 @@ class DataExtraction(threading.Thread):
 			# Wait for all I/O-bound tasks to complete
 			for future in as_completed(futures):
 				try:
-					url, info, audio_data, subtitle_data = future.result()
-					extraction = self.manage_data(info, audio_data, subtitle_data)
+					result: FutureResult = future.result()
+					# url, info, audio_data, subtitle_data = future.result()
+					extraction = self.manage_data(result.video_info, result.audio_file_data, result.subtitle_files_data)
 					count += extraction
 
-					# Free memory
-					del audio_data, subtitle_data
+					self.status_logger.info(f"Processed {result.url}: Result {'Success' if extraction else 'Failure'}")
 
-					self.status_logger.info(f"Successfully processed result for {url}")
+					# Free memory
+					del result
 				except Exception as e:
 					self.status_logger.error(f"Exception processing future: {e}")
 		return count
