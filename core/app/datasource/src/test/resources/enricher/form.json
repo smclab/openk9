@@ -1,0 +1,39 @@
+{
+	"fields": [
+		{
+			"label": "Confidence Threshold",
+			"name": "confidenceThreshold",
+			"type": "number",
+			"size": 10,
+			"required": true,
+			"info": "Minimum confidence score for enrichment results",
+			"values": [
+				{
+					"value": 0.7,
+					"isDefault": true
+				}
+			],
+			"validator": {
+				"min": 0,
+				"max": 1
+			}
+		},
+		{
+			"label": "Language",
+			"name": "language",
+			"type": "text",
+			"size": 10,
+			"required": false,
+			"info": "Target language for enrichment",
+			"values": [
+				{
+					"value": "en",
+					"isDefault": true
+				}
+			],
+			"validator": {
+				"max": 10
+			}
+		}
+	]
+}

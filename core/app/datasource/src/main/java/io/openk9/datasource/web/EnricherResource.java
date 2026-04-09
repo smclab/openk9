@@ -17,19 +17,21 @@
 
 package io.openk9.datasource.web;
 
-import io.openk9.datasource.model.ResourceUri;
-import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
 import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
+import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -90,12 +92,12 @@ public class EnricherResource {
 		return service.getHealth(resourceUri);
 	}
 
+	/**
+	 * Retrieves the dynamic form template from the enricher.
+	 */
 	@Operation(operationId = "form")
 	@Tag(name = "Form API", description = "Return form template for specific enricher")
 	@APIResponses(value = {
-		@APIResponse(responseCode = "200", description = "success"),
-		@APIResponse(responseCode = "404", description = "not found"),
-		@APIResponse(responseCode = "400", description = "invalid"),
 		@APIResponse(
 			responseCode = "200",
 			description = "Form returned",
@@ -107,6 +109,8 @@ public class EnricherResource {
 				)
 			}
 		),
+		@APIResponse(
+			ref = "#/components/responses/form-endpoint-error"),
 		@APIResponse(ref = "#/components/responses/bad-request"),
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
@@ -128,7 +132,14 @@ public class EnricherResource {
 	@POST
 	@Path("/form")
 	public Uni<FormTemplate> getForm(ResourceUri resourceUri) {
-		return service.getForm(resourceUri);
+		return service.getForm(resourceUri)
+			.onFailure(FormEndpointException.class)
+			.transform(cause -> new WebApplicationException(
+					cause, 
+					Response.status(502)
+						.entity(Problems.formEndpointError(
+						(FormEndpointException) cause))
+						.build()));
 	}
 
 }
