@@ -92,6 +92,11 @@ $h2 Enricher Base Classes
 
 ---
 
+$h2 Docker
+
+When you build the project, a Docker image is automatically created with its name and tag derived from the `artifactId` and `version`.
+If you want to change the image name or disable image generation, you can configure these options in the _application properties_.
+
 $h2 Modify Enricher
 
 After generating it, changes need to be made to the enricher to create a concrete implementation:
@@ -211,22 +216,3 @@ After generating it, changes need to be made to the enricher to create a concret
                 .onFailure(res -> LOGGER.error("Error requesting byte array binaries: " + res.getMessage()));
     }
    ```
-
----
-$h2 Docker
-The project includes an executable Dockerfile, you have just to build an image and run it:
-
-$h3 Build Image
-
-```shell
-# Create the jar file
-mvn clean package
-# Build the Docker image
-docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
-```
-
-$h3 Run Container
-
-```shell
-docker run -p 8080:8080 --name <containerName> <imageName> 
-```
