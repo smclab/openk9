@@ -1,7 +1,11 @@
 package ${package};
 
 import io.openk9.connector.api.FormResource;
-import io.openk9.connector.api.beans.*;
+import io.openk9.connector.api.beans.FieldValue;
+import io.openk9.connector.api.beans.Form;
+import io.openk9.connector.api.beans.FormField;
+import io.openk9.connector.api.beans.FormFieldValidator;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +29,7 @@ public class FormResourceImpl implements FormResource {
         formField1.setLabel("Test Form");
         formField1.setRequired(false);
         formField1.setSize(2.0);
-        formField1.setType(FormField.Type.text);
+        formField1.setType(FormField.Type.TEXT);
         formField1.setValidator(getValidator());
         formField1.setValues(getFiledValueList());
         formFieldList.add(formField1);
@@ -37,7 +41,7 @@ public class FormResourceImpl implements FormResource {
         formField2.setLabel("Main Object");
         formField2.setRequired(true);
         formField2.setSize(0.78);
-        formField2.setType(FormField.Type.number);
+        formField2.setType(FormField.Type.NUMBER);
         formField2.setValidator(getValidator());
         formField2.setValues(getFiledValueList());
         formFieldList.add(formField2);
