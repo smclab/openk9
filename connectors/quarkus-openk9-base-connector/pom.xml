@@ -52,6 +52,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>
