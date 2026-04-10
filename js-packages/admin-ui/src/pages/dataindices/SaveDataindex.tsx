@@ -26,12 +26,12 @@ import {
   useForm,
   useToast,
 } from "@components/Form";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
   Button,
   Checkbox,
-  FormControl,
   FormControlLabel,
   Paper,
   Table,
@@ -40,10 +40,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  TextField,
   Typography,
-  Stack,
 } from "@mui/material";
+import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -53,10 +52,7 @@ import {
   useDataSourcesQuery,
   useDocumentTypesQuery,
 } from "../../graphql-generated";
-import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
 import { useDocTypeOptions } from "../../utils/RelationOneToOne";
-import { useOptions } from "@pages/SuggestionCategories";
 
 export type DataindexData = {
   dataindexId: string;
@@ -115,10 +111,13 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const [verifyData, setVerifyData] = useState<string>(mode || "edit");
   const [page, setPage] = useState(0);
-  const [step, setStep] = useState<"configureStandart" | "configureJson">("configureStandart");
+  const [step, setStep] = useState<"configureStandart" | "configureJson" | "configureMappings">("configureStandart");
   const [settings, setSettings] = useState<string>("{}");
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [mappings, setMappings] = useState<string>("{}");
+  const [mappingsLoading, setMappingsLoading] = useState(false);
+  const [mappingsError, setMappingsError] = useState<string | null>(null);
   const previousDocTypeIds = useRef<number[]>([]);
 
   const dataindexQuery = useDataIndexQuery({
@@ -310,6 +309,19 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     } finally {
       setSettingsLoading(false);
     }
+
+    try {
+      setMappingsLoading(true);
+      setMappingsError(null);
+      const mappingsResponse = await restClient.dataIndexResource.postApiDatasourceV1DataIndexGetMappingsFromDocTypes({
+        docTypeIds,
+      });
+      setMappings(JSON.stringify(mappingsResponse, null, 2));
+    } catch (error) {
+      setMappingsError("Errore nel recupero dei mapping.");
+    } finally {
+      setMappingsLoading(false);
+    }
   }, [form, restClient]);
 
   useEffect(() => {
@@ -341,22 +353,31 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
               { key: "knnIndex", label: "KNN Index" },
               ...(form.inputProps("knnIndex").value
                 ? [
-                  { key: "chunkType" },
-                  { key: "chunkWindowSize" },
-                  { key: "embeddingJsonConfig", jsonView: true },
-                  { key: "embeddingDocTypeFieldId" },
-                ]
+                    { key: "chunkType" },
+                    { key: "chunkWindowSize" },
+                    { key: "embeddingJsonConfig", jsonView: true },
+                    { key: "embeddingDocTypeFieldId" },
+                  ]
                 : []),
             ],
             label: "Recap Data Index",
+          },
+          {
+            cell: [{ key: "settings", label: "Settings", jsonView: true }],
+            label: "Settings",
+          },
+          {
+            cell: [{ key: "mappings", label: "Mappings", jsonView: true }],
+            label: "Mappings",
           },
         ],
         valueOverride: {
           datasourceId: form.inputProps("datasourceId").value?.name || "",
           embeddingDocTypeFieldId: form.inputProps("embeddingDocTypeFieldId").value?.name || "",
+          mappings,
         },
       }),
-    [form],
+    [form, mappings],
   );
 
   const isReadOnly = verifyData === "view";
@@ -552,8 +573,9 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
         </Button>
         <Button
           variant="contained"
-          className={`btn${form.inputProps("name").value ? ` btn-name` : ""}${form.inputProps("docTypeIds").value ? " btn-danger" : ""
-            }`}
+          className={`btn${form.inputProps("name").value ? ` btn-name` : ""}${
+            form.inputProps("docTypeIds").value ? " btn-danger" : ""
+          }`}
           type="button"
           sx={{
             border: form.inputProps("name").value && form.inputProps("docTypeIds").value ? "1px solid" : "unset",
@@ -592,6 +614,38 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           <Button variant="contained" color="primary" onClick={() => setStep("configureStandart")}>
             Back
           </Button>
+          <Button variant="contained" color="primary" onClick={() => setStep("configureMappings")}>
+            Next Step
+          </Button>
+        </Box>
+      </>
+    );
+  };
+
+  const renderConfigureMappings = () => {
+    if (mappingsLoading) return <Typography>Caricamento...</Typography>;
+    if (mappingsError) return <Typography color="error">{mappingsError}</Typography>;
+
+    return (
+      <>
+        <Typography variant="h6" mb={2}>
+          Index Mapping
+        </Typography>
+        <CodeInput
+          id="mappings-code-input"
+          readonly
+          label="Mappings"
+          value={mappings}
+          onChange={() => {}}
+          language="json"
+          validationMessages={[]}
+          disabled={false}
+          height="400px"
+        />
+        <Box display="flex" justifyContent="space-between" mt={2}>
+          <Button variant="contained" color="primary" onClick={() => setStep("configureJson")}>
+            Back
+          </Button>
           {!isReadOnly && (
             <Button
               variant="contained"
@@ -613,6 +667,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     <ContainerFluid>
       {step === "configureStandart" && renderConfigureStandard()}
       {step === "configureJson" && renderConfigureJson()}
+      {step === "configureMappings" && renderConfigureMappings()}
       <Recap
         recapData={recapSections}
         setExtraFab={setExtraFab}
