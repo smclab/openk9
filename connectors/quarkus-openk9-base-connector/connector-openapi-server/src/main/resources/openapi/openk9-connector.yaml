@@ -7,7 +7,7 @@ paths:
     post:
       tags:
         - Invoke API
-      description: Invoca il connettore per iniziare l'ingestion
+      description: Invoke the connector to start ingestion
       operationId: invoke
       requestBody:
         required: true
@@ -26,7 +26,7 @@ paths:
     get:
       tags:
         - Sample API
-      description: Chiedi al connettore un sample dei documenti che invierà
+      description: Ask the connector for a sample of the documents it will send
       operationId: sample
       responses:
         '200':
@@ -43,7 +43,7 @@ paths:
     get:
       tags:
         - Health API
-      description: Chiedi al connettore il suo stato di salute
+      description: Ask the connector's health status
       operationId: health
       responses:
         '200':
@@ -60,7 +60,7 @@ paths:
     get:
       tags:
         - Form API
-      description: Chiedi al connettore le specifiche che possono essere configurate da OpenK9
+      description: Ask the connector for the specifications that can be configured by OpenK9
       operationId: form
       responses:
         '200':
@@ -150,8 +150,7 @@ components:
         id:
           type: string
           format: uuid
-          description: Unique string that identifies by datasource the binary inside
-            Openk9.
+          description: Unique string that identifies by datasource the binary inside OpenK9.
         name:
           type: string
           description: Name associated with binary resource.
@@ -165,24 +164,21 @@ components:
         resourceId:
           type: string
           format: uuid
-          description: Unique ID that identifies the binary inside Openk9.
+          description: Unique ID that identifies the binary inside OpenK9.
     IngestionDTO:
       type: object
       properties:
         datasourceId:
           type: integer
           format: int64
-          description: Unique ID that identifies the datasource the ingested message
-            belongs to.
+          description: Unique ID that identifies the datasource the ingested message belongs to.
         tenantId:
           type: string
-          description: Unique string that identifies the tenant the ingested message
-            belongs to.
+          description: Unique string that identifies the tenant the ingested message belongs to.
         contentId:
           type: string
           format: uuid
-          description: Unique ID by datasource that identifies the resource inside
-            Openk9.
+          description: Unique ID by datasource that identifies the resource inside OpenK9.
         parsingDate:
           type: integer
           format: date
@@ -208,8 +204,7 @@ components:
         scheduleId:
           type: string
           format: uuid
-          description: Unique string that identifies the scheduling the ingested message
-            belongs to.
+          description: Unique string that identifies the scheduling the ingested message belongs to.
         last:
           type: boolean
           deprecated: true
@@ -236,5 +231,4 @@ components:
           description: List of objects containing binaries.
         splitBinaries:
           type: boolean
-          description: Specify if multiple binaries must be split up in differente
-            messages.
+          description: Specify if multiple binaries must be split up in different messages.
