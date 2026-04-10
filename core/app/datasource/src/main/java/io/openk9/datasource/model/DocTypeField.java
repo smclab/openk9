@@ -106,6 +106,17 @@ public class DocTypeField extends BaseDocTypeField {
 	@JsonIgnore
 	private Analyzer analyzer;
 
+	@ToString.Exclude
+	@ManyToOne(cascade = {
+		CascadeType.PERSIST,
+		CascadeType.MERGE,
+		CascadeType.REFRESH,
+		CascadeType.DETACH
+	})
+	@JoinColumn(name = "search_analyzer_id")
+	@JsonIgnore
+	private Analyzer searchAnalyzer;
+
 	@ManyToOne(cascade = {
 		CascadeType.DETACH,
 		CascadeType.MERGE,

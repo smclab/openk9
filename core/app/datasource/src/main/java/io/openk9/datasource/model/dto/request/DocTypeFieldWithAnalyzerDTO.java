@@ -43,4 +43,8 @@ public class DocTypeFieldWithAnalyzerDTO extends DocTypeFieldDTO {
 	@Positive
 	@Description("The analyzerId used to analyze the query string in full-text query. (optional)")
 	private Long analyzerId;
+
+	@Positive
+	@Description("The searchAnalyzerId used as search_analyzer for the field in OpenSearch. (optional)")
+	private Long searchAnalyzerId;
 }
