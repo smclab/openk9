@@ -5,7 +5,9 @@ info:
 paths:
   /health:
     get:
-      description: Chiedi all'enricher il suo stato di salute
+      tags:
+        - Health API
+      description: Ask the enricher's health status
       operationId: health
       responses:
         '200':
@@ -20,7 +22,9 @@ paths:
           description: Internal Server Error
   /form:
     get:
-      description: Chiedi all'enricher le specifiche che possono essere configurate da OpenK9
+      tags:
+        - Form API
+      description: Ask the enricher for the specifications that can be configured by OpenK9
       operationId: form
       responses:
         '200':
@@ -37,7 +41,7 @@ paths:
     post:
       tags:
         - Enricher API
-      description: Invoca l'enricher per iniziare il processo di arricchimento del dato
+      description: Invoke the enricher to start the process of data enrichment
       operationId: process
       requestBody:
         required: true
