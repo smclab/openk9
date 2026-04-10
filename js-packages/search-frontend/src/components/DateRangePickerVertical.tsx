@@ -205,8 +205,13 @@ export function DataRangePickerVertical({
           className="openk9-container-input-start-date"
           css={css`
             display: flex;
-            border: 1px solid gray;
+            align-items: center;
+            border: 1px solid var(--openk9-embeddable-search--border-color, #ced4da);
             border-radius: 8px;
+            transition: border-color 0.15s ease;
+            &:focus-within {
+              border-color: var(--openk9-embeddable-search--primary-color, #80bdff);
+            }
           `}
         >
           <label
@@ -219,15 +224,8 @@ export function DataRangePickerVertical({
               height: 1px;
               width: 1px;
               overflow: hidden;
-              clip: rect(
-                1px 1px 1px 1px
-              ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-              clip: rect(
-                1px,
-                1px,
-                1px,
-                1px
-              ); /*maybe deprecated but we need to support legacy browsers */
+              clip: rect(1px 1px 1px 1px);
+              clip: rect(1px, 1px, 1px, 1px);
               clip-path: inset(50%);
               white-space: nowrap;
             `}
@@ -254,47 +252,100 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleStartDateChange}
             css={css`
-              width: 100%;
-              border: transparent;
+              flex: 1;
+              min-width: 0;
+              border: none;
               background: transparent;
+              padding: 10px 12px;
+              font-size: 14px;
+              outline: none;
+              color: var(--openk9-embeddable-search--secondary-text-color, #495057);
+              &::placeholder {
+                color: #adb5bd;
+              }
             `}
           />
-          <div className="openk9-calendar-button" css={css``}>
-            <SingleDatePicker
-              date={start || startDate}
-              numberOfMonths={1}
-              readOnly={readOnly}
-              onDateChange={(d) => {
-                setStartDate(d);
-                onChange({
-                  startDate: (d as any)?._d || undefined,
-                  endDate: endDate?._d || undefined,
-                  keywordKey: undefined,
-                });
-              }}
-              focused={focusedStartInput}
-              onFocusChange={({ focused } = { focused: false }) =>
-                setFocusedStartInput(!!focused)
-              }
-              hideKeyboardShortcutsPanel
-              id="startDate"
-              showClearDate
-              showDefaultInputIcon
-              inputIconPosition="after"
-              isOutsideRange={(day) => {
-                return (
-                  day.isAfter(moment().endOf("day")) ||
-                  (endDate && day.isAfter(endDate))
-                );
-              }}
-              placeholder={
-                translationLabel?.placeholderStart ||
-                t("start-day") ||
-                "Start day"
-              }
-              openDirection="up"
-              phrases={customPhrasesStart}
-            />
+          <div
+            css={css`
+              display: flex;
+              align-items: center;
+              flex-shrink: 0;
+              margin-right: 6px;
+            `}
+          >
+            <div className="openk9-calendar-button">
+              <SingleDatePicker
+                date={start || startDate}
+                numberOfMonths={1}
+                readOnly={readOnly}
+                onDateChange={(d) => {
+                  setStartDate(d);
+                  onChange({
+                    startDate: (d as any)?._d || undefined,
+                    endDate: endDate?._d || undefined,
+                    keywordKey: undefined,
+                  });
+                }}
+                focused={focusedStartInput}
+                onFocusChange={({ focused } = { focused: false }) =>
+                  setFocusedStartInput(!!focused)
+                }
+                hideKeyboardShortcutsPanel
+                id="startDate"
+                showDefaultInputIcon
+                inputIconPosition="after"
+                isOutsideRange={(day) => {
+                  return (
+                    day.isAfter(moment().endOf("day")) ||
+                    (endDate && day.isAfter(endDate))
+                  );
+                }}
+                placeholder={
+                  translationLabel?.placeholderStart ||
+                  t("start-day") ||
+                  "Start day"
+                }
+                openDirection="up"
+                phrases={customPhrasesStart}
+              />
+            </div>
+            {startDate && (
+              <button
+                type="button"
+                aria-label={t("remove-dates") || "Remove date"}
+                onClick={() => {
+                  setStartDate(null);
+                  setDataStart("");
+                  onChange({
+                    startDate: undefined,
+                    endDate: endDate?._d || undefined,
+                    keywordKey: undefined,
+                  });
+                }}
+                css={css`
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: transparent;
+                  border: none;
+                  border-radius: 50%;
+                  width: 26px;
+                  height: 26px;
+                  padding: 0;
+                  cursor: pointer;
+                  color: #adb5bd;
+                  font-size: 14px;
+                  line-height: 1;
+                  transition: color 0.15s ease, background-color 0.15s ease;
+                  &:hover {
+                    color: #dc3545;
+                    background-color: rgba(220, 53, 69, 0.08);
+                  }
+                `}
+              >
+                &#x2715;
+              </button>
+            )}
           </div>
         </div>
         {validationStart !== "" && (
@@ -328,8 +379,13 @@ export function DataRangePickerVertical({
           className="openk9-container-input-end-date"
           css={css`
             display: flex;
-            border: 1px solid gray;
+            align-items: center;
+            border: 1px solid var(--openk9-embeddable-search--border-color, #ced4da);
             border-radius: 8px;
+            transition: border-color 0.15s ease;
+            &:focus-within {
+              border-color: var(--openk9-embeddable-search--primary-color, #80bdff);
+            }
           `}
         >
           <label
@@ -343,15 +399,8 @@ export function DataRangePickerVertical({
               height: 1px;
               width: 1px;
               overflow: hidden;
-              clip: rect(
-                1px 1px 1px 1px
-              ); /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-              clip: rect(
-                1px,
-                1px,
-                1px,
-                1px
-              ); /*maybe deprecated but we need to support legacy browsers */
+              clip: rect(1px 1px 1px 1px);
+              clip: rect(1px, 1px, 1px, 1px);
               clip-path: inset(50%);
               white-space: nowrap;
             `}
@@ -375,53 +424,102 @@ export function DataRangePickerVertical({
             }}
             onBlur={handleEndDateChange}
             css={css`
-              width: 100%;
-              border: transparent;
+              flex: 1;
+              border: none;
               background: transparent;
+              padding: 10px 12px;
+              font-size: 14px;
+              outline: none;
+              color: var(--openk9-embeddable-search--secondary-text-color, #495057);
+              &::placeholder {
+                color: #adb5bd;
+              }
             `}
           />
           <style>{`
-                  .DateInput  {
-                     display: none; 
-                   }
-                   .SingleDatePickerInput_clearDate__default_2{
-                      width:88%;
-                    }
-         `}</style>
-          <div className="openk9-calendar-button" css={css``}>
-            <SingleDatePicker
-              date={end || endDate}
-              numberOfMonths={1}
-              readOnly={readOnly}
-              onDateChange={(d) => {
-                setEndDate(d);
-                onChange({
-                  startDate: startDate?._d || undefined,
-                  endDate: (d as any)?._d || undefined,
-                  keywordKey: undefined,
-                });
-              }}
-              focused={focusedEndInput}
-              onFocusChange={({ focused } = { focused: false }) =>
-                setFocusedEndInput(!!focused)
-              }
-              hideKeyboardShortcutsPanel
-              id="endDate"
-              showClearDate
-              showDefaultInputIcon
-              inputIconPosition="after"
-              isOutsideRange={(day) => {
-                return (
-                  day.isAfter(moment().endOf("day")) ||
-                  (startDate && startDate.isAfter(day))
-                );
-              }}
-              placeholder={
-                translationLabel?.placeholderEnd || t("end-day") || "End day"
-              }
-              openDirection="up"
-              phrases={customPhrasesEndDate}
-            />
+            .DateInput {
+              display: none;
+            }
+          `}</style>
+          <div
+            css={css`
+              display: flex;
+              align-items: center;
+              flex-shrink: 0;
+              margin-right: 6px;
+            `}
+          >
+            <div className="openk9-calendar-button">
+              <SingleDatePicker
+                date={end || endDate}
+                numberOfMonths={1}
+                readOnly={readOnly}
+                onDateChange={(d) => {
+                  setEndDate(d);
+                  onChange({
+                    startDate: startDate?._d || undefined,
+                    endDate: (d as any)?._d || undefined,
+                    keywordKey: undefined,
+                  });
+                }}
+                focused={focusedEndInput}
+                onFocusChange={({ focused } = { focused: false }) =>
+                  setFocusedEndInput(!!focused)
+                }
+                hideKeyboardShortcutsPanel
+                id="endDate"
+                showDefaultInputIcon
+                inputIconPosition="after"
+                isOutsideRange={(day) => {
+                  return (
+                    day.isAfter(moment().endOf("day")) ||
+                    (startDate && startDate.isAfter(day))
+                  );
+                }}
+                placeholder={
+                  translationLabel?.placeholderEnd || t("end-day") || "End day"
+                }
+                openDirection="up"
+                phrases={customPhrasesEndDate}
+              />
+            </div>
+            {endDate && (
+              <button
+                type="button"
+                aria-label={t("remove-dates") || "Remove date"}
+                onClick={() => {
+                  setEndDate(null);
+                  setDataEnd("");
+                  onChange({
+                    startDate: startDate?._d || undefined,
+                    endDate: undefined,
+                    keywordKey: undefined,
+                  });
+                }}
+                css={css`
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: transparent;
+                  border: none;
+                  border-radius: 50%;
+                  width: 26px;
+                  height: 26px;
+                  padding: 0;
+                  cursor: pointer;
+                  color: #adb5bd;
+                  font-size: 14px;
+                  line-height: 1;
+                  transition: color 0.15s ease, background-color 0.15s ease;
+                  &:hover {
+                    color: #dc3545;
+                    background-color: rgba(220, 53, 69, 0.08);
+                  }
+                `}
+              >
+                &#x2715;
+              </button>
+            )}
           </div>
         </div>
         {validationEnd !== "" && (
