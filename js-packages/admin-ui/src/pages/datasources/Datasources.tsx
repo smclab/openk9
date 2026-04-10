@@ -140,28 +140,46 @@ export function Datasources() {
                 ),
               },
               {
-                header: "Schedulable",
+                header: "Scheduling",
                 content: (datasource) => {
-                  const statusText = datasource?.schedulable ? "Active" : "Idle";
-                  const backgroundColor = datasource?.schedulable
-                    ? theme.palette.success.main
-                    : theme.palette.grey[500];
+                  const isScheduled = datasource?.schedulable;
+                  const isReindex = datasource?.reindexable;
 
                   return (
-                    <Typography variant="body2" className="datasource-title">
+                    <Box display="flex" gap={1} flexWrap="wrap">
                       <Typography
                         variant="body2"
                         color={theme.palette.background.paper}
                         sx={{
                           borderRadius: "8px",
-                          background: backgroundColor,
-                          padding: "8px",
-                          maxWidth: "150px",
+                          background: isScheduled
+                            ? theme.palette.success.main
+                            : theme.palette.grey[500],
+                          padding: "4px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          whiteSpace: "nowrap",
                         }}
                       >
-                        {statusText}
+                        {isScheduled ? "Sync Active" : "Sync Idle"}
                       </Typography>
-                    </Typography>
+                      <Typography
+                        variant="body2"
+                        color={theme.palette.background.paper}
+                        sx={{
+                          borderRadius: "8px",
+                          background: isReindex
+                            ? theme.palette.info.main
+                            : theme.palette.grey[500],
+                          padding: "4px 10px",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {isReindex ? "Reindex Active" : "Reindex Idle"}
+                      </Typography>
+                    </Box>
                   );
                 },
               },

@@ -62,6 +62,10 @@ interface Datasource {
   status: DatasourceStatus | string;
   documentsCount: number;
   lastSync: string;
+  schedulable?: boolean;
+  scheduling?: string;
+  reindexable?: boolean;
+  reindexing?: string;
 }
 
 interface NewDatasource {
@@ -281,7 +285,7 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
               <Stack>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Status
+                    Sync
                   </Typography>
                   <Chip
                     label={datasource?.schedulable ? "active" : "idle"}
@@ -298,7 +302,26 @@ const DatasourcesSection = ({ datasourcesData }: { datasourcesData: any }) => {
                 </Box>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Sync Scheduled: {getReadableCronDescription(datasource?.scheduling)}
+                    Reindex
+                  </Typography>
+                  <Chip
+                    label={datasource?.reindexable ? "active" : "idle"}
+                    size="small"
+                    color={datasource?.reindexable ? "info" : "default"}
+                    variant="filled"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.7rem",
+                      fontWeight: 500,
+                      textTransform: "capitalize",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    {datasource?.schedulable
+                      ? `Sync: ${getReadableCronDescription(datasource?.scheduling)}`
+                      : "Sync not scheduled"}
                   </Typography>
                   <Typography
                     variant="caption"
