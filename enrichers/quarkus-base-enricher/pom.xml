@@ -17,7 +17,7 @@
 		<maven.compiler.target>21</maven.compiler.target>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-		<quarkus.platform.version>3.26.1</quarkus.platform.version>
+		<quarkus.platform.version>3.27.2</quarkus.platform.version>
 		<skipITs>true</skipITs>
 	</properties>
 
@@ -32,7 +32,6 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-
 
 	<modules>
 		<module>enricher-openapi-server</module>
