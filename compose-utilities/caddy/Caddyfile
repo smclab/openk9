@@ -18,7 +18,7 @@ localhost, *.localhost, *.*.localhost {
     }
 
     handle /api/ingestion/* {
-        reverse_proxy openk9-ingestion:8080
+        reverse_proxy openk9-api-gateway:8080
     }
 
     @adminPaths {

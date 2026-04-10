@@ -82,6 +82,15 @@ public enum ApiRoute {
 	DATASOURCE_TEMPLATES("/api/datasource/templates/**"),
 
 	/**
+	 * Route for the pipeline callback endpoint on the datasource service.
+	 * Matches requests under {@code /api/datasource/pipeline/callback/**}.
+	 * <p>
+	 * This route is part of the {@link io.openk9.event.tenant.ApiGroup#INGESTION}
+	 * group because enrichers call back after processing ingestion payloads.
+	 */
+	DATASOURCE_PIPELINE_CALLBACK("/api/datasource/pipeline/callback/**"),
+
+	/**
 	 * Route for the datasource service.
 	 * Matches requests under {@code /api/datasource/**}.
 	 */
@@ -169,7 +178,7 @@ public enum ApiRoute {
 				SEARCHER, RAG,
 				DATASOURCE_CURRENT_BUCKET,
 				DATASOURCE_TEMPLATES);
-			case INGESTION -> List.of(INGESTION);
+			case INGESTION -> List.of(INGESTION, DATASOURCE_PIPELINE_CALLBACK);
 			case PUBLIC -> List.of(
 				DATASOURCE_OAUTH2_SETTINGS,
 				DATASOURCE_OAUTH2_SETTINGS_JS);

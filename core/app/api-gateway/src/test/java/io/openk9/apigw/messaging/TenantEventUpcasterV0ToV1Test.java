@@ -112,11 +112,10 @@ class TenantEventUpcasterV0ToV1Test {
 				.isEqualTo("OAUTH2");
 			assertThat(m.get("SEARCH").asText())
 				.isEqualTo("API_KEY");
-			assertThat(m.get("INGESTION").asText())
-				.isEqualTo("API_KEY");
+			assertThat(m.has("INGESTION")).isFalse();
 			assertThat(m.get("PUBLIC").asText())
 				.isEqualTo("API_KEY");
-			assertThat(m).hasSize(4);
+			assertThat(m).hasSize(3);
 		}
 
 		@Test
@@ -136,16 +135,15 @@ class TenantEventUpcasterV0ToV1Test {
 				.isEqualTo("OAUTH2");
 			assertThat(m.get("SEARCH").asText())
 				.isEqualTo("NO_AUTH");
-			assertThat(m.get("INGESTION").asText())
-				.isEqualTo("NO_AUTH");
+			assertThat(m.has("INGESTION")).isFalse();
 			assertThat(m.get("PUBLIC").asText())
 				.isEqualTo("NO_AUTH");
-			assertThat(m).hasSize(4);
+			assertThat(m).hasSize(3);
 		}
 
 		@Test
 		@DisplayName(
-			"Missing SEARCHER defaults SEARCH, INGESTION, "
+			"Missing SEARCHER defaults SEARCH and "
 			+ "PUBLIC to NO_AUTH"
 		)
 		void missingSearcher_defaultsToNoAuth()
@@ -162,11 +160,10 @@ class TenantEventUpcasterV0ToV1Test {
 				.isEqualTo("OAUTH2");
 			assertThat(m.get("SEARCH").asText())
 				.isEqualTo("NO_AUTH");
-			assertThat(m.get("INGESTION").asText())
-				.isEqualTo("NO_AUTH");
+			assertThat(m.has("INGESTION")).isFalse();
 			assertThat(m.get("PUBLIC").asText())
 				.isEqualTo("NO_AUTH");
-			assertThat(m).hasSize(4);
+			assertThat(m).hasSize(3);
 		}
 
 		@Test

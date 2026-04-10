@@ -37,6 +37,8 @@ public class RouterConfiguration {
 	int searcherPort;
 	@Autowired(required = false)
 	int ragPort;
+	@Autowired(required = false)
+	int ingestionPort;
 
 	@Value("${io.openk9.apigw.datasource-url:}")
 	String datasourceUrl;
@@ -44,6 +46,8 @@ public class RouterConfiguration {
 	String searcherUrl;
 	@Value("${io.openk9.apigw.rag-url:}")
 	String ragUrl;
+	@Value("${io.openk9.apigw.ingestion-url:}")
+	String ingestionUrl;
 
 	@Bean
 	RouteLocator locatorBuilder(RouteLocatorBuilder builder) {
@@ -59,6 +63,10 @@ public class RouterConfiguration {
 		String rag = ragPort > 0
 			? "http://localhost:" + ragPort
 			: ragUrl;
+
+		String ingestion = ingestionPort > 0
+			? "http://localhost:" + ingestionPort
+			: ingestionUrl;
 
 		var routes = builder.routes();
 
@@ -99,7 +107,17 @@ public class RouterConfiguration {
 						.path(ApiRoute.RAG.getAntPattern())
 						.uri(rag)
 				);
-				case ANY, INGESTION -> routes.route(
+				case DATASOURCE_PIPELINE_CALLBACK -> routes.route(
+					ApiRoute.DATASOURCE_PIPELINE_CALLBACK.name(), r -> r
+						.path(ApiRoute.DATASOURCE_PIPELINE_CALLBACK.getAntPattern())
+						.uri(datasource)
+				);
+				case INGESTION -> routes.route(
+					ApiRoute.INGESTION.name(), r -> r
+						.path(ApiRoute.INGESTION.getAntPattern())
+						.uri(ingestion)
+				);
+				case ANY -> routes.route(
 					ApiRoute.ANY.name(), r -> r
 						.path(ApiRoute.ANY.getAntPattern())
 						.filters(filter -> filter

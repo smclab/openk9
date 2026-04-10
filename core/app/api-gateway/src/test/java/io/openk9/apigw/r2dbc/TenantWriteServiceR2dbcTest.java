@@ -91,6 +91,43 @@ public class TenantWriteServiceR2dbcTest {
 	}
 
 	@Test
+	@DisplayName(
+		"INGESTION group expands to INGESTION "
+		+ "and DATASOURCE_PIPELINE_CALLBACK")
+	void insertRouteSecurity_ingestionExpandsToTwoRoutes() {
+		// setup tenant
+		StepVerifier.create(
+			service.insertTenant(
+				"tenant3b", "t3b.com", null, null, null)
+		).verifyComplete();
+
+		// insert route security for INGESTION group
+		StepVerifier.create(
+			service.insertRouteSecurity(
+				"tenant3b",
+				ApiGroup.INGESTION,
+				AuthorizationScheme.API_KEY
+			)
+		).verifyComplete();
+
+		// verify both routes are persisted
+		StepVerifier.create(
+			dbClient.sql(
+					"SELECT route FROM route_security "
+					+ "WHERE tenant_id = 'tenant3b' "
+					+ "ORDER BY route")
+				.map((r, m) -> r.get("route", String.class))
+				.all()
+				.collectList()
+		).expectNextMatches(routes ->
+			routes.size() == 2
+				&& routes.contains(
+					"DATASOURCE_PIPELINE_CALLBACK")
+				&& routes.contains("INGESTION")
+		).verifyComplete();
+	}
+
+	@Test
 	@DisplayName("Update Tenant")
 	void updateTenant_ok() {
 		// first insert a tenant

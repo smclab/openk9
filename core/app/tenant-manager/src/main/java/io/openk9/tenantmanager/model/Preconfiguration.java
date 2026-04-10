@@ -49,14 +49,14 @@ public record Preconfiguration(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.NO_AUTH),
-					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
 				SecurityConfiguration.OAUTH2_SEARCH,
 				List.of(
 					Config.of(ApiGroup.ADMINISTRATION, AuthorizationScheme.OAUTH2),
 					Config.of(ApiGroup.PUBLIC, AuthorizationScheme.NO_AUTH),
 					Config.of(ApiGroup.SEARCH, AuthorizationScheme.OAUTH2),
-					Config.of(ApiGroup.INGESTION, AuthorizationScheme.NO_AUTH)
+					Config.of(ApiGroup.INGESTION, AuthorizationScheme.API_KEY)
 				),
 				SecurityConfiguration.OAUTH2_SEARCH_WITH_API_KEY,
 				List.of(

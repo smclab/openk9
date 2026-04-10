@@ -91,8 +91,9 @@ final class TenantEventUpcaster {
 	// -- v0 → v1 --
 	// TenantCreated/TenantUpdated: routeAuthorizationMap had
 	//   DATASOURCE and SEARCHER keys. DATASOURCE is replaced
-	//   by ADMINISTRATION. SEARCHER is replaced by SEARCH,
-	//   PUBLIC, and INGESTION (all copy the SEARCHER value).
+	//   by ADMINISTRATION. SEARCHER value is copied to SEARCH
+	//   and PUBLIC. INGESTION is omitted (defaults to API_KEY
+	//   via RouteAuthorizationMap fallback).
 	//   Also: legacy field "schemaName" renamed to "tenantName".
 	// ApiKeyCreated: lacked apiGroup and expirationDate fields;
 	//   these events are discarded.
@@ -132,9 +133,11 @@ final class TenantEventUpcaster {
 
 	/**
 	 * Replaces the v0 route map (DATASOURCE + SEARCHER) with
-	 * the v1 map (ADMINISTRATION, SEARCH, INGESTION, PUBLIC).
-	 * If the v0 map is missing or incomplete, falls back to a
-	 * legacy default: ADMINISTRATION=OAUTH2, rest=NO_AUTH.
+	 * the v1 map (ADMINISTRATION, SEARCH, PUBLIC). INGESTION
+	 * is intentionally omitted so it falls back to API_KEY via
+	 * {@link RouteAuthorizationMap}. If the v0 map is missing
+	 * or incomplete, falls back to ADMINISTRATION=OAUTH2,
+	 * rest=NO_AUTH.
 	 */
 	static JsonNode upcastRouteAuthorizationMap(JsonNode root) {
 		if (!(root instanceof ObjectNode node)) {
@@ -153,10 +156,11 @@ final class TenantEventUpcaster {
 		}
 
 		// build the v1 map from scratch
+		// INGESTION is intentionally omitted — its authorization
+		// falls back to RouteAuthorizationMap.FALLBACKS (API_KEY)
 		ObjectNode v1Map = node.putObject("routeAuthorizationMap");
 		v1Map.put("ADMINISTRATION", "OAUTH2");
 		v1Map.put("SEARCH", searchScheme);
-		v1Map.put("INGESTION", searchScheme);
 		v1Map.put("PUBLIC", searchScheme);
 
 		return node;

@@ -93,6 +93,20 @@ public class MockDownstreams {
 		return 0;
 	}
 
+	@Bean(destroyMethod = "dispose")
+	DisposableServer ingestionServer() {
+
+		return HttpServer.create()
+			.handle((req, res) -> response(req, res, "ingestion"))
+			.bind()
+			.block();
+	}
+
+	@Bean
+	int ingestionPort(DisposableServer ingestionServer) {
+		return ingestionServer.port();
+	}
+
 	private static Publisher<Void> response(
 		HttpServerRequest req, HttpServerResponse res, String downstream) {
 

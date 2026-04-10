@@ -783,6 +783,69 @@ class ApiGatewaySecurityTest {
 		}
 
 		@Test
+		@DisplayName("INGESTION key should succeed on ingestion route")
+		void testIngestionKeyOnIngestion() {
+			webTestClient.get()
+				.uri("/api/ingestion/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_INGESTION_API_KEY)
+				.exchange()
+				.expectAll(
+					res -> res.expectStatus().isOk(),
+					res -> res.expectBody()
+						.jsonPath("$.tenantId").isEqualTo("sabaody")
+				);
+		}
+
+		@Test
+		@DisplayName("INGESTION key should succeed on pipeline callback route")
+		void testIngestionKeyOnPipelineCallback() {
+			webTestClient.post()
+				.uri("/api/datasource/pipeline/callback/test-token")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_INGESTION_API_KEY)
+				.exchange()
+				.expectAll(
+					res -> res.expectStatus().isOk(),
+					res -> res.expectBody()
+						.jsonPath("$.tenantId").isEqualTo("sabaody")
+				);
+		}
+
+		@Test
+		@DisplayName("SEARCH key should be blocked on ingestion route")
+		void testSearchKeyOnIngestion() {
+			webTestClient.get()
+				.uri("/api/ingestion/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("SEARCH key should be blocked on pipeline callback route")
+		void testSearchKeyOnPipelineCallback() {
+			webTestClient.post()
+				.uri("/api/datasource/pipeline/callback/test-token")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
+		@DisplayName("ADMIN key should be blocked on ingestion route")
+		void testAdminKeyOnIngestion() {
+			webTestClient.get()
+				.uri("/api/ingestion/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_ADMIN_API_KEY)
+				.exchange()
+				.expectStatus().isForbidden();
+		}
+
+		@Test
 		@DisplayName("Expired SEARCH key should be rejected")
 		void testExpiredKeyRejected() {
 			webTestClient.get()

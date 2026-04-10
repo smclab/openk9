@@ -39,10 +39,14 @@ public final class RouteAuthorizationMap {
 				     DATASOURCE_OAUTH2_SETTINGS_JS,
 				     DATASOURCE_CURRENT_BUCKET,
 				     DATASOURCE_TEMPLATES,
-				     INGESTION,
 				     SEARCHER,
-				     RAG -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
-				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
+				     RAG -> 
+					FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
+				case DATASOURCE -> 
+					FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
+				case INGESTION,
+				     DATASOURCE_PIPELINE_CALLBACK ->
+					FALLBACKS.put(r, AuthorizationSchemeToken.API_KEY);
 				// no default case to prevent accidental omissions at compile-time.
 			};
 		}

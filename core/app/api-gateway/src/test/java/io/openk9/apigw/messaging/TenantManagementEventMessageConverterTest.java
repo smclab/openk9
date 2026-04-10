@@ -169,10 +169,8 @@ class TenantManagementEventMessageConverterTest {
 				.containsEntry(
 					ApiGroup.PUBLIC,
 					AuthorizationScheme.API_KEY)
-				.containsEntry(
-					ApiGroup.INGESTION,
-					AuthorizationScheme.API_KEY)
-				.hasSize(4);
+				.doesNotContainKey(ApiGroup.INGESTION)
+				.hasSize(3);
 		}
 
 		@Test

@@ -69,7 +69,8 @@ public class MockEvents {
 				.clientId("openk9")
 				.routeAuthorizationMap(Map.of(
 					ApiGroup.ADMINISTRATION, AuthorizationScheme.API_KEY,
-					ApiGroup.SEARCH, AuthorizationScheme.API_KEY))
+					ApiGroup.SEARCH, AuthorizationScheme.API_KEY,
+					ApiGroup.INGESTION, AuthorizationScheme.API_KEY))
 				.build(),
 
 			TenantEvent.TenantCreated.builder()
