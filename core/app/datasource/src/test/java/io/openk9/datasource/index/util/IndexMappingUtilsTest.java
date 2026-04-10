@@ -25,9 +25,12 @@ import java.util.Set;
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.Tokenizer;
 
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
@@ -40,6 +43,142 @@ class IndexMappingUtilsTest {
 		Map<MappingsKey, Object> result =
 			IndexMappingUtils.docTypesToMappings(List.of(defaultDocType, webDocType));
 		Assertions.assertEquals(expectedJson, JsonObject.mapFrom(result));
+	}
+
+	@Test
+	void mappingShouldContainSearchAnalyzerWhenSet() {
+		DocType docType = new DocType();
+		docType.setName("test");
+
+		Analyzer indexAnalyzer = new Analyzer();
+		indexAnalyzer.setName("index_analyzer");
+		indexAnalyzer.setType("custom");
+
+		Analyzer searchAnalyzer = new Analyzer();
+		searchAnalyzer.setName("search_analyzer");
+		searchAnalyzer.setType("custom");
+
+		DocTypeField field = new DocTypeField();
+		field.setDocType(docType);
+		field.setFieldName("content");
+		field.setFieldType(FieldType.TEXT);
+		field.setAnalyzer(indexAnalyzer);
+		field.setSearchAnalyzer(searchAnalyzer);
+
+		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+
+		Map<MappingsKey, Object> result =
+			IndexMappingUtils.docTypesToMappings(List.of(docType));
+		JsonObject json = JsonObject.mapFrom(result);
+
+		JsonObject contentField = json
+			.getJsonObject("properties")
+			.getJsonObject("test")
+			.getJsonObject("properties")
+			.getJsonObject("content");
+
+		Assertions.assertEquals("text", contentField.getString("type"));
+		Assertions.assertEquals("index_analyzer", contentField.getString("analyzer"));
+		Assertions.assertEquals("search_analyzer", contentField.getString("search_analyzer"));
+	}
+
+	@Test
+	void mappingShouldNotContainSearchAnalyzerWhenNull() {
+		DocType docType = new DocType();
+		docType.setName("test");
+
+		Analyzer indexAnalyzer = new Analyzer();
+		indexAnalyzer.setName("index_analyzer");
+		indexAnalyzer.setType("custom");
+
+		DocTypeField field = new DocTypeField();
+		field.setDocType(docType);
+		field.setFieldName("content");
+		field.setFieldType(FieldType.TEXT);
+		field.setAnalyzer(indexAnalyzer);
+
+		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+
+		Map<MappingsKey, Object> result =
+			IndexMappingUtils.docTypesToMappings(List.of(docType));
+		JsonObject json = JsonObject.mapFrom(result);
+
+		JsonObject contentField = json
+			.getJsonObject("properties")
+			.getJsonObject("test")
+			.getJsonObject("properties")
+			.getJsonObject("content");
+
+		Assertions.assertEquals("text", contentField.getString("type"));
+		Assertions.assertEquals("index_analyzer", contentField.getString("analyzer"));
+		Assertions.assertNull(contentField.getString("search_analyzer"));
+	}
+
+	@Test
+	void settingsShouldIncludeSearchAnalyzer() {
+		DocType docType = new DocType();
+		docType.setName("test");
+
+		Tokenizer tokenizer = new Tokenizer();
+		tokenizer.setName("my_tokenizer");
+		tokenizer.setJsonConfig("{\"type\":\"standard\"}");
+
+		TokenFilter tokenFilter = new TokenFilter();
+		tokenFilter.setName("my_filter");
+		tokenFilter.setJsonConfig("{\"type\":\"lowercase\"}");
+
+		CharFilter charFilter = new CharFilter();
+		charFilter.setName("my_char_filter");
+		charFilter.setJsonConfig("{\"type\":\"html_strip\"}");
+
+		Analyzer indexAnalyzer = new Analyzer();
+		indexAnalyzer.setName("index_analyzer");
+		indexAnalyzer.setType("custom");
+
+		Analyzer searchAnalyzer = new Analyzer();
+		searchAnalyzer.setName("search_analyzer");
+		searchAnalyzer.setType("custom");
+		searchAnalyzer.setTokenizer(tokenizer);
+		searchAnalyzer.setTokenFilters(new LinkedHashSet<>(List.of(tokenFilter)));
+		searchAnalyzer.setCharFilters(new LinkedHashSet<>(List.of(charFilter)));
+
+		DocTypeField field = new DocTypeField();
+		field.setDocType(docType);
+		field.setFieldName("content");
+		field.setFieldType(FieldType.TEXT);
+		field.setAnalyzer(indexAnalyzer);
+		field.setSearchAnalyzer(searchAnalyzer);
+
+		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+
+		Map<String, Object> settings =
+			IndexMappingUtils.docTypesToSettings(List.of(docType));
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> analysis = (Map<String, Object>) settings.get("analysis");
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> analyzers = (Map<String, Object>) analysis.get("analyzer");
+
+		Assertions.assertNotNull(analyzers.get("index_analyzer"),
+			"index_analyzer should be in settings");
+		Assertions.assertNotNull(analyzers.get("search_analyzer"),
+			"search_analyzer should be in settings");
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> tokenizers = (Map<String, Object>) analysis.get("tokenizer");
+		Assertions.assertNotNull(tokenizers.get("my_tokenizer"),
+			"tokenizer from search_analyzer should be in settings");
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> filters = (Map<String, Object>) analysis.get("filter");
+		Assertions.assertNotNull(filters.get("my_filter"),
+			"filter from search_analyzer should be in settings");
+
+		@SuppressWarnings("unchecked")
+		Map<String, Object> charFilters = (Map<String, Object>) analysis.get("char_filter");
+		Assertions.assertNotNull(charFilters.get("my_char_filter"),
+			"char_filter from search_analyzer should be in settings");
 	}
 
 	private static final Object expectedJson = TestUtils.getResourceAsJsonObject(

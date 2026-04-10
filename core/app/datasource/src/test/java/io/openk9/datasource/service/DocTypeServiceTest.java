@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Set;
@@ -119,5 +120,63 @@ public class DocTypeServiceTest {
 
 	}
 
+	@Test
+	void should_bind_and_unbind_searchAnalyzer() {
+
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name("SearchAnalyzerTest")
+				.build())
+			.await().indefinitely();
+
+		var field = docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldDTO.builder()
+					.name("searchAnalyzerField")
+					.fieldName("searchAnalyzerField")
+					.fieldType(FieldType.TEXT)
+					.build()
+			)
+			.await().indefinitely().right;
+
+		var searchAnalyzer = analyzerService.create(AnalyzerDTO.builder()
+				.name("SearchAnalyzerTest search_analyzer")
+				.type("custom")
+				.build())
+			.await().indefinitely();
+
+		// bind searchAnalyzer
+		var bindResult = docTypeFieldService
+			.bindSearchAnalyzer(field.getId(), searchAnalyzer.getId())
+			.await().indefinitely();
+
+		assertNotNull(bindResult.right);
+		assertEquals(searchAnalyzer.getId(), bindResult.right.getId());
+
+		// verify getSearchAnalyzer returns the bound analyzer
+		var fetchedAnalyzer = docTypeFieldService
+			.getSearchAnalyzer(field.getId())
+			.await().indefinitely();
+
+		assertNotNull(fetchedAnalyzer);
+		assertEquals(searchAnalyzer.getId(), fetchedAnalyzer.getId());
+
+		// unbind searchAnalyzer
+		var unbindResult = docTypeFieldService
+			.unbindSearchAnalyzer(field.getId())
+			.await().indefinitely();
+
+		assertNull(unbindResult.right);
+
+		// verify getSearchAnalyzer returns null after unbind
+		var fetchedAfterUnbind = docTypeFieldService
+			.getSearchAnalyzer(field.getId())
+			.await().indefinitely();
+
+		assertNull(fetchedAfterUnbind);
+
+		// cleanup
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+		analyzerService.deleteById(searchAnalyzer.getId()).await().indefinitely();
+	}
 
 }
