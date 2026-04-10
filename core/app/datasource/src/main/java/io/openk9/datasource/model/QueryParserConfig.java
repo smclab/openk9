@@ -58,7 +58,7 @@ public class QueryParserConfig extends K9Entity {
 	private String jsonConfig;
 
 	@ToString.Exclude
-	@ManyToOne(cascade = jakarta.persistence.CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "search_config")
 	@JsonIgnore
 	private SearchConfig searchConfig;

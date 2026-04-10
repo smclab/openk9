@@ -62,6 +62,7 @@ public class SearchConfig extends K9Entity {
 	@OneToMany(
 		mappedBy = "searchConfig",
 		cascade = jakarta.persistence.CascadeType.ALL,
+		orphanRemoval = true,
 		fetch = FetchType.LAZY
 	)
 	@ToString.Exclude
