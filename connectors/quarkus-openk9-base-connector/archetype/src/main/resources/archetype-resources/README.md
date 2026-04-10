@@ -163,6 +163,12 @@ $h2 Connector Base Classes
   The HTTP client configuration is configured through `CrawlingService`.  
   The class name is used as the virtual address on the event bus to send messages to it.
 
+---
+
+$h2 Docker
+
+When you build the project, a Docker image is automatically created with its name and tag derived from the `artifactId` and `version`.
+If you want to change the image name or disable image generation, you can configure these options in the _application properties_.
 
 $h2 Modify Connector
 
@@ -321,22 +327,3 @@ Changes need to be made to the connector to create a concrete implementation(**I
                 });
     }
    ```
-   
----
-$h2 Docker
-The project includes an executable Dockerfile, you have just to build an image and run it:
-
-$h3 Build Image
-
-```shell
-# Create the jar file
-mvn clean package
-# Build the Docker image
-docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
-```
-
-$h3 Run Container
-
-```shell
-docker run -p 8080:8080 --name <containerName> <imageName> 
-```

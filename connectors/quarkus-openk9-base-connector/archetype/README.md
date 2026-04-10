@@ -213,21 +213,10 @@ In these commands, you need to specify the full information about the archetype 
 and the information about the new project you want to create (`artifactId`, `groupId` and `version`).
 
 ## Docker
-The project includes an executable Dockerfile, you have just to build an image and run it:
 
-### Build Image
+When you build the generated project, a Docker image is automatically created with its name and tag derived from the `artifactId` and `version`.
+If you want to change the image name or disable image generation, you can configure these options in the _application properties_.
 
-```shell
-# Create the jar file
-mvn clean package
-# Build the Docker image
-docker build -f src/main/docker/Dockerfile.jvm -t <imageName> .
-```
-
-### Run Container
-```shell
-docker run -p 8080:8080 --name <containerName> <imageName> 
-```
 
 ## Modify Connector
 
