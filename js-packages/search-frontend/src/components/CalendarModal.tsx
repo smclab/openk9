@@ -308,50 +308,71 @@ export function CalendarMobile({
       <div
         css={css`
           display: flex;
-          gap: 2%;
-          padding-inline: 28px;
+          align-items: center;
           justify-content: center;
+          padding-inline: 28px;
           margin-top: -20px;
+          gap: 8px;
         `}
       >
-        <div>
-          <input
-            readOnly
-            className="openk9-input-data openk9-first-input-for-data"
-            css={css`
-              border-radius: 50px;
-              height: 28px;
-              text-align: center;
-              opacity: 0.699999988079071;
-              border: 1px solid
-                var(--openk9-embeddable-search--secondary-active-color);
-            `}
-            value={
-              moment(startDate).format("DD MMMM YYYY") === "Invalid date"
-                ? t("start-day") || "Start day"
-                : moment(startDate).format(formatterLanguage(language))
-            }
-          ></input>
-        </div>
-        <div>
-          <input
-            readOnly
-            className="openk9-input-data openk9-second-input-for-data"
-            css={css`
-              border-radius: 50px;
-              height: 28px;
-              text-align: center;
-              opacity: 0.699999988079071;
-              border: 1px solid
-                var(--openk9-embeddable-search--secondary-active-color);
-            `}
-            value={
-              moment(endDate).format("DD MMMM YYYY") === "Invalid date"
-                ? t("end-day") || "End day"
-                : moment(endDate).format(formatterLanguage(language))
-            }
-          ></input>
-        </div>
+        <span
+          css={css`
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: ${startDate && moment(startDate).isValid()
+              ? "#c0272b"
+              : "#a1a1aa"};
+            background: ${startDate && moment(startDate).isValid()
+              ? "rgba(214, 1, 46, 0.08)"
+              : "#f4f4f5"};
+            border: 1px solid
+              ${startDate && moment(startDate).isValid()
+                ? "rgba(214, 1, 46, 0.2)"
+                : "#e4e4e7"};
+            white-space: nowrap;
+          `}
+        >
+          {startDate && moment(startDate).isValid()
+            ? moment(startDate).format(formatterLanguage(language))
+            : t("start-day") || "Start day"}
+        </span>
+        <span
+          css={css`
+            color: #a1a1aa;
+            font-size: 13px;
+          `}
+        >
+          &rarr;
+        </span>
+        <span
+          css={css`
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: ${endDate && moment(endDate).isValid()
+              ? "#c0272b"
+              : "#a1a1aa"};
+            background: ${endDate && moment(endDate).isValid()
+              ? "rgba(214, 1, 46, 0.08)"
+              : "#f4f4f5"};
+            border: 1px solid
+              ${endDate && moment(endDate).isValid()
+                ? "rgba(214, 1, 46, 0.2)"
+                : "#e4e4e7"};
+            white-space: nowrap;
+          `}
+        >
+          {endDate && moment(endDate).isValid()
+            ? moment(endDate).format(formatterLanguage(language))
+            : t("end-day") || "End day"}
+        </span>
       </div>
       <div
         css={css`
