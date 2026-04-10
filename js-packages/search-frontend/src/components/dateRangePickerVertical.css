@@ -6,6 +6,7 @@
 
 .SingleDatePickerInput_calendarIcon_1 {
   display: flex;
+  height: 37px !important;
 }
 
 .DateRangePickerVertical-date-title {
@@ -67,7 +68,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   fill: #adb5bd !important;
   vertical-align: middle;
 }
-
 
 .SingleDatePickerInput
   .SingleDatePicker_picker.SingleDatePicker_picker__directionLeft {
