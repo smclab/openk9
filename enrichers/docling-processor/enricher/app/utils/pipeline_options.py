@@ -59,6 +59,10 @@ FORMAT_FACTORIES: Dict[InputFormat, Callable[[], FormatOption]] = {
 # =========================
 # UTILS
 # =========================
+def fix_nested_lists(value):
+    if isinstance(value, list) and len(value) == 1 and isinstance(value[0], list):
+        return fix_nested_lists(value[0])
+    return value
 
 
 def normalize_value(value):
@@ -87,7 +91,7 @@ def normalize_dict(d):
     if isinstance(d, dict):
         return {k: normalize_dict(v) for k, v in d.items()}
     elif isinstance(d, list):
-        return [normalize_dict(v) for v in d]
+        return fix_nested_lists([normalize_dict(v) for v in d])
     else:
         return normalize_value(d)
 
