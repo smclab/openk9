@@ -18,9 +18,6 @@
         <fileSet>
             <directory>src/test/java</directory>
         </fileSet>
-        <fileSet>
-            <directory>src/main/docker</directory>
-        </fileSet>
     </fileSets>
 
     <requiredProperties>
