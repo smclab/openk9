@@ -22,10 +22,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import jakarta.inject.Inject;
 
+import io.openk9.event.tenant.ApiGroup;
 import io.openk9.event.tenant.TenantEvent;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.OutboxEvent;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
+import io.openk9.tenantmanager.service.dto.CreateApiKeyRequest;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
@@ -42,6 +44,8 @@ public class TenantDbServiceTest {
 
 	@Inject
 	TenantDbService tenantDbService;
+	@Inject
+	ApiKeyService apiKeyService;
 	@InjectSpy(delegate = true)
 	OutboxEventService outboxService;
 
@@ -122,6 +126,82 @@ public class TenantDbServiceTest {
 		Assertions.assertEquals(
 			TenantEvent.TENANT_DELETED, deleteEventType);
 
+	}
+
+	@Test
+	@DisplayName(
+		"Tenant with API keys should be deleted, cascading "
+		+ "API key removal via ON DELETE CASCADE.")
+	void should_delete_tenant_with_api_keys() {
+
+		TenantParameters parameters =
+			generateTenantParameters("shinymew");
+
+		// 1. Create tenant
+		TenantResponseDTO tenant = tenantDbService.persist(
+				parameters.virtualHost(),
+				parameters.tenantName(),
+				parameters.realmName(),
+				CLIENT_ID,
+				null,
+				SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+				OffsetDateTime.now(),
+				OffsetDateTime.now(),
+				true
+			)
+			.await()
+			.indefinitely();
+
+		long tenantId = Long.parseLong(tenant.id());
+
+		// 2. Create two API keys for this tenant
+		apiKeyService.create(CreateApiKeyRequest.of(
+				parameters.tenantName(),
+				"Key 1",
+				ApiGroup.SEARCH,
+				OffsetDateTime.now().plusMonths(1)))
+			.await().indefinitely();
+
+		apiKeyService.create(CreateApiKeyRequest.of(
+				parameters.tenantName(),
+				"Key 2",
+				ApiGroup.ADMINISTRATION,
+				OffsetDateTime.now().plusMonths(1)))
+			.await().indefinitely();
+
+		// verify keys exist
+		var keysBefore = apiKeyService
+			.findAllByTenantId(tenantId)
+			.await().indefinitely();
+		Assertions.assertEquals(2, keysBefore.size());
+
+		// 3. Delete tenant — must not throw FK violation
+		tenantDbService.deleteTenant(tenantId)
+			.await()
+			.indefinitely();
+
+		// 4. Verify tenant is gone
+		TenantResponseDTO deleted = tenantDbService
+			.findById(tenantId)
+			.await()
+			.indefinitely();
+		Assertions.assertNull(deleted);
+
+		// 5. Verify API keys are gone (cascaded)
+		var keysAfter = apiKeyService
+			.findAllByTenantId(tenantId)
+			.await().indefinitely();
+		Assertions.assertTrue(keysAfter.isEmpty());
+
+		// 6. Verify TenantDeleted event was published
+		OutboxEvent deleteEvent = outboxService
+			.lastEvents(1)
+			.await()
+			.indefinitely()
+			.getFirst();
+		Assertions.assertEquals(
+			TenantEvent.TENANT_DELETED,
+			deleteEvent.getEventType());
 	}
 
 	@Test
