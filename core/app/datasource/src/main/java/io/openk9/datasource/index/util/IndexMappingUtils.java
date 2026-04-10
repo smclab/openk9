@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.openk9.datasource.index.model.MappingsKey;
 import io.openk9.datasource.model.Analyzer;
@@ -63,7 +64,7 @@ public final class IndexMappingUtils {
 			docTypes
 				.stream()
 				.flatMap(Utils::getDocTypeFieldsFrom)
-				.map(DocTypeField::getAnalyzer)
+				.flatMap(dtf -> Stream.of(dtf.getAnalyzer(), dtf.getSearchAnalyzer()))
 				.filter(Objects::nonNull)
 				.distinct()
 				.toList();
@@ -253,6 +254,12 @@ public final class IndexMappingUtils {
 
 				if (analyzer != null) {
 					current.put(MappingsKey.of("analyzer"), analyzer.getName());
+				}
+
+				Analyzer searchAnalyzer = docTypeField.getSearchAnalyzer();
+
+				if (searchAnalyzer != null) {
+					current.put(MappingsKey.of("search_analyzer"), searchAnalyzer.getName());
 				}
 
 				String fieldConfig = docTypeField.getJsonConfig();
