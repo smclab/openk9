@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>io.quarkiverse.openapi.generator</groupId>
 			<artifactId>quarkus-openapi-generator-server</artifactId>
-			<version>2.10.0-lts</version>
+			<version>2.14.0-lts</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
