@@ -152,7 +152,7 @@ export function App() {
           margin-bottom: 30px;
            }
         }
-        @media (max-width: 480px) {
+        @media (max-width: 480.98px) {
           padding: 0;
           grid-template-columns: 1fr;
           grid-template-rows: auto auto auto auto 1fr;
@@ -164,7 +164,7 @@ export function App() {
             "result";
         }
 
-        @media (min-width: 481px) and (max-width: 768px) {
+        @media (min-width: 481px) and (max-width: 768.98px) {
          padding-block:0;
         padding-inline:20px;
           grid-template-columns: 1fr;
@@ -209,7 +209,7 @@ export function App() {
             --openk9-embeddable-search--primary-background-color
           );
 
-          @media (max-width: 480px) {
+          @media (max-width: 768.98px) {
             margin: 0 0px;
             padding: 8px 20px;
           }
@@ -270,7 +270,7 @@ export function App() {
           grid-area: search;
           padding-top: 16px;
           padding-bottom: 8px;
-          @media (max-width: 480px) {
+          @media (max-width: 768.98px) {
             padding-inline: 16px;
           }
         `}
@@ -283,7 +283,7 @@ export function App() {
             justify-content: center;
             align-items: baseline;
 
-            @media (max-width: 768px) {
+            @media (max-width: 768.98px) {
               flex-direction: column;
             }
           `}
@@ -307,7 +307,7 @@ export function App() {
               gap: 1%;
               flex-wrap: wrap;
 
-              @media (min-width: 480px) {
+              @media (min-width: 769px) {
                 display: none;
               }
             `}
@@ -404,7 +404,7 @@ export function App() {
                 background: white;
                 border-radius: 50px;
 
-                @media (min-width: 480px) {
+                @media (min-width: 769px) {
                   display: none;
                 }
               `}
@@ -416,7 +416,7 @@ export function App() {
               <div
                 css={css`
                   padding-block: 8px;
-                  @media (min-width: 480px) {
+                  @media (min-width: 769px) {
                     display: none;
                   }
                 `}
@@ -438,7 +438,7 @@ export function App() {
                     display: flex;
                     align-items: center;
                     padding: 6px 10px;
-                    @media (min-width: 480px) {
+                    @media (min-width: 769px) {
                       display: none;
                     }
                   `}
@@ -466,7 +466,7 @@ export function App() {
           padding-top: 8px;
           padding-bottom: 16px;
           height: max-content;
-          @media (max-width: 480px) {
+          @media (max-width: 768.98px) {
             display: none;
           }
         `}
@@ -586,7 +586,7 @@ export function App() {
           gap: 3px;
           box-sizing: border-box;
           border-radius: 8px;
-          @media (max-width: 768px) {
+          @media (max-width: 768.98px) {
             display: none;
           }
         `}
@@ -762,11 +762,7 @@ export function App() {
             border-radius: 8px;
             overflow: auto;
             flex-direction: column;
-            @media (max-width: 480px) {
-              display: none;
-            }
-
-            @media (min-width: 481px) and (max-width: 768px) {
+            @media (max-width: 768.98px) {
               display: none;
             }
           `}
@@ -779,7 +775,7 @@ export function App() {
             grid-area: panel;
             display: flex;
             flex-direction: column;
-            @media (max-width: 480px) {
+            @media (max-width: 768.98px) {
               margin-inline: 5%;
             }
           `}
@@ -810,7 +806,7 @@ export function App() {
                 display: flex;
                 align-items: center;
                 margin: 10px;
-                @media (max-width: 768px) {
+                @media (max-width: 768.98px) {
                   display: none;
                 }
               `}
@@ -862,7 +858,7 @@ export function App() {
           flex-direction: column;
           gap: 10px;
 
-          @media (max-width: 480px) {
+          @media (max-width: 768.98px) {
             padding-inline: 16px;
             gap: 10px;
           }
@@ -876,7 +872,7 @@ export function App() {
               background-color: white;
               align-items: center;
               border-radius: 8px;
-              @media (max-width: 480px) {
+              @media (max-width: 768.98px) {
                 flex-direction: column;
                 align-items: flex-start;
                 padding: 16px;
@@ -888,7 +884,7 @@ export function App() {
                 padding: 16px;
                 font-weight: 700;
                 width: 100%;
-                @media (max-width: 480px) {
+                @media (max-width: 768.98px) {
                   padding: 0;
                   padding-bottom: 8px;
                 }
@@ -953,15 +949,7 @@ export function App() {
             ? "20px"
             : "unset"};
 
-          @media (max-width: 480px) {
-            display: none;
-          }
-
-          @media (min-width: 481px) and (max-width: 768px) {
-            display: none;
-          }
-
-          @media (min-width: 769px) and (max-width: 1024px) {
+          @media (max-width: 1024px) {
             display: none;
           }
         `}
