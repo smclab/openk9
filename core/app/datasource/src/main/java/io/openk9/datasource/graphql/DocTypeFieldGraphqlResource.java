@@ -78,6 +78,12 @@ public class DocTypeFieldGraphqlResource {
 	}
 
 	@Mutation
+	public Uni<Tuple2<DocTypeField, Analyzer>> bindSearchAnalyzerToDocTypeField(
+		@Id long docTypeFieldId, @Id long analyzerId) {
+		return docTypeFieldService.bindSearchAnalyzer(docTypeFieldId, analyzerId);
+	}
+
+	@Mutation
 	public Uni<Response<DocTypeField>> createSubField(
 		@Id long parentDocTypeFieldId, DocTypeFieldDTO docTypeFieldDTO) {
 
@@ -203,6 +209,10 @@ public class DocTypeFieldGraphqlResource {
 		return docTypeFieldService.getParent(docTypeField);
 	}
 
+	public Uni<Analyzer> searchAnalyzer(@Source DocTypeField docTypeField) {
+		return docTypeFieldService.getSearchAnalyzer(docTypeField.getId());
+	}
+
 	public Uni<Connection<DocTypeField>> subFields(
 		@Source DocTypeField docTypeField,
 		@Description("fetching only nodes after this node (exclusive)") String after,
@@ -221,5 +231,11 @@ public class DocTypeFieldGraphqlResource {
 	public Uni<Tuple2<DocTypeField, Analyzer>> unbindAnalyzerFromDocTypeField(
 		@Id long docTypeFieldId) {
 		return docTypeFieldService.unbindAnalyzer(docTypeFieldId);
+	}
+
+	@Mutation
+	public Uni<Tuple2<DocTypeField, Analyzer>> unbindSearchAnalyzerFromDocTypeField(
+		@Id long docTypeFieldId) {
+		return docTypeFieldService.unbindSearchAnalyzer(docTypeFieldId);
 	}
 }

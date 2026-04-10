@@ -75,6 +75,19 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				})));
 	}
 
+	public Uni<Tuple2<DocTypeField, Analyzer>> bindSearchAnalyzer(long docTypeFieldId, long analyzerId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> _analyzerService.findById(s, analyzerId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(analyzer -> {
+					docTypeField.setSearchAnalyzer(analyzer);
+					return persist(s, docTypeField).map(t -> Tuple2.of(t, analyzer));
+				})));
+	}
+
 	@Override
 	public Uni<DocTypeField> create(DocTypeFieldDTO dto) {
 		return sessionFactory.withTransaction((session, transaction) ->
@@ -140,6 +153,13 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			if (analyzerId != null) {
 				var analyzer = session.getReference(Analyzer.class, analyzerId);
 				docTypeField.setAnalyzer(analyzer);
+			}
+
+			// only when searchAnalyzerId is not null
+			var searchAnalyzerId = withAnalyzerDTO.getSearchAnalyzerId();
+			if (searchAnalyzerId != null) {
+				var searchAnalyzer = session.getReference(Analyzer.class, searchAnalyzerId);
+				docTypeField.setSearchAnalyzer(searchAnalyzer);
 			}
 		}
 
@@ -353,6 +373,11 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			.flatMap(d -> s.fetch(d.getAnalyzer())));
 	}
 
+	public Uni<Analyzer> getSearchAnalyzer(long docTypeFieldId) {
+		return getSessionFactory().withTransaction(s -> findById(s, docTypeFieldId)
+			.flatMap(d -> s.fetch(d.getSearchAnalyzer())));
+	}
+
 	public Uni<Connection<Analyzer>> getAnalyzersConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
@@ -413,6 +438,16 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			.ifNotNull()
 			.transformToUni(docTypeField -> {
 				docTypeField.setAnalyzer(null);
+				return persist(s, docTypeField).map(t -> Tuple2.of(t, null));
+			}));
+	}
+
+	public Uni<Tuple2<DocTypeField, Analyzer>> unbindSearchAnalyzer(long docTypeFieldId) {
+		return sessionFactory.withTransaction((s, tr) -> findById(s, docTypeFieldId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(docTypeField -> {
+				docTypeField.setSearchAnalyzer(null);
 				return persist(s, docTypeField).map(t -> Tuple2.of(t, null));
 			}));
 	}
@@ -542,6 +577,13 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				var analyzer = session.getReference(Analyzer.class, analyzerId);
 				docTypeField.setAnalyzer(analyzer);
 			}
+
+			// only when searchAnalyzerId is not null
+			var searchAnalyzerId = withAnalyzerDTO.getSearchAnalyzerId();
+			if (searchAnalyzerId != null) {
+				var searchAnalyzer = session.getReference(Analyzer.class, searchAnalyzerId);
+				docTypeField.setSearchAnalyzer(searchAnalyzer);
+			}
 		}
 
 		return docTypeField;
@@ -564,6 +606,15 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			}
 
 			docTypeField.setAnalyzer(analyzer);
+
+			// always set searchAnalyzer
+			var searchAnalyzerId = withAnalyzerDTO.getSearchAnalyzerId();
+			Analyzer searchAnalyzer = null;
+			if (searchAnalyzerId != null) {
+				searchAnalyzer = session.getReference(Analyzer.class, searchAnalyzerId);
+			}
+
+			docTypeField.setSearchAnalyzer(searchAnalyzer);
 		}
 
 		return docTypeField;
