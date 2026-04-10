@@ -1,12 +1,9 @@
 import logging
-from typing import Dict, Type
+from typing import Any, Callable, Dict, Type
 
 from docling.backend.json.docling_json_backend import DoclingJSONBackend
 from docling.backend.mets_gbs_backend import MetsGbsDocumentBackend
 from docling.backend.webvtt_backend import WebVTTDocumentBackend
-from docling.datamodel import asr_model_specs
-
-# from docling.datamodel.backend_options import HTMLBackendOptions
 from docling.datamodel.base_models import InputFormat
 from docling.document_converter import (
     AsciiDocFormatOption,
@@ -26,35 +23,11 @@ from docling.document_converter import (
 from docling.pipeline.simple_pipeline import SimplePipeline
 from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
 
-# html_backend_options = HTMLBackendOptions(
-#     source_uri="SOURCE",
-# )
+# =========================
+# FORMAT FACTORIES (UNIFICATO)
+# =========================
 
-all_formats = {
-    InputFormat.CSV: CsvFormatOption(),
-    InputFormat.XLSX: ExcelFormatOption(),
-    InputFormat.DOCX: WordFormatOption(),
-    InputFormat.PPTX: PowerpointFormatOption(),
-    InputFormat.MD: MarkdownFormatOption(),
-    InputFormat.ASCIIDOC: AsciiDocFormatOption(),
-    InputFormat.HTML: HTMLFormatOption(),
-    InputFormat.XML_USPTO: PatentUsptoFormatOption(),
-    InputFormat.XML_JATS: XMLJatsFormatOption(),
-    InputFormat.METS_GBS: FormatOption(
-        pipeline_cls=StandardPdfPipeline, backend=MetsGbsDocumentBackend
-    ),
-    InputFormat.IMAGE: ImageFormatOption(),
-    InputFormat.PDF: PdfFormatOption(),
-    InputFormat.JSON_DOCLING: FormatOption(
-        pipeline_cls=SimplePipeline, backend=DoclingJSONBackend
-    ),
-    InputFormat.AUDIO: AudioFormatOption(),
-    InputFormat.VTT: FormatOption(
-        pipeline_cls=SimplePipeline, backend=WebVTTDocumentBackend
-    ),
-}
-
-FORMAT_TO_OPTIONS_CLS: Dict[InputFormat, Type] = {
+FORMAT_FACTORIES: Dict[InputFormat, Callable[[], FormatOption]] = {
     InputFormat.CSV: CsvFormatOption,
     InputFormat.XLSX: ExcelFormatOption,
     InputFormat.DOCX: WordFormatOption,
@@ -64,124 +37,195 @@ FORMAT_TO_OPTIONS_CLS: Dict[InputFormat, Type] = {
     InputFormat.HTML: HTMLFormatOption,
     InputFormat.XML_USPTO: PatentUsptoFormatOption,
     InputFormat.XML_JATS: XMLJatsFormatOption,
-    InputFormat.METS_GBS: FormatOption,  # Rimosso il costruttore con parametri
     InputFormat.IMAGE: ImageFormatOption,
     InputFormat.PDF: PdfFormatOption,
-    InputFormat.JSON_DOCLING: FormatOption,  # Rimosso il costruttore con parametri
     InputFormat.AUDIO: AudioFormatOption,
-    InputFormat.VTT: FormatOption,  # Rimosso il costruttore con parametri
+    # Formati speciali (richiedono backend/pipeline)
+    InputFormat.METS_GBS: lambda: FormatOption(
+        pipeline_cls=StandardPdfPipeline,
+        backend=MetsGbsDocumentBackend,
+    ),
+    InputFormat.JSON_DOCLING: lambda: FormatOption(
+        pipeline_cls=SimplePipeline,
+        backend=DoclingJSONBackend,
+    ),
+    InputFormat.VTT: lambda: FormatOption(
+        pipeline_cls=SimplePipeline,
+        backend=WebVTTDocumentBackend,
+    ),
 }
 
 
-def collect_format_options_schemas(format_options: dict[InputFormat, FormatOption]):
-    result = {}
-    for fmt, opt in format_options.items():
-        result[fmt.value] = (
-            opt.pipeline_options.model_dump() if opt.pipeline_options else None
-        )
-    return result
+# =========================
+# UTILS
+# =========================
 
 
-def flatten(to_flatten, separator="."):
-    found = True
-    current_data = to_flatten
+def normalize_value(value):
+    if value == "":
+        return None
 
-    while found:
-        found = False
-        new_flattened = {}
-        for key, val in current_data.items():
-            if isinstance(val, dict):
-                for sub_key, sub_val in val.items():
-                    new_flattened[f"{key}{separator}{sub_key}"] = sub_val
-                found = True
-            else:
-                new_flattened[key] = val
+    if isinstance(value, str):
+        # bool
+        if value.lower() in ["true", "false"]:
+            return value.lower() == "true"
 
-        current_data = new_flattened
+        # int
+        if value.isdigit():
+            return int(value)
 
-    return current_data
+        # float
+        try:
+            return float(value)
+        except ValueError:
+            pass
+
+    return value
 
 
-def unflatten_dict(flat_dict, separator="."):
-    unflattened = {}
+def normalize_dict(d):
+    if isinstance(d, dict):
+        return {k: normalize_dict(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [normalize_dict(v) for v in d]
+    else:
+        return normalize_value(d)
 
-    for key, value in flat_dict.items():
-        parts = key.split(separator)
-        current = unflattened
+
+def flatten(
+    data: Dict[str, Any], parent_key: str = "", sep: str = "."
+) -> Dict[str, Any]:
+    """Flatten dict annidato."""
+    items = {}
+    for k, v in data.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.update(flatten(v, new_key, sep))
+        else:
+            items[new_key] = v
+    return items
+
+
+def unflatten_dict(data: Dict[str, Any], sep: str = ".") -> Dict[str, Any]:
+    """Ricostruisce dict annidato da chiavi flat."""
+    result: Dict[str, Any] = {}
+
+    for key, value in data.items():
+        parts = key.split(sep)
+        current = result
 
         for part in parts[:-1]:
             if part not in current:
                 current[part] = {}
+            elif not isinstance(current[part], dict):
+                raise ValueError(f"Conflict at key: {key}")
             current = current[part]
 
         current[parts[-1]] = value
 
-    return unflattened
+    return result
 
 
-def add_configs(
-    opts,
-    arguments,
-    obj_configs=[
-        "accelerator_options",
-        "picture_description_options",
-        "ocr_options",
-        "layout_options",
-        "asr_options",
-    ],
-):
+# =========================
+# CONFIG MERGE
+# =========================
 
-    for arg in arguments:
-        if arg in obj_configs:
-            try:
-                if args := arguments.get("accelerator_options"):
-                    opts.accelerator_options = add_configs(
-                        opts.accelerator_options, args, obj_configs=[]
-                    )
-                if args := arguments.get("picture_description_options"):
-                    opts.picture_description_options = add_configs(
-                        opts.picture_description_options, args, obj_configs=[]
-                    )
-                if args := arguments.get("ocr_options"):
-                    opts.ocr_options = add_configs(
-                        opts.ocr_options, args, obj_configs=[]
-                    )
-                if args := arguments.get("layout_options"):
-                    opts.layout_options = add_configs(
-                        opts.acceleratolayout_optionsr_options, args, obj_configs=[]
-                    )
-                if args := arguments.get("asr_options"):
-                    opts.asr_options = add_configs(
-                        opts.asr_options, args, obj_configs=[]
-                    )
-                # logging.info("has", arg)
-            except:
-                pass
-                # logging.info("non c'è", arg)
 
+def add_configs(opts: Any, arguments: Dict[str, Any]) -> Any:
+    """
+    Applica ricorsivamente configurazioni a un oggetto.
+    """
+    if opts is None:
+        return None
+
+    for key, value in arguments.items():
+        if not hasattr(opts, key):
+            logging.debug(f"Skipping unknown config key: {key}")
+            continue
+
+        current_attr = getattr(opts, key)
+
+        # Caso nested dict → ricorsione
+        if isinstance(value, dict) and current_attr is not None:
+            updated = add_configs(current_attr, value)
+            setattr(opts, key, updated)
         else:
-            if hasattr(opts, arg):
-                # logging.info("has", arg)
-                setattr(opts, arg, arguments[arg])
-            else:
-                pass
-                # logging.info("NOT PRESENT", arg)
+            setattr(opts, key, value)
 
     return opts
 
 
-def get_format_options(configs, format):
+# =========================
+# MAIN API
+# =========================
 
-    logging.info(f"Format: {format}")
+
+def get_format_options(
+    configs: Dict[str, Any],
+    format: InputFormat | str,
+) -> Dict[InputFormat, FormatOption]:
+    """
+    Crea FormatOption configurato a partire da config flat.
+    """
+
+    # Validazione formato
+    try:
+        in_format = InputFormat(format)
+    except Exception as e:
+        raise ValueError(f"Invalid format: {format}") from e
+
+    # Factory
+    factory = FORMAT_FACTORIES.get(in_format)
+    if factory is None:
+        raise ValueError(f"Unsupported format: {in_format}")
+
+    # Istanza opzioni
+    opts = factory()
+
+    # Se non ci sono config → ritorna subito
+    if not configs:
+        return {in_format: opts}
+
+    logging.debug(f"Raw configs: {configs}")
+
+    # 1. Unflatten
     arguments = unflatten_dict(configs)
-    opts_cls = FORMAT_TO_OPTIONS_CLS.get(format)
-    opts = opts_cls()
-    # logging.info(opts)
-    pipeline_options = add_configs(opts.pipeline_options, arguments)
-    opts.pipeline_options = pipeline_options
-    in_form = InputFormat(format)
-    format_options = {
-        in_form: opts,
-    }
-    # logging.info(format_options)
-    return format_options
+
+    # 2. Normalize (🔥 fondamentale)
+    arguments = normalize_dict(arguments)
+
+    # 3. Estrai sezioni corrette
+    pipeline_args = arguments.get("pipeline_options", {})
+    backend_args = arguments.get("backend_options", {})
+
+    # 4. Applica config pipeline
+    if opts.pipeline_options:
+        opts.pipeline_options = add_configs(opts.pipeline_options, pipeline_args)
+
+    # 5. (opzionale) backend config
+    if hasattr(opts, "backend_options") and backend_args:
+        opts.backend_options = add_configs(opts.backend_options, backend_args)
+
+    return {in_format: opts}
+
+
+# =========================
+# EXPORT SCHEMAS
+# =========================
+
+
+def collect_format_options_schemas(
+    format_options: Dict[InputFormat, FormatOption],
+) -> Dict[str, Any]:
+    """
+    Estrae schema delle pipeline options.
+    """
+    result = {}
+
+    for fmt, opt in format_options.items():
+        if hasattr(opt, "pipeline_options") and opt.pipeline_options:
+            result[fmt.value] = opt.pipeline_options.model_dump()
+        else:
+            result[fmt.value] = None
+
+    return result
