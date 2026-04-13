@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Tenant-Manager image:
   extends: .build_template
@@ -94,3 +95,12 @@ Trigger Restart Tenant-Manager Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Tenant Manager to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-tenant-manager"
+  needs:
+    - job: Build Tenant Manager image
+      artifacts: true

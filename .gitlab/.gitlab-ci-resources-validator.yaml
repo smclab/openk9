@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Resources-Validator Image:
   extends: .build_template
@@ -94,3 +95,12 @@ Trigger Restart Resources-Validator Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Resources Validator to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
+  needs:
+    - job: Build Resources Validator image
+      artifacts: true

@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build File-Manager Image:
   extends: .build_template
@@ -121,3 +122,12 @@ Trigger Restart File-Manager Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy File Manager to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-file-manager"
+  needs:
+    - job: Build File Manager image
+      artifacts: true

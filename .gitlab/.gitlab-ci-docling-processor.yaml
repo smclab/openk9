@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
@@ -143,3 +144,14 @@ Trigger Restart:
     # Run only on main/tag or designated feature branch
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Docling Processor to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-docling-processor"
+  needs:
+    - job: Fetch config
+      artifacts: true
+    - job: Build Docling Image
+      artifacts: false

@@ -10,6 +10,7 @@ stages:
 - container-scanning
 - dependency-check
 - restart
+- push
 - publish
 
 #################
@@ -262,3 +263,14 @@ Dependency Check Admin UI:
 # Actually, the template .dependency_check_frontend_template also has rules!
 # We might need to override them if they are too restrictive, but they seem to be Main/MR based.
 # Let's keep it as extended.
+
+######################## COPY TO DOCKER HUB ########################
+Copy Admin UI to DockerHub:
+  extends: .skopeo-copy-to-dockerhub-frontend
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-admin-ui"
+  needs:
+    - job: Fetch version
+      artifacts: true
+    - job: Build Admin Frontend
+      artifacts: false

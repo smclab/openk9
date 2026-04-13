@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Searcher Image:
   extends: .build_template
@@ -97,3 +98,12 @@ Trigger Restart Searcher Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Searcher to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-searcher"
+  needs:
+    - job: Build Searcher image
+      artifacts: true

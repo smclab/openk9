@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
@@ -206,3 +207,24 @@ Trigger Restart:
     # Run only on main/tag or designated feature branch
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Embedding OpenAI to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+  needs:
+    - job: Fetch config
+      artifacts: true
+    - job: Build Embedding OpenAI
+      artifacts: false
+
+Copy Embedding ST to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
+  needs:
+    - job: Fetch config
+      artifacts: true
+    - job: Build Embedding ST
+      artifacts: false

@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
 
@@ -218,3 +219,14 @@ Trigger Restart Rag Release:
     artifacts: false
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Rag Module to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-rag-module"
+  needs:
+    - job: Fetch config
+      artifacts: true
+    - job: Build Rag Image
+      artifacts: false

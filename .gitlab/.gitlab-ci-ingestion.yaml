@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Ingestion image:
   extends: .build_template
@@ -95,3 +96,12 @@ Trigger Restart Ingestion Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy Ingestion to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-ingestion"
+  needs:
+    - job: Build Ingestion image
+      artifacts: true

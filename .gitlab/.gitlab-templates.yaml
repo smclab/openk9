@@ -559,3 +559,82 @@ variables:
     when: never
   - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+
+# ========================================
+# TEMPLATE: .skopeo-copy-to-dockerhub
+# ========================================
+# On tag builds only: copies the already-built image from the internal registry
+# to Docker Hub without rebuilding. Uses Skopeo registry-to-registry copy.
+#
+# Source:      $CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:<version>
+# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version> + :latest
+#
+# Requires in the calling job:
+#   REGISTRY_COMPONENT_NAME: e.g. "openk9-datasource"
+#
+# CI/CD variables (set in GitLab project settings, masked+protected):
+#   DOCKER_HUB_USER     — Docker Hub username
+#   DOCKER_HUB_PASSWORD — Docker Hub password or access token
+
+.skopeo-copy-to-dockerhub:
+  stage: push
+  image:
+    name: quay.io/skopeo/stable:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: none
+  script:
+  - |
+    # Resolve version: backend writes .version, AI modules write config.env
+    if [ -f "$CI_PROJECT_DIR/.version" ]; then
+      VERSION=$(cat "$CI_PROJECT_DIR/.version")
+    elif [ -f "$CI_PROJECT_DIR/config.env" ]; then
+      source "$CI_PROJECT_DIR/config.env"
+    else
+      echo "ERROR: no .version or config.env found — cannot determine image version"
+      exit 1
+    fi
+    echo "VERSION=$VERSION"
+    SRC="docker://$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    DST="docker://docker.io/smclab/$REGISTRY_COMPONENT_NAME:$VERSION"
+    echo "Copying $SRC → $DST"
+    skopeo copy \
+      --src-creds "$CI_REGISTRY_USERNAME:$CI_REGISTRY_PASSWORD" \
+      --dest-creds "$DOCKER_HUB_USER:$DOCKER_HUB_PASSWORD" \
+      "$SRC" "$DST"
+  rules:
+  - if: '$CI_COMMIT_TAG'
+
+# ========================================
+# TEMPLATE: .skopeo-copy-to-dockerhub-frontend
+# ========================================
+# Variant for frontend components (admin-ui, search-frontend, tenant-ui, talk-to).
+# These components build with Kaniko and store the version in version.env
+# (not in .version like backend modules).
+#
+# Source:      $CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:<version>
+# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version> + :latest
+#
+# Requires in the calling job:
+#   REGISTRY_COMPONENT_NAME: e.g. "openk9-admin-ui"
+
+.skopeo-copy-to-dockerhub-frontend:
+  stage: push
+  image:
+    name: quay.io/skopeo/stable:latest
+    entrypoint: [""]
+  variables:
+    GIT_STRATEGY: none
+  script:
+  - |
+    source "$CI_PROJECT_DIR/version.env"
+    echo "VERSION=$VERSION"
+    SRC="docker://$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    DST="docker://docker.io/smclab/$REGISTRY_COMPONENT_NAME:$VERSION"
+    echo "Copying $SRC → $DST"
+    skopeo copy \
+      --src-creds "$CI_REGISTRY_USERNAME:$CI_REGISTRY_PASSWORD" \
+      --dest-creds "$DOCKER_HUB_USER:$DOCKER_HUB_PASSWORD" \
+      "$SRC" "$DST"
+  rules:
+  - if: '$CI_COMMIT_TAG'

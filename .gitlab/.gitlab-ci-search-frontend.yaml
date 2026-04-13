@@ -10,6 +10,7 @@ stages:
 - container-scanning
 - dependency-check
 - restart
+- push
 - publish
 
 #################
@@ -282,3 +283,14 @@ Dependency Check Search Frontend:
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - /analyzer run
+
+######################## COPY TO DOCKER HUB ########################
+Copy Search Frontend to DockerHub:
+  extends: .skopeo-copy-to-dockerhub-frontend
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-search-frontend"
+  needs:
+    - job: Fetch version
+      artifacts: true
+    - job: Build Search Frontend
+      artifacts: false

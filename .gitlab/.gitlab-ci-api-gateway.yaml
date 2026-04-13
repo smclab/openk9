@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 # API Gateway is Spring Boot (NOT Quarkus).
 # It uses JIB directly (mvn jib:build) instead of the Quarkus container-image
@@ -102,3 +103,12 @@ Trigger Restart API-Gateway Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy API-Gateway to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-api-gateway"
+  needs:
+    - job: Build API-Gateway Image
+      artifacts: true

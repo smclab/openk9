@@ -10,6 +10,7 @@ stages:
 - container-scanning
 - dependency-check
 - restart
+- push
 
 #################
 # Fetch Version #
@@ -251,3 +252,13 @@ Dependency Check Talk-To:
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - /analyzer run
+######################## COPY TO DOCKER HUB ########################
+Copy Talk-To to DockerHub:
+  extends: .skopeo-copy-to-dockerhub-frontend
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-talk-to"
+  needs:
+    - job: Fetch version
+      artifacts: true
+    - job: Build Talk-To
+      artifacts: false

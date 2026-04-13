@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build K8S-Client Image:
   extends: .build_template
@@ -57,3 +58,12 @@ Trigger Restart K8S-Client:
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
+
+######################## COPY TO DOCKER HUB ########################
+Copy K8s Client to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-k8s-client"
+  needs:
+    - job: Build K8s Client image
+      artifacts: true
