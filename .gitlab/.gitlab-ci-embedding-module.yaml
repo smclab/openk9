@@ -209,15 +209,18 @@ Trigger Restart:
     - !reference [.rules:child-restart-feature, rules]
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Two jobs: one per image (openai-module + sentence-transformers-module).
+# Copies already-built images to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Embedding OpenAI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-openai-module"
   needs:
     - job: Fetch config
-      artifacts: true
+      artifacts: true  # downloads config.env — needed to resolve the image version
     - job: Build Embedding OpenAI
-      artifacts: false
+      artifacts: false  # image is on the registry, no artifacts needed from this job
 
 Copy Embedding ST to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -225,6 +228,6 @@ Copy Embedding ST to DockerHub:
     REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
   needs:
     - job: Fetch config
-      artifacts: true
+      artifacts: true  # downloads config.env — needed to resolve the image version
     - job: Build Embedding ST
-      artifacts: false
+      artifacts: false  # image is on the registry, no artifacts needed from this job

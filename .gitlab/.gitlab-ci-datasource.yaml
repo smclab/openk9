@@ -100,10 +100,13 @@ Trigger Restart Datasource Release:
     - !reference [.rules:child-deploy-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Copies the image already pushed to the internal registry
+# to Docker Hub (smclab/openk9-datasource:<version>) without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Datasource to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-datasource"
   needs:
     - job: Build Datasource image
-      artifacts: true
+      artifacts: true  # downloads .version file — needed to resolve the image tag

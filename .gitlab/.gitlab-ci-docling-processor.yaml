@@ -146,12 +146,14 @@ Trigger Restart:
     - !reference [.rules:child-restart-feature, rules]
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Docling Processor to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-docling-processor"
   needs:
     - job: Fetch config
-      artifacts: true
+      artifacts: true  # downloads config.env — needed to resolve the image version
     - job: Build Docling Image
-      artifacts: false
+      artifacts: false  # image is on the registry, no artifacts needed from this job

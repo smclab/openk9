@@ -97,10 +97,12 @@ Trigger Restart Tenant-Manager Release:
     - !reference [.rules:child-deploy-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Tenant Manager to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tenant-manager"
   needs:
     - job: Build Tenant Manager image
-      artifacts: true
+      artifacts: true  # downloads .version file — needed to resolve the image tag

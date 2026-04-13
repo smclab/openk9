@@ -260,12 +260,14 @@ Dependency Check Tenant UI:
   - /analyzer run
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub-frontend in .gitlab-templates.yaml for full details.
 Copy Tenant UI to DockerHub:
   extends: .skopeo-copy-to-dockerhub-frontend
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tenant-ui"
   needs:
     - job: Fetch version
-      artifacts: true
+      artifacts: true  # downloads version.env — needed to resolve the image version
     - job: Build Tenant Frontend
-      artifacts: false
+      artifacts: false  # image is on the registry, no artifacts needed from this job

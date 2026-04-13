@@ -563,14 +563,21 @@ variables:
 # ========================================
 # TEMPLATE: .skopeo-copy-to-dockerhub
 # ========================================
-# On tag builds only: copies the already-built image from the internal registry
-# to Docker Hub without rebuilding. Uses Skopeo registry-to-registry copy.
+# Runs ONLY on Git tag (e.g. 3.2.0, 3.0.1).
+#
+# Purpose: after the build job pushes the image to the internal registry,
+# this job copies it to Docker Hub (smclab/*) WITHOUT rebuilding.
+# Skopeo does a registry-to-registry copy — no Docker daemon, no checkout needed.
 #
 # Source:      $CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:<version>
-# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version> + :latest
+# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version>
 #
-# Requires in the calling job:
-#   REGISTRY_COMPONENT_NAME: e.g. "openk9-datasource"
+# Version resolution (via artifacts from the build job):
+#   - Backend modules:  read from .version      (written by maven-build-logic)
+#   - AI modules:       read from config.env     (written by Fetch config job)
+#
+# Required variable in each calling job:
+#   REGISTRY_COMPONENT_NAME: image name on the registry, e.g. "openk9-datasource"
 #
 # CI/CD variables (set in GitLab project settings, masked+protected):
 #   DOCKER_HUB_USER     — Docker Hub username
@@ -582,10 +589,12 @@ variables:
     name: quay.io/skopeo/stable:latest
     entrypoint: [""]
   variables:
+    # No git checkout needed — we only copy between registries
     GIT_STRATEGY: none
   script:
   - |
-    # Resolve version: backend writes .version, AI modules write config.env
+    # Resolve version from artifact file left by the build job:
+    # backend jobs write .version, AI jobs write config.env (sourced as shell vars)
     if [ -f "$CI_PROJECT_DIR/.version" ]; then
       VERSION=$(cat "$CI_PROJECT_DIR/.version")
     elif [ -f "$CI_PROJECT_DIR/config.env" ]; then
@@ -608,15 +617,17 @@ variables:
 # ========================================
 # TEMPLATE: .skopeo-copy-to-dockerhub-frontend
 # ========================================
-# Variant for frontend components (admin-ui, search-frontend, tenant-ui, talk-to).
-# These components build with Kaniko and store the version in version.env
-# (not in .version like backend modules).
+# Same purpose as .skopeo-copy-to-dockerhub, but for frontend components
+# (admin-ui, search-frontend, tenant-ui, talk-to).
+#
+# Frontend components build with Kaniko (not Maven) and store the version
+# in version.env (not in .version). This variant sources version.env instead.
 #
 # Source:      $CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:<version>
-# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version> + :latest
+# Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version>
 #
-# Requires in the calling job:
-#   REGISTRY_COMPONENT_NAME: e.g. "openk9-admin-ui"
+# Required variable in each calling job:
+#   REGISTRY_COMPONENT_NAME: image name on the registry, e.g. "openk9-admin-ui"
 
 .skopeo-copy-to-dockerhub-frontend:
   stage: push
@@ -624,9 +635,11 @@ variables:
     name: quay.io/skopeo/stable:latest
     entrypoint: [""]
   variables:
+    # No git checkout needed — we only copy between registries
     GIT_STRATEGY: none
   script:
   - |
+    # Version is stored in version.env by the "Fetch version" job (reads package.json)
     source "$CI_PROJECT_DIR/version.env"
     echo "VERSION=$VERSION"
     SRC="docker://$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"

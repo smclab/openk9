@@ -98,10 +98,12 @@ Trigger Restart Ingestion Release:
     - !reference [.rules:child-deploy-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
+# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Ingestion to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-ingestion"
   needs:
     - job: Build Ingestion image
-      artifacts: true
+      artifacts: true  # downloads .version file — needed to resolve the image tag
