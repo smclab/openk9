@@ -73,10 +73,11 @@ public class AppManagerService implements AppManager {
 			List.of(
 				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
 				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
+				IngressDef.Route.of("/chat", "openk9-talk-to", 8080),
 				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080),
 				IngressDef.Route.of("/api/searcher", "openk9-api-gateway", 8080),
 				IngressDef.Route.of("/api/rag", "openk9-api-gateway", 8080),
-				IngressDef.Route.of("/chat", "openk9-talk-to", 8080)
+				IngressDef.Route.of("/api/ingestion", "openk9-api-gateway", 8080)
 			)
 		);
 	}
