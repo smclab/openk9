@@ -366,10 +366,6 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
             cell: [{ key: "settings", label: "Settings", jsonView: true }],
             label: "Settings",
           },
-          {
-            cell: [{ key: "mappings", label: "Mappings", jsonView: true }],
-            label: "Mappings",
-          },
         ],
         valueOverride: {
           datasourceId: form.inputProps("datasourceId").value?.name || "",
@@ -614,9 +610,22 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
           <Button variant="contained" color="primary" onClick={() => setStep("configureStandart")}>
             Back
           </Button>
-          <Button variant="contained" color="primary" onClick={() => setStep("configureMappings")}>
-            Next Step
-          </Button>
+          {isReadOnly ? (
+            <Button variant="contained" color="primary" onClick={() => setStep("configureMappings")}>
+              Next Step
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                setVerifyData("editView");
+                setPage(1);
+              }}
+            >
+              Save and continue
+            </Button>
+          )}
         </Box>
       </>
     );
@@ -667,7 +676,7 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     <ContainerFluid>
       {step === "configureStandart" && renderConfigureStandard()}
       {step === "configureJson" && renderConfigureJson()}
-      {step === "configureMappings" && renderConfigureMappings()}
+      {step === "configureMappings" && isReadOnly && renderConfigureMappings()}
       <Recap
         recapData={recapSections}
         setExtraFab={setExtraFab}
