@@ -82,7 +82,7 @@ variables:
         FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
       else
         echo "👤 User: Generic — build only, no push"
-        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=false"
+        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false"
       fi
     else
       echo "⚠️ Unknown branch type, skipping build command construction"
