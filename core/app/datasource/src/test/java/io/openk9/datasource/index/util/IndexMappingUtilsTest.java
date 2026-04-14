@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import jakarta.inject.Inject;
 
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.index.model.MappingsKey;
@@ -31,12 +32,120 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.TokenFilter;
 import io.openk9.datasource.model.Tokenizer;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.base.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.TokenFilterDTO;
+import io.openk9.datasource.model.dto.base.TokenizerDTO;
+import io.openk9.datasource.model.dto.request.AnalyzerWithListsDTO;
+import io.openk9.datasource.model.dto.request.DocTypeFieldWithAnalyzerDTO;
+import io.openk9.datasource.service.AnalyzerService;
+import io.openk9.datasource.service.CharFilterService;
+import io.openk9.datasource.service.DocTypeService;
+import io.openk9.datasource.service.TokenFilterService;
+import io.openk9.datasource.service.TokenizerService;
 
+import io.quarkus.test.junit.QuarkusTest;
 import io.vertx.core.json.JsonObject;
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class IndexMappingUtilsTest {
+@QuarkusTest
+public class IndexMappingUtilsTest {
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+	@Inject
+	AnalyzerService analyzerService;
+	@Inject
+	CharFilterService charFilterService;
+	@Inject
+	TokenFilterService tokenFilterService;
+	@Inject
+	TokenizerService tokenizerService;
+	@Inject
+	DocTypeService docTypeService;
+
+	private Analyzer indexAnalyzer;
+	private Analyzer searchAnalyzer;
+	private Tokenizer tokenizer;
+	private TokenFilter tokenFilter;
+	private CharFilter charFilter;
+	private DocType docTypeWithBothAnalyzers;
+	private DocType docTypeWithOnlyAnalyzer;
+
+	@BeforeEach
+	void setUp() {
+		tokenizer = tokenizerService.create(TokenizerDTO.builder()
+			.name("imutest_tokenizer")
+			.type("standard")
+			.jsonConfig("{\"type\":\"standard\"}")
+			.build()
+		).await().indefinitely();
+
+		tokenFilter = tokenFilterService.create(TokenFilterDTO.builder()
+			.name("imutest_token_filter")
+			.type("lowercase")
+			.jsonConfig("{\"type\":\"lowercase\"}")
+			.build()
+		).await().indefinitely();
+
+		charFilter = charFilterService.create(CharFilterDTO.builder()
+			.name("imutest_char_filter")
+			.type("html_strip")
+			.jsonConfig("{\"type\":\"html_strip\"}")
+			.build()
+		).await().indefinitely();
+
+		indexAnalyzer = analyzerService.create(AnalyzerDTO.builder()
+			.name("imutest_index_analyzer")
+			.type("custom")
+			.build()
+		).await().indefinitely();
+
+		searchAnalyzer = analyzerService.create(AnalyzerWithListsDTO.builder()
+			.name("imutest_search_analyzer")
+			.type("custom")
+			.tokenizerId(tokenizer.getId())
+			.tokenFilterIds(Set.of(tokenFilter.getId()))
+			.charFilterIds(Set.of(charFilter.getId()))
+			.build()
+		).await().indefinitely();
+
+		docTypeWithBothAnalyzers = docTypeService.create(DocTypeDTO.builder()
+			.name("imutest_both_analyzers")
+			.build()
+		).await().indefinitely();
+
+		docTypeService.addDocTypeField(
+			docTypeWithBothAnalyzers.getId(),
+			DocTypeFieldWithAnalyzerDTO.builder()
+				.name("content")
+				.fieldName("content")
+				.fieldType(FieldType.TEXT)
+				.analyzerId(indexAnalyzer.getId())
+				.searchAnalyzerId(searchAnalyzer.getId())
+				.build()
+		).await().indefinitely();
+
+		docTypeWithOnlyAnalyzer = docTypeService.create(DocTypeDTO.builder()
+			.name("imutest_only_analyzer")
+			.build()
+		).await().indefinitely();
+
+		docTypeService.addDocTypeField(
+			docTypeWithOnlyAnalyzer.getId(),
+			DocTypeFieldWithAnalyzerDTO.builder()
+				.name("content")
+				.fieldName("content")
+				.fieldType(FieldType.TEXT)
+				.analyzerId(indexAnalyzer.getId())
+				.build()
+		).await().indefinitely();
+	}
 
 	@Test
 	void docTypesToMappings() {
@@ -47,112 +156,51 @@ class IndexMappingUtilsTest {
 
 	@Test
 	void mappingShouldContainSearchAnalyzerWhenSet() {
-		DocType docType = new DocType();
-		docType.setName("test");
-
-		Analyzer indexAnalyzer = new Analyzer();
-		indexAnalyzer.setName("index_analyzer");
-		indexAnalyzer.setType("custom");
-
-		Analyzer searchAnalyzer = new Analyzer();
-		searchAnalyzer.setName("search_analyzer");
-		searchAnalyzer.setType("custom");
-
-		DocTypeField field = new DocTypeField();
-		field.setDocType(docType);
-		field.setFieldName("content");
-		field.setFieldType(FieldType.TEXT);
-		field.setAnalyzer(indexAnalyzer);
-		field.setSearchAnalyzer(searchAnalyzer);
-
-		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+		DocType loaded = loadFullDocType(docTypeWithBothAnalyzers.getId());
 
 		Map<MappingsKey, Object> result =
-			IndexMappingUtils.docTypesToMappings(List.of(docType));
+			IndexMappingUtils.docTypesToMappings(List.of(loaded));
 		JsonObject json = JsonObject.mapFrom(result);
 
 		JsonObject contentField = json
 			.getJsonObject("properties")
-			.getJsonObject("test")
+			.getJsonObject("imutest_both_analyzers")
 			.getJsonObject("properties")
 			.getJsonObject("content");
 
 		Assertions.assertEquals("text", contentField.getString("type"));
-		Assertions.assertEquals("index_analyzer", contentField.getString("analyzer"));
-		Assertions.assertEquals("search_analyzer", contentField.getString("search_analyzer"));
+		Assertions.assertEquals(
+			"imutest_index_analyzer", contentField.getString("analyzer"));
+		Assertions.assertEquals(
+			"imutest_search_analyzer", contentField.getString("search_analyzer"));
 	}
 
 	@Test
 	void mappingShouldNotContainSearchAnalyzerWhenNull() {
-		DocType docType = new DocType();
-		docType.setName("test");
-
-		Analyzer indexAnalyzer = new Analyzer();
-		indexAnalyzer.setName("index_analyzer");
-		indexAnalyzer.setType("custom");
-
-		DocTypeField field = new DocTypeField();
-		field.setDocType(docType);
-		field.setFieldName("content");
-		field.setFieldType(FieldType.TEXT);
-		field.setAnalyzer(indexAnalyzer);
-
-		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+		DocType loaded = loadFullDocType(docTypeWithOnlyAnalyzer.getId());
 
 		Map<MappingsKey, Object> result =
-			IndexMappingUtils.docTypesToMappings(List.of(docType));
+			IndexMappingUtils.docTypesToMappings(List.of(loaded));
 		JsonObject json = JsonObject.mapFrom(result);
 
 		JsonObject contentField = json
 			.getJsonObject("properties")
-			.getJsonObject("test")
+			.getJsonObject("imutest_only_analyzer")
 			.getJsonObject("properties")
 			.getJsonObject("content");
 
 		Assertions.assertEquals("text", contentField.getString("type"));
-		Assertions.assertEquals("index_analyzer", contentField.getString("analyzer"));
+		Assertions.assertEquals(
+			"imutest_index_analyzer", contentField.getString("analyzer"));
 		Assertions.assertNull(contentField.getString("search_analyzer"));
 	}
 
 	@Test
 	void settingsShouldIncludeSearchAnalyzer() {
-		DocType docType = new DocType();
-		docType.setName("test");
-
-		Tokenizer tokenizer = new Tokenizer();
-		tokenizer.setName("my_tokenizer");
-		tokenizer.setJsonConfig("{\"type\":\"standard\"}");
-
-		TokenFilter tokenFilter = new TokenFilter();
-		tokenFilter.setName("my_filter");
-		tokenFilter.setJsonConfig("{\"type\":\"lowercase\"}");
-
-		CharFilter charFilter = new CharFilter();
-		charFilter.setName("my_char_filter");
-		charFilter.setJsonConfig("{\"type\":\"html_strip\"}");
-
-		Analyzer indexAnalyzer = new Analyzer();
-		indexAnalyzer.setName("index_analyzer");
-		indexAnalyzer.setType("custom");
-
-		Analyzer searchAnalyzer = new Analyzer();
-		searchAnalyzer.setName("search_analyzer");
-		searchAnalyzer.setType("custom");
-		searchAnalyzer.setTokenizer(tokenizer);
-		searchAnalyzer.setTokenFilters(new LinkedHashSet<>(List.of(tokenFilter)));
-		searchAnalyzer.setCharFilters(new LinkedHashSet<>(List.of(charFilter)));
-
-		DocTypeField field = new DocTypeField();
-		field.setDocType(docType);
-		field.setFieldName("content");
-		field.setFieldType(FieldType.TEXT);
-		field.setAnalyzer(indexAnalyzer);
-		field.setSearchAnalyzer(searchAnalyzer);
-
-		docType.setDocTypeFields(new LinkedHashSet<>(List.of(field)));
+		DocType loaded = loadFullDocType(docTypeWithBothAnalyzers.getId());
 
 		Map<String, Object> settings =
-			IndexMappingUtils.docTypesToSettings(List.of(docType));
+			IndexMappingUtils.docTypesToSettings(List.of(loaded));
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> analysis = (Map<String, Object>) settings.get("analysis");
@@ -160,26 +208,59 @@ class IndexMappingUtilsTest {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> analyzers = (Map<String, Object>) analysis.get("analyzer");
 
-		Assertions.assertNotNull(analyzers.get("index_analyzer"),
-			"index_analyzer should be in settings");
-		Assertions.assertNotNull(analyzers.get("search_analyzer"),
-			"search_analyzer should be in settings");
+		Assertions.assertNotNull(analyzers.get("imutest_index_analyzer"),
+			"index analyzer should be in settings");
+		Assertions.assertNotNull(analyzers.get("imutest_search_analyzer"),
+			"search analyzer should be in settings");
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> tokenizers = (Map<String, Object>) analysis.get("tokenizer");
-		Assertions.assertNotNull(tokenizers.get("my_tokenizer"),
-			"tokenizer from search_analyzer should be in settings");
+		Assertions.assertNotNull(tokenizers,
+			"tokenizers section should exist in settings");
+		Assertions.assertNotNull(tokenizers.get("imutest_tokenizer"),
+			"tokenizer from search analyzer should be in settings");
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> filters = (Map<String, Object>) analysis.get("filter");
-		Assertions.assertNotNull(filters.get("my_filter"),
-			"filter from search_analyzer should be in settings");
+		Assertions.assertNotNull(filters,
+			"filters section should exist in settings");
+		Assertions.assertNotNull(filters.get("imutest_token_filter"),
+			"token filter from search analyzer should be in settings");
 
 		@SuppressWarnings("unchecked")
 		Map<String, Object> charFilters = (Map<String, Object>) analysis.get("char_filter");
-		Assertions.assertNotNull(charFilters.get("my_char_filter"),
-			"char_filter from search_analyzer should be in settings");
+		Assertions.assertNotNull(charFilters,
+			"char_filters section should exist in settings");
+		Assertions.assertNotNull(charFilters.get("imutest_char_filter"),
+			"char filter from search analyzer should be in settings");
 	}
+
+	@AfterEach
+	void tearDown() {
+		docTypeService.deleteById(docTypeWithBothAnalyzers.getId()).await().indefinitely();
+		docTypeService.deleteById(docTypeWithOnlyAnalyzer.getId()).await().indefinitely();
+		analyzerService.deleteById(searchAnalyzer.getId()).await().indefinitely();
+		analyzerService.deleteById(indexAnalyzer.getId()).await().indefinitely();
+		charFilterService.deleteById(charFilter.getId()).await().indefinitely();
+		tokenFilterService.deleteById(tokenFilter.getId()).await().indefinitely();
+		tokenizerService.deleteById(tokenizer.getId()).await().indefinitely();
+	}
+
+	/**
+	 * Loads a {@link DocType} through the service layer, using the same
+	 * {@link DocTypeService#getDocTypesAndDocTypeFields} path that
+	 * production code uses. This ensures all lazy collections
+	 * (docTypeFields, subDocTypeFields, analyzer, searchAnalyzer,
+	 * tokenizer, tokenFilters, charFilters) are eagerly fetched.
+	 */
+	private DocType loadFullDocType(long docTypeId) {
+		return sessionFactory.withTransaction(s ->
+			docTypeService.getDocTypesAndDocTypeFields(s, Set.of(docTypeId))
+		).await().indefinitely()
+			.stream().findFirst().orElseThrow();
+	}
+
+	// -- Static test data for the docTypesToMappings pure unit test --
 
 	private static final Object expectedJson = TestUtils.getResourceAsJsonObject(
 		"es/mappings_request.json");
