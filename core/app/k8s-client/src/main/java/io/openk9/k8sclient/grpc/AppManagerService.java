@@ -17,7 +17,11 @@
 
 package io.openk9.k8sclient.grpc;
 
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import jakarta.inject.Inject;
 
 import io.openk9.app.manager.grpc.AppManager;
@@ -30,6 +34,7 @@ import io.openk9.app.manager.grpc.DeleteAllResourcesResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
 import io.openk9.app.manager.grpc.DeleteResourceStatus;
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.app.manager.grpc.Status;
 import io.openk9.common.util.Strings;
 import io.openk9.k8s.crd.Manifest;
@@ -63,22 +68,62 @@ public class AppManagerService implements AppManager {
 	@ConfigProperty(name = "openk9.kubernetes-client.repository-url")
 	String repositoryUrl;
 
-	private static IngressDef getIngressDef(String schemaName, String virtualHost) {
-		return IngressDef.of(
-			String.format(
-				"%s-default-ingress",
-				schemaName
-			),
-			virtualHost,
-			List.of(
+	private static final Map<IngressScope, List<IngressDef.Route>> SCOPE_ROUTES =
+		Map.of(
+			IngressScope.SEARCH, List.of(
 				IngressDef.Route.of("/", "openk9-search-frontend", 8080),
-				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
-				IngressDef.Route.of("/chat", "openk9-talk-to", 8080),
-				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080),
 				IngressDef.Route.of("/api/searcher", "openk9-api-gateway", 8080),
-				IngressDef.Route.of("/api/rag", "openk9-api-gateway", 8080),
-				IngressDef.Route.of("/api/ingestion", "openk9-api-gateway", 8080)
+				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080)
+			),
+			IngressScope.ADMINISTRATION, List.of(
+				IngressDef.Route.of("/admin", "openk9-admin-ui", 8080),
+				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080)
+			),
+			IngressScope.RAG, List.of(
+				IngressDef.Route.of("/chat", "openk9-talk-to", 8080),
+				IngressDef.Route.of("/api/rag", "openk9-api-gateway", 8080)
+			),
+			IngressScope.INGESTION, List.of(
+				IngressDef.Route.of("/api/ingestion", "openk9-api-gateway", 8080),
+				IngressDef.Route.of("/api/datasource", "openk9-api-gateway", 8080)
 			)
+		);
+
+	private static final Set<IngressScope> DEFAULT_SCOPES = EnumSet.of(
+		IngressScope.SEARCH, IngressScope.ADMINISTRATION, IngressScope.RAG);
+
+	private static String ingressName(String schemaName) {
+		return String.format("%s-default-ingress", schemaName);
+	}
+
+	private static IngressDef getIngressDef(
+		String schemaName, String virtualHost, List<IngressScope> scopes) {
+
+		Set<IngressScope> effectiveScopes;
+		if (scopes == null || scopes.isEmpty()) {
+			effectiveScopes = DEFAULT_SCOPES;
+		}
+		else {
+			effectiveScopes = EnumSet.noneOf(IngressScope.class);
+			for (IngressScope scope : scopes) {
+				if (scope != IngressScope.UNRECOGNIZED) {
+					effectiveScopes.add(scope);
+				}
+			}
+		}
+
+		LinkedHashSet<IngressDef.Route> routes = new LinkedHashSet<>();
+		for (IngressScope scope : effectiveScopes) {
+			List<IngressDef.Route> scopeRoutes = SCOPE_ROUTES.get(scope);
+			if (scopeRoutes != null) {
+				routes.addAll(scopeRoutes);
+			}
+		}
+
+		return IngressDef.of(
+			ingressName(schemaName),
+			virtualHost,
+			List.copyOf(routes)
 		);
 	}
 
@@ -116,7 +161,10 @@ public class AppManagerService implements AppManager {
 
 	@Override
 	public Uni<CreateIngressResponse> createIngress(CreateIngressRequest request) {
-		var ingressDef = getIngressDef(request.getSchemaName(), request.getVirtualHost());
+		var ingressDef = getIngressDef(
+			request.getSchemaName(),
+			request.getVirtualHost(),
+			request.getScopesList());
 
 		return ingressService.create(ingressDef)
 			.map(hasMetadata -> CreateIngressResponse.newBuilder()
@@ -163,12 +211,12 @@ public class AppManagerService implements AppManager {
 
 	@Override
 	public Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
-		var ingressDef = getIngressDef(request.getSchemaName(), request.getVirtualHost());
+		var ingressName = ingressName(request.getSchemaName());
 
-		return ingressService.delete(ingressDef)
+		return ingressService.delete(ingressName)
 			.map(statusDetails -> DeleteIngressResponse.newBuilder()
 				.setStatus("SUCCESS")
-				.setResourceName(ingressDef.ingressName())
+				.setResourceName(ingressName)
 				.build())
 			.onFailure()
 			.invoke(throwable ->

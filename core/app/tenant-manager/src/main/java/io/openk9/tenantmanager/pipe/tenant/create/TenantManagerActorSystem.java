@@ -18,11 +18,13 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.service.dto.CreateTenantRequest;
@@ -72,6 +74,7 @@ public class TenantManagerActorSystem {
 		SecurityConfiguration secConfiguration =
 			request.securityConfiguration();
 		OAuth2Settings oAuth2Settings = request.oAuth2Settings();
+		List<IngressScope> ingressScopes = request.ingressScopes();
 
 		CompletionStage<TenantProvisioningManager.Response> ask =
 			AskPattern.ask(
@@ -79,7 +82,7 @@ public class TenantManagerActorSystem {
 				(ActorRef<TenantProvisioningManager.Response> actorRef) ->
 					new TenantProvisioningManager.CreateTenant(
 						vHost, tenantName, secConfiguration,
-						oAuth2Settings, actorRef
+						oAuth2Settings, ingressScopes, actorRef
 					),
 				requestTimeout,
 				actorSystem.scheduler()

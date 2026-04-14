@@ -17,10 +17,12 @@
 
 package io.openk9.tenantmanager.pipe.tenant.create;
 
+import java.util.List;
 import java.util.Optional;
 
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.service.TenantProvisioningService;
 
 import org.apache.pekko.actor.typed.ActorRef;
@@ -41,6 +43,7 @@ public class IngressProvisioner
 
 	private final String tenantName;
 	private final String virtualHost;
+	private final List<IngressScope> ingressScopes;
 	private final boolean defaultBehavior;
 	private final ActorRef<IngressProvisioner.Response> replyTo;
 
@@ -48,6 +51,7 @@ public class IngressProvisioner
 		ActorContext<Command> context,
 		String virtualHost,
 		String tenantName,
+		List<IngressScope> ingressScopes,
 		boolean defaultBehavior,
 		ActorRef<Response> replyTo
 	) {
@@ -55,6 +59,7 @@ public class IngressProvisioner
 		super(context);
 		this.tenantName = tenantName;
 		this.virtualHost = virtualHost;
+		this.ingressScopes = ingressScopes;
 		this.defaultBehavior = defaultBehavior;
 		this.replyTo = replyTo;
 	}
@@ -71,11 +76,13 @@ public class IngressProvisioner
 	public static Behavior<Command> create(
 		String virtualHost,
 		String tenantName,
+		List<IngressScope> ingressScopes,
 		ActorRef<Response> replyTo) {
 
 		return Behaviors.setup(ctx ->
 			new IngressProvisioner(
-				ctx, virtualHost, tenantName, true, replyTo));
+				ctx, virtualHost, tenantName,
+				ingressScopes, true, replyTo));
 	}
 
 	/**
@@ -93,7 +100,8 @@ public class IngressProvisioner
 
 		return Behaviors.setup(ctx ->
 			new IngressProvisioner(
-				ctx, virtualHost, tenantName, false, replyTo));
+				ctx, virtualHost, tenantName,
+				null, false, replyTo));
 	}
 
 	@Override
@@ -197,7 +205,7 @@ public class IngressProvisioner
 		if (k8sNamespace().isPresent()) {
 			getContext().pipeToSelf(
 				TenantProvisioningService.createIngress(
-					virtualHost, tenantName),
+					virtualHost, tenantName, ingressScopes),
 				HandleCreate::new
 			);
 		}

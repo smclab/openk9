@@ -63,9 +63,14 @@ public final class IngressService {
 			.map(ingress -> ingress);
 	}
 
-	public Uni<List<StatusDetails>> delete(IngressDef ingressDef) {
+	public Uni<List<StatusDetails>> delete(String ingressName) {
 		return VertxContextSupport.executeBlocking(() -> {
-				var ingress = getIngress(ingressDef);
+				var ingress = new IngressBuilder()
+					.withNewMetadata()
+					.withName(ingressName)
+					.withNamespace(namespace)
+					.endMetadata()
+					.build();
 
 				return k8sClient.resource(ingress).delete();
 		});

@@ -17,9 +17,11 @@
 
 package io.openk9.tenantmanager.service.dto;
 
+import java.util.List;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -29,5 +31,6 @@ public record CreateTenantRequest(
 	@NotEmpty String virtualHost,
 	@NotNull SecurityConfiguration securityConfiguration,
 	OAuth2Settings oAuth2Settings,
-	String tenantName
+	String tenantName,
+	List<IngressScope> ingressScopes
 ) {}

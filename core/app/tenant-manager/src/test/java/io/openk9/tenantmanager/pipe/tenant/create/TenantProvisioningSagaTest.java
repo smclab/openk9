@@ -16,8 +16,10 @@
  */
 package io.openk9.tenantmanager.pipe.tenant.create;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
@@ -76,6 +78,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks
 		));
@@ -151,6 +154,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -209,6 +213,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", settings,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -277,6 +282,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", null, null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(), mocks));
 
 		mocks.realmProbe.expectMessage(
@@ -331,6 +337,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
 			SecurityConfiguration.NO_GATEWAY_AUTH,
+			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -385,6 +392,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
 			SecurityConfiguration.NO_GATEWAY_AUTH,
+			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -417,6 +425,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "tenant", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -464,6 +473,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -523,6 +533,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", settings,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -576,6 +587,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "schema", null,
 			SecurityConfiguration.NO_GATEWAY_AUTH,
+			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -609,6 +621,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vh", "my-tenant", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -635,6 +648,7 @@ class TenantProvisioningSagaTest {
 		testKit.spawn(TenantProvisioningSaga.create(
 			"vhost", "schema", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
+			null,
 			replyTo.getRef(),
 			mocks
 		));
@@ -722,6 +736,7 @@ class TenantProvisioningSagaTest {
 		@Override
 		public Behavior<IngressProvisioner.Command> ingress(
 			String s, String v,
+			List<IngressScope> ingressScopes,
 			ActorRef<IngressProvisioner.Response> r) {
 
 			ingressAdapter.set(r);

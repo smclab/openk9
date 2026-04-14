@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.model.Tenant;
@@ -44,6 +45,7 @@ public class TenantProvisioningSaga
 
 	private final String virtualHost;
 	private final SecurityConfiguration securityConfiguration;
+	private final List<IngressScope> ingressScopes;
 	private final boolean keycloakAvailable;
 	private final ActorRef<Response> replyTo;
 	private final ProvisioningFactory factory;
@@ -71,6 +73,7 @@ public class TenantProvisioningSaga
 		String tenantName,
 		OAuth2Settings oAuth2Settings,
 		SecurityConfiguration securityConfiguration,
+		List<IngressScope> ingressScopes,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory factory) {
 
@@ -78,6 +81,7 @@ public class TenantProvisioningSaga
 		this.virtualHost = virtualHost;
 		this.oAuth2Settings = oAuth2Settings;
 		this.securityConfiguration = securityConfiguration;
+		this.ingressScopes = ingressScopes;
 		this.replyTo = replyTo;
 		this.factory = factory;
 		this.keycloakAvailable =
@@ -123,11 +127,12 @@ public class TenantProvisioningSaga
 		String tenantName,
 		OAuth2Settings oAuth2Settings,
 		SecurityConfiguration securityConfiguration,
+		List<IngressScope> ingressScopes,
 		ActorRef<Response> replyTo) {
 
 		return create(
 			virtualHost, tenantName, oAuth2Settings,
-			securityConfiguration,
+			securityConfiguration, ingressScopes,
 			replyTo, new DefaultProvisioningFactory()
 		);
 	}
@@ -152,6 +157,7 @@ public class TenantProvisioningSaga
 		String tenantName,
 		OAuth2Settings oAuth2Settings,
 		SecurityConfiguration securityConfiguration,
+		List<IngressScope> ingressScopes,
 		ActorRef<Response> replyTo,
 		ProvisioningFactory provisioningFactory) {
 
@@ -179,7 +185,7 @@ public class TenantProvisioningSaga
 			return new TenantProvisioningSaga(
 				ctx, virtualHost, tenantName,
 				oAuth2Settings, securityConfiguration,
-				replyTo, provisioningFactory
+				ingressScopes, replyTo, provisioningFactory
 			);
 		});
 	}
@@ -247,7 +253,7 @@ public class TenantProvisioningSaga
 		ActorRef<IngressProvisioner.Command> ingress =
 			getContext().spawnAnonymous(factory
 				.ingress(virtualHost, tenantName,
-					ingressAdapter));
+					ingressScopes, ingressAdapter));
 
 		schema.tell(SchemaProvisioner.Start.INSTANCE);
 		ingress.tell(IngressProvisioner.Start.INSTANCE);
@@ -352,6 +358,7 @@ public class TenantProvisioningSaga
 		tenant.setClientSecret(clientSecret);
 		tenant.setSecurityConfiguration(securityConfiguration);
 		tenant.setRealmProvisioned(realmProvisioned);
+		tenant.setIngressScopes(ingressScopes);
 
 		getContext().pipeToSelf(
 			TenantProvisioningService.createEntity(tenant),
@@ -575,6 +582,7 @@ public class TenantProvisioningSaga
 		Behavior<IngressProvisioner.Command> ingress(
 			String virtualHost,
 			String tenantName,
+			List<IngressScope> ingressScopes,
 			ActorRef<IngressProvisioner.Response> replyTo);
 
 		/** Creates a realm provisioner behavior. */
@@ -617,9 +625,10 @@ public class TenantProvisioningSaga
 		@Override
 		public Behavior<IngressProvisioner.Command> ingress(
 			String v, String s,
+			List<IngressScope> ingressScopes,
 			ActorRef<IngressProvisioner.Response> r) {
 
-			return IngressProvisioner.create(v, s, r);
+			return IngressProvisioner.create(v, s, ingressScopes, r);
 		}
 
 		@Override

@@ -18,6 +18,7 @@
 package io.openk9.tenantmanager.model;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,6 +27,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.common.graphql.util.relay.GraphqlId;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -90,6 +92,11 @@ public class Tenant implements GraphqlId {
 
 	@Column(name = "realm_provisioned", nullable = false)
 	private boolean realmProvisioned;
+
+	@Column(name = "ingress_scopes", columnDefinition = "text[]")
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	@Enumerated(EnumType.STRING)
+	private List<IngressScope> ingressScopes;
 
 	@Override
 	public boolean equals(Object o) {

@@ -1,5 +1,8 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
+import java.util.List;
+
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.dto.TenantResponseDTO;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 import io.openk9.tenantmanager.service.dto.OAuth2Settings;
@@ -44,6 +47,7 @@ public class TenantProvisioningManager
 				message.tenantName(),
 				message.settings(),
 				message.securityConfiguration(),
+				message.ingressScopes(),
 				adapter
 			)
 		);
@@ -74,6 +78,7 @@ public class TenantProvisioningManager
 		String virtualHost, String tenantName,
 		SecurityConfiguration securityConfiguration,
 		OAuth2Settings settings,
+		List<IngressScope> ingressScopes,
 		ActorRef<Response> replyTo) implements Command {}
 
 	private record SagaResponse(

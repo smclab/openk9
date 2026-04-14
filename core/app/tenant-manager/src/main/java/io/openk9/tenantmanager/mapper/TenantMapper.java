@@ -45,7 +45,8 @@ public interface TenantMapper {
 		@Mapping(target = "id", ignore = true),
 		@Mapping(target = "createDate", ignore = true),
 		@Mapping(target = "modifiedDate", ignore = true),
-		@Mapping(target = "realmProvisioned", ignore = true)
+		@Mapping(target = "realmProvisioned", ignore = true),
+		@Mapping(target = "ingressScopes", ignore = true)
 	})
 	Tenant map(TenantRequestDTO tenantRequestDTO);
 
@@ -54,7 +55,8 @@ public interface TenantMapper {
 		@Mapping(target = "id", ignore = true),
 		@Mapping(target = "createDate", ignore = true),
 		@Mapping(target = "modifiedDate", ignore = true),
-		@Mapping(target = "realmProvisioned", ignore = true)
+		@Mapping(target = "realmProvisioned", ignore = true),
+		@Mapping(target = "ingressScopes", ignore = true)
 	})
 	Tenant patch(TenantRequestDTO tenantRequestDTO);
 
@@ -62,7 +64,8 @@ public interface TenantMapper {
 		@Mapping(target = "id", ignore = true),
 		@Mapping(target = "createDate", ignore = true),
 		@Mapping(target = "modifiedDate", ignore = true),
-		@Mapping(target = "realmProvisioned", ignore = true)
+		@Mapping(target = "realmProvisioned", ignore = true),
+		@Mapping(target = "ingressScopes", ignore = true)
 	})
 	Tenant map(@MappingTarget Tenant tenant, TenantRequestDTO tenantRequestDTO);
 
@@ -71,7 +74,8 @@ public interface TenantMapper {
 		@Mapping(target = "id", ignore = true),
 		@Mapping(target = "createDate", ignore = true),
 		@Mapping(target = "modifiedDate", ignore = true),
-		@Mapping(target = "realmProvisioned", ignore = true)
+		@Mapping(target = "realmProvisioned", ignore = true),
+		@Mapping(target = "ingressScopes", ignore = true)
 	})
 	Tenant patch(@MappingTarget Tenant tenant, TenantRequestDTO tenantRequestDTO);
 

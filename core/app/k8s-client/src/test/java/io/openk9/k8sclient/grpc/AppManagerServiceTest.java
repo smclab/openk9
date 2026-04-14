@@ -23,6 +23,7 @@ import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.app.manager.grpc.AppManifestList;
 import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.app.manager.grpc.Status;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.test.junit.QuarkusTest;
@@ -218,6 +219,27 @@ class AppManagerServiceTest {
 					.newBuilder()
 					.setSchemaName("mew")
 					.setVirtualHost("mew.openk9.io")
+					.build()
+				),
+			response -> Assertions.assertEquals(
+				"mew-default-ingress",
+				response.getResourceName()
+			)
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void createIngressWithScopesSuccess(UniAsserter asserter) {
+
+		asserter.assertThat(
+			() -> appManager.createIngress(
+				CreateIngressRequest
+					.newBuilder()
+					.setSchemaName("mew")
+					.setVirtualHost("mew.openk9.io")
+					.addScopes(IngressScope.SEARCH)
+					.addScopes(IngressScope.INGESTION)
 					.build()
 				),
 			response -> Assertions.assertEquals(

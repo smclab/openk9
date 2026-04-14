@@ -22,7 +22,7 @@ class TenantManagerActorSystemTest {
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY;
         CreateTenantRequest request = new CreateTenantRequest(
 			"vh", securityConfig, null,
-			"testcreatetenant");
+			"testcreatetenant", null);
 
         TenantResponseDTO tenant = actorSystem
 			.startCreateTenant(request)
@@ -39,7 +39,7 @@ class TenantManagerActorSystemTest {
 			SecurityConfiguration.NO_GATEWAY_AUTH;
         CreateTenantRequest request = new CreateTenantRequest(
 			"vh_basic", securityConfig, null,
-			"testbasicauth");
+			"testbasicauth", null);
 
         TenantResponseDTO tenant = actorSystem
 			.startCreateTenant(request)

@@ -35,6 +35,7 @@ import io.openk9.app.manager.grpc.CreateIngressRequest;
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressRequest;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
+import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.common.util.RandomGenerator;
 import io.openk9.datasource.grpc.Datasource;
 import io.openk9.datasource.grpc.InitTenantRequest;
@@ -134,14 +135,20 @@ public class TenantProvisioningService {
 
 	public static CompletionStage<CreateIngressResponse> createIngress(
 		String virtualHost,
-		String tenantId) {
+		String tenantId,
+		List<IngressScope> ingressScopes) {
+
+		var requestBuilder = CreateIngressRequest.newBuilder()
+			.setVirtualHost(virtualHost)
+			.setSchemaName(tenantId); // todo rename to tenantId
+
+		if (ingressScopes != null) {
+			requestBuilder.addAllScopes(ingressScopes);
+		}
 
 		return EventBusInstanceHolder
 			.<CreateIngressResponse>request(
-				CREATE_INGRESS, CreateIngressRequest.newBuilder()
-					.setVirtualHost(virtualHost)
-					.setSchemaName(tenantId) // todo rename to tenantId
-					.build()
+				CREATE_INGRESS, requestBuilder.build()
 			)
 			.map(Message::body)
 			.subscribeAsCompletionStage();
