@@ -35,6 +35,7 @@ RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=builder /app/js-packages/admin-ui/build /usr/share/nginx/html/admin/
 RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && rm -f /etc/nginx/conf.d/default.conf \
+    && sed -i 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
     && mkdir -p /var/run \
     && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
 COPY ./js-packages/admin-ui/nginx.conf /etc/nginx/conf.d/default.conf
