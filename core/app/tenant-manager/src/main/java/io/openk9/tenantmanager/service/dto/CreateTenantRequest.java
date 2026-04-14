@@ -67,4 +67,18 @@ public record CreateTenantRequest(
 	OAuth2Settings oAuth2Settings,
 	String tenantName,
 	List<IngressScope> ingressScopes
-) {}
+) {
+
+	/**
+	 * Creates a request with Keycloak-managed OAuth2 and
+	 * default ingress scopes.
+	 */
+	public CreateTenantRequest(
+		String virtualHost,
+		SecurityConfiguration securityConfiguration,
+		String tenantName) {
+
+		this(virtualHost, securityConfiguration, null,
+			tenantName, null);
+	}
+}

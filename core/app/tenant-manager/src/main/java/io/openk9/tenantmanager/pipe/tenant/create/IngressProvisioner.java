@@ -65,12 +65,26 @@ public class IngressProvisioner
 	}
 
 	/**
+	 * Creates a provisioning behavior with default ingress
+	 * scopes.
+	 */
+	public static Behavior<Command> create(
+		String virtualHost,
+		String tenantName,
+		ActorRef<Response> replyTo) {
+
+		return create(virtualHost, tenantName, null, replyTo);
+	}
+
+	/**
 	 * Creates a provisioning behavior that creates a Kubernetes
-	 * Ingress.
+	 * Ingress with the given scopes.
 	 *
-	 * @param virtualHost the tenant virtual host
-	 * @param tenantName  the tenant name
-	 * @param replyTo     the actor to reply to
+	 * @param virtualHost   the tenant virtual host
+	 * @param tenantName    the tenant name
+	 * @param ingressScopes scopes to expose, or {@code null}
+	 *                      for the default set
+	 * @param replyTo       the actor to reply to
 	 * @return the provisioning behavior
 	 */
 	public static Behavior<Command> create(

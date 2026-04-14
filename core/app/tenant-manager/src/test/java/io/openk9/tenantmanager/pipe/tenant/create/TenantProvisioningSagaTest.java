@@ -76,9 +76,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null,
+			"vhost", "schema",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks
 		));
@@ -152,9 +151,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null,
+			"vhost", "schema",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -280,9 +278,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", null, null,
+			"vh", null,
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(), mocks));
 
 		mocks.realmProbe.expectMessage(
@@ -335,9 +332,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant", null,
+			"vh", "tenant",
 			SecurityConfiguration.NO_GATEWAY_AUTH,
-			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -390,9 +386,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant", null,
+			"vh", "tenant",
 			SecurityConfiguration.NO_GATEWAY_AUTH,
-			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -423,9 +418,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "tenant", null,
+			"vh", "tenant",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -471,9 +465,8 @@ class TenantProvisioningSagaTest {
 
 		// Act
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "schema", null,
+			"vh", "schema",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -585,9 +578,8 @@ class TenantProvisioningSagaTest {
 
 		// Act
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "schema", null,
+			"vh", "schema",
 			SecurityConfiguration.NO_GATEWAY_AUTH,
-			null,
 			replyTo.getRef(),
 			mocks));
 
@@ -619,9 +611,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vh", "my-tenant", null,
+			"vh", "my-tenant",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks)
 		);
@@ -646,9 +637,8 @@ class TenantProvisioningSagaTest {
 		MockProvisioningFactory mocks = new MockProvisioningFactory();
 
 		testKit.spawn(TenantProvisioningSaga.create(
-			"vhost", "schema", null,
+			"vhost", "schema",
 			SecurityConfiguration.OAUTH2_ADMIN_ONLY,
-			null,
 			replyTo.getRef(),
 			mocks
 		));

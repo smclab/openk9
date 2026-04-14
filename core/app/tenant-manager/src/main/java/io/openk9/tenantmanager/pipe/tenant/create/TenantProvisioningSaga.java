@@ -110,17 +110,42 @@ public class TenantProvisioningSaga
 	}
 
 	/**
-	 * Creates a provisioning saga behavior using the default
-	 * provisioning factory.
-	 *
-	 * @param virtualHost           the tenant virtual host
-	 * @param tenantName            the tenant name, or null to
-	 *                              auto-generate
-	 * @param oAuth2Settings        external OAuth2 settings, or
-	 *                              null for Keycloak
-	 * @param securityConfiguration the tenant's security model
-	 * @param replyTo               the actor to reply to
-	 * @return the saga behavior
+	 * Creates a saga with Keycloak-managed OAuth2 and default
+	 * ingress scopes.
+	 */
+	public static Behavior<Command> create(
+		String virtualHost,
+		String tenantName,
+		SecurityConfiguration securityConfiguration,
+		ActorRef<Response> replyTo) {
+
+		return create(
+			virtualHost, tenantName, null,
+			securityConfiguration, null,
+			replyTo, new DefaultProvisioningFactory()
+		);
+	}
+
+	/**
+	 * Creates a saga with Keycloak-managed OAuth2, default
+	 * ingress scopes, and a custom factory.
+	 */
+	public static Behavior<Command> create(
+		String virtualHost,
+		String tenantName,
+		SecurityConfiguration securityConfiguration,
+		ActorRef<Response> replyTo,
+		ProvisioningFactory provisioningFactory) {
+
+		return create(
+			virtualHost, tenantName, null,
+			securityConfiguration, null,
+			replyTo, provisioningFactory
+		);
+	}
+
+	/**
+	 * Creates a saga with all options and the default factory.
 	 */
 	public static Behavior<Command> create(
 		String virtualHost,
@@ -138,15 +163,19 @@ public class TenantProvisioningSaga
 	}
 
 	/**
-	 * Creates a provisioning saga behavior with the given
-	 * factory.
+	 * Creates a saga with all options and a custom factory.
+	 * <p>
+	 * This is the canonical overload — all others delegate to
+	 * it. Parameters:
 	 *
 	 * @param virtualHost           the tenant virtual host
-	 * @param tenantName            the tenant name, or null to
-	 *                              auto-generate
-	 * @param oAuth2Settings        external OAuth2 settings, or
-	 *                              null for Keycloak
-	 * @param securityConfiguration the tenant's security model
+	 * @param tenantName            the tenant name, or
+	 *                              {@code null} to auto-generate
+	 * @param oAuth2Settings        external IdP credentials, or
+	 *                              {@code null} for Keycloak
+	 * @param securityConfiguration the authorization model
+	 * @param ingressScopes         scopes to expose, or
+	 *                              {@code null} for defaults
 	 * @param replyTo               the actor to reply to
 	 * @param provisioningFactory   factory for provisioner
 	 *                              actors

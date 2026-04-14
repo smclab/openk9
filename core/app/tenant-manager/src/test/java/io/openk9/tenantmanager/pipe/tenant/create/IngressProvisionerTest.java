@@ -98,7 +98,7 @@ class IngressProvisionerTest {
 			// spawn and send Start
 			ActorRef<IngressProvisioner.Command> actor =
 				testKit.spawn(IngressProvisioner.create(
-					"vhost", "tenant", null, replyTo.getRef()));
+					"vhost", "tenant", replyTo.getRef()));
 			actor.tell(IngressProvisioner.Start.INSTANCE);
 
 			replyTo.expectMessage(
@@ -124,7 +124,7 @@ class IngressProvisionerTest {
 
 			ActorRef<IngressProvisioner.Command> actor =
 				testKit.spawn(IngressProvisioner.create(
-					"vhost", "tenant", null, replyTo.getRef()));
+					"vhost", "tenant", replyTo.getRef()));
 			actor.tell(IngressProvisioner.Start.INSTANCE);
 
 			replyTo.expectMessageClass(
@@ -142,7 +142,7 @@ class IngressProvisionerTest {
 
 			ActorRef<IngressProvisioner.Command> actor =
 				testKit.spawn(IngressProvisioner.create(
-					"vhost", "tenant", null, replyTo.getRef()));
+					"vhost", "tenant", replyTo.getRef()));
 			actor.tell(IngressProvisioner.Start.INSTANCE);
 
 			replyTo.expectMessage(
