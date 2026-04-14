@@ -17,12 +17,16 @@
 
 package io.openk9.datasource.searcher.parser.impl;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 import jakarta.enterprise.context.ApplicationScoped;
 
 import io.openk9.datasource.model.Bucket;
-import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
@@ -43,19 +47,18 @@ public class DatasourceIdQueryParser implements QueryParser {
 
 		Bucket bucket = parserContext.getTenantWithBucket().getBucket();
 
-		Set<Datasource> datasources = bucket.getDatasources();
+		Set<Long> datasourceIds = bucket.getDatasources().stream()
+			.map(K9Entity::getId)
+			.collect(Collectors.toSet());
 
-		Iterator<Datasource> iterator = datasources.iterator();
+		List<ParserSearchToken> tokens = parserContext.getTokenTypeGroup();
 
-		long[] ids = new long[datasources.size()];
-
-		for (int i = 0; iterator.hasNext(); i++) {
-
-			Datasource datasource = iterator.next();
-
-			ids[i] = datasource.getId();
-
-		}
+		List<Long> ids = tokens.stream()
+			.map(ParserSearchToken::getValues)
+			.flatMap(Collection::stream)
+			.map(Long::parseLong)
+			.filter(datasourceIds::contains)
+			.toList();
 
 		parserContext.getMutableQuery().filter(
 			QueryBuilders
