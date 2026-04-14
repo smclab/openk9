@@ -3,11 +3,10 @@ stages:
 
 push-file-manager-helm:
   stage: push
-  image: alpine:latest
-  only:
-    refs:
-    - main
-  when: manual
+  image: alpine:3.19
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -18,11 +17,10 @@ push-file-manager-helm:
 
 push-tika-helm:
   stage: push
-  image: alpine:latest
-  only:
-    refs:
-    - main
-  when: manual
+  image: alpine:3.19
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -33,11 +31,10 @@ push-tika-helm:
 
 push-resources-validator-helm:
   stage: push
-  image: alpine:latest
-  only:
-    refs:
-    - main
-  when: manual
+  image: alpine:3.19
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
   before_script:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*

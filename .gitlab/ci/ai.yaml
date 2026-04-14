@@ -1,0 +1,125 @@
+# ================================
+# AI & ML Modules Triggers
+# ================================
+# NOTE: YAML Anchors (&name) are used to define change lists once,
+# and Aliases (*name) are used to reuse them in subsequent rules.
+#
+# Each trigger has three feature-branch rules:
+#
+#   1. "designated" rule:
+#      Fires only for AI-designated users (luca.callocchia).
+#      Runs the full pipeline: build + push image + restart deployment.
+#      USER_TYPE: "designated"
+#
+#   2. "generic" rule:
+#      Fires for any user who is NOT a designated user of any domain
+#      (i.e. not backend, frontend, or AI designated).
+#      Runs build/compile only — no push, no restart. Useful to catch
+#      compilation errors on branches touched by non-owner developers.
+#      USER_TYPE: "generic"
+#
+#   3. Designated users of OTHER domains (backend: mirko/michele, frontend: lorenzo/giorgio)
+#      are excluded from both rules above — their pipelines do NOT trigger
+#      on AI changes, since they are not responsible for this domain.
+#
+# MR and main rules do NOT set USER_TYPE (handled by child-rules defaults).
+
+Trigger Rag Module:
+  stage: trigger
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &rag_module_changes
+        - ai-packages/rag-module/**/*
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *rag_module_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *rag_module_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+      changes: *rag_module_changes
+      variables:
+        USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *rag_module_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *rag_module_changes
+      variables:
+        RELEASE_MR: "true"
+  trigger:
+    include: "/.gitlab/.gitlab-ci-rag-module.yaml"
+    strategy: depend
+
+Trigger Agentic Rag Module:
+  stage: trigger
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &agentic_rag_module_changes
+        - ai-packages/agentic-rag-module/**/*
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *agentic_rag_module_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *agentic_rag_module_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+      changes: *agentic_rag_module_changes
+      variables:
+        USER_TYPE: "generic"
+  trigger:
+    include: "/.gitlab/.gitlab-ci-agentic-rag-module.yaml"
+    strategy: depend
+
+Trigger Embedding Modules:
+  stage: trigger
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &embedding_modules_changes
+        - ai-packages/embedding-modules/**/*
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *embedding_modules_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *embedding_modules_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+      changes: *embedding_modules_changes
+      variables:
+        USER_TYPE: "generic"
+  trigger:
+    include: "/.gitlab/.gitlab-ci-embedding-module.yaml"
+    strategy: depend
+
+Trigger Chunk Evaluation Module:
+  stage: trigger
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: &chunk_eval_changes
+        - ai-packages/chunk-evaluation-module/**/*
+    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *chunk_eval_changes
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
+      changes: *chunk_eval_changes
+      variables:
+        USER_TYPE: "designated"
+    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+      changes: *chunk_eval_changes
+      variables:
+        USER_TYPE: "generic"
+  trigger:
+    include: "/.gitlab/.gitlab-ci-chunk-evaluation-module.yaml"
+    strategy: depend

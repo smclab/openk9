@@ -3,7 +3,7 @@ stages:
 
 push-web-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.19
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -22,7 +22,7 @@ push-web-connector-helm:
 
 push-email-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.19
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -41,7 +41,7 @@ push-email-connector-helm:
 
 push-database-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.19
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
@@ -54,13 +54,13 @@ push-database-connector-helm:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
-  - cd connectors/database-connector/chart/openk9-wordpress-connector && mkdir -p package
+  - cd connectors/database-connector/chart/openk9-database-connector && mkdir -p package
   - helm package . -d package
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
 push-youtube-connector-helm:
   stage: push
-  image: alpine:latest
+  image: alpine:3.19
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:

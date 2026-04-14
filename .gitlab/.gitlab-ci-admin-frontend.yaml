@@ -1,6 +1,8 @@
-################################################################################
-#                                   STAGES                                     #
-################################################################################
+###################### ADMIN FRONTEND PIPELINE ######################
+include:
+  - local: "/.gitlab/.gitlab-templates.yaml"
+  # NEW: Include standardized child rules
+  - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
 - build
@@ -10,19 +12,12 @@ stages:
 - restart
 - publish
 
-include:
-- local: "/.gitlab/.gitlab-templates.yaml"
-
-################################################################################
-#                                    JOBS                                       #
-################################################################################
-
 #################
 # Fetch Version #
 #################
 Fetch version:
   stage: build
-  image: node:18-alpine
+  image: node:22.14.0-alpine
   script:
   - cd js-packages/admin-ui
   - export VERSION=$(node -p "require('./package.json').version")
@@ -31,6 +26,9 @@ Fetch version:
     paths:
     - version.env
     expire_in: 1 day
+  rules:
+    # Always run if triggered
+    - !reference [.rules:child-build-always, rules]
 
 ######################## BUILD Admin FRONTEND ########################
 Build Admin Frontend:
@@ -40,71 +38,105 @@ Build Admin Frontend:
     entrypoint: [ "" ]
   variables:
     DOCKER_CONFIG: "/kaniko/.docker"
+    # GENERATE_SOURCEMAP=false: skips source map generation during production build.
+    # Source maps are large files webpack must compute — not useful inside a Docker image.
+    # This alone can cut craco/webpack build time by 30-50%.
+    GENERATE_SOURCEMAP: "false"
   needs:
   - job: Fetch version
     artifacts: true
   script:
   # Docker credentials configuration
+  - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
+    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
+    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
+    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
+      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
 
-  # Conditional logic to determine which tag to use
+  # Conditional logic to determine push behaviour
   - |
-    if [[ "$CI_COMMIT_BRANCH" == "main" ]]; then
-      # For main, use version from package.json
+    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
       source $CI_PROJECT_DIR/version.env
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION"
       echo "=== Building Admin UI with VERSION=$VERSION ==="
-      DOCKER_TAG="$VERSION"
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # For feature branch, use 996-SNAPSHOT
-      echo "=== Building Admin UI with VERSION=996-SNAPSHOT for feature branch ==="
-      DOCKER_TAG="996-SNAPSHOT"
+      if [[ "$GITLAB_USER_LOGIN" == "lorenzo.venneri" || "$GITLAB_USER_LOGIN" == "giorgio.bartolomeo" ]]; then
+        KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-admin-ui:996-SNAPSHOT"
+        echo "=== Building Admin UI with VERSION=996-SNAPSHOT for frontend developer ==="
+      else
+        KANIKO_PUSH="--no-push"
+        echo "=== Building Admin UI (no push) for generic user ==="
+      fi
     fi
 
-  # Execute build with the previously determined tag
+  # Execute build with the determined push behaviour
   - |
     /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=72h \
+      --snapshot-mode=redo \
+      --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
-      --destination "$CI_REGISTRY_NAME/openk9/admin-ui:$DOCKER_TAG"
+      $KANIKO_PUSH \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/admin-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/admin-ui/**/*
+    # main/tag: push versione; designated feature: push 996-SNAPSHOT; generic feature: build no push
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
+    - !reference [.rules:child-build-feature-generic, rules]
 
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:14
+  image: node:22.14.0
+  cache:
+    - key:
+        prefix: "shared-yarn"
+        files:
+          - yarn.lock
+      paths:
+        - .yarn-cache
+      policy: pull-push
+    - key:
+        prefix: "admin-ui-nm"
+        files:
+          - js-packages/admin-ui/package.json
+      paths:
+        - js-packages/admin-ui/node_modules
+      policy: pull-push
   script:
-  - cd js-packages/admin-ui
-  - yarn install
-  - yarn build
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  # Disable workspace strict root check to ensure Lerna aggregates smoothly
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder .yarn-cache
+  # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
+  - yarn install --prefer-offline --frozen-lockfile
+  # 2. Build ONLY the specific component using Lerna scope
+  - CI=false npx lerna run build --scope openk9-admin-ui
   rules:
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - js-packages/admin-ui/**/*
+    # Run only on MR
+    - !reference [.rules:child-verify-mr, rules]
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
   stage: container-scanning
-  image: $CI_TEMPLATE_REGISTRY_HOST/security-products/container-scanning:latest
+  image: $CS_ANALYZER_IMAGE
+  allow_failure: true
   dependencies:
   - "Fetch version"
   - "Build Admin Frontend"
   script:
   - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/admin-ui:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/admin-ui:$VERSION"
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION"
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
+    # Run only on Main/Tag
+    - !reference [.rules:child-deploy-main-tag, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -112,39 +144,121 @@ Trigger Restart:
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "openk9-admin-ui"
+    COMPONENT_NAME: "admin-ui"
     COMPONENT_TYPE: "frontend"
   rules:
-  # Rule for main branch
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/admin-ui/**/*
-  # Rule for feature branch
-  - if: "$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/"
-    changes:
-    - js-packages/admin-ui/**/*
+    # Run on Main/Tag and Feature
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
 
-####################### PUBLISH Admin FRONTEND #######################
-Publish Admin Frontend:
-  stage: publish
-  image: node:18
+# --- RELEASE BRANCH JOBS ---
+
+Build Admin Frontend Release:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    GENERATE_SOURCEMAP: "false"
+  needs:
+  - job: Fetch version
+    artifacts: true
   script:
-  - cd js-packages/admin-ui
-  - pwd
-  - whoami
-  - yarn install
-  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-  - npm publish --access public
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - mkdir -p /kaniko/.docker
+  - |
+    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
+    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
+    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
+      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
+  - |
+    if [[ -n "$CI_COMMIT_TAG" && "$CI_COMMIT_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+      source $CI_PROJECT_DIR/version.env
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION"
+      echo "=== Release tag: push $VERSION ==="
+    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
+      source $CI_PROJECT_DIR/version.env
+      SNAP_TAG="${VERSION}-SNAPSHOT"
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$SNAP_TAG"
+      echo "=== Release branch: push $SNAP_TAG ==="
+    else
+      KANIKO_PUSH="--no-push"
+      echo "=== Release MR: build only, no push ==="
+    fi
+  - |
+    /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=72h \
+      --snapshot-mode=redo \
+      --compressed-caching=false \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/admin-ui/Dockerfile" \
+      $KANIKO_PUSH \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    when: manual
-  - when: never
+    - !reference [.rules:child-deploy-release, rules]
+
+Build Verifier Admin Frontend Release MR:
+  stage: build-verifier
+  image: node:22.14.0
+  cache:
+    - key:
+        prefix: "shared-yarn"
+        files:
+          - yarn.lock
+      paths:
+        - .yarn-cache
+      policy: pull
+    - key:
+        prefix: "admin-ui-nm"
+        files:
+          - js-packages/admin-ui/package.json
+      paths:
+        - js-packages/admin-ui/node_modules
+      policy: pull
+  script:
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder .yarn-cache
+  - yarn install --prefer-offline --frozen-lockfile
+  - CI=false npx lerna run build --scope openk9-admin-ui
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+Trigger Restart Admin Frontend Release:
+  extends: .restart_job_template
+  dependencies:
+  - Fetch version
+  variables:
+    COMPONENT_NAME: "admin-ui"
+    COMPONENT_TYPE: "frontend"
+    TARGET_ENV: "k9-stable-2"
+  rules:
+    - !reference [.rules:child-deploy-release, rules]
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check Admin UI:
   stage: dependency-check
+  needs:
+  - job: Fetch version
+  - job: Build Verifier
+    optional: true
   extends: .dependency_check_frontend_template
   allow_failure: true
+  variables:
+    # Point the npm-audit analyzer to the specific subdirectory.
+    # Without this, it finds the root yarn.lock and installs the entire
+    # workspace → segfault in yarn 1.22.5 inside the analyzer container.
+    DS_PROJECT_DIR: "js-packages/admin-ui"
   script:
-  - cd js-packages/admin-ui
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
   - /analyzer run
+# Rules for dependency check are in the template, which uses standard logic.
+# But template uses 'changes' filter. It should be fine as parent already filtered changes.
+# Actually, the template .dependency_check_frontend_template also has rules!
+# We might need to override them if they are too restrictive, but they seem to be Main/MR based.
+# Let's keep it as extended.

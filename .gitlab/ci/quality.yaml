@@ -1,0 +1,132 @@
+# ================================
+# Quality & Security Checks
+# ================================
+
+# Define Anchor for Java files list
+.java_files_list: &java_files_list
+  - core/**/*
+  - vendor/**/*
+  - pom.xml
+
+# Define Anchor for all-source files list (Java, JS, Python/AI)
+# Used by SonarQube so it triggers on any source change, not just Java.
+.all_source_files_list: &all_source_files_list
+  - core/**/*
+  - vendor/**/*
+  - js-packages/**/*
+  - ai-packages/**/*
+  - enrichers/**/*
+  - pom.xml
+  - "*.json"
+  - "*.js"
+  - "*.ts"
+  - "*.tsx"
+
+# Define Anchor for Python files list
+.python_files_list: &python_files_list
+  - ai-packages/**/*
+  - enrichers/**/*
+
+# Maven Dependency Check
+Maven Dependency Check:
+  stage: dependency-check
+  image: eclipse-temurin:21-jdk
+  variables:
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  before_script:
+  - cd core
+  - ./mvnw install
+  script:
+  - ./mvnw -pl '!../vendor/hibernate-rx-multitenancy, !../vendor/hibernate-rx-multitenancy/runtime, !../vendor/hibernate-rx-multitenancy/deployment'  dependency-check:aggregate
+  allow_failure: true
+  artifacts:
+    paths:
+    - core/target/dependency-check-report.html
+    expire_in: 1 week
+  cache:
+    # Two separate cache entries:
+    # 1. shared-mvn: reuses the same Maven repo cache as build jobs (pull-only here,
+    #    dependency-check does not need to write new artifacts to the Maven cache).
+    # 2. owasp-nvd-db: caches only the OWASP NVD database download, not the full .m2 repo.
+    #    Scoped to org/owasp to avoid growing the cache with unrelated Maven artifacts.
+    - key: "shared-mvn"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository
+      policy: pull
+    - key: "owasp-nvd-db"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository/org/owasp
+      policy: pull-push
+  rules:
+    # 1. Main Branch
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: *java_files_list
+    # 2. Merge Request
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: *java_files_list
+    # 3. Tag — no changes: filter (tags have no reliable diff baseline in GitLab)
+    - if: "$CI_COMMIT_TAG"
+
+# SonarQube Check
+SonarQube Check:
+  stage: quality
+  image:
+    name: sonarsource/sonar-scanner-cli:5.0.1
+    entrypoint: [ "" ]
+  variables:
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+    GIT_DEPTH: "0"
+  cache:
+    key: "sonar-cache"
+    paths:
+    - .sonar/cache
+  before_script:
+  - mkdir /tmp/empty
+  script:
+  - sonar-scanner -Dsonar.qualitygate.wait=true
+  allow_failure: true
+  rules:
+  # Block first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # 1. Main Branch - trigger on any source change
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes: *all_source_files_list
+  # 2. Merge Request - trigger on any source change
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *all_source_files_list
+  # 3. Tag
+  - if: "$CI_COMMIT_TAG"
+
+# Python Dependency Check (pip-audit)
+Python Dependency Check:
+  stage: dependency-check
+  image: python:3.12-slim
+  allow_failure: true
+  script:
+  - pip install --quiet pip-audit
+  - |
+    echo "=== Python Dependency Check (pip-audit) ===" | tee pip-audit-report.txt
+    OVERALL=0
+    for req in $(find ai-packages enrichers -name "requirements*.txt" | sort); do
+      echo "--- Scanning: $req ---" | tee -a pip-audit-report.txt
+      pip-audit -r "$req" --progress-spinner off --skip-editable 2>&1 | tee -a pip-audit-report.txt || OVERALL=1
+    done
+    exit $OVERALL
+  artifacts:
+    paths:
+    - pip-audit-report.txt
+    expire_in: 1 week
+    when: always
+  rules:
+  # Block on new branch creation
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  # 1. Main Branch
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes: *python_files_list
+  # 2. Merge Request
+  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    changes: *python_files_list
+  # 3. Tag — no changes: filter (tags have no reliable diff baseline in GitLab)
+  - if: "$CI_COMMIT_TAG"

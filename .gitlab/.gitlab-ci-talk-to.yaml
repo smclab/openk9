@@ -1,4 +1,4 @@
-###################### SEARCH FRONTEND PIPELINE ######################
+###################### TALK-TO PIPELINE ######################
 include:
   - local: "/.gitlab/.gitlab-templates.yaml"
   # NEW: Include standardized child rules
@@ -10,7 +10,6 @@ stages:
 - container-scanning
 - dependency-check
 - restart
-- publish
 
 #################
 # Fetch Version #
@@ -19,9 +18,9 @@ Fetch version:
   stage: build
   image: node:22.14.0-alpine
   script:
-  - cd js-packages/search-frontend
-  - export VERSION=$(node -p "require('./package.json').version") # Reads version from package.json
-  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env # Saves version to a file
+  - cd js-packages/talk-to
+  - export VERSION=$(node -p "require('./package.json').version")
+  - echo "VERSION=$VERSION" > $CI_PROJECT_DIR/version.env
   artifacts:
     paths:
     - version.env
@@ -30,8 +29,8 @@ Fetch version:
     # Always run if triggered
     - !reference [.rules:child-build-always, rules]
 
-######################## BUILD SEARCH FRONTEND ########################
-Build Search Frontend:
+######################## BUILD TALK-TO ########################
+Build Talk-To:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -42,6 +41,7 @@ Build Search Frontend:
   - job: Fetch version
     artifacts: true
   script:
+  # Docker credentials configuration
   - export NODE_OPTIONS="--max-old-space-size=8192"
   - mkdir -p /kaniko/.docker
   - |
@@ -54,15 +54,15 @@ Build Search Frontend:
   - |
     if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
       source $CI_PROJECT_DIR/version.env
-      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION"
-      echo "=== Building Search Frontend with VERSION=$VERSION ==="
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION"
+      echo "=== Building Talk-To with VERSION=$VERSION ==="
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
       if [[ "$GITLAB_USER_LOGIN" == "lorenzo.venneri" || "$GITLAB_USER_LOGIN" == "giorgio.bartolomeo" ]]; then
-        KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-search-frontend:996-SNAPSHOT"
-        echo "=== Building Search Frontend with VERSION=996-SNAPSHOT for frontend developer ==="
+        KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-talk-to:996-SNAPSHOT"
+        echo "=== Building Talk-To with VERSION=996-SNAPSHOT for frontend developer ==="
       else
         KANIKO_PUSH="--no-push"
-        echo "=== Building Search Frontend (no push) for generic user ==="
+        echo "=== Building Talk-To (no push) for generic user ==="
       fi
     fi
 
@@ -75,7 +75,7 @@ Build Search Frontend:
       --snapshot-mode=redo \
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
       $KANIKO_PUSH \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
@@ -84,15 +84,11 @@ Build Search Frontend:
     - !reference [.rules:child-restart-feature, rules]
     - !reference [.rules:child-build-feature-generic, rules]
 
-######################## BUILD VERIFIER (NODE) ########################
+######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
   image: node:22.14.0
   cache:
-    # Two separate cache entries:
-    # 1. shared-yarn: global yarn download cache, shared across all frontend modules.
-    #    Key on yarn.lock so it invalidates when dependencies change globally.
-    # 2. search-frontend-nm: node_modules specific to this module, keyed on its package.json.
     - key:
         prefix: "shared-yarn"
         files:
@@ -101,16 +97,12 @@ Build Verifier:
         - .yarn-cache
       policy: pull-push
     - key:
-        prefix: "search-frontend-nm"
+        prefix: "talk-to-nm"
         files:
-          - js-packages/search-frontend/package.json
+          - js-packages/talk-to/package.json
       paths:
-        - js-packages/search-frontend/node_modules
+        - js-packages/talk-to/node_modules
       policy: pull-push
-  artifacts:
-    paths:
-    - js-packages/search-frontend/dist/
-    expire_in: 1 day
   script:
   - export NODE_OPTIONS="--max-old-space-size=8192"
   # Disable workspace strict root check to ensure Lerna aggregates smoothly
@@ -120,7 +112,7 @@ Build Verifier:
   # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
   - yarn install --prefer-offline --frozen-lockfile
   # 2. Build ONLY the specific component using Lerna scope
-  - CI=false npx lerna run build --scope @openk9ui/search-frontend
+  - CI=false npx lerna run build --scope talk-to
   rules:
     # Run only on MR
     - !reference [.rules:child-verify-mr, rules]
@@ -132,13 +124,13 @@ Container Scanning:
   allow_failure: true
   dependencies:
   - "Fetch version"
-  - "Build Search Frontend"
+  - "Build Talk-To"
   script:
-  - source version.env # Loads version from artifact
-  - echo "Scanning image $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION"
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION" # Scans the image
+  - source version.env
+  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION ==="
+  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION"
   rules:
-    # Run only on Main
+    # Run only on Main/Tag
     - !reference [.rules:child-deploy-main-tag, rules]
 
 ######################## TRIGGER RESTART ########################
@@ -147,39 +139,16 @@ Trigger Restart:
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "search-frontend"
+    COMPONENT_NAME: "talk-to"
     COMPONENT_TYPE: "frontend"
   rules:
     # Run on Main/Tag and Feature
     - !reference [.rules:child-deploy-main-tag, rules]
     - !reference [.rules:child-restart-feature, rules]
 
-####################### PUBLISH SEARCH FRONTEND #######################
-Publish Search Frontend:
-  stage: publish
-  image: node:22.14.0
-  needs:
-  - job: Fetch version
-    artifacts: true
-  script:
-  - cd js-packages/search-frontend
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
-  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-  - npm publish --access public
-  rules:
-    # Publish only on Main/Tag
-    - !reference [.rules:child-publish, rules]
-    # Note: Manual rule removed to standard automation, or re-add if strict manual is required.
-    # Original file had partial Manual. Moving to automated publish if pipeline succeeds on Main.
-
 # --- RELEASE BRANCH JOBS ---
 
-Build Search Frontend Release:
+Build Talk-To Release:
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
@@ -200,12 +169,12 @@ Build Search Frontend Release:
   - |
     if [[ -n "$CI_COMMIT_TAG" && "$CI_COMMIT_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
       source $CI_PROJECT_DIR/version.env
-      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION"
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION"
       echo "=== Release tag: push $VERSION ==="
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
       source $CI_PROJECT_DIR/version.env
       SNAP_TAG="${VERSION}-SNAPSHOT"
-      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$SNAP_TAG"
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-talk-to:$SNAP_TAG"
       echo "=== Release branch: push $SNAP_TAG ==="
     else
       KANIKO_PUSH="--no-push"
@@ -219,13 +188,13 @@ Build Search Frontend Release:
       --snapshot-mode=redo \
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
-      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/talk-to/Dockerfile" \
       $KANIKO_PUSH \
       --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     - !reference [.rules:child-deploy-release, rules]
 
-Build Verifier Search Frontend Release MR:
+Build Verifier Talk-To Release MR:
   stage: build-verifier
   image: node:22.14.0
   cache:
@@ -237,11 +206,11 @@ Build Verifier Search Frontend Release MR:
         - .yarn-cache
       policy: pull
     - key:
-        prefix: "search-frontend-nm"
+        prefix: "talk-to-nm"
         files:
-          - js-packages/search-frontend/package.json
+          - js-packages/talk-to/package.json
       paths:
-        - js-packages/search-frontend/node_modules
+        - js-packages/talk-to/node_modules
       policy: pull
   script:
   - export NODE_OPTIONS="--max-old-space-size=8192"
@@ -249,23 +218,23 @@ Build Verifier Search Frontend Release MR:
   - yarn config set network-timeout 600000
   - yarn config set cache-folder .yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
-  - CI=false npx lerna run build --scope @openk9ui/search-frontend
+  - CI=false npx lerna run build --scope talk-to
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
 
-Trigger Restart Search Frontend Release:
+Trigger Restart Talk-To Release:
   extends: .restart_job_template
   dependencies:
   - Fetch version
   variables:
-    COMPONENT_NAME: "search-frontend"
+    COMPONENT_NAME: "talk-to"
     COMPONENT_TYPE: "frontend"
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Search Frontend:
+Dependency Check Talk-To:
   stage: dependency-check
   needs:
   - job: Fetch version
@@ -274,10 +243,10 @@ Dependency Check Search Frontend:
   extends: .dependency_check_frontend_template
   allow_failure: true
   variables:
-    # Point the npm-audit analyzer to the specific subdirectory.
-    # Without this, it finds the root yarn.lock and installs the entire
-    # workspace → segfault in yarn 1.22.5 inside the analyzer container.
-    DS_PROJECT_DIR: "js-packages/search-frontend"
+    # Tell the npm-audit analyzer to scan only the talk-to subdirectory,
+    # NOT the monorepo root. Without this, the analyzer finds the root yarn.lock
+    # and tries to install ALL workspace packages → segfault in yarn 1.22.5
+    DS_PROJECT_DIR: "js-packages/talk-to"
   script:
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
