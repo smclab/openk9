@@ -18,6 +18,7 @@
 package io.openk9.tenantmanager.pipe.tenant.create;
 
 import java.time.Duration;
+import java.util.List;
 
 import io.openk9.app.manager.grpc.CreateIngressResponse;
 import io.openk9.app.manager.grpc.DeleteIngressResponse;
@@ -143,6 +144,24 @@ class IngressProvisionerTest {
 			ActorRef<IngressProvisioner.Command> actor =
 				testKit.spawn(IngressProvisioner.create(
 					"vhost", "tenant", replyTo.getRef()));
+			actor.tell(IngressProvisioner.Start.INSTANCE);
+
+			replyTo.expectMessage(
+				TIMEOUT, IngressProvisioner.Success.INSTANCE);
+		}
+
+		@Test
+		@DisplayName(
+			"skips and replies Success when ingressScopes "
+			+ "is empty")
+		void skipsWhenEmptyScopes() {
+			TestProbe<IngressProvisioner.Response> replyTo =
+				testKit.createTestProbe();
+
+			ActorRef<IngressProvisioner.Command> actor =
+				testKit.spawn(IngressProvisioner.create(
+					"vhost", "tenant", List.of(),
+					replyTo.getRef()));
 			actor.tell(IngressProvisioner.Start.INSTANCE);
 
 			replyTo.expectMessage(

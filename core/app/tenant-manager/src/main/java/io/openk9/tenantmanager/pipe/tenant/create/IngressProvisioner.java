@@ -216,7 +216,13 @@ public class IngressProvisioner
 
 	private Behavior<Command> onStartDefault(Command ignore) {
 
-		if (k8sNamespace().isPresent()) {
+		if (ingressScopes != null && ingressScopes.isEmpty()) {
+			getContext().getLog().info(
+				"Skipping ingress creation."
+				+ " Empty ingressScopes — explicit opt-out.");
+			replyTo.tell(Success.INSTANCE);
+		}
+		else if (k8sNamespace().isPresent()) {
 			getContext().pipeToSelf(
 				TenantProvisioningService.createIngress(
 					virtualHost, tenantName, ingressScopes),
@@ -224,7 +230,6 @@ public class IngressProvisioner
 			);
 		}
 		else {
-
 			getContext().getLog().info(
 				"Skipping ingress creation."
 				+ " No kubernetes namespace defined.");
