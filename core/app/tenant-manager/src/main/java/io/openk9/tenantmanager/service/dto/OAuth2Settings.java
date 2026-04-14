@@ -21,22 +21,28 @@ import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-/**
- * External OAuth2 identity provider credentials.
- * <p>
- * When supplied in a {@link CreateTenantRequest}, these values
- * are stored directly on the tenant and Keycloak realm
- * auto-provisioning is skipped.
- *
- * @param issuerUri    the OpenID Connect issuer URI
- * @param clientId     the OAuth2 client identifier
- * @param clientSecret the OAuth2 client secret, or
- *                     {@code null} for public clients
- */
+@Schema(description = "External OAuth2 identity provider "
+	+ "credentials. When provided, Keycloak realm "
+	+ "auto-provisioning is skipped.")
 @RegisterForReflection
 public record OAuth2Settings(
-	@Nonnull String issuerUri,
-	@Nonnull String clientId,
-	@Nullable String clientSecret
+
+	@Nonnull
+	@Schema(description = "OpenID Connect issuer URI.",
+		required = true,
+		example = "https://idp.example.com/realms/myrealm")
+	String issuerUri,
+
+	@Nonnull
+	@Schema(description = "OAuth2 client identifier.",
+		required = true)
+	String clientId,
+
+	@Nullable
+	@Schema(description = "OAuth2 client secret. "
+		+ "Omit for public clients.")
+	String clientSecret
+
 ) {}

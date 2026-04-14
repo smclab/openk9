@@ -25,48 +25,47 @@ import io.openk9.app.manager.grpc.IngressScope;
 import io.openk9.tenantmanager.model.SecurityConfiguration;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
-/**
- * Request payload for creating a new tenant.
- *
- * @param virtualHost           the hostname that identifies
- *                              this tenant (e.g.
- *                              {@code demo.openk9.io}). Used as
- *                              the Ingress host and Keycloak
- *                              realm alias. Required.
- * @param securityConfiguration the gateway-level authorization
- *                              model. Determines which routes
- *                              require OAuth2, API keys, or no
- *                              auth. Required.
- * @param oAuth2Settings        external identity provider
- *                              credentials. When provided,
- *                              Keycloak realm provisioning is
- *                              skipped and these values are
- *                              stored directly. {@code null}
- *                              means auto-provision via
- *                              Keycloak (if available).
- * @param tenantName            the tenant identifier used as
- *                              the database schema name and
- *                              Kubernetes resource prefix.
- *                              Must match
- *                              {@code [a-z][a-z0-9]{0,62}}.
- *                              {@code null} to auto-generate.
- * @param ingressScopes         which route groups to expose on
- *                              the Kubernetes Ingress. Each
- *                              {@link IngressScope} maps to a
- *                              set of paths. {@code null} to
- *                              use the default set (SEARCH,
- *                              ADMINISTRATION, RAG). An empty
- *                              list means no ingress is
- *                              created.
- */
+@Schema(description = "Request payload for creating a new tenant.")
 @RegisterForReflection
 public record CreateTenantRequest(
-	@NotEmpty String virtualHost,
-	@NotNull SecurityConfiguration securityConfiguration,
+
+	@NotEmpty
+	@Schema(description = "Hostname that identifies this tenant "
+		+ "(e.g. demo.openk9.io). Used as Ingress host and "
+		+ "Keycloak realm alias.",
+		required = true,
+		example = "demo.openk9.io")
+	String virtualHost,
+
+	@NotNull
+	@Schema(description = "Gateway-level authorization model. "
+		+ "Determines which routes require OAuth2, API keys, "
+		+ "or no auth.",
+		required = true)
+	SecurityConfiguration securityConfiguration,
+
+	@Schema(description = "External identity provider "
+		+ "credentials. When provided, Keycloak realm "
+		+ "provisioning is skipped and these values are "
+		+ "stored directly. Omit to auto-provision via "
+		+ "Keycloak (if available).")
 	OAuth2Settings oAuth2Settings,
+
+	@Schema(description = "Tenant identifier used as database "
+		+ "schema name and Kubernetes resource prefix. Must "
+		+ "match [a-z][a-z0-9]{0,62}. Omit to auto-generate.",
+		example = "demo")
 	String tenantName,
+
+	@Schema(description = "Route groups to expose on the "
+		+ "Kubernetes Ingress: SEARCH, ADMINISTRATION, RAG, "
+		+ "INGESTION. Omit for the default set (SEARCH, "
+		+ "ADMINISTRATION, RAG). An empty list skips ingress "
+		+ "creation entirely.")
 	List<IngressScope> ingressScopes
+
 ) {
 
 	/**
