@@ -67,6 +67,11 @@ public class RouterConfiguration {
 				case DATASOURCE_OAUTH2_SETTINGS -> routes.route(
 					ApiRoute.DATASOURCE_OAUTH2_SETTINGS.name(), r -> r
 						.path(ApiRoute.DATASOURCE_OAUTH2_SETTINGS.getAntPattern())
+						.uri("forward:/oauth2/settings")
+				);
+				case DATASOURCE_OAUTH2_SETTINGS_JS -> routes.route(
+					ApiRoute.DATASOURCE_OAUTH2_SETTINGS_JS.name(), r -> r
+						.path(ApiRoute.DATASOURCE_OAUTH2_SETTINGS_JS.getAntPattern())
 						.uri("forward:/oauth2/settings.js")
 				);
 				case DATASOURCE_CURRENT_BUCKET -> routes.route(
@@ -96,11 +101,11 @@ public class RouterConfiguration {
 				);
 				case ANY, INGESTION -> routes.route(
 					ApiRoute.ANY.name(), r -> r
-					.path(ApiRoute.ANY.getAntPattern())
-					.filters(filter -> filter
-						.setStatus(200)
-						.setResponseHeader("X-Route", "No-Match"))
-					.uri("noop://noop")
+						.path(ApiRoute.ANY.getAntPattern())
+						.filters(filter -> filter
+							.setStatus(200)
+							.setResponseHeader("X-Route", "No-Match"))
+						.uri("noop://noop")
 				);
 				// no default case to prevent accidental omissions at compile-time.
 			};
@@ -108,6 +113,5 @@ public class RouterConfiguration {
 
 		return routes.build();
 	}
-
 
 }

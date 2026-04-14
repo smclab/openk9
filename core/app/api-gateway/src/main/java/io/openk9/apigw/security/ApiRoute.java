@@ -54,10 +54,20 @@ import org.springframework.util.PathMatcher;
 public enum ApiRoute {
 
 	/**
-	 * Route for the datasource service, that doesn't need to be protected.
-	 * Matches requests under {@code /api/datasource/oauth2/settings.js}
+	 * Route for the OAuth2/OIDC settings JSON endpoint.
+	 * Matches requests under {@code /api/datasource/oauth2/settings}.
+	 * Does not require authentication.
 	 */
-	DATASOURCE_OAUTH2_SETTINGS("/api/datasource/oauth2/settings.js"),
+	DATASOURCE_OAUTH2_SETTINGS("/api/datasource/oauth2/settings"),
+
+	/**
+	 * Route for the legacy OAuth2 settings JavaScript endpoint.
+	 * Matches requests under {@code /api/datasource/oauth2/settings.js}.
+	 * Does not require authentication.
+	 *
+	 * @deprecated use {@link #DATASOURCE_OAUTH2_SETTINGS} instead
+	 */
+	DATASOURCE_OAUTH2_SETTINGS_JS("/api/datasource/oauth2/settings.js"),
 
 	/**
 	 * Route for the current bucket configuration.
@@ -161,7 +171,8 @@ public enum ApiRoute {
 				DATASOURCE_TEMPLATES);
 			case INGESTION -> List.of(INGESTION);
 			case PUBLIC -> List.of(
-				DATASOURCE_OAUTH2_SETTINGS);
+				DATASOURCE_OAUTH2_SETTINGS,
+				DATASOURCE_OAUTH2_SETTINGS_JS);
 		};
 	}
 

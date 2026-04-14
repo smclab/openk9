@@ -35,12 +35,13 @@ public final class RouteAuthorizationMap {
 		for (ApiRoute r : ApiRoute.values()) {
 			var enforcer = switch (r) {
 				case ANY,
-					 DATASOURCE_OAUTH2_SETTINGS,
-					 DATASOURCE_CURRENT_BUCKET,
-					 DATASOURCE_TEMPLATES,
-					 INGESTION,
-					 SEARCHER,
-					 RAG -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
+				     DATASOURCE_OAUTH2_SETTINGS,
+				     DATASOURCE_OAUTH2_SETTINGS_JS,
+				     DATASOURCE_CURRENT_BUCKET,
+				     DATASOURCE_TEMPLATES,
+				     INGESTION,
+				     SEARCHER,
+				     RAG -> FALLBACKS.put(r, AuthorizationSchemeToken.NO_AUTH);
 				case DATASOURCE -> FALLBACKS.put(r, AuthorizationSchemeToken.OAUTH2);
 				// no default case to prevent accidental omissions at compile-time.
 			};

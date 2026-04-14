@@ -38,61 +38,81 @@ public class Oauth2SettingsResource {
 	@Autowired
 	TenantSecurityService tenantSecurityService;
 
-    @GetMapping("/settings")
+	/**
+	 * Returns the OAuth2/OIDC settings for the current tenant
+	 * as a JSON object with generic OIDC fields.
+	 *
+	 * @param exchange the current server exchange
+	 * @return the tenant OAuth2 settings, or empty if not configured
+	 */
+	@GetMapping(value = "/settings", produces = "application/json")
 	public Mono<OAuth2Settings> settings(ServerWebExchange exchange) {
 
 		return tenantSecurityService.getOAuth2Settings(exchange);
 	}
 
-    @GetMapping(value = "/settings.js", produces = "text/javascript")
-    public Mono<String> settingsJs(ServerHttpRequest request) {
+	/**
+	 * Returns the OAuth2 settings as JavaScript variables for
+	 * legacy Keycloak and new OIDC consumption.
+	 *
+	 * @param request the current HTTP request
+	 * @return a JavaScript snippet setting {@code window.*} variables
+	 * @deprecated use {@link #settings(ServerWebExchange)} instead
+	 */
+	@Deprecated
+	@GetMapping(value = "/settings.js", produces = "text/javascript")
+	public Mono<String> settingsJs(ServerHttpRequest request) {
 		URI requestURI = request.getURI();
 		String requestHost = requestURI.getHost();
 
 		return tenantSecurityService.getTenantId(requestHost)
 			.flatMap(tenantId -> tenantSecurityService
 				.getTenantAggregate(tenantId)
-				.map(Oauth2SettingsResource::encodeOldSettingsJs)
-			);
+				.map(Oauth2SettingsResource::encodeJs));
 	}
 
-	private static String encodeOldSettingsJs(Tenant tenant) {
+	private static String encodeJs(Tenant tenant) {
 
-		if (tenant.oauth2Settings() == null || tenant.oauth2Settings().issuerUri() == null || tenant.oauth2Settings().issuerUri().isBlank()) {
+		if (tenant.oauth2Settings() == null 
+		|| tenant.oauth2Settings().issuerUri() == null 
+		|| tenant.oauth2Settings().issuerUri().isBlank()) {
+
+			// Returns an empty set of variables
 			return """
 				window.KEYCLOAK_URL ='';
 				window.KEYCLOAK_REALM ='';
 				window.KEYCLOAK_CLIENT_ID ='';
-			""";
+				window.ISSUER_URI ='';
+				window.CLIENT_ID ='';
+				window.CLIENT_SECRET ='';
+				""";
 		}
 
+		String tenantId = tenant.tenantId();
 		String issuerUri = tenant.oauth2Settings().issuerUri();
+
+		// Get keycloakUrl from issuerUri 
 		int slashIndex = issuerUri.indexOf('/', 8);
-		var keycloakUrl = slashIndex != -1 ? issuerUri.substring(0, slashIndex) : issuerUri;
+		String keycloakUrl = slashIndex != -1 
+			? issuerUri.substring(0, slashIndex) 
+			: issuerUri;
 
-		return String.format(
-			"""
-				window.KEYCLOAK_URL ='%s';
-				window.KEYCLOAK_REALM ='%s';
-				window.KEYCLOAK_CLIENT_ID ='%s';
+		String clientId = tenant.oauth2Settings().clientId();
+		String clientSecret = tenant.oauth2Settings().clientSecret();
+
+		// Returns legacy and new js variables
+		return String.format("""
+			// legacy keycloak variables
+			window.KEYCLOAK_URL ='%s';
+			window.KEYCLOAK_REALM ='%s';
+			window.KEYCLOAK_CLIENT_ID ='%s';
+			// new oidc variables
+			window.ISSUER_URI ='%s';
+			window.CLIENT_ID ='%s';
+			window.CLIENT_SECRET ='%s';
 			""",
-			keycloakUrl,
-			tenant.tenantId(),
-			tenant.oauth2Settings().clientId()
-		);
-	}
-
-	private static String encodeNewSettingsJs(OAuth2Settings oauth2Settings) {
-
-		return String.format(
-			"""
-				window.ISSUER_URI ='%s';
-				window.CLIENT_ID ='%s';
-			""",
-			oauth2Settings.issuerUri(),
-			oauth2Settings.clientId()
-		);
-
+			keycloakUrl, tenantId, clientId,
+		 	issuerUri, clientId, clientSecret);
 	}
 
 }
