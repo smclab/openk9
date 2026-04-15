@@ -4,7 +4,7 @@ module.exports = function (app) {
   app.use(
     "/api/tenant-manager",
     createProxyMiddleware({
-      target: "https://tenant-manager-frontend.openk9.io",
+      target: "https://tenant-manager-stable-2.openk9.io",
       changeOrigin: true,
     })
   );
