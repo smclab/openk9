@@ -145,7 +145,7 @@ export function TenantCreate() {
               control={<Switch checked={ability} onChange={() => setAbility(!ability)} color="primary" />}
               label={<Typography sx={{ fontWeight: 500 }}>Configure all fields</Typography>}
             />
-            <TextInput label="Tenant Name" {...form.inputProps("realmName")} disabled={!ability} />
+            <TextInput label="Realm Name" {...form.inputProps("realmName")} disabled={!ability} />
             <TextInput label="Schema Name" {...form.inputProps("schemaName")} disabled={!ability} />
             <TextInput label="Liquid Base Schema Name" {...form.inputProps("liquibaseSchemaName")} disabled={!ability} />
             <TextInput label="Client Id" {...form.inputProps("clientId")} disabled={!ability} />
