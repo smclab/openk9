@@ -145,53 +145,54 @@ export function TenantCreate() {
               control={<Switch checked={ability} onChange={() => setAbility(!ability)} color="primary" />}
               label={<Typography sx={{ fontWeight: 500 }}>Configure all fields</Typography>}
             />
-            <TextInput label="Real Name" {...form.inputProps("realmName")} disabled={!ability} />
+            <TextInput label="Tenant Name" {...form.inputProps("realmName")} disabled={!ability} />
             <TextInput label="Schema Name" {...form.inputProps("schemaName")} disabled={!ability} />
             <TextInput label="Liquid Base Schema Name" {...form.inputProps("liquibaseSchemaName")} disabled={!ability} />
             <TextInput label="Client Id" {...form.inputProps("clientId")} disabled={!ability} />
-          </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-end",
-            }}
-          >
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              disabled={!form.canSubmit}
+            <Box
               sx={{
-                px: 4,
-                py: 1.5,
-                borderRadius: 1,
-                textTransform: "none",
-                fontWeight: 600,
+                display: "flex",
+                justifyContent: "flex-end",
+                gridColumn: "1 / -1",
               }}
-              onClick={
-                !ability
-                  ? async () => {
-                      setLoading(true);
-                      try {
-                        const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
-                          virtualHost: form.inputProps("virtualHost").value,
-                        });
-                        if (stato) {
-                          showToast({ displayType: "success", title: "Tenant created", content: "" });
-                          setLoading(false);
-                          navigate(`/tenants/`, { replace: true });
-                        }
-                      } catch (error) {
-                        setLoading(false);
-                        showToast({ displayType: "error", title: "Tenant not created", content: "" });
-                      }
-                    }
-                  : undefined
-              }
             >
-              {tenantId === "new" ? "Create" : "Update"}
-            </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={!form.canSubmit}
+                sx={{
+                  px: 4,
+                  py: 1.5,
+                  borderRadius: 1,
+                  textTransform: "none",
+                  fontWeight: 600,
+                }}
+                onClick={
+                  !ability
+                    ? async () => {
+                        setLoading(true);
+                        try {
+                          const stato = await restClient.tenantManagerResource.postApiTenantManagerTenantManagerTenant({
+                            virtualHost: form.inputProps("virtualHost").value,
+                          });
+                          if (stato) {
+                            showToast({ displayType: "success", title: "Tenant created", content: "" });
+                            setLoading(false);
+                            navigate(`/tenants/`, { replace: true });
+                          }
+                        } catch (error) {
+                          setLoading(false);
+                          showToast({ displayType: "error", title: "Tenant not created", content: "" });
+                        }
+                      }
+                    : undefined
+                }
+              >
+                {tenantId === "new" ? "Create" : "Update"}
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Container>

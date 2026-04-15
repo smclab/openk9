@@ -221,17 +221,20 @@ export type TenantDtoInput = {
   virtualHost: Scalars['String'];
 };
 
-export type ProcessesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type ProcessesQuery = { __typename?: 'Query', backgroundProcesses?: { __typename?: 'DefaultConnection_BackgroundProcess', edges?: Array<{ __typename?: 'DefaultEdge_BackgroundProcess', node?: { __typename?: 'BackgroundProcess', id?: any | null, name?: string | null, createDate?: any | null, status?: Status | null, modifiedDate?: any | null, processId?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
-
 export type TenantQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
 export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, realmName?: string | null, schemaName?: string | null, modifiedDate?: any | null, virtualHost?: string | null, clientSecret?: string | null, createDate?: any | null } | null };
+
+export type TenantsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null, createDate?: any | null, modifiedDate?: any | null } | null } | null> | null } | null };
 
 export type CreateOrUpdateTenantMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -245,62 +248,7 @@ export type CreateOrUpdateTenantMutationVariables = Exact<{
 
 export type CreateOrUpdateTenantMutation = { __typename?: 'Mutation', tenant?: { __typename?: 'Response_Tenant', fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
-export type TenantsQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  cursor?: InputMaybe<Scalars['String']>;
-}>;
 
-
-export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null, createDate?: any | null, modifiedDate?: any | null } | null } | null> | null } | null };
-
-
-export const ProcessesDocument = gql`
-    query Processes {
-  backgroundProcesses {
-    edges {
-      node {
-        id
-        name
-        createDate
-        status
-        modifiedDate
-        processId
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
-  }
-}
-    `;
-
-/**
- * __useProcessesQuery__
- *
- * To run a query within a React component, call `useProcessesQuery` and pass it any options that fit your needs.
- * When your component renders, `useProcessesQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useProcessesQuery({
- *   variables: {
- *   },
- * });
- */
-export function useProcessesQuery(baseOptions?: Apollo.QueryHookOptions<ProcessesQuery, ProcessesQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProcessesQuery, ProcessesQueryVariables>(ProcessesDocument, options);
-      }
-export function useProcessesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProcessesQuery, ProcessesQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProcessesQuery, ProcessesQueryVariables>(ProcessesDocument, options);
-        }
-export type ProcessesQueryHookResult = ReturnType<typeof useProcessesQuery>;
-export type ProcessesLazyQueryHookResult = ReturnType<typeof useProcessesLazyQuery>;
-export type ProcessesQueryResult = Apollo.QueryResult<ProcessesQuery, ProcessesQueryVariables>;
 export const TenantDocument = gql`
     query Tenant($id: ID!) {
   tenant(id: $id) {
@@ -342,6 +290,49 @@ export function useTenantLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ten
 export type TenantQueryHookResult = ReturnType<typeof useTenantQuery>;
 export type TenantLazyQueryHookResult = ReturnType<typeof useTenantLazyQuery>;
 export type TenantQueryResult = Apollo.QueryResult<TenantQuery, TenantQueryVariables>;
+export const TenantsDocument = gql`
+    query Tenants($searchText: String, $cursor: String) {
+  tenants(searchText: $searchText, first: 25, after: $cursor) {
+    edges {
+      node {
+        id
+        virtualHost
+        createDate
+        modifiedDate
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useTenantsQuery__
+ *
+ * To run a query within a React component, call `useTenantsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTenantsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTenantsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useTenantsQuery(baseOptions?: Apollo.QueryHookOptions<TenantsQuery, TenantsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
+      }
+export function useTenantsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TenantsQuery, TenantsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
+        }
+export type TenantsQueryHookResult = ReturnType<typeof useTenantsQuery>;
+export type TenantsLazyQueryHookResult = ReturnType<typeof useTenantsLazyQuery>;
+export type TenantsQueryResult = Apollo.QueryResult<TenantsQuery, TenantsQueryVariables>;
 export const CreateOrUpdateTenantDocument = gql`
     mutation CreateOrUpdateTenant($id: ID, $virtualHost: String!, $schemaName: String!, $liquibaseSchemaName: String!, $clientId: String!, $realmName: String!) {
   tenant(
@@ -386,47 +377,4 @@ export function useCreateOrUpdateTenantMutation(baseOptions?: Apollo.MutationHoo
 export type CreateOrUpdateTenantMutationHookResult = ReturnType<typeof useCreateOrUpdateTenantMutation>;
 export type CreateOrUpdateTenantMutationResult = Apollo.MutationResult<CreateOrUpdateTenantMutation>;
 export type CreateOrUpdateTenantMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>;
-export const TenantsDocument = gql`
-    query Tenants($searchText: String, $cursor: String) {
-  tenants(searchText: $searchText, first: 25, after: $cursor) {
-    edges {
-      node {
-        id
-        virtualHost
-        createDate
-        modifiedDate
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useTenantsQuery__
- *
- * To run a query within a React component, call `useTenantsQuery` and pass it any options that fit your needs.
- * When your component renders, `useTenantsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useTenantsQuery({
- *   variables: {
- *      searchText: // value for 'searchText'
- *      cursor: // value for 'cursor'
- *   },
- * });
- */
-export function useTenantsQuery(baseOptions?: Apollo.QueryHookOptions<TenantsQuery, TenantsQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
-      }
-export function useTenantsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TenantsQuery, TenantsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<TenantsQuery, TenantsQueryVariables>(TenantsDocument, options);
-        }
-export type TenantsQueryHookResult = ReturnType<typeof useTenantsQuery>;
-export type TenantsLazyQueryHookResult = ReturnType<typeof useTenantsLazyQuery>;
-export type TenantsQueryResult = Apollo.QueryResult<TenantsQuery, TenantsQueryVariables>;
-// Generated on 2023-01-18T15:33:18+01:00
+// Generated on 2026-04-15T10:35:39+02:00
