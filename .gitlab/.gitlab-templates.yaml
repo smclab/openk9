@@ -148,7 +148,7 @@ variables:
         -Dquarkus.container-image.push=true"
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
-      SNAP_TAG="${VERSION}-SNAPSHOT"
+      SNAP_TAG="${VERSION}"
       echo "Release branch: push $SNAP_TAG"
       eval "$BASE_CMD \
         -Dquarkus.container-image.build=true \
@@ -297,7 +297,7 @@ variables:
         -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
 
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
-      SNAP_TAG="${VERSION}-SNAPSHOT"
+      SNAP_TAG="${VERSION}"
       echo "Release branch: push $SNAP_TAG"
       eval "$BASE_INSTALL"
       mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \

@@ -187,7 +187,7 @@ Build Rag Release:
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$VERSION"
     else
-      SNAP_TAG="${VERSION}-SNAPSHOT"
+      SNAP_TAG="${VERSION}"
       echo "[RAG Release] Branch: push $SNAP_TAG"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-rag-module:$SNAP_TAG"

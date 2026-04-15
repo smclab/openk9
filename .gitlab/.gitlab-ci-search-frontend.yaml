@@ -204,7 +204,7 @@ Build Search Frontend Release:
       echo "=== Release tag: push $VERSION ==="
     elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
       source $CI_PROJECT_DIR/version.env
-      SNAP_TAG="${VERSION}-SNAPSHOT"
+      SNAP_TAG="${VERSION}"
       KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$SNAP_TAG"
       echo "=== Release branch: push $SNAP_TAG ==="
     else
