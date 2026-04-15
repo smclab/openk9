@@ -23,7 +23,9 @@ COPY ./js-packages/search-frontend/nginx.conf.default /etc/nginx/nginx.conf.defa
 
 RUN mkdir -p /usr/share/nginx/html/
 COPY --from=react-build /app/js-packages/search-frontend/dist /usr/share/nginx/html/
-RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
+RUN sed -i 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
+    && sed -i 's/^user .*;//' /etc/nginx/nginx.conf \
+    && rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && rm -f /etc/nginx/conf.d/default.conf \
     && mkdir -p /var/run \
     && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
