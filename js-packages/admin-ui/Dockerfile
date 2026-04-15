@@ -5,7 +5,7 @@ RUN mkdir -p /app/js-packages/admin-ui
 COPY ./js-packages/admin-ui /app/js-packages/admin-ui
 WORKDIR /app/js-packages/admin-ui
 RUN yarn install
-RUN NODE_ENV=production yarn build
+RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
 FROM nginx:stable-alpine3.23-slim

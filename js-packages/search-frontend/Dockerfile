@@ -12,7 +12,7 @@ RUN yarn install --frozen-lockfile
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend
-RUN NODE_ENV=production yarn build
+RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
 FROM nginx:stable-alpine3.23-slim
