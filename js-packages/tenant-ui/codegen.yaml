@@ -1,7 +1,7 @@
 schema:
-  - https://tenant-manager.openk9.io/api/tenant-manager/graphql:
+  - https://tenant-manager-stable-2.openk9.io/api/tenant-manager/graphql:
       headers:
-        Authorization: "Bearer "
+        Authorization: ""
 
 documents: "./src/**/*.tsx"
 generates:
