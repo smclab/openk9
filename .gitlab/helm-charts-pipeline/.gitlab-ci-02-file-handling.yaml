@@ -7,6 +7,10 @@ push-file-manager-helm:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      when: manual
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+      when: manual
   before_script:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -21,6 +25,10 @@ push-tika-helm:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      when: manual
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+      when: manual
   before_script:
   - apk update
   - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -34,6 +42,10 @@ push-resources-validator-helm:
   image: alpine:3.19
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      when: manual
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
       when: manual
   before_script:
   - apk update
