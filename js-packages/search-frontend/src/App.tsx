@@ -60,6 +60,7 @@ export const openk9 = new OpenK9({
   queryStringMap: { filters: "filtri" },
   useQueryAnalysis: false,
   showSyntax: false,
+  autocompleteEnabled: true,
 });
 
 export function App() {

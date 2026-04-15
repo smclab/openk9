@@ -453,6 +453,7 @@ type allFiltersConfigurableProps = {
 
 export type Configuration = {
   // simple types
+  autocompleteEnabled: boolean;
   autoselectTab?: boolean | null | undefined;
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
@@ -561,6 +562,7 @@ export type Configuration = {
 };
 
 const defaultConfiguration: Configuration = {
+  autocompleteEnabled: false,
   activeFilters: null,
   activeFiltersConfigurable: null,
   allFilters: null,

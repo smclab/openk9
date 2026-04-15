@@ -2,7 +2,7 @@ import { useQuery } from "react-query";
 import { useOpenK9Client } from "../components/client";
 import { useDebounce } from "../components/useDebounce";
 
-export function useAutocomplete(textOnChange: string) {
+export function useAutocomplete(textOnChange: string, autocompleteEnabled: boolean = true) {
   const client = useOpenK9Client();
   const debounced = useDebounce(textOnChange, 250);
 
@@ -16,7 +16,7 @@ export function useAutocomplete(textOnChange: string) {
       return es;
     },
     {
-      enabled: debounced.trim().length >= 1,
+      enabled: autocompleteEnabled && debounced.trim().length >= 1,
       keepPreviousData: true,
     },
   );

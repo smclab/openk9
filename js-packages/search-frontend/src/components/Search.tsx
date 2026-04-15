@@ -73,7 +73,7 @@ export function Search({
   const [highlightIndex, setHighlightIndex] = React.useState(-1);
   const [acceptSuggestion, setAcceptSuggestion] = React.useState(true);
 
-  const autocompleteQ = useAutocomplete(selectionsState.textOnChange);
+  const autocompleteQ = useAutocomplete(selectionsState.textOnChange, configuration.autocompleteEnabled);
   const suggestions = autocompleteQ.data ?? [];
 
   React.useEffect(() => {
