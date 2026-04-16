@@ -69,6 +69,15 @@ public class SearchConfig extends K9Entity {
 	@JsonIgnore
 	private Set<QueryParserConfig> queryParserConfigs = new LinkedHashSet<>();
 
+	/**
+	 * Adds a {@link QueryParserConfig} to the given collection and
+	 * binds it to this {@link SearchConfig}.
+	 *
+	 * @param queryParserConfigs the target collection
+	 * @param queryParserConfig the config to add
+	 * @return {@code true} if the config was added, {@code false}
+	 *         if it was already present
+	 */
 	public boolean addQueryParserConfig(
 		Collection<QueryParserConfig> queryParserConfigs, QueryParserConfig queryParserConfig) {
 		if (queryParserConfigs.add(queryParserConfig)) {
@@ -78,6 +87,15 @@ public class SearchConfig extends K9Entity {
 		return false;
 	}
 
+	/**
+	 * Removes the given {@link QueryParserConfig} from the given
+	 * collection and dissociates it from this {@link SearchConfig}.
+	 *
+	 * @param queryParserConfigs the target collection
+	 * @param queryParserConfig the config to remove
+	 * @return {@code true} if the config was removed, {@code false}
+	 *         if it was not present
+	 */
 	public boolean removeQueryParserConfig(
 		Collection<QueryParserConfig> queryParserConfigs, QueryParserConfig queryParserConfig) {
 
@@ -90,6 +108,16 @@ public class SearchConfig extends K9Entity {
 
 	}
 
+	/**
+	 * Removes the {@link QueryParserConfig} with the given ID from
+	 * the given collection and dissociates it from this
+	 * {@link SearchConfig}.
+	 *
+	 * @param queryParserConfigs the target collection
+	 * @param queryParserConfigId the ID of the config to remove
+	 * @return {@code true} if a config with the given ID was found
+	 *         and removed, {@code false} otherwise
+	 */
 	public boolean removeQueryParserConfig(Collection<QueryParserConfig> queryParserConfigs, long queryParserConfigId) {
 
 		Iterator<QueryParserConfig> iterator = queryParserConfigs.iterator();
@@ -105,6 +133,14 @@ public class SearchConfig extends K9Entity {
 		return false;
 	}
 
+	/**
+	 * Clears the given collection of {@link QueryParserConfig}s.
+	 * When the collection is the one managed by Hibernate on this
+	 * {@link SearchConfig}, {@code orphanRemoval} will delete the
+	 * removed rows at flush time.
+	 *
+	 * @param queryParserConfigs the collection to clear
+	 */
 	public void removeAllQueryParserConfig(
 		Collection<QueryParserConfig> queryParserConfigs) {
 		queryParserConfigs.clear();
