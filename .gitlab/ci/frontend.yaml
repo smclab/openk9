@@ -54,7 +54,7 @@ Trigger Search Frontend:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *search_frontend_changes
     # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *search_frontend_changes
       variables:
         RELEASE_MR: "true"
@@ -90,7 +90,7 @@ Trigger Admin Frontend:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *admin_ui_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *admin_ui_changes
       variables:
         RELEASE_MR: "true"
@@ -126,7 +126,7 @@ Trigger Tenant Frontend:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *tenant_ui_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *tenant_ui_changes
       variables:
         RELEASE_MR: "true"
@@ -162,7 +162,7 @@ Trigger Talk-To Frontend:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *talk_to_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *talk_to_changes
       variables:
         RELEASE_MR: "true"

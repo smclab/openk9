@@ -56,7 +56,7 @@ Trigger Datasource:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *datasource_changes
     # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *datasource_changes
       variables:
         RELEASE_MR: "true"
@@ -90,7 +90,7 @@ Trigger Searcher:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *searcher_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *searcher_changes
       variables:
         RELEASE_MR: "true"
@@ -121,7 +121,7 @@ Trigger Ingestion:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *ingestion_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *ingestion_changes
       variables:
         RELEASE_MR: "true"
@@ -159,7 +159,7 @@ Trigger K8S-Client:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *k8s_client_changes
     # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *k8s_client_changes
       variables:
         RELEASE_MR: "true"
@@ -190,7 +190,7 @@ Trigger File-Manager:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *file_manager_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *file_manager_changes
       variables:
         RELEASE_MR: "true"
@@ -227,7 +227,7 @@ Trigger Tenant-Manager:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *tenant_manager_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tenant_manager_changes
       variables:
         RELEASE_MR: "true"
@@ -258,7 +258,7 @@ Trigger Tika:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *tika_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tika_changes
       variables:
         RELEASE_MR: "true"
@@ -288,7 +288,7 @@ Trigger Resources-Validator:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *resources_validator_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *resources_validator_changes
       variables:
         RELEASE_MR: "true"
