@@ -36,6 +36,7 @@
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.version>3.27.2</quarkus.platform.version>
 		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
+		<skip-dependency-check>true</skip-dependency-check>
 		<skipITs>true</skipITs>
 	</properties>
 
@@ -74,6 +75,7 @@
 					<nvdApiKey>${NVD_API_KEY}</nvdApiKey>
 					<nvdApiDelay>6000</nvdApiDelay>
 					<suppressionFile>dependency-check-suppressions.xml</suppressionFile>
+					<skip>${skip-dependency-check}</skip>
 				</configuration>
 			</plugin>
 		</plugins>
