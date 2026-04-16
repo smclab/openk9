@@ -315,6 +315,15 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		return super.patch(id, dto);
 	}
 
+	/**
+	 * Removes all {@link QueryParserConfig}s associated with the
+	 * given {@link SearchConfig}. Relies on {@code orphanRemoval}
+	 * to delete the rows from the database at flush time.
+	 *
+	 * @param s the current Hibernate reactive session
+	 * @param id the ID of the {@link SearchConfig}
+	 * @return a {@link Uni} emitting the updated {@link SearchConfig}
+	 */
 	public Uni<SearchConfig> removeAllQueryParserConfig(Mutiny.Session s, long id) {
 		return findById(s, id)
 			.onItem()
@@ -329,10 +338,28 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 			);
 	}
 
+	/**
+	 * Removes all {@link QueryParserConfig}s associated with the
+	 * given {@link SearchConfig} within a new transaction.
+	 *
+	 * @param id the ID of the {@link SearchConfig}
+	 * @return a {@link Uni} emitting the updated {@link SearchConfig}
+	 */
 	public Uni<SearchConfig> removeAllQueryParserConfig(long id) {
-		return sessionFactory.withTransaction(s -> removeAllQueryParserConfig(s, id));
+		return sessionFactory.withTransaction(
+			s -> removeAllQueryParserConfig(s, id));
 	}
 
+	/**
+	 * Removes a single {@link QueryParserConfig} from the given
+	 * {@link SearchConfig}. The removed config becomes an orphan
+	 * and is deleted by {@code orphanRemoval} at flush time.
+	 *
+	 * @param id the ID of the {@link SearchConfig}
+	 * @param queryParserConfigId the ID of the config to remove
+	 * @return a {@link Uni} emitting the updated SearchConfig
+	 *         and the removed config ID, or null if not found
+	 */
 	public Uni<Tuple2<SearchConfig, Long>> removeQueryParserConfig(long id, long queryParserConfigId) {
 		return sessionFactory.withTransaction(s -> findById(s, id)
 			.onItem()
