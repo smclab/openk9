@@ -105,11 +105,8 @@ public class SearchConfig extends K9Entity {
 		return false;
 	}
 
-	public void removeAllQueryParserConfig(Collection<QueryParserConfig> queryParserConfigs) {
-
-		queryParserConfigs.stream()
-			.forEach(queryParserConfig -> queryParserConfig.setSearchConfig(null));
-
+	public void removeAllQueryParserConfig(
+		Collection<QueryParserConfig> queryParserConfigs) {
 		queryParserConfigs.clear();
 	}
 

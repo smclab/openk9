@@ -276,19 +276,23 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 					List<Uni<Void>> unis = new ArrayList<>();
 					unis.add(Uni.createFrom().voidItem());
 
-					List<QueryParserConfigDTO> queryParsers = withQueryParsersDTO.getQueryParsers();
+					List<QueryParserConfigDTO> queryParsers =
+						withQueryParsersDTO.getQueryParsers();
+
 					if (queryParsers != null) {
-						unis.add(removeAllQueryParserConfig(s, id).replaceWithVoid());
+						searchConfig.getQueryParserConfigs().clear();
 
 						// iterates all DTO's queryParser information
-						unis.addAll(withQueryParsersDTO.getQueryParsers().stream()
+						unis.addAll(queryParsers.stream()
 							.map(queryParserConfigDTO ->
 								// creates a queryParser based on the DTO's information
-								queryParserConfigService.create(s, queryParserConfigDTO)
+								queryParserConfigService.create(
+										s, queryParserConfigDTO)
 									// binds the queryParser to the searchConfig
 									.invoke(queryParserConfig ->
 										searchConfig.addQueryParserConfig(
-											newStateSearchConfig.getQueryParserConfigs(),
+											newStateSearchConfig
+												.getQueryParserConfigs(),
 											queryParserConfig
 										)
 									)
@@ -303,7 +307,8 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 						.discardItems()
 						.onFailure()
 						.invoke(log::error)
-						.flatMap(ignored -> s.merge(newStateSearchConfig));
+						.flatMap(ignored ->
+							s.merge(newStateSearchConfig));
 				})
 			);
 		}
@@ -314,13 +319,13 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 		return findById(s, id)
 			.onItem()
 			.ifNotNull()
-			.transformToUni(searchConfig ->
-				s.fetch(searchConfig.getQueryParserConfigs())
-					.flatMap(queryParserConfigs -> {
-					searchConfig.removeAllQueryParserConfig(queryParserConfigs);
-					return persist(s, searchConfig)
-						.map(dt -> dt);
-					})
+			.transformToUni(searchConfig -> s
+				.fetch(searchConfig.getQueryParserConfigs())
+				.flatMap(queryParserConfigs -> {
+					searchConfig.removeAllQueryParserConfig(
+						queryParserConfigs);
+					return merge(s, searchConfig);
+				})
 			);
 	}
 
@@ -370,12 +375,14 @@ public class SearchConfigService extends BaseK9EntityService<SearchConfig, Searc
 					unis.add(Uni.createFrom().voidItem());
 
 					List<QueryParserConfigDTO> queryParsers = withQueryParsersDTO.getQueryParsers();
-					unis.add(removeAllQueryParserConfig(s, id).replaceWithVoid());
+
+					// removes old queryParserConfigs
+					searchConfig.getQueryParserConfigs().clear();
 
 					if (queryParsers != null) {
 
 						// iterates all DTO's queryParser information
-						unis.addAll(withQueryParsersDTO.getQueryParsers().stream()
+						unis.addAll(queryParsers.stream()
 							.map(queryParserConfigDTO ->
 								// creates a queryParser based on the DTO's information
 								queryParserConfigService.create(s, queryParserConfigDTO)

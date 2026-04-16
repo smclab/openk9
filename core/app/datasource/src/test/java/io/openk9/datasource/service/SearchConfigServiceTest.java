@@ -50,29 +50,28 @@ public class SearchConfigServiceTest {
 	private static final String SEARCH_CONFIG_ONE_NAME = ENTITY_NAME_PREFIX + "Search config 1";
 	private static final String SEARCH_CONFIG_TWO_NAME = ENTITY_NAME_PREFIX + "Search config 2";
 	private static final String SEARCH_CONFIG_THREE_NAME = ENTITY_NAME_PREFIX + "Search config 3";
-	private static final String TYPE_ENTITY = "ENTITY";
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_ONE =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_ONE_NAME)
-			.type(TYPE_ENTITY)
+			.type("TEXT")
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_TWO =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_TWO_NAME)
-			.type(TYPE_ENTITY)
+			.type("KNN")
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_THREE =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_THREE_NAME)
-			.type(TYPE_ENTITY)
+			.type("ENTITY")
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_FOUR =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_FOUR_NAME)
-			.type(TYPE_ENTITY)
+			.type("FILTER")
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final List<QueryParserConfigDTO> PARSER_CONFIG_DTO_LIST =
@@ -630,6 +629,79 @@ public class SearchConfigServiceTest {
 		assertEquals(minScoreUpdated, searchConfigUpdated.getMinScore());
 		assertTrue(searchConfigUpdated.isMinScoreSuggestions());
 		assertTrue(searchConfigUpdated.isMinScoreSearch());
+	}
+
+	@Test
+	void should_not_create_orphans_on_repeated_updates() {
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_THREE_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		long searchConfigId = searchConfig.getId();
+
+		// update 3 times consecutively
+		for (int i = 0; i < 3; i++) {
+			SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+				.name(searchConfig.getName())
+				.minScore(0F)
+				.minScoreSuggestions(false)
+				.minScoreSearch(false)
+				.queryParsers(PARSER_CONFIG_DTO_LIST)
+				.build();
+
+			searchConfigService.update(searchConfigId, dto)
+				.await()
+				.indefinitely();
+		}
+
+		// verify no orphans
+		assertEquals(0L, EntitiesUtils.countOrphanQueryParserConfigs(sessionFactory));
+
+		// verify correct count of associated parsers
+		assertEquals(
+			PARSER_CONFIG_DTO_LIST.size(),
+			EntitiesUtils.countQueryParserConfigsForSearchConfig(searchConfigId, sessionFactory)
+		);
+	}
+
+	@Test
+	void should_not_create_orphans_on_update_with_empty_parsers() {
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_THREE_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(PARSER_CONFIG_DTO_LIST.size(), searchConfig.getQueryParserConfigs().size());
+
+		// update with empty parsers list
+		SearchConfigWithQueryParsersDTO dto = SearchConfigWithQueryParsersDTO.builder()
+			.name(searchConfig.getName())
+			.minScore(0F)
+			.minScoreSuggestions(false)
+			.minScoreSearch(false)
+			.queryParsers(new ArrayList<>())
+			.build();
+
+		searchConfigService.update(searchConfig.getId(), dto)
+			.await()
+			.indefinitely();
+
+		SearchConfig updated =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_THREE_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(0, updated.getQueryParserConfigs().size());
+
+		// verify no orphans
+		assertEquals(0L, EntitiesUtils.countOrphanQueryParserConfigs(sessionFactory));
 	}
 
 	@AfterEach

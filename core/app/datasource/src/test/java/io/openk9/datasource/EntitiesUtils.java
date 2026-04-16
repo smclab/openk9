@@ -43,10 +43,8 @@ import io.openk9.datasource.service.DatasourceService;
 import io.openk9.datasource.service.DocTypeFieldService;
 import io.openk9.datasource.service.RAGConfigurationService;
 import io.openk9.datasource.service.SearchConfigService;
-import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -415,15 +413,52 @@ public class EntitiesUtils {
 			Mutiny.SessionFactory sessionFactory) {
 
 		sessionFactory.withTransaction(
-				session -> {
-					List<Uni<SearchConfig>> unis = new ArrayList<>();
-					unis.add(searchConfigService.removeAllQueryParserConfig(session, id));
-					unis.add(searchConfigService.deleteById(session, id));
+				session -> searchConfigService.deleteById(session, id)
+					.replaceWithVoid())
+			.await()
+			.indefinitely();
+	}
 
-					return Uni.combine().all().unis(unis)
-						.usingConcurrencyOf(1)
-						.with(ignored -> Uni.createFrom().voidItem());
-				})
+	/**
+	 * Counts orphaned {@link QueryParserConfig} rows in the database
+	 * that have no associated {@link SearchConfig}.
+	 *
+	 * @param sessionFactory the session factory to use
+	 * @return the number of orphaned rows
+	 */
+	public static long countOrphanQueryParserConfigs(
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> session.createNativeQuery(
+					"SELECT COUNT(*) FROM query_parser_config "
+					+ "WHERE search_config IS NULL",
+					Long.class
+				).getSingleResult())
+			.await()
+			.indefinitely();
+	}
+
+	/**
+	 * Counts {@link QueryParserConfig} rows associated with a
+	 * specific {@link SearchConfig}.
+	 *
+	 * @param searchConfigId the ID of the SearchConfig
+	 * @param sessionFactory the session factory to use
+	 * @return the number of associated rows
+	 */
+	public static long countQueryParserConfigsForSearchConfig(
+			long searchConfigId,
+			Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> session.createNativeQuery(
+					"SELECT COUNT(*) FROM query_parser_config "
+					+ "WHERE search_config = :id",
+					Long.class
+				)
+				.setParameter("id", searchConfigId)
+				.getSingleResult())
 			.await()
 			.indefinitely();
 	}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/04/16-01-changelog.xml">
+
+	<changeSet id="1776328055-1" author="openk9">
+		<comment>Remove orphaned query_parser_config rows with no search_config</comment>
+		<delete tableName="query_parser_config">
+			<where>search_config IS NULL</where>
+		</delete>
+	</changeSet>
+
+	<changeSet id="1776328055-2" author="openk9">
+		<comment>Remove duplicate query_parser_config rows keeping the one with the highest id per (search_config, type)</comment>
+		<sql>
+			DELETE FROM query_parser_config
+			WHERE id NOT IN (
+				SELECT MAX(id) FROM query_parser_config
+				GROUP BY search_config, type
+			)
+		</sql>
+	</changeSet>
+
+	<changeSet id="1776328055-3" author="openk9">
+		<comment>Add unique constraint on (search_config, type) to prevent duplicate query parser types per search config</comment>
+		<addUniqueConstraint columnNames="search_config,type"
+							constraintName="uk_query_parser_config_search_config_type"
+							tableName="query_parser_config"/>
+	</changeSet>
+
+</databaseChangeLog>

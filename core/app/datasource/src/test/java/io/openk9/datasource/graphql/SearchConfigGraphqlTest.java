@@ -80,18 +80,21 @@ public class SearchConfigGraphqlTest {
 	private static final String SEARCH_CONFIG_WITH_QUERY_PARSERS = "searchConfigWithQueryParsers";
 	private static final String SEARCH_CONFIG_WITH_QUERY_PARSERS_DTO = "searchConfigWithQueryParsersDTO";
 	private static final String TYPE = "type";
+	private static final String TYPE_TEXT = "TEXT";
+	private static final String TYPE_KNN = "KNN";
 	private static final String TYPE_ENTITY = "ENTITY";
+	private static final String TYPE_FILTER = "FILTER";
 	// QueryParserConfigDTO for entity creation and list
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_ONE =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_ONE_NAME)
-			.type(TYPE_ENTITY)
+			.type(TYPE_TEXT)
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_TWO =
 		QueryParserConfigDTO.builder()
 			.name(QUERY_PARSER_TWO_NAME)
-			.type(TYPE_ENTITY)
+			.type(TYPE_KNN)
 			.jsonConfig(JSON_CONFIG)
 			.build();
 	private static final QueryParserConfigDTO QUERY_PARSER_DTO_THREE =
@@ -105,11 +108,11 @@ public class SearchConfigGraphqlTest {
 	// InputObject for mutations and list
 	private static final InputObject QUERY_PARSER_INPUT_ONE = inputObject(
 		prop(NAME, QUERY_PARSER_ONE_NAME),
-		prop(TYPE, TYPE_ENTITY)
+		prop(TYPE, TYPE_TEXT)
 	);
 	private static final InputObject QUERY_PARSER_INPUT_TWO = inputObject(
 		prop(NAME, QUERY_PARSER_TWO_NAME),
-		prop(TYPE, TYPE_ENTITY)
+		prop(TYPE, TYPE_KNN)
 	);
 	private static final InputObject QUERY_PARSER_INPUT_THREE = inputObject(
 		prop(NAME, QUERY_PARSER_THREE_NAME),
@@ -117,7 +120,7 @@ public class SearchConfigGraphqlTest {
 	);
 	private static final InputObject QUERY_PARSER_INPUT_FOUR = inputObject(
 		prop(NAME, QUERY_PARSER_FOUR_NAME),
-		prop(TYPE, TYPE_ENTITY)
+		prop(TYPE, TYPE_FILTER)
 	);
 	private static final List<InputObject> QUERY_PARSERS_INPUT_LIST =
 		List.of(QUERY_PARSER_INPUT_ONE, QUERY_PARSER_INPUT_TWO, QUERY_PARSER_INPUT_THREE);
@@ -963,6 +966,138 @@ public class SearchConfigGraphqlTest {
 			// A "label" must be present for every field in each template
 			assertEquals(fields.size(), labelCount);
 		}
+	}
+
+	@Test
+	void should_not_create_orphans_on_graphql_update()
+		throws ExecutionException, InterruptedException {
+
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_TWO_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(QUERY_PARSERS_INPUT_LIST.size(), searchConfig.getQueryParserConfigs().size());
+
+		// update with a different single parser
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					SEARCH_CONFIG_WITH_QUERY_PARSERS,
+					args(
+						arg(ID, searchConfig.getId()),
+						arg(PATCH, false),
+						arg(
+							SEARCH_CONFIG_WITH_QUERY_PARSERS_DTO,
+							inputObject(
+								prop(NAME, SEARCH_CONFIG_TWO_NAME),
+								prop(MIN_SCORE, 0F),
+								prop(MIN_SCORE_SUGGESTIONS, false),
+								prop(MIN_SCORE_SEARCH, false),
+								prop(
+									QUERY_PARSERS,
+									List.of(QUERY_PARSER_INPUT_FOUR)
+								)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var actualSearchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_TWO_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(1, actualSearchConfig.getQueryParserConfigs().size());
+
+		// verify no orphans in database
+		assertEquals(0L, EntitiesUtils.countOrphanQueryParserConfigs(sessionFactory));
+	}
+
+	@Test
+	void should_not_create_orphans_on_graphql_patch()
+		throws ExecutionException, InterruptedException {
+
+		SearchConfig searchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_TWO_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(QUERY_PARSERS_INPUT_LIST.size(), searchConfig.getQueryParserConfigs().size());
+
+		// patch with a different single parser
+		var mutation = document(
+			operation(
+				OperationType.MUTATION,
+				field(
+					SEARCH_CONFIG_WITH_QUERY_PARSERS,
+					args(
+						arg(ID, searchConfig.getId()),
+						arg(PATCH, true),
+						arg(
+							SEARCH_CONFIG_WITH_QUERY_PARSERS_DTO,
+							inputObject(
+								prop(NAME, SEARCH_CONFIG_TWO_NAME),
+								prop(MIN_SCORE, 0F),
+								prop(MIN_SCORE_SUGGESTIONS, false),
+								prop(MIN_SCORE_SEARCH, false),
+								prop(
+									QUERY_PARSERS,
+									List.of(QUERY_PARSER_INPUT_FOUR)
+								)
+							)
+						)
+					),
+					field(ENTITY,
+						field(ID),
+						field(NAME)
+					),
+					field(FIELD_VALIDATORS,
+						field(FIELD),
+						field(MESSAGE)
+					)
+				)
+			)
+		);
+
+		var response = graphQLClient.executeSync(mutation);
+
+		assertFalse(response.hasError());
+		assertTrue(response.hasData());
+
+		var actualSearchConfig =
+			EntitiesUtils.getSearchConfig(
+				SEARCH_CONFIG_TWO_NAME,
+				searchConfigService,
+				sessionFactory
+			);
+
+		assertEquals(1, actualSearchConfig.getQueryParserConfigs().size());
+
+		// verify no orphans in database
+		assertEquals(0L, EntitiesUtils.countOrphanQueryParserConfigs(sessionFactory));
 	}
 
 	@AfterEach
