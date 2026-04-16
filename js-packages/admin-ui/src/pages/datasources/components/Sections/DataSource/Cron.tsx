@@ -370,7 +370,7 @@ const CronEditor: React.FC<CronEditorProps> = ({
   const getReadableCronDescription = (): string => {
     try {
       const fullCronExpression = `${cronExpression}`;
-      return cronstrue.toString(fullCronExpression);
+      return cronstrue.toString(fullCronExpression, { dayOfWeekStartIndexZero: false });
     } catch (error) {
       return "Invalid cron expression";
     }
