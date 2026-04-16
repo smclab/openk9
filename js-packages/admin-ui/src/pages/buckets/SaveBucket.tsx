@@ -27,7 +27,6 @@ import {
   useDataSourcesQuery,
   useLanguagesQuery,
   useSuggestionCategoriesQuery,
-  useLanguagesQuery,
   useTabsQuery,
   useUnboundRagConfigurationsByBucketQuery,
 } from "../../graphql-generated";
@@ -35,12 +34,7 @@ import { AssociatedUnassociated, formatQueryToBE, formatQueryToFE } from "../../
 
 import RefreshOptionsLayout from "@components/Form/Inputs/CheckboxOptionsLayout";
 import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
-import {
-  useLanguages,
-  useOptionSearchConfig,
-  useQueryAnaylyses,
-  useRagConfigurationChatRag,
-} from "../../../src/utils/RelationOneToOne";
+import { useLanguages, useOptionSearchConfig, useQueryAnaylyses } from "../../../src/utils/RelationOneToOne";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const associationTabs: Array<{ label: string; id: string; tooltip?: string }> = [

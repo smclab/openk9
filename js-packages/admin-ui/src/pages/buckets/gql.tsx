@@ -295,8 +295,6 @@ export const CreateUpdateBucketRecap = gql`
     $ragConfigurationChat: BigInteger
     $ragConfigurationChatTool: BigInteger
     $ragConfigurationSimpleGenerate: BigInteger
-    $autocorrection: BigInteger
-    $autocomplete: BigInteger
     $languageIds: [BigInteger]
   ) {
     bucketWithLists(
@@ -318,8 +316,6 @@ export const CreateUpdateBucketRecap = gql`
         ragConfigurationChat: $ragConfigurationChat
         ragConfigurationChatTool: $ragConfigurationChatTool
         ragConfigurationSimpleGenerate: $ragConfigurationSimpleGenerate
-        autocorrectionId: $autocorrection
-        autocompleteId: $autocomplete
         languageIds: $languageIds
       }
     ) {
