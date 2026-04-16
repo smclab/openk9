@@ -104,7 +104,7 @@ Build Verifier:
       --cache=true \
       --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
       --cache-ttl=72h \
-      --snapshot-mode=redo \
+      --snapshot-mode=time \
       --compressed-caching=false \
       --context "${CI_PROJECT_DIR}" \
       --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
