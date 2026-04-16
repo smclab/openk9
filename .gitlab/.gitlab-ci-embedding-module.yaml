@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 variables:
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
@@ -318,3 +319,26 @@ Trigger Restart Embedding Release:
     artifacts: false
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+# Runs on release tag or release branch push. Copies the already-built images
+# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
+Copy Embedding ST to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
+  needs:
+    - job: Fetch config
+      artifacts: true  # downloads config.env — needed to resolve the image version
+    - job: Build Embedding ST Release
+      artifacts: false
+
+Copy Embedding OpenAI to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+  needs:
+    - job: Fetch config
+      artifacts: true
+    - job: Build Embedding OpenAI Release
+      artifacts: false

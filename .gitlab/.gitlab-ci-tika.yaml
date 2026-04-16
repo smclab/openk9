@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Tika:
   extends: .build_template
@@ -94,3 +95,14 @@ Trigger Restart Tika Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+# Runs on release tag or release branch push. Copies the already-built image
+# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
+Copy Tika to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-tika"
+  needs:
+    - job: Build Tika Release
+      artifacts: true  # downloads .version file — needed to resolve the image tag

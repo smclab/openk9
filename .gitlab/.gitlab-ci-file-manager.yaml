@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build File-Manager Image:
   extends: .build_template
@@ -121,3 +122,14 @@ Trigger Restart File-Manager Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+# Runs on release tag or release branch push. Copies the already-built image
+# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
+Copy File Manager to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-file-manager"
+  needs:
+    - job: Build File-Manager Release
+      artifacts: true  # downloads .version file — needed to resolve the image tag

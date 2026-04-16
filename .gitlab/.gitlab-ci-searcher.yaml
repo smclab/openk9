@@ -8,6 +8,7 @@ stages:
 - build-verifier
 - container-scanning
 - restart
+- push
 
 Build Searcher Image:
   extends: .build_template
@@ -97,3 +98,14 @@ Trigger Restart Searcher Release:
     TARGET_ENV: "k9-stable-2"
   rules:
     - !reference [.rules:child-deploy-release, rules]
+
+######################## COPY TO DOCKER HUB ########################
+# Runs on release tag or release branch push. Copies the already-built image
+# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
+Copy Searcher to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-searcher"
+  needs:
+    - job: Build Searcher Release
+      artifacts: true  # downloads .version file — needed to resolve the image tag
