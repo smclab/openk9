@@ -88,42 +88,30 @@ Build Search Frontend:
 ######################## BUILD VERIFIER (NODE) ########################
 Build Verifier:
   stage: build-verifier
-  image: node:22.14.0
-  cache:
-    # Two separate cache entries:
-    # 1. shared-yarn: global yarn download cache, shared across all frontend modules.
-    #    Key on yarn.lock so it invalidates when dependencies change globally.
-    # 2. search-frontend-nm: node_modules specific to this module, keyed on its package.json.
-    - key:
-        prefix: "shared-yarn"
-        files:
-          - yarn.lock
-      paths:
-        - .yarn-cache
-      policy: pull-push
-    - key:
-        prefix: "search-frontend-nm"
-        files:
-          - js-packages/search-frontend/package.json
-      paths:
-        - js-packages/search-frontend/node_modules
-      policy: pull-push
-  artifacts:
-    paths:
-    - js-packages/search-frontend/dist/
-    expire_in: 1 day
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+  needs:
+  - job: Fetch version
+    artifacts: false
   script:
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Disable workspace strict root check to ensure Lerna aggregates smoothly
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder .yarn-cache
-  # 1. Install all dependencies from the project root (solves workspace-aggregator timeouts)
-  - yarn install --prefer-offline --frozen-lockfile
-  # 2. Build ONLY the specific component using Lerna scope
-  - CI=false npx lerna run build --scope @openk9ui/search-frontend
+  - mkdir -p /kaniko/.docker
+  - printf '{}' > /kaniko/.docker/config.json
+  - |
+    /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=72h \
+      --snapshot-mode=redo \
+      --compressed-caching=false \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+      --no-push \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
-    # Run only on MR
+    # Run only on MR — Kaniko --no-push avoids yarn install on runner disk (prevents ENOSPC)
     - !reference [.rules:child-verify-mr, rules]
 
 ######################## CONTAINER SCANNING ########################
