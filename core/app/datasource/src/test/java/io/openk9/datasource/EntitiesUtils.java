@@ -51,6 +51,33 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 public class EntitiesUtils {
 
+	// Create methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
+		DTO dto,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(
+				session -> service.create(dto)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void createEntity(
+		ENTITY entity,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(
+				session -> service.create(entity)
+			)
+			.await()
+			.indefinitely();
+	}
+
 	/**
 	 * Cleans the state of the given {@link Bucket} by resetting its configurable values.
 	 *
@@ -234,6 +261,44 @@ public class EntitiesUtils {
 			.await()
 			.indefinitely();
 	}
+	// Get methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> List<ENTITY> getAllEntities(
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(session ->
+				service.findAll()
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
+		long id,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> service.findById(session, id)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> ENTITY getEntity(
+		String name,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		return sessionFactory.withTransaction(
+				session -> service.findByName(session, name)
+			)
+			.await()
+			.indefinitely();
+	}
 
 	public static Bucket getBucket(
 		Mutiny.SessionFactory sessionFactory, BucketService bucketService, String name) {
@@ -280,18 +345,6 @@ public class EntitiesUtils {
 			.indefinitely();
 	}
 
-	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
-		SERVICE extends BaseK9EntityService<ENTITY, DTO>> List<ENTITY> getAllEntities(
-		SERVICE service,
-		Mutiny.SessionFactory sessionFactory) {
-
-		return sessionFactory.withTransaction(session ->
-				service.findAll()
-			)
-			.await()
-			.indefinitely();
-	}
-
 	public static SuggestionCategory getSuggestionCategory(
 		Mutiny.SessionFactory sessionFactory, SuggestionCategoryService suggestionCategoryService,
 		String name) {
@@ -310,6 +363,38 @@ public class EntitiesUtils {
 		return sessionFactory.withTransaction(
 				session -> tabService.findByName(session, name)
 			)
+			.await()
+			.indefinitely();
+	}
+
+	// Remove methods
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+		ENTITY entity,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		removeEntity(entity.getId(), service, sessionFactory);
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+		String name,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		var entity = getEntity(name, service, sessionFactory);
+
+		removeEntity(entity.getId(), service, sessionFactory);
+	}
+
+	public static <ENTITY extends K9Entity, DTO extends K9EntityDTO,
+		SERVICE extends BaseK9EntityService<ENTITY, DTO>> void removeEntity(
+		long id,
+		SERVICE service,
+		Mutiny.SessionFactory sessionFactory) {
+
+		sessionFactory.withTransaction(session -> service.deleteById(session, id))
 			.await()
 			.indefinitely();
 	}
