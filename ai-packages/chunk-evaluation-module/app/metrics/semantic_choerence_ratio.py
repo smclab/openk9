@@ -62,7 +62,8 @@ def calculate_scr(chunks):
     for i in range(len(sent_embs) - 1):
         sim = inter_sim_calc(sent_embs[i], sent_embs[i + 1])
         adjacent_similarities.append(float(sim))
-
+    if len(adjacent_similarities) == 0:
+        return {"forward": 0.0, "backward": 0.0}
     forward = [
         intra_sim[i] / (adjacent_similarities[i] + 0.0000001)
         for i in range(len(intra_sim) - 1)
