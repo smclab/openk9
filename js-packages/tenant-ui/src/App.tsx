@@ -4,6 +4,7 @@ import { AppBar, Box, InputAdornment, List, TextField, ThemeProvider, Toolbar, T
 import { QueryClientProvider } from "@tanstack/react-query";
 import React, { useMemo, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { UserManager } from "oidc-client-ts";
 import { BrandLogo } from "./components/BrandLogo";
 import { apolloClient } from "./components/client/apolloClient";
 import { AuthenticationProvider } from "./components/client/authentication";
@@ -21,7 +22,11 @@ import ThemeSwitcher from "./components/ThemeSwitcher";
 import { ToastProvider } from "./components/ToastProvider";
 import "./index.css";
 
-export default function App() {
+type AppProps = {
+  userManager: UserManager;
+};
+
+export default function App({ userManager }: AppProps) {
   const savedTheme = localStorage.getItem("isDarkMode");
   const [isDarkMode, setIsDarkMode] = React.useState(savedTheme === "true");
   const memoizedTheme = useMemo(() => (isDarkMode ? darkTheme : lightTheme), [isDarkMode]);
@@ -36,7 +41,7 @@ export default function App() {
 
   return (
     <ThemeProvider theme={memoizedTheme}>
-      <AuthenticationProvider>
+      <AuthenticationProvider userManager={userManager}>
         <QueryClientProvider client={queryClient}>
           <ApolloProvider client={apolloClient}>
             <ToastProvider>
@@ -187,6 +192,8 @@ export default function App() {
 const AppRoutes = () => (
   <Routes>
     <Route path="" element={<DashBoard />} />
+    {/* OIDC callback route — handled by react-oidc-context via AuthProvider */}
+    <Route path="callback" element={<DashBoard />} />
     <Route path="tenants">
       <Route path="" element={<Tenants />} />
       <Route path="tenant-create" element={<TenantCreate />} />

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Silent Renew</title>
+</head>
+<body>
+  <!--
+    This page is loaded in a hidden iframe by oidc-client-ts
+    to silently refresh the access token before it expires.
+  -->
+  <script>
+    window.parent.postMessage(window.location.href, window.location.origin);
+  </script>
+</body>
+</html>

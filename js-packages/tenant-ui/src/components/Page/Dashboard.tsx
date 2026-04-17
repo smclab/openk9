@@ -16,7 +16,7 @@ export function DashBoard() {
   const [user, setUser] = React.useState<string | undefined>();
   React.useEffect(() => {
     getUserProfile().then((data) => {
-      setUser(JSON.parse(JSON.stringify(data))?.name);
+      setUser(data?.name);
     });
   }, []);
 

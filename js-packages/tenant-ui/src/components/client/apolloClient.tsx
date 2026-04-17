@@ -1,13 +1,14 @@
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { relayStylePagination } from "@apollo/client/utilities";
+import { getAccessToken } from "./oidcClient";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
     uri: "/api/tenant-manager/graphql",
     async fetch(input, init?) {
-      const basicToken = sessionStorage.getItem("basic_auth_token");
-      if (basicToken) {
-        const headers = { ...(init ?? { headers: {} }).headers, Authorization: `Basic ${basicToken}` };
+      const token = await getAccessToken();
+      if (token) {
+        const headers = { ...(init ?? { headers: {} }).headers, Authorization: `Bearer ${token}` };
         return await fetch(input, { ...init, headers });
       } else {
         return await fetch(input, init);
