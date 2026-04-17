@@ -104,5 +104,5 @@ Copy Resources Validator to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
   needs:
-    - job: Build Resources Validator image
+    - job: Build Resources-Validator Image
       artifacts: true  # downloads .version file — needed to resolve the image tag

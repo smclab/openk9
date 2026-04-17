@@ -67,5 +67,5 @@ Copy K8s Client to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-k8s-client"
   needs:
-    - job: Build K8s Client image
+    - job: Build K8S-Client Image
       artifacts: true  # downloads .version file — needed to resolve the image tag

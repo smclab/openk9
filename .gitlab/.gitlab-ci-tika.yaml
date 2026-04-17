@@ -104,5 +104,5 @@ Copy Tika to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tika"
   needs:
-    - job: Build Tika image
+    - job: Build Tika
       artifacts: true  # downloads .version file — needed to resolve the image tag

@@ -107,5 +107,5 @@ Copy Searcher to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-searcher"
   needs:
-    - job: Build Searcher image
+    - job: Build Searcher Image
       artifacts: true  # downloads .version file — needed to resolve the image tag

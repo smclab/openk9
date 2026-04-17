@@ -131,5 +131,5 @@ Copy File Manager to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-file-manager"
   needs:
-    - job: Build File Manager image
+    - job: Build File-Manager Image
       artifacts: true  # downloads .version file — needed to resolve the image tag
