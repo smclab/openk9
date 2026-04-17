@@ -305,41 +305,45 @@ export default function DataIndexFormsource({
                 }
                 label="Enable KNN Index"
               />
-              <Box sx={{ marginBottom: 1 }}>
-                <CustomSelect
-                  label="Chunk Type"
-                  id="chunk-type-select"
-                  dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
-                  disabled={isDisabled || !extraParamsDataIndex.knnIndex}
-                  value={extraParamsDataIndex.chunkType || ChunkType.ChunkTypeCharacterTextSplitter}
-                  onChange={(e: string) => {
-                    changeExtraParamsDataIndex("chunkType", e);
-                  }}
-                  validationMessages={[]}
-                />
-              </Box>
-              <NumberInput
-                disabled={isDisabled || !extraParamsDataIndex.knnIndex}
-                value={extraParamsDataIndex.chunkWindowSize || 0}
-                onChange={(e) => {
-                  changeExtraParamsDataIndex("chunkWindowSize", Number(e));
-                }}
-                id="chunk-window-size"
-                label="Chunk Window Size"
-                validationMessages={[]}
-              />
-              <CodeInput
-                disabled={isDisabled || !extraParamsDataIndex.knnIndex}
-                readonly={isDisabled || !extraParamsDataIndex.knnIndex}
-                language="json"
-                value={extraParamsDataIndex.embeddingJsonConfig || ""}
-                onChange={(e) => {
-                  changeExtraParamsDataIndex("embeddingJsonConfig", e);
-                }}
-                id="embedding-json-config"
-                label="Embedding JSON Config"
-                validationMessages={[]}
-              />
+              {extraParamsDataIndex.knnIndex === true && (
+                <>
+                  <Box sx={{ marginBottom: 1 }}>
+                    <CustomSelect
+                      label="Chunk Type"
+                      id="chunk-type-select"
+                      dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
+                      disabled={isDisabled}
+                      value={extraParamsDataIndex.chunkType || ChunkType.ChunkTypeCharacterTextSplitter}
+                      onChange={(e: string) => {
+                        changeExtraParamsDataIndex("chunkType", e);
+                      }}
+                      validationMessages={[]}
+                    />
+                  </Box>
+                  <NumberInput
+                    disabled={isDisabled}
+                    value={extraParamsDataIndex.chunkWindowSize || 0}
+                    onChange={(e) => {
+                      changeExtraParamsDataIndex("chunkWindowSize", Number(e));
+                    }}
+                    id="chunk-window-size"
+                    label="Chunk Window Size"
+                    validationMessages={[]}
+                  />
+                  <CodeInput
+                    disabled={isDisabled}
+                    readonly={isDisabled}
+                    language="json"
+                    value={extraParamsDataIndex.embeddingJsonConfig || ""}
+                    onChange={(e) => {
+                      changeExtraParamsDataIndex("embeddingJsonConfig", e);
+                    }}
+                    id="embedding-json-config"
+                    label="Embedding JSON Config"
+                    validationMessages={[]}
+                  />
+                </>
+              )}
               <AutocompleteDropdown
                 label="Doc Type Field"
                 onChange={(val) =>
