@@ -61,6 +61,7 @@ scheduler.start()
 setup_rabbitmq()
 
 credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+connection = None
 
 for _ in range(10):
     try:
@@ -72,10 +73,9 @@ for _ in range(10):
         print("RabbitMQ non pronto, retry…")
         time.sleep(3)
 
+if not connection:
+    raise "Connessione a RabbitMQ fallita"
 
-connection = pika.BlockingConnection(
-    pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
-)
 channel = connection.channel()
 
 channel.queue_declare(queue="chunks")
