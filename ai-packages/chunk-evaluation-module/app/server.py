@@ -78,6 +78,8 @@ if not connection:
 
 channel = connection.channel()
 
+channel.basic_qos(prefetch_count=1)
+
 channel.queue_declare(queue="chunks")
 
 print("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
