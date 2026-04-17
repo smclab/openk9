@@ -232,32 +232,47 @@ def get_chat_chain(
             "aws_bedrock": aws_bedrock,
         }
 
-        yield from stream_rag_conversation(
-            search_text,
-            reranker_api_url,
-            range_values,
-            after_key,
-            suggest_keyword,
-            suggestion_category_id,
-            virtual_host,
-            jwt,
-            extra,
-            sort,
-            sort_after_key,
-            language,
-            opensearch_host,
-            grpc_host_embedding,
-            grpc_host_datasource,
-            chat_id,
-            user_id,
-            tenant_id,
-            retrieve_from_uploaded_documents,
-            chat_history,
-            timestamp,
-            chat_sequence_number,
-            configuration,
-            embedding_model_configuration,
-        )
+        try:
+            generator = stream_rag_conversation(
+                search_text,
+                reranker_api_url,
+                range_values,
+                after_key,
+                suggest_keyword,
+                suggestion_category_id,
+                virtual_host,
+                jwt,
+                extra,
+                sort,
+                sort_after_key,
+                language,
+                opensearch_host,
+                grpc_host_embedding,
+                grpc_host_datasource,
+                chat_id,
+                user_id,
+                tenant_id,
+                retrieve_from_uploaded_documents,
+                chat_history,
+                timestamp,
+                chat_sequence_number,
+                configuration,
+                embedding_model_configuration,
+            )
+
+            for chunk in generator:
+                yield chunk
+
+        except Exception as e:
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                yield json.dumps(
+                    {
+                        "chunk": "Rate limit exceeded. Try again later.",
+                        "type": "ERROR",
+                    }
+                )
+                return
+            raise e
 
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
@@ -389,32 +404,47 @@ def get_chat_chain_tool(
         llm_with_tools_response = llm_with_tools.invoke(search_query)
 
         if llm_with_tools_response.tool_calls:
-            yield from stream_rag_conversation(
-                search_text,
-                reranker_api_url,
-                range_values,
-                after_key,
-                suggest_keyword,
-                suggestion_category_id,
-                virtual_host,
-                jwt,
-                extra,
-                sort,
-                sort_after_key,
-                language,
-                opensearch_host,
-                grpc_host_embedding,
-                grpc_host_datasource,
-                chat_id,
-                user_id,
-                tenant_id,
-                retrieve_from_uploaded_documents,
-                chat_history,
-                timestamp,
-                chat_sequence_number,
-                configuration,
-                embedding_model_configuration,
-            )
+            try:
+                generator = stream_rag_conversation(
+                    search_text,
+                    reranker_api_url,
+                    range_values,
+                    after_key,
+                    suggest_keyword,
+                    suggestion_category_id,
+                    virtual_host,
+                    jwt,
+                    extra,
+                    sort,
+                    sort_after_key,
+                    language,
+                    opensearch_host,
+                    grpc_host_embedding,
+                    grpc_host_datasource,
+                    chat_id,
+                    user_id,
+                    tenant_id,
+                    retrieve_from_uploaded_documents,
+                    chat_history,
+                    timestamp,
+                    chat_sequence_number,
+                    configuration,
+                    embedding_model_configuration,
+                )
+
+                for chunk in generator:
+                    yield chunk
+
+            except Exception as e:
+                if "rate_limit" in str(e).lower() or "429" in str(e):
+                    yield json.dumps(
+                        {
+                            "chunk": "Rate limit exceeded. Try again later.",
+                            "type": "ERROR",
+                        }
+                    )
+                    return
+                raise e
 
         else:
             prompt_no_rag = (
@@ -471,5 +501,14 @@ def get_chat_chain_tool(
             yield json.dumps({"chunk": "", "type": "END"})
 
     except Exception as e:
-        logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
-        yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
+        if "rate_limit" in str(e).lower() or "429" in str(e):
+            logger.error(f"{e}")
+            yield json.dumps(
+                {
+                    "chunk": "Rate limit exceeded. Try again later.",
+                    "type": "ERROR",
+                }
+            )
+        else:
+            logger.error(f"{UNEXPECTED_ERROR_MESSAGE}: {e}")
+            yield json.dumps({"chunk": UNEXPECTED_ERROR_MESSAGE, "type": "ERROR"})
