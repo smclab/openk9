@@ -70,7 +70,7 @@
       "name": "prefix",
       "type": "text",
       "size": 4,
-      "required": true,
+      "required": false,
       "values": [],
       "placeholder": "minio",
       "info": "Prefix of folder in the bucket",

@@ -56,10 +56,7 @@ class IngestionHandler:
     def post_message(self, payload):
         try:
             r = requests.post(self.ingestion_url, json=payload, timeout=20)
-            if r.status_code == 200:
-                return
-            else:
-                r.raise_for_status()
+            r.raise_for_status()
         except Exception as e:
             logger.error(str(e) + " during request at url: " + str(self.ingestion_url))
             if self.do_raise_error:

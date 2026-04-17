@@ -74,10 +74,10 @@ class BaseMinioExtractor(abc.ABC):
 			if isinstance(e, HTTPError):
 				# Checks status code
 				status_code = e.response.status_code
+				error_msg = f"HTTPError ({status_code}): Client Error. Error while posting to ingestion_url."
+
 				# if status_code > 500 means it failed to post to ingestion_url (Server Failure)
 				if 500 <= status_code < 600:
-					self.status_logger.warning(f"HTTPError ({status_code}): Server Error.\nCould not post HALT request. Failed posting to ingestion_url.")
-					self.status_logger.error(e)
-				else:
-					self.status_logger.error(f"HTTPError ({status_code}): Posting HALT")
-					self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
+					error_msg = f"HTTPError ({status_code}): Server Error. Failed posting to ingestion_url."
+				self.status_logger.error(error_msg)
+				self.status_logger.error(e)
