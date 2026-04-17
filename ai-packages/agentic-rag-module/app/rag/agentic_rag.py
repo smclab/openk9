@@ -1440,148 +1440,208 @@ class RagGraph:
                 )
 
     def stream(self, query: str):
-        if (
-            self.output_guardrail.get("enable_output_guardrail")
-            and self.output_guardrail_type == 1
-        ):
-            start_chunk = True
-            result_answer = ""
-            chunk_batch = []
-
-            for chunk, metadata in self.graph.stream(
-                {
-                    "current_query": query,
-                    "chat_sequence_number": self.chat_sequence_number,
-                },
-                config=self.config,
-                stream_mode="messages",
+        try:
+            if (
+                self.output_guardrail.get("enable_output_guardrail")
+                and self.output_guardrail_type == 1
             ):
-                if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    if start_chunk:
-                        yield json.dumps({"chunk": "", "type": "START"})
-                        start_chunk = False
-                    result_answer += chunk.content
-                    chunk_batch.append({"chunk": chunk.content, "type": "CHUNK"})
+                start_chunk = True
+                result_answer = ""
+                chunk_batch = []
 
-                    if len(chunk_batch) == self.output_guardrail_chunk_interval:
-                        llm_output_guardrail = self._llm_output_guardrail(result_answer)
-                        result_answer = ""
-
-                        if llm_output_guardrail != "NONE":
-                            yield json.dumps({"chunk": "", "type": "END"})
-                            return
-
-                        else:
-                            for chunk in chunk_batch:
-                                yield json.dumps(chunk)
-                            chunk_batch = []
-
-            if chunk_batch:
-                llm_output_guardrail = self._llm_output_guardrail(result_answer)
-
-                if llm_output_guardrail != "NONE":
-                    yield json.dumps({"chunk": "", "type": "END"})
-                    return
-                else:
-                    for chunk in chunk_batch:
-                        yield json.dumps(chunk)
-                    chunk_batch = []
-
-        elif (
-            self.output_guardrail.get("enable_output_guardrail")
-            and self.output_guardrail_type == 2
-        ):
-            start_chunk = True
-            result_answer = ""
-            chunk_number = 0
-
-            for chunk, metadata in self.graph.stream(
-                {
-                    "current_query": query,
-                    "chat_sequence_number": self.chat_sequence_number,
-                },
-                config=self.config,
-                stream_mode="messages",
-            ):
-                if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    chunk_number += 1
-                    if start_chunk:
-                        yield json.dumps({"chunk": "", "type": "START"})
-                        start_chunk = False
-                    result_answer += chunk.content
-
-                    if chunk_number == self.output_guardrail_chunk_interval:
-                        llm_output_guardrail = self._llm_output_guardrail(result_answer)
-                        chunk_number = 0
-                        result_answer = ""
-
-                        if llm_output_guardrail != "NONE":
-                            yield json.dumps(
-                                {"chunk": "Inappropriate content", "type": "CANCEL"}
+                try:
+                    for chunk, metadata in self.graph.stream(
+                        {
+                            "current_query": query,
+                            "chat_sequence_number": self.chat_sequence_number,
+                        },
+                        config=self.config,
+                        stream_mode="messages",
+                    ):
+                        if (
+                            metadata["langgraph_node"] == "llm_response"
+                            and chunk.content
+                        ):
+                            if start_chunk:
+                                yield json.dumps({"chunk": "", "type": "START"})
+                                start_chunk = False
+                            result_answer += chunk.content
+                            chunk_batch.append(
+                                {"chunk": chunk.content, "type": "CHUNK"}
                             )
-                            return
-                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
-            if chunk_number > 0:
-                llm_output_guardrail = self._llm_output_guardrail(result_answer)
+                            if len(chunk_batch) == self.output_guardrail_chunk_interval:
+                                llm_output_guardrail = self._llm_output_guardrail(
+                                    result_answer
+                                )
+                                result_answer = ""
 
-                if llm_output_guardrail != "NONE":
-                    yield json.dumps(
-                        {"chunk": "Inappropriate content", "type": "CANCEL"}
-                    )
-                    return
+                                if llm_output_guardrail != "NONE":
+                                    yield json.dumps({"chunk": "", "type": "END"})
+                                    return
 
-        else:
-            start_chunk = True
-            result_answer = ""
+                                else:
+                                    for chunk in chunk_batch:
+                                        yield json.dumps(chunk)
+                                    chunk_batch = []
+                except Exception as e:
+                    if "rate_limit" in str(e).lower() or "429" in str(e):
+                        yield json.dumps(
+                            {
+                                "chunk": "Rate limit exceeded. Try again later.",
+                                "type": "ERROR",
+                            }
+                        )
+                        return
+                    raise e
 
-            for chunk, metadata in self.graph.stream(
-                {
-                    "current_query": query,
-                    "chat_sequence_number": self.chat_sequence_number,
-                },
-                config=self.config,
-                stream_mode="messages",
+                if chunk_batch:
+                    llm_output_guardrail = self._llm_output_guardrail(result_answer)
+
+                    if llm_output_guardrail != "NONE":
+                        yield json.dumps({"chunk": "", "type": "END"})
+                        return
+                    else:
+                        for chunk in chunk_batch:
+                            yield json.dumps(chunk)
+                        chunk_batch = []
+
+            elif (
+                self.output_guardrail.get("enable_output_guardrail")
+                and self.output_guardrail_type == 2
             ):
-                if metadata["langgraph_node"] == "llm_response" and chunk.content:
-                    if start_chunk:
-                        yield json.dumps({"chunk": "", "type": "START"})
-                        start_chunk = False
-                    result_answer += chunk.content
+                start_chunk = True
+                result_answer = ""
+                chunk_number = 0
 
-                    yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+                try:
+                    for chunk, metadata in self.graph.stream(
+                        {
+                            "current_query": query,
+                            "chat_sequence_number": self.chat_sequence_number,
+                        },
+                        config=self.config,
+                        stream_mode="messages",
+                    ):
+                        if (
+                            metadata["langgraph_node"] == "llm_response"
+                            and chunk.content
+                        ):
+                            chunk_number += 1
+                            if start_chunk:
+                                yield json.dumps({"chunk": "", "type": "START"})
+                                start_chunk = False
+                            result_answer += chunk.content
 
-        if last_state := self.graph.get_state(self.config):
-            if all(
-                [
-                    self.chat_sequence_number == 1,
-                    self.tenant_id,
-                    self.user_id,
-                    self.chat_id,
-                    conversation_title := last_state.values.get("conversation_title"),
-                ]
-            ):
-                yield from self._stream_title(conversation_title)
+                            if chunk_number == self.output_guardrail_chunk_interval:
+                                llm_output_guardrail = self._llm_output_guardrail(
+                                    result_answer
+                                )
+                                chunk_number = 0
+                                result_answer = ""
 
-            if self.rag_type != "SIMPLE_GENERATE" and (
-                documents := last_state.values.get("context")
-            ):
-                yield from self._stream_documents(documents)
+                                if llm_output_guardrail != "NONE":
+                                    yield json.dumps(
+                                        {
+                                            "chunk": "Inappropriate content",
+                                            "type": "CANCEL",
+                                        }
+                                    )
+                                    return
+                            yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
 
-        info = {
-            "chain": "agentic_rag",
-            "user_id": self.user_id,
-            "chat_id": self.chat_id,
-            "answer": result_answer[:200] + "...",
-        }
-        logger.info(json.dumps(info))
+                except Exception as e:
+                    if "rate_limit" in str(e).lower() or "429" in str(e):
+                        yield json.dumps(
+                            {
+                                "chunk": "Rate limit exceeded. Try again later.",
+                                "type": "ERROR",
+                            }
+                        )
+                        return
+                    raise e
 
-        if last_state.values.get("guardrail_check"):
-            yield json.dumps(
-                {
-                    "chunk": f"{last_state.values.get('response')} - ({last_state.values.get('guardrail_category')})",
-                    "type": "GUARDRAIL",
-                }
-            )
+                if chunk_number > 0:
+                    llm_output_guardrail = self._llm_output_guardrail(result_answer)
 
-        yield json.dumps({"chunk": "", "type": "END"})
+                    if llm_output_guardrail != "NONE":
+                        yield json.dumps(
+                            {"chunk": "Inappropriate content", "type": "CANCEL"}
+                        )
+                        return
+
+            else:
+                start_chunk = True
+                result_answer = ""
+
+                try:
+                    for chunk, metadata in self.graph.stream(
+                        {
+                            "current_query": query,
+                            "chat_sequence_number": self.chat_sequence_number,
+                        },
+                        config=self.config,
+                        stream_mode="messages",
+                    ):
+                        if (
+                            metadata["langgraph_node"] == "llm_response"
+                            and chunk.content
+                        ):
+                            if start_chunk:
+                                yield json.dumps({"chunk": "", "type": "START"})
+                                start_chunk = False
+                            result_answer += chunk.content
+
+                            yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+
+                except Exception as e:
+                    if "rate_limit" in str(e).lower() or "429" in str(e):
+                        yield json.dumps(
+                            {
+                                "chunk": "Rate limit exceeded. Try again later.",
+                                "type": "ERROR",
+                            }
+                        )
+                        return
+                    raise e
+
+            if last_state := self.graph.get_state(self.config):
+                if all(
+                    [
+                        self.chat_sequence_number == 1,
+                        self.tenant_id,
+                        self.user_id,
+                        self.chat_id,
+                        conversation_title := last_state.values.get(
+                            "conversation_title"
+                        ),
+                    ]
+                ):
+                    yield from self._stream_title(conversation_title)
+
+                if self.rag_type != "SIMPLE_GENERATE" and (
+                    documents := last_state.values.get("context")
+                ):
+                    yield from self._stream_documents(documents)
+
+            info = {
+                "chain": "agentic_rag",
+                "user_id": self.user_id,
+                "chat_id": self.chat_id,
+                "answer": result_answer[:200] + "...",
+            }
+            logger.info(json.dumps(info))
+
+            if last_state.values.get("guardrail_check"):
+                yield json.dumps(
+                    {
+                        "chunk": f"{last_state.values.get('response')} - ({last_state.values.get('guardrail_category')})",
+                        "type": "GUARDRAIL",
+                    }
+                )
+
+            yield json.dumps({"chunk": "", "type": "END"})
+
+        except Exception as e:
+            logger.error(f"Streaming error: {e}")
+            yield json.dumps({"chunk": str(e), "type": "ERROR"})
