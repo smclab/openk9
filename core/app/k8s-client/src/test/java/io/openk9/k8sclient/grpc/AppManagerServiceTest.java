@@ -217,7 +217,7 @@ class AppManagerServiceTest {
 			() -> appManager.createIngress(
 				CreateIngressRequest
 					.newBuilder()
-					.setSchemaName("mew")
+					.setTenantId("mew")
 					.setVirtualHost("mew.openk9.io")
 					.build()
 				),
@@ -236,7 +236,7 @@ class AppManagerServiceTest {
 			() -> appManager.createIngress(
 				CreateIngressRequest
 					.newBuilder()
-					.setSchemaName("mew")
+					.setTenantId("mew")
 					.setVirtualHost("mew.openk9.io")
 					.addScopes(IngressScope.SEARCH)
 					.addScopes(IngressScope.INGESTION)

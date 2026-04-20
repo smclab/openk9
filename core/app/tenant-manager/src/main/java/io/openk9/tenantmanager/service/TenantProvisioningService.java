@@ -140,7 +140,7 @@ public class TenantProvisioningService {
 
 		var requestBuilder = CreateIngressRequest.newBuilder()
 			.setVirtualHost(virtualHost)
-			.setSchemaName(tenantId); // todo rename to tenantId
+			.setTenantId(tenantId);
 
 		if (ingressScopes != null) {
 			requestBuilder.addAllScopes(ingressScopes);

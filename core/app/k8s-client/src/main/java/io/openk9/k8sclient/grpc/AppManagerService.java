@@ -49,6 +49,13 @@ import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+/**
+ * Quarkus gRPC implementation of the {@link AppManager} service contract.
+ * <p>
+ * Bridges gRPC requests to the Kubernetes cluster: applies and deletes
+ * {@link Manifest} resources via {@link KubernetesClient}, and
+ * manages tenant Ingresses via {@link IngressService}.
+ */
 @GrpcService
 public class AppManagerService implements AppManager {
 
@@ -92,12 +99,31 @@ public class AppManagerService implements AppManager {
 	private static final Set<IngressScope> DEFAULT_SCOPES = EnumSet.of(
 		IngressScope.SEARCH, IngressScope.ADMINISTRATION, IngressScope.RAG);
 
-	private static String ingressName(String schemaName) {
-		return String.format("%s-default-ingress", schemaName);
+	private static String ingressName(String tenantId) {
+		return String.format("%s-default-ingress", tenantId);
 	}
 
+	/**
+	 * Builds the {@link IngressDef} describing the default Ingress for a tenant,
+	 * aggregating the HTTP routes required by the requested {@link IngressScope}s.
+	 * <p>
+	 * When {@code scopes} is {@code null} or empty, {@link #DEFAULT_SCOPES}
+	 * ({@code SEARCH}, {@code ADMINISTRATION}, {@code RAG}) is used. Unknown
+	 * enum values ({@link IngressScope#UNRECOGNIZED}, produced by protobuf when
+	 * the client sends a scope the server does not know) are silently filtered
+	 * out.
+	 * <p>
+	 * Routes are collected into a {@link LinkedHashSet} so that scope iteration
+	 * order is preserved and routes shared across scopes (e.g.
+	 * {@code /api/datasource}) are de-duplicated.
+	 *
+	 * @param tenantId    tenant identifier, used to derive the ingress name
+	 * @param virtualHost host the ingress answers on
+	 * @param scopes      requested scopes; {@code null}/empty lead to defaults
+	 * @return the ingress definition to be created
+	 */
 	private static IngressDef getIngressDef(
-		String schemaName, String virtualHost, List<IngressScope> scopes) {
+		String tenantId, String virtualHost, List<IngressScope> scopes) {
 
 		Set<IngressScope> effectiveScopes;
 		if (scopes == null || scopes.isEmpty()) {
@@ -121,12 +147,20 @@ public class AppManagerService implements AppManager {
 		}
 
 		return IngressDef.of(
-			ingressName(schemaName),
+			ingressName(tenantId),
 			virtualHost,
 			List.copyOf(routes)
 		);
 	}
 
+	/**
+	 * Applies a Kubernetes resource described by the given manifest.
+	 * Creates the resource if absent, otherwise updates it in place.
+	 *
+	 * @param request the manifest to materialize (chart, version, tenant)
+	 * @return a {@link Uni} emitting an {@link ApplyResponse} whose status
+	 *         carries the applied resource name
+	 */
 	@Override
 	public Uni<ApplyResponse> applyResource(AppManifest request) {
 		var manifest = Manifest.builder()
@@ -159,10 +193,21 @@ public class AppManagerService implements AppManager {
 				log.warn("Resource apply got an error", throwable));
 	}
 
+	/**
+	 * Creates the default Ingress for a tenant. The routes exposed by the
+	 * Ingress are determined by the requested scopes; when no scopes are
+	 * provided the defaults ({@code SEARCH}, {@code ADMINISTRATION},
+	 * {@code RAG}) are applied. See {@link #getIngressDef} for the aggregation
+	 * rules.
+	 *
+	 * @param request tenantId, virtual host and requested scopes
+	 * @return a {@link Uni} emitting a {@link CreateIngressResponse} with the
+	 *         created resource name
+	 */
 	@Override
 	public Uni<CreateIngressResponse> createIngress(CreateIngressRequest request) {
 		var ingressDef = getIngressDef(
-			request.getSchemaName(),
+			request.getTenantId(),
 			request.getVirtualHost(),
 			request.getScopesList());
 
@@ -176,6 +221,17 @@ public class AppManagerService implements AppManager {
 				log.warn("Ingress create got an error", throwable));
 	}
 
+	/**
+	 * Deletes every resource in the supplied list in parallel.
+	 * <p>
+	 * Individual failures do not fail the whole call: per-item outcomes are
+	 * collected into the response as {@link DeleteResourceStatus} entries with
+	 * either {@code SUCCESS} or {@code ERROR} status.
+	 *
+	 * @param request the manifests to delete
+	 * @return a {@link Uni} emitting the aggregated
+	 *         {@link DeleteAllResourcesResponse}
+	 */
 	@Override
 	public Uni<DeleteAllResourcesResponse> deleteAllResources(AppManifestList request) {
 
@@ -209,6 +265,14 @@ public class AppManagerService implements AppManager {
 				);
 	}
 
+	/**
+	 * Deletes the default Ingress of a tenant, whose name follows the
+	 * {@code <tenant>-default-ingress} convention.
+	 *
+	 * @param request identifies the tenant whose Ingress is being removed
+	 * @return a {@link Uni} emitting a {@link DeleteIngressResponse} with the
+	 *         removed resource name
+	 */
 	@Override
 	public Uni<DeleteIngressResponse> deleteIngress(DeleteIngressRequest request) {
 		var ingressName = ingressName(request.getSchemaName());
@@ -223,6 +287,12 @@ public class AppManagerService implements AppManager {
 				log.warn("Ingress delete got an error", throwable));
 	}
 
+	/**
+	 * Deletes a single Kubernetes resource described by the given manifest.
+	 *
+	 * @param appManifest the manifest identifying the resource to delete
+	 * @return a {@link Uni} emitting {@link Empty} on success
+	 */
 	@Override
 	public Uni<Empty> deleteResource(AppManifest appManifest) {
 		return executeDeleteResource(appManifest)

@@ -51,9 +51,11 @@ message ApplyResponse {
 }
 
 message CreateIngressRequest {
-  string schemaName = 1;
+  reserved 1;
+  reserved "schemaName";
   string virtualHost = 2;
   repeated IngressScope scopes = 3;
+  string tenantId = 4;
 }
 
 enum IngressScope {
