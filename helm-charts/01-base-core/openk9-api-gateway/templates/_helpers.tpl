@@ -49,3 +49,12 @@ Create OpenK9 Rag URL
 {{- printf "http://%s:%s" .host .port }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create OpenK9 Ingestion URL
+*/}}
+{{- define "helper.ingestionURL" -}}
+{{- with .Values.openk9.ingestion -}}
+{{- printf "http://%s:%s" .host .port }}
+{{- end }}
+{{- end }}

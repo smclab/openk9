@@ -95,9 +95,12 @@ openk9:
   datasource:
     host: "openk9-datasource"
     port: "8080"
-  datasource:
+  rag:
     host: "openk9-rag-module"
     port: "5000"
+  ingestion:
+    host: "openk9-ingestion"
+    port: "8080"
 
 ## Spring Gateway configuration
 spring:
@@ -188,6 +191,10 @@ ingress:
   paths:
   - /api/datasource
   - /api/searcher
+  ## The paths below could be defined just when it's needed and
+  ## when it make sense.
+  # - /api/rag
+  # - /api/ingestion
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
@@ -202,6 +209,8 @@ route:
   paths:
   - /api/datasource
   - /api/searcher
+  # - /api/rag
+  # - /api/ingestion
   tls:
     enabled: false
     secretName: openk9-tls-star-secret #-TBMD
