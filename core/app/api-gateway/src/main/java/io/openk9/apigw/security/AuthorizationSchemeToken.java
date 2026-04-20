@@ -19,6 +19,7 @@ package io.openk9.apigw.security;
 
 import io.openk9.apigw.security.apikey.ApiKeyAuthenticationToken;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
@@ -31,7 +32,7 @@ public enum AuthorizationSchemeToken {
 
 	API_KEY(ApiKeyAuthenticationToken.class),
 	OAUTH2(JwtAuthenticationToken.class),
-	NO_AUTH(NoAuthenticationToken.class);
+	NO_AUTH(AnonymousAuthenticationToken.class);
 
 	private final Class<? extends Authentication> authenticationTokenClass;
 

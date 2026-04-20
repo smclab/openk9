@@ -17,6 +17,8 @@
 
 package io.openk9.apigw.security.configuration;
 
+import java.util.UUID;
+
 import io.openk9.apigw.security.ApiRoute;
 import io.openk9.apigw.security.AuthorizationHeaderFilter;
 
@@ -83,6 +85,10 @@ public class WebFilterChainConfiguration {
 			.oauth2ResourceServer(oauth2 -> oauth2
 				.authenticationManagerResolver(
 					jwtAuthManagerResolver))
+			.anonymous(anonymous -> anonymous
+				.key(UUID.randomUUID().toString())
+				.principal("anonymousUser")
+				.authorities("ROLE_ANONYMOUS"))
 			.authorizeExchange(authorize -> authorize
 				.pathMatchers(ApiRoute.antPatterns())
 				.access(authzManager))

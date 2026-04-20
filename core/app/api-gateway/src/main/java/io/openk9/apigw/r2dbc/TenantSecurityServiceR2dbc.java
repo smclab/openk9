@@ -29,7 +29,6 @@ import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.ChecksumValidationException;
 import io.openk9.apigw.security.ExpiredApiKeyException;
 import io.openk9.apigw.security.Keychain;
-import io.openk9.apigw.security.NoAuthenticationToken;
 import io.openk9.apigw.security.RouteAuthorizationMap;
 import io.openk9.apigw.security.ApiRoute;
 import io.openk9.apigw.security.Tenant;
@@ -171,7 +170,6 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 		return getTenantAggregate(tenantId)
 			.map(Tenant::routeAuthorizationMap)
 			.flatMap(routeAuthorizationMap -> authenticationMono
-				.defaultIfEmpty(NoAuthenticationToken.INSTANCE)
 				.map(auth -> routeAuthorizationMap.allows(apiRoute, auth)))
 			.defaultIfEmpty(false); // disallow if tenant doesn't exist
 	}
