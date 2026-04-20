@@ -14,9 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import asyncio
 import json
 import os
+import secrets
 from contextlib import asynccontextmanager
 from enum import Enum
 from pathlib import Path
@@ -25,7 +27,16 @@ from urllib.parse import urlparse, urlunparse
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Header,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from google.protobuf.struct_pb2 import Struct
