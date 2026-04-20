@@ -3,9 +3,8 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
-import React from "react";
-import { getUserProfile } from "../client/authentication";
 import { BrandLogo } from "../BrandLogo";
+import { useAuth } from "../client/authStore";
 
 export function bytesToMegabytes(bytes: number): number {
   const megabytes = bytes / (1024 * 1024);
@@ -13,17 +12,12 @@ export function bytesToMegabytes(bytes: number): number {
 }
 
 export function DashBoard() {
-  const [user, setUser] = React.useState<string | undefined>();
-  React.useEffect(() => {
-    getUserProfile().then((data) => {
-      setUser(data?.name);
-    });
-  }, []);
+  const { username } = useAuth();
 
   return (
     <Container maxWidth="lg">
       <Box sx={{ display: "flex", gap: 3, mt: 3 }}>
-        <Presentation user={user || ""} />
+        <Presentation user={username ?? ""} />
       </Box>
     </Container>
   );

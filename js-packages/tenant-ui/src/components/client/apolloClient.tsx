@@ -1,18 +1,23 @@
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { relayStylePagination } from "@apollo/client/utilities";
-import { getAccessToken } from "./oidcClient";
+import { forceSignOut, getAuthHeader } from "./authStore";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
     uri: "/api/tenant-manager/graphql",
     async fetch(input, init?) {
-      const token = await getAccessToken();
-      if (token) {
-        const headers = { ...(init ?? { headers: {} }).headers, Authorization: `Bearer ${token}` };
-        return await fetch(input, { ...init, headers });
-      } else {
-        return await fetch(input, init);
+      const authHeader = getAuthHeader();
+      const headers = authHeader
+        ? { ...(init?.headers ?? {}), Authorization: authHeader }
+        : init?.headers;
+      const response = await fetch(input, { ...init, headers });
+      if (response.status === 401) {
+        forceSignOut();
+        if (!window.location.pathname.endsWith("/login")) {
+          window.location.assign("/tenant/login");
+        }
       }
+      return response;
     },
   }),
   cache: new InMemoryCache({
@@ -41,4 +46,3 @@ export const apolloClient = new ApolloClient({
     },
   }),
 });
-

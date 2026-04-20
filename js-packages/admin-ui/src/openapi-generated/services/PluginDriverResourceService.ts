@@ -74,6 +74,7 @@ id: number,
                 400: `Bad Request`,
                 404: `Not found`,
                 500: `Internal Server Error`,
+                502: `The service does not expose a form endpoint or returned an invalid response`,
             },
         });
     }
