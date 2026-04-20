@@ -16,21 +16,6 @@
         }
       },
       {
-        "label": "Driver",
-        "field": "driver",
-        "type": "text",
-        "size": 4,
-        "required": true,
-        "values": [],
-        "info": "Database driver (e.g., psycopg2, pymysql).",
-        "placeholder": "pymysql",
-        "validator": {
-          "min": 0,
-          "max": 100,
-          "regex": "/[[:alnum:]]+/"
-        }
-      },
-      {
         "label": "Username",
         "field": "username",
         "type": "text",

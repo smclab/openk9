@@ -33,9 +33,7 @@ class Dialect(str, Enum):
 class Driver(str, Enum):
     psycopg2 = "psycopg2"
     pymysql = "pymysql"
-    mysqlconnector = "mysqlconnector"
     pyodbc = "pyodbc"
-    pymssql = "pymssql"
     oracledb = "oracledb"
     fdb = "fdb"
     ibm_db = "ibm_db"
@@ -44,21 +42,24 @@ class Driver(str, Enum):
     @classmethod
     def map(cls):
         return {
-            Dialect.postgresql: [cls.psycopg2],
-            Dialect.mysql: [cls.mysqlconnector, cls.pymysql],
-            Dialect.mariadb: [cls.pymysql],
-            Dialect.oracle: [cls.oracledb],
-            Dialect.mssql: [cls.pyodbc, cls.pymssql],
-            Dialect.firebird: [cls.fdb],
-            Dialect.ibm_db: [cls.ibm_db],
-            Dialect.snowflake: [cls.snowflake],
+            Dialect.postgresql: cls.psycopg2,
+            Dialect.mysql: cls.pymysql,
+            Dialect.mariadb: cls.pymysql,
+            Dialect.oracle: cls.oracledb,
+            Dialect.mssql: cls.pyodbc,
+            Dialect.firebird: cls.fdb,
+            Dialect.ibm_db: cls.ibm_db,
+            Dialect.snowflake: cls.snowflake,
         }
+
+    @classmethod
+    def get_for(cls, dialect: Dialect):
+   		return cls.map()[dialect]
 
 
 class DatabaseRequest(BaseModel):
-    # TODO: Change in form.json Dialect and Driver to value selection (?)
+    # TODO: Change in form.json Dialect to value selection (?)
     dialect: Dialect
-    driver: Driver
     username: str
     password: str
     host: str
@@ -73,13 +74,6 @@ class DatabaseRequest(BaseModel):
     scheduleId: str
     tenantId: str
 
-    @model_validator(mode='after')
-    def verify_square(self) -> Self:
-        dialect_drive_map = Driver.map()
-        usable_drivers = dialect_drive_map[self.dialect]
-        if self.driver not in usable_drivers:
-            raise ValueError(f'Acceptable drivers for {self.dialect.value} are {[usable_driver.value for usable_driver in usable_drivers]}')
-        return self
 # TODO: Implement NoSql extraction
 
 
@@ -88,7 +82,6 @@ def get_data(request: DatabaseRequest):
     request = request.dict()
 
     dialect = request["dialect"]
-    driver = request["driver"]
     username = request["username"]
     password = request["password"]
     host = request["host"]
@@ -102,6 +95,9 @@ def get_data(request: DatabaseRequest):
     datasource_id = request["datasourceId"]
     schedule_id = request["scheduleId"]
     tenant_id = request["tenantId"]
+
+	# Retrives driver for request dialect or thorws an exception
+    driver = Driver.get_for(dialect)
 
     data_extraction = DataExtraction(dialect, driver, username, password,
                                      host, port, db, schema, table, columns, where,

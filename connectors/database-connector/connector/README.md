@@ -17,7 +17,6 @@ Call this endpoint to execute a crawler that extract tables from Database
 This endpoint takes different arguments in JSON raw body:
 
 - **dialect**: Database name such as 'mysql', 'oracle', 'postgresql', etc. (required)
-- **driver**: Database driver (e.g., psycopg2, pymysql). (required)
 - **username**: Database username. (required)
 - **password**: Database password. (required)
 - **host**: Database server address (IP or domain). (required)
@@ -39,7 +38,6 @@ curl --location --request POST 'http://localhost:5000/getData' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "dialect": "mysql",
-    "driver": pymysql,
     "username": "admin",
     "password": "password",
     "host": "localhost",
