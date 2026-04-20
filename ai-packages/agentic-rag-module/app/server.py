@@ -39,6 +39,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from google.protobuf.struct_pb2 import Struct
 from opensearchpy import OpenSearch
 from phoenix.otel import register
@@ -85,6 +86,8 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 UPLOAD_FILE_EXTENSIONS = os.getenv("UPLOAD_FILE_EXTENSIONS")
 MAX_UPLOAD_FILE_SIZE = int(os.getenv("MAX_UPLOAD_FILE_SIZE")) * 1024 * 1024
 MAX_UPLOAD_FILES_NUMBER = int(os.getenv("MAX_UPLOAD_FILES_NUMBER"))
+OPENK9_SECURITY_ADMIN_USERNAME = "admin"
+OPENK9_SECURITY_ADMIN_PASSWORD = os.getenv("OPENK9_SECURITY_ADMIN_PASSWORD")
 
 
 if ARIZE_PHOENIX_ENABLED:
@@ -140,6 +143,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+security = HTTPBasic()
 
 
 @app.get("/")
@@ -1352,13 +1357,34 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
 
 
 @app.post(
-    "/api/rag/embed-guardrails",
+    "/api/embed-guardrails",
+    tags=["RAG"],
 )
 async def embed_guardrails(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     documents: list[str],
     request: Request,
     headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = OPENK9_SECURITY_ADMIN_USERNAME.encode("utf-8")
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = OPENK9_SECURITY_ADMIN_PASSWORD.encode("utf-8")
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
     if headers.x_forwarded_host:
         virtual_host = headers.x_forwarded_host.split(",")[0]
     else:
@@ -1659,12 +1685,35 @@ def save_domains_documents(opensearch_host: str, documents: list, vector_size: i
             return f"Bulk indexing failed: {e}"
 
 
-@app.post("/api/rag/embed-domains")
+@app.post(
+    "/api/embed-domains",
+    tags=["RAG"],
+)
 async def embed_domains(
+    credentials: Annotated[HTTPBasicCredentials, Depends(security)],
     documents: list[dict],
     request: Request,
     headers: Annotated[models.CommonHeadersMinimal, Header()],
 ):
+    current_username_bytes = credentials.username.encode("utf8")
+    correct_username_bytes = OPENK9_SECURITY_ADMIN_USERNAME.encode("utf-8")
+    is_correct_username = secrets.compare_digest(
+        current_username_bytes, correct_username_bytes
+    )
+
+    current_password_bytes = credentials.password.encode("utf8")
+    correct_password_bytes = OPENK9_SECURITY_ADMIN_PASSWORD.encode("utf-8")
+    is_correct_password = secrets.compare_digest(
+        current_password_bytes, correct_password_bytes
+    )
+
+    if not (is_correct_username and is_correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
     if headers.x_forwarded_host:
         virtual_host = headers.x_forwarded_host.split(",")[0]
     else:
