@@ -18,7 +18,6 @@
 package io.openk9.apigw.filter;
 
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -26,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import jakarta.annotation.PostConstruct;
 
@@ -47,18 +47,29 @@ import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Spring Cloud Gateway {@link GlobalFilter} that re-signs incoming
- * Bearer tokens as internal HMAC-signed JWTs, adding tenant and
- * group claims for downstream MicroProfile JWT consumption.
+ * Spring Cloud Gateway {@link GlobalFilter} that rewrites the outbound
+ * {@code Authorization} header based on the Spring Security
+ * {@link Authentication} present in the reactive context.
  * <p>
- * Non-Bearer authorization schemes (e.g. Basic) are either
- * stripped or passed through depending on the
- * {@code io.openk9.apigw.passthrough-non-bearer-auth} property.
+ * Trust boundary: this filter never parses the raw inbound
+ * {@code Authorization} header. All identity claims come from the
+ * {@link Authentication} that the {@code SecurityWebFilterChain} has
+ * already validated (issuer, signature, audience, expiration).
+ * <p>
+ * Only a {@link JwtAuthenticationToken} produces an internal MP-JWT.
+ * Every other authentication (anonymous, API key, etc.) causes the
+ * {@code Authorization} header to be stripped before the request is
+ * forwarded downstream.
  */
 @Slf4j
 @Component
@@ -85,6 +96,9 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	// MP-JWT claims to be added in the self-signed JWT.
 	private static final String UNIQUE_PRINCIPAL_NAME = "upn";
 	private static final String GROUPS_PERMISSION_GRANT = "groups";
+	private static final String ISSUED_AT = "iat";
+	private static final String EXPIRATION = "exp";
+	private static final String SUBJECT = "sub";
 
 	// MP-JWT Constant JWT claim values,
 	// because they are related to the OpenK9 Api Gateway.
@@ -112,42 +126,153 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		}
 	}
 
-	/**
-	 * Replaces a valid Bearer token with an internal JWT,
-	 * strips failed Bearer tokens, and optionally passes
-	 * non-Bearer schemes through unchanged.
-	 */
 	@Override
 	public Mono<Void> filter(
 		ServerWebExchange exchange,
 		GatewayFilterChain chain) {
 
-		String internalToken = createInternalToken(exchange);
-		return chain.filter(exchange.mutate()
-			.request(request -> request
-				.headers(httpHeaders -> {
-					if (internalToken != null) {
-						httpHeaders.set(HttpHeaders.AUTHORIZATION, "Bearer " + internalToken);
-					}
-					else if (!passthroughNonBearerAuth) {
-						httpHeaders.remove(HttpHeaders.AUTHORIZATION);
-					}
-					// else: passthrough enabled, preserve original header
-				}).build()
-			).build()
-		);
+		return ReactiveSecurityContextHolder.getContext()
+			.map(SecurityContext::getAuthentication)
+			.map(auth -> headerActionFor(auth, exchange))
+			.defaultIfEmpty(stripAuthorization())
+			.flatMap(action -> chain.filter(exchange.mutate()
+				.request(request -> request.headers(action).build())
+				.build()));
+	}
+
+	private Consumer<HttpHeaders> headerActionFor(
+		Authentication authentication, ServerWebExchange exchange) {
+
+		if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+			String internal = createInternalTokenFromJwt(jwtAuth, exchange);
+			if (internal != null) {
+				return setBearer(internal);
+			}
+		}
+
+		// Any authentication other than a validated JWT (anonymous,
+		// API key, ...) never produces an identity-bearing internal
+		// token. Strip the Authorization header unless local-dev
+		// passthrough is enabled, in which case non-Bearer schemes
+		// (e.g. Basic) are preserved for direct downstream auth.
+		if (passthroughNonBearerAuth) {
+			return noAction();
+		}
+
+		return stripAuthorization();
+	}
+
+	private static Consumer<HttpHeaders> setBearer(String internalToken) {
+		return headers -> headers.set(
+			HttpHeaders.AUTHORIZATION, "Bearer " + internalToken);
+	}
+
+	private static Consumer<HttpHeaders> stripAuthorization() {
+		return headers -> headers.remove(HttpHeaders.AUTHORIZATION);
+	}
+
+	private static Consumer<HttpHeaders> noAction() {
+		return headers -> {};
+	}
+
+	private static String createInternalTokenFromJwt(
+		JwtAuthenticationToken jwtAuth, ServerWebExchange exchange) {
+
+		Jwt jwt = jwtAuth.getToken();
+		Map<String, Object> claims = jwt.getClaims();
+
+		String sub = resolveSubject(claims);
+		if (sub == null) {
+			log.warn("The subject cannot be found in the validated JWT.");
+			return null;
+		}
+
+		Set<String> aggregateGroups = new HashSet<>();
+		addGroupsFromGroupsClaim(claims, aggregateGroups);
+		addGroupsFromRealmAccessRolesClaim(claims, aggregateGroups);
+		List<String> groups = new ArrayList<>(aggregateGroups);
+
+		Date iat = toDate(claims.get(ISSUED_AT));
+		Date exp = toDate(claims.get(EXPIRATION));
+		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+
+		try {
+			JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
+				.keyID(JWK.getKeyID())
+				.build();
+
+			JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+				.subject(sub)
+				.claim(UNIQUE_PRINCIPAL_NAME, sub)
+				.issuer(ISSUER_VALUE)
+				.audience(AUDIENCE_VALUE)
+				.claim(GROUPS_PERMISSION_GRANT, groups)
+				.issueTime(iat)
+				.expirationTime(exp)
+				.claim(TENANT_ID, tenantId)
+				.jwtID(UUID.randomUUID().toString())
+				.build();
+
+			SignedJWT signedJWT = new SignedJWT(header, claimsSet);
+			signedJWT.sign(SIGNER);
+
+			return signedJWT.serialize();
+		}
+		catch (JOSEException e) {
+			log.warn("An error occurred while signing the internal JWT.", e);
+			return null;
+		}
+	}
+
+	// Referring the MP-JWT Specification:
+	//
+	// MP-JWT "upn" claim is the user principal name
+	// in the java.security.Principal interface,
+	// and is the caller principal name
+	// in jakarta.security.enterprise.identitystore.IdentityStore.
+	// If this claim is missing,
+	// fallback to the "preferred_username",
+	// OIDC Section 5.1 should be attempted,
+	// and if that claim is missing,
+	// fallback to the "sub" claim should be used.
+	private static String resolveSubject(Map<String, Object> claims) {
+		Object upn = claims.get(UNIQUE_PRINCIPAL_NAME);
+		if (upn instanceof String s && !s.isEmpty()) {
+			return s;
+		}
+		Object preferred = claims.get(PREFERRED_USERNAME);
+		if (preferred instanceof String s && !s.isEmpty()) {
+			return s;
+		}
+		Object sub = claims.get(SUBJECT);
+		if (sub instanceof String s && !s.isEmpty()) {
+			return s;
+		}
+		return null;
+	}
+
+	private static Date toDate(Object claim) {
+		if (claim instanceof Date d) {
+			return d;
+		}
+		if (claim instanceof java.time.Instant i) {
+			return Date.from(i);
+		}
+		if (claim instanceof Number n) {
+			return new Date(n.longValue() * 1000L);
+		}
+		return null;
 	}
 
 	private static void addGroupsFromRealmAccessRolesClaim(
-		JWTClaimsSet claims, Set<String> aggregateRoles)
-		throws ParseException {
+		Map<String, Object> claims, Set<String> aggregateRoles) {
 
-		Map<String, Object> realmAccessClaim = claims.getJSONObjectClaim(REALM_ACCESS);
-		if (realmAccessClaim == null) {
+		Object realmAccessClaim = claims.get(REALM_ACCESS);
+		if (!(realmAccessClaim instanceof Map<?, ?> realmAccess)) {
 			return;
 		}
 
-		Object rolesObj = realmAccessClaim.get(ROLES);
+		Object rolesObj = realmAccess.get(ROLES);
 		if (rolesObj instanceof List<?> list) {
 			for (Object item : list) {
 				if (item instanceof String role) {
@@ -158,107 +283,16 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 	}
 
 	private static void addGroupsFromGroupsClaim(
-		JWTClaimsSet claims, Set<String> aggregateRoles)
-		throws ParseException {
+		Map<String, Object> claims, Set<String> aggregateRoles) {
 
-		List<String> groupsClaim = claims.getStringListClaim(GROUPS_PERMISSION_GRANT);
-		if (groupsClaim != null) {
-			aggregateRoles.addAll(groupsClaim);
-		}
-	}
-
-
-	private static String createInternalToken(ServerWebExchange exchange) {
-		HttpHeaders headers = exchange.getRequest().getHeaders();
-		String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
-
-		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
-		String authScheme = "";
-
-		if (authorization != null && authorization.length() >= 7) {
-			authScheme = authorization.substring(0, 7);
-		}
-
-		if (authScheme.equalsIgnoreCase("bearer ")) {
-			String jwtString = authorization.substring(7);
-
-			try {
-				SignedJWT jwt = SignedJWT.parse(jwtString);
-				JWTClaimsSet claims = jwt.getJWTClaimsSet();
-
-				String sub;
-				List<String> groups;
-				Date iat;
-				Date exp;
-
-				// Referring the MP-JWT Specification:
-				//
-				// MP-JWT "upn" claim is the user principal name
-				// in the java.security.Principal interface,
-				// and is the caller principal name
-				// in jakarta.security.enterprise.identitystore.IdentityStore.
-				// If this claim is missing,
-				// fallback to the "preferred_username",
-				// OIDC Section 5.1 should be attempted,
-				// and if that claim is missing,
-				// fallback to the "sub" claim should be used.
-				if (claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME) != null) {
-					sub = claims.getClaimAsString(UNIQUE_PRINCIPAL_NAME);
+		Object groupsClaim = claims.get(GROUPS_PERMISSION_GRANT);
+		if (groupsClaim instanceof List<?> list) {
+			for (Object item : list) {
+				if (item instanceof String group) {
+					aggregateRoles.add(group);
 				}
-				else if (claims.getClaimAsString(PREFERRED_USERNAME) != null) {
-					sub = claims.getClaimAsString(PREFERRED_USERNAME);
-				}
-				else if (claims.getSubject() != null) {
-					sub = claims.getSubject();
-				}
-				else {
-					log.warn("The subject cannot be found in the current JWT.");
-					return null;
-				}
-
-				iat = claims.getIssueTime();
-				exp = claims.getExpirationTime();
-
-				// Aggregate groups from known claims used for listing roles.
-				// In MP-JWT specification, "groups" is the claim suggested for
-				// grouping permission grants.
-				Set<String> aggregateGroups = new HashSet<>();
-				addGroupsFromGroupsClaim(claims, aggregateGroups);
-				addGroupsFromRealmAccessRolesClaim(claims, aggregateGroups);
-				groups = new ArrayList<>(aggregateGroups);
-
-				JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
-					.keyID(JWK.getKeyID())
-					.build();
-
-				JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
-					.subject(sub)
-					.claim(UNIQUE_PRINCIPAL_NAME, sub)
-					.issuer(ISSUER_VALUE)
-					.audience(AUDIENCE_VALUE)
-					.claim(GROUPS_PERMISSION_GRANT, groups)
-					.issueTime(iat)
-					.expirationTime(exp)
-					.claim(TENANT_ID, tenantId)
-					.jwtID(UUID.randomUUID().toString())
-					.build();
-
-				SignedJWT signedJWT = new SignedJWT(
-					header,
-					claimsSet
-				);
-
-				signedJWT.sign(SIGNER);
-
-				return signedJWT.serialize();
 			}
-			catch (ParseException | JOSEException e) {
-				log.warn("An error occurred while creating internal JWT.", e);
-			}
-
 		}
-
-		return null;
 	}
 
 }

@@ -124,6 +124,7 @@ class ApiGatewaySecurityTest {
 	// credentials
 	private static final String INVALID_JWT_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vdW5rbm93bklzc3Vlci5sb2NhbGhvc3QiLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.azSxTv3dA4-360UsoOwxtHkJaVcGYdM_y8YcJbckNRI";
 	private static final String ALABASTA_VALID_JWT_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vYWxhYmFzdGEubG9jYWxob3N0OjkwMDAiLCJzdWIiOiJhZG1pbiIsIm5hbWUiOiJKb2huIERvZSIsImFkbWluIjp0cnVlLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6OTk5OTk5OTk5OSwiZ3JvdXBzIjpbIms5LWFkbWluIl0sInRlbmFudElkIjoiYWxhYmFzdGEifQ.MGX1UGrM8j5E0TzTzbK8OLBClmnBjtDdzBtgKK8LGwY";
+	private static final String SKYPEA_VALID_JWT_TOKEN = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vc2t5cGVhLmxvY2FsaG9zdDo5MDAwIiwic3ViIjoic2t5dXNlciIsIm5hbWUiOiJTa3kgVXNlciIsImlhdCI6MTUxNjIzOTAyMiwiZXhwIjo5OTk5OTk5OTk5LCJncm91cHMiOlsic2t5cGVhLWFkbWluIl0sInRlbmFudElkIjoic2t5cGVhIn0.MGX1UGrM8j5E0TzTzbK8OLBClmnBjtDdzBtgKK8LGwY";
 
 	private static final String INVALID_API_KEY = "ApiKey sk_9a6ef1042afe82404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667";
 	private static final String ALABASTA_VALID_API_KEY = "ApiKey sk_f5b4136fd3449f94f7d60b11180bd7b63eef073b84e3b34d6098b0c71f3cc930_a9d05b90";
@@ -141,6 +142,7 @@ class ApiGatewaySecurityTest {
 	private static final String SABAODY_HOST = "sabaody.localhost";
 	private static final String LOGUETOWN_HOST = "loguetown.localhost";
 	private static final String WATERSEVEN_HOST = "waterseven.localhost";
+	private static final String SKYPEA_HOST = "skypea.localhost";
 	private static final String UNKNOWN_HOST = "unknown.localhost";
 
 	@Nested
@@ -854,6 +856,65 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.AUTHORIZATION, SABAODY_EXPIRED_API_KEY)
 				.exchange()
 				.expectStatus().isUnauthorized();
+		}
+	}
+
+	@Nested
+	@DisplayName("Internal MP-JWT Propagation Tests")
+	class InternalMpJwtPropagationTests {
+
+		@Test
+		@DisplayName("Anonymous request on NO_AUTH route strips Authorization downstream")
+		void testAnonymousRequestStripsAuthorization() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SKYPEA_HOST)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.authorizationPresent").isEqualTo(false)
+				.jsonPath("$.upn").isEmpty()
+				.jsonPath("$.groups").isEmpty();
+		}
+
+		@Test
+		@DisplayName("Validated JWT builds MP-JWT from SecurityContext claims, not from the raw header")
+		void testDatasourceOAuth2PropagatesUpnAndGroups() {
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.authorizationPresent").isEqualTo(true)
+				.jsonPath("$.upn").isEqualTo("admin")
+				.jsonPath("$.groups[0]").isEqualTo("k9-admin");
+		}
+
+		@Test
+		@DisplayName("Forged JWT is rejected by SecurityWebFilterChain before the filter runs")
+		void testForgedJwtRejectedBeforeFilter() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SKYPEA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, ALABASTA_VALID_JWT_TOKEN)
+				.exchange()
+				.expectStatus().isUnauthorized();
+		}
+
+		@Test
+		@DisplayName("API key request propagates no identity JWT downstream")
+		void testApiKeyRequestStripsAuthorization() {
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_SEARCH_API_KEY)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.authorizationPresent").isEqualTo(false)
+				.jsonPath("$.upn").isEmpty();
 		}
 	}
 

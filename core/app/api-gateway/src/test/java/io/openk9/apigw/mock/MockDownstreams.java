@@ -18,6 +18,7 @@
 package io.openk9.apigw.mock;
 
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.Map;
 
 import io.openk9.common.util.web.InternalHeaders;
@@ -50,12 +51,29 @@ public class MockDownstreams {
 
 	private static final ObjectMapper objMapper = new ObjectMapper();
 
-	private static String json(String serviceName, String tenantId, SignedJWT jwt) {
-		Map<String, Object> mapJson = Map.of(
-			"data", "hello from %s".formatted(serviceName),
-			"tenantId", tenantId != null ? tenantId : "unknown",
-			"jwt", jwt != null ? jwt : "unknown"
-		);
+	private static String json(
+		String serviceName, String tenantId,
+		String authorizationHeader, SignedJWT jwt) {
+
+		Map<String, Object> mapJson = new HashMap<>();
+		mapJson.put("data", "hello from %s".formatted(serviceName));
+		mapJson.put("tenantId", tenantId != null ? tenantId : "unknown");
+		mapJson.put("authorizationPresent", authorizationHeader != null);
+
+		String upn = null;
+		Object groups = null;
+		if (jwt != null) {
+			try {
+				var claims = jwt.getJWTClaimsSet();
+				upn = claims.getStringClaim("upn");
+				groups = claims.getClaim("groups");
+			}
+			catch (ParseException e) {
+				log.warn("cannot read claims from internal jwt", e);
+			}
+		}
+		mapJson.put("upn", upn);
+		mapJson.put("groups", groups);
 
 		return objMapper.writeValueAsString(mapJson);
 	}
@@ -111,13 +129,14 @@ public class MockDownstreams {
 		HttpServerRequest req, HttpServerResponse res, String downstream) {
 
 		var headers = req.requestHeaders();
+		String authorization = headers.get(HttpHeaders.AUTHORIZATION);
 		SignedJWT jwt =  getSignedJWT(headers);
 
 		var tenantId = headers.get(InternalHeaders.TENANT_ID);
 
 		return res
 			.header("Content-Type", "application/json")
-			.sendString(Mono.just(json(downstream, tenantId, jwt)));
+			.sendString(Mono.just(json(downstream, tenantId, authorization, jwt)));
 	}
 
 	private static SignedJWT getSignedJWT(io.netty.handler.codec.http.HttpHeaders headers) {
