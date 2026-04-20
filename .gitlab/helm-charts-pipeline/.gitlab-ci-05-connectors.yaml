@@ -76,3 +76,22 @@ push-youtube-connector-helm:
   - cd connectors/youtube-connector/chart/openk9-youtube-connector && mkdir -p package
   - helm package . -d package
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-minio-connector-helm:
+  stage: push
+  image: alpine:3.19
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/minio-connector/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/minio-connector/chart/openk9-minio-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
