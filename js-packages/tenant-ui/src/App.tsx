@@ -7,6 +7,7 @@ import { BrowserRouter, Outlet, Route, Routes, useNavigate } from "react-router-
 import { BrandLogo } from "./components/BrandLogo";
 import { apolloClient } from "./components/client/apolloClient";
 import { AuthProvider, RedirectIfAuthenticated, RequireAuth, useAuth } from "./components/client/authStore";
+import { SessionExpirationWarning } from "./components/client/SessionExpirationWarning";
 import { queryClient } from "./components/client/queryClient";
 import { ModalProvider } from "./components/Modals";
 import { useFilteredMenuItems } from "./components/Navigation/menuItems";
@@ -94,6 +95,7 @@ function MainLayout({ isDarkMode, toggleTheme }: LayoutProps) {
 
   return (
     <SideNavigationContextProvider>
+      <SessionExpirationWarning />
       <Box
         sx={{
           display: "flex",

@@ -4,6 +4,9 @@ import { Navigate, useLocation } from "react-router-dom";
 const STORAGE_KEY = "tenantUiAuth";
 const DEFAULT_EXPIRATION_MINUTES = 8 * 60;
 const CHANGE_EVENT = "tenant-ui:auth-changed";
+const TOUCH_THROTTLE_MS = 60_000;
+
+export const SESSION_WARNING_LEAD_MS = 5 * 60_000;
 
 type StoredAuth = {
   token: string;
@@ -15,8 +18,10 @@ type StoredAuth = {
 type AuthContextValue = {
   isAuthenticated: boolean;
   username: string | null;
+  expiresAt: number | null;
   signIn: (username: string, password: string, opts?: { expiresInMinutes?: number }) => void;
   signOut: () => void;
+  extendSession: (opts?: { expiresInMinutes?: number }) => void;
 };
 
 const AuthContext = React.createContext<AuthContextValue | null>(null);
@@ -52,6 +57,19 @@ export function getAuthHeader(): string | null {
 
 export function forceSignOut(): void {
   clearStorage();
+  window.dispatchEvent(new Event(CHANGE_EVENT));
+}
+
+let lastTouchAt = 0;
+
+export function touchSession(opts?: { expiresInMinutes?: number }): void {
+  const now = Date.now();
+  if (now - lastTouchAt < TOUCH_THROTTLE_MS) return;
+  const current = readStorage();
+  if (!current) return;
+  const expiresInMinutes = opts?.expiresInMinutes ?? DEFAULT_EXPIRATION_MINUTES;
+  writeStorage({ ...current, expiresAt: now + expiresInMinutes * 60_000 });
+  lastTouchAt = now;
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
@@ -92,18 +110,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = React.useCallback<AuthContextValue["signOut"]>(() => {
+    lastTouchAt = 0;
     clearStorage();
     setAuth(null);
+  }, []);
+
+  const extendSession = React.useCallback<AuthContextValue["extendSession"]>((opts) => {
+    lastTouchAt = 0;
+    touchSession(opts);
   }, []);
 
   const value = React.useMemo<AuthContextValue>(
     () => ({
       isAuthenticated: auth !== null,
       username: auth?.username ?? null,
+      expiresAt: auth?.expiresAt ?? null,
       signIn,
       signOut,
+      extendSession,
     }),
-    [auth, signIn, signOut]
+    [auth, signIn, signOut, extendSession]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

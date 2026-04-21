@@ -1,6 +1,6 @@
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { relayStylePagination } from "@apollo/client/utilities";
-import { forceSignOut, getAuthHeader } from "./authStore";
+import { forceSignOut, getAuthHeader, touchSession } from "./authStore";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
@@ -16,6 +16,8 @@ export const apolloClient = new ApolloClient({
         if (!window.location.pathname.endsWith("/login")) {
           window.location.assign("/tenant/login");
         }
+      } else if (response.ok) {
+        touchSession();
       }
       return response;
     },
