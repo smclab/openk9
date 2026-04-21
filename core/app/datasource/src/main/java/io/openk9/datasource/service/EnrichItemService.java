@@ -54,7 +54,9 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 	}
 
 	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
-		return httpEnricherClient.getHealth(resourceUri);
+		return httpEnricherClient
+			.validateBaseUri(resourceUri)
+			.flatMap(validResourceUri -> httpEnricherClient.getHealth(validResourceUri));
 	}
 
 }
