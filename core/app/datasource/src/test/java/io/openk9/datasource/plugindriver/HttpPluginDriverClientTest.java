@@ -20,6 +20,7 @@ package io.openk9.datasource.plugindriver;
 import java.io.IOException;
 import java.io.InputStream;
 
+import io.openk9.datasource.client.exception.InvalidUriException;
 import jakarta.inject.Inject;
 import jakarta.validation.ValidationException;
 
@@ -270,6 +271,51 @@ class HttpPluginDriverClientTest {
 
 				wireMockServer.removeStub(invalidBodyStub);
 			}
+		);
+
+	}
+
+	@Test
+	void should_not_fail_when_base_uri_conforms_regex_pattern() {
+
+		ResourceUri resourceUriTest = ResourceUri.builder()
+			.baseUri("http://openk9-test-connector:5555")
+			.build();
+
+		Assertions.assertDoesNotThrow(() ->
+			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+				.await()
+				.indefinitely()
+		);
+
+	}
+
+	@Test
+	void should_fail_when_base_uri_does_not_conform_regex_pattern() {
+
+		ResourceUri resourceUriTest = ResourceUri.builder()
+			.baseUri("http://crawler-test:5555")
+			.build();
+
+		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
+			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+				.await()
+				.indefinitely()
+		);
+
+	}
+
+	@Test
+	void should_fail_with_invalid_base_uri() {
+
+		ResourceUri resourceUriTest = ResourceUri.builder()
+			.baseUri("openk9.test")
+			.build();
+
+		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
+			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+				.await()
+				.indefinitely()
 		);
 
 	}
