@@ -1,0 +1,107 @@
+{
+  "fields": [
+    {
+      "label": "Type Mapping",
+      "name": "type_mapping",
+      "field": "type_mapping",
+      "type": "stringMap",
+      "size": 12,
+      "required": true,
+      "info": "Mapping from MIME type to document alias. Only files whose detected MIME type appears here are parsed; the alias is added to documentTypes on the enriched payload.",
+      "placeholder": "",
+      "values": [],
+      "validator": {}
+    },
+    {
+      "label": "Retain Binaries",
+      "name": "retain_binaries",
+      "field": "retain_binaries",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "If true, the original binary is retained in the payload after parsing. If false, only the extracted text and metadata are forwarded.",
+      "placeholder": "",
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "validator": {}
+    },
+    {
+      "label": "Summary Length",
+      "name": "summary_length",
+      "field": "summary_length",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "info": "Maximum number of characters kept as document summary. Use -1 to disable the summary cap.",
+      "placeholder": "5000",
+      "values": [
+        {
+          "value": 5000,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": -1,
+        "max": 1000000
+      }
+    },
+    {
+      "label": "Max Length",
+      "name": "max_length",
+      "field": "max_length",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "info": "Maximum number of characters of extracted text kept on the document. Text longer than this is truncated. Use -1 to disable truncation.",
+      "placeholder": "100000",
+      "values": [
+        {
+          "value": 100000,
+          "isDefault": true
+        }
+      ],
+      "validator": {
+        "min": -1,
+        "max": 10000000
+      }
+    },
+    {
+      "label": "Include Last Modified Date",
+      "name": "include_last_modified_date",
+      "field": "include_last_modified_date",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "If true, the last modified date extracted from the document metadata is written to file.lastModifiedDate on the enriched payload.",
+      "placeholder": "",
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "validator": {}
+    },
+    {
+      "label": "Include Content Type",
+      "name": "include_content_type",
+      "field": "include_content_type",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "info": "If true, the Content-Type detected by Tika is written to document.contentType on the enriched payload.",
+      "placeholder": "",
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "validator": {}
+    }
+  ]
+}
