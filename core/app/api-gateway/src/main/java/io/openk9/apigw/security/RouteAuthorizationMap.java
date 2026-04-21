@@ -20,11 +20,30 @@ package io.openk9.apigw.security;
 import java.util.EnumMap;
 import java.util.Map;
 
-import io.openk9.apigw.security.apikey.ApiKeyAuthenticationToken;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-
+/**
+ * Per-tenant mapping from {@link ApiRoute} to the
+ * {@link AuthorizationSchemeToken} that must be enforced on requests
+ * reaching that route.
+ * <p>
+ * A tenant declares overrides (e.g. {@code SEARCHER → OAUTH2}) when
+ * it wants a stricter policy than the workspace-wide defaults; any
+ * route the tenant leaves unspecified falls back to the built-in
+ * {@code FALLBACKS} table defined in this class. The fallbacks
+ * encode the product-wide convention: the administrative
+ * {@code DATASOURCE} route requires OAuth2, while search, ingestion,
+ * RAG and tenant-lookup routes are public by default
+ * ({@link AuthorizationSchemeToken#NO_AUTH}).
+ * <p>
+ * Instances are immutable and built via the factory methods
+ * {@link #of()} (defaults only) and {@link #of(Map)} (with tenant
+ * overrides merged over the defaults). The map is consumed by the
+ * gateway authorization flow — in particular by
+ * {@link RouteAuthorizationResolverFilter}, which resolves the
+ * scheme for the current request and publishes it on the exchange
+ * so downstream stages ({@code TenantSecurityServiceR2dbc},
+ * {@code SelfSignedMPJwtGlobalPreFilter}) can act on it without a
+ * second lookup.
+ */
 public final class RouteAuthorizationMap {
 
 	private final EnumMap<ApiRoute, AuthorizationSchemeToken> tenantMappings;
@@ -79,46 +98,16 @@ public final class RouteAuthorizationMap {
 		return new RouteAuthorizationMap(tenantMappings);
 	}
 
-	private AuthorizationSchemeToken schemeFor(ApiRoute apiRoute) {
-		return tenantMappings.getOrDefault(apiRoute, FALLBACKS.get(apiRoute));
-	}
-
 	/**
-	 * Checks whether the given authentication is allowed to access
-	 * the specified route.
+	 * Returns the {@link AuthorizationSchemeToken} configured for the
+	 * given {@link ApiRoute}, falling back to the default mapping when
+	 * the tenant has no override.
 	 *
 	 * @param apiRoute the route being accessed
-	 * @param authentication the current authentication token
-	 * @return {@code true} if access is allowed
+	 * @return the authorization scheme for that route
 	 */
-	public boolean allows(
-		ApiRoute apiRoute, Authentication authentication) {
-		AuthorizationSchemeToken authSchemeToken = schemeFor(apiRoute);
-
-		// allows access when authScheme not defined or explicitly not required
-		if (authSchemeToken == null
-			|| authSchemeToken == AuthorizationSchemeToken.NO_AUTH) {
-
-			return true;
-		}
-
-		// allows access when required authentication match
-		if (!authSchemeToken.match(authentication.getClass())) {
-			return false;
-		}
-
-		// for API key authentication, verify the key's ApiGroup
-		// covers the requested route
-		if (authentication instanceof ApiKeyAuthenticationToken) {
-			String requiredAuthority = "ROUTE_" + apiRoute.name();
-
-			return authentication.getAuthorities()
-				.stream()
-				.map(GrantedAuthority::getAuthority)
-				.anyMatch(requiredAuthority::equals);
-		}
-
-		return true;
+	public AuthorizationSchemeToken schemeFor(ApiRoute apiRoute) {
+		return tenantMappings.getOrDefault(apiRoute, FALLBACKS.get(apiRoute));
 	}
 
 }

@@ -29,6 +29,8 @@ import java.util.function.Consumer;
 
 import jakarta.annotation.PostConstruct;
 
+import io.openk9.apigw.security.RouteAuthorizationResolverFilter;
+import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.TenantIdResolverFilter;
 
 import com.nimbusds.jose.JOSEException;
@@ -59,17 +61,18 @@ import reactor.core.publisher.Mono;
 /**
  * Spring Cloud Gateway {@link GlobalFilter} that rewrites the outbound
  * {@code Authorization} header based on the Spring Security
- * {@link Authentication} present in the reactive context.
+ * {@link Authentication} present in the reactive context and on the
+ * {@link AuthorizationSchemeToken} configured for the current route.
  * <p>
  * Trust boundary: this filter never parses the raw inbound
  * {@code Authorization} header. All identity claims come from the
  * {@link Authentication} that the {@code SecurityWebFilterChain} has
  * already validated (issuer, signature, audience, expiration).
  * <p>
- * Only a {@link JwtAuthenticationToken} produces an internal MP-JWT.
- * Every other authentication (anonymous, API key, etc.) causes the
- * {@code Authorization} header to be stripped before the request is
- * forwarded downstream.
+ * On authenticated routes, only a {@link JwtAuthenticationToken}
+ * produces an internal MP-JWT. Every other authentication (anonymous,
+ * API key, etc.) causes the {@code Authorization} header to be
+ * stripped before the request is forwarded downstream.
  */
 @Slf4j
 @Component
@@ -131,32 +134,41 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		ServerWebExchange exchange,
 		GatewayFilterChain chain) {
 
+		AuthorizationSchemeToken scheme =
+			RouteAuthorizationResolverFilter.getAuthorizationScheme(exchange);
+
 		return ReactiveSecurityContextHolder.getContext()
 			.map(SecurityContext::getAuthentication)
-			.map(auth -> headerActionFor(auth, exchange))
-			.defaultIfEmpty(stripAuthorization())
+			.map(auth -> headerActionFor(scheme, auth, exchange))
 			.flatMap(action -> chain.filter(exchange.mutate()
 				.request(request -> request.headers(action).build())
 				.build()));
 	}
 
 	private Consumer<HttpHeaders> headerActionFor(
-		Authentication authentication, ServerWebExchange exchange) {
+		AuthorizationSchemeToken scheme,
+		Authentication authentication,
+		ServerWebExchange exchange) {
 
-		if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+		// Mint an internal MP-JWT only when the route
+		// scheme is OAUTH2 and the authentication is a validated
+		// JwtAuthenticationToken.
+		if (scheme == AuthorizationSchemeToken.OAUTH2
+			&& authentication instanceof JwtAuthenticationToken jwtAuth) {
+
 			String internal = createInternalTokenFromJwt(jwtAuth, exchange);
 			if (internal != null) {
 				return setBearer(internal);
 			}
 		}
 
-		// Any authentication other than a validated JWT (anonymous,
-		// API key, ...) never produces an identity-bearing internal
-		// token. Strip the Authorization header unless local-dev
-		// passthrough is enabled, in which case non-Bearer schemes
-		// (e.g. Basic) are preserved for direct downstream auth.
-		if (passthroughNonBearerAuth) {
-			return noAction();
+		// Passthrough preserves non-Bearer schemes (e.g. Basic) for
+		// direct downstream auth in local/Docker environments.
+		// Bearer tokens are never passed through
+		if (passthroughNonBearerAuth 
+			&& !(authentication instanceof JwtAuthenticationToken)) {
+
+			return noop();
 		}
 
 		return stripAuthorization();
@@ -171,7 +183,7 @@ public class SelfSignedMPJwtGlobalPreFilter implements GlobalFilter {
 		return headers -> headers.remove(HttpHeaders.AUTHORIZATION);
 	}
 
-	private static Consumer<HttpHeaders> noAction() {
+	private static Consumer<HttpHeaders> noop() {
 		return headers -> {};
 	}
 

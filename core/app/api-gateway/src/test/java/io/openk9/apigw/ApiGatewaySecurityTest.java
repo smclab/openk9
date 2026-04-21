@@ -878,6 +878,26 @@ class ApiGatewaySecurityTest {
 		}
 
 		@Test
+		@DisplayName("Valid JWT on NO_AUTH route does not propagate identity downstream")
+		void testValidJwtOnNoAuthRouteStripsIdentity() {
+			// skypea tenant falls back to the default scheme map,
+			// where SEARCHER is NO_AUTH. Even if the admin UI re-uses
+			// its validated access token on a search call, the gateway
+			// must forward the request as anonymous — no upn, no
+			// groups, no Authorization header.
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SKYPEA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SKYPEA_VALID_JWT_TOKEN)
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody()
+				.jsonPath("$.authorizationPresent").isEqualTo(false)
+				.jsonPath("$.upn").isEmpty()
+				.jsonPath("$.groups").isEmpty();
+		}
+
+		@Test
 		@DisplayName("Validated JWT builds MP-JWT from SecurityContext claims, not from the raw header")
 		void testDatasourceOAuth2PropagatesUpnAndGroups() {
 			webTestClient.get()

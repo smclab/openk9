@@ -43,6 +43,8 @@ public class WebFilterChainConfiguration {
 	@Autowired
 	WebFilter tenantResolverFilter;
 	@Autowired
+	WebFilter routeAuthorizationResolverFilter;
+	@Autowired
 	WebFilter apiKeyAuthFilter;
 	@Autowired
 	ReactiveAuthenticationManagerResolver<ServerWebExchange> jwtAuthManagerResolver;
@@ -74,6 +76,9 @@ public class WebFilterChainConfiguration {
 		return http
 			.addFilterBefore(
 				tenantResolverFilter,
+				SecurityWebFiltersOrder.CORS)
+			.addFilterAfter(
+				routeAuthorizationResolverFilter,
 				SecurityWebFiltersOrder.CORS)
 			.csrf(ServerHttpSecurity.CsrfSpec::disable)
 			.addFilterAt(

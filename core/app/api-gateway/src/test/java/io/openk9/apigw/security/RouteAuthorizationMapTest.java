@@ -19,63 +19,20 @@ package io.openk9.apigw.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
-
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-@DisplayName("RouteAuthorizationMap")
+@DisplayName("AuthorizationSchemeToken")
 class RouteAuthorizationMapTest {
 
-	@Nested
-	@DisplayName("allows()")
-	class Allows {
-
-		@Test
-		@DisplayName("NO_AUTH route accepts AnonymousAuthenticationToken")
-		void anonymousTokenAllowedOnNoAuthRoute() {
-			Authentication anonymous = new AnonymousAuthenticationToken(
-				"test-key",
-				"anonymousUser",
-				List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))
-			);
-
-			RouteAuthorizationMap map = RouteAuthorizationMap.of();
-
-			assertThat(map.allows(ApiRoute.SEARCHER, anonymous)).isTrue();
-		}
-
-		@Test
-		@DisplayName("OAUTH2 route rejects AnonymousAuthenticationToken")
-		void anonymousTokenRejectedOnOauth2Route() {
-			Authentication anonymous = new AnonymousAuthenticationToken(
-				"test-key",
-				"anonymousUser",
-				List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))
-			);
-
-			RouteAuthorizationMap map = RouteAuthorizationMap.of();
-
-			assertThat(map.allows(ApiRoute.DATASOURCE, anonymous)).isFalse();
-		}
-	}
-
-	@Nested
-	@DisplayName("AuthorizationSchemeToken")
-	class SchemeToken {
-
-		@Test
-		@DisplayName("NO_AUTH matches Spring's AnonymousAuthenticationToken")
-		void noAuthMatchesAnonymousToken() {
-			assertThat(
-				AuthorizationSchemeToken.NO_AUTH
-					.match(AnonymousAuthenticationToken.class)
-			).isTrue();
-		}
+	@Test
+	@DisplayName("NO_AUTH matches Spring's AnonymousAuthenticationToken")
+	void noAuthMatchesAnonymousToken() {
+		assertThat(
+			AuthorizationSchemeToken.NO_AUTH
+				.match(AnonymousAuthenticationToken.class)
+		).isTrue();
 	}
 
 }

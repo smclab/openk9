@@ -25,12 +25,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.openk9.apigw.security.ApiRoute;
+import io.openk9.apigw.security.RouteAuthorizationResolverFilter;
 import io.openk9.apigw.security.AuthorizationSchemeToken;
 import io.openk9.apigw.security.ChecksumValidationException;
 import io.openk9.apigw.security.ExpiredApiKeyException;
 import io.openk9.apigw.security.Keychain;
 import io.openk9.apigw.security.RouteAuthorizationMap;
-import io.openk9.apigw.security.ApiRoute;
 import io.openk9.apigw.security.Tenant;
 import io.openk9.apigw.security.TenantIdResolverFilter;
 import io.openk9.apigw.security.TenantSecurityService;
@@ -43,6 +44,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.Cache;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -155,23 +157,53 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 	}
 
 	@Override
-	public Mono<Boolean> isAuthorized(Mono<Authentication> authenticationMono, ServerWebExchange exchange) {
-		String tenantId = TenantIdResolverFilter.getTenantId(exchange);
+	public Mono<Boolean> isAuthorized(
+		Mono<Authentication> authenticationMono, 
+		ServerWebExchange exchange) {
 
-		if (tenantId == null) {
+		ApiRoute apiRoute = RouteAuthorizationResolverFilter
+			.getApiRoute(exchange);
+		AuthorizationSchemeToken scheme = RouteAuthorizationResolverFilter
+			.getAuthorizationScheme(exchange);
+
+		// The resolver filter did not stamp the exchange. Deny.
+		if (apiRoute == null || scheme == null) {
 			return Mono.just(false);
 		}
 
-		var request = exchange.getRequest();
-		var path = request.getPath();
+		return authenticationMono
+			.map(auth -> allows(scheme, apiRoute, auth));
+	}
 
-		ApiRoute apiRoute = ApiRoute.matchOf(path.value());
+	private static boolean allows(
+		AuthorizationSchemeToken authSchemeToken,
+		ApiRoute apiRoute,
+		Authentication authentication) {
 
-		return getTenantAggregate(tenantId)
-			.map(Tenant::routeAuthorizationMap)
-			.flatMap(routeAuthorizationMap -> authenticationMono
-				.map(auth -> routeAuthorizationMap.allows(apiRoute, auth)))
-			.defaultIfEmpty(false); // disallow if tenant doesn't exist
+		// NO_AUTH and null scheme always allow.
+		if (authSchemeToken == null
+			|| authSchemeToken == AuthorizationSchemeToken.NO_AUTH) {
+
+			return true;
+		}
+
+		// Authentication class must match 
+		// AuthorizationSchemeToken referenced class.
+		if (!authSchemeToken.match(authentication.getClass())) {
+			return false;
+		}
+
+		// API Keys must match the current ApiRoute.
+		if (authentication instanceof ApiKeyAuthenticationToken) {
+			String requiredAuthority = "ROUTE_" + apiRoute.name();
+
+			return authentication.getAuthorities()
+				.stream()
+				.map(GrantedAuthority::getAuthority)
+				.anyMatch(requiredAuthority::equals);
+		}
+
+		return true;
 	}
 
 	@Override

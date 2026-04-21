@@ -17,6 +17,7 @@
 
 package io.openk9.apigw.security.configuration;
 
+import io.openk9.apigw.security.RouteAuthorizationResolverFilter;
 import io.openk9.apigw.security.TenantIdResolverFilter;
 import io.openk9.apigw.security.TenantSecurityAuthorizationManager;
 import io.openk9.apigw.security.TenantSecurityService;
@@ -41,6 +42,13 @@ public class WebFiltersConfiguration {
 	WebFilter tenantResolverFilter(TenantSecurityService tenantSecurityService) {
 
 		return new TenantIdResolverFilter(tenantSecurityService);
+	}
+
+	@Bean
+	WebFilter routeAuthorizationResolverFilter(
+		TenantSecurityService tenantSecurityService) {
+
+		return new RouteAuthorizationResolverFilter(tenantSecurityService);
 	}
 
 	@Bean
