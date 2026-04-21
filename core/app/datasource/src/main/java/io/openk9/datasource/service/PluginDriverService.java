@@ -372,8 +372,9 @@ public class PluginDriverService
 	}
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-		ResourceUri resourceUri = pluginDriverDTO.getResourceUri();
-		return httpPluginDriverClient.getHealth(resourceUri);
+		return httpPluginDriverClient
+			.validateBaseUri(pluginDriverDTO.getResourceUri())
+			.flatMap(validResourceUri -> httpPluginDriverClient.getHealth(validResourceUri));
 	}
 
 	public Uni<HealthDTO> getHealth(long id) {
