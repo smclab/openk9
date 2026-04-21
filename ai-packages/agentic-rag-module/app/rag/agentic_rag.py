@@ -186,9 +186,9 @@ class Domain(BaseModel):
     @classmethod
     def force_list(cls, v):
         if v is None:
-            return ["nullo"]
+            return None
         if isinstance(v, str):
-            return [v]
+            return None if v.strip() == "" else [v]
         return v
 
 
