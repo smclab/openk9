@@ -680,7 +680,6 @@ class RagGraph:
                 "billing",
                 "feature-information",
                 "account-management",
-                "''",
             ]
             found_domains = set(INTENTS)
 
@@ -692,9 +691,7 @@ class RagGraph:
     def intent_detection_decision(
         self, state: GraphState
     ) -> Literal["input_domain", "rag_router"]:
-        if not state.domain:
-            return "input_domain"
-        elif "NEW_QUESTION" in state.domain:
+        if not state.domain or "NEW_QUESTION" in state.domain:
             return "input_domain"
         else:
             return "rag_router"
