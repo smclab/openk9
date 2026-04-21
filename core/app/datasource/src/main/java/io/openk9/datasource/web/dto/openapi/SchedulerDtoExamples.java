@@ -62,7 +62,7 @@ public class SchedulerDtoExamples {
 	public static final String RESOURCE_URI_REQUEST =
 		"""
 		{
-			"base_uri": "https://example.com",
+			"baseUri": "http://test-resource:1234",
 			"path": "/test"
 		}
 		""";
