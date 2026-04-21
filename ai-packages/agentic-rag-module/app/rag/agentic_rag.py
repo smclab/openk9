@@ -826,15 +826,10 @@ class RagGraph:
             Contesto della conversazione: {context}
             Domanda corrente: {query}
 
-        Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
-        """
+            Rispondi SOLAMENTE con "RAG" or "DIRECT" senza altro testo.
+            """
             )
 
-        no_rag = self.configuration.get("no_rag")
-
-        if no_rag:
-            state.use_rag = False
-        else:
             rag_router_prompt_template = PromptTemplate.from_template(rag_router_prompt)
 
             rag_router_chain = (
@@ -847,6 +842,7 @@ class RagGraph:
             decision = rag_router_chain.invoke(
                 {"query": query, "context": conversation_context}
             )
+
         state.use_rag = "RAG" in decision.response.value
 
         return state
