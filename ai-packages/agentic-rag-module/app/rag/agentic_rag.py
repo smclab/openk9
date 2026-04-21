@@ -915,17 +915,18 @@ class RagGraph:
         else:
             search_query = self.configuration.get("search_query") or []
 
-            domain_filter = models.SearchToken(
-                tokenType="TEXT",
-                keywordKey="domain",
-                values=state.domain,
-                filter=True,
-                entityType="",
-                entityName="",
-                extra={},
-            )
+            if state.domain:
+                domain_filter = models.SearchToken(
+                    tokenType="TEXT",
+                    keywordKey="domain",
+                    values=state.domain,
+                    filter=True,
+                    entityType="",
+                    entityName="",
+                    extra={},
+                )
 
-            search_query.append(domain_filter)
+                search_query.append(domain_filter)
 
             retriever = OpenSearchRetriever(
                 search_query=search_query,
