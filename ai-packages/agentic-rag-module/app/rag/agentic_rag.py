@@ -1416,18 +1416,20 @@ class RagGraph:
                 document_id := metadata.get("document_id")
             ) and document_id not in documents_id:
                 documents_id.add(document_id)
-                score = metadata.get("score")
-                title = metadata.get("title")
-                url = metadata.get("url")
+                chunk = {}
+                chunk["citations"] = []
+                if "score" in metadata:
+                    chunk["score"] = metadata.get("score")
+                if "title" in metadata:
+                    chunk["title"] = metadata.get("title")
+                if "url" in metadata:
+                    chunk["url"] = metadata.get("url")
+                if "domain" in metadata:
+                    chunk["domain"] = metadata.get("domain")
 
                 yield json.dumps(
                     {
-                        "chunk": {
-                            "score": score,
-                            "title": title,
-                            "url": url,
-                            "citations": [],
-                        },
+                        "chunk": chunk,
                         "type": "DOCUMENT",
                     }
                 )
