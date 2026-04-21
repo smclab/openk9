@@ -1357,8 +1357,7 @@ class RagGraph:
                 self.intent_detection_decision,
                 {
                     "input_domain": "input_domain",
-                    "opensearch_retriever": "opensearch_retriever",
-                    "llm_response": "llm_response",
+                    "rag_router": "rag_router",
                 },
             )
 
