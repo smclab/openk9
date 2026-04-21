@@ -142,6 +142,11 @@ public abstract class HttpDatasourceServiceClient {
 
 	public Uni<ResourceUri> validateBaseUri(ResourceUri resourceUri) {
 		URI uri = URI.create(resourceUri.getBaseUri());
+		if(uri.getHost() == null) {
+			return Uni.createFrom().failure(
+				new InvalidUriException("baseUri is not valid")
+			);
+		}
 
 		for (String regex : regexValidations) {
 			if(uri.getHost().matches(regex))
