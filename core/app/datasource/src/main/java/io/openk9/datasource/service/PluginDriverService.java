@@ -71,6 +71,7 @@ import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 
 import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
@@ -88,6 +89,9 @@ public class PluginDriverService
 	HttpPluginDriverClient httpPluginDriverClient;
 	@Inject
 	IndexMappingService indexMappingService;
+
+	@ConfigProperty(name = "openk9.datasource.client.plugin-driver.validation.regexes")
+	List<String> regexValidations;
 
 	PluginDriverService(PluginDriverMapper mapper) {
 		this.mapper = mapper;
@@ -373,7 +377,7 @@ public class PluginDriverService
 
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		return httpPluginDriverClient
-			.validateBaseUri(pluginDriverDTO.getResourceUri())
+			.validateBaseUri(pluginDriverDTO.getResourceUri(), regexValidations)
 			.flatMap(validResourceUri -> httpPluginDriverClient.getHealth(validResourceUri));
 	}
 

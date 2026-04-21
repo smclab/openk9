@@ -28,12 +28,18 @@ import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.util.List;
 
 @ApplicationScoped
 public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichItemDTO> {
 
 	@Inject
 	HttpEnricherClient httpEnricherClient;
+
+	@ConfigProperty(name = "openk9.datasource.client.enricher.validation.regexes")
+	List<String> regexValidations;
 
 	EnrichItemService(EnrichItemMapper mapper) {
 		this.mapper = mapper;
@@ -55,7 +61,7 @@ public class EnrichItemService extends BaseK9EntityService<EnrichItem, EnrichIte
 
 	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
 		return httpEnricherClient
-			.validateBaseUri(resourceUri)
+			.validateBaseUri(resourceUri, regexValidations)
 			.flatMap(validResourceUri -> httpEnricherClient.getHealth(validResourceUri));
 	}
 

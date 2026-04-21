@@ -34,7 +34,6 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.net.URI;
 import java.util.List;
@@ -45,9 +44,6 @@ public abstract class HttpDatasourceServiceClient {
 	WebClient webClient;
 	@Inject
 	Validator validator;
-
-	@ConfigProperty(name = "openk9.datasource.client.validation.regexes")
-	List<String> regexValidations;
 
 	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
@@ -140,7 +136,7 @@ public abstract class HttpDatasourceServiceClient {
 			new ConstraintViolationException(violations));
 	}
 
-	public Uni<ResourceUri> validateBaseUri(ResourceUri resourceUri) {
+	public Uni<ResourceUri> validateBaseUri(ResourceUri resourceUri, List<String> regexValidations) {
 		URI uri = URI.create(resourceUri.getBaseUri());
 		if(uri.getHost() == null) {
 			return Uni.createFrom().failure(

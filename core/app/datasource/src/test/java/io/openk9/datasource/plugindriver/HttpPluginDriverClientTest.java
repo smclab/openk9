@@ -19,6 +19,7 @@ package io.openk9.datasource.plugindriver;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import io.openk9.datasource.client.exception.InvalidUriException;
 import jakarta.inject.Inject;
@@ -43,6 +44,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -62,6 +64,9 @@ class HttpPluginDriverClientTest {
 
 	@InjectWireMock
 	WireMockServer wireMockServer;
+
+	@ConfigProperty(name = "openk9.datasource.client.plugin-driver.validation.regexes")
+	List<String> regexValidations;
 
 	@Test
 	@RunOnVertxContext
@@ -283,7 +288,7 @@ class HttpPluginDriverClientTest {
 			.build();
 
 		Assertions.assertDoesNotThrow(() ->
-			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+			httpPluginDriverClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);
@@ -298,7 +303,7 @@ class HttpPluginDriverClientTest {
 			.build();
 
 		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
-			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+			httpPluginDriverClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);
@@ -313,7 +318,7 @@ class HttpPluginDriverClientTest {
 			.build();
 
 		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
-			httpPluginDriverClient.validateBaseUri(resourceUriTest)
+			httpPluginDriverClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);

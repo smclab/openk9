@@ -19,6 +19,7 @@ package io.openk9.datasource.enricher;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import io.openk9.datasource.client.exception.InvalidUriException;
 import jakarta.inject.Inject;
@@ -41,6 +42,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.vertx.RunOnVertxContext;
 import io.quarkus.test.vertx.UniAsserter;
 import io.vertx.core.json.Json;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -59,6 +61,9 @@ class HttpEnricherClientTest {
 
 	@InjectWireMock
 	WireMockServer wireMockServer;
+
+	@ConfigProperty(name = "openk9.datasource.client.enricher.validation.regexes")
+	List<String> regexValidations;
 
 	@Test
 	@RunOnVertxContext
@@ -150,7 +155,7 @@ class HttpEnricherClientTest {
 			.build();
 
 		Assertions.assertDoesNotThrow(() ->
-			httpEnricherClient.validateBaseUri(resourceUriTest)
+			httpEnricherClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);
@@ -165,7 +170,7 @@ class HttpEnricherClientTest {
 			.build();
 
 		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
-			httpEnricherClient.validateBaseUri(resourceUriTest)
+			httpEnricherClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);
@@ -180,7 +185,7 @@ class HttpEnricherClientTest {
 			.build();
 
 		Assertions.assertThrowsExactly(InvalidUriException.class, () ->
-			httpEnricherClient.validateBaseUri(resourceUriTest)
+			httpEnricherClient.validateBaseUri(resourceUriTest, regexValidations)
 				.await()
 				.indefinitely()
 		);
