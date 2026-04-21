@@ -28,7 +28,6 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
-import io.openk9.common.model.dto.Problem;
 import io.openk9.datasource.client.exception.FormEndpointException;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
@@ -38,7 +37,6 @@ import io.openk9.datasource.web.dto.HealthDTO;
 import io.openk9.datasource.web.dto.PluginDriverDocTypesDTO;
 import io.openk9.datasource.web.dto.openapi.BucketDtoExamples;
 import io.openk9.datasource.web.dto.openapi.PluginDriverDtoExamples;
-import io.openk9.datasource.web.dto.openapi.SchedulerDtoExamples;
 
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
