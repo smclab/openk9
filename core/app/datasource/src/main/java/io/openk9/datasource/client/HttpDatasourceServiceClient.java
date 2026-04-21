@@ -23,6 +23,7 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.Validator;
 
 import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.client.exception.InvalidUriException;
 import io.openk9.datasource.client.exception.UnexpectedResponseStatusException;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
@@ -33,6 +34,10 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import java.net.URI;
+import java.util.List;
 
 public abstract class HttpDatasourceServiceClient {
 
@@ -40,6 +45,9 @@ public abstract class HttpDatasourceServiceClient {
 	WebClient webClient;
 	@Inject
 	Validator validator;
+
+	@ConfigProperty(name = "openk9.datasource.client.validation.regexes")
+	List<String> regexValidations;
 
 	public static final String FORM_PATH = "/form";
 	public static final String HEALTH_PATH = "/health";
@@ -130,6 +138,18 @@ public abstract class HttpDatasourceServiceClient {
 
 		return Uni.createFrom().failure(
 			new ConstraintViolationException(violations));
+	}
+
+	public Uni<ResourceUri> validateBaseUri(ResourceUri resourceUri) {
+		URI uri = URI.create(resourceUri.getBaseUri());
+
+		for (String regex : regexValidations) {
+			if(uri.getHost().matches(regex))
+				return Uni.createFrom().item(resourceUri);
+		}
+		return Uni.createFrom().failure(
+			new InvalidUriException("baseUri does not match the expected pattern")
+		);
 	}
 
 }
