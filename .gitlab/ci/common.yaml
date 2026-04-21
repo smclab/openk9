@@ -16,6 +16,16 @@ Trigger Connectors Build:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - connectors/**/*
+    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/**/*
+    # RELEASE MR: porting-* verso release branch — build verifier only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/**/*
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-connectors.yaml"
     strategy: depend

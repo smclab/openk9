@@ -33,7 +33,7 @@ Per la documentazione generale della pipeline su `main`, vedere `README.md` su `
 
 **Frontend (Kaniko/Node):** `search-frontend`, `admin-ui`, `tenant-ui`, `talk-to`, `openk9-chatbot` (solo npm publish)
 
-**Connectors (Kaniko):** `openk9-crawler` (web), `email-connector`, `database-connector`, `youtube-connector`, `gitlab-connector`
+**Connectors (Kaniko):** `openk9-crawler` (web), `email-connector`, `database-connector`, `youtube-connector`, `gitlab-connector`, `minio-connector`
 
 ---
 
