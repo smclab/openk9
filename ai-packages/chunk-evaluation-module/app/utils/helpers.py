@@ -25,7 +25,7 @@ def manage_daily_dataset(dataset_name, input_item, output_item, metadata):
             inputs=input_item,
             outputs=output_item,
             metadata=metadata,
-            # timeout=30,
+            timeout=30,
         )
 
     except ValueError as e:
