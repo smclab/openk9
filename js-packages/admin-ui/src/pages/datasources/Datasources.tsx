@@ -140,44 +140,39 @@ export function Datasources() {
                 ),
               },
               {
-                header: "Scheduling",
+                header: "schedulable / reindexable",
                 content: (datasource) => {
                   const isScheduled = datasource?.schedulable;
                   const isReindex = datasource?.reindexable;
 
                   return (
-                    <Box display="flex" gap={1} flexWrap="wrap">
+                    <Box display="flex" gap={0.5} flexDirection={"column"} width={"fit-content"}>
                       <Typography
                         variant="body2"
                         color={theme.palette.background.paper}
                         sx={{
                           borderRadius: "8px",
-                          background: isScheduled
-                            ? theme.palette.success.main
-                            : theme.palette.grey[500],
+                          background: isScheduled ? theme.palette.success.main : theme.palette.grey[500],
                           padding: "4px 10px",
                           fontSize: "0.75rem",
                           fontWeight: 600,
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {isScheduled ? "Sync Active" : "Sync Idle"}
+                        {isScheduled ? "Schedulable Active" : "Schedulable Idle"}
                       </Typography>
                       <Typography
                         variant="body2"
                         color={theme.palette.background.paper}
                         sx={{
                           borderRadius: "8px",
-                          background: isReindex
-                            ? theme.palette.info.main
-                            : theme.palette.grey[500],
+                          background: isReindex ? theme.palette.info.main : theme.palette.grey[500],
                           padding: "4px 10px",
                           fontSize: "0.75rem",
                           fontWeight: 600,
-                          whiteSpace: "nowrap",
                         }}
                       >
-                        {isReindex ? "Reindex Active" : "Reindex Idle"}
+                        {isReindex ? "Reindexable Active" : "Reindexable Idle"}
                       </Typography>
                     </Box>
                   );
