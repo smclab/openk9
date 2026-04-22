@@ -188,6 +188,7 @@ def callback(ch, method, properties, body):
                 dataset_name=dataset_name,
                 input_item=input_item,
                 output_item=output_item,
+                metadata=[{}],
             )
 
         ch.basic_ack(delivery_tag=method.delivery_tag)

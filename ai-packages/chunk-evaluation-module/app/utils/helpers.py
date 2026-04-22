@@ -15,7 +15,7 @@ client = Client()
 async_client = AsyncClient()
 
 
-def manage_daily_dataset(dataset_name, input_item, output_item):
+def manage_daily_dataset(dataset_name, input_item, output_item, metadata):
     try:
         # Verifica se il dataset esiste
         client.datasets._get_dataset_id_by_name(dataset_name=dataset_name)
@@ -24,7 +24,8 @@ def manage_daily_dataset(dataset_name, input_item, output_item):
             dataset=dataset_name,
             inputs=input_item,
             outputs=output_item,
-            metadata=[{}],
+            metadata=metadata,
+            # timeout=30,
         )
 
     except ValueError as e:
@@ -33,7 +34,7 @@ def manage_daily_dataset(dataset_name, input_item, output_item):
             name=dataset_name,
             inputs=input_item,
             outputs=output_item,
-            metadata=[{}],
+            metadata=metadata,
         )
 
 
@@ -49,9 +50,12 @@ def score(input) -> dict:
         chonkie_chunks.append(Chunk(text=c_text, embedding=embedding))
 
     results = {}
+
     results["semantic_choerence"] = calculate_scr(chonkie_chunks)
     results["redundancy_bloat"] = calculate_rb(chonkie_chunks, text)
     results["layout_fidelity"] = calculate_lf(chonkie_chunks, text)
+
+    logging.info(f"RESULTS: {results}")
 
     return results
 
@@ -59,7 +63,7 @@ def score(input) -> dict:
 def delete_all_experiments(dataset):
     experiments = client.experiments.list(dataset_id=dataset.id)
     for experiment in experiments:
-        print(experiment)
+        logging.info(experiment)
         client.experiments.delete(experiment_id=experiment["id"])
 
 
@@ -111,7 +115,7 @@ async def make_async_experiment(task, evaluators, dataset=None, experiment_name=
         dataset = await async_client.datasets.get_dataset(dataset=dataset)
     if experiment_name is None:
         experiment_name = f"experiment-{datetime.today().strftime('%d-%m-%Y-%H-%M')}"
-    print("STARTING AN EXPERIMENT")
+    logging.info("STARTING AN EXPERIMENT")
     await async_delete_all_experiments(dataset)
     experiment = await async_run_experiment(
         experiment_name=experiment_name,
