@@ -1357,7 +1357,7 @@ def save_guardrails_documents(opensearch_host: str, documents: list, vector_size
 
 
 @app.post(
-    "/api/embed-guardrails",
+    "/api/rag/embed-guardrails",
     tags=["RAG"],
 )
 async def embed_guardrails(
@@ -1686,7 +1686,7 @@ def save_domains_documents(opensearch_host: str, documents: list, vector_size: i
 
 
 @app.post(
-    "/api/embed-domains",
+    "/api/rag/embed-domains",
     tags=["RAG"],
 )
 async def embed_domains(
