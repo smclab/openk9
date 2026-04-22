@@ -27,6 +27,12 @@ logger = logging.getLogger(__name__)
 
 task = partial(score)
 should_make_experiment = False
+should_flush_data = False
+
+input_data = []
+output_data = []
+metadata = []
+
 
 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
 rabbit_user = os.getenv("RABBITMQ_USER", "user")
@@ -34,7 +40,52 @@ rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
 
 MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
+BUFFER_TRESHOLD = int(os.getenv("BUFFER_TRESHOLD", 50))
+BUFFER_DELAY = int(os.getenv("BUFFER_DELAY", 20))
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
+
+
+def flush_dataset(dataset_name):
+    global input_data, output_data, metadata
+    global should_make_experiment, should_flush_data
+    portion = min(len(input_data), BUFFER_TRESHOLD)
+
+    if not input_data:
+        return
+    logger.info(f"Flushing {portion}/{len(input_data)} documents")
+    manage_daily_dataset(
+        dataset_name=dataset_name,
+        input_item=input_data[:portion],
+        output_item=output_data[:portion],
+        metadata=metadata[:portion],
+    )
+
+    input_data = input_data[portion:]
+    output_data = output_data[portion:]
+    metadata = metadata[portion:]
+    logger.info(f"Remaining {len(input_data)} documents")
+    if len(input_data) > 0:
+        should_flush_data = True
+        should_make_experiment = False
+        scheduler.add_job(**flush_job_params)
+    else:
+        should_flush_data = False
+        should_make_experiment = True
+        scheduler.add_job(**experiment_job_params)
+        scheduler.remove_job("flush_pending_documents")
+
+
+def add_item(dataset_name, input_item, output_item):
+    global input_data, output_data, should_flush_data, metadata
+    input_data.extend(input_item)
+    output_data.extend(output_item)
+    metadata.extend([{}])
+    logger.info(f"Documents{len(input_data)}")
+    if not should_flush_data:
+        logger.info("ATTIVATO FLUSHING")
+        should_flush_data = True
+        scheduler.remove_job("experiment_pending_documents")
+        scheduler.add_job(**flush_job_params)
 
 
 def interval_experiment(task, evaluators):
@@ -44,19 +95,33 @@ def interval_experiment(task, evaluators):
         should_make_experiment = False
 
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    interval_experiment,
-    trigger="interval",
-    minutes=MIN_TIME_DELAY,
-    misfire_grace_time=120,
-    id="experiment_pending_documents",
-    kwargs={
-        "task": task,
-        "evaluators": EVALUATORS,
+experiment_job_params = {
+    "func": interval_experiment,  # La funzione da eseguire
+    "trigger": "interval",  # Il trigger per far partire il job periodicamente
+    "minutes": MIN_TIME_DELAY,  # Intervallo in minuti
+    "misfire_grace_time": 120,  # Tempo di tolleranza per il job
+    "replace_existing": True,
+    "id": "experiment_pending_documents",  # ID del job
+    "kwargs": {
+        "task": task,  # Parametro 'task'
+        "evaluators": EVALUATORS,  # Parametro 'evaluators'
     },
-)
+}
 
+flush_job_params = {
+    "func": flush_dataset,  # La funzione da eseguire
+    "trigger": "interval",  # Il trigger per far partire il job
+    "seconds": BUFFER_DELAY,  # La data in cui il job verrà eseguito
+    "replace_existing": True,
+    "misfire_grace_time": 120,
+    "id": "flush_pending_documents",
+    "kwargs": {
+        "dataset_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}"  # Parametro della funzione
+    },
+}
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(**experiment_job_params)
 scheduler.start()
 setup_rabbitmq()
 
@@ -68,9 +133,10 @@ for _ in range(10):
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
         )
+        logger.info("RabbitMQ pronto")
         break
     except Exception as e:
-        print("RabbitMQ non pronto, retry…")
+        logger.info("RabbitMQ non pronto, retry…")
         time.sleep(3)
 
 if not connection:
@@ -82,7 +148,7 @@ channel.basic_qos(prefetch_count=1)
 
 channel.queue_declare(queue="chunks")
 
-print("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
+logger.info("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
 
 
 def callback(ch, method, properties, body):
@@ -110,8 +176,7 @@ def callback(ch, method, properties, body):
                 ]
             }
         ]
-
-        dataset = manage_daily_dataset(
+        add_item(
             dataset_name=dataset_name, input_item=input_item, output_item=output_item
         )
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -121,7 +186,9 @@ def callback(ch, method, properties, body):
         retry_count = headers.get("retry-count", 0)
 
         if retry_count >= int(MAX_RETRIES):
-            print(f"[ERROR] Max retries reached ({retry_count}) - invio in error queue")
+            logger.info(
+                f"[ERROR] Max retries reached ({retry_count}) - invio in error queue"
+            )
             ch.basic_publish(
                 exchange="error.exchange",
                 routing_key="error",
@@ -139,7 +206,7 @@ def callback(ch, method, properties, body):
                 properties=pika.BasicProperties(delivery_mode=2, headers=headers),
             )
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            print(
+            logger.info(
                 f"[RETRY] Retry count {retry_count + 1} - messaggio inviato alla retry queue"
             )
     should_make_experiment = True
