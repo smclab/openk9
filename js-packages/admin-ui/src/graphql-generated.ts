@@ -6219,7 +6219,7 @@ export type DataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename: 'DefaultConnection_Datasource', edges?: Array<{ __typename: 'DefaultEdge_Datasource', node?: { __typename: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename: 'DefaultConnection_Datasource', edges?: Array<{ __typename: 'DefaultEdge_Datasource', node?: { __typename: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, scheduling?: string | null, reindexable?: boolean | null, reindexing?: string | null, lastIngestionDate?: any | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteDataSourceMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -13580,8 +13580,10 @@ export const DataSourcesDocument = gql`
         id
         name
         schedulable
-        lastIngestionDate
         scheduling
+        reindexable
+        reindexing
+        lastIngestionDate
         jsonConfig
         description
         __typename
