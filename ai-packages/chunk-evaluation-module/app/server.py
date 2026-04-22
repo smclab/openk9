@@ -42,6 +42,7 @@ MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
 BUFFER_TRESHOLD = int(os.getenv("BUFFER_TRESHOLD", 50))
 BUFFER_DELAY = int(os.getenv("BUFFER_DELAY", 20))
+BUFFER_UPLOAD = os.getenv("BUFFER_UPLOAD", "").lower() == "true"
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
 
 
@@ -176,9 +177,19 @@ def callback(ch, method, properties, body):
                 ]
             }
         ]
-        add_item(
-            dataset_name=dataset_name, input_item=input_item, output_item=output_item
-        )
+        if BUFFER_UPLOAD:
+            add_item(
+                dataset_name=dataset_name,
+                input_item=input_item,
+                output_item=output_item,
+            )
+        else:
+            dataset = manage_daily_dataset(
+                dataset_name=dataset_name,
+                input_item=input_item,
+                output_item=output_item,
+            )
+
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     except Exception as e:
