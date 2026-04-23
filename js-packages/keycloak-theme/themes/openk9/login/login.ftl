@@ -8,7 +8,7 @@
         <div class="container">
             <div class="center">
              <img class="logo" src="${url.resourcesPath}/img/logo.svg">
-          <label class="firstTitle"> Open </label><label class="title">k9</label>
+          <label class="firstTitle">OpenK9</label>
                
             </div>
             <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
