@@ -78,12 +78,12 @@ body {
 }
 
 .container {
-  width: 100%;
-  max-width: 380px;
-  padding: 32px;
+  width: 440px;
+  max-width: 100%;
+  padding: 40px;
   background: var(--ok9-card);
   border: 1px solid var(--ok9-border);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: none;
 }
 
@@ -91,13 +91,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin: 0 0 24px;
+  gap: 10px;
+  margin: 0 0 28px;
   letter-spacing: -0.02em;
 }
 
 .logo {
-  max-height: 40px;
+  max-height: 48px;
   width: auto;
   margin: 0;
   color: var(--ok9-primary);
@@ -105,7 +105,7 @@ body {
 
 .firstTitle,
 .title {
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--ok9-text);
   margin: 0;
