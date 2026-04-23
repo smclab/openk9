@@ -39,7 +39,6 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-flow-renderer": "^10.3.17",
-    "react-oidc-context": "^3.2.0",
     "react-router-dom": "^6.3.0",
     "react-virtuoso": "^2.16.4",
     "recharts": "^2.13.3",
