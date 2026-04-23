@@ -16,27 +16,13 @@
 */
 import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { relayStylePagination } from "@apollo/client/utilities";
-import { keycloak, isOauth2Enabled } from "./authentication";
+import { getAuthHeaders } from "./authentication";
 
 export const apolloClient = new ApolloClient({
   link: new HttpLink({
     uri: "/api/datasource/graphql",
     async fetch(input, init?) {
-      let authHeaders: Record<string, string> = {};
-      if (isOauth2Enabled) {
-        if (keycloak.authenticated) {
-          await keycloak.updateToken(30);
-          authHeaders = { Authorization: `Bearer ${keycloak.token}` };
-        }
-      } else {
-        const basicToken = sessionStorage.getItem("basic_auth_token");
-        if (basicToken) {
-          authHeaders = {
-            Authorization: `Basic ${basicToken}`,
-          };
-        }
-      }
-      
+      const authHeaders = await getAuthHeaders();
       const headers = { ...(init ?? { headers: {} }).headers, ...authHeaders };
       return await fetch(input, { ...init, headers });
     },
