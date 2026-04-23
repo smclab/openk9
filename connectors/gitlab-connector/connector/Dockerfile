@@ -1,28 +1,44 @@
+# --- STAGE 1: Builder ---
+FROM python:3.13-slim AS builder
+
+# upgrade pip
+RUN python -m pip install --upgrade pip==26.0
+
+# Use a virtual environment next stage copy
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN apt-get update && rm -rf /var/lib/apt/lists/*
+
+COPY ./requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.txt
+
+
+# --- STAGE 2: Runtime ---
 FROM python:3.13-slim
 
-COPY requirements.txt /requirements.txt
+# Upgrade pip
+RUN python -m pip install --upgrade pip==26.0
 
-# Install utils
-RUN  apt-get update \
-    && apt-get install -y wget \
-    && apt-get install -y unzip \
-    && apt-get install -y dos2unix \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install -r requirements.txt
+# Copy the compiled site-packages/binaries from the builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
-ADD docker-entrypoint.sh /etc/docker-entrypoint.sh
-
-COPY app /app
-
+# Setup entrypoint and app files
+ADD ./docker-entrypoint.sh /etc/docker-entrypoint.sh
+COPY ./app /app
 WORKDIR /app
 
-RUN dos2unix /etc/docker-entrypoint.sh
+# Final preparations
+RUN dos2unix /etc/docker-entrypoint.sh && \
+    chmod a+x /etc/docker-entrypoint.sh
 
-RUN chmod a+x /etc/docker-entrypoint.sh
-
+# Security best practice: run as non-root
 USER 1001
 
 ENTRYPOINT ["/bin/bash"]
-
 CMD ["/etc/docker-entrypoint.sh"]
