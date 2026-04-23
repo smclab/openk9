@@ -15,7 +15,6 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React, { useEffect, useState, createContext, useContext } from "react";
-import { AuthProvider, useAuth } from "react-oidc-context";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { BasicLoginForm } from "./BasicLoginForm";
 
@@ -46,13 +45,41 @@ export const userManager: UserManager | null = isOauth2Enabled
       redirect_uri: redirectUri,
       post_logout_redirect_uri: redirectUri,
       response_type: "code",
-      scope: "openid profile email offline_access",
+      scope: "openid profile email",
       automaticSilentRenew: true,
       loadUserInfo: true,
       monitorSession: false,
       userStore: new WebStorageStateStore({ store: window.sessionStorage }),
     })
   : null;
+
+const isRedirectCallback = (): boolean => {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("code") && params.has("state");
+};
+
+export async function authInit(): Promise<boolean> {
+  if (!userManager) return true;
+  try {
+    if (isRedirectCallback()) {
+      await userManager.signinRedirectCallback();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    const user = await userManager.getUser();
+    if (!user || user.expired) {
+      await userManager.signinRedirect();
+      await new Promise<void>(() => {});
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("OIDC auth init failed, forcing redirect", err);
+    await userManager.removeUser();
+    await userManager.signinRedirect();
+    await new Promise<void>(() => {});
+    return false;
+  }
+}
 
 export async function getAccessToken(): Promise<string | null> {
   if (!userManager) return null;
@@ -87,42 +114,54 @@ type AuthenticationContextValue = {
 
 const AuthenticationContext = createContext<AuthenticationContextValue>(null as any);
 
-const onSigninCallback = (_user: User | void): void => {
-  window.history.replaceState({}, document.title, window.location.pathname);
-};
-
-function OidcGate({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
+function OidcAuthenticationProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    if (!auth.isAuthenticated && !auth.isLoading && !auth.error && !auth.activeNavigator) {
-      void auth.signinRedirect();
-    }
-  }, [auth.isAuthenticated, auth.isLoading, auth.error, auth.activeNavigator, auth]);
+    if (!userManager) return;
+    let cancelled = false;
 
-  if (auth.error) {
-    return (
-      <div style={{ padding: 24 }}>
-        <strong>Authentication error:</strong> {auth.error.message}
-      </div>
-    );
-  }
+    userManager.getUser().then((u) => {
+      if (!cancelled) setUser(u);
+    });
 
-  if (auth.isLoading || !auth.isAuthenticated) return null;
+    const onUserLoaded = (u: User) => {
+      if (!cancelled) setUser(u);
+    };
+    const onUserUnloaded = () => {
+      if (!cancelled) setUser(null);
+    };
+    const onSilentRenewError = (err: Error) => {
+      console.error("OIDC silent renew error", err);
+    };
+
+    userManager.events.addUserLoaded(onUserLoaded);
+    userManager.events.addUserUnloaded(onUserUnloaded);
+    userManager.events.addSilentRenewError(onSilentRenewError);
+
+    return () => {
+      cancelled = true;
+      userManager!.events.removeUserLoaded(onUserLoaded);
+      userManager!.events.removeUserUnloaded(onUserUnloaded);
+      userManager!.events.removeSilentRenewError(onSilentRenewError);
+    };
+  }, []);
+
+  const logout = () => {
+    void userManager?.signoutRedirect();
+  };
 
   const value: AuthenticationContextValue = {
-    isAuthenticated: true,
+    isAuthenticated: !!user && !user.expired,
     isOauth2: true,
-    logout: () => {
-      void auth.signoutRedirect();
-    },
+    logout,
     getAuthHeaders,
   };
 
   return <AuthenticationContext.Provider value={value}>{children}</AuthenticationContext.Provider>;
 }
 
-function BasicAuthGate({ children }: { children: React.ReactNode }) {
+function BasicAuthenticationProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     () => !!sessionStorage.getItem("basic_auth_token"),
   );
@@ -153,13 +192,9 @@ function BasicAuthGate({ children }: { children: React.ReactNode }) {
 
 export function AuthenticationProvider({ children }: { children: React.ReactNode }) {
   if (!isOauth2Enabled || !userManager) {
-    return <BasicAuthGate>{children}</BasicAuthGate>;
+    return <BasicAuthenticationProvider>{children}</BasicAuthenticationProvider>;
   }
-  return (
-    <AuthProvider userManager={userManager} onSigninCallback={onSigninCallback}>
-      <OidcGate>{children}</OidcGate>
-    </AuthProvider>
-  );
+  return <OidcAuthenticationProvider>{children}</OidcAuthenticationProvider>;
 }
 
 export function useAuthentication() {
