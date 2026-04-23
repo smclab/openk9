@@ -1197,12 +1197,16 @@ class RagGraph:
                 }
             )
         else:
-            prompt_no_rag = self.configuration.get("prompt_no_rag")
+            prompt_no_rag = (
+                self.configuration.get("prompt_no_rag")
+                if self.configuration.get("prompt_no_rag")
+                else """You are a helpful, concise assistant that provides accurate, clear, and self-contained answers without using external retrieval."""
+            )
 
             direct_prompt = ChatPromptTemplate.from_template(
                 prompt_no_rag
                 + """
-                Previous conversation: {history}
+                Previous conversation (may be empty or omitted):: {history}
                 
                 Current question: {query}
                 
