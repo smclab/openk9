@@ -45,13 +45,22 @@ export const userManager: UserManager | null = isOauth2Enabled
       redirect_uri: redirectUri,
       post_logout_redirect_uri: redirectUri,
       response_type: "code",
-      scope: "openid profile email",
+      scope: "openid",
       automaticSilentRenew: true,
-      loadUserInfo: true,
+      loadUserInfo: false,
       monitorSession: false,
       userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+      stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
     })
   : null;
+
+if (isOauth2Enabled) {
+  console.log("[auth] OIDC enabled", {
+    authority: buildAuthority(),
+    client_id: window.KEYCLOAK_CLIENT_ID,
+    redirect_uri: redirectUri,
+  });
+}
 
 const isRedirectCallback = (): boolean => {
   const params = new URLSearchParams(window.location.search);
@@ -62,18 +71,31 @@ export async function authInit(): Promise<boolean> {
   if (!userManager) return true;
   try {
     if (isRedirectCallback()) {
-      await userManager.signinRedirectCallback();
+      console.log("[auth] processing redirect callback");
+      const callbackUser = await userManager.signinRedirectCallback();
+      console.log("[auth] callback user:", {
+        has_access_token: !!callbackUser?.access_token,
+        expired: callbackUser?.expired,
+        expires_at: callbackUser?.expires_at,
+        token_type: callbackUser?.token_type,
+      });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     const user = await userManager.getUser();
+    console.log("[auth] authInit user after init:", {
+      present: !!user,
+      expired: user?.expired,
+      has_token: !!user?.access_token,
+    });
     if (!user || user.expired) {
+      console.log("[auth] no valid user, redirecting to IdP");
       await userManager.signinRedirect();
       await new Promise<void>(() => {});
       return false;
     }
     return true;
   } catch (err) {
-    console.error("OIDC auth init failed, forcing redirect", err);
+    console.error("[auth] authInit failed, forcing redirect", err);
     await userManager.removeUser();
     await userManager.signinRedirect();
     await new Promise<void>(() => {});
@@ -91,7 +113,11 @@ export async function getAccessToken(): Promise<string | null> {
 export async function getAuthHeaders(): Promise<Record<string, string>> {
   if (isOauth2Enabled) {
     const token = await getAccessToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    if (!token) {
+      console.warn("[auth] getAuthHeaders: no access token available");
+      return {};
+    }
+    return { Authorization: `Bearer ${token}` };
   }
   const basicToken = sessionStorage.getItem("basic_auth_token");
   return basicToken ? { Authorization: `Basic ${basicToken}` } : {};
