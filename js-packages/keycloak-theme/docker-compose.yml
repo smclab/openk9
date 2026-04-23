@@ -1,29 +1,30 @@
-version: "2"
 services:
-  postgresql:
-    image: docker.io/bitnami/postgresql:11
+  postgres:
+    image: postgres:16
     environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
-      - ALLOW_EMPTY_PASSWORD=yes
-      - POSTGRESQL_USERNAME=bn_keycloak
-      - POSTGRESQL_DATABASE=bitnami_keycloak
+    # - ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=keycloak
     volumes:
-      - "postgresql_data:/bitnami/postgresql"
+      - postgres_data:/var/lib/postgresql/data
 
   keycloak:
-    image: docker.io/bitnami/keycloak:19
+    image: keycloak/keycloak:26.0
+    command: start-dev
     depends_on:
-      - postgresql
+      - postgres
     environment:
-      # ALLOW_EMPTY_PASSWORD is recommended only for development.
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
-      - "80:8081"
       - "8080:8080"
     volumes:
-      - "./themes/openk9:/opt/bitnami/keycloak/themes/test"
+      - "./themes/openk9:/opt/keycloak/themes/openk9"
 
 volumes:
-  postgresql_data:
-    driver: local
+  postgres_data:
