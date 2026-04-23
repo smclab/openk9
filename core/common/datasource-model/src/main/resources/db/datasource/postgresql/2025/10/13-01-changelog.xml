@@ -21,19 +21,24 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
 http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
-	logicalFilePath="db/datasource/2026/04/08-01-changelog.xml">
-	<!--
-		Ported on 2026-04-08 after the cherry-pick of commit fbd78969182139336ef06615317564eb7fc6c189
-		from main. Original changelog path: 2025/10/13-01-changelog.xml
--->
+	logicalFilePath="db/datasource/2025/10/13-01-changelog.xml">
 
-	<changeSet id="1775643133-1" author="openk9">
+
+	<changeSet id="1760348860193-1" author="openk9">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<columnExists tableName="scheduler" columnName="reindex"/>
+			</not>
+		</preConditions>
 		<addColumn tableName="scheduler">
 			<column name="reindex" type="BOOLEAN" valueBoolean="false"/>
 		</addColumn>
 	</changeSet>
 
-	<changeSet id="1775643133-2" author="openk9">
+	<changeSet id="1760348860193-2" author="openk9">
+		<preConditions onFail="WARN">
+			<columnExists tableName="scheduler" columnName="reindex"/>
+		</preConditions>
 		<sql>
 			update scheduler s
 			set reindex = true
