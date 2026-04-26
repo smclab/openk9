@@ -289,6 +289,18 @@ type ResulListPaginationProps = {
   noResultsCustom?: React.ReactNode | null | undefined;
 };
 
+export type ExternalSearchTokenKind = "tabs" | "search" | "filters";
+
+export type ExternalSearchTokenEntry = {
+  kind: ExternalSearchTokenKind;
+  tokens: Array<SearchToken>;
+};
+
+export type ExternalSearchTokens =
+  | Array<ExternalSearchTokenEntry>
+  | null
+  | undefined;
+
 export type TabsCallbackProps = ({
   callbackSelectTab,
   callbackUnselectTab,
@@ -457,6 +469,7 @@ export type Configuration = {
   autoselectTab?: boolean | null | undefined;
   debounceTimeSearch: number | null | undefined;
   defaultTokens: Array<SearchToken>;
+  externalSearchTokens?: ExternalSearchTokens;
   defaultString: string | null | undefined;
   extraClass?: ExtraClassProps | null | undefined;
   languageSelect: string | null | undefined;
@@ -579,6 +592,7 @@ const defaultConfiguration: Configuration = {
   languageSelect: null,
   debounceTimeSearch: null,
   defaultTokens: [],
+  externalSearchTokens: null,
   detailMobile: null,
   details: null,
   enabled: false,

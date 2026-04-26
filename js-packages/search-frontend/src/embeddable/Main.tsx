@@ -192,6 +192,8 @@ export function Main({
       selectionsState,
       selectionsDispatch,
       retrieveType,
+      externalSearchTokens: configuration.externalSearchTokens,
+      setSortAfterKey,
     });
   const { isQueryAnalysisCompleteSuggestions, spansSuggestions } =
     useQueryAnalysisWithoutSearch({
@@ -1251,6 +1253,39 @@ export function Main({
   );
 }
 
+function useStableValue<T>(value: T): T {
+  const ref = React.useRef<T>(value);
+  if (!isEqual(ref.current, value)) {
+    ref.current = value;
+  }
+  return ref.current;
+}
+
+function useFlushableDebounce<T>(
+  value: T,
+  delay: number,
+  flushKey: unknown,
+): T {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+  const flushKeyRef = React.useRef(flushKey);
+  const isFirstRef = React.useRef(true);
+  React.useEffect(() => {
+    if (isFirstRef.current) {
+      isFirstRef.current = false;
+      flushKeyRef.current = flushKey;
+      return;
+    }
+    if (!Object.is(flushKeyRef.current, flushKey)) {
+      flushKeyRef.current = flushKey;
+      setDebouncedValue(value);
+      return;
+    }
+    const timeout = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timeout);
+  }, [value, delay, flushKey]);
+  return debouncedValue;
+}
+
 function useSearch({
   configuration,
   debounceTimeSearch,
@@ -1261,6 +1296,8 @@ function useSearch({
   selectionsState,
   selectionsDispatch,
   retrieveType,
+  externalSearchTokens,
+  setSortAfterKey,
 }: {
   configuration: Configuration;
   debounceTimeSearch: number;
@@ -1282,6 +1319,13 @@ function useSearch({
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   retrieveType?: string;
+  externalSearchTokens?:
+    | Array<{
+        kind: "tabs" | "search" | "filters";
+        tokens: SearchToken[];
+      }>
+    | null;
+  setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
     configuration;
@@ -1400,18 +1444,73 @@ function useSearch({
     [infoSort?.field, infoSort?.type, sort],
   );
 
+  const stableExternalSearchTokens = useStableValue(
+    externalSearchTokens ?? null,
+  );
+
+  const externalOverrides = React.useMemo<{
+    tabs?: SearchToken[];
+    search?: SearchToken[];
+    filters?: SearchToken[];
+  }>(() => {
+    const map: {
+      tabs?: SearchToken[];
+      search?: SearchToken[];
+      filters?: SearchToken[];
+    } = {};
+    if (Array.isArray(stableExternalSearchTokens)) {
+      for (const entry of stableExternalSearchTokens) {
+        if (!entry || typeof entry !== "object" || !("kind" in entry)) continue;
+        const tokens = Array.isArray(entry.tokens) ? entry.tokens : [];
+        if (entry.kind === "tabs") map.tabs = tokens;
+        else if (entry.kind === "search") map.search = tokens;
+        else if (entry.kind === "filters") map.filters = tokens;
+      }
+    }
+    return map;
+  }, [stableExternalSearchTokens]);
+
+  const effectiveTabTokens = externalOverrides.tabs ?? tabTokens?.tabToken ?? [];
+  const effectiveFilterTokens = externalOverrides.filters ?? newTokenFilter;
+  const effectiveSearchTokens = externalOverrides.search ?? newSearch;
+
   const searchQueryMemo = React.useMemo(
     () => [
       ...defaultTokens,
-      ...(tabTokens?.tabToken ?? []),
-      ...newTokenFilter,
-      ...newSearch,
+      ...effectiveTabTokens,
+      ...effectiveFilterTokens,
+      ...effectiveSearchTokens,
       ...dateTokens,
     ],
-    [defaultTokens, tabTokens?.tabToken, newTokenFilter, newSearch, dateTokens],
+    [
+      defaultTokens,
+      effectiveTabTokens,
+      effectiveFilterTokens,
+      effectiveSearchTokens,
+      dateTokens,
+    ],
   );
 
-  const searchQuery = useDebounce(searchQueryMemo, debounceTimeSearch);
+  const searchQuery = useFlushableDebounce(
+    searchQueryMemo,
+    debounceTimeSearch,
+    stableExternalSearchTokens,
+  );
+
+  const isFirstExternalRunRef = React.useRef(true);
+  const pageSizeRef = React.useRef(selectionsState.range[1]);
+  pageSizeRef.current = selectionsState.range[1];
+  React.useEffect(() => {
+    if (isFirstExternalRunRef.current) {
+      isFirstExternalRunRef.current = false;
+      return;
+    }
+    selectionsDispatch({
+      type: "set-range",
+      range: [0, pageSizeRef.current],
+    });
+    setSortAfterKey("");
+  }, [stableExternalSearchTokens, selectionsDispatch, setSortAfterKey]);
 
   const isQueryAnalysisComplete =
     selectionsState.textOnChange === debouncedOnChange.textOnChange &&
