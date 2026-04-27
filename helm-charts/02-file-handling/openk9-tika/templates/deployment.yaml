@@ -23,7 +23,7 @@ spec:
       {{- include "common.images.renderPullSecrets" . | nindent 6 }}
       #serviceAccountName: {{ template "common.names.serviceAccountName" . }}
       nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.nodeSelector "context" $) | nindent 8 }}
-      securityContext: {{ toYaml .Values.podSecurityContext | indent 8 }}
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.hostAliases "context" $) | nindent 8 }}
       containers:
         - name: {{ .Release.Name }}
