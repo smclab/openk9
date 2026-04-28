@@ -12,7 +12,13 @@ import pika
 from apscheduler.schedulers.background import BackgroundScheduler
 from rabbit_manager.structure import setup_rabbitmq
 from utils.evaluators import layout_fidelity, redundancy_bloat, semantic_choerence
-from utils.helpers import client, make_experiment, manage_daily_dataset, score
+from utils.helpers import (
+    client,
+    get_dataset_index,
+    make_experiment,
+    manage_daily_dataset,
+    score,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,12 +50,24 @@ BUFFER_TRESHOLD = int(os.getenv("BUFFER_TRESHOLD", 50))
 BUFFER_DELAY = int(os.getenv("BUFFER_DELAY", 20))
 BUFFER_UPLOAD = os.getenv("BUFFER_UPLOAD", "").lower() == "true"
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
+N_MAX_DOCUMENTS = int(os.getenv("N_MAX_DOCUMENTS", 150))
 
 
-def flush_dataset(dataset_name):
+def flush_dataset(dataset_base_name):
     global input_data, output_data, metadata
     global should_make_experiment, should_flush_data
     portion = min(len(input_data), BUFFER_TRESHOLD)
+
+    all_datasets = client.datasets.list()
+    dataset_index = len(
+        get_dataset_index(
+            all_datasets=all_datasets,
+            name_contains=dataset_base_name,
+            min_examples=N_MAX_DOCUMENTS,
+        )
+    )
+    dataset_name = dataset_base_name + f"-{dataset_index}"
+    logging.info(f"Dataset name: {dataset_name}")
 
     if not input_data:
         return
@@ -89,10 +107,10 @@ def add_item(dataset_name, input_item, output_item):
         scheduler.add_job(**flush_job_params)
 
 
-def interval_experiment(task, evaluators):
+def interval_experiment(task, evaluators, dataset_name=None):
     global should_make_experiment
     if should_make_experiment:
-        make_experiment(task, evaluators)
+        make_experiment(task, evaluators, dataset=dataset_name)
         should_make_experiment = False
 
 
@@ -117,7 +135,7 @@ flush_job_params = {
     "misfire_grace_time": 120,
     "id": "flush_pending_documents",
     "kwargs": {
-        "dataset_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}"  # Parametro della funzione
+        "dataset_base_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}"  # Parametro della funzione
     },
 }
 
