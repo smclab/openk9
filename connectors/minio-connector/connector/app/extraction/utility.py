@@ -105,11 +105,20 @@ class IngestionHandler:
 @dataclass
 class FileExtensionMethod:
     file_type_name: str
-    extensions: set[str]
-    method: Callable[[bytes], DataFrame]
+    extensions: set[str] | dict[str, set[str]]
+    parse: Callable[[bytes, Union[str, None]], DataFrame]
 
     def contains(self, extension: str) -> bool:
-        return extension in self.extensions
+        extensions = self.extensions if isinstance(self.extensions, set) else reduce(lambda x, y: x.union(y), self.extensions.values())
+        return extension in extensions
+
+    def get_engine(self, extension: str):
+        if not isinstance(self.extensions, dict):
+            return None
+
+        for engine, extensions in self.extensions.items():
+            if extension in extensions:
+                return engine
 
 
 class FileExtractor:
@@ -123,8 +132,14 @@ class FileExtractor:
                 # xlrd engine: .xls
                 # pyxlsb engine: .xlsb
                 # openpyxl engine: everything else
-                extensions={".xls", ".xlsx", ".xlsm", ".xlsb", ".odf", ".ods", ".odt"},
-                method=self.__extract_excel
+                # extensions={".xls", ".xlsx", ".xlsm", ".xlsb", ".odf", ".ods"},
+                extensions= {
+                    "openpyxl": {".xlsx", ".xlsm"},
+                    "xlrd": {".xls"},
+                    "pyxlsb": {".xlsb"},
+                    "odf": {".odf", ".ods"}
+                },
+                parse=self.__extract_excel,
             ),
             FileExtensionMethod(
                 file_type_name="csv",
@@ -136,7 +151,7 @@ class FileExtractor:
                 # .bak: Copie di backup di database che mantengono la struttura CSV.
                 # .prn: Vecchio formato di esportazione per la stampa, talvolta strutturato a colonne fisse.
                 extensions={".csv", ".txt", ".tsv", ".dat", ".log", ".bak", ".prn"},
-                method=self.__extract_csv
+                parse=self.__extract_csv
             ),
         ]
 
@@ -150,7 +165,8 @@ class FileExtractor:
             try:
                 if file_extension_method.contains(extension=file_extension):
                     logger.info(f"Trying to extract file: {object_name} as {file_extension_method.file_type_name}")
-                    return file_extension_method.method(data)
+                    engine = file_extension_method.get_engine(file_extension)
+                    return file_extension_method.parse(data, engine)
             except Exception as e:
                 logger.warning(f"[FileExtractor] Error extracting file data {object_name} as {file_extension_method.file_type_name}.", exc_info=e)
                 continue
@@ -158,17 +174,17 @@ class FileExtractor:
         logger.warning(f"Skipped file {object_name}. Extension {file_extension} not supported.")
         return None
 
-    def __extract_excel(self, data: bytes) -> DataFrame:
+    def __extract_excel(self, data: bytes, engine) -> DataFrame:
         try:
             data = BytesIO(data)
-            df = pd.read_excel(data, header=0 if self.do_try_extract_header else None)
+            df = pd.read_excel(data, engine=engine, header=0 if self.do_try_extract_header else None)
             if self.do_try_extract_header and not has_valid_header(df):
                 df = pd.read_excel(data, header=None)
             return df
         except Exception:
             raise
 
-    def __extract_csv(self, data: bytes) -> DataFrame:
+    def __extract_csv(self, data: bytes, engine) -> DataFrame:
         try:
             data = BytesIO(data)
             # CSV will always have header
