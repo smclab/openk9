@@ -64,31 +64,35 @@ public class AclQueryParser implements QueryParser {
 	@Override
 	public Uni<Void> apply(ParserContext parserContext) {
 
-		var innerQuery = getBoolQuery(parserContext, this.extraRolesEnabled);
+		var innerQuery = getBoolQuery(parserContext);
 
 		parserContext.getMutableQuery().filter(innerQuery);
 
 		return Uni.createFrom().voidItem();
 	}
 
-	protected static BoolQueryBuilder getBoolQuery(
-		ParserContext parserContext, boolean extraRolesEnabled) {
+	protected BoolQueryBuilder getBoolQuery(ParserContext parserContext) {
 
 		BoolQueryBuilder innerQuery =
 			QueryBuilders
 				.boolQuery()
 				.minimumShouldMatch(1)
-				.should(QueryBuilders.matchQuery("acl.public", true));
+				.should(QueryBuilders.matchQuery(
+					"acl.public", true));
 
-		AclMapping[] aclMappings = parserContext.getTenantWithBucket().getAclMappings();
+		AclMapping[] aclMappings = 
+			parserContext.getTenantWithBucket().getAclMappings();
+
 		JsonWebToken jwt = parserContext.getJwt();
 		List<String> extraRoles = null;
 
-		if (extraRolesEnabled) {
-			Map<String, List<String>> extraParams = parserContext.getExtraParams();
+		if (this.extraRolesEnabled) {
+			Map<String, List<String>> extraParams = 
+				parserContext.getExtraParams();
 
 			if (extraParams != null && !extraParams.isEmpty()) {
-				extraRoles = extraParams.get(ExtraParamKeys.EXTRA_ROLES);
+				extraRoles = extraParams.get(
+					ExtraParamKeys.EXTRA_ROLES);
 			}
 		}
 
@@ -97,7 +101,7 @@ public class AclQueryParser implements QueryParser {
 			DocTypeField docTypeField = aclMapping.getDocTypeField();
 			UserField userField = aclMapping.getUserField();
 
-			if (jwt.getClaimNames() != null) {
+			if (jwt != null && jwt.getClaimNames() != null) {
 				apply(docTypeField, userField.getTerms(jwt), innerQuery);
 			}
 

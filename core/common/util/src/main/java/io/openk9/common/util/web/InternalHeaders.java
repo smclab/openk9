@@ -17,6 +17,8 @@
 
 package io.openk9.common.util.web;
 
+import java.util.Set;
+
 import lombok.Getter;
 
 /**
@@ -36,6 +38,18 @@ public final class InternalHeaders {
 	 */
 	public static final String ROLES = "X-K9-ROLES";
 
+	/**
+	 * Contains the ACL that will be added as extra parameters
+	 * for the search query.
+	 */
+	public static final String ACL = "OPENK9_ACL";
+
+	/**
+	 * All internal header names, used for sanitization in the gateway
+	 * pre-filter. Adding a new header constant above automatically
+	 * includes it in sanitization.
+	 */
+	public static final Set<String> HEADER_NAMES = Set.of(TENANT_ID, ROLES, ACL);
 
 	private InternalHeaders() {}
 }

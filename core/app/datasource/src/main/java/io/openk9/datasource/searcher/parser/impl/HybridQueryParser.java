@@ -39,15 +39,8 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 @Named("HybridQueryParser")
 public class HybridQueryParser implements QueryParser {
 
-	@ConfigProperty(
-		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
-	)
-	String extraParamsKey;
-
-	@ConfigProperty(
-		name = "openk9.datasource.acl.query.extra.params.enabled", defaultValue = "false"
-	)
-	boolean extraParamsEnabled;
+	@Inject
+	AclQueryParser aclQueryParser;
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -127,10 +120,12 @@ public class HybridQueryParser implements QueryParser {
 				.map(hybridQuery -> {
 					searchSourceBuilder.query(hybridQuery);
 
-					var aclFilterQuery = AclQueryParser.getBoolQuery(
-						parserContext, extraParamsEnabled);
+					var aclFilterQuery = 
+						aclQueryParser.getBoolQuery(
+							parserContext);
 
-					searchSourceBuilder.postFilter(aclFilterQuery);
+					searchSourceBuilder.postFilter(
+						aclFilterQuery);
 
 					return searchSourceBuilder;
 				});
@@ -138,6 +133,10 @@ public class HybridQueryParser implements QueryParser {
 		}
 
 		return Uni.createFrom().item(searchSourceBuilder);
+	}
+
+	protected AclQueryParser getAclQueryParser() {
+		return this.aclQueryParser;
 	}
 
 }

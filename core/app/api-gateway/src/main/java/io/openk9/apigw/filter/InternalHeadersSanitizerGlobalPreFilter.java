@@ -22,6 +22,7 @@ import io.openk9.common.util.web.InternalHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -35,12 +36,19 @@ import reactor.core.publisher.Mono;
 public class InternalHeadersSanitizerGlobalPreFilter implements GlobalFilter {
 
 	@Override
-	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+	public Mono<Void> filter(
+		ServerWebExchange exchange, GatewayFilterChain chain) {
 
-		// Remove just X-K9-ROLES
-		return chain.filter(exchange.mutate()
-			.request(req -> req.headers(headers -> headers.remove(InternalHeaders.ROLES)))
+		return chain.filter(exchange.mutate().request(r -> r.headers(
+				InternalHeadersSanitizerGlobalPreFilter::removeInternalHeaders))
 			.build());
+	}
+
+	private static void removeInternalHeaders(HttpHeaders headers) {
+
+		for (String header : InternalHeaders.HEADER_NAMES) {
+			headers.remove(header);
+		}
 	}
 
 }

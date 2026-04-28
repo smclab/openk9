@@ -31,6 +31,7 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @QuarkusTest
 public class HybridQueryParserTest {
@@ -65,6 +66,17 @@ public class HybridQueryParserTest {
 	@Test
 	void should_not_throw_null_pointer_exception() {
 
-		assertDoesNotThrow(() -> hybridQueryParser.apply(parserContext, searchSourceBuilder));
+		assertDoesNotThrow(() -> hybridQueryParser.apply(
+			parserContext, searchSourceBuilder));
+	}
+
+	@Test
+	void should_inject_acl_query_parser_after_refactoring() {
+		// after refactoring, AclQueryParser is injected via CDI
+		assertNotNull(hybridQueryParser.getAclQueryParser());
+
+		// and getBoolQuery should not throw with default config
+		assertDoesNotThrow(() -> hybridQueryParser.getAclQueryParser()
+			.getBoolQuery(parserContext));
 	}
 }
