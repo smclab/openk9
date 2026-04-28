@@ -15,7 +15,25 @@ client = Client()
 async_client = AsyncClient()
 
 
+def get_dataset_index(
+    all_datasets, name_contains=None, min_examples=None, max_examples=None
+):
+    filtered = all_datasets
+
+    if name_contains:
+        filtered = [d for d in filtered if name_contains.lower() in d["name"].lower()]
+
+    if min_examples is not None:
+        filtered = [d for d in filtered if d["example_count"] >= min_examples]
+
+    if max_examples is not None:
+        filtered = [d for d in filtered if d["example_count"] <= max_examples]
+
+    return filtered
+
+
 def manage_daily_dataset(dataset_name, input_item, output_item, metadata):
+
     try:
         # Verifica se il dataset esiste
         client.datasets._get_dataset_id_by_name(dataset_name=dataset_name)
@@ -25,7 +43,7 @@ def manage_daily_dataset(dataset_name, input_item, output_item, metadata):
             inputs=input_item,
             outputs=output_item,
             metadata=metadata,
-            timeout=30,
+            timeout=120,
         )
 
     except ValueError as e:
