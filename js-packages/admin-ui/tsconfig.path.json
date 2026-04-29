@@ -1,11 +1,14 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
     "paths": {
-      "@pages": ["pages"], // this doesn't work for @pages/smth
-      "@pages/*": ["pages/*"],
-      "@components": ["components"],
-      "@components/*": ["components/*"]
+      "@pages": ["./src/pages"],
+      "@pages/*": ["./src/pages/*"],
+      "@components": ["./src/components"],
+      "@components/*": ["./src/components/*"],
+      "utils": ["./src/utils"],
+      "utils/*": ["./src/utils/*"],
+      "openapi-generated": ["./src/openapi-generated"],
+      "openapi-generated/*": ["./src/openapi-generated/*"]
     }
   }
 }
