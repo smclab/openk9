@@ -6,12 +6,9 @@
 
 (How one can reproduce the issue - this is very important)
 
-## Example Project
+## Target Environment
 
-(If possible, create an example project here on GitLab.com that exhibits the problematic
-behavior, and link to it here in the bug report.
-If you are using an older version of GitLab, this will also determine whether the bug has been fixed
-in a more recent version)
+(Describe the environment where the bug was observed: OpenK9 version, deployment type (Docker Compose / Kubernetes), OS, browser if applicable, and any relevant configuration details)
 
 ## What is the current bug behavior?
 
