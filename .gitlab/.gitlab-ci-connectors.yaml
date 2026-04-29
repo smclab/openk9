@@ -15,9 +15,9 @@ Fetch config:
   stage: fetch
   image: alpine:3.19
   script:
-  - VERSION=$(grep -m1 '<version>' core/pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
-  - echo "VERSION=$VERSION"
-  - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
+  - source python_modules_config.txt
+  - echo "VERSION=$OPENK9_VERSION"
+  - echo "VERSION=$OPENK9_VERSION" > "$CI_PROJECT_DIR/config.env"
   artifacts:
     paths:
     - config.env
