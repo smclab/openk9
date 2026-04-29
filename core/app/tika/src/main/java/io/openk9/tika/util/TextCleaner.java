@@ -29,10 +29,10 @@ public class TextCleaner {
     /**
      * Cleans the raw text by performing the following operations:
      * 1. Decodes HTML entities and removes HTML tags.
-     * 2. Corrects word breaks that are split across lines.
-     * 3. Removes sequences of long dots (more than 3 dots).
-     * 4. Removes unwanted characters while keeping numbers and certain symbols like slashes.
-     * 5. Normalizes whitespace by replacing multiple spaces, tabs, or newlines with a single space.
+     * 2. Normalizes whitespace by replacing multiple spaces, tabs, or newlines with a single space.
+     * 3. Corrects word breaks that are split across lines.
+     * 4. Removes sequences of long dots (more than 3 dots).
+     * 5. Removes unwanted characters while keeping numbers and certain symbols like slashes.
      *
      * If an exception occurs during the cleaning process, the method will return the original raw text.
      *
