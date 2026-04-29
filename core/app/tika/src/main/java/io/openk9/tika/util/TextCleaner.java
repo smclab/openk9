@@ -19,7 +19,6 @@ package io.openk9.tika.util;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.safety.Safelist;
 
 /**
  * A utility class for cleaning raw text by removing unwanted HTML tags, correcting word breaks,
@@ -48,19 +47,21 @@ public class TextCleaner {
 
         try {
             // 1. Decode HTML entities and remove HTML tags using Jsoup
-            String cleanedText = Jsoup.clean(rawText, "", Safelist.none(), new Document.OutputSettings().prettyPrint(false));
+            Document doc = Jsoup.parse(rawText);
+            doc.select("*").prepend(" ").append(" ");
+            String cleanedText = doc.text();
 
-            // 2. Correct word breaks like "Organiz- \nzation" -> "Organization".
-            cleanedText = cleanedText.replaceAll("(\\w+)-\\s*\\n(\\w+)", "$1$2");
+            // 2. Normalize whitespace by replacing newlines or multiple spaces with a single space, also removing tabs.
+            cleanedText = cleanedText.replaceAll("[ \\t]+", " ").replaceAll("\\n+", " ");
 
-            // 3. Remove sequences of long dots (more than 3) like "...........".
+            // 3. Correct word breaks like "Organi- zation" -> "Organization".
+            cleanedText = cleanedText.replaceAll("(\\w+)-\\s+(\\w+)", "$1$2");
+
+            // 4. Remove sequences of long dots (more than 3) like "...........".
             cleanedText = cleanedText.replaceAll("\\.{4,}", "");
 
-            // 4. Remove unwanted characters while keeping numbers with / (e.g., 3/27).
-            cleanedText = cleanedText.replaceAll("[^a-zA-Z0-9 .,;:?!()/%-]|(?<!\\d)/|/(?!\\d)", "");
-
-            // 5. Normalize whitespace by replacing newlines or multiple spaces with a single space, also removing tabs.
-            cleanedText = cleanedText.replaceAll("[ \t]+", " ").replaceAll("\\n+", " ");
+            // 5. Remove unwanted characters while keeping numbers with / (e.g., 3/27).
+            cleanedText = cleanedText.replaceAll("[^\\p{L}\\p{Nd}\\p{Sm}\\p{Sc}\\p{Pd} .,;:?!\"'’()/%@&]|(?<!\\d)/|/(?!\\d)", "");
 
             return cleanedText.trim();
         } catch (Exception e) {
