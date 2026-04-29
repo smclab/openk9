@@ -126,14 +126,4 @@
 		<cve>CVE-2026-33870</cve>
 		<cve>CVE-2026-33871</cve>
 	</suppress>
-	<suppress>
-		<notes><![CDATA[
-	CVE-2026-1002 concerns a cache manipulation vulnerability in the Vert.x Web
-	StaticHandler component. This project does not serve static files and does
-	not use StaticHandler in any configuration, making this vulnerability
-	not exploitable in this context.
-	]]></notes>
-		<filePath regex="true">.*vertx-web-.*\.jar.*</filePath>
-		<cve>CVE-2026-1002</cve>
-	</suppress>
 </suppressions>
