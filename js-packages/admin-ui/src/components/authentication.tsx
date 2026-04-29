@@ -18,47 +18,64 @@ import React, { useEffect, useState, createContext, useContext } from "react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { BasicLoginForm } from "./BasicLoginForm";
 
-declare global {
-  interface Window {
-    KEYCLOAK_URL: string;
-    KEYCLOAK_REALM: string;
-    KEYCLOAK_CLIENT_ID: string;
-  }
-}
+const OAUTH2_SETTINGS_ENDPOINT = "/api/datasource/oauth2/settings";
 
-const oauth2BaseUrl = typeof window !== "undefined" ? window.KEYCLOAK_URL : "";
+type OauthConfig = {
+  issuerUri: string;
+  clientId: string;
+};
 
-export const isOauth2Enabled = !!oauth2BaseUrl && oauth2BaseUrl !== "DISABLED" && oauth2BaseUrl !== "";
-
-const buildAuthority = (): string => {
-  const realm = window.KEYCLOAK_REALM;
-  const base = oauth2BaseUrl.replace(/\/+$/, "");
-  return realm ? `${base}/realms/${realm}` : base;
+type OauthSettingsResponse = {
+  issuerUri?: string | null;
+  clientId?: string | null;
+  clientSecret?: string | null;
 };
 
 const redirectUri = typeof window !== "undefined" ? `${window.location.origin}/admin/` : "";
 
-export const userManager: UserManager | null = isOauth2Enabled
-  ? new UserManager({
-      authority: buildAuthority(),
-      client_id: window.KEYCLOAK_CLIENT_ID,
-      redirect_uri: redirectUri,
-      post_logout_redirect_uri: redirectUri,
-      response_type: "code",
-      scope: "openid",
-      automaticSilentRenew: true,
-      loadUserInfo: false,
-      monitorSession: false,
-      userStore: new WebStorageStateStore({ store: window.sessionStorage }),
-      stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
-    })
-  : null;
+let userManager: UserManager | null = null;
+let oauthEnabled = false;
 
-if (isOauth2Enabled) {
-  console.log("[auth] OIDC enabled", {
-    authority: buildAuthority(),
-    client_id: window.KEYCLOAK_CLIENT_ID,
+export function getUserManager(): UserManager | null {
+  return userManager;
+}
+
+export function isOauth2Enabled(): boolean {
+  return oauthEnabled;
+}
+
+async function loadOauthConfig(): Promise<OauthConfig | null> {
+  try {
+    const res = await fetch(OAUTH2_SETTINGS_ENDPOINT, { credentials: "same-origin" });
+    if (!res.ok) {
+      console.log("[auth] oauth2/settings not ok", res.status);
+      return null;
+    }
+    const data = (await res.json()) as OauthSettingsResponse;
+    if (!data.issuerUri || data.issuerUri === "DISABLED" || !data.clientId) {
+      console.log("[auth] oauth2 disabled or incomplete", data);
+      return null;
+    }
+    return { issuerUri: data.issuerUri, clientId: data.clientId };
+  } catch (err) {
+    console.warn("[auth] oauth2/settings fetch failed, falling back to Basic", err);
+    return null;
+  }
+}
+
+function buildUserManager(config: OauthConfig): UserManager {
+  return new UserManager({
+    authority: config.issuerUri,
+    client_id: config.clientId,
     redirect_uri: redirectUri,
+    post_logout_redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid",
+    automaticSilentRenew: true,
+    loadUserInfo: false,
+    monitorSession: false,
+    userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+    stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
   });
 }
 
@@ -68,7 +85,17 @@ const isRedirectCallback = (): boolean => {
 };
 
 export async function authInit(): Promise<boolean> {
-  if (!userManager) return true;
+  const config = await loadOauthConfig();
+  if (!config) {
+    oauthEnabled = false;
+    userManager = null;
+    return true;
+  }
+
+  oauthEnabled = true;
+  userManager = buildUserManager(config);
+  console.log("[auth] OIDC enabled", { authority: config.issuerUri, client_id: config.clientId, redirect_uri: redirectUri });
+
   try {
     if (isRedirectCallback()) {
       console.log("[auth] processing redirect callback");
@@ -76,13 +103,11 @@ export async function authInit(): Promise<boolean> {
       console.log("[auth] callback user:", {
         has_access_token: !!callbackUser?.access_token,
         expired: callbackUser?.expired,
-        expires_at: callbackUser?.expires_at,
-        token_type: callbackUser?.token_type,
       });
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     const user = await userManager.getUser();
-    console.log("[auth] authInit user after init:", {
+    console.log("[auth] authInit user:", {
       present: !!user,
       expired: user?.expired,
       has_token: !!user?.access_token,
@@ -111,7 +136,7 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export async function getAuthHeaders(): Promise<Record<string, string>> {
-  if (isOauth2Enabled) {
+  if (oauthEnabled) {
     const token = await getAccessToken();
     if (!token) {
       console.warn("[auth] getAuthHeaders: no access token available");
@@ -124,7 +149,7 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 export async function getUserProfile() {
-  if (isOauth2Enabled && userManager) {
+  if (oauthEnabled && userManager) {
     const user = await userManager.getUser();
     return user?.profile ?? {};
   }
@@ -146,8 +171,9 @@ function OidcAuthenticationProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!userManager) return;
     let cancelled = false;
+    const um = userManager;
 
-    userManager.getUser().then((u) => {
+    um.getUser().then((u) => {
       if (!cancelled) setUser(u);
     });
 
@@ -161,15 +187,15 @@ function OidcAuthenticationProvider({ children }: { children: React.ReactNode })
       console.error("OIDC silent renew error", err);
     };
 
-    userManager.events.addUserLoaded(onUserLoaded);
-    userManager.events.addUserUnloaded(onUserUnloaded);
-    userManager.events.addSilentRenewError(onSilentRenewError);
+    um.events.addUserLoaded(onUserLoaded);
+    um.events.addUserUnloaded(onUserUnloaded);
+    um.events.addSilentRenewError(onSilentRenewError);
 
     return () => {
       cancelled = true;
-      userManager!.events.removeUserLoaded(onUserLoaded);
-      userManager!.events.removeUserUnloaded(onUserUnloaded);
-      userManager!.events.removeSilentRenewError(onSilentRenewError);
+      um.events.removeUserLoaded(onUserLoaded);
+      um.events.removeUserUnloaded(onUserUnloaded);
+      um.events.removeSilentRenewError(onSilentRenewError);
     };
   }, []);
 
@@ -217,7 +243,7 @@ function BasicAuthenticationProvider({ children }: { children: React.ReactNode }
 }
 
 export function AuthenticationProvider({ children }: { children: React.ReactNode }) {
-  if (!isOauth2Enabled || !userManager) {
+  if (!oauthEnabled || !userManager) {
     return <BasicAuthenticationProvider>{children}</BasicAuthenticationProvider>;
   }
   return <OidcAuthenticationProvider>{children}</OidcAuthenticationProvider>;
