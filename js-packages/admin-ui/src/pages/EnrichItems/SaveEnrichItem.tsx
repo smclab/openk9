@@ -129,6 +129,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         baseUri: "",
         path: "",
         script: "",
+        jsonConfig: "",
         behaviorMergeType: BehaviorMergeType.Merge,
         jsonPath: "",
         requestTimeout: 1000,
@@ -143,6 +144,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       baseUri: enrichItemQuery.data?.enrichItem?.resourceUri?.baseUri ?? "",
       path: enrichItemQuery.data?.enrichItem?.resourceUri?.path ?? "",
       script: enrichItemQuery.data?.enrichItem?.script || "",
+      jsonConfig: enrichItemQuery.data?.enrichItem?.jsonConfig || "",
       behaviorMergeType: enrichItemQuery.data?.enrichItem?.behaviorMergeType,
       jsonPath: enrichItemQuery.data?.enrichItem?.jsonPath || "",
       requestTimeout: enrichItemQuery.data?.enrichItem?.requestTimeout || 1000,
@@ -154,7 +156,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         variables: {
           id: enrichItemId !== "new" ? enrichItemId : undefined,
           ...data,
-          jsonConfig: dynamicFormJson || undefined,
+          jsonConfig: dynamicFormJson || data.jsonConfig || undefined,
           resourceUri: {
             baseUri: data.baseUri,
             path: data.path,
@@ -274,7 +276,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       },
     ],
     valueOverride: {
-      jsonConfig: dynamicFormJson || enrichItemQuery.data?.enrichItem?.jsonConfig || "",
+      jsonConfig: dynamicFormJson || form.inputProps("jsonConfig").value || "",
     },
   });
 
@@ -401,27 +403,32 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                   disabled={!!view}
                 />
               ) : (
-                (() => {
-                  const isGroovy = form.inputProps("type").value === EnrichItemType.GroovyScript;
-                  return (
-                    <CodeInput
-                      language={isGroovy ? "groovy" : "json"}
-                      label={isGroovy ? "Script" : "Configuration"}
-                      disabled={!!view}
-                      id="code-input-enricher"
-                      onChange={(e) => {
-                        form.inputProps("script").onChange(e);
-                      }}
-                      validationMessages={[]}
-                      value={form.inputProps("script").value || ""}
-                      description={
-                        isGroovy
-                          ? "Groovy script executed during enrich step"
-                          : "Json configuration sended to corresponding external parser when execution start"
-                      }
-                    />
-                  );
-                })()
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <CodeInput
+                    language="groovy"
+                    label="Script"
+                    disabled={!!view}
+                    id="code-input-enricher-script"
+                    onChange={(e) => {
+                      form.inputProps("script").onChange(e);
+                    }}
+                    validationMessages={[]}
+                    value={form.inputProps("script").value || ""}
+                    description="Groovy script executed during enrich step"
+                  />
+                  <CodeInput
+                    language="json"
+                    label="Json Config"
+                    disabled={!!view}
+                    id="code-input-enricher-json-config"
+                    onChange={(e) => {
+                      form.inputProps("jsonConfig").onChange(e);
+                    }}
+                    validationMessages={[]}
+                    value={form.inputProps("jsonConfig").value || ""}
+                    description="Json configuration sended to corresponding external parser when execution start"
+                  />
+                </Box>
               )
             ) : (
               <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
