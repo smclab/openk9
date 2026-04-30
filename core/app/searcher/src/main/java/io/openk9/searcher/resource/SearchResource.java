@@ -84,9 +84,12 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.quarkus.grpc.GrpcClient;
 import io.smallrye.mutiny.Uni;
+import io.openk9.searcher.filter.RouteFilters;
+
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.lucene.search.TotalHits;
@@ -158,6 +161,8 @@ public class SearchResource {
 	HttpServerRequest request;
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	RoutingContext routingContext;
 	@GrpcClient("searcher")
 	Searcher searcherClient;
 	@Inject
@@ -166,6 +171,14 @@ public class SearchResource {
 	Integer totalResultLimit;
 	@Inject
 	Tracer tracer;
+
+	private String getTenantId() {
+		String tenantId = routingContext.get(RouteFilters.TENANT_ID_KEY);
+		if (tenantId == null || tenantId.isEmpty()) {
+			throw new MissingTenantIdException();
+		}
+		return tenantId;
+	}
 
 	/**
 	 * Builds an OpenSearch Highlight configuration for the given fields and query text.
@@ -842,7 +855,7 @@ public class SearchResource {
 	 * Creates an OpenSearch autocomplete query based on the provided search request and
 	 * Autocomplete configurations.
 	 *
-	 * <p>This method retrieves autocomplete configurations for the current virtual host,
+	 * <p>This method retrieves autocomplete configurations for the current tenant,
 	 * validates that autocomplete is enabled, extracts and validates the query text from
 	 * the search token, and creates an OpenSearch autocomplete request based on the
 	 * configurations.
@@ -865,9 +878,8 @@ public class SearchResource {
 	private Uni<AutocompleteContext> _buildAutocompleteContext(
 		AutocompleteRequestDTO autocompleteRequest) {
 
-		var virtualHost = request.authority().toString();
 		var autocompleteConfigurationsRequest = AutocompleteConfigurationsRequest.newBuilder()
-			.setVirtualHost(virtualHost)
+			.setTenantId(getTenantId())
 			.build();
 
 		// retrieve Autocomplete configurations
@@ -893,7 +905,7 @@ public class SearchResource {
 	 * Creates an OpenSearch autocorrection query based on the provided search request and
 	 * Autocorrection configurations.
 	 *
-	 * <p>This method retrieves autocorrection configurations for the current virtual host,
+	 * <p>This method retrieves autocorrection configurations for the current tenant,
 	 * validates that autocorrection is enabled, extracts and validates the query text from
 	 * the search token, and creates an OpenSearch autocorrection request based on the
 	 * configurations.
@@ -916,9 +928,8 @@ public class SearchResource {
 	private Uni<AutocorrectionContext> _buildAutocorrectionContext(
 			SearchRequest searchRequest) {
 
-		var virtualHost = request.authority().toString();
 		var autocorrectionConfigurationsRequest = AutocorrectionConfigurationsRequest.newBuilder()
-			.setVirtualHost(virtualHost)
+			.setTenantId(getTenantId())
 			.build();
 
 		// retrieve Autocorrection configurations
@@ -1646,7 +1657,7 @@ public class SearchResource {
 
 		var rawToken = getRawToken(headers);
 		builder.setSearchText(searchRequest.getSearchText());
-		builder.setVirtualHost(request.authority().toString());
+		builder.setTenantId(getTenantId());
 		builder.setJwt(rawToken);
 		builder.setMode(mode);
 
@@ -1709,7 +1720,7 @@ public class SearchResource {
 		String language = searchRequest.getLanguage();
 
 		return requestBuilder
-			.setVirtualHost(request.authority().toString())
+			.setTenantId(getTenantId())
 			.setJwt(rawToken)
 			.putAllExtra(extra)
 			.addAllSort(mapToGrpc(searchRequest.getSort()))

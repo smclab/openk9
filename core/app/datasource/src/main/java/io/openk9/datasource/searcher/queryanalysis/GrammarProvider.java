@@ -26,10 +26,9 @@ import jakarta.inject.Inject;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
-import io.openk9.datasource.service.TenantRegistry;
+import io.openk9.datasource.service.TenantIdResolver;
 
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
@@ -41,14 +40,14 @@ import org.hibernate.reactive.mutiny.Mutiny;
 @ApplicationScoped
 public class GrammarProvider {
 
-	public Uni<Grammar> getOrCreateGrammar(String virtualHost, JsonWebToken jwt) {
+	public Uni<Grammar> getOrCreateGrammar(String tenantId, String virtualHost, JsonWebToken jwt) {
 
-		return getTenantWithBucket(virtualHost)
+		return getTenantWithBucket(tenantId, virtualHost)
 			.onItem().ifNull().fail()
 			.onItem().ifNotNull().transform(tenantWithBucket -> {
 
 				var bucket = tenantWithBucket.getBucket();
-				var tenantId = tenantWithBucket.getTenantId();
+				var resolvedTenantId = tenantWithBucket.getTenantId();
 
 				QueryAnalysis queryAnalysis = bucket.getQueryAnalysis();
 
@@ -64,7 +63,7 @@ public class GrammarProvider {
 				GrammarMixin grammarMixin = GrammarMixin.of(
 					mappedRules, mappedAnnotators);
 
-				return new Grammar(tenantId, List.of(grammarMixin));
+				return new Grammar(resolvedTenantId, List.of(grammarMixin));
 			});
 	}
 
@@ -90,7 +89,7 @@ public class GrammarProvider {
 	}
 
 	@Inject
-	TenantRegistry tenantRegistry;
+	TenantIdResolver tenantIdResolver;
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
@@ -98,22 +97,19 @@ public class GrammarProvider {
 	@Inject
 	AnnotatorFactory annotatorFactory;
 
-	private Uni<TenantWithBucket> getTenantWithBucket(String virtualHost) {
-		return cache.getAsync(
-			new CompositeCacheKey(virtualHost, "grammarProvider", "getTenantWithBucket"),
-			key -> tenantRegistry.getTenantId(virtualHost)
-				.flatMap(tenantId -> sessionFactory
-					.withTransaction(
-						tenantId, (s, t) -> s
-							.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
-							.setParameter(TenantBinding_.VIRTUAL_HOST, virtualHost)
-							.getSingleResult()
-							.map(bucket -> new TenantWithBucket(tenantId, bucket))
-							.onFailure()
-							.recoverWithNull()
-					)
+	private Uni<TenantWithBucket> getTenantWithBucket(String tenantId, String virtualHost) {
+		return tenantIdResolver.resolve(tenantId, virtualHost)
+			.flatMap(tenantIdResolved -> cache.getAsync(
+				new CompositeCacheKey(tenantIdResolved, "grammarProvider", "getTenantWithBucket"),
+				key -> sessionFactory.withTransaction(
+					tenantIdResolved, (s, t) -> s
+						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
+						.getSingleResult()
+						.map(bucket -> new TenantWithBucket(tenantIdResolved, bucket))
+						.onFailure()
+						.recoverWithNull()
 				)
-		);
+			));
 	}
 
 	@CacheName("bucket-resource")

@@ -37,11 +37,13 @@ service Searcher {
 }
 
 message AutocompleteConfigurationsRequest {
-  string virtualHost = 1;
+  string virtualHost = 1 [deprecated = true];
+  string tenantId = 2;
 }
 
 message AutocorrectionConfigurationsRequest {
-  string virtualHost = 1;
+  string virtualHost = 1 [deprecated = true];
+  string tenantId = 2;
 }
 
 message AutocompleteConfigurationsResponse {
@@ -126,13 +128,14 @@ message QueryParserRequest {
   string afterKey = 3;
   string suggestKeyword = 4;
   int64 suggestionCategoryId = 5;
-  string virtualHost = 6;
+  string virtualHost = 6 [deprecated = true];
   optional string jwt = 7;
   map<string, Value> extra = 8;
   repeated Sort sort = 9;
   optional string sortAfterKey = 10;
   optional string language = 11;
   optional bool vectorIndices = 12 [deprecated = true];
+  string tenantId = 13;
 }
 
 message Sort {
@@ -158,22 +161,26 @@ message SearchTokenRequest {
 message QueryAnalysisRequest {
   string searchText = 1;
   repeated QueryAnalysisToken tokens = 2;
-  string virtualHost = 3;
+  string virtualHost = 3 [deprecated = true];
   optional string jwt = 4;
   string mode = 5;
+  string tenantId = 6;
 }
 
 message GetLLMConfigurationsRequest {
-  string virtualHost = 1;
+  string virtualHost = 1 [deprecated = true];
+  string tenantId = 2;
 }
 
 message GetRAGConfigurationsRequest {
-  string virtualHost = 1;
+  string virtualHost = 1 [deprecated = true];
   RAGType ragType = 2;
+  string tenantId = 3;
 }
 
 message GetEmbeddingModelConfigurationsRequest {
-  string virtualHost = 1;
+  string virtualHost = 1 [deprecated = true];
+  string tenantId = 2;
 }
 
 enum RAGType {

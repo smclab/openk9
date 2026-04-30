@@ -28,7 +28,6 @@ import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Fetch;
-import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -52,12 +51,10 @@ import io.openk9.datasource.model.SearchConfig;
 import io.openk9.datasource.model.SearchConfig_;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
-import io.openk9.datasource.model.TenantBinding;
-import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
-import io.openk9.datasource.service.TenantRegistry;
+import io.openk9.datasource.service.TenantIdResolver;
 import io.openk9.searcher.client.dto.ParserSearchToken;
 import io.openk9.searcher.client.mapper.SearcherMapper;
 import io.openk9.searcher.grpc.QueryParserRequest;
@@ -89,7 +86,7 @@ public abstract class BaseSearchService {
 	@Inject
 	Mutiny.SessionFactory sf;
 	@Inject
-	TenantRegistry tenantRegistry;
+	protected TenantIdResolver tenantIdResolver;
 
 	public static JsonObject getQueryParserConfig(Bucket bucket, QueryParserType tokenType) {
 
@@ -253,15 +250,18 @@ public abstract class BaseSearchService {
 
 	}
 
+	// Single-row invariant: tenant_binding contains exactly one row per tenant schema
+	// (TenantSchemaService._insertIntoTenantBinding hardcodes id=1). Schema isolation via
+	// sf.withTransaction(tenantId, ...) is sufficient to scope the result; no virtualHost
+	// predicate is needed.
 	protected void customizeCriteriaBuilder(
-		String virtualHost, CriteriaBuilder criteriaBuilder,
+		CriteriaBuilder criteriaBuilder,
 		CriteriaQuery<Bucket> criteriaQuery, boolean suggestion,
 		long suggestionCategoryId) {
 
 		Root<Bucket> tenantRoot = criteriaQuery.from(Bucket.class);
 
-		Join<Bucket, TenantBinding> tenantBindingJoin =
-			tenantRoot.join(Bucket_.tenantBinding);
+		tenantRoot.join(Bucket_.tenantBinding);
 
 		tenantRoot
 			.fetch(Bucket_.searchConfig, JoinType.LEFT)
@@ -319,59 +319,45 @@ public abstract class BaseSearchService {
 			.fetch(DocType_.docTypeFields, JoinType.LEFT)
 			.fetch(DocTypeField_.parentDocTypeField, JoinType.LEFT);
 
-		conjunction = criteriaBuilder.and(
-			conjunction,
-			criteriaBuilder.equal(
-				tenantBindingJoin.get(TenantBinding_.virtualHost),
-				virtualHost
-			)
-		);
-
 		criteriaQuery.where(conjunction);
 
 	}
 
-
 	protected Uni<TenantWithBucket> getTenantAndFetchRelations(
-		String virtualHost, boolean suggestion, long suggestionCategoryId) {
+		String tenantId, boolean suggestion, long suggestionCategoryId) {
 
-		return tenantRegistry.getTenantId(virtualHost)
-			.flatMap(tenantId -> sf
-				.withTransaction(tenantId, (s, t) -> {
+		return sf.withTransaction(tenantId, (s, t) -> {
+			CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
 
-					CriteriaBuilder criteriaBuilder = sf.getCriteriaBuilder();
+			CriteriaQuery<Bucket> criteriaQuery =
+				criteriaBuilder.createQuery(Bucket.class);
 
-					CriteriaQuery<Bucket> criteriaQuery =
-						criteriaBuilder.createQuery(Bucket.class);
+			customizeCriteriaBuilder(criteriaBuilder, criteriaQuery, suggestion,
+				suggestionCategoryId);
 
-					customizeCriteriaBuilder(
-						virtualHost, criteriaBuilder, criteriaQuery, suggestion,
-						suggestionCategoryId);
-
-					return s
-						.createQuery(criteriaQuery)
-						.getSingleResultOrNull();
-					}
+			return s
+				.createQuery(criteriaQuery)
+				.getSingleResultOrNull();
+			}
+		)
+		.onFailure(SQLGrammarException.class)
+		.recoverWithUni(throwable ->
+			Uni.createFrom().failure(
+				new InvalidTenantException(
+					String.format(
+						"Impossible to identify a valid tenant from tenantId=\"%s\".",
+						tenantId
+					),
+					throwable
 				)
-				.onFailure(SQLGrammarException.class)
-				.recoverWithUni(throwable ->
-					Uni.createFrom().failure(
-						new InvalidTenantException(
-							String.format(
-								"Impossible to identify a valid tenant from the virtualHost: \"%s\".",
-								virtualHost
-							),
-							throwable
-						)
-					)
-				)
-				.map(bucket -> {
-					if (bucket == null) {
-						log.warn("It's not possible to find a valid active bucket.");
-					}
-					return new TenantWithBucket(tenantId, bucket);
-				})
-			);
+			)
+		)
+		.map(bucket -> {
+			if (bucket == null) {
+				log.warn("It's not possible to find a valid active bucket.");
+			}
+			return new TenantWithBucket(tenantId, bucket);
+		});
 
 	}
 

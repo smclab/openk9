@@ -55,28 +55,32 @@ import org.eclipse.microprofile.graphql.Ignore;
 @Setter
 @ToString
 @RequiredArgsConstructor
+// Single-row invariant: tenant_binding contains exactly one row per tenant schema
+// (TenantSchemaService._insertIntoTenantBinding hardcodes id=1). Schema isolation via
+// SET LOCAL SCHEMA is sufficient to scope the result; no virtualHost predicate is needed.
 @NamedQueries({
 	@NamedQuery(
 		name = Bucket.FETCH_ANNOTATORS_NAMED_QUERY,
 		query =
-			"from Bucket b " +
-			"join fetch b.tenantBinding tb " +
-			"join fetch b.datasources ds " +
-			"join fetch ds.dataIndex di " +
-			"left join fetch ds.pluginDriver pr " +
-			"left join fetch pr.aclMappings am " +
-			"left join fetch am.docTypeField amdtf " +
-			"join fetch b.queryAnalysis qa " +
-			"join fetch qa.rules qar " +
-			"join fetch qa.annotators qaa " +
-			"left join fetch qaa.docTypeField dtf " +
-			"left join fetch dtf.parentDocTypeField pdtf " +
-			"left join fetch dtf.subDocTypeFields sdtf " +
-			"where tb.virtualHost = :virtualHost " +
-			"and (" +
-			"(dtf is not null and qaa.type in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
-			"or (dtf is null and qaa.type not in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) " +
-			" )"
+			"""
+				from Bucket b 
+				join fetch b.tenantBinding tb 
+				join fetch b.datasources ds 
+				join fetch ds.dataIndex di 
+				left join fetch ds.pluginDriver pr 
+				left join fetch pr.aclMappings am 
+				left join fetch am.docTypeField amdtf 
+				join fetch b.queryAnalysis qa 
+				join fetch qa.rules qar 
+				join fetch qa.annotators qaa 
+				left join fetch qaa.docTypeField dtf 
+				left join fetch dtf.parentDocTypeField pdtf 
+				left join fetch dtf.subDocTypeFields sdtf 
+				where (
+					(dtf is not null and qaa.type in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) 
+					or (dtf is null and qaa.type not in ('AGGREGATOR', 'AUTOCOMPLETE', 'AUTOCORRECT', 'KEYWORD_AUTOCOMPLETE')) 
+				 )
+			"""
 	),
 	@NamedQuery(
 		name = Bucket.CURRENT_NAMED_QUERY,

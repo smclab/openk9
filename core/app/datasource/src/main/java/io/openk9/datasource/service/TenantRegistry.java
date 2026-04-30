@@ -23,6 +23,21 @@ import io.smallrye.mutiny.Uni;
 
 public interface TenantRegistry {
 
+	/**
+	 * Resolves a {@code virtualHost} to its {@code tenantId} (schema name).
+	 * <p>
+	 * Issues a gRPC call to {@code tenant-manager}; not cached at this layer.
+	 * <p>
+	 * Two callers are expected:
+	 * <ul>
+	 *     <li>The API Gateway's {@code TenantIdResolverFilter}, which resolves once per
+	 *     incoming HTTP request and propagates the result downstream as the
+	 *     {@code X-TENANT-ID} header.</li>
+	 *     <li>Server-side gRPC handlers as a legacy fallback, used only when an incoming
+	 *     request still carries {@code virtualHost} but not {@code tenantId} (pre-#1849
+	 *     clients). New code should receive {@code tenantId} from its caller instead.</li>
+	 * </ul>
+	 */
 	Uni<String> getTenantId(String virtualHost);
 
 	Uni<List<String>> getTenantIdList();
