@@ -184,12 +184,14 @@ export function SaveEnrichItem() {
                       }
                     />
                     <CodeInput
-                      language="javascript"
+                      language={form.inputProps("type").value === EnrichItemType.GroovyScript ? "groovy" : "javascript"}
                       label="Script"
                       {...form.inputProps("script")}
                       readonly={view === "view" || page === 1}
                       description={
-                        "Use it to insert script to be executed in case of Groovy Script enrich, or use it for validation in case of Sync/Async enrich"
+                        form.inputProps("type").value === EnrichItemType.GroovyScript
+                          ? "Groovy script executed during enrich step"
+                          : "Use it to insert script to be executed in case of Groovy Script enrich, or use it for validation in case of Sync/Async enrich"
                       }
                     />
                   </ContainerFluid>

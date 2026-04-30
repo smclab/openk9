@@ -65,6 +65,8 @@ function createInMemoriUri(language: MonacoLanguage) {
       return `${nextUriId++}.tsx`;
     case "json":
       return `${nextUriId++}.json`;
+    case "groovy":
+      return `${nextUriId++}.groovy`;
     case "text":
       return `${nextUriId++}.txt`;
     case undefined:
@@ -80,6 +82,7 @@ type MonacoLanguage =
   | "typescript"
   | "typescript-react"
   | "json"
+  | "groovy"
   | "text"
   | undefined;
 
@@ -95,6 +98,8 @@ function labelPostfix(language: MonacoLanguage) {
       return "(TypeScript + React)";
     case "json":
       return "(JSON)";
+    case "groovy":
+      return "(Groovy)";
     case "text":
       return "(Text)";
     case undefined:
