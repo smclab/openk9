@@ -460,10 +460,16 @@ class RagGraph:
             else:
                 return "UNSAFE"
         else:
+            input_guardrail_response = ""
             guardrail_chain = guardrail_prompt_template | self.llm
             guardrail_response = guardrail_chain.invoke({"query": query})
 
-            return guardrail_response.content
+            if isinstance(guardrail_response.content, list):
+                input_guardrail_response = guardrail_response.content[0].get("text")
+            else:
+                input_guardrail_response = guardrail_response.content
+
+            return input_guardrail_response
 
     def _llm_output_guardrail(self, result_answer):
         embedding_model_configuration = get_embedding_model_configuration(
@@ -556,12 +562,20 @@ class RagGraph:
                     else:
                         return "UNSAFE"
                 else:
+                    output_guardrail_response = ""
                     guardrail_chain = guardrail_prompt_template | self.llm
                     guardrail_response = guardrail_chain.invoke(
                         {"result_answer": result_answer}
                     )
 
-                    return guardrail_response.content
+                    if isinstance(guardrail_response.content, list):
+                        output_guardrail_response = guardrail_response.content[0].get(
+                            "text"
+                        )
+                    else:
+                        output_guardrail_response = guardrail_response.content
+
+                    return output_guardrail_response
 
             return "NONE"
 
@@ -642,7 +656,14 @@ class RagGraph:
             }
         )
 
-        domain_response = parser.parse(raw_output.content)
+        domain_content = ""
+
+        if isinstance(raw_output.content, list):
+            domain_content = raw_output.content[0].get("text")
+        else:
+            domain_content = raw_output.content
+
+        domain_response = parser.parse(domain_content)
 
         return domain_response
 
@@ -1218,7 +1239,15 @@ class RagGraph:
                 {"query": query, "history": conversation_history}
             )
 
-        state.response = response.content
+        llm_response = ""
+
+        if isinstance(response.content, list):
+            llm_response = response.content[0].get("text")
+        else:
+            llm_response = response.content
+
+        state.response = llm_response
+
         return state
 
     def history_saver_node(self, state: GraphState) -> GraphState:
@@ -1461,12 +1490,21 @@ class RagGraph:
                             metadata["langgraph_node"] == "llm_response"
                             and chunk.content
                         ):
+                            chunk_response = ""
+
+                            if isinstance(chunk.content, list):
+                                chunk_response = chunk.content[0].get("text")
+                            else:
+                                chunk_response = chunk.content
+
                             if start_chunk:
                                 yield json.dumps({"chunk": "", "type": "START"})
                                 start_chunk = False
-                            result_answer += chunk.content
+
+                            result_answer += chunk_response
+
                             chunk_batch.append(
-                                {"chunk": chunk.content, "type": "CHUNK"}
+                                {"chunk": chunk_response, "type": "CHUNK"}
                             )
 
                             if len(chunk_batch) == self.output_guardrail_chunk_interval:
@@ -1526,11 +1564,20 @@ class RagGraph:
                             metadata["langgraph_node"] == "llm_response"
                             and chunk.content
                         ):
+                            chunk_response = ""
+
+                            if isinstance(chunk.content, list):
+                                chunk_response = chunk.content[0].get("text")
+                            else:
+                                chunk_response = chunk.content
+
                             chunk_number += 1
+
                             if start_chunk:
                                 yield json.dumps({"chunk": "", "type": "START"})
                                 start_chunk = False
-                            result_answer += chunk.content
+
+                            result_answer += chunk_response
 
                             if chunk_number == self.output_guardrail_chunk_interval:
                                 llm_output_guardrail = self._llm_output_guardrail(
@@ -1547,7 +1594,7 @@ class RagGraph:
                                         }
                                     )
                                     return
-                            yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -1586,12 +1633,20 @@ class RagGraph:
                             metadata["langgraph_node"] == "llm_response"
                             and chunk.content
                         ):
+                            chunk_response = ""
+
+                            if isinstance(chunk.content, list):
+                                chunk_response = chunk.content[0].get("text")
+                            else:
+                                chunk_response = chunk.content
+
                             if start_chunk:
                                 yield json.dumps({"chunk": "", "type": "START"})
                                 start_chunk = False
-                            result_answer += chunk.content
 
-                            yield json.dumps({"chunk": chunk.content, "type": "CHUNK"})
+                            result_answer += chunk_response
+
+                            yield json.dumps({"chunk": chunk_response, "type": "CHUNK"})
 
                 except Exception as e:
                     if "rate_limit" in str(e).lower() or "429" in str(e):
