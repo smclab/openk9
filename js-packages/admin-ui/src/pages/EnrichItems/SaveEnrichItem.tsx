@@ -407,7 +407,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                   changeValueKey={changeValueTemplate}
                   disabled={!!view}
                 />
-              ) : (
+              ) : form.inputProps("type").value === EnrichItemType.GroovyScript ? (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <CodeInput
                     language="groovy"
@@ -434,6 +434,19 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                     description="Json configuration sended to corresponding external parser when execution start"
                   />
                 </Box>
+              ) : (
+                <CodeInput
+                  language="json"
+                  label="Configuration"
+                  disabled={!!view}
+                  id="code-input-enricher"
+                  onChange={(e) => {
+                    form.inputProps("jsonConfig").onChange(e);
+                  }}
+                  validationMessages={[]}
+                  value={form.inputProps("jsonConfig").value || ""}
+                  description="Json configuration sended to corresponding external parser when execution start"
+                />
               )
             ) : (
               <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
