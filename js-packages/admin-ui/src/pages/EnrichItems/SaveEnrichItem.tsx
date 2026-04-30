@@ -224,7 +224,7 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
         content: "Please test the connection before proceeding, or ensure the endpoint is reachable.",
         displayType: "warning",
       });
-      // For now, allowing to proceed as per "imposta anche la possibilità di poterlo bloccare" 
+      // For now, allowing to proceed as per "imposta anche la possibilità di poterlo bloccare"
       // but keeping it as a warning unless we want to strictly block.
     }
 
@@ -401,18 +401,27 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                   disabled={!!view}
                 />
               ) : (
-                <CodeInput
-                  language="json"
-                  label="Configuration"
-                  disabled={!!view}
-                  id="code-input-enricher"
-                  onChange={(e) => {
-                    form.inputProps("script").onChange(e);
-                  }}
-                  validationMessages={[]}
-                  value={form.inputProps("script").value || ""}
-                  description="Json configuration sended to corresponding external parser when execution start"
-                />
+                (() => {
+                  const isGroovy = form.inputProps("type").value === EnrichItemType.GroovyScript;
+                  return (
+                    <CodeInput
+                      language={isGroovy ? "groovy" : "json"}
+                      label={isGroovy ? "Script" : "Configuration"}
+                      disabled={!!view}
+                      id="code-input-enricher"
+                      onChange={(e) => {
+                        form.inputProps("script").onChange(e);
+                      }}
+                      validationMessages={[]}
+                      value={form.inputProps("script").value || ""}
+                      description={
+                        isGroovy
+                          ? "Groovy script executed during enrich step"
+                          : "Json configuration sended to corresponding external parser when execution start"
+                      }
+                    />
+                  );
+                })()
               )
             ) : (
               <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "200px" }}>
