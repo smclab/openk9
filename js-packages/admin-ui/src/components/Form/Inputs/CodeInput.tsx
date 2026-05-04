@@ -175,28 +175,39 @@ export function CodeInput({
     editor?: monaco.editor.IStandaloneCodeEditor;
     model?: monaco.editor.ITextModel;
   }>({});
+  const onChangeRef = React.useRef(onChange);
+  React.useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   const theme = useTheme();
   React.useEffect(() => {
     if (editorElementRef.current) {
       applyMonacoTheme(theme);
-      const editor = monaco.editor.create(
-        editorElementRef.current,
-        { readOnly: readonly },
-        { minimap: { enabled: false }, theme: "materialTheme" },
-      );
-      editor.updateOptions({ tabSize: 2 });
+      const editor = monaco.editor.create(editorElementRef.current, {
+        readOnly: readonly,
+        minimap: { enabled: false },
+        theme: "materialTheme",
+        tabSize: 2,
+      });
       editor.onDidBlurEditorText(() => {
         if (editorRef.current.model) {
-          onChange(editorRef.current.model.getValue());
+          onChangeRef.current(editorRef.current.model.getValue());
         }
       });
       editorRef.current.editor = editor;
       return () => {
         editor.dispose();
+        editorRef.current.editor = undefined;
       };
     }
-  }, [onChange]);
+  }, []);
+
+  React.useEffect(() => {
+    if (editorRef.current.editor) {
+      editorRef.current.editor.updateOptions({ readOnly: readonly });
+    }
+  }, [readonly]);
 
   React.useEffect(() => {
     applyMonacoTheme(theme);
@@ -206,22 +217,28 @@ export function CodeInput({
   }, [theme]);
 
   React.useEffect(() => {
-    if (editorRef.current.editor) {
-      const model = monaco.editor.createModel(
-        value,
-        remapLanguage(language),
-        monaco.Uri.from({
-          scheme: "inmemory",
-          path: createInMemoriUri(language),
-        }),
-      );
-      editorRef.current.editor.setModel(model);
-      editorRef.current.model = model;
-      return () => {
-        model.dispose();
-      };
+    if (!editorRef.current.editor) return;
+    const model = monaco.editor.createModel(
+      value,
+      remapLanguage(language),
+      monaco.Uri.from({
+        scheme: "inmemory",
+        path: createInMemoriUri(language),
+      }),
+    );
+    editorRef.current.editor.setModel(model);
+    editorRef.current.model = model;
+    return () => {
+      model.dispose();
+    };
+  }, [language]);
+
+  React.useEffect(() => {
+    const model = editorRef.current.model;
+    if (model && value !== model.getValue()) {
+      model.setValue(value);
     }
-  }, [language, value, onChange]);
+  }, [value]);
 
   const editorStyle = {
     height,

@@ -98,6 +98,12 @@ export function ConfigureDatasource({
   const navigate = useNavigate();
   const pipelineTab = tabs.find((tab) => tab.value === "pipeline");
   const isPipelineDisabled = !!pipelineTab?.disabled;
+  const handleJsonConfigChange = React.useCallback(
+    (e: string) => {
+      setDataDatasource((data) => ({ ...data, jsonConfig: e }));
+    },
+    [setDataDatasource],
+  );
   return (
     <React.Fragment>
       <Box sx={{ marginTop: "20px" }}>
@@ -116,9 +122,7 @@ export function ConfigureDatasource({
                   label="Configuration"
                   disabled={false}
                   id="code-input-datasource"
-                  onChange={(e) => {
-                    setDataDatasource((data) => ({ ...data, jsonConfig: e }));
-                  }}
+                  onChange={handleJsonConfigChange}
                   validationMessages={[]}
                   value={dataDatasource.jsonConfig || ""}
                   description="Json configuration sended to corresponding external parser when execution start"
