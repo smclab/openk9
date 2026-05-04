@@ -1680,13 +1680,26 @@ public class SearchResource {
 
 		Map<String, Value> extra = new HashMap<>();
 
-		List<String> requestHeader =
-			headers.getRequestHeader(InternalHeaders.ROLES);
+		List<String> extraRoles = new ArrayList<>();
 
-		if (requestHeader != null && !requestHeader.isEmpty()) {
+		// Merge Internal Headers values for EXTRA_ROLES handling.
+		// Headers are X-K9-ROLES and OPENK9_ACL (legacy)
+		List<String> rolesHeader =
+			headers.getRequestHeader(InternalHeaders.ROLES);
+		if (rolesHeader != null) {
+			extraRoles.addAll(rolesHeader);
+		}
+
+		List<String> aclHeader =
+			headers.getRequestHeader(InternalHeaders.ACL);
+		if (aclHeader != null) {
+			extraRoles.addAll(aclHeader);
+		}
+
+		if (!extraRoles.isEmpty()) {
 			extra.put(
 				ExtraParamKeys.EXTRA_ROLES,
-				Value.newBuilder().addAllValue(requestHeader).build()
+				Value.newBuilder().addAllValue(extraRoles).build()
 			);
 		}
 
