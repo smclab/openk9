@@ -6301,7 +6301,7 @@ export type SearchConfigQueryVariables = Exact<{
 }>;
 
 
-export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean, maxSearchPageFrom?: number | null, maxSearchPageSize?: number | null, maxTextQueryLength?: number | null, queryParserConfigs?: { __typename?: 'DefaultConnection_QueryParserConfig', edges?: Array<{ __typename?: 'DefaultEdge_QueryParserConfig', node?: { __typename?: 'QueryParserConfig', id?: string | null, name?: string | null, type?: QueryParserType | null, jsonConfig?: string | null } | null } | null> | null } | null } | null };
+export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean, queryParserConfigs?: { __typename?: 'DefaultConnection_QueryParserConfig', edges?: Array<{ __typename?: 'DefaultEdge_QueryParserConfig', node?: { __typename?: 'QueryParserConfig', id?: string | null, name?: string | null, type?: QueryParserType | null, jsonConfig?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6310,9 +6310,6 @@ export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
   minScore: Scalars['Float'];
   minScoreSuggestions: Scalars['Boolean'];
   minScoreSearch: Scalars['Boolean'];
-  maxSearchPageFrom?: InputMaybe<Scalars['Int']>;
-  maxSearchPageSize?: InputMaybe<Scalars['Int']>;
-  maxTextQueryLength?: InputMaybe<Scalars['Int']>;
   queryParsersConfig?: InputMaybe<Array<InputMaybe<QueryParserConfigDtoInput>> | InputMaybe<QueryParserConfigDtoInput>>;
 }>;
 
@@ -6424,6 +6421,15 @@ export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
 
 
 export type CreateOrUpdateSuggestionCategoryMutation = { __typename?: 'Mutation', suggestionCategoryWithDocTypeField?: { __typename?: 'Response_SuggestionCategory', entity?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type DocTypeFieldsByParentForSuggestionQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  parentId: Scalars['BigInteger'];
+  docTypeId: Scalars['ID'];
+}>;
+
+
+export type DocTypeFieldsByParentForSuggestionQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
 
 export type TabsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -11325,9 +11331,6 @@ export const SearchConfigDocument = gql`
     minScore
     minScoreSuggestions
     minScoreSearch
-    maxSearchPageFrom
-    maxSearchPageSize
-    maxTextQueryLength
     queryParserConfigs {
       edges {
         node {
@@ -11370,10 +11373,10 @@ export type SearchConfigQueryHookResult = ReturnType<typeof useSearchConfigQuery
 export type SearchConfigLazyQueryHookResult = ReturnType<typeof useSearchConfigLazyQuery>;
 export type SearchConfigQueryResult = Apollo.QueryResult<SearchConfigQuery, SearchConfigQueryVariables>;
 export const CreateOrUpdateSearchConfigDocument = gql`
-    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!, $maxSearchPageFrom: Int, $maxSearchPageSize: Int, $maxTextQueryLength: Int, $queryParsersConfig: [QueryParserConfigDTOInput]) {
+    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!, $queryParsersConfig: [QueryParserConfigDTOInput]) {
   searchConfigWithQueryParsers(
     id: $id
-    searchConfigWithQueryParsersDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch, maxSearchPageFrom: $maxSearchPageFrom, maxSearchPageSize: $maxSearchPageSize, maxTextQueryLength: $maxTextQueryLength, queryParsers: $queryParsersConfig}
+    searchConfigWithQueryParsersDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch, queryParsers: $queryParsersConfig}
   ) {
     entity {
       id
@@ -11408,9 +11411,6 @@ export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<Creat
  *      minScore: // value for 'minScore'
  *      minScoreSuggestions: // value for 'minScoreSuggestions'
  *      minScoreSearch: // value for 'minScoreSearch'
- *      maxSearchPageFrom: // value for 'maxSearchPageFrom'
- *      maxSearchPageSize: // value for 'maxSearchPageSize'
- *      maxTextQueryLength: // value for 'maxTextQueryLength'
  *      queryParsersConfig: // value for 'queryParsersConfig'
  *   },
  * });
@@ -11983,6 +11983,65 @@ export function useCreateOrUpdateSuggestionCategoryMutation(baseOptions?: Apollo
 export type CreateOrUpdateSuggestionCategoryMutationHookResult = ReturnType<typeof useCreateOrUpdateSuggestionCategoryMutation>;
 export type CreateOrUpdateSuggestionCategoryMutationResult = Apollo.MutationResult<CreateOrUpdateSuggestionCategoryMutation>;
 export type CreateOrUpdateSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>;
+export const DocTypeFieldsByParentForSuggestionDocument = gql`
+    query DocTypeFieldsByParentForSuggestion($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
+  docTypeFieldsFromDocTypeByParent(
+    parentId: $parentId
+    searchText: $searchText
+    first: 30
+    docTypeId: $docTypeId
+  ) {
+    edges {
+      node {
+        id
+        name
+        description
+        fieldType
+        boost
+        searchable
+        exclude
+        fieldName
+        jsonConfig
+        sortable
+        parent {
+          id
+          fieldName
+        }
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useDocTypeFieldsByParentForSuggestionQuery__
+ *
+ * To run a query within a React component, call `useDocTypeFieldsByParentForSuggestionQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocTypeFieldsByParentForSuggestionQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocTypeFieldsByParentForSuggestionQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      parentId: // value for 'parentId'
+ *      docTypeId: // value for 'docTypeId'
+ *   },
+ * });
+ */
+export function useDocTypeFieldsByParentForSuggestionQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>(DocTypeFieldsByParentForSuggestionDocument, options);
+      }
+export function useDocTypeFieldsByParentForSuggestionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>(DocTypeFieldsByParentForSuggestionDocument, options);
+        }
+export type DocTypeFieldsByParentForSuggestionQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentForSuggestionQuery>;
+export type DocTypeFieldsByParentForSuggestionLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentForSuggestionLazyQuery>;
+export type DocTypeFieldsByParentForSuggestionQueryResult = Apollo.QueryResult<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>;
 export const TabsDocument = gql`
     query Tabs($searchText: String, $after: String) {
   tabs(searchText: $searchText, first: 20, after: $after) {
@@ -16220,4 +16279,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-05-04T14:40:54+02:00
+// Generated on 2026-05-04T15:58:41+02:00
