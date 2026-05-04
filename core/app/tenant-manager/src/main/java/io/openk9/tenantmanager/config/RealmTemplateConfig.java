@@ -23,6 +23,8 @@ import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
+import org.keycloak.representations.idm.RealmRepresentation.BruteForceStrategy;
+
 /**
  * Configuration mapping for Keycloak realm template defaults.
  * <p>
@@ -112,7 +114,7 @@ public interface RealmTemplateConfig {
 		int quickLoginCheckMilliSeconds();
 
 		@WithDefault("MULTIPLE")
-		String strategy();
+		BruteForceStrategy strategy();
 
 		@WithDefault("5")
 		int maxTemporaryLockouts();

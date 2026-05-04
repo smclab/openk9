@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation.BruteForceStrategy;
 import org.keycloak.representations.idm.RolesRepresentation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -220,10 +221,9 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 		@Test
 		@DisplayName("bruteForceStrategy is MULTIPLE")
 		void bruteForceStrategy() {
-			var attrs = hardenedRealm.getAttributes();
-			assertNotNull(attrs);
 			assertEquals(
-				"MULTIPLE", attrs.get("bruteForceStrategy"));
+				BruteForceStrategy.MULTIPLE,
+				hardenedRealm.getBruteForceStrategy());
 		}
 	}
 
@@ -682,7 +682,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 				@Override public int maxDeltaTimeSeconds() { return 0; }
 				@Override public int minimumQuickLoginWaitSeconds() { return 0; }
 				@Override public int quickLoginCheckMilliSeconds() { return 0; }
-				@Override public String strategy() { return ""; }
+				@Override public BruteForceStrategy strategy() { return BruteForceStrategy.MULTIPLE; }
 				@Override public int maxTemporaryLockouts() { return 0; }
 			};
 		}
@@ -733,7 +733,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 				@Override public int maxDeltaTimeSeconds() { return 43200; }
 				@Override public int minimumQuickLoginWaitSeconds() { return 60; }
 				@Override public int quickLoginCheckMilliSeconds() { return 1000; }
-				@Override public String strategy() { return "MULTIPLE"; }
+				@Override public BruteForceStrategy strategy() { return BruteForceStrategy.MULTIPLE; }
 				@Override public int maxTemporaryLockouts() { return 5; }
 			};
 		}

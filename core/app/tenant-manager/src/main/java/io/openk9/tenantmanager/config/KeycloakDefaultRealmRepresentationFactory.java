@@ -104,8 +104,7 @@ public class KeycloakDefaultRealmRepresentationFactory {
 				(long) bf.quickLoginCheckMilliSeconds());
 			realm.setMaxFailureWaitSeconds(bf.maxFailureWaitSeconds());
 			realm.setMaxDeltaTimeSeconds(bf.maxDeltaTimeSeconds());
-			realm.setAttributes(Map.of(
-				"bruteForceStrategy", bf.strategy()));
+			realm.setBruteForceStrategy(bf.strategy());
 		}
 
 		// Events / audit
