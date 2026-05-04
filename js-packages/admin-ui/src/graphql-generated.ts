@@ -6301,7 +6301,7 @@ export type SearchConfigQueryVariables = Exact<{
 }>;
 
 
-export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean, queryParserConfigs?: { __typename?: 'DefaultConnection_QueryParserConfig', edges?: Array<{ __typename?: 'DefaultEdge_QueryParserConfig', node?: { __typename?: 'QueryParserConfig', id?: string | null, name?: string | null, type?: QueryParserType | null, jsonConfig?: string | null } | null } | null> | null } | null } | null };
+export type SearchConfigQuery = { __typename?: 'Query', searchConfig?: { __typename?: 'SearchConfig', id?: string | null, name?: string | null, description?: string | null, minScore?: number | null, minScoreSuggestions: boolean, minScoreSearch: boolean, maxSearchPageFrom?: number | null, maxSearchPageSize?: number | null, maxTextQueryLength?: number | null, queryParserConfigs?: { __typename?: 'DefaultConnection_QueryParserConfig', edges?: Array<{ __typename?: 'DefaultEdge_QueryParserConfig', node?: { __typename?: 'QueryParserConfig', id?: string | null, name?: string | null, type?: QueryParserType | null, jsonConfig?: string | null } | null } | null> | null } | null } | null };
 
 export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6310,6 +6310,9 @@ export type CreateOrUpdateSearchConfigMutationVariables = Exact<{
   minScore: Scalars['Float'];
   minScoreSuggestions: Scalars['Boolean'];
   minScoreSearch: Scalars['Boolean'];
+  maxSearchPageFrom?: InputMaybe<Scalars['Int']>;
+  maxSearchPageSize?: InputMaybe<Scalars['Int']>;
+  maxTextQueryLength?: InputMaybe<Scalars['Int']>;
   queryParsersConfig?: InputMaybe<Array<InputMaybe<QueryParserConfigDtoInput>> | InputMaybe<QueryParserConfigDtoInput>>;
 }>;
 
@@ -11331,6 +11334,9 @@ export const SearchConfigDocument = gql`
     minScore
     minScoreSuggestions
     minScoreSearch
+    maxSearchPageFrom
+    maxSearchPageSize
+    maxTextQueryLength
     queryParserConfigs {
       edges {
         node {
@@ -11373,10 +11379,10 @@ export type SearchConfigQueryHookResult = ReturnType<typeof useSearchConfigQuery
 export type SearchConfigLazyQueryHookResult = ReturnType<typeof useSearchConfigLazyQuery>;
 export type SearchConfigQueryResult = Apollo.QueryResult<SearchConfigQuery, SearchConfigQueryVariables>;
 export const CreateOrUpdateSearchConfigDocument = gql`
-    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!, $queryParsersConfig: [QueryParserConfigDTOInput]) {
+    mutation CreateOrUpdateSearchConfig($id: ID, $name: String!, $description: String, $minScore: Float!, $minScoreSuggestions: Boolean!, $minScoreSearch: Boolean!, $maxSearchPageFrom: Int, $maxSearchPageSize: Int, $maxTextQueryLength: Int, $queryParsersConfig: [QueryParserConfigDTOInput]) {
   searchConfigWithQueryParsers(
     id: $id
-    searchConfigWithQueryParsersDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch, queryParsers: $queryParsersConfig}
+    searchConfigWithQueryParsersDTO: {name: $name, description: $description, minScore: $minScore, minScoreSuggestions: $minScoreSuggestions, minScoreSearch: $minScoreSearch, maxSearchPageFrom: $maxSearchPageFrom, maxSearchPageSize: $maxSearchPageSize, maxTextQueryLength: $maxTextQueryLength, queryParsers: $queryParsersConfig}
   ) {
     entity {
       id
@@ -11411,6 +11417,9 @@ export type CreateOrUpdateSearchConfigMutationFn = Apollo.MutationFunction<Creat
  *      minScore: // value for 'minScore'
  *      minScoreSuggestions: // value for 'minScoreSuggestions'
  *      minScoreSearch: // value for 'minScoreSearch'
+ *      maxSearchPageFrom: // value for 'maxSearchPageFrom'
+ *      maxSearchPageSize: // value for 'maxSearchPageSize'
+ *      maxTextQueryLength: // value for 'maxTextQueryLength'
  *      queryParsersConfig: // value for 'queryParsersConfig'
  *   },
  * });
@@ -16279,4 +16288,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-05-04T15:58:41+02:00
+// Generated on 2026-05-04T16:28:59+02:00
