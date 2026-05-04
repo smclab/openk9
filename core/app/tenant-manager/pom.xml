@@ -135,12 +135,6 @@
     </dependency>
     <!-- schema migrations // -->
 
-    <!-- realm template -->
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-qute</artifactId>
-    </dependency>
-
     <!-- // standalone -->
     <dependency>
       <groupId>io.quarkus</groupId>

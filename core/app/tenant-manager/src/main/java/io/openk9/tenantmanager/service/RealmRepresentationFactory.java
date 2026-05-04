@@ -17,12 +17,15 @@
 
 package io.openk9.tenantmanager.service;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -106,12 +109,61 @@ public class RealmRepresentationFactory {
 		return userRepresentation;
 	}
 
+	private static final String PASSWORD_UPPER =
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	private static final String PASSWORD_LOWER =
+		"abcdefghijklmnopqrstuvwxyz";
+	private static final String PASSWORD_DIGITS =
+		"0123456789";
+	private static final String PASSWORD_SPECIAL =
+		"!@#$%^&*()-_=+{}[]|;:,.<>?";
+	private static final String PASSWORD_ALL =
+		PASSWORD_UPPER + PASSWORD_LOWER
+			+ PASSWORD_DIGITS + PASSWORD_SPECIAL;
+	private static final SecureRandom PASSWORD_RANDOM =
+		new SecureRandom();
+
 	private static CredentialRepresentation _createAdminCredentialRepresentation() {
-		CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-		credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-		credentialRepresentation.setValue(UUID.randomUUID().toString());
+		CredentialRepresentation credentialRepresentation =
+			new CredentialRepresentation();
+		credentialRepresentation.setType(
+			CredentialRepresentation.PASSWORD);
+		credentialRepresentation.setValue(_generateAdminPassword());
 		credentialRepresentation.setTemporary(false);
 		return credentialRepresentation;
+	}
+
+	/**
+	 * Generates a random password that satisfies the realm
+	 * password policy (at least 1 upper, 1 lower, 1 digit,
+	 * 1 special char, minimum 12 chars).
+	 */
+	private static String _generateAdminPassword() {
+		var sb = new StringBuilder(12);
+		sb.append(
+			PASSWORD_UPPER.charAt(
+				PASSWORD_RANDOM.nextInt(PASSWORD_UPPER.length())));
+		sb.append(
+			PASSWORD_LOWER.charAt(
+				PASSWORD_RANDOM.nextInt(PASSWORD_LOWER.length())));
+		sb.append(
+			PASSWORD_DIGITS.charAt(
+				PASSWORD_RANDOM.nextInt(PASSWORD_DIGITS.length())));
+		sb.append(
+			PASSWORD_SPECIAL.charAt(
+				PASSWORD_RANDOM.nextInt(PASSWORD_SPECIAL.length())));
+		for (int i = 0; i < 8; i++) {
+			sb.append(
+				PASSWORD_ALL.charAt(
+					PASSWORD_RANDOM.nextInt(PASSWORD_ALL.length())));
+		}
+		var chars = sb.chars()
+			.mapToObj(c -> (char) c)
+			.collect(Collectors.toList());
+		Collections.shuffle(chars, PASSWORD_RANDOM);
+		return chars.stream()
+			.map(String::valueOf)
+			.collect(Collectors.joining());
 	}
 
 	private static RolesRepresentation _createRolesRepresentation() {
