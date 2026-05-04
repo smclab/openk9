@@ -377,6 +377,9 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
 
   const datasourceSection = mappingCardRecap({
     form: form as any,
+    valueOverride: {
+      dynamicFormJson: dynamicTemplate ? dynamicFormJson : formValues.jsonConfig,
+    },
     sections: [
       {
         label: "Datasource",
