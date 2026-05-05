@@ -24,9 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @DisplayName("TextCleaner")
 public class TextCleanerTest {
 
@@ -34,20 +31,26 @@ public class TextCleanerTest {
 
 	@Test
 	@DisplayName("Return cleaned text")
-	void returnCleanedHtmlContentText() {
+	void returnCleanedText() {
 
-		List<String> rawTextList = new ArrayList<>();
-		rawTextList.add("This&nbsp;is a&nbsp;&nbsp;simple sentence with&nbsp;non-breaking spaces.");
-		rawTextList.add("&nbsp;&nbsp;This sentence starts and ends with non-breaking spaces.&nbsp;");
-		rawTextList.add("This    sentence     has      too many spaces.");
-		rawTextList.add("Special characters: &amp; &quot; &#39; should be decoded.");
+		Assertions.assertEquals(
+			"This is a simple sentence with non-breaking spaces.",
+			TextCleaner.cleanText("This&nbsp;is a&nbsp;&nbsp;simple sentence with&nbsp;non-breaking spaces.")
+		);
 
-		Assertions.assertDoesNotThrow(() -> {
-				rawTextList
-					.forEach(rawText -> {
-						log.info(TextCleaner.cleanText(rawText));
-					});
-			}
+		Assertions.assertEquals(
+			"This sentence starts and ends with non-breaking spaces.",
+			TextCleaner.cleanText("&nbsp;&nbsp;This sentence starts and ends with non-breaking spaces.&nbsp;")
+		);
+
+		Assertions.assertEquals(
+			"This sentence has too many spaces.",
+			TextCleaner.cleanText("This    sentence     has      too many spaces.")
+		);
+
+		Assertions.assertEquals(
+			"Special characters: & \" ' should be decoded.",
+			TextCleaner.cleanText("Special characters: &amp; &quot; &#39; should be decoded.")
 		);
 	}
 
