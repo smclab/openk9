@@ -17,9 +17,12 @@
 
 package io.openk9.datasource.service;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
@@ -37,9 +40,13 @@ import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.util.UniActionListener;
 
 import io.smallrye.mutiny.Uni;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.Root;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.cluster.sharding.typed.javadsl.ClusterSharding;
 import org.apache.pekko.cluster.sharding.typed.javadsl.EntityRef;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.client.RequestOptions;
@@ -58,6 +65,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	ActorSystemProvider actorSystemProvider;
 	@Inject
 	RestHighLevelClient restHighLevelClient;
+	@Inject
+	TenantRegistry tenantRegistry;
+
+	@ConfigProperty(name = "openk9.scheduler.retention.days", defaultValue = "7")
+	int retention;
 
 	SchedulerService() {}
 
@@ -94,6 +106,43 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 				}
 				default -> Uni.createFrom().voidItem();
 			});
+	}
+
+	// Scheduled every day at 00:00 am
+	@Scheduled(cron = "0 0 0 * * ?")
+	public Uni<Void> removeScheduling() {
+		return tenantRegistry.getTenantIdList().flatMap(tenantIdList -> {
+			List<Uni<Void>> uniVoidList = tenantIdList.stream()
+				.map(this::removeOldScheduling)
+				.toList();
+
+			return Uni.combine().all().unis(uniVoidList).discardItems();
+		});
+	}
+
+	private Uni<Void> removeOldScheduling(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (session, transaction) -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+			CriteriaDelete<Scheduler> deleteScheduler = cb.createCriteriaDelete(Scheduler.class);
+			Root<Scheduler> deleteFrom = deleteScheduler.from(Scheduler.class);
+
+			var lastModifiedDate = deleteFrom.get(Scheduler_.MODIFIED_DATE).as(OffsetDateTime.class);
+			var expirationDate = OffsetDateTime.now().minusDays(retention);
+
+			deleteScheduler.where(
+				cb.and(
+					deleteFrom.get(Scheduler_.STATUS).in("FINISHED", "CANCELLED", "FAILURE"),
+					cb.lessThan(lastModifiedDate, expirationDate)
+				)
+			);
+
+			return session.createQuery(deleteScheduler).executeUpdate();
+
+		}).flatMap(result -> {
+			logger.infof("Deleted %d old Schedulers from %s", result, tenantId);
+			return Uni.createFrom().voidItem();
+		});
 	}
 
 	/**
