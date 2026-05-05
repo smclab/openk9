@@ -35,6 +35,9 @@
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.version>3.27.3</quarkus.platform.version>
+		<netty.groupd-id>io.netty</netty.groupd-id>
+		<netty.artifact-id>netty-bom</netty.artifact-id>
+		<netty.version>4.1.132.Final</netty.version>
 		<dependency-check-plugin.version>12.1.9</dependency-check-plugin.version>
 		<skip-dependency-check>true</skip-dependency-check>
 		<skipITs>true</skipITs>
@@ -42,6 +45,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>${netty.groupd-id}</groupId>
+				<artifactId>${netty.artifact-id}</artifactId>
+				<version>${netty.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>${quarkus.platform.group-id}</groupId>
 				<artifactId>${quarkus.platform.artifact-id}</artifactId>
