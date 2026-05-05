@@ -267,6 +267,11 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "behaviorMergeType", label: "Behavior Merge Type" },
           { key: "behaviorOnError", label: "Behavior On Error" },
           {
+            key: "script",
+            label: "Script",
+            jsonView: true,
+          },
+          {
             key: "jsonConfig",
             label: "Configuration",
             jsonView: true,
