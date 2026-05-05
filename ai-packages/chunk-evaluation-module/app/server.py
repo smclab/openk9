@@ -32,7 +32,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 task = partial(score)
-should_make_experiment = False
+should_make_experiment = True
 should_flush_data = False
 
 input_data = []
@@ -66,6 +66,13 @@ def flush_dataset(dataset_base_name):
             min_examples=N_MAX_DOCUMENTS,
         )
     )
+    num_daily_datasets = len(
+        get_dataset_index(
+            all_datasets=all_datasets,
+            name_contains=dataset_base_name,
+        )
+    )
+
     dataset_name = dataset_base_name + f"-{dataset_index}"
     logging.info(f"Dataset name: {dataset_name}")
 
@@ -90,7 +97,6 @@ def flush_dataset(dataset_base_name):
     else:
         should_flush_data = False
         should_make_experiment = True
-        scheduler.add_job(**experiment_job_params)
         scheduler.remove_job("flush_pending_documents")
 
 
@@ -103,15 +109,39 @@ def add_item(dataset_name, input_item, output_item):
     if not should_flush_data:
         logger.info("ATTIVATO FLUSHING")
         should_flush_data = True
-        scheduler.remove_job("experiment_pending_documents")
         scheduler.add_job(**flush_job_params)
 
 
-def interval_experiment(task, evaluators, dataset_name=None):
+def interval_experiment(task, evaluators, dataset_name=None, dataset_base_name=None):
     global should_make_experiment
     if should_make_experiment:
-        make_experiment(task, evaluators, dataset=dataset_name)
-        should_make_experiment = False
+        if dataset_name:
+            make_experiment(task, evaluators, dataset=dataset_name)
+            return
+
+        all_datasets = client.datasets.list()
+        if dataset_base_name:
+            daily_dataset = get_dataset_index(
+                all_datasets, name_contains=dataset_base_name
+            )
+            reversing = daily_dataset[::-1]
+            for dats in reversing:
+                elm = client.experiments.list(dataset_id=dats["id"])
+                if not elm or elm[0].get("example_count", 0) < dats.get(
+                    "example_count", 0
+                ):
+                    make_experiment(task, evaluators, dataset=dats["name"])
+                    return
+        else:
+            reversing = all_datasets[::-1]
+            for dats in reversing:
+                elm = client.experiments.list(dataset_id=dats["id"])
+                if not elm or elm[0].get("example_count", 0) < dats.get(
+                    "example_count", 0
+                ):
+                    make_experiment(task, evaluators, dataset=dats["name"])
+                    return
+            should_make_experiment = False
 
 
 experiment_job_params = {
@@ -123,7 +153,8 @@ experiment_job_params = {
     "id": "experiment_pending_documents",  # ID del job
     "kwargs": {
         "task": task,  # Parametro 'task'
-        "evaluators": EVALUATORS,  # Parametro 'evaluators'
+        "evaluators": EVALUATORS,
+        # "dataset_base_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}",  # Parametro 'evaluators'
     },
 }
 
