@@ -86,6 +86,16 @@ export function useRecoveryForm(restClient: any, formValues: any, requestBody: a
   const [loadingFormCustom, setLoadingFormCustom] = React.useState(true);
   const [recoveryFormStandart, setRecoveryFormStandart] = React.useState<Template | undefined>(undefined);
   React.useEffect(() => {
+    setRecoveryFormStandart(undefined);
+    setFormCustom([]);
+    setLoadingFormCustom(true);
+
+    if (!formValues?.pluginDriverSelect?.id) {
+      setLoadingFormCustom(false);
+      return;
+    }
+
+    let cancelled = false;
     const formCustomClient = recoveryForm({
       restClient,
       id: formValues?.pluginDriverSelect?.id,
@@ -95,6 +105,7 @@ export function useRecoveryForm(restClient: any, formValues: any, requestBody: a
 
     formCustomClient
       .then((data: Field[]) => {
+        if (cancelled) return;
         const remappedData = data
           ?.map((formItem) => {
             if (formItem.type === "text" && Array.isArray(formItem.values) && formItem.values.length === 0) {
@@ -111,10 +122,16 @@ export function useRecoveryForm(restClient: any, formValues: any, requestBody: a
         setLoadingFormCustom(false);
       })
       .catch((error) => {
+        if (cancelled) return;
         console.error("Errore durante il recupero del form:", error);
+        setRecoveryFormStandart(undefined);
         setFormCustom(undefined);
         setLoadingFormCustom(false);
       });
+
+    return () => {
+      cancelled = true;
+    };
   }, [formValues.pluginDriverSelect?.id]);
 
   return { formCustom, loadingFormCustom, recoveryFormStandart, setFormCustom };
