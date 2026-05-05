@@ -122,6 +122,10 @@ gql`
         id
         name
       }
+      searchAnalyzer {
+        id
+        name
+      }
       translations {
         key
         language
@@ -237,6 +241,7 @@ gql`
     $jsonConfig: String
     $sortable: Boolean!
     $analyzerId: BigInteger
+    $searchAnalyzerId: BigInteger
   ) {
     docTypeFieldWithAnalyzer(
       docTypeId: $documentTypeId
@@ -252,6 +257,7 @@ gql`
         jsonConfig: $jsonConfig
         sortable: $sortable
         analyzerId: $analyzerId
+        searchAnalyzerId: $searchAnalyzerId
       }
     ) {
       entity {

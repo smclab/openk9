@@ -5823,7 +5823,7 @@ export type DocumentTypeFieldQueryVariables = Exact<{
 }>;
 
 
-export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, analyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+export type DocumentTypeFieldQuery = { __typename?: 'Query', docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, analyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null, searchAnalyzer?: { __typename?: 'Analyzer', id?: string | null, name?: string | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateDocumentTypeSubFieldsMutationVariables = Exact<{
   parentDocTypeFieldId: Scalars['ID'];
@@ -5879,6 +5879,7 @@ export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   jsonConfig?: InputMaybe<Scalars['String']>;
   sortable: Scalars['Boolean'];
   analyzerId?: InputMaybe<Scalars['BigInteger']>;
+  searchAnalyzerId?: InputMaybe<Scalars['BigInteger']>;
 }>;
 
 
@@ -8967,6 +8968,10 @@ export const DocumentTypeFieldDocument = gql`
       id
       name
     }
+    searchAnalyzer {
+      id
+      name
+    }
     translations {
       key
       language
@@ -9202,11 +9207,11 @@ export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeF
 export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
 export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
 export const CreateOrUpdateDocumentTypeFieldDocument = gql`
-    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger) {
+    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger, $searchAnalyzerId: BigInteger) {
   docTypeFieldWithAnalyzer(
     docTypeId: $documentTypeId
     docTypeFieldId: $documentTypeFieldId
-    docTypeFieldWithAnalyzerDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable, analyzerId: $analyzerId}
+    docTypeFieldWithAnalyzerDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable, analyzerId: $analyzerId, searchAnalyzerId: $searchAnalyzerId}
   ) {
     entity {
       id
@@ -9245,6 +9250,7 @@ export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<
  *      jsonConfig: // value for 'jsonConfig'
  *      sortable: // value for 'sortable'
  *      analyzerId: // value for 'analyzerId'
+ *      searchAnalyzerId: // value for 'searchAnalyzerId'
  *   },
  * });
  */
@@ -16288,4 +16294,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-05-04T16:28:59+02:00
+// Generated on 2026-05-05T10:49:41+02:00

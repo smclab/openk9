@@ -116,6 +116,7 @@ export function SaveSubDocType({
         jsonConfig: "{}",
         sortable: false,
         analyzer: { ...documentTypeFieldQuery.data?.docTypeField?.analyzer },
+        searchAnalyzer: { ...documentTypeFieldQuery.data?.docTypeField?.searchAnalyzer },
       }),
       [documentTypeFieldQuery],
     ),
@@ -129,6 +130,9 @@ export function SaveSubDocType({
             documentTypeFieldId: subDocTypesId !== "new" ? subDocTypesId : undefined,
             ...data,
             ...(data.analyzer.id !== "-1" ? { analyzerId: data.analyzer.id } : {}),
+            ...(data.searchAnalyzer.id && data.searchAnalyzer.id !== "-1"
+              ? { searchAnalyzerId: data.searchAnalyzer.id }
+              : {}),
           },
         });
       } else {
@@ -175,6 +179,18 @@ export function SaveSubDocType({
             name: form.inputProps("analyzer").value.name || "",
           }}
           description="Analyzer association for Document Type Field"
+        />
+        <CustomSelectRelationsOneToOne
+          options={analyzerOption}
+          label="Search Analyzer association"
+          onChange={(val) => {
+            form.inputProps("searchAnalyzer").onChange({ id: val.id, name: val.name });
+          }}
+          value={{
+            id: form.inputProps("searchAnalyzer").value.id || "-1",
+            name: form.inputProps("searchAnalyzer").value.name || "",
+          }}
+          description="Search Analyzer association for Document Type Field. Used as search_analyzer at query time."
         />
         <NumberInput
           label="Boost"
