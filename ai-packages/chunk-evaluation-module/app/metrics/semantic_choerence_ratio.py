@@ -1,77 +1,97 @@
 from typing import List
 
 import numpy as np
-from chonkie import (
-    BaseRefinery,
-    EmbeddingsRefinery,
-    SentenceChunker,
-)
+from chonkie import BaseRefinery, EmbeddingsRefinery, SentenceChunker
 from chonkie.types import Chunk
-from sklearn.metrics.pairwise import cosine_similarity
+
+EPS = 1e-8
 
 
 class IntraSimilarityRefinery(BaseRefinery):
-    def __init__(self, embedding_model="", sentence_splitter=""):
-        pass
+    def __init__(self):
+        self.em_refinery = EmbeddingsRefinery(
+            embedding_model="minishlab/potion-base-32M",
+        )
+        self.sentence_splitter = SentenceChunker(
+            chunk_size=1,
+            min_sentences_per_chunk=1,
+            delim=[".", "!", "?", "\n"],
+        )
 
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
-        em_refinery = EmbeddingsRefinery(
-            embedding_model="minishlab/potion-base-32M",  # Required
-        )
-        sentence_splitter = SentenceChunker(
-            chunk_size=1,  # Dimensione molto piccola
-            min_sentences_per_chunk=1,  # Esattamente 1 frase per chunk
-            delim=[".", "!", "?", "\n"],  # Delimitatori di frase
-        )
-        refined_chunks = []
-        for chunk in chunks:
-            sentences = sentence_splitter.chunk(chunk.text)
-            sentences_ref = em_refinery(sentences)
-            intra_similarity = self._intra_sim_calc(sentences_ref)
-            chunk.intra_similarity = intra_similarity
-            chunk.sentence_embeddings = [embs.embedding for embs in sentences_ref]
-            refined_chunks.append(chunk)
-        return refined_chunks
+        all_sentences = []
+        chunk_map = []
 
-    def _intra_sim_calc(self, chunk_sentences):
-        embeddings = [chunk.embedding for chunk in chunk_sentences]
-        sim_matrix = cosine_similarity(embeddings)
-        n = sim_matrix.shape[0]
-        mask = ~np.eye(n, dtype=bool)
-        values = sim_matrix[mask]
-        if values.size > 0:
-            intragroup_similarity = values.mean()
-        else:
-            intragroup_similarity = 0.0
-        return intragroup_similarity
+        for idx, chunk in enumerate(chunks):
+            sentences = self.sentence_splitter.chunk(chunk.text)
+            for s in sentences:
+                all_sentences.append(s)
+                chunk_map.append(idx)
+
+        all_embeddings = self.em_refinery(all_sentences)
+
+        chunk_embeddings = [[] for _ in chunks]
+
+        for emb, idx in zip(all_embeddings, chunk_map):
+            chunk_embeddings[idx].append(emb.embedding)
+
+        for i, chunk in enumerate(chunks):
+            embs = np.array(chunk_embeddings[i])
+
+            if len(embs) <= 1:
+                intra = 0.0
+            else:
+                norms = np.linalg.norm(embs, axis=1, keepdims=True) + EPS
+                embs_norm = embs / norms
+
+                sim_matrix = embs_norm @ embs_norm.T
+
+                n = sim_matrix.shape[0]
+                mask = ~np.eye(n, dtype=bool)
+                values = sim_matrix[mask]
+
+                intra = float(values.mean()) if values.size > 0 else 0.0
+
+            chunk.intra_similarity = intra
+            chunk.sentence_embeddings = embs
+
+        return chunks
 
 
-def inter_sim_calc(chunk_A, chunk_B):
-    sim_matrix = cosine_similarity(chunk_A, chunk_B)
-    return np.mean(sim_matrix)
+def inter_sim_calc(A, B):
+    if len(A) == 0 or len(B) == 0:
+        return 0.0
+
+    A = np.array(A)
+    B = np.array(B)
+
+    A = A / (np.linalg.norm(A, axis=1, keepdims=True) + EPS)
+    B = B / (np.linalg.norm(B, axis=1, keepdims=True) + EPS)
+
+    return float((A @ B.T).mean())
 
 
 def calculate_scr(chunks):
-    intra_refinery = IntraSimilarityRefinery()
-    refined_chunks = intra_refinery.refine(chunks)
+    refinery = IntraSimilarityRefinery()
+    refined_chunks = refinery.refine(chunks)
 
-    intra_sim = [float(aaa.intra_similarity) for aaa in refined_chunks]
-    sent_embs = [aaa.sentence_embeddings for aaa in refined_chunks]
+    intra_sim = np.array([c.intra_similarity for c in refined_chunks])
+    sent_embs = [c.sentence_embeddings for c in refined_chunks]
 
-    adjacent_similarities = []
-    for i in range(len(sent_embs) - 1):
-        sim = inter_sim_calc(sent_embs[i], sent_embs[i + 1])
-        adjacent_similarities.append(float(sim))
-    if len(adjacent_similarities) == 0:
+    if len(sent_embs) < 2:
         return {"forward": 0.0, "backward": 0.0}
-    forward = [
-        intra_sim[i] / (adjacent_similarities[i] + 0.0000001)
-        for i in range(len(intra_sim) - 1)
-    ]
 
-    backward = [
-        intra_sim[i + 1] / (adjacent_similarities[i] + 0.0000001)
-        for i in range(len(intra_sim) - 1)
-    ]
+    adjacent_sim = np.array(
+        [
+            inter_sim_calc(sent_embs[i], sent_embs[i + 1])
+            for i in range(len(sent_embs) - 1)
+        ]
+    )
 
-    return {"forward": np.mean(forward), "backward": np.mean(backward)}
+    forward = intra_sim[:-1] / (adjacent_sim + EPS)
+    backward = intra_sim[1:] / (adjacent_sim + EPS)
+
+    return {
+        "forward": float(forward.mean()),
+        "backward": float(backward.mean()),
+    }
