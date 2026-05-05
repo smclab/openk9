@@ -54,8 +54,9 @@ export function SaveDatasource() {
 
   const hasMissingRequiredDynamic = !!dynamicTemplate?.fields?.some((f: any) => f?.required && isFieldEmpty(f));
 
-  const isDisabledNextStep = baseDisabled || hasMissingRequiredDynamic;
-  const tabs = constructTabs({ datasourceId, isDisabledNextStep, mode, isRecap });
+  const isDisabledNextStep = baseDisabled;
+  const isDisabledAfterDatasource = baseDisabled || hasMissingRequiredDynamic;
+  const tabs = constructTabs({ datasourceId, isDisabledNextStep, isDisabledAfterDatasource, mode, isRecap });
   const isView = mode === "view";
 
   React.useEffect(() => {

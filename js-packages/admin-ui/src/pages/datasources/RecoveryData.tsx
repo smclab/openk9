@@ -125,11 +125,13 @@ export const constructTabs = ({
   datasourceId,
   mode,
   isDisabledNextStep,
+  isDisabledAfterDatasource,
   isRecap,
 }: {
   datasourceId: string;
   mode: string;
   isDisabledNextStep: boolean;
+  isDisabledAfterDatasource: boolean;
   isRecap: boolean;
 }) => [
   {
@@ -151,14 +153,14 @@ export const constructTabs = ({
     value: "pipeline",
     step: 3,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/pipeline`,
-    disabled: isDisabledNextStep,
+    disabled: isDisabledAfterDatasource,
   },
   {
     label: "Data Index",
     value: "dataIndex",
     step: 4,
     path: `/data-source/${datasourceId}/mode/${mode}/landingTab/data-index`,
-    disabled: isDisabledNextStep,
+    disabled: isDisabledAfterDatasource,
   },
   ...(isRecap
     ? [
@@ -167,7 +169,7 @@ export const constructTabs = ({
           value: "recap",
           step: 5,
           path: `/data-source/${datasourceId}/mode/${mode}/landingTab/recap`,
-          disabled: isDisabledNextStep,
+          disabled: isDisabledAfterDatasource,
         },
       ]
     : []),
