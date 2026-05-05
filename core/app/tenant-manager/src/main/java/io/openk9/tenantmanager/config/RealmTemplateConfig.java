@@ -18,7 +18,6 @@
 package io.openk9.tenantmanager.config;
 
 import java.util.List;
-import java.util.Optional;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
@@ -51,13 +50,6 @@ public interface RealmTemplateConfig {
 	 */
 	EventsConfig events();
 
-	/**
-	 * Optional SMTP configuration. When absent, email
-	 * notifications and self-service password reset are
-	 * disabled and a WARN log is emitted at provisioning time.
-	 */
-	Optional<SmtpConfig> smtp();
-
 	interface PasswordPolicyConfig {
 
 		@WithDefault("8")
@@ -80,14 +72,6 @@ public interface RealmTemplateConfig {
 
 		@WithDefault("90")
 		int expirationDays();
-
-		/**
-		 * Optional path to a password blacklist file on the
-		 * Keycloak volume. When empty, the
-		 * {@code passwordBlacklist(...)} term is omitted from
-		 * the password policy string.
-		 */
-		Optional<String> blacklist();
 	}
 
 	interface BruteForceConfig {
@@ -149,28 +133,6 @@ public interface RealmTemplateConfig {
 
 		@WithDefault("true")
 		boolean adminDetailsEnabled();
-	}
-
-	interface SmtpConfig {
-
-		Optional<String> host();
-
-		Optional<Integer> port();
-
-		Optional<String> from();
-
-		@WithDefault("false")
-		boolean auth();
-
-		@WithDefault("false")
-		boolean starttls();
-
-		@WithDefault("false")
-		boolean ssl();
-
-		Optional<String> user();
-
-		Optional<String> password();
 	}
 
 }

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -260,146 +259,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 			assertTrue(policy.contains(
 				"forceExpiredPasswordChange(90)"));
 			assertFalse(policy.contains("passwordBlacklist"));
-		}
-	}
-
-	// ---------------------------------------------------------------
-	// Password blacklist absent / present
-	// ---------------------------------------------------------------
-
-	@Nested
-	@DisplayName("Password blacklist")
-	class PasswordBlacklist {
-
-		@Test
-		@DisplayName("blacklist absent: policy does not contain passwordBlacklist")
-		void blacklistAbsent() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
-			var policy = factory.getDefaultRealmRepresentation()
-				.getPasswordPolicy();
-			assertNotNull(policy);
-			assertFalse(policy.contains("passwordBlacklist"));
-		}
-
-		@Test
-		@DisplayName("blacklist present: policy contains passwordBlacklist(file)")
-		void blacklistPresent() {
-			var config = new HardenedConfig() {
-				@Override
-				public PasswordPolicyConfig passwordPolicy() {
-					return new PasswordPolicyConfig() {
-						@Override public int length() { return 8; }
-						@Override public int upperCase() { return 1; }
-						@Override public int lowerCase() { return 1; }
-						@Override public int digits() { return 1; }
-						@Override public int specialChars() { return 1; }
-						@Override public int history() { return 5; }
-						@Override public int expirationDays() { return 90; }
-						@Override
-						public Optional<String> blacklist() {
-							return Optional.of("rockyou.txt");
-						}
-					};
-				}
-			};
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				config, true);
-			var policy = factory.getDefaultRealmRepresentation()
-				.getPasswordPolicy();
-			assertNotNull(policy);
-			assertTrue(
-				policy.contains("passwordBlacklist(rockyou.txt)"));
-		}
-	}
-
-	// ---------------------------------------------------------------
-	// SMTP absent
-	// ---------------------------------------------------------------
-
-	@Nested
-	@DisplayName("SMTP absent")
-	class SmtpAbsent {
-
-		@Test
-		@DisplayName("smtpServer is null, verifyEmail is false, no exception")
-		void smtpNotConfigured() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new DefaultConfig(), true);
-			var r = factory.getDefaultRealmRepresentation();
-			assertNull(r.getSmtpServer());
-			assertFalse(r.isVerifyEmail());
-		}
-	}
-
-	// ---------------------------------------------------------------
-	// SMTP present
-	// ---------------------------------------------------------------
-
-	@Nested
-	@DisplayName("SMTP present")
-	class SmtpPresent {
-
-		@Test
-		@DisplayName("SMTP fully configured: server map and verifyEmail")
-		void smtpConfigured() {
-			var config = new DefaultConfig() {
-				@Override
-				public Optional<SmtpConfig> smtp() {
-					return Optional.of(new SmtpConfig() {
-						@Override public Optional<String> host() { return Optional.of("smtp.example.com"); }
-						@Override public Optional<Integer> port() { return Optional.of(587); }
-						@Override public Optional<String> from() { return Optional.of("noreply@example.com"); }
-						@Override public boolean auth() { return true; }
-						@Override public boolean starttls() { return true; }
-						@Override public boolean ssl() { return false; }
-						@Override public Optional<String> user() { return Optional.of("user"); }
-						@Override public Optional<String> password() { return Optional.of("pass"); }
-					});
-				}
-			};
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				config, true);
-			var r = factory.getDefaultRealmRepresentation();
-			var smtp = r.getSmtpServer();
-			assertNotNull(smtp);
-			assertEquals("smtp.example.com", smtp.get("host"));
-			assertEquals("587", smtp.get("port"));
-			assertEquals("noreply@example.com", smtp.get("from"));
-			assertEquals("true", smtp.get("auth"));
-			assertEquals("true", smtp.get("starttls"));
-			assertEquals("false", smtp.get("ssl"));
-			assertEquals("user", smtp.get("user"));
-			assertEquals("pass", smtp.get("password"));
-			assertTrue(r.isVerifyEmail());
-		}
-
-		@Test
-		@DisplayName("SMTP without TLS: same behavior, no enforcement")
-		void smtpWithoutTls() {
-			var config = new DefaultConfig() {
-				@Override
-				public Optional<SmtpConfig> smtp() {
-					return Optional.of(new SmtpConfig() {
-						@Override public Optional<String> host() { return Optional.of("localhost"); }
-						@Override public Optional<Integer> port() { return Optional.of(25); }
-						@Override public Optional<String> from() { return Optional.of("test@localhost"); }
-						@Override public boolean auth() { return false; }
-						@Override public boolean starttls() { return false; }
-						@Override public boolean ssl() { return false; }
-						@Override public Optional<String> user() { return Optional.empty(); }
-						@Override public Optional<String> password() { return Optional.empty(); }
-					});
-				}
-			};
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				config, true);
-			var r = factory.getDefaultRealmRepresentation();
-			var smtp = r.getSmtpServer();
-			assertNotNull(smtp);
-			assertEquals("localhost", smtp.get("host"));
-			assertEquals("25", smtp.get("port"));
-			assertTrue(r.isVerifyEmail());
 		}
 	}
 
@@ -668,7 +527,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 				@Override public int specialChars() { return 0; }
 				@Override public int history() { return 0; }
 				@Override public int expirationDays() { return 0; }
-				@Override public Optional<String> blacklist() { return Optional.empty(); }
 			};
 		}
 
@@ -699,8 +557,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 			};
 		}
 
-		@Override
-		public Optional<SmtpConfig> smtp() { return Optional.empty(); }
 	}
 
 	/**
@@ -719,7 +575,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 				@Override public int specialChars() { return 1; }
 				@Override public int history() { return 5; }
 				@Override public int expirationDays() { return 90; }
-				@Override public Optional<String> blacklist() { return Optional.empty(); }
 			};
 		}
 
@@ -766,8 +621,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 			};
 		}
 
-		@Override
-		public Optional<SmtpConfig> smtp() { return Optional.empty(); }
 	}
 
 }

@@ -19,7 +19,6 @@ package io.openk9.tenantmanager.config;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -119,38 +118,6 @@ public class KeycloakDefaultRealmRepresentationFactory {
 			realm.setAdminEventsDetailsEnabled(ev.adminDetailsEnabled());
 		}
 
-		// SMTP / Email Notifications
-		config.smtp().ifPresentOrElse(
-			smtp -> {
-				if (smtp.host().isEmpty()
-					|| smtp.port().isEmpty()
-					|| smtp.from().isEmpty()) {
-					realm.setVerifyEmail(false);
-					return;
-				}
-				Map<String, String> smtpMap = new LinkedHashMap<>();
-				smtpMap.put("host", smtp.host().get());
-				smtpMap.put(
-					"port", String.valueOf(smtp.port().get()));
-				smtpMap.put("from", smtp.from().get());
-				smtpMap.put(
-					"auth", String.valueOf(smtp.auth()));
-				smtpMap.put(
-					"starttls", String.valueOf(smtp.starttls()));
-				smtpMap.put(
-					"ssl", String.valueOf(smtp.ssl()));
-				smtp.user().ifPresent(
-					u -> smtpMap.put("user", u));
-				smtp.password().ifPresent(
-					p -> smtpMap.put("password", p));
-				realm.setSmtpServer(smtpMap);
-				realm.setVerifyEmail(true);
-			},
-			() -> {
-				realm.setVerifyEmail(false);
-			}
-		);
-
 		// Roles
 		realm.setRoles(createDefaultRoles());
 
@@ -194,9 +161,6 @@ public class KeycloakDefaultRealmRepresentationFactory {
 			clauses.add("forceExpiredPasswordChange("
 				+ pp.expirationDays() + ")");
 		}
-		pp.blacklist().ifPresent(bl ->
-			clauses.add("passwordBlacklist(" + bl + ")"));
-
 		if (clauses.size() <= 2) {
 			// Only notUsername and notEmail — unconfigured
 			return null;
