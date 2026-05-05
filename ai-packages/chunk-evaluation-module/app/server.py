@@ -127,7 +127,7 @@ def interval_experiment(task, evaluators, dataset_name=None, dataset_base_name=N
             reversing = daily_dataset[::-1]
             for dats in reversing:
                 elm = client.experiments.list(dataset_id=dats["id"])
-                if not elm or elm[0].get("example_count", 0) < dats.get(
+                if not elm or elm[0].get("successful_run_count", 0) < dats.get(
                     "example_count", 0
                 ):
                     make_experiment(task, evaluators, dataset=dats["name"])
@@ -136,7 +136,7 @@ def interval_experiment(task, evaluators, dataset_name=None, dataset_base_name=N
             reversing = all_datasets[::-1]
             for dats in reversing:
                 elm = client.experiments.list(dataset_id=dats["id"])
-                if not elm or elm[0].get("example_count", 0) < dats.get(
+                if not elm or elm[0].get("successful_run_count", 0) < dats.get(
                     "example_count", 0
                 ):
                     make_experiment(task, evaluators, dataset=dats["name"])
