@@ -19,13 +19,8 @@ package io.openk9.tenantmanager.service;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -39,17 +34,12 @@ public class RealmRepresentationFactory {
 	private RealmRepresentationFactory() {}
 
 	public static RealmRepresentation createRealmRepresentation(
-		String virtualHost, String realmName) {
+		String virtualHost, String realmName,
+		RealmRepresentation defaultRealmRepresentation) {
 
-		return createRealmRepresentation(
-			virtualHost, realmName, new RealmRepresentation());
-
-	}
-
-	public static RealmRepresentation createRealmRepresentation(
-		String virtualHost, String realmName, RealmRepresentation defaultRealmRepresentation) {
-
-		Objects.requireNonNull(defaultRealmRepresentation, "defaultRealmRepresentation is null");
+		Objects.requireNonNull(
+			defaultRealmRepresentation,
+			"defaultRealmRepresentation is null");
 
 		defaultRealmRepresentation.setRealm(realmName);
 		defaultRealmRepresentation.setEnabled(true);
@@ -65,33 +55,45 @@ public class RealmRepresentationFactory {
 
 		clients
 			.stream()
-			.filter(clientRepresentation -> clientRepresentation.getClientId().equals("openk9"))
+			.filter(
+				clientRepresentation ->
+					clientRepresentation.getClientId()
+						.equals("openk9"))
 			.findFirst()
-			.or(() -> Optional.of(_createClientRepresentation("openk9")))
 			.ifPresent(
 				clientRepresentation -> {
-					clientRepresentation.setWebOrigins(List.of("+"));
-					clientRepresentation.setRedirectUris(List.of("https://" + virtualHost + "/*"));
+					clientRepresentation.setWebOrigins(
+						List.of("+"));
+					clientRepresentation.setRedirectUris(
+						List.of(
+							"https://"
+							+ virtualHost + "/*"));
 				}
 			);
 
-		RolesRepresentation roles = defaultRealmRepresentation.getRoles();
+		RolesRepresentation roles =
+			defaultRealmRepresentation.getRoles();
 
-		if (!(roles != null && (roles.getRealm() != null && !roles.getRealm().isEmpty())))  {
-			defaultRealmRepresentation.setRoles(_createRolesRepresentation());
+		if (!(roles != null
+			&& (roles.getRealm() != null
+				&& !roles.getRealm().isEmpty()))) {
+
+			defaultRealmRepresentation.setRoles(
+				createRolesRepresentation());
 		}
 
 		defaultRealmRepresentation.setUsers(
 			List.of(
-				_createAdminUserRepresentation()
+				createAdminUserRepresentation()
 			)
 		);
 
 		return defaultRealmRepresentation;
 	}
 
-	private static UserRepresentation _createAdminUserRepresentation() {
-		UserRepresentation userRepresentation = new UserRepresentation();
+	private static UserRepresentation createAdminUserRepresentation() {
+		UserRepresentation userRepresentation =
+			new UserRepresentation();
 		userRepresentation.setUsername("k9admin");
 		userRepresentation.setFirstName("k9admin");
 		userRepresentation.setLastName("k9admin");
@@ -102,10 +104,11 @@ public class RealmRepresentationFactory {
 		userRepresentation.setEnabled(true);
 		userRepresentation.setCredentials(
 			List.of(
-				_createAdminCredentialRepresentation()
+				createAdminCredentialRepresentation()
 			)
 		);
-		userRepresentation.setRequiredActions(List.of("UPDATE_PASSWORD"));
+		userRepresentation.setRequiredActions(
+			List.of("UPDATE_PASSWORD"));
 		return userRepresentation;
 	}
 
@@ -120,15 +123,18 @@ public class RealmRepresentationFactory {
 	private static final String PASSWORD_ALL =
 		PASSWORD_UPPER + PASSWORD_LOWER
 			+ PASSWORD_DIGITS + PASSWORD_SPECIAL;
+	private static final int PASSWORD_LENGTH = 12;
 	private static final SecureRandom PASSWORD_RANDOM =
 		new SecureRandom();
 
-	private static CredentialRepresentation _createAdminCredentialRepresentation() {
+	private static CredentialRepresentation
+		createAdminCredentialRepresentation() {
+
 		CredentialRepresentation credentialRepresentation =
 			new CredentialRepresentation();
 		credentialRepresentation.setType(
 			CredentialRepresentation.PASSWORD);
-		credentialRepresentation.setValue(_generateAdminPassword());
+		credentialRepresentation.setValue(generateAdminPassword());
 		credentialRepresentation.setTemporary(false);
 		return credentialRepresentation;
 	}
@@ -138,78 +144,57 @@ public class RealmRepresentationFactory {
 	 * password policy (at least 1 upper, 1 lower, 1 digit,
 	 * 1 special char, minimum 12 chars).
 	 */
-	private static String _generateAdminPassword() {
-		var sb = new StringBuilder(12);
-		sb.append(
-			PASSWORD_UPPER.charAt(
-				PASSWORD_RANDOM.nextInt(PASSWORD_UPPER.length())));
-		sb.append(
-			PASSWORD_LOWER.charAt(
-				PASSWORD_RANDOM.nextInt(PASSWORD_LOWER.length())));
-		sb.append(
-			PASSWORD_DIGITS.charAt(
-				PASSWORD_RANDOM.nextInt(PASSWORD_DIGITS.length())));
-		sb.append(
-			PASSWORD_SPECIAL.charAt(
-				PASSWORD_RANDOM.nextInt(PASSWORD_SPECIAL.length())));
-		for (int i = 0; i < 8; i++) {
-			sb.append(
-				PASSWORD_ALL.charAt(
-					PASSWORD_RANDOM.nextInt(PASSWORD_ALL.length())));
+	static String generateAdminPassword() {
+		char[] pwd = new char[PASSWORD_LENGTH];
+		pwd[0] = PASSWORD_UPPER.charAt(
+			PASSWORD_RANDOM.nextInt(PASSWORD_UPPER.length()));
+		pwd[1] = PASSWORD_LOWER.charAt(
+			PASSWORD_RANDOM.nextInt(PASSWORD_LOWER.length()));
+		pwd[2] = PASSWORD_DIGITS.charAt(
+			PASSWORD_RANDOM.nextInt(PASSWORD_DIGITS.length()));
+		pwd[3] = PASSWORD_SPECIAL.charAt(
+			PASSWORD_RANDOM.nextInt(PASSWORD_SPECIAL.length()));
+		for (int i = 4; i < PASSWORD_LENGTH; i++) {
+			pwd[i] = PASSWORD_ALL.charAt(
+				PASSWORD_RANDOM.nextInt(PASSWORD_ALL.length()));
 		}
-		var chars = sb.chars()
-			.mapToObj(c -> (char) c)
-			.collect(Collectors.toList());
-		Collections.shuffle(chars, PASSWORD_RANDOM);
-		return chars.stream()
-			.map(String::valueOf)
-			.collect(Collectors.joining());
+		// Fisher-Yates shuffle
+		for (int i = PASSWORD_LENGTH - 1; i > 0; i--) {
+			int j = PASSWORD_RANDOM.nextInt(i + 1);
+			char tmp = pwd[i];
+			pwd[i] = pwd[j];
+			pwd[j] = tmp;
+		}
+		return new String(pwd);
 	}
 
-	private static RolesRepresentation _createRolesRepresentation() {
+	private static RolesRepresentation
+		createRolesRepresentation() {
 
-		RolesRepresentation rolesRepresentation = new RolesRepresentation();
+		RolesRepresentation rolesRepresentation =
+			new RolesRepresentation();
 		rolesRepresentation.setRealm(
 			List.of(
-				_createRoleRepresentation("k9-admin", "K9 Admin Role"),
-				_createRoleRepresentation("k9-write", "K9 Write Role"),
-				_createRoleRepresentation("k9-read", "K9 Read Role")
+				createRoleRepresentation(
+					"k9-admin", "K9 Admin Role"),
+				createRoleRepresentation(
+					"k9-write", "K9 Write Role"),
+				createRoleRepresentation(
+					"k9-read", "K9 Read Role")
 			)
 		);
 		return rolesRepresentation;
-
 	}
 
-
-	private static RoleRepresentation _createRoleRepresentation(
+	private static RoleRepresentation createRoleRepresentation(
 		String name, String description) {
+
 		RoleRepresentation k9admin = new RoleRepresentation();
 		k9admin.setName(name);
 		k9admin.setDescription(description);
 		k9admin.setComposite(false);
 		k9admin.setClientRole(false);
 		return k9admin;
-	}
-
-	private static ClientRepresentation _createClientRepresentation(String clientId) {
-		ClientRepresentation clientRepresentation = new ClientRepresentation();
-		clientRepresentation.setName(clientId);
-		clientRepresentation.setClientId(clientId);
-		clientRepresentation.setEnabled(true);
-		clientRepresentation.setProtocol("openid-connect");
-		clientRepresentation.setClientAuthenticatorType("client-secret");
-		clientRepresentation.setDefaultClientScopes(
-			List.of("profile", "email", "roles"));
-
-		clientRepresentation.setAttributes(
-			Map.of(
-				"login_theme", clientId
-			)
-		);
-		clientRepresentation.setPublicClient(true);
-		clientRepresentation.setStandardFlowEnabled(true);
-
-		return clientRepresentation;
 	}
 
 }

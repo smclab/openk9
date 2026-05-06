@@ -19,6 +19,7 @@ package io.openk9.tenantmanager.config;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -319,7 +320,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 			assertNotNull(realmRoles);
 
 			var roleMap = realmRoles.stream()
-				.collect(java.util.stream.Collectors.toMap(
+				.collect(Collectors.toMap(
 					r -> r.getName(), r -> r));
 
 			assertTrue(roleMap.containsKey("k9-admin"));
