@@ -17,19 +17,13 @@
 
 package io.openk9.tenantmanager.config;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation.BruteForceStrategy;
 import org.keycloak.representations.idm.RolesRepresentation;
@@ -37,7 +31,6 @@ import org.keycloak.representations.idm.RolesRepresentation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -45,135 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DisplayName("KeycloakDefaultRealmRepresentationFactory")
 class KeycloakDefaultRealmRepresentationFactoryTest {
-
-	private static final ObjectMapper mapper = JsonMapper.builder()
-		.enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-		.enable(SerializationFeature.INDENT_OUTPUT)
-		.build();
-
-	private RealmRepresentation realm;
-
-	@BeforeEach
-	void setUp() {
-		var factory = new KeycloakDefaultRealmRepresentationFactory(
-			new DefaultConfig(), true);
-		realm = factory.getDefaultRealmRepresentation();
-	}
-
-	// ---------------------------------------------------------------
-	// Legacy profile equivalence
-	// ---------------------------------------------------------------
-
-	@Nested
-	@DisplayName("Legacy profile equivalence")
-	class LegacyEquivalence {
-
-		private RealmRepresentation legacyRealm;
-
-		@BeforeEach
-		void loadLegacyBaseline() throws IOException {
-			try (InputStream is = getClass().getClassLoader()
-				.getResourceAsStream("legacy-realm-baseline.json")) {
-				assertNotNull(is,
-					"legacy-realm-baseline.json not found on classpath");
-				legacyRealm = mapper.readValue(
-					is, RealmRepresentation.class);
-			}
-		}
-
-		@Test
-		@DisplayName("enabled field matches legacy baseline")
-		void enabledMatches() {
-			assertEquals(legacyRealm.isEnabled(), realm.isEnabled());
-		}
-
-		@Test
-		@DisplayName("roles match legacy baseline")
-		void rolesMatch() {
-			var legacyRoles = legacyRealm.getRoles();
-			var newRoles = realm.getRoles();
-
-			assertNotNull(legacyRoles);
-			assertNotNull(newRoles);
-
-			var legacyRoleNames = legacyRoles.getRealm().stream()
-				.map(r -> r.getName() + ":" + r.getDescription())
-				.sorted()
-				.toList();
-			var newRoleNames = newRoles.getRealm().stream()
-				.map(r -> r.getName() + ":" + r.getDescription())
-				.sorted()
-				.toList();
-
-			assertEquals(legacyRoleNames, newRoleNames);
-		}
-
-		@Test
-		@DisplayName("client openk9 matches legacy baseline")
-		void clientMatches() {
-			var legacyClient = findOpenk9Client(legacyRealm);
-			var newClient = findOpenk9Client(realm);
-
-			assertNotNull(legacyClient);
-			assertNotNull(newClient);
-
-			assertEquals(
-				legacyClient.getClientId(), 
-				newClient.getClientId());
-			assertEquals(
-				legacyClient.isEnabled(), 
-				newClient.isEnabled());
-			assertEquals(
-				legacyClient.getClientAuthenticatorType(),
-				newClient.getClientAuthenticatorType());
-			assertEquals(
-				legacyClient.isStandardFlowEnabled(),
-				newClient.isStandardFlowEnabled());
-			assertEquals(
-				legacyClient.isPublicClient(), 
-				newClient.isPublicClient());
-			assertEquals(
-				legacyClient.getProtocol(), 
-				newClient.getProtocol());
-		}
-
-		@Test
-		@DisplayName(
-			"new hardening fields are null in legacy-equivalent config")
-		void newFieldsAreNull() {
-			// With DefaultConfig (all features off), these
-			// remain null like the legacy template
-			assertNull(realm.getPasswordPolicy());
-			assertNull(realm.isBruteForceProtected());
-			assertNull(realm.getFailureFactor());
-			assertNull(realm.isEventsEnabled());
-			assertNull(realm.getSmtpServer());
-		}
-
-		@Test
-		@DisplayName(
-			"best-practice additive fields are always set")
-		void bestPracticeFieldsAreSet() {
-			assertEquals("external", realm.getSslRequired());
-			assertFalse(realm.isRegistrationAllowed());
-			assertFalse(realm.isDuplicateEmailsAllowed());
-			assertFalse(realm.isEditUsernameAllowed());
-			assertTrue(realm.isLoginWithEmailAllowed());
-			assertNotNull(realm.getBrowserSecurityHeaders());
-		}
-
-		private ClientRepresentation findOpenk9Client(
-			RealmRepresentation r) {
-
-			if (r.getClients() == null) {
-				return null;
-			}
-			return r.getClients().stream()
-				.filter(c -> "openk9".equals(c.getClientId()))
-				.findFirst()
-				.orElse(null);
-		}
-	}
 
 	// ---------------------------------------------------------------
 	// Brute force protection defaults
@@ -187,8 +51,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			hardenedRealm = factory.getDefaultRealmRepresentation();
 		}
 
@@ -238,8 +101,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			hardenedRealm = factory.getDefaultRealmRepresentation();
 		}
 
@@ -274,8 +136,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			hardenedRealm = factory.getDefaultRealmRepresentation();
 		}
 
@@ -353,8 +214,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			hardenedRealm = factory.getDefaultRealmRepresentation();
 		}
 
@@ -394,15 +254,14 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 	// ---------------------------------------------------------------
 
 	@Nested
-	@DisplayName("TC-U8 — Browser security headers")
+	@DisplayName("Browser security headers")
 	class BrowserSecurityHeadersTest {
 
 		private Map<String, String> headers;
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			headers = factory.getDefaultRealmRepresentation()
 				.getBrowserSecurityHeaders();
 		}
@@ -447,8 +306,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 
 		@BeforeEach
 		void setUp() {
-			var factory = new KeycloakDefaultRealmRepresentationFactory(
-				new HardenedConfig(), true);
+			var factory = new KeycloakDefaultRealmRepresentationFactory();
 			hardenedRealm = factory.getDefaultRealmRepresentation();
 		}
 
@@ -504,123 +362,6 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 		void realmEnabled() {
 			assertTrue(hardenedRealm.isEnabled());
 		}
-	}
-
-	// ---------------------------------------------------------------
-	// Config implementations for testing
-	// ---------------------------------------------------------------
-
-	/**
-	 * Config with ALL hardening features disabled/zeroed.
-	 * Used to verify legacy equivalence, the factory
-	 * should leave all new fields null.
-	 */
-	static class DefaultConfig implements RealmTemplateConfig {
-
-		@Override
-		public PasswordPolicyConfig passwordPolicy() {
-			return new PasswordPolicyConfig() {
-				@Override public int length() { return 0; }
-				@Override public int upperCase() { return 0; }
-				@Override public int lowerCase() { return 0; }
-				@Override public int digits() { return 0; }
-				@Override public int specialChars() { return 0; }
-				@Override public int history() { return 0; }
-				@Override public int expirationDays() { return 0; }
-			};
-		}
-
-		@Override
-		public BruteForceConfig bruteForce() {
-			return new BruteForceConfig() {
-				@Override public int failureFactor() { return 0; }
-				@Override public boolean permanentLockout() { return false; }
-				@Override public int waitIncrementSeconds() { return 0; }
-				@Override public int maxFailureWaitSeconds() { return 0; }
-				@Override public int maxDeltaTimeSeconds() { return 0; }
-				@Override public int minimumQuickLoginWaitSeconds() { return 0; }
-				@Override public int quickLoginCheckMilliSeconds() { return 0; }
-				@Override public BruteForceStrategy strategy() { return BruteForceStrategy.MULTIPLE; }
-				@Override public int maxTemporaryLockouts() { return 0; }
-			};
-		}
-
-		@Override
-		public EventsConfig events() {
-			return new EventsConfig() {
-				@Override public boolean enabled() { return false; }
-				@Override public int expirationSeconds() { return 0; }
-				@Override public List<String> listeners() { return List.of(); }
-				@Override public List<String> enabledTypes() { return List.of(); }
-				@Override public boolean adminEnabled() { return false; }
-				@Override public boolean adminDetailsEnabled() { return false; }
-			};
-		}
-
-	}
-
-	/**
-	 * Config with all hardening features set to the
-	 * production secure defaults.
-	 */
-	static class HardenedConfig implements RealmTemplateConfig {
-
-		@Override
-		public PasswordPolicyConfig passwordPolicy() {
-			return new PasswordPolicyConfig() {
-				@Override public int length() { return 8; }
-				@Override public int upperCase() { return 1; }
-				@Override public int lowerCase() { return 1; }
-				@Override public int digits() { return 1; }
-				@Override public int specialChars() { return 1; }
-				@Override public int history() { return 5; }
-				@Override public int expirationDays() { return 90; }
-			};
-		}
-
-		@Override
-		public BruteForceConfig bruteForce() {
-			return new BruteForceConfig() {
-				@Override public int failureFactor() { return 10; }
-				@Override public boolean permanentLockout() { return true; }
-				@Override public int waitIncrementSeconds() { return 60; }
-				@Override public int maxFailureWaitSeconds() { return 900; }
-				@Override public int maxDeltaTimeSeconds() { return 43200; }
-				@Override public int minimumQuickLoginWaitSeconds() { return 60; }
-				@Override public int quickLoginCheckMilliSeconds() { return 1000; }
-				@Override public BruteForceStrategy strategy() { return BruteForceStrategy.MULTIPLE; }
-				@Override public int maxTemporaryLockouts() { return 5; }
-			};
-		}
-
-		@Override
-		public EventsConfig events() {
-			return new EventsConfig() {
-				@Override public boolean enabled() { return true; }
-				@Override public int expirationSeconds() { return 2592000; }
-				@Override public List<String> listeners() {
-					return List.of("jboss-logging");
-				}
-				@Override public List<String> enabledTypes() {
-					return List.of(
-						"LOGIN", "LOGIN_ERROR",
-						"LOGOUT", "LOGOUT_ERROR",
-						"CODE_TO_TOKEN", "CODE_TO_TOKEN_ERROR",
-						"REFRESH_TOKEN", "REFRESH_TOKEN_ERROR",
-						"REGISTER", "REGISTER_ERROR",
-						"UPDATE_PASSWORD", "UPDATE_PASSWORD_ERROR",
-						"RESET_PASSWORD", "RESET_PASSWORD_ERROR",
-						"SEND_RESET_PASSWORD",
-						"REMOVE_TOTP", "UPDATE_TOTP",
-						"USER_DISABLED_BY_PERMANENT_LOCKOUT",
-						"USER_DISABLED_BY_TEMPORARY_LOCKOUT",
-						"PERMISSION_TOKEN");
-				}
-				@Override public boolean adminEnabled() { return true; }
-				@Override public boolean adminDetailsEnabled() { return true; }
-			};
-		}
-
 	}
 
 }

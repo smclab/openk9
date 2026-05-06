@@ -17,55 +17,73 @@
 
 package io.openk9.tenantmanager.config;
 
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation.BruteForceStrategy;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.RolesRepresentation;
 
 /**
  * Factory that produces a default {@link RealmRepresentation}
- * for newly provisioned Keycloak realms, driven by
- * {@link RealmTemplateConfig}.
+ * for newly provisioned Keycloak realms with security hardening
+ * values hardcoded as constants.
+ * <p>
+ * All tuning of realm parameters after provisioning could be done
+ * via the admin console.
+ * </p>
  */
 @ApplicationScoped
 public class KeycloakDefaultRealmRepresentationFactory {
 
-	private final RealmTemplateConfig config;
+	// Brute force protection (Keycloak recommended)
+	private static final int BF_FAILURE_FACTOR = 10;
+	private static final boolean BF_PERMANENT_LOCKOUT = true;
+	private static final int BF_WAIT_INCREMENT_SECONDS = 60;
+	private static final int BF_MAX_FAILURE_WAIT_SECONDS = 900;
+	private static final int BF_MAX_DELTA_TIME_SECONDS = 43200;
+	private static final int BF_MIN_QUICK_LOGIN_WAIT_SECONDS = 60;
+	private static final long BF_QUICK_LOGIN_CHECK_MS = 1000L;
+	private static final int BF_MAX_TEMPORARY_LOCKOUTS = 5;
+	private static final BruteForceStrategy BF_STRATEGY =
+		BruteForceStrategy.MULTIPLE;
 
-	@Inject
-	public KeycloakDefaultRealmRepresentationFactory(
-		RealmTemplateConfig config) {
-		this.config = config;
-	}
+	// Events / audit (compliance defaults)
+	private static final boolean EVENTS_ENABLED = true;
+	private static final long EVENTS_EXPIRATION_SECONDS = 2_592_000L;
+	private static final List<String> EVENTS_LISTENERS =
+		List.of("jboss-logging");
+	private static final List<String> EVENTS_ENABLED_TYPES = List.of(
+		"LOGIN", "LOGIN_ERROR", "LOGOUT", "LOGOUT_ERROR",
+		"CODE_TO_TOKEN", "CODE_TO_TOKEN_ERROR",
+		"REFRESH_TOKEN", "REFRESH_TOKEN_ERROR",
+		"REGISTER", "REGISTER_ERROR",
+		"UPDATE_PASSWORD", "UPDATE_PASSWORD_ERROR",
+		"RESET_PASSWORD", "RESET_PASSWORD_ERROR",
+		"SEND_RESET_PASSWORD",
+		"REMOVE_TOTP", "UPDATE_TOTP",
+		"USER_DISABLED_BY_PERMANENT_LOCKOUT",
+		"USER_DISABLED_BY_TEMPORARY_LOCKOUT",
+		"PERMISSION_TOKEN");
+	private static final boolean EVENTS_ADMIN_ENABLED = true;
+	private static final boolean EVENTS_ADMIN_DETAILS_ENABLED = true;
 
-	/**
-	 * Package-private constructor for testing with a custom
-	 * config without CDI.
-	 */
-	KeycloakDefaultRealmRepresentationFactory(
-		RealmTemplateConfig config, boolean ignored) {
-		this.config = config;
-	}
+	// Pre-built password policy string
+	private static final String DEFAULT_PASSWORD_POLICY =
+		"length(8) and upperCase(1) and lowerCase(1) and digits(1)"
+		+ " and specialChars(1) and notUsername(undefined)"
+		+ " and notEmail(undefined) and passwordHistory(5)"
+		+ " and forceExpiredPasswordChange(90)";
 
 	/**
 	 * Returns a default {@link RealmRepresentation} with
-	 * security hardening fields populated from the active
-	 * configuration.
-	 * <p>
-	 * When a config section signals "not configured"
-	 * (e.g. {@code failureFactor == 0} for brute force,
-	 * {@code length == 0} for password policy,
-	 * {@code enabled == false} for events), the corresponding
-	 * fields are left {@code null} to match the legacy Qute
-	 * template output.
-	 * </p>
+	 * security hardening.
 	 *
 	 * @return a new {@link RealmRepresentation} instance
 	 */
@@ -84,39 +102,29 @@ public class KeycloakDefaultRealmRepresentationFactory {
 		realm.setBrowserSecurityHeaders(defaultBrowserSecurityHeaders());
 
 		// Password policy
-		String policy = buildPasswordPolicy();
-		if (policy != null) {
-			realm.setPasswordPolicy(policy);
-		}
+		realm.setPasswordPolicy(DEFAULT_PASSWORD_POLICY);
 
 		// Brute force protection
-		var bf = config.bruteForce();
-		if (bf.failureFactor() > 0) {
-			realm.setBruteForceProtected(true);
-			realm.setPermanentLockout(bf.permanentLockout());
-			realm.setFailureFactor(bf.failureFactor());
-			realm.setMaxTemporaryLockouts(bf.maxTemporaryLockouts());
-			realm.setWaitIncrementSeconds(bf.waitIncrementSeconds());
-			realm.setMinimumQuickLoginWaitSeconds(
-				bf.minimumQuickLoginWaitSeconds());
-			realm.setQuickLoginCheckMilliSeconds(
-				(long) bf.quickLoginCheckMilliSeconds());
-			realm.setMaxFailureWaitSeconds(bf.maxFailureWaitSeconds());
-			realm.setMaxDeltaTimeSeconds(bf.maxDeltaTimeSeconds());
-			realm.setBruteForceStrategy(bf.strategy());
-		}
+		realm.setBruteForceProtected(true);
+		realm.setPermanentLockout(BF_PERMANENT_LOCKOUT);
+		realm.setFailureFactor(BF_FAILURE_FACTOR);
+		realm.setMaxTemporaryLockouts(BF_MAX_TEMPORARY_LOCKOUTS);
+		realm.setWaitIncrementSeconds(BF_WAIT_INCREMENT_SECONDS);
+		realm.setMinimumQuickLoginWaitSeconds(
+			BF_MIN_QUICK_LOGIN_WAIT_SECONDS);
+		realm.setQuickLoginCheckMilliSeconds(BF_QUICK_LOGIN_CHECK_MS);
+		realm.setMaxFailureWaitSeconds(BF_MAX_FAILURE_WAIT_SECONDS);
+		realm.setMaxDeltaTimeSeconds(BF_MAX_DELTA_TIME_SECONDS);
+		realm.setBruteForceStrategy(BF_STRATEGY);
 
 		// Events / audit
-		var ev = config.events();
-		if (ev.enabled()) {
-			realm.setEventsEnabled(true);
-			realm.setEventsExpiration((long) ev.expirationSeconds());
-			realm.setEventsListeners(new ArrayList<>(ev.listeners()));
-			realm.setEnabledEventTypes(
-				new ArrayList<>(ev.enabledTypes()));
-			realm.setAdminEventsEnabled(ev.adminEnabled());
-			realm.setAdminEventsDetailsEnabled(ev.adminDetailsEnabled());
-		}
+		realm.setEventsEnabled(EVENTS_ENABLED);
+		realm.setEventsExpiration(EVENTS_EXPIRATION_SECONDS);
+		realm.setEventsListeners(new ArrayList<>(EVENTS_LISTENERS));
+		realm.setEnabledEventTypes(
+			new ArrayList<>(EVENTS_ENABLED_TYPES));
+		realm.setAdminEventsEnabled(EVENTS_ADMIN_ENABLED);
+		realm.setAdminEventsDetailsEnabled(EVENTS_ADMIN_DETAILS_ENABLED);
 
 		// Roles
 		realm.setRoles(createDefaultRoles());
@@ -128,50 +136,7 @@ public class KeycloakDefaultRealmRepresentationFactory {
 	}
 
 	/**
-	 * Builds the password policy string from configuration.
-	 * Returns {@code null} when all policy sub-values are at
-	 * their zero/unconfigured state.
-	 */
-	String buildPasswordPolicy() {
-		var pp = config.passwordPolicy();
-
-		var clauses = new ArrayList<String>();
-
-		if (pp.length() > 0) {
-			clauses.add("length(" + pp.length() + ")");
-		}
-		if (pp.upperCase() > 0) {
-			clauses.add("upperCase(" + pp.upperCase() + ")");
-		}
-		if (pp.lowerCase() > 0) {
-			clauses.add("lowerCase(" + pp.lowerCase() + ")");
-		}
-		if (pp.digits() > 0) {
-			clauses.add("digits(" + pp.digits() + ")");
-		}
-		if (pp.specialChars() > 0) {
-			clauses.add("specialChars(" + pp.specialChars() + ")");
-		}
-		clauses.add("notUsername(undefined)");
-		clauses.add("notEmail(undefined)");
-		if (pp.history() > 0) {
-			clauses.add("passwordHistory(" + pp.history() + ")");
-		}
-		if (pp.expirationDays() > 0) {
-			clauses.add("forceExpiredPasswordChange("
-				+ pp.expirationDays() + ")");
-		}
-		if (clauses.size() <= 2) {
-			// Only notUsername and notEmail — unconfigured
-			return null;
-		}
-
-		return String.join(" and ", clauses);
-	}
-
-	/**
 	 * Returns the default browser security headers map.
-	 * Values aligned with Keycloak 26.x defaults.
 	 */
 	static Map<String, String> defaultBrowserSecurityHeaders() {
 		Map<String, String> headers = new LinkedHashMap<>();
