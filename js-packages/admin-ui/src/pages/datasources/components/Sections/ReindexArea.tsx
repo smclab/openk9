@@ -16,7 +16,9 @@
 */
 import { ModalConfirm } from "@components/Form";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
-import { Box, Button } from "@mui/material";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { Box, Button, Divider, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { defaultModal } from "../../Function";
@@ -52,50 +54,58 @@ export default function ReindexArea({
       >
         {showDialog.isShow && (
           <ModalConfirm
-            title="Confirm Change"
+            title={showDialog.title || "Leave wizard?"}
             body={showDialog.message}
-            labelConfirm="Change"
+            labelConfirm="Leave and create"
+            type="warning"
             actionConfirm={() => {
               showDialog.callbackConfirm();
             }}
             close={() => showDialog.callbackClose()}
           />
         )}
-        <Box>
-          <Box display={"flex"} flexDirection={"row"} gap={"10px"} alignItems={"end"}>
-            <AutocompleteDropdownWithOptions
-              label="Data Index"
-              value={
-                connectionData?.dataIndex?.id
-                  ? { id: connectionData.dataIndex.id, name: connectionData.dataIndex.name ?? "" }
-                  : undefined
-              }
-              onChange={(val) => {
-                setConnectionData((prev: any) => ({
-                  ...prev,
-                  dataIndex: { id: val.id, name: val.name },
-                }));
-              }}
-              onClear={() => {
-                setConnectionData((prev: any) => ({
-                  ...prev,
-                  dataIndex: { id: "", name: "" },
-                }));
-              }}
-              disabled={isView}
-              optionsDefault={connectionData.optionDataindex.map((item: any) => ({ value: item.id, label: item.name }))}
-              description="Select the data index to reindex your data into."
-              sx={{ width: 400 }}
-            />
+        <Box sx={{ width: "100%", maxWidth: 600 }}>
+          <AutocompleteDropdownWithOptions
+            label="Data Index"
+            value={
+              connectionData?.dataIndex?.id
+                ? { id: connectionData.dataIndex.id, name: connectionData.dataIndex.name ?? "" }
+                : undefined
+            }
+            onChange={(val) => {
+              setConnectionData((prev: any) => ({
+                ...prev,
+                dataIndex: { id: val.id, name: val.name },
+              }));
+            }}
+            onClear={() => {
+              setConnectionData((prev: any) => ({
+                ...prev,
+                dataIndex: { id: "", name: "" },
+              }));
+            }}
+            disabled={isView}
+            optionsDefault={connectionData.optionDataindex.map((item: any) => ({ value: item.id, label: item.name }))}
+            description="Select the data index to reindex your data into."
+            sx={{ width: "100%" }}
+          />
+          <Divider sx={{ marginBlock: "20px" }} />
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "8px" }}>
+            <Typography variant="body2" color="text.primary">
+              Can't find your Data Index? Go and create a new one.
+            </Typography>
             <Button
-              variant="contained"
+              variant="outlined"
               color="info"
               disabled={isView}
+              aria-label="Shortcut to create a new Data Index (leaves the current wizard)"
+              endIcon={<OpenInNewIcon fontSize="small" />}
               onClick={() => {
                 setShowDialog({
                   isShow: true,
-                  message: "Attention, to create new data index, you should leave this page",
-                  title: "Area Data Index",
+                  message:
+                    "You are about to leave the Datasource wizard to create a new Data Index. The data entered in the previous steps will be lost. Do you want to continue?",
+                  title: "Leave wizard?",
                   callbackClose: () => {
                     setShowDialog(defaultModal);
                   },
@@ -105,10 +115,24 @@ export default function ReindexArea({
                   },
                 });
               }}
-              sx={{ marginLeft: "auto", minHeight: "56px" }}
+              sx={{ textTransform: "none" }}
             >
-              Create Data Index
+              Create new Data Index
             </Button>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "6px",
+                marginTop: "4px",
+              }}
+            >
+              <WarningAmberIcon fontSize="small" color="warning" sx={{ marginTop: "2px" }} />
+              <Typography variant="caption" color="text.secondary">
+                Warning: creating a new Data Index will take you out of this page and the data entered in the previous
+                steps will be lost.
+              </Typography>
+            </Box>
           </Box>
         </Box>
       </div>
@@ -117,10 +141,11 @@ export default function ReindexArea({
           marginTop: "10px",
           display: "flex",
           justifyContent: "space-between",
+          alignItems: "center",
         }}
       >
         <Button
-          variant="contained"
+          variant="outlined"
           color="secondary"
           aria-label="Back"
           onClick={() => {
@@ -132,9 +157,16 @@ export default function ReindexArea({
         {!isView && (
           <Button
             variant="contained"
+            color="primary"
+            size="large"
             aria-label="Recap"
             onClick={() => {
               setIsRecap(true);
+            }}
+            sx={{
+              fontWeight: "bold",
+              paddingInline: "32px",
+              boxShadow: 3,
             }}
           >
             Recap
