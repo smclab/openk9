@@ -202,7 +202,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 
 				this.replyTo.tell(new Working(heldMessage, requester));
 			}
-			case LAST -> this.replyTo.tell(new Last(requester));
+			case LAST -> this.replyTo.tell(new Last(requester, dataPayload.getParsingDate()));
 			case HALT -> {
 				log.warnf(
 					"The publisher has sent an HALT message. So %s will be cancelled.",
@@ -269,7 +269,8 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	public record Halt(DataProcessException exception, ActorRef<Scheduling.Response> requester)
 		implements Response {}
 
-	public record Last(ActorRef<Scheduling.Response> requester) implements Response {}
+	public record Last(ActorRef<Scheduling.Response> requester, long parsingDate)
+		implements Response {}
 
 	public record Working(HeldMessage heldMessage, ActorRef<Scheduling.Response> requester)
 		implements Response {}
