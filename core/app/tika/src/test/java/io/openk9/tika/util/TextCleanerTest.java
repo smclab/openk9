@@ -21,13 +21,11 @@ import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("TextCleaner")
 public class TextCleanerTest {
 
-	private static final Logger log =  Logger.getLogger(TextCleanerTest.class);
+	private static final Logger log = Logger.getLogger(TextCleanerTest.class);
 
 	@Test
 	@DisplayName("Return cleaned text")
@@ -54,33 +52,31 @@ public class TextCleanerTest {
 		);
 	}
 
-	@ParameterizedTest
-	@ValueSource(
-		strings = {
-			"""
-				<p>
-				The Euro-
-				pean Central Bank announced a new policy mea-
-				sure aimed at stabilizing inflation across the euro-
-				zone.&nbsp;According to officials, the inter-
-				vention will take effect im-
-				mediately.
-				</p>
-				
-				<p>
-				Experts say that the eco-
-				nomic outlook remains uncer-
-				tain, with several fac-
-				tors contributing to mar-
-				ket volatility.&nbsp;&nbsp;&nbsp;Investors are advised to main-
-				tain a diversified port-
-				folio.
-				</p>
-			"""
-		}
-	)
+	@Test
 	@DisplayName("Return cleaned HTML text")
-	void returnCleanedHtmlText(String rawText) {
+	void returnCleanedHtmlText() {
+		String rawText =
+				"""
+					<p>
+					The Euro-
+					pean Central Bank announced a new policy mea-
+					sure aimed at stabilizing inflation across the euro-
+					zone.&nbsp;According to officials, the inter-
+					vention will take effect im-
+					mediately.
+					</p>
+				
+					<p>
+					Experts say that the eco-
+					nomic outlook remains uncer-
+					tain, with several fac-
+					tors contributing to mar-
+					ket volatility.&nbsp;&nbsp;&nbsp;Investors are advised to main-
+					tain a diversified port-
+					folio.
+					</p>
+				""";
+
 		Assertions.assertDoesNotThrow(() ->
 			log.info(TextCleaner.cleanText(rawText))
 		);
