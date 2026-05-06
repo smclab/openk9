@@ -33,6 +33,23 @@ public class RealmRepresentationFactory {
 
 	private RealmRepresentationFactory() {}
 
+	/**
+	 * Merges runtime data (virtual host, realm name, openk9 client URIs,
+	 * admin user) into a hardened default realm representation produced by
+	 * {@link io.openk9.tenantmanager.config.KeycloakDefaultRealmRepresentationFactory}.
+	 *
+	 * @param virtualHost                 the tenant virtual host, used for the
+	 *                                    realm display name and the openk9
+	 *                                    client redirect URIs.
+	 * @param realmName                   the Keycloak realm identifier.
+	 * @param defaultRealmRepresentation  the hardened realm template; must not
+	 *                                    be {@code null}.
+	 * @return the same {@code defaultRealmRepresentation} instance, mutated
+	 *         in place with runtime values, an admin user, and (when missing)
+	 *         the default k9 roles.
+	 * @throws NullPointerException if {@code defaultRealmRepresentation} is
+	 *         {@code null}.
+	 */
 	public static RealmRepresentation createRealmRepresentation(
 		String virtualHost, String realmName,
 		RealmRepresentation defaultRealmRepresentation) {
@@ -55,21 +72,13 @@ public class RealmRepresentationFactory {
 
 		clients
 			.stream()
-			.filter(
-				clientRepresentation ->
-					clientRepresentation.getClientId()
-						.equals("openk9"))
+			.filter(c -> c.getClientId().equals("openk9"))
 			.findFirst()
-			.ifPresent(
-				clientRepresentation -> {
-					clientRepresentation.setWebOrigins(
-						List.of("+"));
-					clientRepresentation.setRedirectUris(
-						List.of(
-							"https://"
-							+ virtualHost + "/*"));
-				}
-			);
+			.ifPresent(c -> {
+				c.setWebOrigins(List.of("+"));
+				c.setRedirectUris(
+					List.of("https://" + virtualHost + "/*"));
+			});
 
 		RolesRepresentation roles =
 			defaultRealmRepresentation.getRoles();
@@ -127,9 +136,7 @@ public class RealmRepresentationFactory {
 	private static final SecureRandom PASSWORD_RANDOM =
 		new SecureRandom();
 
-	private static CredentialRepresentation
-		createAdminCredentialRepresentation() {
-
+	private static CredentialRepresentation createAdminCredentialRepresentation() {
 		CredentialRepresentation credentialRepresentation =
 			new CredentialRepresentation();
 		credentialRepresentation.setType(
@@ -168,9 +175,7 @@ public class RealmRepresentationFactory {
 		return new String(pwd);
 	}
 
-	private static RolesRepresentation
-		createRolesRepresentation() {
-
+	private static RolesRepresentation createRolesRepresentation() {
 		RolesRepresentation rolesRepresentation =
 			new RolesRepresentation();
 		rolesRepresentation.setRealm(
