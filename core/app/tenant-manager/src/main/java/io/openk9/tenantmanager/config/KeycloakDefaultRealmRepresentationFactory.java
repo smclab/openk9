@@ -76,7 +76,7 @@ public class KeycloakDefaultRealmRepresentationFactory {
 
 	// Pre-built password policy string
 	private static final String DEFAULT_PASSWORD_POLICY =
-		"length(8) and upperCase(1) and lowerCase(1) and digits(1)"
+		"length(12) and upperCase(1) and lowerCase(1) and digits(1)"
 		+ " and specialChars(1) and notUsername(undefined)"
 		+ " and notEmail(undefined) and passwordHistory(5)"
 		+ " and forceExpiredPasswordChange(90)";

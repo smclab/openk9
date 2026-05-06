@@ -110,7 +110,7 @@ class KeycloakDefaultRealmRepresentationFactoryTest {
 		void passwordPolicyTokens() {
 			var policy = hardenedRealm.getPasswordPolicy();
 			assertNotNull(policy);
-			assertTrue(policy.contains("length(8)"));
+			assertTrue(policy.contains("length(12)"));
 			assertTrue(policy.contains("upperCase(1)"));
 			assertTrue(policy.contains("lowerCase(1)"));
 			assertTrue(policy.contains("digits(1)"));
