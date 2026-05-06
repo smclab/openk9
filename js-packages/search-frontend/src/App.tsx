@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { css } from "styled-components";
 import "./app.css";
 import "./components/dataRangePicker.css";
+import { getCachedAccessToken } from "./components/client";
 import { DeleteLogo } from "./components/DeleteLogo";
 import { Logo } from "./components/Logo";
 import { MaintenancePage } from "./components/MaintenancePage";
@@ -669,7 +670,9 @@ export function App() {
                   css={css`
                     font-size: 14px;
                     letter-spacing: 0.2px;
-                    color: var(--openk9-embeddable-search--secondary-text-color);
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color
+                    );
                   `}
                 >
                   Calendar
@@ -689,7 +692,8 @@ export function App() {
                       : "openk9-dropdown-filters-close"
                   }`}
                   aria-label={
-                    t("openk9-collapsable-filter") || "openk9 collapsable filter"
+                    t("openk9-collapsable-filter") ||
+                    "openk9 collapsable filter"
                   }
                   aria-expanded={isOpenCalendar ? "true" : "false"}
                   css={css`
@@ -699,8 +703,8 @@ export function App() {
                     border-radius: 8px;
                     padding: 6px 8px;
                     cursor: pointer;
-                    transition: transform 120ms ease, background-color 120ms ease,
-                      border-color 120ms ease;
+                    transition: transform 120ms ease,
+                      background-color 120ms ease, border-color 120ms ease;
                     &:hover {
                       background: rgba(0, 0, 0, 0.03);
                     }
@@ -967,6 +971,10 @@ export function App() {
           `}
         >
           <Chatbot
+            callbackAuthorization={() => {
+              const token = getCachedAccessToken();
+              return token ? `Bearer ${token}` : null;
+            }}
             icon={{
               buttonIcon: <Logo size={35} color="white" />,
               userIcon: <User />,

@@ -41,6 +41,18 @@ type OauthSettingsResponse = {
 let userManager: UserManager | null = null;
 let oauth2Enabled = false;
 let oauth2InitPromise: Promise<boolean> | null = null;
+let cachedAccessToken: string | null = null;
+
+function setCachedAccessToken(token: string | null | undefined) {
+  cachedAccessToken = token ?? null;
+}
+
+function bindUserManagerEvents(um: UserManager) {
+  um.events.addUserLoaded((user) => setCachedAccessToken(user?.access_token));
+  um.events.addUserUnloaded(() => setCachedAccessToken(null));
+  um.events.addUserSignedOut(() => setCachedAccessToken(null));
+  um.events.addAccessTokenExpired(() => setCachedAccessToken(null));
+}
 
 async function loadOauthConfig(): Promise<OauthConfig | null> {
   try {
@@ -98,6 +110,7 @@ export function initOAuth2(): Promise<boolean> {
     }
     oauth2Enabled = true;
     userManager = buildUserManager(config);
+    bindUserManagerEvents(userManager);
 
     try {
       if (isRedirectCallback()) {
@@ -110,12 +123,15 @@ export function initOAuth2(): Promise<boolean> {
       }
       const user = await userManager.getUser();
       if (!user || user.expired) {
+        setCachedAccessToken(null);
         return false;
       }
+      setCachedAccessToken(user.access_token);
       return true;
     } catch (err) {
       console.error("[auth] OAuth2 init failed", err);
       await userManager.removeUser();
+      setCachedAccessToken(null);
       return false;
     }
   })();
@@ -128,6 +144,10 @@ export function isOAuth2Enabled(): boolean {
 
 export function getUserManager(): UserManager | null {
   return userManager;
+}
+
+export function getCachedAccessToken(): string | null {
+  return cachedAccessToken;
 }
 
 export function OpenK9Client({
