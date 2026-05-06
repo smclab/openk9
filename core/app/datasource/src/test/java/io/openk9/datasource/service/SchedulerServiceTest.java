@@ -17,21 +17,50 @@
 
 package io.openk9.datasource.service;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.hibernate.reactive.mutiny.Mutiny;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import io.quarkus.test.junit.QuarkusTest;
+
+import java.time.OffsetDateTime;
 import java.util.Comparator;
+import java.util.Set;
+import java.util.UUID;
+
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.model.util.K9Entity;
-
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class SchedulerServiceTest {
 
 	@Inject
+	DatasourceService datasourceService;
+
+	@Inject
 	SchedulerService schedulerService;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
+
+	private static final String DATASOURCE_NAME = "DatasourceTest";
+
+	@BeforeEach
+	void setup() {
+		createDatasource();
+		createSchedulerRunning();
+		createSchedulerFinished();
+		createSchedulerFailure();
+		createSchedulerStale();
+	}
 
 	@Test
 	void getStatusList() {
@@ -51,5 +80,149 @@ class SchedulerServiceTest {
 			statusList.getFirst().status(),
 			SchedulerService.getHealthStatus(newest.getStatus())
 		);
+	}
+
+	@Test
+	void removeOldScheduler() {
+		updateLastModifiedDate();
+
+		schedulerService.removeScheduling()
+			.await()
+			.indefinitely();
+
+		var result = schedulerService.findAll()
+			.await()
+			.indefinitely();
+
+		var allowedStatuses = Set.of(
+			Scheduler.SchedulerStatus.RUNNING,
+			Scheduler.SchedulerStatus.STALE,
+			Scheduler.SchedulerStatus.ERROR
+		);
+
+		assertTrue(result.stream()
+			.allMatch(scheduler -> allowedStatuses.contains(scheduler.getStatus()))
+		);
+	}
+
+	@Test
+	void should_does_not_throw_when_removing_empty_scheduler() {
+		sessionFactory.withTransaction(session ->
+			session.createNativeQuery("DELETE FROM scheduler").executeUpdate()
+		).await().indefinitely();
+
+		assertDoesNotThrow(() ->
+			schedulerService.removeScheduling()
+				.await()
+				.indefinitely()
+		);
+	}
+
+	@AfterEach
+	void tearDown() {
+		var id = getDatasource().getId();
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> datasourceService.deleteById(id)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createDatasource() {
+		DatasourceDTO dto = DatasourceDTO.builder()
+			.name(DATASOURCE_NAME)
+			.scheduling(DatasourceConnectionObjects.SCHEDULING)
+			.schedulable(false)
+			.reindexing(DatasourceConnectionObjects.REINDEXING)
+			.reindexable(false)
+			.build();
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> datasourceService.create(dto)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createSchedulerRunning() {
+		var datasource = getDatasource();
+
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setStatus(Scheduler.SchedulerStatus.RUNNING);
+		scheduler.setReindex(false);
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> schedulerService.create(scheduler)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createSchedulerFailure() {
+		var datasource = getDatasource();
+
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setStatus(Scheduler.SchedulerStatus.FAILURE);
+		scheduler.setReindex(false);
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> schedulerService.create(scheduler)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createSchedulerStale() {
+		var datasource = getDatasource();
+
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setStatus(Scheduler.SchedulerStatus.STALE);
+		scheduler.setReindex(false);
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> schedulerService.create(scheduler)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void createSchedulerFinished() {
+		var datasource = getDatasource();
+
+		Scheduler scheduler = new Scheduler();
+		scheduler.setScheduleId(UUID.randomUUID().toString());
+		scheduler.setDatasource(datasource);
+		scheduler.setOldDataIndex(datasource.getDataIndex());
+		scheduler.setStatus(Scheduler.SchedulerStatus.FINISHED);
+
+		sessionFactory.withTransaction(
+				(session, transaction) -> schedulerService.create(scheduler)
+			)
+			.await()
+			.indefinitely();
+	}
+
+	private void updateLastModifiedDate() {
+		sessionFactory.withTransaction(session ->
+			session.createNativeQuery(
+					"UPDATE scheduler SET modified_date = :date")
+				.setParameter("date", OffsetDateTime.now().minusDays(8))
+				.executeUpdate()
+		).await().indefinitely();
+	}
+
+	private Datasource getDatasource() {
+		return sessionFactory.withTransaction(
+				(session, transaction) -> datasourceService.findByName(session, DATASOURCE_NAME)
+			)
+			.await()
+			.indefinitely();
 	}
 }
