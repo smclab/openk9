@@ -46,7 +46,6 @@ import "./components/dateRangePickerVertical.css";
 import "./components/dataRangePicker.css";
 import "react-dates/lib/css/_datepicker.css";
 
-const isKeycloakEnabled = import.meta.env.VITE_KEYCLOAK_ENABLED === "true" && !!window.KEYCLOAK_URL && window.KEYCLOAK_URL !== "DISABLED";
 const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
 const isGenerativeEnabled = import.meta.env.VITE_GENERATIVE_ENABLED === "true";
 const isCalendarEnabled = import.meta.env.VITE_CALENDAR_ENABLED !== "false";
@@ -57,7 +56,7 @@ export const openk9 = new OpenK9({
   searchReplaceText: false,
   memoryResults: false,
   useGenerativeApi: isGenerativeEnabled,
-  useKeycloak: isKeycloakEnabled,
+  useOAuth2: true,
   queryStringMap: { filters: "filtri" },
   useQueryAnalysis: false,
   showSyntax: false,

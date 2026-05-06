@@ -1,6 +1,6 @@
 # Stage 1 - build environment
 FROM node:20-alpine AS react-build
-ARG BUILD_ENV=keycloak
+ARG BUILD_ENV=oauth2
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
@@ -36,18 +36,15 @@ WORKDIR /app/js-packages/search-frontend
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
 
-RUN if [ "$BUILD_ENV" = "keycloak" ]; then \
-  echo "Building for Keycloak environment..." && \
-  CI=false NODE_ENV=production yarn build:keycloak; \
-  elif [ "$BUILD_ENV" = "nokeycloak" ]; then \
-  echo "Building for No-Keycloak environment..." && \
-  CI=false NODE_ENV=production yarn build:nokeycloak; \
+RUN if [ "$BUILD_ENV" = "oauth2" ]; then \
+  echo "Building for OAuth2 environment..." && \
+  CI=false NODE_ENV=production yarn build:oauth2; \
   elif [ "$BUILD_ENV" = "chatbot" ]; then \
   echo "Building for Chatbot environment..." && \
   CI=false NODE_ENV=production yarn build:chatbot; \
   else \
-  echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to keycloak..." && \
-  CI=false NODE_ENV=production yarn build:keycloak; \
+  echo "Unknown BUILD_ENV: $BUILD_ENV, defaulting to oauth2..." && \
+  CI=false NODE_ENV=production yarn build:oauth2; \
   fi
 
 # Stage 2 - the production environment

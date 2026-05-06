@@ -87,7 +87,7 @@ export function Main({
   const useGenerativeApi = configuration.useGenerativeApi;
   const useQueryString = configuration.useQueryString;
   const useQueryStringFilters = configuration.useQueryStringFilters;
-  const useKeycloak = configuration.useKeycloak;
+  const useOAuth2 = configuration.useOAuth2;
   const iconCustom = configuration.icons;
   const isHoverChangeDetail = configuration.resultList?.changeOnOver ?? true;
   const isActiveSkeleton = configuration?.isActiveSkeleton || null;
@@ -116,7 +116,7 @@ export function Main({
   const [isMobileMinWidth, setIsMobileMinWIdth] = React.useState(false);
   const [languageSelect, setLanguageSelect] = React.useState("");
   const [selectionsState, selectionsDispatch] = useSelections({
-    useKeycloak,
+    useOAuth2,
     persistInQueryString: useQueryString,
     defaultString: configuration.defaultString || "",
     queryStringValues,
@@ -125,7 +125,7 @@ export function Main({
 
   const [selectionsStateSuggestions, selectionsDispatchSuggestions] =
     useSelections({
-      useKeycloak,
+      useOAuth2,
       persistInQueryString: useQueryString,
       defaultString: configuration.defaultString || "",
       queryStringValues,

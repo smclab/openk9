@@ -53,8 +53,7 @@ export class OpenK9 {
         this.queryClient.invalidateQueries();
       },
       tenant: this.configuration.tenant ?? "",
-      useKeycloak: this.configuration.useKeycloak,
-      waitKeycloackForToken: this.configuration.waitKeycloackForToken,
+      useOAuth2: this.configuration.useOAuth2,
       callback: this.configuration.callbackClient,
     });
     this.render();
@@ -511,13 +510,12 @@ export type Configuration = {
   tenant: string | null;
   token: string | null;
   useQueryAnalysis: boolean;
-  useKeycloak: boolean;
+  useOAuth2: boolean;
   useGenerativeApi: boolean | null | undefined;
   useQueryString: boolean;
   useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
   viewButton: boolean;
-  waitKeycloackForToken: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -653,12 +651,11 @@ const defaultConfiguration: Configuration = {
   totalResultMobile: null,
   useGenerativeApi: null,
   useQueryAnalysis: true,
-  useKeycloak: true,
+  useOAuth2: true,
   useQueryString: true,
   useQueryStringFilters: true,
   useFilterConfiguration: true,
   viewButton: false,
-  waitKeycloackForToken: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };

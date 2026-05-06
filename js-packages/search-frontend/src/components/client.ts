@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
 *
 * This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import React from "react";
-import Keycloak from "keycloak-js";
-import { useState } from "react";
+import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { Options } from "./SortResults";
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
@@ -26,75 +25,156 @@ export function useOpenK9Client() {
   return React.useContext(OpenK9ClientContext);
 }
 
-declare global {
-  interface Window {
-    KEYCLOAK_URL: string;
-    KEYCLOAK_REALM: string;
-    KEYCLOAK_CLIENT_ID: string;
+const OAUTH2_SETTINGS_ENDPOINT = "/api/datasource/oauth2/settings";
+
+type OauthConfig = {
+  issuerUri: string;
+  clientId: string;
+};
+
+type OauthSettingsResponse = {
+  issuerUri?: string | null;
+  clientId?: string | null;
+  clientSecret?: string | null;
+};
+
+let userManager: UserManager | null = null;
+let oauth2Enabled = false;
+let oauth2InitPromise: Promise<boolean> | null = null;
+
+async function loadOauthConfig(): Promise<OauthConfig | null> {
+  try {
+    const res = await fetch(OAUTH2_SETTINGS_ENDPOINT, {
+      credentials: "same-origin",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as OauthSettingsResponse;
+    if (!data.issuerUri || data.issuerUri === "DISABLED" || !data.clientId) {
+      return null;
+    }
+    return { issuerUri: data.issuerUri, clientId: data.clientId };
+  } catch {
+    return null;
   }
+}
+
+function buildUserManager(config: OauthConfig): UserManager {
+  const redirectUri =
+    typeof window !== "undefined" ? window.location.origin + window.location.pathname : "";
+  return new UserManager({
+    authority: config.issuerUri,
+    client_id: config.clientId,
+    redirect_uri: redirectUri,
+    post_logout_redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid",
+    automaticSilentRenew: true,
+    loadUserInfo: true,
+    monitorSession: false,
+    userStore: new WebStorageStateStore({ store: window.sessionStorage }),
+    stateStore: new WebStorageStateStore({ store: window.sessionStorage }),
+  });
+}
+
+function isRedirectCallback(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("code") && params.has("state");
+}
+
+/**
+ * Loads OAuth2 settings and initializes the global UserManager.
+ * Resolves to true when authentication is ready (either OAuth2 user available
+ * or OAuth2 disabled). Triggers a redirect when an OIDC login is needed and in
+ * that case never resolves — the page is leaving.
+ */
+export function initOAuth2(): Promise<boolean> {
+  if (oauth2InitPromise) return oauth2InitPromise;
+  oauth2InitPromise = (async () => {
+    const config = await loadOauthConfig();
+    if (!config) {
+      oauth2Enabled = false;
+      userManager = null;
+      return true;
+    }
+    oauth2Enabled = true;
+    userManager = buildUserManager(config);
+
+    try {
+      if (isRedirectCallback()) {
+        await userManager.signinRedirectCallback();
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
+      const user = await userManager.getUser();
+      if (!user || user.expired) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("[auth] OAuth2 init failed", err);
+      await userManager.removeUser();
+      return false;
+    }
+  })();
+  return oauth2InitPromise;
+}
+
+export function isOAuth2Enabled(): boolean {
+  return oauth2Enabled;
+}
+
+export function getUserManager(): UserManager | null {
+  return userManager;
 }
 
 export function OpenK9Client({
   onAuthenticated,
   tenant,
-  useKeycloak = true,
-  waitKeycloackForToken,
+  useOAuth2 = true,
   callback,
 }: {
   onAuthenticated(): void;
   tenant: string;
-  useKeycloak?: boolean;
-  waitKeycloackForToken: boolean;
+  useOAuth2?: boolean;
   callback(): void | null | undefined;
 }) {
-  const keycloak = new Keycloak({
-    url: window.KEYCLOAK_URL,
-    realm: window.KEYCLOAK_REALM || "openk9",
-    clientId: window.KEYCLOAK_CLIENT_ID || "openk9",
-  });
-  const appendToBody = { token: "" };
-  const setToken = (newToken: string) => {
-    appendToBody.token = newToken;
+  const externalToken = { value: "" };
+  const setExternalToken = (newToken: string) => {
+    externalToken.value = newToken;
   };
-  async function waitForToken() {
-    let count = 0;
-    while (appendToBody.token === "" || count < 5) {
-      count++;
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-  }
-  const keycloakInit = useKeycloak
-    ? keycloak.init({
-        onLoad: "check-sso",
-        checkLoginIframe: false,
-      })
-    : null;
-  if (keycloakInit)
-    keycloakInit.then(() => {
-      onAuthenticated();
+
+  const authInit: Promise<boolean> | null = useOAuth2 ? initOAuth2() : null;
+  if (authInit) {
+    authInit.then((ready) => {
+      if (ready) onAuthenticated();
     });
+  }
+
+  async function getAccessToken(): Promise<string | null> {
+    if (!userManager) return null;
+    const user: User | null = await userManager.getUser();
+    if (!user || user.expired) return null;
+    return user.access_token ?? null;
+  }
+
   async function authFetch(route: string, init: RequestInit = {}) {
-    await keycloakInit;
-    if (keycloak.authenticated) {
-      await keycloak.updateToken(30);
-    }
-    if (callback) {
-      callback();
-    }
+    if (callback) callback();
 
     let headers = init.headers;
-
-    if (useKeycloak && keycloak.authenticated) {
-      headers = {
-        Authorization: `Bearer ${keycloak.token}`,
-        ...init.headers,
-      };
-    } else if (!useKeycloak && waitKeycloackForToken) {
-      if (!keycloak.authenticated && appendToBody.token === "") {
-        await waitForToken();
+    if (useOAuth2 && oauth2Enabled) {
+      const token = await getAccessToken();
+      if (token) {
+        headers = {
+          Authorization: `Bearer ${token}`,
+          ...init.headers,
+        };
       }
+    } else if (!useOAuth2 && externalToken.value) {
       headers = {
-        Authorization: `Bearer ${appendToBody.token}`,
+        Authorization: `Bearer ${externalToken.value}`,
         ...init.headers,
       };
     }
@@ -105,19 +185,28 @@ export function OpenK9Client({
     });
   }
   return {
-    authInit: keycloakInit,
+    authInit,
     async authenticate({ token = "" }: { token?: string }) {
-      if (useKeycloak) {
-        await keycloak.login();
+      if (useOAuth2) {
+        if (!userManager) await initOAuth2();
+        await userManager?.signinRedirect();
       } else {
-        setToken(token || "");
+        setExternalToken(token || "");
       }
     },
     async deauthenticate() {
-      await keycloak.logout();
+      if (useOAuth2 && userManager) {
+        await userManager.signoutRedirect();
+      } else {
+        setExternalToken("");
+      }
     },
     async getUserProfile() {
-      return await keycloak.loadUserInfo();
+      if (useOAuth2 && userManager) {
+        const user = await userManager.getUser();
+        return user?.profile ?? {};
+      }
+      return {};
     },
     async getGenerateResponse({
       searchQuery,
@@ -816,4 +905,3 @@ type SuggestionsCategoriesResult = Array<{
   multiSelect: boolean;
   translationMap: { [key: string]: string };
 }>;
-

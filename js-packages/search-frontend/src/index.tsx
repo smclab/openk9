@@ -17,17 +17,15 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
+import { initOAuth2 } from "./components/client";
 
-declare global {
-  interface Window {
-    KEYCLOAK_URL: string;
-    KEYCLOAK_REALM: string;
-    KEYCLOAK_CLIENT_ID: string;
-  }
+async function bootstrap() {
+  await initOAuth2();
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
 }
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+void bootstrap();

@@ -47,9 +47,8 @@
     "build:embeddable": "vite build --config vite/embeddable.prod.ts",
     "build:importable": "vite build --config vite/importable.dev.ts && rollup -c",
     "build:embeddable:dev": "vite build --config vite/embeddable.dev.ts",
-    "build:keycloak": "vite build --config vite/embeddable.prod.ts && cross-env VITE_KEYCLOAK_ENABLED=true VITE_CHATBOT_ENABLED=false vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
-    "build:nokeycloak": "vite build --config vite/embeddable.prod.ts && cross-env VITE_KEYCLOAK_ENABLED=false VITE_CHATBOT_ENABLED=false vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
-    "build:chatbot": "vite build --config vite/embeddable.prod.ts && cross-env VITE_KEYCLOAK_ENABLED=true VITE_CHATBOT_ENABLED=true vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
+    "build:oauth2": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=false vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
+    "build:chatbot": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=true vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
     "preview": "vite preview --config vite/standalone.dev.ts",
     "lint": "eslint --ext js,ts,tsx src",
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
@@ -78,7 +77,6 @@
     "@fortawesome/free-solid-svg-icons": "7.1.0",
     "@fortawesome/react-fontawesome": "3.1.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.1",
-    "@types/keycloak-js": "^3.4.1",
     "@types/lodash": "^4.14.178",
     "@types/luxon": "^2.3.2",
     "@types/moment": "^2.13.0",
@@ -101,7 +99,6 @@
     "eslint-config-react-app": "^6.0.0",
     "eslint-import-resolver-node": "^0.3.4",
     "eslint-plugin-prettier": "^3.1.4",
-    "keycloak-js": "25.0.6",
     "lint-staged": "^12.1.2",
     "lodash": "^4.17.21",
     "luxon": "^2.4.0",
@@ -134,6 +131,7 @@
   "dependencies": {
     "@openk9ui/openk9-chatbot": "npm:@openk9ui/openk9-chatbot@3.1.1-SNAPSHOT",
     "i18next": "^22.5.1",
+    "oidc-client-ts": "^3.1.0",
     "react-i18next": "^12.3.1",
     "sanitize-html": "^2.11.0"
   }

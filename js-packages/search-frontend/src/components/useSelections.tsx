@@ -26,14 +26,14 @@ function toEnabledSet(values: queryStringValues) {
 }
 
 export function useSelections({
-  useKeycloak = true,
+  useOAuth2 = true,
   persistInQueryString = false,
   localStorageKey = "selections",
   defaultString = "",
   queryStringValues,
   queryStringMap,
 }: {
-  useKeycloak?: boolean;
+  useOAuth2?: boolean;
   persistInQueryString?: boolean;
   localStorageKey?: string;
   defaultString?: string;
@@ -77,9 +77,9 @@ export function useSelections({
   const client = useOpenK9Client();
 
   React.useEffect(() => {
-    if (useKeycloak && client.authInit) {
+    if (useOAuth2 && client.authInit) {
       client.authInit.then(() => setCanSave(true));
-    } else if (!useKeycloak) {
+    } else if (!useOAuth2) {
       setCanSave(true);
     }
   }, []);
