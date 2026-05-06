@@ -19,8 +19,10 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { initOAuth2 } from "./components/client";
 
+const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
+
 async function bootstrap() {
-  await initOAuth2();
+  if (isOAuth2Enabled) await initOAuth2();
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <App />

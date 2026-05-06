@@ -134,17 +134,45 @@ export function OpenK9Client({
   onAuthenticated,
   tenant,
   useOAuth2 = true,
+  waitForToken = false,
   callback,
 }: {
   onAuthenticated(): void;
   tenant: string;
   useOAuth2?: boolean;
+  waitForToken?: boolean;
   callback(): void | null | undefined;
 }) {
-  const externalToken = { value: "" };
+  // External-token mode (useOAuth2: false): the host application obtains a
+  // token (e.g. via an async login) and injects it via openk9.authenticate({token}).
+  // When waitForToken is true, authFetch holds requests until the token is set,
+  // so calls fired before the host completes its async login are not sent
+  // anonymously.
+  const EXTERNAL_TOKEN_TIMEOUT_MS = 10_000;
+  let externalToken = "";
+  let externalTokenWaiters: Array<() => void> = [];
   const setExternalToken = (newToken: string) => {
-    externalToken.value = newToken;
+    externalToken = newToken;
+    const waiters = externalTokenWaiters;
+    externalTokenWaiters = [];
+    waiters.forEach((resolve) => resolve());
   };
+  const waitForExternalToken = () =>
+    new Promise<void>((resolve) => {
+      if (externalToken) {
+        resolve();
+        return;
+      }
+      const onSet = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      const timer = setTimeout(() => {
+        externalTokenWaiters = externalTokenWaiters.filter((w) => w !== onSet);
+        resolve();
+      }, EXTERNAL_TOKEN_TIMEOUT_MS);
+      externalTokenWaiters.push(onSet);
+    });
 
   const authInit: Promise<boolean> | null = useOAuth2 ? initOAuth2() : null;
   if (authInit) {
@@ -172,11 +200,16 @@ export function OpenK9Client({
           ...init.headers,
         };
       }
-    } else if (!useOAuth2 && externalToken.value) {
-      headers = {
-        Authorization: `Bearer ${externalToken.value}`,
-        ...init.headers,
-      };
+    } else if (!useOAuth2) {
+      if (waitForToken && !externalToken) {
+        await waitForExternalToken();
+      }
+      if (externalToken) {
+        headers = {
+          Authorization: `Bearer ${externalToken}`,
+          ...init.headers,
+        };
+      }
     }
 
     return fetch(tenant + route, {

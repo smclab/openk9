@@ -54,6 +54,7 @@ export class OpenK9 {
       },
       tenant: this.configuration.tenant ?? "",
       useOAuth2: this.configuration.useOAuth2,
+      waitForToken: this.configuration.waitForToken,
       callback: this.configuration.callbackClient,
     });
     this.render();
@@ -516,6 +517,7 @@ export type Configuration = {
   useQueryStringFilters: boolean;
   useFilterConfiguration: boolean;
   viewButton: boolean;
+  waitForToken: boolean;
   // element types
   activeFilters: Element | string | null;
   calendar: Element | string | null;
@@ -656,6 +658,7 @@ const defaultConfiguration: Configuration = {
   useQueryStringFilters: true,
   useFilterConfiguration: true,
   viewButton: false,
+  waitForToken: false,
   changeSortResult: (sort) => sort,
   overrideTabs: (tabs) => tabs,
 };
