@@ -36,53 +36,73 @@ All administration panels use **HTTP Basic Authentication** with `admin` / `admi
 
 ### Compose profiles
 
-The default `compose.yaml` starts the core stack (PostgreSQL, OpenSearch, RabbitMQ, API Gateway, backend services, frontends, and Caddy reverse proxy). Additional capabilities are available as compose overlays:
+The default `compose.yaml` starts the core stack (PostgreSQL, OpenSearch,
+RabbitMQ, API Gateway, backend services, frontends, and Caddy reverse
+proxy). Additional capabilities are available as optional profiles:
 
 | Profile | Compose file | What it adds |
 |---|---|---|
-| File handling | `compose-with-file-handling.yaml` | MinIO, File Manager, Tika, MinIO Connector |
-| Gen AI | `compose-with-gen-ai.yaml` | RAG module, Embedding module, Talk-To chat |
-| OAuth2 server | `compose-with-oauth2-server.yaml` | Keycloak identity provider (optional) |
+| `file-handling` | `compose-with-file-handling.yaml` | MinIO, File Manager, Tika, MinIO Connector |
+| `gen-ai` | `compose-with-gen-ai.yaml` | RAG module, Embedding module, Talk-To chat |
+| `oauth2` | `compose-with-oauth2-server.yaml` | Keycloak identity provider |
 
-To add overlays, pass extra `-f` flags:
 
 ```bash
 # Core + File Handling + Gen AI
-docker compose -f compose.yaml -f compose-with-file-handling.yaml -f compose-with-gen-ai.yaml up -d
+docker compose \
+  -f compose.yaml \
+  -f compose-with-file-handling.yaml \
+  -f compose-with-gen-ai.yaml \
+  up -d
 
 # Everything (core + all overlays)
-docker compose -f compose.yaml -f compose-with-file-handling.yaml -f compose-with-gen-ai.yaml -f compose-with-oauth2-server.yaml up -d
+docker compose \
+  -f compose.yaml \
+  -f compose-with-file-handling.yaml \
+  -f compose-with-gen-ai.yaml \
+  -f compose-with-oauth2-server.yaml \
+  up -d
 ```
 
-With the Gen AI profile, conversational search is available at [https://demo.openk9.localhost/chat](https://demo.openk9.localhost/chat).
+With the Gen AI profile, conversational search is available at
+[https://demo.openk9.localhost/chat](https://demo.openk9.localhost/chat).
 
 ## Development with k9.sh
 
-For developers building from source, the `k9.sh` script wraps Maven, Docker, and Docker Compose into a single CLI.
+For developers building from source, the `k9.sh` script wraps Maven,
+Docker, and Docker Compose into a single CLI.
 
 ### Prerequisites
 
-- Docker (with Compose v2)
+- Docker (with Compose v2 plugin or standalone `docker-compose`)
 - Java 21+ and Maven (via bundled `mvnw`)
-- Node.js / Yarn (for frontend builds)
+- Node.js ≥ 20 / Yarn (for frontend builds)
+- Python 3.10+ (for AI service builds)
+
+Run `./k9.sh doctor` to check all prerequisites at once (see below).
 
 ### Quick start
 
 ```bash
-./k9.sh start                                    # Start core services (pulls images)
-./k9.sh start --build                            # Build from source, then start
-./k9.sh start --profile=with-gen-ai --build      # Build and start with AI services
-./k9.sh start --profile=all                      # Start everything
+./k9.sh up                                 # Start core services (pulls images)
+./k9.sh up --build                         # Build from source, then start
+./k9.sh up --with=gen-ai --build           # Build and start with AI services
+./k9.sh up --all                           # Start all profiles
 ```
 
 ### Common workflows
 
 ```bash
-./k9.sh build datasource                         # Build a single service
-./k9.sh build datasource --skip-mvn-shared-deps  # Skip shared deps if unchanged
-./k9.sh restart datasource --build               # Rebuild and restart one service
-./k9.sh logs tenant-manager                      # Follow logs for a service
-./k9.sh down                                     # Tear down (removes volumes)
+./k9.sh build datasource                   # Build a single service
+./k9.sh build datasource searcher          # Build multiple (shared deps once)
+./k9.sh build datasource --skip-shared-core  # Skip shared deps if unchanged
+./k9.sh build --with=gen-ai                # Build core + AI images
+./k9.sh build --tag=1.0.0                  # Build with a custom image tag
+./k9.sh build datasource --platform=amd64 # Cross-compile for amd64 on arm64 host
+./k9.sh restart datasource --build        # Rebuild and restart one service
+./k9.sh logs tenant-manager               # Follow logs for a service
+./k9.sh down                              # Stop containers (volumes preserved)
+./k9.sh down -v                           # Stop containers and remove volumes
 ```
 
 ### Profiles
@@ -92,10 +112,78 @@ Profiles are additive. Core services are always included.
 | Profile | Services added |
 |---|---|
 | `core` (default) | PostgreSQL, OpenSearch, RabbitMQ, API Gateway, Datasource, Tenant Manager, Ingestion, Searcher, frontends, Caddy |
-| `with-file-handling` | MinIO, File Manager, Tika, MinIO Connector |
-| `with-gen-ai` | RAG module, Embedding module, Talk-To |
-| `with-oauth2-server` | Keycloak OAuth2/OIDC identity provider |
-| `all` | All of the above |
+| `file-handling` | MinIO, File Manager, Tika, MinIO Connector |
+| `gen-ai` | RAG module, Embedding module, Talk-To |
+| `oauth2` | Keycloak OAuth2/OIDC identity provider |
+
+```bash
+./k9.sh up --with=oauth2                   # Core + Keycloak
+./k9.sh up --with=gen-ai --with=oauth2     # Core + AI + Keycloak
+./k9.sh up --all                           # All profiles
+```
+
+### doctor — check prerequisites
+
+```bash
+./k9.sh doctor
+```
+
+Checks java, mvn, docker, docker compose, node, yarn, and python3.
+Reports `OK` / `MISSING` / `WRONG_VERSION` for each tool with
+platform-specific install hints. Exits non-zero if any check fails.
+
+```
+k9.sh — prerequisite check
+
+  java (>= 21)           OK  (21.0.7)
+  mvn (>= 3.9)           OK  (3.9.11)
+  docker                 OK  (29.4.2)
+  docker compose (v2)    OK  (2.35.1)
+  node (>= 20)           OK  (22.14.0)
+  yarn                   OK  (1.22.22)
+  python3 (>= 3.10)      OK  (3.12.3)
+
+✓ All prerequisites satisfied.
+```
+
+### push — publish images to a registry
+
+```bash
+OPENK9_REGISTRY=registry.example.com/openk9 \
+  ./k9.sh push datasource searcher --tag=1.0.0
+```
+
+Tags and pushes locally built images to `OPENK9_REGISTRY`. The registry
+can also be set in `.env` (see below). Images must be built for
+`linux/amd64` before pushing — if the local image is `arm64`, the
+command refuses with a rebuild instruction:
+
+```
+✗ Image smclab/openk9-datasource:local-dev is arm64, not amd64.
+  Rebuild for the correct platform before pushing:
+  ./k9.sh build datasource --tag=local-dev --platform=amd64
+```
+
+> **Note:** cross-platform builds from arm64 to amd64 use QEMU emulation
+> and can be significantly slower, especially for AI Python images.
+
+### Configuration via .env
+
+Create an `openk9/.env` file to persist local configuration. 
+Shell environment variables always take precedence over `.env` values.
+
+```bash
+# openk9/.env
+TAG=local-dev
+OPENK9_REGISTRY=registry.example.com/openk9
+```
+
+Supported variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `TAG` | `local-dev` | Docker image tag used by build/push |
+| `OPENK9_REGISTRY` | _(none)_ | Target registry for `./k9.sh push` |
 
 Run `./k9.sh` without arguments for full usage information.
 
