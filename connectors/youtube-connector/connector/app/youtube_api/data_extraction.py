@@ -9,8 +9,8 @@ from logging.config import dictConfig
 from typing import Dict
 
 import requests
-from twisted.web.server import date_time_string
 from yt_dlp import YoutubeDL
+from yt_dlp.utils import DateRange
 
 from .util.log_config import LogConfig
 from .util.utility import format_raw_content, post_message, hash_str_to_int, get_as_base64, FutureResult, FileData
