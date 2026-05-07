@@ -394,15 +394,12 @@ do_build() {
 # --- doctor command ---
 
 do_doctor() {
-    local os
-    os="$(uname -s)"
     local any_fail=false
 
     _check_tool() {
         local label="$1" cmd="$2" min_ver="$3" detected_ver="$4"
         if [ -z "$detected_ver" ]; then
             printf '  %-22s %s\n' "$label" "MISSING"
-            _install_hint "$label" "$os"
             any_fail=true
         else
             local major minor
@@ -410,47 +407,11 @@ do_doctor() {
             if [ -n "$min_ver" ] && [ "${major:-0}" -lt "$min_ver" ] 2>/dev/null; then
                 printf '  %-22s %s  (found %s, need >= %s)\n' \
                     "$label" "WRONG_VERSION" "$detected_ver" "$min_ver"
-                _install_hint "$label" "$os"
                 any_fail=true
             else
                 printf '  %-22s %s  (%s)\n' "$label" "OK" "$detected_ver"
             fi
         fi
-    }
-
-    _install_hint() {
-        local label="$1" os="$2"
-        case "$label" in
-            java)
-                case "$os" in
-                    Darwin) printf '    → brew install openjdk@21  or  sdk install java 21-tem\n' ;;
-                    Linux)  printf '    → sdk install java 21-tem  or  apt install openjdk-21-jdk\n' ;;
-                    *)      printf '    → https://adoptium.net/\n' ;;
-                esac ;;
-            docker)
-                case "$os" in
-                    Darwin) printf '    → https://docs.docker.com/desktop/mac/install/\n' ;;
-                    Linux)  printf '    → https://docs.docker.com/engine/install/\n' ;;
-                    *)      printf '    → https://docs.docker.com/get-docker/\n' ;;
-                esac ;;
-            "docker compose")
-                printf '    → Upgrade Docker Desktop or install the Compose plugin:\n'
-                printf '      https://docs.docker.com/compose/install/\n' ;;
-            node)
-                case "$os" in
-                    Darwin) printf '    → brew install node  or  https://nodejs.org/\n' ;;
-                    Linux)  printf '    → https://nodejs.org/en/download/package-manager\n' ;;
-                    *)      printf '    → https://nodejs.org/\n' ;;
-                esac ;;
-            yarn)
-                printf '    → npm install -g yarn\n' ;;
-            python3)
-                case "$os" in
-                    Darwin) printf '    → brew install python  or  https://www.python.org/\n' ;;
-                    Linux)  printf '    → apt install python3  or  https://www.python.org/\n' ;;
-                    *)      printf '    → https://www.python.org/\n' ;;
-                esac ;;
-        esac
     }
 
     echo "k9.sh — prerequisite check"
@@ -485,7 +446,7 @@ do_doctor() {
 
     echo ""
     if [ "$any_fail" = true ]; then
-        _error "One or more prerequisites are missing or outdated."
+        _error "Install the missing requirements to run k9.sh."
         exit 1
     else
         _ok "All prerequisites satisfied."
