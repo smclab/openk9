@@ -771,16 +771,10 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				lastReceived = true;
 				log.infof("%s received last message", shardingKey);
 
-				// Advance lastIngestionDate using the parsingDate carried by
-				// the LAST payload only for regular triggers that received
-				// no documents, so the next scheduling starts from this
-				// date and does not reprocess the same empty window. For
-				// reindex schedulings the date is left null on purpose, so
-				// that EvaluateStatus marks the scheduling as CANCELLED and
-				// UpdateDatasource does not swap the DataIndex. For regular
-				// triggers that already processed at least one document the
-				// local lastIngestionDate is non-null and the LAST payload's
-				// date is ignored — the last document's date wins.
+				// Advance lastIngestionDate using the LAST payload
+				// only for regular triggers that received no documents,
+				// so the next scheduling starts from this
+				// date and does not reprocess the same empty window.
 				if (!scheduler.isReindex() && lastIngestionDate == null) {
 					OffsetDateTime parsingDate =
 						OffsetDateTime.ofInstant(
