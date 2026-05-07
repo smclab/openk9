@@ -343,21 +343,27 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             ;;
         web-connector)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
         minio-connector)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             ;;
         rag-module)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             ;;
         embedding-module)
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
         talk-to)
