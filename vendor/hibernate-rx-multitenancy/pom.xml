@@ -35,4 +35,23 @@
         <module>runtime</module>
     </modules>
 
+    <properties>
+        <netty.groupd-id>io.netty</netty.groupd-id>
+        <netty.artifact-id>netty-bom</netty.artifact-id>
+        <netty.version>4.1.132.Final</netty.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${netty.groupd-id}</groupId>
+                <artifactId>${netty.artifact-id}</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
 </project>
