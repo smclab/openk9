@@ -1,14 +1,13 @@
-###################### OPENK9-CHATBOT PIPELINE ######################
+###################### OPENK9-CHATBOT CHILD PIPELINE — RELEASE BRANCH ######################
+# The npm library is published only from main. On 3.0.x we only verify it compiles
+# on porting-* push and MR — no publish, no release build, no tag handling.
 include:
   - local: "/.gitlab/.gitlab-templates.yaml"
-  # NEW: Include standardized child rules
   - local: '/.gitlab/ci/child-rules.yaml'
 
 stages:
 - build
 - build-verifier
-- dependency-check
-- publish
 
 #################
 # Fetch Version #
@@ -25,11 +24,11 @@ Fetch version:
     - version.env
     expire_in: 1 day
   rules:
-    # Always run if triggered
-    - !reference [.rules:child-build-always, rules]
+    - !reference [.rules:child-verify-release-mr, rules]
+    - !reference [.rules:child-verify-porting-push, rules]
 
-######################## BUILD VERIFIER ########################
-Build Verifier:
+######################## BUILD VERIFIER (yarn install + build) ########################
+Build Verifier OpenK9-Chatbot:
   stage: build-verifier
   image: node:22.14.0
   cache:
@@ -50,61 +49,12 @@ Build Verifier:
     expire_in: 1 day
   script:
   - cd js-packages/openk9-chatbot
-  # Set Node memory limit to 8GB to prevent OOM
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  # Yarn configuration for resilience (standalone module)
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder ../../.yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
-  - yarn build
-  rules:
-    # Run only on MR
-    - !reference [.rules:child-verify-mr, rules]
-
-####################### PUBLISH OPENK9-CHATBOT #######################
-Publish OpenK9-Chatbot:
-  stage: publish
-  image: node:22.14.0
-  cache:
-    key:
-      prefix: "openk9-chatbot"
-      files:
-        - yarn.lock
-    paths:
-    - js-packages/openk9-chatbot/node_modules
-    - .yarn-cache
-    policy: pull-push
-  needs:
-  - job: Fetch version
-    artifacts: true
-  script:
-  - cd js-packages/openk9-chatbot
   - export NODE_OPTIONS="--max-old-space-size=8192"
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder ../../.yarn-cache
   - yarn install --prefer-offline --frozen-lockfile
   - yarn build
-  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
-  - npm publish --access public
   rules:
-    # Run only on Main
-    - !reference [.rules:child-publish, rules]
-
-####################### DEPENDENCY CHECK #######################
-Dependency Check OpenK9-Chatbot:
-  stage: dependency-check
-  needs:
-  - job: Fetch version
-  - job: Build Verifier
-    optional: true
-  extends: .dependency_check_frontend_template
-  allow_failure: true
-  variables:
-    DS_PROJECT_DIR: "js-packages/openk9-chatbot"
-  script:
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - /analyzer run
-  # No explicit rules: inherits .dependency_check_frontend_template rules (MR + main/tag)
+    - !reference [.rules:child-verify-release-mr, rules]
+    - !reference [.rules:child-verify-porting-push, rules]

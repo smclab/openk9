@@ -1,35 +1,27 @@
 # ================================
-# Backend Modules Triggers
+# Backend Modules Triggers — RELEASE BRANCH (3.0.x)
 # ================================
-# NOTE: YAML Anchors (&name) are used to define change lists once,
-# and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# Each trigger has three feature-branch rules:
+# Each trigger fires only on the four release-branch contexts:
 #
-#   1. "designated" rule:
-#      Fires only for backend-designated users (mirko.zizzari, michele.bastianelli).
-#      Runs the full pipeline: build + push image + restart deployment.
-#      USER_TYPE: "designated"
+#   1. push 3.0.x          → Build Release + Restart Release (k9-stable-2)
+#   2. tag 3.0.N           → Build Release + Skopeo to Docker Hub
+#   3. push porting-*      → Build Verifier (compile only)         [PORTING_PUSH=true]
+#   4. MR porting- → 3.0.x → Build Verifier (compile only, 1 only) [RELEASE_MR=true]
 #
-#   2. "generic" rule:
-#      Fires for any user who is NOT a designated user of any domain
-#      (i.e. not backend, frontend, or AI designated).
-#      Runs build/compile only — no push, no restart. Useful to catch
-#      compilation errors on branches touched by non-owner developers.
-#      USER_TYPE: "generic"
+# Cross-domain users (frontend: lorenzo/giorgio, AI: luca) are excluded from
+# porting-* rules (push and MR) — they are not responsible for backend changes,
+# their pushes/MRs do not trigger this domain.
 #
-#   3. Designated users of OTHER domains (frontend: lorenzo/giorgio, AI: luca)
-#      are excluded from both rules above — their pipelines do NOT trigger
-#      on backend changes, since they are not responsible for this domain.
-#
-# MR and main rules do NOT set USER_TYPE (handled by child-rules defaults).
+# YAML Anchors (&name) define change lists once; Aliases (*name) reuse them.
 
 Trigger Datasource:
   stage: trigger
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    # 1. push release branch
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &datasource_changes
         - core/app/datasource/**/*
         - core/service/**/*
@@ -41,21 +33,14 @@ Trigger Datasource:
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *datasource_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
-      changes: *datasource_changes
-      variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
+    # 2. release tag
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    # 3. push porting-*
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *datasource_changes
       variables:
-        USER_TYPE: "generic"
-    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *datasource_changes
-    # RELEASE MR: porting-* verso release branch — compile only
+        PORTING_PUSH: "true"
+    # 4. MR porting-* → release branch
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *datasource_changes
       variables:
@@ -69,7 +54,7 @@ Trigger Searcher:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &searcher_changes
         - core/app/searcher/**/*
         - core/service/**/*
@@ -77,19 +62,11 @@ Trigger Searcher:
         - core/client/common/**/*
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *searcher_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *searcher_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *searcher_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *searcher_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *searcher_changes
       variables:
@@ -103,24 +80,16 @@ Trigger Ingestion:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &ingestion_changes
         - core/app/ingestion/**/*
         - core/common/util/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *ingestion_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *ingestion_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *ingestion_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *ingestion_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *ingestion_changes
       variables:
@@ -134,7 +103,7 @@ Trigger K8S-Client:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &k8s_client_changes
         - core/app/k8s-client/**/*
         - core/service/**/*
@@ -144,21 +113,11 @@ Trigger K8S-Client:
         - core/common/util/**/*
         - core/client/common/**/*
         - core/api/tenant-manager-api/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *k8s_client_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *k8s_client_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *k8s_client_changes
-      variables:
-        USER_TYPE: "generic"
-    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *k8s_client_changes
-    # RELEASE MR: porting-* verso release branch — compile only
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *k8s_client_changes
       variables:
@@ -172,24 +131,16 @@ Trigger File-Manager:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &file_manager_changes
         - core/app/file-manager/**/*
         - core/common/resources-common/**/*
         - core/client/grpc/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *file_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *file_manager_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *file_manager_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *file_manager_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *file_manager_changes
       variables:
@@ -203,7 +154,7 @@ Trigger Tenant-Manager:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &tenant_manager_changes
         - core/app/tenant-manager/**/*
         - core/common/graphql-util/**/*
@@ -214,19 +165,11 @@ Trigger Tenant-Manager:
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *tenant_manager_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tenant_manager_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *tenant_manager_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *tenant_manager_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tenant_manager_changes
       variables:
@@ -235,29 +178,20 @@ Trigger Tenant-Manager:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
     strategy: depend
 
-
 Trigger Tika:
   stage: trigger
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &tika_changes
         - core/app/tika/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *tika_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tika_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *tika_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *tika_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tika_changes
       variables:
@@ -271,23 +205,15 @@ Trigger Resources-Validator:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &resources_validator_changes
         - core/app/resources-validator/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *resources_validator_changes
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "mirko.zizzari" || $GITLAB_USER_LOGIN == "michele.bastianelli")'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *resources_validator_changes
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes: *resources_validator_changes
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *resources_validator_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *resources_validator_changes
       variables:

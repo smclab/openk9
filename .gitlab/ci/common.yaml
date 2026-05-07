@@ -1,5 +1,5 @@
 # ================================
-# Common & Helm Triggers
+# Common & Helm Triggers — RELEASE BRANCH (3.0.x)
 # ================================
 
 # CONNECTORS (Docker Build)
@@ -8,19 +8,16 @@ Trigger Connectors Build:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - connectors/**/*
-        - .gitlab/.gitlab-ci-connectors.yaml
-    - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        - connectors/**/*
-    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - connectors/**/*
-    # RELEASE MR: porting-* verso release branch — build verifier only
+        - .gitlab/.gitlab-ci-connectors.yaml
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/'
+      changes:
+        - connectors/**/*
+      variables:
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - connectors/**/*
@@ -31,10 +28,12 @@ Trigger Connectors Build:
     strategy: depend
 
 # ================================
-# Helm Charts Triggers
+# Helm Charts Triggers — RELEASE BRANCH only
 # ================================
-# Consolidating triggers based on Helm Chart Pipeline files structure.
-# Each trigger points to a specific group file in .gitlab/helm-charts-pipeline/
+# Helm charts on the release line are validated/published only on:
+#   - push 3.0.x      (publish chart with branch SNAPSHOT version)
+#   - tag 3.0.N       (publish chart with release version)
+#   - MR porting-*    (validate chart, no publish)
 
 # 1. Base Core (Ingestion, Datasource, Searcher, etc.)
 Trigger Helm Base Core:
@@ -42,13 +41,10 @@ Trigger Helm Base Core:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/01-base-core/**/*
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/01-base-core/**/*
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/01-base-core/**/*
@@ -64,13 +60,10 @@ Trigger Helm File Handling:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/02-file-handling/**/*
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/02-file-handling/**/*
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/02-file-handling/**/*
@@ -86,13 +79,10 @@ Trigger Helm Gen AI:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/03-gen-ai/**/*
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/03-gen-ai/**/*
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/03-gen-ai/**/*
@@ -108,13 +98,10 @@ Trigger Helm Connectors:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/05-connectors/**/*
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/05-connectors/**/*
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/05-connectors/**/*
@@ -130,13 +117,10 @@ Trigger Helm Utilities:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      changes:
-        - helm-charts/06-utilities/**/*
-    - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/06-utilities/**/*
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
         - helm-charts/06-utilities/**/*
@@ -145,4 +129,3 @@ Trigger Helm Utilities:
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
     strategy: depend
-

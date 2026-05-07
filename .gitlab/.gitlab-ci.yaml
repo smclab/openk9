@@ -1,29 +1,22 @@
 #############################################
-#            GITLAB CI PIPELINE             #
-#        Refactored / Modularized           #
+#       GITLAB CI PIPELINE — RELEASE         #
+#       Branch: 3.0.x  (release line)        #
 #############################################
 
 stages:
   - trigger
+  - fetch
   - build
-  - restart
-  - quality
-  - container-scanning
-  - dependency-check
   - build-verifier
-  - publish
+  - restart
   - push
-
-
 
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
-  
-  # 2. Domain-Specific Trigger Files
+
+  # Domain-specific trigger files (parents only — children are pulled in via `include`
+  # inside each trigger job).
   - local: '/.gitlab/ci/backend.yaml'
   - local: '/.gitlab/ci/frontend.yaml'
   - local: '/.gitlab/ci/ai.yaml'
   - local: '/.gitlab/ci/common.yaml'
-  
-  # 3. Global Quality & Security Checks
-  - local: '/.gitlab/ci/quality.yaml'

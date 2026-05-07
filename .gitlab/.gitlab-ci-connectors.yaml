@@ -1,4 +1,4 @@
-######################### CONNECTORS PIPELINE #########################
+######################### CONNECTORS CHILD PIPELINE — RELEASE BRANCH #########################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/ci/child-rules.yaml'
@@ -6,17 +6,23 @@ include:
 stages:
 - fetch
 - build
-- container-scanning
 - build-verifier
+- push
+
+variables:
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
 
 #################
 # Fetch Config  #
 #################
+# OPENK9_VERSION is read from python_modules_config.txt (e.g. 3.0.3-SNAPSHOT) —
+# the same source used by AI modules. On tag pipelines we use $CI_COMMIT_TAG
+# instead, so this is only consumed on branch builds.
 Fetch config:
   stage: fetch
   image: alpine:3.19
   script:
-  - VERSION=$(grep -m1 '<version>' core/pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/')
+  - VERSION=$(grep '^OPENK9_VERSION=' python_modules_config.txt | cut -d '=' -f2)
   - echo "VERSION=$VERSION"
   - echo "VERSION=$VERSION" > "$CI_PROJECT_DIR/config.env"
   artifacts:
@@ -26,743 +32,233 @@ Fetch config:
   rules:
   - !reference [.rules:child-build-always, rules]
 
-###############################################################
-#                   BUILD WEB CONNECTOR                       #
-###############################################################
-Build Web Connector image:
+# ──────────────────────────────────────────────────────────────────────────────
+# Hidden anchors — shared body for all connectors
+# ──────────────────────────────────────────────────────────────────────────────
+.connector-build-release: &connector-build-release
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    name: $KANIKO_IMAGE
     entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "web-connector"
   needs:
   - job: Fetch config
     artifacts: true
   script:
   - |
-    echo "=== Building Web Connector (openk9-crawler) ==="
     source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
     echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
     KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector --dockerfile ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$CI_COMMIT_TAG"
+    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector --dockerfile ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector/Dockerfile"
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      IMAGE_TAG="$CI_COMMIT_TAG"
     else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
+      IMAGE_TAG="$VERSION"
     fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/openk9-crawler/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/openk9-crawler/**/*
+    echo "[$IMAGE_NAME] push :$IMAGE_TAG"
+    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
+      --destination "$CI_REGISTRY_NAME/openk9/$IMAGE_NAME:$IMAGE_TAG"
 
-###############################################################
-#                   BUILD EMAIL CONNECTOR                     #
-###############################################################
-Build Email Connector image:
-  stage: build
+.connector-verify: &connector-verify
+  stage: build-verifier
   image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    name: $KANIKO_IMAGE
     entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "email-connector"
   needs:
   - job: Fetch config
     artifacts: true
   script:
   - |
-    echo "=== Building Email Connector ==="
-    source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
     mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
+    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
     > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
     KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/email-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$CI_COMMIT_TAG"
-    else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
-    fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/email-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/email-connector/**/*
+    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector --dockerfile ${CI_PROJECT_DIR}/connectors/${CONNECTOR_DIR}/connector/Dockerfile"
+    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
 
 ###############################################################
-#                  BUILD DATABASE CONNECTOR                   #
-###############################################################
-Build Database Connector image:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "database-connector"
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    echo "=== Building Database Connector ==="
-    source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/database-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$CI_COMMIT_TAG"
-    else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
-    fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/database-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/database-connector/**/*
-
-###############################################################
-#                  BUILD YOUTUBE CONNECTOR                    #
-###############################################################
-Build YouTube Connector image:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "youtube-connector"
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    echo "=== Building YouTube Connector ==="
-    source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/youtube-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$CI_COMMIT_TAG"
-    else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
-    fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/youtube-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/youtube-connector/**/*
-
-###############################################################
-#                  BUILD GITLAB CONNECTOR                     #
-###############################################################
-Build GitLab Connector image:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "gitlab-connector"
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    echo "=== Building GitLab Connector ==="
-    source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$CI_COMMIT_TAG"
-    else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
-    fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/gitlab-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/gitlab-connector/**/*
-
-###############################################################
-#                  BUILD MINIO CONNECTOR                      #
-###############################################################
-Build Minio Connector image:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  variables:
-    DOCKER_CONFIG: "/kaniko/.docker"
-    COMPONENT: "minio-connector"
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    echo "=== Building Minio Connector ==="
-    source $CI_PROJECT_DIR/config.env
-
-    echo "=== Configuring Kaniko ==="
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-
-    echo "=== Building Docker image with Kaniko ==="
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/minio-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/minio-connector/connector/Dockerfile"
-
-    if [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-       { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "MR: build only, no push"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
-    elif [ -n "$CI_COMMIT_TAG" ]; then
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$CI_COMMIT_TAG"
-    else
-      echo "main: push :$VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
-    fi
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/minio-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/minio-connector/**/*
-
-###############################################################
-#               CONTAINER SCANNING WEB CONNECTOR              #
-###############################################################
-Container Scanning Web Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build Web Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/openk9-crawler/**/*
-  - if: '$CI_COMMIT_TAG'
-
-###############################################################
-#               CONTAINER SCANNING EMAIL CONNECTOR            #
-###############################################################
-Container Scanning Email Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build Email Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/email-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-
-###############################################################
-#             CONTAINER SCANNING DATABASE CONNECTOR           #
-###############################################################
-Container Scanning Database Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build Database Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/database-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-
-###############################################################
-#             CONTAINER SCANNING YOUTUBE CONNECTOR            #
-###############################################################
-Container Scanning YouTube Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build YouTube Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/youtube-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-
-###############################################################
-#             CONTAINER SCANNING GITLAB CONNECTOR             #
-###############################################################
-Container Scanning GitLab Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build GitLab Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/gitlab-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-
-###############################################################
-#             CONTAINER SCANNING MINIO CONNECTOR             #
-###############################################################
-Container Scanning Minio Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build Minio Connector image
-    artifacts: false
-  before_script:
-  - source $CI_PROJECT_DIR/config.env
-  - export VERSION=${CI_COMMIT_TAG:-$VERSION}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - connectors/minio-connector/**/*
-  - if: '$CI_COMMIT_TAG'
-
-# --- RELEASE BRANCH JOBS ---
-
-###############################################################
-#              BUILD WEB CONNECTOR RELEASE                    #
+#                       WEB CONNECTOR                         #
 ###############################################################
 Build Web Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector --dockerfile ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[Web Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$CI_COMMIT_TAG"
-    else
-      echo "[Web Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "openk9-crawler"
+    IMAGE_NAME: "openk9-web-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier Web Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector --dockerfile ${CI_PROJECT_DIR}/connectors/openk9-crawler/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier Web Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "openk9-crawler"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
+
+Copy Web Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-web-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Web Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]
 
 ###############################################################
-#              BUILD EMAIL CONNECTOR RELEASE                  #
+#                       EMAIL CONNECTOR                       #
 ###############################################################
 Build Email Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/email-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[Email Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$CI_COMMIT_TAG"
-    else
-      echo "[Email Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "email-connector"
+    IMAGE_NAME: "openk9-email-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier Email Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/email-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/email-connector/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier Email Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "email-connector"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
+
+Copy Email Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-email-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Email Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]
 
 ###############################################################
-#             BUILD DATABASE CONNECTOR RELEASE                #
+#                     DATABASE CONNECTOR                      #
 ###############################################################
 Build Database Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/database-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[Database Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$CI_COMMIT_TAG"
-    else
-      echo "[Database Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "database-connector"
+    IMAGE_NAME: "openk9-database-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier Database Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/database-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/database-connector/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier Database Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "database-connector"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
+
+Copy Database Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-database-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Database Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]
 
 ###############################################################
-#             BUILD YOUTUBE CONNECTOR RELEASE                 #
+#                      YOUTUBE CONNECTOR                      #
 ###############################################################
 Build YouTube Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/youtube-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[YouTube Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$CI_COMMIT_TAG"
-    else
-      echo "[YouTube Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "youtube-connector"
+    IMAGE_NAME: "openk9-youtube-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier YouTube Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/youtube-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/youtube-connector/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier YouTube Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "youtube-connector"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
+
+Copy YouTube Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-youtube-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build YouTube Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]
 
 ###############################################################
-#              BUILD GITLAB CONNECTOR RELEASE                 #
+#                       GITLAB CONNECTOR                      #
 ###############################################################
 Build GitLab Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[GitLab Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$CI_COMMIT_TAG"
-    else
-      echo "[GitLab Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "gitlab-connector"
+    IMAGE_NAME: "openk9-gitlab-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier GitLab Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/gitlab-connector/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier GitLab Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "gitlab-connector"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
+
+Copy GitLab Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-gitlab-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build GitLab Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]
 
 ###############################################################
-#              BUILD MINIO CONNECTOR RELEASE                  #
+#                       MINIO CONNECTOR                       #
 ###############################################################
 Build Minio Connector Release:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    source $CI_PROJECT_DIR/config.env
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"},\"https://index.docker.io/v1/\":{\"auth\":\"$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/minio-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/minio-connector/connector/Dockerfile"
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[Minio Release] Tag: push $CI_COMMIT_TAG"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$CI_COMMIT_TAG"
-    else
-      echo "[Minio Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
-    fi
+  <<: *connector-build-release
+  variables:
+    CONNECTOR_DIR: "minio-connector"
+    IMAGE_NAME: "openk9-minio-connector"
   rules:
-  - !reference [.rules:child-deploy-release, rules]
+  - !reference [.rules:child-build-release, rules]
 
-Build Verifier Minio Connector Release MR:
-  stage: build-verifier
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug
-    entrypoint: [ "" ]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  script:
-  - |
-    mkdir -p /kaniko/.docker
-    echo "{\"auths\":{\"registry.smc.it:49083\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" \
-    > /kaniko/.docker/config.json
-    KANIKO_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CTX="--context ${CI_PROJECT_DIR}/connectors/minio-connector/connector --dockerfile ${CI_PROJECT_DIR}/connectors/minio-connector/connector/Dockerfile"
-    /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
+Build Verifier Minio Connector:
+  <<: *connector-verify
+  variables:
+    CONNECTOR_DIR: "minio-connector"
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
+  - !reference [.rules:child-verify-porting-push, rules]
 
+Copy Minio Connector to DockerHub:
+  extends: .skopeo-copy-to-dockerhub
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Minio Connector Release
+    artifacts: false
+  rules:
+  - !reference [.rules:child-skopeo-release, rules]

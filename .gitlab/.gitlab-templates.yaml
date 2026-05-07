@@ -1,25 +1,26 @@
-# Generic build template used by each component (datasource, ingestion, etc.)
+# =================================================================================
+# Templates for the RELEASE BRANCH (3.0.x) pipeline.
+# Only release-flavoured templates live here; legacy main/feature/MR templates are
+# on the `main` branch.
+# =================================================================================
 
-# ========================================
-# GLOBAL VARIABLES
-# ========================================
+# Image used by the AI Container Scanning template — kept here for completeness even
+# if container-scanning is currently disabled on this branch.
 variables:
   CS_ANALYZER_IMAGE: "registry.gitlab.com/security-products/container-scanning:8"
 
-  
+# ========================================
+# TEMPLATE: .build_template
+# ========================================
+# Base image + Maven cache + artifacts shared by every backend Maven build.
 .build_template:
-  #image: eclipse-temurin:21-jdk
   image: maven:3.9.6-eclipse-temurin-21
   variables:
-    TEST_NAME: "local/test"
-    DOCKER_HOST: "tcp://localhost:2375"
-    DOCKER_TLS_CERTDIR: ""
     MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress -DskipTests -Dquarkus.devservices.enabled=false"
     MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   cache:
-    # Shared Maven cache across all backend components.
-    # Using a single key avoids replicating the same dependencies N times on the runner.
-    # pull-push on main/feature branch builds; MR and verifier jobs override to pull-only.
+    # Shared Maven cache across all backend components; pull-push so that
+    # release-branch builds populate it for every job in the same pipeline.
     key: "shared-mvn"
     paths:
     - $CI_PROJECT_DIR/.m2/repository
@@ -30,304 +31,61 @@ variables:
     expire_in: 2 days
 
 # ========================================
-# TEMPLATE: .maven-build-logic (NEW)
+# TEMPLATE: .maven-build-logic-release
 # ========================================
-# Standardized Maven build script for all Backend components.
-# Usage in child pipeline:
-# script:
-#   - cd core (optional if path is correct)
-#   - !reference [.maven-build-logic, script]
+# Maven build for release branch (3.0.x) and release tags (3.0.N).
 #
-# Requires variable: $COMPONENT (e.g. "datasource")
-
-.maven-build-logic:
+#   push 3.0.x  → tag image with VERSION read from pom (e.g. 3.0.3-SNAPSHOT)
+#   tag 3.0.N   → tag image with $CI_COMMIT_TAG          (e.g. 3.0.1)
+#
+# .version artifact mirrors the pushed tag so downstream jobs (Restart, Skopeo)
+# can resolve it without re-checking branch/tag context.
+.maven-build-logic-release:
   script:
   - |
-    echo "🏗️ Starting Standard Maven Build for: $COMPONENT"
-    
-    # 1. Extract Version
-    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    echo "VERSION=$VERSION"
-    echo "$VERSION" > $CI_PROJECT_DIR/.version
-    
-    # 2. Determine Build Command and Tags
-    BASE_CMD="mvn $MAVEN_CLI_OPTS package -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am"
-    
-    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
-      # ✅ Main/Tag: Official Build & Push
-      echo "🚀 Build type: OFFICIAL (Main/Tag)"
-      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true"
-      
-    # Identificazione di una Merge Request (MR):
-    # 1. CI_MERGE_REQUEST_IID: Se esiste, siamo sicuramente in una MR
-    # 2. CI_PIPELINE_SOURCE == "merge_request_event": Trigger da webhook MR
-    # 3. parent_pipeline && no branch && no tag: Identifica l'esecuzione di una child pipeline
-    #    scatenata durante una MR (GitLab non formatta bene Branch/Tag nelle MR delle Downstream e passano nudi)
-    elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" || ("$CI_PIPELINE_SOURCE" == "parent_pipeline" && -z "$CI_COMMIT_BRANCH" && -z "$CI_COMMIT_TAG") ]]; then
-      # 🧪 MR: Build Only (No Push)
-      echo "🧪 Build type: TEST (Merge Request)"
-      FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=false -Dquarkus.container-image.push=false"
-      
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # 🌿 Feature: designated → build + push; generic → build only (no push)
-      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        TAG="998-SNAPSHOT"
-        echo "👤 User: Michele ($TAG)"
-        echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
-        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
-      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
-        TAG="999-SNAPSHOT"
-        echo "👤 User: Mirko ($TAG)"
-        echo "🌿 Build type: FEATURE SNAPSHOT ($TAG)"
-        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=true -Dquarkus.container-image.tag=$TAG"
-      else
-        echo "👤 User: Generic — build only, no push"
-        FINAL_CMD="$BASE_CMD -Dquarkus.container-image.build=true -Dquarkus.container-image.push=false"
-      fi
-    else
-      echo "⚠️ Unknown branch type, skipping build command construction"
-      FINAL_CMD="echo 'Skipping build'"
-    fi
-    
-    # 3. Execute
-    echo "▶️ Executing: $FINAL_CMD"
-    eval "$FINAL_CMD"
+    echo "Release build for: $COMPONENT"
 
+    POM_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    if [[ -n "$CI_COMMIT_TAG" ]]; then
+      IMAGE_TAG="$CI_COMMIT_TAG"
+      echo "Tag release: push $IMAGE_TAG"
+    else
+      IMAGE_TAG="$POM_VERSION"
+      echo "Release branch: push $IMAGE_TAG"
+    fi
+
+    echo "$IMAGE_TAG" > $CI_PROJECT_DIR/.version
+
+    eval "mvn $MAVEN_CLI_OPTS package \
+      -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository \
+      -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am \
+      -Dquarkus.container-image.build=true \
+      -Dquarkus.container-image.push=true \
+      -Dquarkus.container-image.tag=$IMAGE_TAG"
 
 # ========================================
 # TEMPLATE: .maven-build-verifier-logic
 # ========================================
-# Lightweight Maven build for MR validation.
-# Does NOT push to registry. Only validates that the code compiles.
-# Used by Build Verifier jobs in backend child pipelines.
-
+# Lightweight Maven build for compile-only verification (release MR / porting push).
+# Does NOT push to registry. Used by Build Verifier <X> Release MR / Porting Push jobs.
 .maven-build-verifier-logic:
   script:
   - |
-    echo "🧪 Starting Build Verifier (MR only) for: $COMPONENT"
-    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout -f core/pom.xml)
-    echo "VERSION=$VERSION"
-    echo "▶️ Compiling only, no image push"
+    echo "Build Verifier (compile only) for: $COMPONENT"
     cd core
     mvn $MAVEN_CLI_OPTS package \
       -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository \
       -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am \
       -Dquarkus.container-image.build=false \
       -Dquarkus.container-image.push=false
-    echo "✅ Build Verifier completed successfully for $COMPONENT"
-
-# ========================================
-# TEMPLATE: .maven-build-logic-release
-# ========================================
-# Build + push logic for release branches (N.N.x) and release tags (N.N.N).
-# Differences vs .maven-build-logic:
-#   - No user-specific logic (no 998/999-SNAPSHOT)
-#   - On release branch: pushes tag "<branch>-SNAPSHOT" (e.g. "3.0.x-SNAPSHOT")
-#   - On release tag: pushes the exact version from pom
-#   - On MR toward release branch: no push (compile only)
-#
-# Requires variable: $COMPONENT (e.g. "datasource")
-
-.maven-build-logic-release:
-  script:
-  - |
-    echo "Release Build for: $COMPONENT"
-
-    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    echo "VERSION=$VERSION"
-    echo "$VERSION" > $CI_PROJECT_DIR/.version
-
-    BASE_CMD="mvn $MAVEN_CLI_OPTS package \
-      -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository \
-      -pl ../vendor/hibernate-rx-multitenancy/deployment,app/$COMPONENT -am"
-
-    if [[ -n "$CI_COMMIT_TAG" ]]; then
-      echo "Tag release: push $VERSION"
-      eval "$BASE_CMD \
-        -Dquarkus.container-image.build=true \
-        -Dquarkus.container-image.push=true"
-
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
-      SNAP_TAG="${VERSION}"
-      echo "Release branch: push $SNAP_TAG"
-      eval "$BASE_CMD \
-        -Dquarkus.container-image.build=true \
-        -Dquarkus.container-image.push=true \
-        -Dquarkus.container-image.tag=$SNAP_TAG"
-
-    else
-      echo "Release MR: compile only, no push"
-      eval "$BASE_CMD \
-        -Dquarkus.container-image.build=false \
-        -Dquarkus.container-image.push=false"
-    fi
+    echo "Build Verifier completed for $COMPONENT"
 
 # ========================================
 # TEMPLATE: .maven-verifier-template
 # ========================================
-# Reusable verifier job for backend components on MR.
-# Extends .build_template but overrides cache to pull-only:
-# - MR jobs must NOT write to the shared Maven cache
-# - Only main/feature branch builds populate the cache (pull-push)
-# Usage in child pipelines:
-#   Build Verifier Datasource:
-#     extends: .maven-verifier-template
-#     stage: build-verifier
-#     variables:
-#       COMPONENT: "datasource"
-#     rules:
-#       - !reference [.rules:child-verify-mr, rules]
-
+# Verifier job for release MR + porting push. Pull-only cache: must NOT
+# overwrite the shared Maven cache with unreviewed code.
 .maven-verifier-template:
-  extends: .build_template
-  cache:
-    key: "shared-mvn"
-    paths:
-    - $CI_PROJECT_DIR/.m2/repository
-    policy: pull  # MR: read-only - avoids overwriting shared cache with unreviewed code
-  script:
-  - !reference [.maven-build-verifier-logic, script]
-
-
-# ========================================
-# TEMPLATE: .springboot-build-logic
-# ========================================
-# Build + push logic for Spring Boot components that use JIB directly.
-# API Gateway is Spring Boot (NOT Quarkus), so it cannot use
-# -Dquarkus.container-image.push flags — JIB is invoked as a separate step.
-#
-# Requires variables in the child pipeline job:
-#   COMPONENT:      short name, e.g. "api-gateway"
-#   REGISTRY_IMAGE: full image path, e.g. "$CI_REGISTRY_NAME/openk9/openk9-api-gateway"
-#
-# Branch behaviour:
-#   main / tag  -> mvn install + jib:build (versioned image)
-#   feature     -> designated: mvn install + jib:build (998/999-SNAPSHOT); generic: mvn install only (no push)
-#   MR          -> mvn install only (compile check, no push)
-
-.springboot-build-logic:
-  script:
-  - |
-    echo "Starting Spring Boot / JIB Build for: $COMPONENT"
-
-    cd core
-    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    echo "VERSION=$VERSION"
-    echo "$VERSION" > $CI_PROJECT_DIR/.version
-
-    BASE_INSTALL="mvn $MAVEN_CLI_OPTS clean install -am -pl app/$COMPONENT -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-
-    if [[ "$CI_COMMIT_BRANCH" == "main" || -n "$CI_COMMIT_TAG" ]]; then
-      echo "Build type: OFFICIAL (Main/Tag) — tag: $VERSION"
-      eval "$BASE_INSTALL"
-      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-        -Djib.to.image="$REGISTRY_IMAGE:$VERSION" \
-        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-
-    # Identificazione di una Merge Request (MR):
-    # 1. CI_MERGE_REQUEST_IID: Presenza di un ID di Merge Request
-    # 2. CI_PIPELINE_SOURCE == "merge_request_event": Evento diretto di pipeline GitLab su MR
-    # 3. parent_pipeline && no branch && no tag: Condizione fondamentale per intercettare l'evento di MR 
-    #    dall'interno di una Child Pipeline (dove le macro del branch spariscono nei context di Merge Request).
-    elif [[ -n "$CI_MERGE_REQUEST_IID" || "$CI_PIPELINE_SOURCE" == "merge_request_event" || \
-            ("$CI_PIPELINE_SOURCE" == "parent_pipeline" && -z "$CI_COMMIT_BRANCH" && -z "$CI_COMMIT_TAG") ]]; then
-      echo "Build type: TEST (Merge Request) — compile only, no push"
-      eval "$BASE_INSTALL"
-
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+-.*$ ]]; then
-      # Feature: designated → build + push; generic → compile only (no push)
-      if [[ "$GITLAB_USER_LOGIN" == "michele.bastianelli" ]]; then
-        TAG="998-SNAPSHOT"
-        echo "User: Michele ($TAG)"
-        echo "Build type: FEATURE SNAPSHOT ($TAG)"
-        eval "$BASE_INSTALL"
-        mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-          -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
-          -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-          -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-          -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-      elif [[ "$GITLAB_USER_LOGIN" == "mirko.zizzari" ]]; then
-        TAG="999-SNAPSHOT"
-        echo "User: Mirko ($TAG)"
-        echo "Build type: FEATURE SNAPSHOT ($TAG)"
-        eval "$BASE_INSTALL"
-        mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-          -Djib.to.image="$REGISTRY_IMAGE:$TAG" \
-          -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-          -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-          -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-      else
-        echo "User: Generic — compile only, no push"
-        eval "$BASE_INSTALL"
-      fi
-    else
-      echo "Unknown branch type — compile only"
-      eval "$BASE_INSTALL"
-    fi
-
-# ========================================
-# TEMPLATE: .springboot-build-logic-release
-# ========================================
-# Build + push logic for Spring Boot / JIB components on release branches.
-# Analogous to .maven-build-logic-release but uses JIB instead of Quarkus flags.
-#
-# Requires variables: $COMPONENT, $REGISTRY_IMAGE
-
-.springboot-build-logic-release:
-  script:
-  - |
-    echo "Release Spring Boot Build for: $COMPONENT"
-
-    cd core
-    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-    echo "VERSION=$VERSION"
-    echo "$VERSION" > $CI_PROJECT_DIR/.version
-
-    BASE_INSTALL="mvn $MAVEN_CLI_OPTS clean install -am -pl app/$COMPONENT -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-
-    if [[ -n "$CI_COMMIT_TAG" ]]; then
-      echo "Tag release: push $VERSION"
-      eval "$BASE_INSTALL"
-      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-        -Djib.to.image="$REGISTRY_IMAGE:$VERSION" \
-        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-
-    elif [[ "$CI_COMMIT_BRANCH" =~ ^[0-9]+\.[0-9]+\.x$ ]]; then
-      SNAP_TAG="${VERSION}"
-      echo "Release branch: push $SNAP_TAG"
-      eval "$BASE_INSTALL"
-      mvn jib:build -f app/$COMPONENT/pom.xml -DskipTests \
-        -Djib.to.image="$REGISTRY_IMAGE:$SNAP_TAG" \
-        -Djib.to.auth.username="$CI_REGISTRY_USERNAME" \
-        -Djib.to.auth.password="$CI_REGISTRY_PASSWORD" \
-        -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-
-    else
-      echo "Release MR: compile only, no push"
-      eval "$BASE_INSTALL"
-    fi
-
-# ========================================
-# TEMPLATE: .springboot-verifier-logic
-# ========================================
-.springboot-verifier-logic:
-  script:
-  - |
-    echo "Starting Spring Boot Build Verifier (MR only) for: $COMPONENT"
-    cd core
-    mvn $MAVEN_CLI_OPTS clean install -am -pl app/$COMPONENT \
-      -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
-    echo "Build Verifier completed for $COMPONENT"
-
-# ========================================
-# TEMPLATE: .springboot-verifier-template
-# ========================================
-# pull-only cache: MR jobs must NOT write to the shared Maven cache.
-.springboot-verifier-template:
   extends: .build_template
   cache:
     key: "shared-mvn"
@@ -335,275 +93,105 @@ variables:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull
   script:
-  - !reference [.springboot-verifier-logic, script]
-
-.container-scanning-template:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  variables:
-    CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
-    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
-    GIT_STRATEGY: fetch
-  allow_failure: true
-  artifacts:
-    reports:
-      container_scanning: gl-container-scanning-report.json
-      cyclonedx: "**/gl-sbom-*.cdx.json"
-    paths: [ gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json" ]
-  #dependencies: [$DEPENDS_ON]
-  before_script:
-  - export VERSION=$(cat $CI_PROJECT_DIR/.version)
-  - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
-  - echo "Using version $VERSION"
-  script:
-  - gtcs scan
-
-.dependency_check_frontend_template:
-  image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
-  variables:
-    TOOL: yarn
-  artifacts:
-    reports:
-      dependency_scanning: gl-dependency-scanning-report.json
-    paths:
-    - gl-dependency-scanning-report.json
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/**/*
-  - if: '$CI_COMMIT_TAG'
-    changes:
-    - js-packages/**/*
+  - !reference [.maven-build-verifier-logic, script]
 
 # ========================================
-# TEMPLATE: .restart_job_template (UPDATED)
+# TEMPLATE: .restart_job_template
 # ========================================
-# This template manages the restart of ArgoCD pods based on the pipeline context:
+# Triggers the external restart pipeline. The release branch only restarts the
+# TARGET_ENV (k9-stable-2) — tags do NOT auto-restart (production deploy is
+# handled manually by ops/ArgoCD).
 #
-# ▶️ 1. ON "main" BRANCH OR TAG:
-#    - Dynamically retrieves the IMAGE_TAG value based on component type:
-#        - frontend  ➝ from version.env (VERSION=...)
-#        - backend   ➝ from .version (containing only the version number)
-#        - ai        ➝ from config.env (VERSION=...)
-#    - If no file is found, fallback to "dev-SNAPSHOT"
-#
-#    - Executes restart in these namespaces (UPDATED LOGIC):
-#        - backend       ➝ k9-backend, k9-backend01, k9-test
-#        - backend-oracle ➝ k9-backend-oracle
-#        - ai            ➝ k9-ai
-#        - frontend      ➝ k9-frontend
-#        - test          ➝ k9-test
-#
-# ▶️ 2. ON FEATURE BRANCH (e.g. 123-new-feature):
-#    - The restart happens based on COMPONENT_TYPE and passes GITLAB_USER_LOGIN
-#      to let the target pipeline determine the correct namespace:
-#        - Passes COMPONENT_TYPE and GITLAB_USER_LOGIN to target pipeline
-#        - Target pipeline determines namespace based on user + component type
-#        - Uses appropriate SNAPSHOT tags per component type
-#
-# ▶️ 3. ON RELEASE BRANCH (e.g. 3.0.x) or RELEASE TAG (e.g. 3.0.2):
-#    - IMAGE_TAG is read from the version file (same as main/tag logic)
-#    - TARGET_ENV must be set by the calling job (e.g. TARGET_ENV: "k9-stable-2")
-#    - TARGET_ENV is passed to the external pipeline, which uses it as the target namespace
-#
-# ▶️ 4. OTHER BRANCHES:
-#    - No action performed
-#
-# NOTE:
-# - This template triggers the target pipeline with the necessary parameters
-# - The target pipeline (.gitlab-ci.yml) handles the actual ArgoCD restart logic
-# - User-based namespace determination is handled by the target pipeline
-
+# IMAGE_TAG is read from .version (backend), config.env (AI) or version.env (frontend).
+# Required variables in each calling job:
+#   COMPONENT_NAME — short name (e.g. "datasource")
+#   COMPONENT_TYPE — "backend", "ai", "frontend"
+#   TARGET_ENV     — release namespace (e.g. "k9-stable-2")
 .restart_job_template:
   stage: restart
   image: alpine:3.16
   script:
   - apk add --no-cache bash curl
   - echo "CI_COMMIT_BRANCH=$CI_COMMIT_BRANCH"
-  - echo "GITLAB_USER_LOGIN=$GITLAB_USER_LOGIN"
   - echo "COMPONENT_NAME=$COMPONENT_NAME"
   - echo "COMPONENT_TYPE=$COMPONENT_TYPE"
+  - echo "TARGET_ENV=$TARGET_ENV"
   - |
     bash -c '
-    if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
-      echo "🔁 Merge on main or tag: calculating IMAGE_TAG for $COMPONENT_NAME"
-
-      # 🔁 Dynamically retrieve IMAGE_TAG based on component type
-      if [ "$COMPONENT_TYPE" = "frontend" ] && [ -f "$CI_PROJECT_DIR/version.env" ]; then
-        source "$CI_PROJECT_DIR/version.env"
-        export IMAGE_TAG="$VERSION"
-        echo "✅ Loaded IMAGE_TAG (frontend) from version.env: $IMAGE_TAG"
-
-      elif [ "$COMPONENT_TYPE" = "backend" ] && [ -f "$CI_PROJECT_DIR/.version" ]; then
-        IMAGE_TAG=$(cat "$CI_PROJECT_DIR/.version")
-        echo "✅ Loaded IMAGE_TAG (backend) from .version: $IMAGE_TAG"
-
-      elif [ "$COMPONENT_TYPE" = "ai" ] && [ -f "$CI_PROJECT_DIR/config.env" ]; then
-        source "$CI_PROJECT_DIR/config.env"
-        export IMAGE_TAG="$VERSION"
-        echo "✅ Loaded IMAGE_TAG (ai) from config.env: $IMAGE_TAG"
-
-      else
-        echo "⚠️ No version file found, using fallback"
-        export IMAGE_TAG="dev-SNAPSHOT"
-      fi
-
-      # ✅ SIMPLIFIED LOGIC: Single call to external pipeline
-      # The external pipeline already calculates target namespaces based on COMPONENT_TYPE
-      echo "🔁 Triggering external restart pipeline for component: $COMPONENT_NAME ($COMPONENT_TYPE)"
-      
-      curl -X POST \
-        -F "token=${RESTART_TRIGGER_TOKEN}" \
-        -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-        -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-        -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-        -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-        -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
-        -F "ref=master" \
-        "${RESTART_TRIGGER_URL}"
-
-    elif echo "$CI_COMMIT_BRANCH" | grep -qE "^[0-9]+\.[0-9]+\.x$" || echo "$CI_COMMIT_TAG" | grep -qE "^[0-9]+\.[0-9]+\.[0-9]+"; then
-      # 🔁 Release branch (3.0.x) or release tag (3.0.2): restart in TARGET_ENV
-      echo "🚀 Release branch/tag: calculating IMAGE_TAG for $COMPONENT_NAME"
-
-      if [ "$COMPONENT_TYPE" = "frontend" ] && [ -f "$CI_PROJECT_DIR/version.env" ]; then
-        source "$CI_PROJECT_DIR/version.env"
-        export IMAGE_TAG="$VERSION"
-        echo "✅ Loaded IMAGE_TAG (frontend) from version.env: $IMAGE_TAG"
-
-      elif [ "$COMPONENT_TYPE" = "backend" ] && [ -f "$CI_PROJECT_DIR/.version" ]; then
-        IMAGE_TAG=$(cat "$CI_PROJECT_DIR/.version")
-        echo "✅ Loaded IMAGE_TAG (backend) from .version: $IMAGE_TAG"
-
-      elif [ "$COMPONENT_TYPE" = "ai" ] && [ -f "$CI_PROJECT_DIR/config.env" ]; then
-        source "$CI_PROJECT_DIR/config.env"
-        export IMAGE_TAG="$VERSION"
-        echo "✅ Loaded IMAGE_TAG (ai) from config.env: $IMAGE_TAG"
-
-      else
-        echo "⚠️ No version file found, using fallback"
-        export IMAGE_TAG="dev-SNAPSHOT"
-      fi
-
-      if [ -z "$TARGET_ENV" ]; then
-        echo "⛔ TARGET_ENV is not set — cannot determine release namespace"
-        exit 1
-      fi
-
-      echo "🎯 TARGET_ENV=$TARGET_ENV, IMAGE_TAG=$IMAGE_TAG"
-
-      curl -X POST \
-        -F "token=${RESTART_TRIGGER_TOKEN}" \
-        -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-        -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-        -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-        -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-        -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
-        -F "variables[TARGET_ENV]=$TARGET_ENV" \
-        -F "ref=master" \
-        "${RESTART_TRIGGER_URL}"
-
-    elif echo "$CI_COMMIT_BRANCH" | grep -qE "^[0-9]+-.*$"; then
-      # 🔁 Feature branch: pass user info to target pipeline for namespace determination
-      echo "🌿 Feature branch ➤ component type: $COMPONENT_TYPE, user: $GITLAB_USER_LOGIN"
-
-      # Determine IMAGE_TAG based on component type
-      case "$COMPONENT_TYPE" in
-        "backend")
-          if [ "$GITLAB_USER_LOGIN" = "michele.bastianelli" ]; then
-            IMAGE_TAG="998-SNAPSHOT"
-          else
-            IMAGE_TAG="999-SNAPSHOT"
-          fi
-          ;;
-        "ai")
-          IMAGE_TAG="997-SNAPSHOT"
-          ;;
-        "frontend")
-          IMAGE_TAG="996-SNAPSHOT"
-          ;;
-        "test")
-          IMAGE_TAG="latest"
-          ;;
-        *)
-          IMAGE_TAG="latest"
-          ;;
-      esac
-
-      echo "🔧 Using IMAGE_TAG: $IMAGE_TAG for component type: $COMPONENT_TYPE"
-
-      # Single call - let target pipeline determine namespace based on user + component type
-      curl -X POST \
-        -F "token=${RESTART_TRIGGER_TOKEN}" \
-        -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
-        -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
-        -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
-        -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
-        -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
-        -F "ref=master" \
-        "${RESTART_TRIGGER_URL}"
-
+    if [ "$COMPONENT_TYPE" = "frontend" ] && [ -f "$CI_PROJECT_DIR/version.env" ]; then
+      source "$CI_PROJECT_DIR/version.env"
+      export IMAGE_TAG="$VERSION"
+    elif [ "$COMPONENT_TYPE" = "backend" ] && [ -f "$CI_PROJECT_DIR/.version" ]; then
+      IMAGE_TAG=$(cat "$CI_PROJECT_DIR/.version")
+    elif [ "$COMPONENT_TYPE" = "ai" ] && [ -f "$CI_PROJECT_DIR/config.env" ]; then
+      source "$CI_PROJECT_DIR/config.env"
+      export IMAGE_TAG="$VERSION"
     else
-      echo "⛔ Branch $CI_COMMIT_BRANCH doesn'\''t match any pattern"
+      echo "ERROR: no version file found for COMPONENT_TYPE=$COMPONENT_TYPE"
+      exit 1
     fi
+
+    if [ -z "$TARGET_ENV" ]; then
+      echo "ERROR: TARGET_ENV is not set"
+      exit 1
+    fi
+
+    echo "Triggering restart: COMPONENT_NAME=$COMPONENT_NAME, IMAGE_TAG=$IMAGE_TAG, TARGET_ENV=$TARGET_ENV"
+
+    curl -X POST \
+      -F "token=${RESTART_TRIGGER_TOKEN}" \
+      -F "variables[TRIGGER_JOB]=restart-${COMPONENT_NAME}" \
+      -F "variables[IMAGE_TAG]=$IMAGE_TAG" \
+      -F "variables[COMPONENT_TYPE]=$COMPONENT_TYPE" \
+      -F "variables[CI_COMMIT_BRANCH]=$CI_COMMIT_BRANCH" \
+      -F "variables[GITLAB_USER_LOGIN]=$GITLAB_USER_LOGIN" \
+      -F "variables[TARGET_ENV]=$TARGET_ENV" \
+      -F "ref=master" \
+      "${RESTART_TRIGGER_URL}"
     '
-  rules:
-  # Explicitly block on MR: restart must never run on MR
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    when: never
-  - if: '$CI_MERGE_REQUEST_IID'
-    when: never
-  - if: '$CI_COMMIT_BRANCH == "main"'
-  - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
-  - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
-  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
 
 # ========================================
 # TEMPLATE: .skopeo-copy-to-dockerhub
 # ========================================
-# Runs on Git tag (e.g. 3.0.1, 3.0.2) and on push to release branch (e.g. 3.0.x).
-#
-# Purpose: after the build job pushes the image to the internal registry,
-# this job copies it to Docker Hub (smclab/*) WITHOUT rebuilding.
-# Skopeo does a registry-to-registry copy — no Docker daemon, no checkout needed.
+# Copies the already-built image from the internal registry to Docker Hub.
+# Runs on release tag only (push 3.0.x is not copied to Docker Hub).
 #
 # Source:      $CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:<version>
 # Destination: docker.io/smclab/$REGISTRY_COMPONENT_NAME:<version>
 #
-# Version resolution (via artifacts from the build job):
-#   - Backend modules:  read from .version      (written by maven-build-logic-release)
-#   - AI modules:       read from config.env     (written by Fetch config job)
-#   - Frontend modules: read from version.env    (written by Fetch version job)
+# Version resolution (from build job artifacts):
+#   - Backend modules:  .version    (written by .maven-build-logic-release)
+#   - AI modules:       config.env  (written by Fetch config job — overridden by tag)
+#   - Frontend modules: version.env (written by Fetch version job)
+#
+# On release tag the version on disk may be the branch SNAPSHOT, so we prefer
+# $CI_COMMIT_TAG when present.
 #
 # Required variable in each calling job:
-#   REGISTRY_COMPONENT_NAME: image name on the registry, e.g. "openk9-datasource"
+#   REGISTRY_COMPONENT_NAME — image name on the registry, e.g. "openk9-datasource"
 #
 # CI/CD variables (set in GitLab project settings, masked+protected):
 #   DOCKER_HUB_USER     — Docker Hub username
 #   DOCKER_HUB_PASSWORD — Docker Hub password or access token
-
 .skopeo-copy-to-dockerhub:
   stage: push
   image:
     name: quay.io/skopeo/stable:v1.22.0
     entrypoint: [""]
   variables:
-    # No git checkout needed — we only copy between registries
     GIT_STRATEGY: none
   script:
   - |
-    # Resolve version from artifact file left by the build job:
-    # backend: .version, AI: config.env, frontend: version.env
-    if [ -f "$CI_PROJECT_DIR/.version" ]; then
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      VERSION="$CI_COMMIT_TAG"
+    elif [ -f "$CI_PROJECT_DIR/.version" ]; then
       VERSION=$(cat "$CI_PROJECT_DIR/.version")
     elif [ -f "$CI_PROJECT_DIR/config.env" ]; then
       source "$CI_PROJECT_DIR/config.env"
     elif [ -f "$CI_PROJECT_DIR/version.env" ]; then
       source "$CI_PROJECT_DIR/version.env"
     else
-      echo "ERROR: no .version, config.env or version.env found — cannot determine image version"
+      echo "ERROR: no version source found — cannot determine image version"
       exit 1
     fi
     echo "VERSION=$VERSION"
@@ -616,4 +204,3 @@ variables:
       "$SRC" "$DST"
   rules:
   - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
-  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'

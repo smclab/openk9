@@ -1,4 +1,4 @@
-###################### RESOURCES-VALIDATOR CHILD PIPELINE ######################
+###################### RESOURCES-VALIDATOR CHILD PIPELINE — RELEASE BRANCH ######################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/ci/child-rules.yaml'
@@ -6,59 +6,8 @@ include:
 stages:
 - build
 - build-verifier
-- container-scanning
 - restart
 - push
-
-Build Resources-Validator Image:
-  extends: .build_template
-  variables:
-    COMPONENT: "resources-validator"
-  stage: build
-  script:
-  - cd core
-  - !reference [.maven-build-logic, script]
-  artifacts:
-    paths:
-    - .version
-    expire_in: 24 hours
-  rules:
-    # main/tag: push versione; designated feature: push snapshot; generic feature: build no push
-    - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
-    - !reference [.rules:child-build-feature-generic, rules]
-
-######################## BUILD VERIFIER ########################
-Build Verifier Resources-Validator:
-  extends: .maven-verifier-template
-  stage: build-verifier
-  variables:
-    COMPONENT: "resources-validator"
-  rules:
-    - !reference [.rules:child-verify-mr, rules]
-
-# SCANNING JOB
-Container Scanning Resources-Validator:
-  dependencies: [ Build Resources-Validator Image ]
-  extends: .container-scanning-template
-  variables:
-    REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
-  rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
-
-# RESTART JOB
-Trigger Restart Resources-Validator:
-  extends: .restart_job_template
-  dependencies:
-  - Build Resources-Validator Image
-  variables:
-    COMPONENT_NAME: "resources-validator"
-    COMPONENT_TYPE: "backend"
-  rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
-
-# --- RELEASE BRANCH JOBS ---
 
 Build Resources-Validator Release:
   extends: .build_template
@@ -73,9 +22,9 @@ Build Resources-Validator Release:
     - .version
     expire_in: 24 hours
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-build-release, rules]
 
-Build Verifier Resources-Validator Release MR:
+Build Verifier Resources-Validator:
   extends: .maven-verifier-template
   stage: build-verifier
   variables:
@@ -84,6 +33,7 @@ Build Verifier Resources-Validator Release MR:
   - !reference [.maven-build-verifier-logic, script]
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
+    - !reference [.rules:child-verify-porting-push, rules]
 
 Trigger Restart Resources-Validator Release:
   extends: .restart_job_template
@@ -94,15 +44,14 @@ Trigger Restart Resources-Validator Release:
     COMPONENT_TYPE: "backend"
     TARGET_ENV: "k9-stable-2"
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
-######################## COPY TO DOCKER HUB ########################
-# Runs on release tag or release branch push. Copies the already-built image
-# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
-Copy Resources Validator to DockerHub:
+Copy Resources-Validator to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
   needs:
     - job: Build Resources-Validator Release
-      artifacts: true  # downloads .version file — needed to resolve the image tag
+      artifacts: true
+  rules:
+    - !reference [.rules:child-skopeo-release, rules]

@@ -1,59 +1,33 @@
 # ================================
-# Frontend Modules Triggers
+# Frontend Modules Triggers — RELEASE BRANCH (3.0.x)
 # ================================
-# NOTE: YAML Anchors (&name) are used to define change lists once,
-# and Aliases (*name) are used to reuse them in subsequent rules.
 #
-# Each trigger has three feature-branch rules:
+# Each trigger fires only on the four release-branch contexts:
 #
-#   1. "designated" rule:
-#      Fires only for frontend-designated users (lorenzo.venneri, giorgio.bartolomeo).
-#      Runs the full pipeline: build + push image + restart deployment.
-#      USER_TYPE: "designated"
+#   1. push 3.0.x          → Build Release + Restart Release (k9-stable-2)
+#   2. tag 3.0.N           → Build Release + Skopeo to Docker Hub
+#   3. push porting-*      → Build Verifier (compile only)         [PORTING_PUSH=true]
+#   4. MR porting- → 3.0.x → Build Verifier (compile only, 1 only) [RELEASE_MR=true]
 #
-#   2. "generic" rule:
-#      Fires for any user who is NOT a designated user of any domain
-#      (i.e. not backend, frontend, or AI designated).
-#      Runs build/compile only — no push, no restart. Useful to catch
-#      compilation errors on branches touched by non-owner developers.
-#      USER_TYPE: "generic"
+# Cross-domain users (backend: mirko/michele, AI: luca) are excluded from
+# porting-* rules (push and MR) — frontend pipelines do not run for them.
 #
-#   3. Designated users of OTHER domains (backend: mirko/michele, AI: luca)
-#      are excluded from both rules above — their pipelines do NOT trigger
-#      on frontend changes, since they are not responsible for this domain.
-#
-# MR and main rules do NOT set USER_TYPE (handled by child-rules defaults).
+# OpenK9-Chatbot exception: the npm library is published only from main, so
+# its trigger fires only on porting-* (push/MR) for compile verification.
 
 Trigger Search Frontend:
   stage: trigger
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &search_frontend_changes
         - js-packages/search-frontend/**/*
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *search_frontend_changes
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        paths: *search_frontend_changes
-        compare_to: 'refs/heads/main'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
-      changes:
-        paths: *search_frontend_changes
-        compare_to: 'refs/heads/main'
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes:
-        paths: *search_frontend_changes
-        compare_to: 'refs/heads/main'
-      variables:
-        USER_TYPE: "generic"
-    # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *search_frontend_changes
-    # RELEASE MR: porting-* verso release branch — compile only
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *search_frontend_changes
       variables:
@@ -67,29 +41,14 @@ Trigger Admin Frontend:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &admin_ui_changes
         - js-packages/admin-ui/**/*
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *admin_ui_changes
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        paths: *admin_ui_changes
-        compare_to: 'refs/heads/main'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
-      changes:
-        paths: *admin_ui_changes
-        compare_to: 'refs/heads/main'
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes:
-        paths: *admin_ui_changes
-        compare_to: 'refs/heads/main'
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *admin_ui_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *admin_ui_changes
       variables:
@@ -103,29 +62,14 @@ Trigger Tenant Frontend:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &tenant_ui_changes
         - js-packages/tenant-ui/**/*
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *tenant_ui_changes
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        paths: *tenant_ui_changes
-        compare_to: 'refs/heads/main'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
-      changes:
-        paths: *tenant_ui_changes
-        compare_to: 'refs/heads/main'
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes:
-        paths: *tenant_ui_changes
-        compare_to: 'refs/heads/main'
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *tenant_ui_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *tenant_ui_changes
       variables:
@@ -139,29 +83,14 @@ Trigger Talk-To Frontend:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: &talk_to_changes
         - js-packages/talk-to/**/*
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *talk_to_changes
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        paths: *talk_to_changes
-        compare_to: 'refs/heads/main'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
-      changes:
-        paths: *talk_to_changes
-        compare_to: 'refs/heads/main'
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes:
-        paths: *talk_to_changes
-        compare_to: 'refs/heads/main'
-      variables:
-        USER_TYPE: "generic"
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *talk_to_changes
+        PORTING_PUSH: "true"
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *talk_to_changes
       variables:
@@ -170,32 +99,23 @@ Trigger Talk-To Frontend:
     include: "/.gitlab/.gitlab-ci-talk-to.yaml"
     strategy: depend
 
+# OpenK9-Chatbot: npm library, published only from main.
+# On 3.0.x we run only Build Verifier on porting-* push/MR — no publish, no
+# release build, no tag handling.
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: &chatbot_changes
         - js-packages/openk9-chatbot/**/*
-    - if: '$CI_COMMIT_TAG'
+      variables:
+        PORTING_PUSH: "true"
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "luca.callocchia"'
       changes: *chatbot_changes
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes:
-        paths: *chatbot_changes
-        compare_to: 'refs/heads/main'
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && ($GITLAB_USER_LOGIN == "lorenzo.venneri" || $GITLAB_USER_LOGIN == "giorgio.bartolomeo")'
-      changes:
-        paths: *chatbot_changes
-        compare_to: 'refs/heads/main'
       variables:
-        USER_TYPE: "designated"
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN != "mirko.zizzari" && $GITLAB_USER_LOGIN != "michele.bastianelli" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo" && $GITLAB_USER_LOGIN != "luca.callocchia"'
-      changes:
-        paths: *chatbot_changes
-        compare_to: 'refs/heads/main'
-      variables:
-        USER_TYPE: "generic"
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
     strategy: depend

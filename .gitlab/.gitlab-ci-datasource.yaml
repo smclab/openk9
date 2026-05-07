@@ -1,4 +1,4 @@
-###################### DATASOURCE CHILD PIPELINE ######################
+###################### DATASOURCE CHILD PIPELINE — RELEASE BRANCH ######################
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/ci/child-rules.yaml'
@@ -6,63 +6,11 @@ include:
 stages:
 - build
 - build-verifier
-- container-scanning
 - restart
 - push
 
-Build Datasource image:
-  extends: .build_template
-  variables:
-    COMPONENT: "datasource"
-  stage: build
-  script:
-  - cd core
-  - !reference [.maven-build-logic, script]
-  artifacts:
-    paths:
-    - .version
-    expire_in: 24 hours
-  rules:
-    # main/tag: push versione; designated feature: push snapshot; generic feature: build no push
-    - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
-    - !reference [.rules:child-build-feature-generic, rules]
-
-######################## BUILD VERIFIER ########################
-Build Verifier Datasource:
-  extends: .maven-verifier-template
-  stage: build-verifier
-  variables:
-    COMPONENT: "datasource"
-  script:
-  - !reference [.maven-build-verifier-logic, script]
-  rules:
-    # Run only on MR - lightweight compile check, no push
-    - !reference [.rules:child-verify-mr, rules]
-
-# SCANNING JOB
-Container Scanning Datasource:
-  dependencies: [ Build Datasource image ]
-  extends: .container-scanning-template
-  variables:
-    REGISTRY_COMPONENT_NAME: "openk9-datasource"
-  rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
-
-# RESTART JOB
-Trigger Restart Datasource:
-  extends: .restart_job_template
-  dependencies:
-  - Build Datasource image
-  variables:
-    COMPONENT_NAME: "datasource"
-    COMPONENT_TYPE: "backend"
-  rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
-
-# --- RELEASE BRANCH JOBS ---
-
+# Build + push image to internal registry.
+# Fires on push 3.0.x (SNAPSHOT) and on tag 3.0.N (release version).
 Build Datasource Release:
   extends: .build_template
   variables:
@@ -76,9 +24,10 @@ Build Datasource Release:
     - .version
     expire_in: 24 hours
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-build-release, rules]
 
-Build Verifier Datasource Release MR:
+# Compile check on MR porting-* → 3.0.x and on push porting-* (no push).
+Build Verifier Datasource:
   extends: .maven-verifier-template
   stage: build-verifier
   variables:
@@ -87,7 +36,9 @@ Build Verifier Datasource Release MR:
   - !reference [.maven-build-verifier-logic, script]
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
+    - !reference [.rules:child-verify-porting-push, rules]
 
+# Restart k9-stable-2 — fires on push 3.0.x ONLY (tags do not auto-restart).
 Trigger Restart Datasource Release:
   extends: .restart_job_template
   dependencies:
@@ -97,11 +48,9 @@ Trigger Restart Datasource Release:
     COMPONENT_TYPE: "backend"
     TARGET_ENV: "k9-stable-2"
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
-######################## COPY TO DOCKER HUB ########################
-# Runs on release tag or release branch push. Copies the already-built image
-# to Docker Hub without rebuilding. See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml.
+# Copy image to Docker Hub — fires on tag 3.0.N ONLY.
 Copy Datasource to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
@@ -109,3 +58,5 @@ Copy Datasource to DockerHub:
   needs:
     - job: Build Datasource Release
       artifacts: true  # downloads .version file — needed to resolve the image tag
+  rules:
+    - !reference [.rules:child-skopeo-release, rules]

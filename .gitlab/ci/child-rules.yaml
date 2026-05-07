@@ -1,89 +1,58 @@
-# Standard rules for Child Pipelines
+# Standard rules for Child Pipelines on RELEASE BRANCH (3.0.x).
 # These rules assume the parent pipeline has already decided "IF" to run.
 # These rules decide "WHICH JOBS" to run within the child pipeline.
 #
-# ── HOW USER_TYPE WORKS ────────────────────────────────────────────────────────
+# ── BRANCH MODEL ──────────────────────────────────────────────────────────────
 #
-# USER_TYPE is set by the PARENT trigger job (backend.yaml / frontend.yaml / ai.yaml)
-# and passed down to the child pipeline as a variable. It controls what the child runs:
+# This branch (3.0.x) is the release line. Only four contexts trigger pipelines:
 #
-#   "designated" → set when the pusher is the domain owner (e.g. mirko/michele for backend,
-#                  lorenzo/giorgio for frontend, luca for AI).
-#                  Child runs: build Docker image + push to registry + restart deployment.
+#   A) push 3.0.x       → Build Release + Restart Release (k9-stable-2)
+#   B) tag 3.0.N        → Build Release + Skopeo to Docker Hub (no restart)
+#   C) push porting-*   → Build Verifier (compile only, no push, no restart)
+#   D) MR porting-* → 3.0.x → Build Verifier (compile only, no push, no restart)
 #
-#   "generic"    → set when the pusher is NOT a designated user of ANY domain
-#                  (e.g. mario.rossi touching any module).
-#                  Child runs: build/compile only (no push, no restart).
-#                  Purpose: catch compilation errors early on non-owner branches.
-#
-#   (unset)      → no USER_TYPE means the pipeline was triggered by main, tag, or MR.
-#                  Child runs standard jobs as defined by child-deploy-main-tag / child-verify-mr.
-#
-# NOTE: designated users of OTHER domains are excluded entirely from the parent trigger
-# (e.g. lorenzo modifying backend files → no pipeline starts at all).
-# This avoids useless build-verifier runs for developers not responsible for that domain.
+# Feature branches [0-9]+-... and main builds DO NOT exist on this branch:
+# they live on `main`. Cross-domain users are excluded at the parent level.
 # ──────────────────────────────────────────────────────────────────────────────
 
 .rules:child-build-always:
   rules:
     - when: on_success
 
-.rules:child-deploy-main-tag:
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'  # release tag → handled exclusively by child-deploy-release
-      when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-
-# Restart and full build+push run only for DESIGNATED developers on feature branches
-.rules:child-restart-feature:
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $USER_TYPE == "designated"'
-
-# Build (no push) for GENERIC users on feature branches
-.rules:child-build-feature-generic:
-  rules:
-    - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $USER_TYPE == "generic"'
-
-# Build Verifier runs on Merge Requests only (any user).
-# Generic users on feature branches run the Build job (no push) via child-build-feature-generic —
-# running Build Verifier on top would be redundant since the full Docker build already compiles.
-.rules:child-verify-mr:
-  rules:
-    - if: '$CI_MERGE_REQUEST_IID'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    # In GitLab, parent-child pipelines have CI_PIPELINE_SOURCE="parent_pipeline".
-    # Since predefined MR variables (like CI_MERGE_REQUEST_IID) are NOT passed to children,
-    # we detect an MR child pipeline by the ABSENCE of a branch/tag
-    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
-
-# NOTE: child-publish and child-deploy-main-tag are currently identical.
-# They are kept separate for semantic clarity (npm publish vs Docker deploy)
-# and to allow future divergence (e.g. publish only on main, not on tag).
-.rules:child-publish:
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
-
-# ── RELEASE BRANCH RULES ──────────────────────────────────────────────────────
-#
-# child-deploy-release: fires on push/merge to any release branch (3.0.x, 3.1.x, ...)
-#   or on a release tag (3.0.1, 3.0.2, ...).
-#   Used by: Build Release + Trigger Restart Release jobs.
-#
-# child-verify-release-mr: fires when the parent passes RELEASE_MR="true",
-#   which happens on MR from porting-* toward a release branch.
-#   Used by: Build Verifier Release MR jobs.
-#
-# The regex /^\d+\.\d+\.x$/ matches any future release branch automatically.
-# The regex /^\d+\.\d+\.\d+/ matches any semver release tag.
-# ──────────────────────────────────────────────────────────────────────────────
-
-.rules:child-deploy-release:
+# ── RELEASE BUILD ─────────────────────────────────────────────────────────────
+# Used by: Build <X> Release jobs.
+# Fires on push to release branch (3.0.x) AND on release tag (3.0.N).
+.rules:child-build-release:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
 
+# ── RESTART (release branch only) ─────────────────────────────────────────────
+# Used by: Trigger Restart <X> Release jobs.
+# Fires ONLY on push to release branch (3.0.x). Tag releases do NOT auto-restart;
+# production deploy is handled manually via ArgoCD/ops.
+.rules:child-restart-release:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+
+# ── SKOPEO (Docker Hub copy) ──────────────────────────────────────────────────
+# Used by: Copy <X> to DockerHub jobs.
+# Fires ONLY on release tag (3.0.N). Branch SNAPSHOT builds stay on the internal
+# registry only.
+.rules:child-skopeo-release:
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+
+# ── VERIFY: MR porting-* → 3.0.x ──────────────────────────────────────────────
+# Used by: Build Verifier <X> Release MR jobs.
+# Parent passes RELEASE_MR="true" when the MR target is a release branch.
 .rules:child-verify-release-mr:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $RELEASE_MR == "true"'
+
+# ── VERIFY: push porting-* (no MR) ────────────────────────────────────────────
+# Used by: Build Verifier <X> Porting Push jobs.
+# Parent passes PORTING_PUSH="true" when the branch matches /^porting-/.
+.rules:child-verify-porting-push:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $PORTING_PUSH == "true"'
