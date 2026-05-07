@@ -140,6 +140,7 @@ export const DocTypeFields = gql`
         node {
           id
           name
+          fieldType
         }
       }
       pageInfo {

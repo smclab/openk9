@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState } from "react";
-import { useDocTypeFieldsQuery } from "../../graphql-generated";
+import { FieldType, useDocTypeFieldsQuery } from "../../graphql-generated";
 
 type Option = { value: string; label: string };
 
@@ -23,7 +23,7 @@ export const useDocTypeFieldsOptions = (
   } = useDocTypeFieldsQuery({
     variables: {
       searchText: searchText || undefined,
-      first: 20,
+      first: 50,
       after: null,
     },
     notifyOnNetworkStatusChange: true,
@@ -35,10 +35,12 @@ export const useDocTypeFieldsOptions = (
 
   const options: Option[] = useMemo(() => {
     const edges = data?.docTypeFields?.edges ?? [];
-    return edges.map((item) => ({
-      value: item?.node?.id || "",
-      label: item?.node?.name || "",
-    }));
+    return edges
+      .filter((item) => item?.node?.fieldType === FieldType.Keyword)
+      .map((item) => ({
+        value: item?.node?.id || "",
+        label: item?.node?.name || "",
+      }));
   }, [data]);
 
   const hasNextPageFromServer = Boolean(pageInfo?.hasNextPage && pageInfo?.endCursor);
@@ -53,7 +55,7 @@ export const useDocTypeFieldsOptions = (
     const result = await fetchMore({
       variables: {
         searchText: searchText || undefined,
-        first: 20,
+        first: 50,
         after: pageInfo.endCursor,
       },
     });
