@@ -391,6 +391,173 @@ do_build() {
     fi
 }
 
+# --- doctor command ---
+
+do_doctor() {
+    local os
+    os="$(uname -s)"
+    local any_fail=false
+
+    _check_tool() {
+        local label="$1" cmd="$2" min_ver="$3" detected_ver="$4"
+        if [ -z "$detected_ver" ]; then
+            printf '  %-22s %s\n' "$label" "MISSING"
+            _install_hint "$label" "$os"
+            any_fail=true
+        else
+            local major minor
+            major=$(echo "$detected_ver" | grep -oE '[0-9]+' | head -1)
+            if [ -n "$min_ver" ] && [ "${major:-0}" -lt "$min_ver" ] 2>/dev/null; then
+                printf '  %-22s %s  (found %s, need >= %s)\n' \
+                    "$label" "WRONG_VERSION" "$detected_ver" "$min_ver"
+                _install_hint "$label" "$os"
+                any_fail=true
+            else
+                printf '  %-22s %s  (%s)\n' "$label" "OK" "$detected_ver"
+            fi
+        fi
+    }
+
+    _install_hint() {
+        local label="$1" os="$2"
+        case "$label" in
+            java)
+                case "$os" in
+                    Darwin) printf '    → brew install openjdk@21  or  sdk install java 21-tem\n' ;;
+                    Linux)  printf '    → sdk install java 21-tem  or  apt install openjdk-21-jdk\n' ;;
+                    *)      printf '    → https://adoptium.net/\n' ;;
+                esac ;;
+            mvn)
+                case "$os" in
+                    Darwin) printf '    → brew install maven  or  sdk install maven\n' ;;
+                    Linux)  printf '    → sdk install maven  or  apt install maven\n' ;;
+                    *)      printf '    → https://maven.apache.org/download.cgi\n' ;;
+                esac ;;
+            docker)
+                case "$os" in
+                    Darwin) printf '    → https://docs.docker.com/desktop/mac/install/\n' ;;
+                    Linux)  printf '    → https://docs.docker.com/engine/install/\n' ;;
+                    *)      printf '    → https://docs.docker.com/get-docker/\n' ;;
+                esac ;;
+            "docker compose")
+                printf '    → Upgrade Docker Desktop or install the Compose plugin:\n'
+                printf '      https://docs.docker.com/compose/install/\n' ;;
+            node)
+                case "$os" in
+                    Darwin) printf '    → brew install node  or  https://nodejs.org/\n' ;;
+                    Linux)  printf '    → https://nodejs.org/en/download/package-manager\n' ;;
+                    *)      printf '    → https://nodejs.org/\n' ;;
+                esac ;;
+            yarn)
+                printf '    → npm install -g yarn\n' ;;
+            python3)
+                case "$os" in
+                    Darwin) printf '    → brew install python  or  https://www.python.org/\n' ;;
+                    Linux)  printf '    → apt install python3  or  https://www.python.org/\n' ;;
+                    *)      printf '    → https://www.python.org/\n' ;;
+                esac ;;
+        esac
+    }
+
+    echo "k9.sh — prerequisite check"
+    echo ""
+
+    local java_ver=""
+    java_ver=$(java -version 2>&1 | grep -oE '[0-9]+\.[0-9]+|[0-9]+' | head -1) || true
+    # java -version prints "1.8.x" for Java 8, "11", "17", "21" for modern releases.
+    # Normalise "1.x" → "x" so the major-version comparison works uniformly.
+    case "$java_ver" in 1.*) java_ver="${java_ver#1.}" ;; esac
+    _check_tool "java (>= 21)" "java" "21" "$java_ver"
+
+    local mvn_ver=""
+    if command -v mvn >/dev/null 2>&1; then
+        mvn_ver=$(mvn -v 2>/dev/null | grep -oE 'Apache Maven [0-9.]+' | grep -oE '[0-9.]+' | head -1) || true
+    elif [ -f core/mvnw ]; then
+        mvn_ver="(bundled mvnw)"
+    fi
+    _check_tool "mvn (>= 3.9)" "mvn" "" "$mvn_ver"
+
+    local docker_ver=""
+    docker_ver=$(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9.]+' | head -1) || true
+    _check_tool "docker" "docker" "" "$docker_ver"
+
+    local compose_ver=""
+    compose_ver=$("${DOCKER_COMPOSE_CMD[@]}" version 2>/dev/null | grep -oE '[0-9]+\.[0-9.]+' | head -1) || true
+    _check_tool "docker compose (v2)" "docker compose" "2" "$compose_ver"
+
+    local node_ver=""
+    node_ver=$(node --version 2>/dev/null | grep -oE '[0-9]+' | head -1) || true
+    _check_tool "node (>= 20)" "node" "20" "$node_ver"
+
+    local yarn_ver=""
+    yarn_ver=$(yarn --version 2>/dev/null) || true
+    _check_tool "yarn" "yarn" "" "$yarn_ver"
+
+    local python_ver=""
+    python_ver=$(python3 --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -1) || true
+    _check_tool "python3 (>= 3.10)" "python3" "3" "$python_ver"
+
+    echo ""
+    if [ "$any_fail" = true ]; then
+        _error "One or more prerequisites are missing or outdated."
+        exit 1
+    else
+        _ok "All prerequisites satisfied."
+    fi
+}
+
+# --- push command ---
+
+do_push() {
+    if [ -z "$OPENK9_REGISTRY" ]; then
+        _error "OPENK9_REGISTRY is not set."
+        _info  "Define it in your shell environment or in openk9/.env:"
+        _info  "  OPENK9_REGISTRY=registry.example.com/openk9"
+        exit 1
+    fi
+
+    if [ ${#SERVICES[@]} -eq 0 ]; then
+        _error "No services specified. Usage: ./k9.sh push <service...> [--tag=TAG]"
+        exit 1
+    fi
+
+    local push_failed=false
+    for svc in "${SERVICES[@]}"; do
+        local src_image="smclab/openk9-${svc}:${TAG}"
+        local dst_image="${OPENK9_REGISTRY}/openk9-${svc}:${TAG}"
+
+        # Verify the source image exists locally.
+        if ! docker image inspect "$src_image" >/dev/null 2>&1; then
+            _error "Image not found locally: $src_image"
+            _info  "Build it first: ./k9.sh build $svc --tag=$TAG --platform=amd64"
+            push_failed=true
+            continue
+        fi
+
+        # Refuse to push non-amd64 images; the Kubernetes target is always amd64.
+        local img_arch
+        img_arch=$(docker image inspect --format '{{.Architecture}}' "$src_image" 2>/dev/null) || true
+        if [ "$img_arch" != "amd64" ]; then
+            _error "Image $src_image is $img_arch, not amd64."
+            _info  "Rebuild for the correct platform before pushing:"
+            _info  "  ./k9.sh build $svc --tag=$TAG --platform=amd64"
+            push_failed=true
+            continue
+        fi
+
+        _info "Tagging $src_image → $dst_image"
+        docker tag "$src_image" "$dst_image"
+        _info "Pushing $dst_image"
+        docker push "$dst_image"
+        _ok "$svc pushed."
+    done
+
+    if [ "$push_failed" = true ]; then
+        _error "One or more services failed to push."
+        exit 1
+    fi
+}
+
 # --- Compose helper ---
 
 compose() {
@@ -417,19 +584,23 @@ Commands:
   build   [services...]   Build Docker images from source
   up      [services...]   Start the Docker Compose stack
   stop    [services...]   Stop running containers
-  down    [services...]   Stop and remove containers and volumes
+  down    [services...]   Stop containers (volumes preserved by default)
   restart [services...]   Restart containers
   logs    [services...]   Follow container logs
+  doctor                  Check prerequisites (java, docker, node, ...)
+  push    <services...>   Tag and push images to OPENK9_REGISTRY
 
 Options:
-  -b, --build          Build images before starting/restarting
-  --tag=TAG            Docker image tag (default: local-dev)
-  --with=PROFILE       Enable a compose profile (repeatable)
-  -a, --all            Shorthand for --with all profiles
-  --skip-shared-core   Skip Java core shared dependencies
-                       (root POM, hibernate-rx-multitenancy,
-                       common/, client/, tenant-events/).
-                       Useful when only the service code changed.
+  -b, --build            Build images before starting/restarting
+  --tag=TAG              Docker image tag (default: local-dev)
+  --platform=ARCH        Override build platform: amd64 or arm64
+  --with=PROFILE         Enable a compose profile (repeatable)
+  -a, --all              Shorthand for --with all profiles
+  --skip-shared-core     Skip Java core shared dependencies
+                         (root POM, hibernate-rx-multitenancy,
+                         common/, client/, tenant-events/).
+                         Useful when only the service code changed.
+  -v, --volumes          (down only) Also remove Docker volumes
 
 Profiles (--with):
   core           Base services: PostgreSQL, OpenSearch, RabbitMQ,
@@ -520,7 +691,10 @@ Examples:
   ./k9.sh build datasource --tag=test Build datasource with custom tag
   ./k9.sh restart datasource --build  Rebuild and restart datasource
   ./k9.sh logs datasource             Follow datasource logs
-  ./k9.sh down                        Tear down (with volumes)
+  ./k9.sh down                        Stop containers (keep volumes)
+  ./k9.sh down -v                     Stop containers and remove volumes
+  ./k9.sh doctor                      Check all prerequisites
+  ./k9.sh push datasource --tag=1.0   Push datasource image to registry
 USAGE
 }
 
@@ -546,7 +720,12 @@ case "$CMD" in
         compose stop "${SERVICES[@]}"
         ;;
     down)
-        compose down --volumes "${SERVICES[@]}"
+        if [ "$DOWN_REMOVE_VOLUMES" = true ]; then
+            compose down --volumes "${SERVICES[@]}"
+        else
+            compose down "${SERVICES[@]}"
+            _info "Volumes preserved. Use './k9.sh down -v' to remove them."
+        fi
         ;;
     restart)
         if [ "$BUILD" = true ]; then
@@ -561,6 +740,12 @@ case "$CMD" in
         ;;
     logs)
         compose logs -f "${SERVICES[@]}"
+        ;;
+    doctor)
+        do_doctor
+        ;;
+    push)
+        do_push
         ;;
     *)
         usage
