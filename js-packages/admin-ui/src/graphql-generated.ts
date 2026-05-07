@@ -6363,6 +6363,13 @@ export type DocTypeFieldsQueryVariables = Exact<{
 
 export type DocTypeFieldsQuery = { __typename?: 'Query', docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
+export type DocTypeFieldsByTypeQueryVariables = Exact<{
+  fieldType?: InputMaybe<FieldType>;
+}>;
+
+
+export type DocTypeFieldsByTypeQuery = { __typename?: 'Query', docTypeFieldsByType?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
+
 export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
   name: Scalars['String'];
@@ -11930,6 +11937,42 @@ export function useDocTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type DocTypeFieldsQueryHookResult = ReturnType<typeof useDocTypeFieldsQuery>;
 export type DocTypeFieldsLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsLazyQuery>;
 export type DocTypeFieldsQueryResult = Apollo.QueryResult<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>;
+export const DocTypeFieldsByTypeDocument = gql`
+    query DocTypeFieldsByType($fieldType: FieldType) {
+  docTypeFieldsByType(fieldType: $fieldType) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useDocTypeFieldsByTypeQuery__
+ *
+ * To run a query within a React component, call `useDocTypeFieldsByTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocTypeFieldsByTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocTypeFieldsByTypeQuery({
+ *   variables: {
+ *      fieldType: // value for 'fieldType'
+ *   },
+ * });
+ */
+export function useDocTypeFieldsByTypeQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>(DocTypeFieldsByTypeDocument, options);
+      }
+export function useDocTypeFieldsByTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>(DocTypeFieldsByTypeDocument, options);
+        }
+export type DocTypeFieldsByTypeQueryHookResult = ReturnType<typeof useDocTypeFieldsByTypeQuery>;
+export type DocTypeFieldsByTypeLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByTypeLazyQuery>;
+export type DocTypeFieldsByTypeQueryResult = Apollo.QueryResult<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>;
 export const CreateOrUpdateSuggestionCategoryDocument = gql`
     mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!, $multiSelect: Boolean!, $docTypeFieldId: BigInteger) {
   suggestionCategoryWithDocTypeField(

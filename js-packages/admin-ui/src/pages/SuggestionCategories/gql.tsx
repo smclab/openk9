@@ -166,6 +166,15 @@ export const DocTypeFields = gql`
   }
 `;
 
+export const DocTypeFieldsByType = gql`
+  query DocTypeFieldsByType($fieldType: FieldType) {
+    docTypeFieldsByType(fieldType: $fieldType) {
+      id
+      name
+    }
+  }
+`;
+
 gql`
   mutation CreateOrUpdateSuggestionCategory(
     $id: ID
