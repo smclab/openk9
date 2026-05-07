@@ -582,7 +582,7 @@ Usage: ./k9.sh <command> [services...] [options]
 
 Commands:
   build   [services...]   Build Docker images from source
-  up      [services...]   Start the Docker Compose stack
+  up      [services...]   Start the Docker Compose stack (alias: start)
   stop    [services...]   Stop running containers
   down    [services...]   Stop containers (volumes preserved by default)
   restart [services...]   Restart containers
@@ -706,7 +706,7 @@ case "$CMD" in
     build)
         do_build
         ;;
-    up)
+    up|start)
         if [ "$BUILD" = true ]; then
             do_build
         fi
