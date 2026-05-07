@@ -75,7 +75,7 @@ Docker, and Docker Compose into a single CLI.
 ### Prerequisites
 
 - Docker (with Compose v2 plugin or standalone `docker-compose`)
-- Java 21+ and Maven (via bundled `mvnw`)
+- Java 21+ (Maven not required — the bundled `mvnw` wrapper is used)
 - Node.js ≥ 20 / Yarn (for frontend builds)
 - Python 3.10+ (for AI service builds)
 
@@ -128,7 +128,7 @@ Profiles are additive. Core services are always included.
 ./k9.sh doctor
 ```
 
-Checks java, mvn, docker, docker compose, node, yarn, and python3.
+Checks java, docker, docker compose, node, yarn, and python3.
 Reports `OK` / `MISSING` / `WRONG_VERSION` for each tool with
 platform-specific install hints. Exits non-zero if any check fails.
 
@@ -136,7 +136,6 @@ platform-specific install hints. Exits non-zero if any check fails.
 k9.sh — prerequisite check
 
   java (>= 21)           OK  (21.0.7)
-  mvn (>= 3.9)           OK  (3.9.11)
   docker                 OK  (29.4.2)
   docker compose (v2)    OK  (2.35.1)
   node (>= 20)           OK  (22.14.0)

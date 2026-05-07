@@ -427,12 +427,6 @@ do_doctor() {
                     Linux)  printf '    → sdk install java 21-tem  or  apt install openjdk-21-jdk\n' ;;
                     *)      printf '    → https://adoptium.net/\n' ;;
                 esac ;;
-            mvn)
-                case "$os" in
-                    Darwin) printf '    → brew install maven  or  sdk install maven\n' ;;
-                    Linux)  printf '    → sdk install maven  or  apt install maven\n' ;;
-                    *)      printf '    → https://maven.apache.org/download.cgi\n' ;;
-                esac ;;
             docker)
                 case "$os" in
                     Darwin) printf '    → https://docs.docker.com/desktop/mac/install/\n' ;;
@@ -468,14 +462,6 @@ do_doctor() {
     # Normalise "1.x" → "x" so the major-version comparison works uniformly.
     case "$java_ver" in 1.*) java_ver="${java_ver#1.}" ;; esac
     _check_tool "java (>= 21)" "java" "21" "$java_ver"
-
-    local mvn_ver=""
-    if command -v mvn >/dev/null 2>&1; then
-        mvn_ver=$(mvn -v 2>/dev/null | grep -oE 'Apache Maven [0-9.]+' | grep -oE '[0-9.]+' | head -1) || true
-    elif [ -f core/mvnw ]; then
-        mvn_ver="(bundled mvnw)"
-    fi
-    _check_tool "mvn (>= 3.9)" "mvn" "" "$mvn_ver"
 
     local docker_ver=""
     docker_ver=$(docker --version 2>/dev/null | grep -oE '[0-9]+\.[0-9.]+' | head -1) || true
