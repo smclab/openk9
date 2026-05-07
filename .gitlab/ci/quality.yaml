@@ -1,0 +1,116 @@
+# ================================
+# Quality & Security Checks — RELEASE BRANCH (3.0.x)
+# ================================
+#
+# Three global jobs cover all source domains:
+#   - Maven Dependency Check       (Java backend modules)
+#   - Python Dependency Check      (AI + connectors)
+#   - Frontend Dependency Check    (yarn audit, all js-packages)
+#
+# All run only on push to the release branch — never on porting-* (would slow
+# down dev feedback) and never on tag (too late, the artifact is already cut).
+# All are `allow_failure: true`: a CVE finding never blocks build/restart;
+# reports are produced as artifacts and reviewed manually before tagging.
+#
+# SonarQube is intentionally omitted: on release we only port already-reviewed
+# code from main, the gate has already been applied upstream.
+
+# ── File-list anchors ─────────────────────────────────────────────────────────
+.java_files_list: &java_files_list
+  - core/**/*
+  - vendor/**/*
+  - pom.xml
+
+.python_files_list: &python_files_list
+  - ai-packages/**/*
+  - connectors/**/*
+
+.frontend_files_list: &frontend_files_list
+  - js-packages/**/*
+
+# ── Maven Dependency Check ────────────────────────────────────────────────────
+Maven Dependency Check:
+  stage: dependency-check
+  image: eclipse-temurin:21-jdk
+  allow_failure: true
+  variables:
+    MAVEN_OPTS: "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  before_script:
+  - cd core
+  - ./mvnw install -DskipTests
+  script:
+  - ./mvnw -pl '!../vendor/hibernate-rx-multitenancy, !../vendor/hibernate-rx-multitenancy/runtime, !../vendor/hibernate-rx-multitenancy/deployment' dependency-check:aggregate
+  artifacts:
+    paths:
+    - core/target/dependency-check-report.html
+    expire_in: 1 week
+    when: always
+  cache:
+    # Two cache entries:
+    # 1. shared-mvn (pull-only): reuses the build job's Maven cache.
+    # 2. owasp-nvd-db (pull-push): persists the OWASP NVD database between runs.
+    - key: "shared-mvn"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository
+      policy: pull
+    - key: "owasp-nvd-db"
+      paths:
+      - $CI_PROJECT_DIR/.m2/repository/org/owasp
+      policy: pull-push
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes: *java_files_list
+
+# ── Python Dependency Check (AI + connectors) ─────────────────────────────────
+Python Dependency Check:
+  stage: dependency-check
+  image: python:3.12-slim
+  allow_failure: true
+  script:
+  - pip install --quiet pip-audit
+  - |
+    echo "=== Python Dependency Check (pip-audit) ===" | tee pip-audit-report.txt
+    OVERALL=0
+    for req in $(find ai-packages connectors -name "requirements*.txt" 2>/dev/null | sort); do
+      echo "--- Scanning: $req ---" | tee -a pip-audit-report.txt
+      pip-audit -r "$req" --progress-spinner off --skip-editable 2>&1 | tee -a pip-audit-report.txt || OVERALL=1
+    done
+    exit $OVERALL
+  artifacts:
+    paths:
+    - pip-audit-report.txt
+    expire_in: 1 week
+    when: always
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes: *python_files_list
+
+# ── Frontend Dependency Check (yarn audit, all js-packages) ───────────────────
+Frontend Dependency Check:
+  stage: dependency-check
+  image: node:22.14.0
+  allow_failure: true
+  script:
+  - |
+    echo "=== Frontend Dependency Check (yarn audit) ===" | tee yarn-audit-report.txt
+    OVERALL=0
+    for pkg in js-packages/*/package.json; do
+      dir=$(dirname "$pkg")
+      echo "--- Scanning: $dir ---" | tee -a yarn-audit-report.txt
+      (cd "$dir" && yarn audit --level high 2>&1) | tee -a yarn-audit-report.txt || OVERALL=1
+    done
+    exit $OVERALL
+  artifacts:
+    paths:
+    - yarn-audit-report.txt
+    expire_in: 1 week
+    when: always
+  rules:
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes: *frontend_files_list

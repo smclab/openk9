@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -37,6 +38,17 @@ Build Verifier Datasource:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+# Container scan on the image just built — fires on push 3.0.x ONLY.
+Container Scanning Datasource:
+  extends: .container-scanning-template
+  needs:
+  - job: Build Datasource Release
+    artifacts: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-datasource"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 # Restart k9-stable-2 — fires on push 3.0.x ONLY (tags do not auto-restart).
 Trigger Restart Datasource Release:

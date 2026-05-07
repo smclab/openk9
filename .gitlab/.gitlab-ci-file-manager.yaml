@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -34,6 +35,16 @@ Build Verifier File-Manager:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning File-Manager:
+  extends: .container-scanning-template
+  needs:
+  - job: Build File-Manager Release
+    artifacts: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-file-manager"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 Trigger Restart File-Manager Release:
   extends: .restart_job_template

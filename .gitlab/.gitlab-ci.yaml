@@ -8,6 +8,8 @@ stages:
   - fetch
   - build
   - build-verifier
+  - container-scanning
+  - dependency-check
   - restart
   - push
 
@@ -20,3 +22,6 @@ include:
   - local: '/.gitlab/ci/frontend.yaml'
   - local: '/.gitlab/ci/ai.yaml'
   - local: '/.gitlab/ci/common.yaml'
+
+  # Global quality & security checks (Maven/Python/Frontend dependency audits).
+  - local: '/.gitlab/ci/quality.yaml'

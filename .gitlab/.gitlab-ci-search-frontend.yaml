@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -101,6 +102,19 @@ Build Verifier Search Frontend:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+######################## CONTAINER SCANNING (push 3.0.x only) ########################
+Container Scanning Search Frontend:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Search Frontend Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-search-frontend"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## TRIGGER RESTART (push 3.0.x only) ########################
 Trigger Restart Search Frontend Release:

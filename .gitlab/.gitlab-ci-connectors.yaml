@@ -7,6 +7,7 @@ stages:
 - fetch
 - build
 - build-verifier
+- container-scanning
 - push
 
 variables:
@@ -96,6 +97,18 @@ Build Verifier Web Connector:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
 
+Container Scanning Web Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Web Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-web-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
+
 Copy Web Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
@@ -126,6 +139,18 @@ Build Verifier Email Connector:
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning Email Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Email Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-email-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
 
 Copy Email Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -158,6 +183,18 @@ Build Verifier Database Connector:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
 
+Container Scanning Database Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Database Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-database-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
+
 Copy Database Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
@@ -188,6 +225,18 @@ Build Verifier YouTube Connector:
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning YouTube Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build YouTube Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-youtube-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
 
 Copy YouTube Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -220,6 +269,18 @@ Build Verifier GitLab Connector:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
 
+Container Scanning GitLab Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build GitLab Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-gitlab-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
+
 Copy GitLab Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
@@ -250,6 +311,18 @@ Build Verifier Minio Connector:
   rules:
   - !reference [.rules:child-verify-release-mr, rules]
   - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning Minio Connector:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Minio Connector Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
+  rules:
+  - !reference [.rules:child-restart-release, rules]
 
 Copy Minio Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub

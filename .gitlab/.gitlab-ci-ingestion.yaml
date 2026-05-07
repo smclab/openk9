@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -34,6 +35,16 @@ Build Verifier Ingestion:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning Ingestion:
+  extends: .container-scanning-template
+  needs:
+  - job: Build Ingestion Release
+    artifacts: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-ingestion"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 Trigger Restart Ingestion Release:
   extends: .restart_job_template

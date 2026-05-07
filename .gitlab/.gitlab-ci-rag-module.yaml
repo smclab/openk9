@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -87,6 +88,19 @@ Build Verifier Rag:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+######################## CONTAINER SCANNING RAG (push 3.0.x only) ########################
+Container Scanning Rag:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Rag Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-rag-module"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## TRIGGER RESTART RAG (push 3.0.x only) ########################
 Trigger Restart Rag Release:

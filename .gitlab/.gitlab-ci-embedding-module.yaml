@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -124,6 +125,31 @@ Build Verifier Embedding:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+######################## CONTAINER SCANNING EMBEDDING (push 3.0.x only) ########################
+Container Scanning Embedding ST:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Embedding ST Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
+
+Container Scanning Embedding OpenAI:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch config
+    artifacts: true
+  - job: Build Embedding OpenAI Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## TRIGGER RESTART EMBEDDING (push 3.0.x only) ########################
 Trigger Restart Embedding Release:

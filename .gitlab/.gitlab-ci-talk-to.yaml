@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -97,6 +98,19 @@ Build Verifier Talk-To:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+######################## CONTAINER SCANNING (push 3.0.x only) ########################
+Container Scanning Talk-To:
+  extends: .container-scanning-template
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Talk-To Release
+    artifacts: false
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-talk-to"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## TRIGGER RESTART (push 3.0.x only) ########################
 Trigger Restart Talk-To Release:

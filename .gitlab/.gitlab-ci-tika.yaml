@@ -6,6 +6,7 @@ include:
 stages:
 - build
 - build-verifier
+- container-scanning
 - restart
 - push
 
@@ -34,6 +35,16 @@ Build Verifier Tika:
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
+
+Container Scanning Tika:
+  extends: .container-scanning-template
+  needs:
+  - job: Build Tika Release
+    artifacts: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-tika"
+  rules:
+    - !reference [.rules:child-restart-release, rules]
 
 Trigger Restart Tika Release:
   extends: .restart_job_template
