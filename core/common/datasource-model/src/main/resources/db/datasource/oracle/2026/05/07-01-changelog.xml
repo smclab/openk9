@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<databaseChangeLog
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
+	logicalFilePath="db/datasource/2026/05/07-01-changelog.xml"
+>
+
+	<changeSet id="1778157703680-1" author="openk9">
+		<comment>Rename duplicate names in rag_configuration table by appending a numeric suffix</comment>
+		<sql>
+			MERGE INTO rag_configuration rc
+			USING (
+				SELECT
+					id,
+					name,
+					ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+				FROM rag_configuration
+			) dn
+			ON (rc.id = dn.id AND dn.rn > 1)
+			WHEN MATCHED THEN
+			UPDATE SET rc.name = rc.name || '_' || (dn.rn - 1);
+		</sql>
+	</changeSet>
+
+	<changeSet id="1778157703680-2" author="openk9">
+		<comment>Rename duplicate names in embedding_model table by appending a numeric suffix</comment>
+		<sql>
+			MERGE INTO embedding_model em
+			USING (
+				SELECT
+					id,
+					name,
+					ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+				FROM embedding_model
+			) dn
+			ON (em.id = dn.id AND dn.rn > 1)
+			WHEN MATCHED THEN
+			UPDATE SET em.name = em.name || '_' || (dn.rn - 1);
+		</sql>
+	</changeSet>
+
+	<changeSet id="1778157703680-3" author="openk9">
+		<comment>Rename duplicate names in large_language_model table by appending a numeric suffix</comment>
+		<sql>
+			MERGE INTO large_language_model llm
+			USING (
+				SELECT
+					id,
+					name,
+					ROW_NUMBER() OVER (PARTITION BY name ORDER BY id) AS rn
+				FROM large_language_model
+			) dn
+			ON (llm.id = dn.id AND dn.rn > 1)
+			WHEN MATCHED THEN
+			UPDATE SET llm.name = llm.name || '_' || (dn.rn - 1);
+		</sql>
+	</changeSet>
+
+	<changeSet id="1778157703680-4" author="openk9">
+		<addUniqueConstraint tableName="rag_configuration"
+							 columnNames="name"
+							 constraintName="uk_rag_configuration_name"/>
+	</changeSet>
+
+	<changeSet id="1778157703680-5" author="openk9">
+		<addUniqueConstraint tableName="embedding_model"
+							 columnNames="name"
+							 constraintName="uk_embedding_model_name"/>
+	</changeSet>
+
+	<changeSet id="1778157703680-6" author="openk9">
+		<addUniqueConstraint tableName="large_language_model"
+							 columnNames="name"
+							 constraintName="uk_large_language_model_name"/>
+	</changeSet>
+
+</databaseChangeLog>
