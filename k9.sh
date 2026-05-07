@@ -114,8 +114,10 @@ parse_args() {
 
     BUILD=false
     SKIP_MVN_SHARED_DEPS=false
+    DOWN_REMOVE_VOLUMES=false
     SERVICES=()
     OTHER_ARGS=()
+    PLATFORM_OVERRIDE=""
 
     for arg in "$@"; do
         if [ "$arg" == "--build" ] || [ "$arg" == "-b" ]; then
@@ -124,8 +126,22 @@ parse_args() {
             SKIP_MVN_SHARED_DEPS=true
         elif [[ "$arg" == --tag=* ]]; then
             TAG="${arg#--tag=}"
+        elif [[ "$arg" == --platform=* ]]; then
+            local plat="${arg#--platform=}"
+            case "$plat" in
+                amd64) PLATFORM_OVERRIDE="linux/amd64" ;;
+                arm64) PLATFORM_OVERRIDE="linux/arm64" ;;
+                linux/amd64|linux/arm64) PLATFORM_OVERRIDE="$plat" ;;
+                *)
+                    echo "Error: unknown platform '$plat'"
+                    echo "Valid values: amd64, arm64"
+                    exit 1
+                    ;;
+            esac
         elif [ "$arg" == "--all" ] || [ "$arg" == "-a" ]; then
             PROFILES+=(file-handling gen-ai oauth2)
+        elif [ "$arg" == "--volumes" ] || [ "$arg" == "-v" ]; then
+            DOWN_REMOVE_VOLUMES=true
         elif [[ "$arg" == --with=* ]]; then
             local p="${arg#--with=}"
             if profile_to_file "$p" >/dev/null; then
@@ -142,6 +158,16 @@ parse_args() {
             SERVICES+=("$arg")
         fi
     done
+
+    # Apply platform override after all args are parsed, so it wins
+    # over the host-architecture auto-detection at the top of the script.
+    if [ -n "$PLATFORM_OVERRIDE" ]; then
+        JIB_PLATFORM="$PLATFORM_OVERRIDE"
+        case "$PLATFORM_OVERRIDE" in
+            linux/amd64) JIB_ARCH="amd64" ;;
+            linux/arm64) JIB_ARCH="arm64" ;;
+        esac
+    fi
 
     # Deduplicate profiles
     local unique=()
@@ -225,24 +251,24 @@ build_core() {
     )
 
     echo "--- Building Frontend Services ---"
-    docker build -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
-    docker build -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
-    docker build -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
 
     echo "--- Building Connectors ---"
-    docker build -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
 }
 
 build_gen_ai() {
     echo "--- Building AI Services ---"
-    docker build -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
-    docker build -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
-    docker build -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
 }
 
 build_file_handling() {
     echo "--- Building File Services ---"
-    docker build -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
@@ -311,34 +337,52 @@ build_single() {
                 "-pl" "app/$service")
             ;;
         search-frontend)
-            docker build -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
-            docker build -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            docker build -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             ;;
         web-connector)
-            docker build -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
         minio-connector)
-            docker build -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             ;;
         rag-module)
-            docker build -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             ;;
         embedding-module)
-            docker build -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
         talk-to)
-            docker build -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             ;;
     esac
 }
 
+_has_java_service() {
+    local java_services="api-gateway tenant-manager datasource ingestion searcher file-manager tika"
+    for svc in "$@"; do
+        for jsvc in $java_services; do
+            [ "$svc" = "$jsvc" ] && return 0
+        done
+    done
+    return 1
+}
+
 do_build() {
     if [ ${#SERVICES[@]} -gt 0 ]; then
+        # For multi-service builds that include at least one Java service,
+        # build shared Maven dependencies once up front to avoid redundant
+        # rebuilds when build_single is called for each service.
+        if [ ${#SERVICES[@]} -gt 1 ] && [ "$SKIP_MVN_SHARED_DEPS" = false ] \
+                && _has_java_service "${SERVICES[@]}"; then
+            build_mvn_shared_deps
+            SKIP_MVN_SHARED_DEPS=true
+        fi
         for svc in "${SERVICES[@]}"; do
             build_single "$svc"
         done
