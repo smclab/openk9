@@ -195,6 +195,7 @@ nb-configuration.xml
 /lsp/
 .jbang
 .sdkmanrc
+.env
 .envrc
 .quarkus
 

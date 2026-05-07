@@ -21,26 +21,55 @@ set -e
 # Run ./k9.sh without arguments for full usage information.
 #
 
-# Configuration defaults
-TAG="local-dev"
+# Change to the repo root so relative paths and .env loading work correctly.
+cd "$(dirname "$0")"
+
+# --- .env loader ---
+# Reads key=value pairs from openk9/.env (gitignored). Shell environment
+# variables always take precedence; .env values are only applied when the
+# variable is not already set.
+_load_env_file() {
+    [ -f ".env" ] || return 0
+    while IFS= read -r _env_line || [ -n "$_env_line" ]; do
+        # Skip blank lines and comments.
+        [[ -z "${_env_line// }" || "$_env_line" =~ ^[[:space:]]*# ]] && continue
+        _env_key="${_env_line%%=*}"
+        _env_val="${_env_line#*=}"
+        # Strip leading/trailing whitespace from the key.
+        _env_key="${_env_key#"${_env_key%%[![:space:]]*}"}"
+        _env_key="${_env_key%"${_env_key##*[![:space:]]}"}"
+        # Only export if not already set in the shell environment.
+        [ -z "${!_env_key+x}" ] && export "${_env_key}=${_env_val}"
+    done < ".env"
+    unset _env_line _env_key _env_val
+}
+_load_env_file
+
+# Configuration defaults — use ${VAR:-default} so .env-set values survive.
+TAG="${TAG:-local-dev}"
+OPENK9_REGISTRY="${OPENK9_REGISTRY:-}"
 PROFILES=()
 
-# Detect host architecture for container image builds
+# Detect host architecture for container image builds.
 HOST_ARCH=$(uname -m)
 case "$HOST_ARCH" in
     aarch64|arm64) JIB_PLATFORM="linux/arm64"; JIB_ARCH="arm64" ;;
     *)             JIB_PLATFORM="linux/amd64"; JIB_ARCH="amd64" ;;
 esac
 
-# Detect docker compose command
+# Detect docker compose command. Use an array so the two-word form
+# "docker compose" is passed as two arguments, not one quoted string.
 if docker compose version >/dev/null 2>&1; then
-    DOCKER_COMPOSE="docker compose"
+    DOCKER_COMPOSE_CMD=(docker compose)
 else
-    DOCKER_COMPOSE="docker-compose"
+    DOCKER_COMPOSE_CMD=(docker-compose)
 fi
 
-# Change to the openk9 directory
-cd "$(dirname "$0")"
+# --- Logging helpers ---
+_info()  { printf '%s\n'         "$*"; }
+_ok()    { printf '\033[0;32m✓\033[0m %s\n' "$*"; }
+_warn()  { printf '\033[0;33m!\033[0m %s\n' "$*" >&2; }
+_error() { printf '\033[0;31m✗\033[0m %s\n' "$*" >&2; }
 
 # --- Profile to compose file mapping ---
 
@@ -176,8 +205,8 @@ build_core() {
 
         echo "Building Spring Boot services..."
         ./mvnw package -DskipTests jib:dockerBuild \
-            -Djib.to.image=smclab/openk9-api-gateway:$TAG \
-            -Djib.platform.architecture=$JIB_ARCH \
+            "-Djib.to.image=smclab/openk9-api-gateway:$TAG" \
+            "-Djib.platform.architecture=$JIB_ARCH" \
             -f app/api-gateway/pom.xml
 
         echo "Building Quarkus services..."
@@ -185,46 +214,46 @@ build_core() {
             echo "Building $SVC..."
             ./mvnw package -DskipTests \
                 -Dquarkus.profile=prod \
-                -Dquarkus.jib.platforms=$JIB_PLATFORM \
+                "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=false \
                 -Dquarkus.container-image.group=smclab \
-                -Dquarkus.container-image.name=openk9-$SVC \
-                -Dquarkus.container-image.tag=$TAG \
-                -pl app/$SVC
+                "-Dquarkus.container-image.name=openk9-$SVC" \
+                "-Dquarkus.container-image.tag=$TAG" \
+                "-pl" "app/$SVC"
         done
     )
 
     echo "--- Building Frontend Services ---"
-    docker build -t smclab/openk9-search-frontend:$TAG -f js-packages/search-frontend/Dockerfile .
-    docker build -t smclab/openk9-admin-ui:$TAG -f js-packages/admin-ui/Dockerfile .
-    docker build -t smclab/openk9-tenant-ui:$TAG -f js-packages/tenant-ui/Dockerfile .
+    docker build -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+    docker build -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
+    docker build -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
 
     echo "--- Building Connectors ---"
-    docker build -t smclab/openk9-web-connector:$TAG -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+    docker build -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
 }
 
 build_gen_ai() {
     echo "--- Building AI Services ---"
-    docker build -t smclab/openk9-rag-module:$TAG -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
-    docker build -t smclab/openk9-embedding-module-base:$TAG -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
-    docker build -t smclab/openk9-talk-to:$TAG -f js-packages/talk-to/Dockerfile .
+    docker build -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+    docker build -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+    docker build -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
 }
 
 build_file_handling() {
     echo "--- Building File Services ---"
-    docker build -t smclab/openk9-minio-connector:$TAG -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+    docker build -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
             -Dquarkus.profile=prod \
-            -Dquarkus.jib.platforms=$JIB_PLATFORM \
+            "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=false \
             -Dquarkus.container-image.group=smclab \
-            -Dquarkus.container-image.name=openk9-$SVC \
-            -Dquarkus.container-image.tag=$TAG \
-            -pl app/$SVC
+            "-Dquarkus.container-image.name=openk9-$SVC" \
+            "-Dquarkus.container-image.tag=$TAG" \
+            "-pl" "app/$SVC"
     done)
 }
 
@@ -266,43 +295,44 @@ build_single() {
     case "$service" in
         api-gateway)
             (cd core && ./mvnw package -DskipTests jib:dockerBuild \
-                -Djib.to.image=smclab/openk9-api-gateway:$TAG \
-                -Djib.platform.architecture=$JIB_ARCH \
+                "-Djib.to.image=smclab/openk9-api-gateway:$TAG" \
+                "-Djib.platform.architecture=$JIB_ARCH" \
                 -f app/api-gateway/pom.xml)
             ;;
         tenant-manager|datasource|ingestion|searcher|file-manager|tika)
             (cd core && ./mvnw package -DskipTests \
                 -Dquarkus.profile=prod \
+                "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=false \
                 -Dquarkus.container-image.group=smclab \
-                -Dquarkus.container-image.name=openk9-$service \
-                -Dquarkus.container-image.tag=$TAG \
-                -pl app/$service)
+                "-Dquarkus.container-image.name=openk9-$service" \
+                "-Dquarkus.container-image.tag=$TAG" \
+                "-pl" "app/$service")
             ;;
         search-frontend)
-            docker build -t smclab/openk9-search-frontend:$TAG -f js-packages/search-frontend/Dockerfile .
+            docker build -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
-            docker build -t smclab/openk9-admin-ui:$TAG -f js-packages/admin-ui/Dockerfile .
+            docker build -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            docker build -t smclab/openk9-tenant-ui:$TAG -f js-packages/tenant-ui/Dockerfile .
+            docker build -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             ;;
         web-connector)
-            docker build -t smclab/openk9-web-connector:$TAG -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+            docker build -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
         minio-connector)
-            docker build -t smclab/openk9-minio-connector:$TAG -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+            docker build -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             ;;
         rag-module)
-            docker build -t smclab/openk9-rag-module:$TAG -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+            docker build -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             ;;
         embedding-module)
-            docker build -t smclab/openk9-embedding-module-base:$TAG -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+            docker build -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
         talk-to)
-            docker build -t smclab/openk9-talk-to:$TAG -f js-packages/talk-to/Dockerfile .
+            docker build -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             ;;
     esac
 }
@@ -328,7 +358,7 @@ compose() {
             flags+=(-f "$overlay")
         fi
     done
-    IMAGE_TAG="$TAG" $DOCKER_COMPOSE "${flags[@]}" "$@"
+    IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
 }
 
 # --- Usage ---
