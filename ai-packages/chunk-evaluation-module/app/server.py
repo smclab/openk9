@@ -32,12 +32,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 task = partial(score)
-should_make_experiment = True
-should_flush_data = False
 
 input_data = []
 output_data = []
 metadata = []
+
+last_ingestion = None
+last_experiment = None
+
+scheduler = BackgroundScheduler()
+scheduler.start()
 
 
 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
@@ -52,157 +56,129 @@ BUFFER_UPLOAD = os.getenv("BUFFER_UPLOAD", "").lower() == "true"
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
 N_MAX_DOCUMENTS = int(os.getenv("N_MAX_DOCUMENTS", 150))
 
+DO_EXPERIMENTS = os.getenv("DO_EXPERIMENTS", False).lower() == "true"
+if DO_EXPERIMENTS:
+    EXPERIMENT_MODE = int(os.getenv("EXPERIMENT_MODE", 1))
+else:
+    EXPERIMENT_MODE = 0
 
-def flush_dataset(dataset_base_name):
+
+def add_item(dataset_base_name, input_item, output_item):
     global input_data, output_data, metadata
-    global should_make_experiment, should_flush_data
-    portion = min(len(input_data), BUFFER_TRESHOLD)
-
-    all_datasets = client.datasets.list()
-    dataset_index = len(
-        get_dataset_index(
-            all_datasets=all_datasets,
-            name_contains=dataset_base_name,
-            min_examples=N_MAX_DOCUMENTS,
-        )
-    )
-    num_daily_datasets = len(
-        get_dataset_index(
-            all_datasets=all_datasets,
-            name_contains=dataset_base_name,
-        )
-    )
-
-    dataset_name = dataset_base_name + f"-{dataset_index}"
-    logging.info(f"Dataset name: {dataset_name}")
-
-    if not input_data:
-        return
-    logger.info(f"Flushing {portion}/{len(input_data)} documents")
-    manage_daily_dataset(
-        dataset_name=dataset_name,
-        input_item=input_data[:portion],
-        output_item=output_data[:portion],
-        metadata=metadata[:portion],
-    )
-
-    input_data = input_data[portion:]
-    output_data = output_data[portion:]
-    metadata = metadata[portion:]
-    logger.info(f"Remaining {len(input_data)} documents")
-    if len(input_data) > 0:
-        should_flush_data = True
-        should_make_experiment = False
-        scheduler.add_job(**flush_job_params)
-    else:
-        should_flush_data = False
-        should_make_experiment = True
-        scheduler.remove_job("flush_pending_documents")
-
-
-def add_item(dataset_name, input_item, output_item):
-    global input_data, output_data, should_flush_data, metadata
+    global last_ingestion
     input_data.extend(input_item)
     output_data.extend(output_item)
     metadata.extend([{}])
     logger.info(f"Documents{len(input_data)}")
-    if not should_flush_data:
-        logger.info("ATTIVATO FLUSHING")
-        should_flush_data = True
-        scheduler.add_job(**flush_job_params)
+    portion = min(len(input_data), BUFFER_TRESHOLD)
 
-
-def interval_experiment(task, evaluators, dataset_name=None, dataset_base_name=None):
-    global should_make_experiment
-    if should_make_experiment:
-        if dataset_name:
-            make_experiment(task, evaluators, dataset=dataset_name)
-            return
-
+    if (
+        last_ingestion is None
+        or (datetime.now() - last_ingestion).total_seconds() >= BUFFER_DELAY
+        or portion >= BUFFER_TRESHOLD
+    ):
         all_datasets = client.datasets.list()
-        if dataset_base_name:
-            daily_dataset = get_dataset_index(
-                all_datasets, name_contains=dataset_base_name
+        dataset_index = len(
+            get_dataset_index(
+                all_datasets=all_datasets,
+                name_contains=dataset_base_name,
+                min_examples=N_MAX_DOCUMENTS,
             )
-            reversing = daily_dataset[::-1]
-            for dats in reversing:
-                elm = client.experiments.list(dataset_id=dats["id"])
-                if not elm or elm[0].get("successful_run_count", 0) < dats.get(
-                    "example_count", 0
-                ):
-                    make_experiment(task, evaluators, dataset=dats["name"])
-                    return
-        else:
-            reversing = all_datasets[::-1]
-            for dats in reversing:
-                elm = client.experiments.list(dataset_id=dats["id"])
-                if not elm or elm[0].get("successful_run_count", 0) < dats.get(
-                    "example_count", 0
-                ):
-                    make_experiment(task, evaluators, dataset=dats["name"])
-                    return
-            should_make_experiment = False
+        )
+
+        dataset_name = dataset_base_name + f"-{dataset_index}"
+        logger.info(f"Flushing {portion}/{len(input_data)} documents")
+        manage_daily_dataset(
+            dataset_name=dataset_name,
+            input_item=input_data[:portion],
+            output_item=output_data[:portion],
+            metadata=metadata[:portion],
+        )
+        input_data = input_data[portion:]
+        output_data = output_data[portion:]
+        metadata = metadata[portion:]
+        logger.info(f"Remaining {len(input_data)} documents")
+        last_ingestion = datetime.now()
+    if input_data:
+        scheduler.add_job(
+            add_item,
+            "date",
+            run_date=datetime.now() + timedelta(seconds=BUFFER_DELAY),
+            id="debounce_flush_job",
+            replace_existing=True,
+            kwargs={
+                "dataset_base_name": dataset_base_name,
+                "input_item": [],
+                "output_item": [],
+            },
+        )
+        if EXPERIMENT_MODE == 2:
+            delay = MIN_TIME_DELAY
+            if BUFFER_DELAY > MIN_TIME_DELAY * 60:
+                delay = MIN_TIME_DELAY + int(BUFFER_DELAY / 60)
+            scheduler.add_job(
+                after_load_experiment,
+                "interval",
+                minutes=delay,
+                misfire_grace_time=120,
+                id="after_load_experiment",
+                replace_existing=True,
+                kwargs={
+                    "task": task,
+                    "evaluators": EVALUATORS,
+                    "dataset_base_name": dataset_base_name,
+                },
+            )
+
+
+def after_load_experiment(task, evaluators, dataset_base_name=None):
+    logging.info(f"After_experiment {dataset_base_name}")
+    all_datasets = client.datasets.list()
+    daily_dataset = get_dataset_index(all_datasets, name_contains=dataset_base_name)
+    reversing = daily_dataset[::-1]
+    for dats in reversing:
+        elm = client.experiments.list(dataset_id=dats["id"])
+        if not elm or elm[0].get("successful_run_count", 0) < dats.get(
+            "example_count", 0
+        ):
+            make_experiment(task, evaluators, dataset=dats["name"])
+            return
+    scheduler.remove_job("after_load_experiment")
+
+
+def background_experiment(task, evaluators):
+    global last_experiment
+
+    if last_experiment is None or last_ingestion > last_experiment:
+        all_datasets = client.datasets.list()
+        reversing = all_datasets[::-1]
+        for dats in reversing:
+            elm = client.experiments.list(dataset_id=dats["id"])
+            if not elm or elm[0].get("successful_run_count", 0) < dats.get(
+                "example_count", 0
+            ):
+                make_experiment(task, evaluators, dataset=dats["name"])
+                return
+        last_experiment = datetime.now()
 
 
 experiment_job_params = {
-    "func": interval_experiment,  # La funzione da eseguire
+    "func": background_experiment,  # La funzione da eseguire
     "trigger": "interval",  # Il trigger per far partire il job periodicamente
     "minutes": MIN_TIME_DELAY,  # Intervallo in minuti
     "misfire_grace_time": 120,  # Tempo di tolleranza per il job
     "replace_existing": True,
-    "id": "experiment_pending_documents",  # ID del job
+    "id": "background_experiments",  # ID del job
     "kwargs": {
         "task": task,  # Parametro 'task'
         "evaluators": EVALUATORS,
-        # "dataset_base_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}",  # Parametro 'evaluators'
     },
 }
-
-flush_job_params = {
-    "func": flush_dataset,  # La funzione da eseguire
-    "trigger": "interval",  # Il trigger per far partire il job
-    "seconds": BUFFER_DELAY,  # La data in cui il job verrà eseguito
-    "replace_existing": True,
-    "misfire_grace_time": 120,
-    "id": "flush_pending_documents",
-    "kwargs": {
-        "dataset_base_name": f"dataset-{datetime.today().strftime('%d-%m-%Y')}"  # Parametro della funzione
-    },
-}
-
-scheduler = BackgroundScheduler()
-scheduler.add_job(**experiment_job_params)
-scheduler.start()
-setup_rabbitmq()
-
-credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
-connection = None
-
-for _ in range(10):
-    try:
-        connection = pika.BlockingConnection(
-            pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
-        )
-        logger.info("RabbitMQ pronto")
-        break
-    except Exception as e:
-        logger.info("RabbitMQ non pronto, retry…")
-        time.sleep(3)
-
-if not connection:
-    raise "Connessione a RabbitMQ fallita"
-
-channel = connection.channel()
-
-channel.basic_qos(prefetch_count=1)
-
-channel.queue_declare(queue="chunks")
-
-logger.info("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
+if EXPERIMENT_MODE == 1:  # in BACKGROUND
+    scheduler.add_job(**experiment_job_params)
 
 
 def callback(ch, method, properties, body):
-    global should_make_experiment
     try:
         data = json.loads(body.decode("utf-8"))
         chunks = data.get("chunks")
@@ -228,7 +204,7 @@ def callback(ch, method, properties, body):
         ]
         if BUFFER_UPLOAD:
             add_item(
-                dataset_name=dataset_name,
+                dataset_base_name=dataset_name,
                 input_item=input_item,
                 output_item=output_item,
             )
@@ -273,6 +249,27 @@ def callback(ch, method, properties, body):
     should_make_experiment = True
 
 
-channel.basic_consume(queue="main.queue", on_message_callback=callback)
+credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+connection = None
 
+for _ in range(10):
+    try:
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
+        )
+        logger.info("RabbitMQ pronto")
+        break
+    except Exception as e:
+        logger.info("RabbitMQ non pronto, retry…")
+        time.sleep(3)
+
+if not connection:
+    raise "Connessione a RabbitMQ fallita"
+
+channel = connection.channel()
+channel.basic_qos(prefetch_count=1)
+channel.queue_declare(queue="chunks")
+channel.basic_consume(queue="main.queue", on_message_callback=callback)
 channel.start_consuming()
+
+logger.info("[*] In attesa di messaggi. Premere CTRL+C per uscire.")
