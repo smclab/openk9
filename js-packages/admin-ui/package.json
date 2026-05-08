@@ -50,7 +50,8 @@
     "start": "vite",
     "build": "tsc && vite build",
     "test": "vitest",
-    "compile-graphql": "graphql-codegen --watch --verbose",
+    "fetch-schema": "cd ../../core && ./mvnw -pl app/datasource -am -P '!validate,!format,graphql-schema' -q process-classes",
+    "compile-graphql": "yarn fetch-schema && TS_NODE_COMPILER_OPTIONS='{\"moduleResolution\":\"node\"}' graphql-codegen --verbose",
     "compile-openapi": "openapi --input https://k9-frontend.openk9.io/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
   },
   "eslintConfig": {
