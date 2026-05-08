@@ -250,10 +250,6 @@ public abstract class BaseSearchService {
 
 	}
 
-	// Single-row invariant: tenant_binding contains exactly one row per tenant schema
-	// (TenantSchemaService._insertIntoTenantBinding hardcodes id=1). Schema isolation via
-	// sf.withTransaction(tenantId, ...) is sufficient to scope the result; no virtualHost
-	// predicate is needed.
 	protected void customizeCriteriaBuilder(
 		CriteriaBuilder criteriaBuilder,
 		CriteriaQuery<Bucket> criteriaQuery, boolean suggestion,

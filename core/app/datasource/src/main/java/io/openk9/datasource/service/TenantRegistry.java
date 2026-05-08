@@ -25,18 +25,15 @@ public interface TenantRegistry {
 
 	/**
 	 * Resolves a {@code virtualHost} to its {@code tenantId} (schema name).
+	 * by issuing a gRPC call to the {@code tenant-manager} service.
 	 * <p>
-	 * Issues a gRPC call to {@code tenant-manager}; not cached at this layer.
+	 * Used as a legacy fallback in server-side gRPC handlers that still receive
+	 * {@code virtualHost} instead of {@code tenantId} directly.
+	 * Should also be used in contexts where {@code tenantId} must be resolved
+	 * outside an HTTP request flow (where {@code tenantId} would already be
+	 * available in the request context).
 	 * <p>
-	 * Two callers are expected:
-	 * <ul>
-	 *     <li>The API Gateway's {@code TenantIdResolverFilter}, which resolves once per
-	 *     incoming HTTP request and propagates the result downstream as the
-	 *     {@code X-TENANT-ID} header.</li>
-	 *     <li>Server-side gRPC handlers as a legacy fallback, used only when an incoming
-	 *     request still carries {@code virtualHost} but not {@code tenantId} (pre-#1849
-	 *     clients). New code should receive {@code tenantId} from its caller instead.</li>
-	 * </ul>
+	 * New code should receive {@code tenantId} directly from its caller instead.
 	 */
 	Uni<String> getTenantId(String virtualHost);
 

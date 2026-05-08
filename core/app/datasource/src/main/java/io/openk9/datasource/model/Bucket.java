@@ -55,9 +55,6 @@ import org.eclipse.microprofile.graphql.Ignore;
 @Setter
 @ToString
 @RequiredArgsConstructor
-// Single-row invariant: tenant_binding contains exactly one row per tenant schema
-// (TenantSchemaService._insertIntoTenantBinding hardcodes id=1). Schema isolation via
-// SET LOCAL SCHEMA is sufficient to scope the result; no virtualHost predicate is needed.
 @NamedQueries({
 	@NamedQuery(
 		name = Bucket.FETCH_ANNOTATORS_NAMED_QUERY,

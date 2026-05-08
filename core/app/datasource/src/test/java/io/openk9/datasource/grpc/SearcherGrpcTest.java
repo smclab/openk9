@@ -650,7 +650,7 @@ public class SearcherGrpcTest {
 			});
 	}
 
-	// Issue #1849 — tenantId short-circuit: when the proto carries tenantId, the server
+	// tenantId short-circuit: when the proto carries tenantId, the server
 	// must skip TenantRegistry.getTenantId(virtualHost). To prove the short-circuit, we
 	// deliberately send a bogus virtualHost: if the resolver were still consulted the
 	// request would fail; succeeding proves tenantId took precedence.
