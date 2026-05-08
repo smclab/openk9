@@ -3,9 +3,6 @@ FROM python:3.13-slim AS builder
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
-# upgrade pip
-RUN python -m pip install --upgrade pip==26.0
-
 # Use a virtual environment next stage copy
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -13,7 +10,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN apt-get update && rm -rf /var/lib/apt/lists/*
 
 COPY ./requirements.txt /requirements.txt
-RUN pip install --no-cache-dir -r /requirements.txt
+# upgrade pip and install requirements
+RUN pip install --no-cache-dir --upgrade pip==26.1.1 && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Install webkit browser
 RUN PLAYWRIGHT_BROWSERS_PATH=/ms-playwright playwright install webkit
@@ -25,14 +24,11 @@ RUN tldextract --cache_dir /tld_cache --update || echo "Update failed, using loc
 # --- STAGE 2: Runtime ---
 FROM python:3.13-slim
 
-ARG WITH_SCRAPYDWEB=0
-ENV WITH_SCRAPYDWEB=$WITH_SCRAPYDWEB
-
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 ENV TLDEXTRACT_CACHE=/tld_cache
 
-# Upgrade pip
-RUN python -m pip install --upgrade pip==26.0
+# Uninstall global pip uses venv pip
+RUN python -m pip uninstall -y pip
 
 # Copy the compiled site-packages/binaries from the builder
 COPY --from=builder /opt/venv /opt/venv
@@ -42,22 +38,15 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --from=builder /ms-playwright /ms-playwright
 
 # Copy the tldextract cache from builder
-COPY --from=builder /tld_cache /tld_cache
+COPY --from=builder --chown=1001:1001 /tld_cache /tld_cache
 
 COPY ./app /app
-
-COPY ./scrapydweb_settings_v11.py /app/scrapydweb_settings_v11.py
 
 RUN apt-get update && apt-get upgrade -y && apt-get install -y \
         curl dos2unix && \
         # Install playwright to install dependencies
         pip install playwright && \
         playwright install-deps webkit && \
-        if [ "$WITH_SCRAPYDWEB" = 1 ]; then \
-            # Install scrapydweb and copy settings file
-            echo "Installing Scrapydweb..."; \
-            pip install scrapydweb; \
-        fi && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
