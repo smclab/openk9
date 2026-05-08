@@ -1,8 +1,5 @@
 schema:
-  - https://k9-test-301-7.openk9.io/api/datasource/graphql:
-      headers:
-        Authorization: 
-          ""
+  - ../../core/app/datasource/target/generated/schema.graphql
 
 documents: "./src/**/*.tsx"
 generates:
