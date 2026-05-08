@@ -1,4 +1,6 @@
 ###################### EMBEDDING MODULE CHILD PIPELINE — RELEASE BRANCH ######################
+# Builds only the OpenAI image (Dockerfile.base). The sentence-transformers
+# image is intentionally NOT built on 3.0.x.
 include:
   - local: '/.gitlab/.gitlab-templates.yaml'
   - local: '/.gitlab/ci/child-rules.yaml'
@@ -31,47 +33,6 @@ Fetch config:
     expire_in: 1 day
   rules:
     - !reference [.rules:child-build-always, rules]
-
-######################## BUILD EMBEDDING ST RELEASE (KANIKO) ########################
-Build Embedding ST Release:
-  stage: build
-  image:
-    name: $KANIKO_IMAGE
-    entrypoint: [""]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  cache:
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
-  script:
-  - source $CI_PROJECT_DIR/config.env
-  - mkdir -p /kaniko/.docker
-  - |
-    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
-    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
-    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
-      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
-  - |
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/embedding-modules --dockerfile ${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile.sentence_transformer"
-
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      IMAGE_TAG="$CI_COMMIT_TAG"
-      echo "[ST Release] Tag: push $IMAGE_TAG"
-    else
-      IMAGE_TAG="$VERSION"
-      echo "[ST Release] Branch: push $IMAGE_TAG"
-    fi
-
-    /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-      --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$IMAGE_TAG"
-  rules:
-    - !reference [.rules:child-build-release, rules]
 
 ######################## BUILD EMBEDDING OPENAI RELEASE (KANIKO) ########################
 Build Embedding OpenAI Release:
@@ -127,18 +88,6 @@ Build Verifier Embedding:
     - !reference [.rules:child-verify-porting-push, rules]
 
 ######################## CONTAINER SCANNING EMBEDDING (push 3.0.x only) ########################
-Container Scanning Embedding ST:
-  extends: .container-scanning-template
-  needs:
-  - job: Fetch config
-    artifacts: true
-  - job: Build Embedding ST Release
-    artifacts: false
-  variables:
-    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
-  rules:
-    - !reference [.rules:child-restart-release, rules]
-
 Container Scanning Embedding OpenAI:
   extends: .container-scanning-template
   needs:
@@ -163,24 +112,10 @@ Trigger Restart Embedding Release:
     artifacts: true
   - job: Build Embedding OpenAI Release
     artifacts: false
-  - job: Build Embedding ST Release
-    artifacts: false
   rules:
     - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB (tag only) ########################
-Copy Embedding ST to DockerHub:
-  extends: .skopeo-copy-to-dockerhub
-  variables:
-    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
-  needs:
-    - job: Fetch config
-      artifacts: true
-    - job: Build Embedding ST Release
-      artifacts: false
-  rules:
-    - !reference [.rules:child-skopeo-release, rules]
-
 Copy Embedding OpenAI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
