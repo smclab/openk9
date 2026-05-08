@@ -221,4 +221,31 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>graphql-schema</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>smallrye-graphql-maven-plugin</artifactId>
+            <version>2.14.2</version>
+            <executions>
+              <execution>
+                <id>generate-schema</id>
+                <goals>
+                  <goal>generate-schema</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <includeScalars>true</includeScalars>
+              <includeDependencies>true</includeDependencies>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
