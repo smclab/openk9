@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.quarkus.scheduler.Scheduled;
+import io.smallrye.mutiny.groups.UniJoin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.Tuple;
@@ -109,12 +110,18 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	// Scheduled every day at 00:00 am
 	@Scheduled(cron = "0 0 0 * * ?")
 	public Uni<Void> removeScheduling() {
+		UniJoin.Builder<Void> builder = Uni.join().builder();
 		return tenantRegistry.getTenantIdList().flatMap(tenantIdList -> {
-			List<Uni<Void>> uniVoidList = tenantIdList.stream()
-				.map(this::removeOldScheduling)
-				.toList();
+			tenantIdList.forEach(tenantId ->
+				builder.add(removeOldScheduling(tenantId))
+			);
 
-			return Uni.combine().all().unis(uniVoidList).discardItems();
+			return builder.joinAll()
+				.usingConcurrencyOf(1)
+				.andCollectFailures()
+				.onFailure()
+				.invoke(throwable -> logger.error(throwable))
+				.replaceWithVoid();
 		});
 	}
 
