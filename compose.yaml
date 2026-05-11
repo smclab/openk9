@@ -67,7 +67,7 @@ services:
       - ./compose-utilities/postgresql:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
   caddy:
-    image: caddy:latest
+    image: caddy:2
     container_name: caddy
     ports:
       - "80:80"
