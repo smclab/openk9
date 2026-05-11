@@ -19,7 +19,6 @@ import {
   ContainerFluid,
   CreateDataEntity,
   CustomSelect,
-  CustomSelectRelationsOneToOne,
   NumberInput,
   TextInput,
   TitleEntity,
@@ -52,7 +51,7 @@ import {
   useDataSourcesQuery,
   useDocumentTypesQuery,
 } from "../../graphql-generated";
-import { useDocTypeOptions } from "../../utils/RelationOneToOne";
+import { useDataSources, useDocTypeOptions } from "../../utils/RelationOneToOne";
 
 export type DataindexData = {
   dataindexId: string;
@@ -126,7 +125,6 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     errorPolicy: "ignore",
   });
 
-  const { datasourcersQuery, OptionDataSourceType } = useOptionsDataSource();
   const documentTypesQuery = useDocumentTypesQuery();
 
   const chunkTypeDict = useMemo(
@@ -255,43 +253,6 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
     form.inputProps("embeddingJsonConfig").onChange(null);
     form.inputProps("chunkType").onChange(null);
   }, [form]);
-
-  const loadMoreOptionsDataSource = useCallback(async (): Promise<{ value: string; label: string }[]> => {
-    if (!datasourcersQuery.data?.datasources?.pageInfo?.hasNextPage) return [];
-
-    try {
-      const response = await datasourcersQuery.fetchMore({
-        variables: {
-          after: datasourcersQuery.data.datasources.pageInfo.endCursor,
-        },
-      });
-
-      const newEdges = response.data?.datasources?.edges || [];
-      const newPageInfo = response.data?.datasources?.pageInfo;
-
-      if (!newEdges.length || !newPageInfo) return [];
-
-      datasourcersQuery.updateQuery((prev) => ({
-        ...prev,
-        datasources: {
-          __typename: "DefaultConnection_Datasource",
-          ...prev.datasources,
-          edges: [...(prev.datasources?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
-
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Errore nel caricamento delle opzioni datasource:", error);
-      return [];
-    }
-  }, [datasourcersQuery]);
 
   const getInfo = useCallback(async () => {
     const docTypeIds = form.inputProps("docTypeIds").value;
@@ -471,16 +432,13 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
                 <div>
                   <TextInput label="Name" {...form.inputProps("name")} />
                   <TextInput label="Description" {...form.inputProps("description")} />
-                  <CustomSelectRelationsOneToOne
-                    options={OptionDataSourceType}
+                  <AutocompleteDropdown
                     label="Associate Datasource"
                     onChange={(val) => form.inputProps("datasourceId").onChange({ id: val.id, name: val.name })}
                     value={form.inputProps("datasourceId").value || { id: "", name: "" }}
                     disabled={isReadOnly}
-                    loadMoreOptions={{
-                      response: loadMoreOptionsDataSource,
-                      hasNextPage: datasourcersQuery.data?.datasources?.pageInfo?.hasNextPage || false,
-                    }}
+                    onClear={() => form.inputProps("datasourceId").onChange(null)}
+                    useOptions={useDataSources}
                   />
                   <DocumentTypeTable />
                   <FormControlLabel

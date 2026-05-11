@@ -16,6 +16,7 @@
 */
 import {
   RagType,
+  useDataSourcesQuery,
   useDocTypeFieldOptionsAnnotatorsQuery,
   useDocTypeFieldOptionsTokenTabQuery,
   useDocTypeFieldsQuery,
@@ -159,6 +160,11 @@ export const useRagConfigurationChatRag: UseOptionsHook = makeUseOptionsHook({
 export const useDocTypeOptions: UseOptionsHook = makeUseOptionsHook({
   useQuery: useDocTypeFieldsQuery,
   connectionKey: "docTypeFields",
+  first: 20,
+});
+export const useDataSources: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDataSourcesQuery,
+  connectionKey: "datasources",
   first: 20,
 });
 export const useQuery: UseOptionsHook = makeUseOptionsHook({
