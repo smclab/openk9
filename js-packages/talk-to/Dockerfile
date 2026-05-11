@@ -21,7 +21,13 @@ RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
     && sed -i 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
     && sed -i 's/^user .*;//' /etc/nginx/nginx.conf \
     && mkdir -p /var/run \
-    && chmod g+rw /var/cache/nginx /var/run /etc/nginx/conf.d
+                /var/cache/nginx/client_temp \
+                /var/cache/nginx/proxy_temp \
+                /var/cache/nginx/fastcgi_temp \
+                /var/cache/nginx/uwsgi_temp \
+                /var/cache/nginx/scgi_temp \
+    && chown -R 1001:0 /var/cache/nginx /var/run /etc/nginx/conf.d /usr/share/nginx/html \
+    && chmod -R g+rwX /var/cache/nginx /var/run /etc/nginx/conf.d /usr/share/nginx/html
 EXPOSE 8080
 USER 1001
 
