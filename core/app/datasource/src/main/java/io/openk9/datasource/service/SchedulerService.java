@@ -65,8 +65,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	ActorSystemProvider actorSystemProvider;
 	@Inject
 	RestHighLevelClient restHighLevelClient;
-	@Inject
-	TenantRegistry tenantRegistry;
 
 	@ConfigProperty(name = "openk9.scheduler.retention.days", defaultValue = "7")
 	int retention;
