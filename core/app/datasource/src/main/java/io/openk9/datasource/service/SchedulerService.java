@@ -130,7 +130,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 
 			deleteScheduler.where(
 				cb.and(
-					deleteFrom.get(Scheduler_.STATUS).in("FINISHED", "CANCELLED", "FAILURE"),
+					deleteFrom.get(Scheduler_.STATUS).in(
+						Scheduler.SchedulerStatus.FINISHED,
+						Scheduler.SchedulerStatus.CANCELLED,
+						Scheduler.SchedulerStatus.FAILURE
+					),
 					cb.lessThan(lastModifiedDate, expirationDate)
 				)
 			);
