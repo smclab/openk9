@@ -186,3 +186,34 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
                 documents.append(document)
 
         return documents
+
+    def get_domains(
+        self,
+        size: int = 1000,
+    ) -> List[str]:
+        open_search_client = OpenSearch(
+            hosts=[self.opensearch_host],
+        )
+
+        if not open_search_client.indices.exists(index=self.uploaded_documents_index):
+            return []
+
+        response = open_search_client.search(
+            index=self.uploaded_documents_index,
+            body={
+                "size": 0,
+                "aggs": {
+                    "distinct_domains": {
+                        "terms": {
+                            "field": "domain.keyword",
+                            "size": size,
+                        }
+                    }
+                },
+            },
+        )
+
+        return [
+            bucket["key"]
+            for bucket in response["aggregations"]["distinct_domains"]["buckets"]
+        ]
