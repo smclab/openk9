@@ -355,7 +355,7 @@ tzdata==2025.2
     # via
     #   faker
     #   pandas
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests
 uvicorn==0.37.0
     # via -r requirements.in

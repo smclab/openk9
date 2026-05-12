@@ -2,8 +2,8 @@ aiohttp==3.13.3
 aiofiles==24.1.0
 apscheduler==3.11.0
 arize-phoenix-otel==0.9.1
-authlib==1.6.5
-cryptography==44.0.1
+authlib==1.6.9
+cryptography==46.0.5
 fastapi==0.128.0
 filelock==3.20.1
 grpcio-tools==1.71.0
@@ -13,7 +13,7 @@ langchain_ibm==0.3.8
 langchain-aws==0.2.35
 langchain-cli==0.0.36
 langchain-community==0.3.27
-langchain-core==0.3.81
+langchain-core==0.3.85
 langchain-docling==1.0.0
 langchain-google-vertexai==2.0.15
 langchain-ollama==0.2.3
@@ -25,9 +25,9 @@ llama-index-core==0.12.41
 llama-index==0.12.41
 openinference-instrumentation-langchain==0.1.39
 opensearch-py==2.8.0
-protobuf==5.29.5
+protobuf==5.29.6
 python-dotenv==1.0.1
-python-multipart==0.0.20
-pyjwt==2.10.1
+python-multipart==0.0.27
+pyjwt==2.12.0
 requests==2.32.4
 setuptools==78.1.1
