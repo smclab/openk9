@@ -110,6 +110,11 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	// Scheduled every day at 00:00 am
 	@Scheduled(cron = "0 0 0 * * ?")
 	public Uni<Void> removeScheduling() {
+		if (retention < 0) {
+			logger.warn("retention value is negative, no Schedulers will be removed");
+			return Uni.createFrom().voidItem();
+		}
+
 		UniJoin.Builder<Void> builder = Uni.join().builder();
 		return tenantRegistry.getTenantIdList().flatMap(tenantIdList -> {
 			tenantIdList.forEach(tenantId ->
