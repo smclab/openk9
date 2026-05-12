@@ -21,7 +21,7 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 
 export function Step3Confirm({ values }: Props) {
   const { data } = usePreconfigurationsQuery();
-  const selected = (data?.getPreconfigurations ?? []).find((p) => p?.name === values.step2.securityConfiguration);
+  const selected = (data?.preconfigurations ?? []).find((p) => p?.name === values.step2.securityConfiguration);
 
   return (
     <Stack spacing={3}>

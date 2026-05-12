@@ -17,7 +17,7 @@ import {
 import { PreconfigurationsQuery, usePreconfigurationsQuery } from "../../graphql-generated";
 import { apiGroupLabel, authSchemeColor, authSchemeLabel, securityConfigDescription, securityConfigLabel, SecurityConfigurationKey, WizardState } from "./types";
 
-type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["getPreconfigurations"]>[number]>;
+type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["preconfigurations"]>[number]>;
 
 type Props = {
   values: WizardState["step2"];
@@ -26,7 +26,7 @@ type Props = {
 
 export function Step2Security({ values, onChange }: Props) {
   const { data, loading, error } = usePreconfigurationsQuery();
-  const presets = (data?.getPreconfigurations ?? []).filter((p): p is Preconfig => !!p);
+  const presets = (data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p);
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 
   if (loading) {

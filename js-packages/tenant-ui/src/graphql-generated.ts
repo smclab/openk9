@@ -18,57 +18,73 @@ export type Scalars = {
   DateTime: any;
 };
 
-export type BackgroundProcess = GraphqlId & {
-  __typename?: 'BackgroundProcess';
+export enum ApiGroup {
+  Administration = 'ADMINISTRATION',
+  Ingestion = 'INGESTION',
+  Public = 'PUBLIC',
+  Search = 'SEARCH'
+}
+
+export type ApiKeyResponse = {
+  __typename?: 'ApiKeyResponse';
+  apiGroup?: Maybe<Scalars['String']>;
   /** ISO-8601 */
   createDate?: Maybe<Scalars['DateTime']>;
-  id?: Maybe<Scalars['BigInteger']>;
-  message?: Maybe<Scalars['String']>;
   /** ISO-8601 */
-  modifiedDate?: Maybe<Scalars['DateTime']>;
+  expirationDate?: Maybe<Scalars['DateTime']>;
+  hash?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
   name?: Maybe<Scalars['String']>;
-  processId?: Maybe<Scalars['String']>;
-  status?: Maybe<Status>;
+  prefix?: Maybe<Scalars['String']>;
+  status?: Maybe<Scalars['String']>;
+  suffix?: Maybe<Scalars['String']>;
+  tenantId?: Maybe<Scalars['String']>;
+};
+
+export enum AuthorizationScheme {
+  ApiKey = 'API_KEY',
+  NoAuth = 'NO_AUTH',
+  Oauth2 = 'OAUTH2'
+}
+
+export type Config = {
+  __typename?: 'Config';
+  apiGroup?: Maybe<ApiGroup>;
+  authScheme?: Maybe<AuthorizationScheme>;
 };
 
 /** A connection to a list of items. */
-export type Connection_BackgroundProcess = {
+export type Connection_TenantResponseDto = {
   /** A list of edges. */
-  edges?: Maybe<Array<Maybe<Edge_BackgroundProcess>>>;
+  edges?: Maybe<Array<Maybe<Edge_TenantResponseDto>>>;
   /** details about this specific page */
   pageInfo?: Maybe<PageInfo>;
 };
 
-/** A connection to a list of items. */
-export type Connection_Tenant = {
-  /** A list of edges. */
-  edges?: Maybe<Array<Maybe<Edge_Tenant>>>;
-  /** details about this specific page */
+export type CreateApiKeyRequestInput = {
+  apiGroup: ApiGroup;
+  /** ISO-8601 */
+  expirationDate?: InputMaybe<Scalars['DateTime']>;
+  name: Scalars['String'];
+  tenantName: Scalars['String'];
+};
+
+export type CreateApiKeyResponse = {
+  __typename?: 'CreateApiKeyResponse';
+  apiKey?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
+};
+
+export type DefaultConnection_TenantResponseDto = Connection_TenantResponseDto & {
+  __typename?: 'DefaultConnection_TenantResponseDTO';
+  edges?: Maybe<Array<Maybe<Edge_TenantResponseDto>>>;
   pageInfo?: Maybe<PageInfo>;
 };
 
-export type DefaultConnection_BackgroundProcess = Connection_BackgroundProcess & {
-  __typename?: 'DefaultConnection_BackgroundProcess';
-  edges?: Maybe<Array<Maybe<Edge_BackgroundProcess>>>;
-  pageInfo?: Maybe<PageInfo>;
-};
-
-export type DefaultConnection_Tenant = Connection_Tenant & {
-  __typename?: 'DefaultConnection_Tenant';
-  edges?: Maybe<Array<Maybe<Edge_Tenant>>>;
-  pageInfo?: Maybe<PageInfo>;
-};
-
-export type DefaultEdge_BackgroundProcess = Edge_BackgroundProcess & {
-  __typename?: 'DefaultEdge_BackgroundProcess';
+export type DefaultEdge_TenantResponseDto = Edge_TenantResponseDto & {
+  __typename?: 'DefaultEdge_TenantResponseDTO';
   cursor?: Maybe<Scalars['String']>;
-  node?: Maybe<BackgroundProcess>;
-};
-
-export type DefaultEdge_Tenant = Edge_Tenant & {
-  __typename?: 'DefaultEdge_Tenant';
-  cursor?: Maybe<Scalars['String']>;
-  node?: Maybe<Tenant>;
+  node?: Maybe<TenantResponseDto>;
 };
 
 export type DefaultPageInfo = PageInfo & {
@@ -85,19 +101,11 @@ export enum Direction {
 }
 
 /** An edge in a connection */
-export type Edge_BackgroundProcess = {
+export type Edge_TenantResponseDto = {
   /** cursor marks a unique position or index into the connection */
   cursor?: Maybe<Scalars['String']>;
   /** The item at the end of the edge */
-  node?: Maybe<BackgroundProcess>;
-};
-
-/** An edge in a connection */
-export type Edge_Tenant = {
-  /** cursor marks a unique position or index into the connection */
-  cursor?: Maybe<Scalars['String']>;
-  /** The item at the end of the edge */
-  node?: Maybe<Tenant>;
+  node?: Maybe<TenantResponseDto>;
 };
 
 export type FieldValidator = {
@@ -106,22 +114,30 @@ export type FieldValidator = {
   message?: Maybe<Scalars['String']>;
 };
 
-export type GraphqlId = {
-  id?: Maybe<Scalars['BigInteger']>;
-};
-
 /** Mutation root */
 export type Mutation = {
   __typename?: 'Mutation';
-  tenant?: Maybe<Response_Tenant>;
+  createApiKey?: Maybe<CreateApiKeyResponse>;
+  revokeApiKey?: Maybe<Scalars['Boolean']>;
+  tenant?: Maybe<Response_TenantResponseDto>;
+};
+
+
+/** Mutation root */
+export type MutationCreateApiKeyArgs = {
+  createApiKeyRequest: CreateApiKeyRequestInput;
+};
+
+
+/** Mutation root */
+export type MutationRevokeApiKeyArgs = {
+  id: Scalars['ID'];
 };
 
 
 /** Mutation root */
 export type MutationTenantArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  patch?: InputMaybe<Scalars['Boolean']>;
-  tenantDTO?: InputMaybe<TenantDtoInput>;
+  tenantRequestDTO?: InputMaybe<TenantRequestDtoInput>;
 };
 
 /** Information about pagination in a connection. */
@@ -136,36 +152,38 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
+export type Preconfiguration = {
+  __typename?: 'Preconfiguration';
+  configs?: Maybe<Array<Maybe<Config>>>;
+  name?: Maybe<SecurityConfiguration>;
+};
+
 /** Query root */
 export type Query = {
   __typename?: 'Query';
-  backgroundProcess?: Maybe<BackgroundProcess>;
-  backgroundProcesses?: Maybe<Connection_BackgroundProcess>;
-  tenant?: Maybe<Tenant>;
-  tenants?: Maybe<Connection_Tenant>;
+  apiKey?: Maybe<ApiKeyResponse>;
+  apiKeys?: Maybe<Array<Maybe<ApiKeyResponse>>>;
+  preconfigurations?: Maybe<Array<Maybe<Preconfiguration>>>;
+  tenant?: Maybe<TenantResponseDto>;
+  tenants?: Maybe<Connection_TenantResponseDto>;
 };
 
 
 /** Query root */
-export type QueryBackgroundProcessArgs = {
+export type QueryApiKeyArgs = {
   id: Scalars['ID'];
 };
 
 
 /** Query root */
-export type QueryBackgroundProcessesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  searchText?: InputMaybe<Scalars['String']>;
-  sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
+export type QueryApiKeysArgs = {
+  tenantId: Scalars['String'];
 };
 
 
 /** Query root */
 export type QueryTenantArgs = {
-  id: Scalars['ID'];
+  id?: InputMaybe<Scalars['ID']>;
 };
 
 
@@ -179,67 +197,85 @@ export type QueryTenantsArgs = {
   sortByList?: InputMaybe<Array<InputMaybe<SortByInput>>>;
 };
 
-export type Response_Tenant = {
-  __typename?: 'Response_Tenant';
-  entity?: Maybe<Tenant>;
+export type Response_TenantResponseDto = {
+  __typename?: 'Response_TenantResponseDTO';
+  entity?: Maybe<TenantResponseDto>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
+
+export enum SecurityConfiguration {
+  /** No gateway auth, downstream services handle security */
+  NoGatewayAuth = 'NO_GATEWAY_AUTH',
+  /** OAuth2 for admin only, search and data access are open */
+  Oauth2AdminOnly = 'OAUTH2_ADMIN_ONLY',
+  /** OAuth2 for admin only, API keys for all other routes */
+  Oauth2AdminWithApiKey = 'OAUTH2_ADMIN_WITH_API_KEY',
+  /** OAuth2 for admin and search, data access is open */
+  Oauth2Search = 'OAUTH2_SEARCH',
+  /** OAuth2 for admin and search, API keys for data and ingestion */
+  Oauth2SearchWithApiKey = 'OAUTH2_SEARCH_WITH_API_KEY'
+}
 
 export type SortByInput = {
   column?: InputMaybe<Scalars['String']>;
   direction?: InputMaybe<Direction>;
 };
 
-export enum Status {
-  Failed = 'FAILED',
-  Finished = 'FINISHED',
-  InProgress = 'IN_PROGRESS',
-  Roolback = 'ROOLBACK'
-}
-
-export type Tenant = GraphqlId & {
-  __typename?: 'Tenant';
-  clientId?: Maybe<Scalars['String']>;
-  clientSecret?: Maybe<Scalars['String']>;
-  id?: Maybe<Scalars['BigInteger']>;
-  issuerUri?: Maybe<Scalars['String']>;
-  liquibaseSchemaName?: Maybe<Scalars['String']>;
-  schemaName?: Maybe<Scalars['String']>;
-  virtualHost?: Maybe<Scalars['String']>;
-};
-
-export type TenantDtoInput = {
+export type TenantRequestDtoInput = {
   clientId: Scalars['String'];
   clientSecret?: InputMaybe<Scalars['String']>;
-  liquibaseSchemaName: Scalars['String'];
-  realmName: Scalars['String'];
-  schemaName: Scalars['String'];
+  issuerUri: Scalars['String'];
+  securityConfiguration: SecurityConfiguration;
+  tenantName: Scalars['String'];
   virtualHost: Scalars['String'];
 };
 
-export type ProcessesQueryVariables = Exact<{ [key: string]: never; }>;
+export type TenantResponseDto = {
+  __typename?: 'TenantResponseDTO';
+  clientId?: Maybe<Scalars['String']>;
+  clientSecret?: Maybe<Scalars['String']>;
+  id?: Maybe<Scalars['String']>;
+  issuerUri?: Maybe<Scalars['String']>;
+  realmProvisioned: Scalars['Boolean'];
+  securityConfiguration?: Maybe<SecurityConfiguration>;
+  tenantName?: Maybe<Scalars['String']>;
+  virtualHost?: Maybe<Scalars['String']>;
+};
+
+export type GetApiKeysQueryVariables = Exact<{
+  tenantId: Scalars['String'];
+}>;
 
 
-export type ProcessesQuery = { __typename?: 'Query', backgroundProcesses?: { __typename?: 'DefaultConnection_BackgroundProcess', edges?: Array<{ __typename?: 'DefaultEdge_BackgroundProcess', node?: { __typename?: 'BackgroundProcess', id?: any | null, name?: string | null, createDate?: any | null, status?: Status | null, modifiedDate?: any | null, processId?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type GetApiKeysQuery = { __typename?: 'Query', apiKeys?: Array<{ __typename?: 'ApiKeyResponse', id?: string | null, tenantId?: string | null, name?: string | null, apiGroup?: string | null, status?: string | null, prefix?: string | null, suffix?: string | null, hash?: string | null, createDate?: any | null, expirationDate?: any | null } | null> | null };
+
+export type GetApiKeyQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type GetApiKeyQuery = { __typename?: 'Query', apiKey?: { __typename?: 'ApiKeyResponse', id?: string | null, tenantId?: string | null, name?: string | null, apiGroup?: string | null, status?: string | null, prefix?: string | null, suffix?: string | null, hash?: string | null, createDate?: any | null, expirationDate?: any | null } | null };
+
+export type CreateApiKeyMutationVariables = Exact<{
+  createApiKeyRequest: CreateApiKeyRequestInput;
+}>;
+
+
+export type CreateApiKeyMutation = { __typename?: 'Mutation', createApiKey?: { __typename?: 'CreateApiKeyResponse', id?: string | null, apiKey?: string | null } | null };
+
+export type RevokeApiKeyMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type RevokeApiKeyMutation = { __typename?: 'Mutation', revokeApiKey?: boolean | null };
 
 export type TenantQueryVariables = Exact<{
   id: Scalars['ID'];
 }>;
 
 
-export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'Tenant', id?: any | null, schemaName?: string | null, virtualHost?: string | null, clientSecret?: string | null, issuerUri?: string | null } | null };
-
-export type CreateOrUpdateTenantMutationVariables = Exact<{
-  id?: InputMaybe<Scalars['ID']>;
-  virtualHost: Scalars['String'];
-  schemaName: Scalars['String'];
-  liquibaseSchemaName: Scalars['String'];
-  clientId: Scalars['String'];
-  realmName: Scalars['String'];
-}>;
-
-
-export type CreateOrUpdateTenantMutation = { __typename?: 'Mutation', tenant?: { __typename?: 'Response_Tenant', fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+export type TenantQuery = { __typename?: 'Query', tenant?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, clientId?: string | null, clientSecret?: string | null, issuerUri?: string | null, securityConfiguration?: SecurityConfiguration | null, realmProvisioned: boolean } | null };
 
 export type TenantsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -247,64 +283,185 @@ export type TenantsQueryVariables = Exact<{
 }>;
 
 
-export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_Tenant', edges?: Array<{ __typename?: 'DefaultEdge_Tenant', node?: { __typename?: 'Tenant', id?: any | null, virtualHost?: string | null } | null } | null> | null } | null };
+export type TenantsQuery = { __typename?: 'Query', tenants?: { __typename?: 'DefaultConnection_TenantResponseDTO', edges?: Array<{ __typename?: 'DefaultEdge_TenantResponseDTO', node?: { __typename?: 'TenantResponseDTO', id?: string | null, virtualHost?: string | null } | null } | null> | null } | null };
+
+export type PreconfigurationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export const ProcessesDocument = gql`
-    query Processes {
-  backgroundProcesses {
-    edges {
-      node {
-        id
-        name
-        createDate
-        status
-        modifiedDate
-        processId
-      }
-    }
-    pageInfo {
-      hasNextPage
-      endCursor
-    }
+export type PreconfigurationsQuery = { __typename?: 'Query', preconfigurations?: Array<{ __typename?: 'Preconfiguration', name?: SecurityConfiguration | null, configs?: Array<{ __typename?: 'Config', apiGroup?: ApiGroup | null, authScheme?: AuthorizationScheme | null } | null> | null } | null> | null };
+
+export type CreateTenantMutationVariables = Exact<{
+  tenantRequestDTO: TenantRequestDtoInput;
+}>;
+
+
+export type CreateTenantMutation = { __typename?: 'Mutation', tenant?: { __typename?: 'Response_TenantResponseDTO', entity?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, securityConfiguration?: SecurityConfiguration | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+
+export const GetApiKeysDocument = gql`
+    query GetApiKeys($tenantId: String!) {
+  apiKeys(tenantId: $tenantId) {
+    id
+    tenantId
+    name
+    apiGroup
+    status
+    prefix
+    suffix
+    hash
+    createDate
+    expirationDate
   }
 }
     `;
 
 /**
- * __useProcessesQuery__
+ * __useGetApiKeysQuery__
  *
- * To run a query within a React component, call `useProcessesQuery` and pass it any options that fit your needs.
- * When your component renders, `useProcessesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useGetApiKeysQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetApiKeysQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useProcessesQuery({
+ * const { data, loading, error } = useGetApiKeysQuery({
  *   variables: {
+ *      tenantId: // value for 'tenantId'
  *   },
  * });
  */
-export function useProcessesQuery(baseOptions?: Apollo.QueryHookOptions<ProcessesQuery, ProcessesQueryVariables>) {
+export function useGetApiKeysQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<ProcessesQuery, ProcessesQueryVariables>(ProcessesDocument, options);
+        return Apollo.useQuery<GetApiKeysQuery, GetApiKeysQueryVariables>(GetApiKeysDocument, options);
       }
-export function useProcessesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ProcessesQuery, ProcessesQueryVariables>) {
+export function useGetApiKeysLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetApiKeysQuery, GetApiKeysQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<ProcessesQuery, ProcessesQueryVariables>(ProcessesDocument, options);
+          return Apollo.useLazyQuery<GetApiKeysQuery, GetApiKeysQueryVariables>(GetApiKeysDocument, options);
         }
-export type ProcessesQueryHookResult = ReturnType<typeof useProcessesQuery>;
-export type ProcessesLazyQueryHookResult = ReturnType<typeof useProcessesLazyQuery>;
-export type ProcessesQueryResult = Apollo.QueryResult<ProcessesQuery, ProcessesQueryVariables>;
+export type GetApiKeysQueryHookResult = ReturnType<typeof useGetApiKeysQuery>;
+export type GetApiKeysLazyQueryHookResult = ReturnType<typeof useGetApiKeysLazyQuery>;
+export type GetApiKeysQueryResult = Apollo.QueryResult<GetApiKeysQuery, GetApiKeysQueryVariables>;
+export const GetApiKeyDocument = gql`
+    query GetApiKey($id: ID!) {
+  apiKey(id: $id) {
+    id
+    tenantId
+    name
+    apiGroup
+    status
+    prefix
+    suffix
+    hash
+    createDate
+    expirationDate
+  }
+}
+    `;
+
+/**
+ * __useGetApiKeyQuery__
+ *
+ * To run a query within a React component, call `useGetApiKeyQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetApiKeyQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetApiKeyQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetApiKeyQuery(baseOptions: Apollo.QueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetApiKeyQuery, GetApiKeyQueryVariables>(GetApiKeyDocument, options);
+      }
+export function useGetApiKeyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetApiKeyQuery, GetApiKeyQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetApiKeyQuery, GetApiKeyQueryVariables>(GetApiKeyDocument, options);
+        }
+export type GetApiKeyQueryHookResult = ReturnType<typeof useGetApiKeyQuery>;
+export type GetApiKeyLazyQueryHookResult = ReturnType<typeof useGetApiKeyLazyQuery>;
+export type GetApiKeyQueryResult = Apollo.QueryResult<GetApiKeyQuery, GetApiKeyQueryVariables>;
+export const CreateApiKeyDocument = gql`
+    mutation CreateApiKey($createApiKeyRequest: CreateApiKeyRequestInput!) {
+  createApiKey(createApiKeyRequest: $createApiKeyRequest) {
+    id
+    apiKey
+  }
+}
+    `;
+export type CreateApiKeyMutationFn = Apollo.MutationFunction<CreateApiKeyMutation, CreateApiKeyMutationVariables>;
+
+/**
+ * __useCreateApiKeyMutation__
+ *
+ * To run a mutation, you first call `useCreateApiKeyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateApiKeyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createApiKeyMutation, { data, loading, error }] = useCreateApiKeyMutation({
+ *   variables: {
+ *      createApiKeyRequest: // value for 'createApiKeyRequest'
+ *   },
+ * });
+ */
+export function useCreateApiKeyMutation(baseOptions?: Apollo.MutationHookOptions<CreateApiKeyMutation, CreateApiKeyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateApiKeyMutation, CreateApiKeyMutationVariables>(CreateApiKeyDocument, options);
+      }
+export type CreateApiKeyMutationHookResult = ReturnType<typeof useCreateApiKeyMutation>;
+export type CreateApiKeyMutationResult = Apollo.MutationResult<CreateApiKeyMutation>;
+export type CreateApiKeyMutationOptions = Apollo.BaseMutationOptions<CreateApiKeyMutation, CreateApiKeyMutationVariables>;
+export const RevokeApiKeyDocument = gql`
+    mutation RevokeApiKey($id: ID!) {
+  revokeApiKey(id: $id)
+}
+    `;
+export type RevokeApiKeyMutationFn = Apollo.MutationFunction<RevokeApiKeyMutation, RevokeApiKeyMutationVariables>;
+
+/**
+ * __useRevokeApiKeyMutation__
+ *
+ * To run a mutation, you first call `useRevokeApiKeyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRevokeApiKeyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [revokeApiKeyMutation, { data, loading, error }] = useRevokeApiKeyMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRevokeApiKeyMutation(baseOptions?: Apollo.MutationHookOptions<RevokeApiKeyMutation, RevokeApiKeyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<RevokeApiKeyMutation, RevokeApiKeyMutationVariables>(RevokeApiKeyDocument, options);
+      }
+export type RevokeApiKeyMutationHookResult = ReturnType<typeof useRevokeApiKeyMutation>;
+export type RevokeApiKeyMutationResult = Apollo.MutationResult<RevokeApiKeyMutation>;
+export type RevokeApiKeyMutationOptions = Apollo.BaseMutationOptions<RevokeApiKeyMutation, RevokeApiKeyMutationVariables>;
 export const TenantDocument = gql`
     query Tenant($id: ID!) {
   tenant(id: $id) {
     id
-    schemaName
+    tenantName
     virtualHost
+    clientId
     clientSecret
     issuerUri
+    securityConfiguration
+    realmProvisioned
   }
 }
     `;
@@ -336,50 +493,6 @@ export function useTenantLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Ten
 export type TenantQueryHookResult = ReturnType<typeof useTenantQuery>;
 export type TenantLazyQueryHookResult = ReturnType<typeof useTenantLazyQuery>;
 export type TenantQueryResult = Apollo.QueryResult<TenantQuery, TenantQueryVariables>;
-export const CreateOrUpdateTenantDocument = gql`
-    mutation CreateOrUpdateTenant($id: ID, $virtualHost: String!, $schemaName: String!, $liquibaseSchemaName: String!, $clientId: String!, $realmName: String!) {
-  tenant(
-    id: $id
-    tenantDTO: {virtualHost: $virtualHost, schemaName: $schemaName, liquibaseSchemaName: $liquibaseSchemaName, clientId: $clientId, realmName: $realmName}
-  ) {
-    fieldValidators {
-      field
-      message
-    }
-  }
-}
-    `;
-export type CreateOrUpdateTenantMutationFn = Apollo.MutationFunction<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>;
-
-/**
- * __useCreateOrUpdateTenantMutation__
- *
- * To run a mutation, you first call `useCreateOrUpdateTenantMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateOrUpdateTenantMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createOrUpdateTenantMutation, { data, loading, error }] = useCreateOrUpdateTenantMutation({
- *   variables: {
- *      id: // value for 'id'
- *      virtualHost: // value for 'virtualHost'
- *      schemaName: // value for 'schemaName'
- *      liquibaseSchemaName: // value for 'liquibaseSchemaName'
- *      clientId: // value for 'clientId'
- *      realmName: // value for 'realmName'
- *   },
- * });
- */
-export function useCreateOrUpdateTenantMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>(CreateOrUpdateTenantDocument, options);
-      }
-export type CreateOrUpdateTenantMutationHookResult = ReturnType<typeof useCreateOrUpdateTenantMutation>;
-export type CreateOrUpdateTenantMutationResult = Apollo.MutationResult<CreateOrUpdateTenantMutation>;
-export type CreateOrUpdateTenantMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateTenantMutation, CreateOrUpdateTenantMutationVariables>;
 export const TenantsDocument = gql`
     query Tenants($searchText: String, $cursor: String) {
   tenants(searchText: $searchText, first: 25, after: $cursor) {
@@ -421,4 +534,84 @@ export function useTenantsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<Te
 export type TenantsQueryHookResult = ReturnType<typeof useTenantsQuery>;
 export type TenantsLazyQueryHookResult = ReturnType<typeof useTenantsLazyQuery>;
 export type TenantsQueryResult = Apollo.QueryResult<TenantsQuery, TenantsQueryVariables>;
-// Generated on 2023-01-18T15:33:18+01:00
+export const PreconfigurationsDocument = gql`
+    query Preconfigurations {
+  preconfigurations {
+    name
+    configs {
+      apiGroup
+      authScheme
+    }
+  }
+}
+    `;
+
+/**
+ * __usePreconfigurationsQuery__
+ *
+ * To run a query within a React component, call `usePreconfigurationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePreconfigurationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePreconfigurationsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function usePreconfigurationsQuery(baseOptions?: Apollo.QueryHookOptions<PreconfigurationsQuery, PreconfigurationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PreconfigurationsQuery, PreconfigurationsQueryVariables>(PreconfigurationsDocument, options);
+      }
+export function usePreconfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PreconfigurationsQuery, PreconfigurationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PreconfigurationsQuery, PreconfigurationsQueryVariables>(PreconfigurationsDocument, options);
+        }
+export type PreconfigurationsQueryHookResult = ReturnType<typeof usePreconfigurationsQuery>;
+export type PreconfigurationsLazyQueryHookResult = ReturnType<typeof usePreconfigurationsLazyQuery>;
+export type PreconfigurationsQueryResult = Apollo.QueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
+export const CreateTenantDocument = gql`
+    mutation CreateTenant($tenantRequestDTO: TenantRequestDTOInput!) {
+  tenant(tenantRequestDTO: $tenantRequestDTO) {
+    entity {
+      id
+      tenantName
+      virtualHost
+      securityConfiguration
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateTenantMutationFn = Apollo.MutationFunction<CreateTenantMutation, CreateTenantMutationVariables>;
+
+/**
+ * __useCreateTenantMutation__
+ *
+ * To run a mutation, you first call `useCreateTenantMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateTenantMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createTenantMutation, { data, loading, error }] = useCreateTenantMutation({
+ *   variables: {
+ *      tenantRequestDTO: // value for 'tenantRequestDTO'
+ *   },
+ * });
+ */
+export function useCreateTenantMutation(baseOptions?: Apollo.MutationHookOptions<CreateTenantMutation, CreateTenantMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateTenantMutation, CreateTenantMutationVariables>(CreateTenantDocument, options);
+      }
+export type CreateTenantMutationHookResult = ReturnType<typeof useCreateTenantMutation>;
+export type CreateTenantMutationResult = Apollo.MutationResult<CreateTenantMutation>;
+export type CreateTenantMutationOptions = Apollo.BaseMutationOptions<CreateTenantMutation, CreateTenantMutationVariables>;
+// Generated on 2026-05-12T16:33:01+02:00

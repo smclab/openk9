@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 
 gql`
   query Preconfigurations {
-    getPreconfigurations {
+    preconfigurations {
       name
       configs {
         apiGroup

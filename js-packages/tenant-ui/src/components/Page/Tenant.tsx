@@ -22,7 +22,6 @@ export const TenantQuery = gql`
   query Tenant($id: ID!) {
     tenant(id: $id) {
       id
-      schemaName
       tenantName
       virtualHost
       clientId
@@ -60,7 +59,7 @@ export function Tenant() {
             try {
               if (selectedConnector) {
                 await restClient.provisioningResource.postApiTenantManagerProvisioningConnector({
-                  tenantName: tenant?.schemaName || "",
+                  tenantName: tenant?.tenantName || "",
                   preset: selectedConnector,
                 });
                 showToast({
@@ -115,9 +114,9 @@ export function Tenant() {
           actionConfirm={async () => {
             setIsLoading(true);
             try {
-              if (tenant?.schemaName) {
+              if (tenant?.tenantName) {
                 await restClient.provisioningResource.postApiTenantManagerProvisioningInitTenant({
-                  tenantName: tenant.schemaName,
+                  tenantName: tenant.tenantName,
                 });
                 showToast({
                   displayType: "success",
@@ -229,7 +228,6 @@ export function Tenant() {
           >
             <TextField label="Tenant Name" value={tenant?.tenantName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Virtual Host" value={tenant?.virtualHost || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
-            <TextField label="Schema Name" value={tenant?.schemaName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Client ID" value={tenant?.clientId || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Client Secret" value={tenant?.clientSecret || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Issuer URI" value={tenant?.issuerUri || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
