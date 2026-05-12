@@ -1,4 +1,3 @@
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const CompressionPlugin = require("compression-webpack-plugin");
 const path = require("path");
 
@@ -10,27 +9,6 @@ module.exports = {
     },
     plugins: {
       add: [
-        [
-          new MonacoWebpackPlugin({
-            languages: ["json", "typescript", "javascript"],
-            features: [
-              "bracketMatching",
-              "clipboard",
-              "contextmenu",
-              "coreCommands",
-              "cursorUndo",
-              "find",
-              "format",
-              "hover",
-              "inPlaceReplace",
-              "iPadShowKeyboard",
-              "links",
-              "multicursor",
-              "suggest",
-            ],
-          }),
-          "append",
-        ],
         [
           new CompressionPlugin({
             filename: "[path][base].gz",
@@ -64,12 +42,6 @@ module.exports = {
           splitChunks: {
             chunks: "all",
             cacheGroups: {
-              monacoEditor: {
-                test: /[\\/]node_modules[\\/]monaco-editor[\\/]/,
-                name: "monaco-editor",
-                priority: 40,
-                reuseExistingChunk: true,
-              },
               mui: {
                 test: /[\\/]node_modules[\\/]@mui[\\/]/,
                 name: "mui",
