@@ -107,7 +107,13 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 			});
 	}
 
-	// Scheduled every day at 00:00 am
+	/**
+	 * Scheduled job that runs daily at midnight to delete old {@link Scheduler} records.
+	 * <p>
+	 * Removes Schedulers in {@code FINISHED}, {@code CANCELLED}, and {@code FAILURE} status
+	 * whose last modified date is older than the configured {@code retention} days.
+	 * If {@code retention} is negative, no records are deleted.
+	 */
 	@Scheduled(cron = "0 0 0 * * ?")
 	public Uni<Void> removeScheduling() {
 		if (retention < 0) {
