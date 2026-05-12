@@ -13,9 +13,13 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  /** Scalar for BigDecimal */
   BigDecimal: any;
+  /** Scalar for BigInteger */
   BigInteger: any;
+  /** Scalar for DateTime */
   DateTime: any;
+  /** Scalar for FormConfigurations */
   FormConfigurations: any;
 };
 
@@ -573,7 +577,6 @@ export type CreateRagConfigurationDtoInput = {
    * Controls context window merging behavior for chunk processing:
    * 0: Disables chunk merging.
    * > 0: Enables merging with specified window size.
-   *
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
@@ -587,19 +590,16 @@ export type CreateRagConfigurationDtoInput = {
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
-   *
    */
   promptNoRag?: InputMaybe<Scalars['String']>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
-   *
    */
   ragToolDescription?: InputMaybe<Scalars['String']>;
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
-   *
    */
   reformulate?: InputMaybe<Scalars['Boolean']>;
   /** Prompt template used if reformulate is set to true. */
@@ -1486,14 +1486,12 @@ export type EmbeddingModelDtoInput = {
    * Authentication API key required for accessing the embedding model's service.
    * Necessary for providers that require authentication to use their embedding API.
    * Ensure this key is kept confidential.
-   *
    */
   apiKey?: InputMaybe<Scalars['String']>;
   /**
    * The API URL for the embedding model's endpoint.
    * Required only when using a custom embedding service or a model hosted
    * on a private/internal network.
-   *
    */
   apiUrl?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
@@ -1512,7 +1510,6 @@ export type EmbeddingModelDtoInput = {
    * 768 dimensions: Standard for many BERT-based models
    * 1,024 dimensions: High-performance models
    * 1,536 dimensions: Ultra-high performance models
-   *
    */
   vectorSize: Scalars['Int'];
 };
@@ -1805,7 +1802,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket with the linked RAGConfiguration.
    *   - `ragConfiguration`: The linked RAGConfiguration.
-   *
    */
   bindRAGConfigurationToBucket?: Maybe<Tuple2_Bucket_RagConfiguration>;
   bindSearchConfigToBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
@@ -1823,7 +1819,6 @@ export type Mutation = {
    *
    * Returns:
    * - The RAGConfiguration entity created.
-   *
    */
   createRAGConfiguration?: Maybe<Response_RagConfiguration>;
   createSubField?: Maybe<Response_DocTypeField>;
@@ -1839,9 +1834,14 @@ export type Mutation = {
    * Deletes a DocType entity by its ID after validating the provided name matches the entity.
    * Requires both the docTypeId and docTypeName (as a confirmation mechanism) to prevent
    * accidental deletions.
-   *
    */
   deleteDocType?: Maybe<DocType>;
+  /**
+   * Deletes a DocTypeField entity by its ID after validating the provided name matches the entity.
+   * Requires both the docTypeFieldId and docTypeFieldName (as a confirmation mechanism) to prevent
+   * accidental deletions.
+   */
+  deleteDocTypeField?: Maybe<DocTypeField>;
   deleteDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
   deleteDocTypeTemplate?: Maybe<DocTypeTemplate>;
   deleteEmbeddingModel?: Maybe<EmbeddingModel>;
@@ -1863,7 +1863,22 @@ export type Mutation = {
   deleteTokenTab?: Maybe<TokenTab>;
   deleteTokenizer?: Maybe<Tokenizer>;
   docType?: Maybe<Response_DocType>;
+  /**
+   * Creates or updates a DocTypeField entity under the specified DocType.
+   * If docTypeFieldId is null, a new DocTypeField is created.
+   * Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+   * Returns validation errors if the provided DTO fails validation.
+   * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+   * when updating or patching an existing DocTypeField.
+   */
   docTypeField?: Maybe<Response_DocTypeField>;
+  /**
+   * Creates or updates a DocTypeField entity with an associated Analyzer.
+   * If docTypeFieldId is null, a new DocTypeField is created under the specified DocType.
+   * Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
+   * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
+   * when updating or patching an existing DocTypeField.
+   */
   docTypeFieldWithAnalyzer?: Maybe<Response_DocTypeField>;
   docTypeTemplate?: Maybe<Response_DocTypeTemplate>;
   docTypeWithTemplate?: Maybe<Response_DocType>;
@@ -1942,7 +1957,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket after unbinding the RAGConfiguration.
    *   - `ragConfiguration`: Always null.
-   *
    */
   unbindRAGConfigurationFromBucket?: Maybe<Tuple2_Bucket_RagConfiguration>;
   unbindSearchConfigFromBucket?: Maybe<Tuple2_Bucket_SearchConfig>;
@@ -1958,7 +1972,6 @@ export type Mutation = {
    *
    * Returns:
    * - The RAGConfiguration entity created.
-   *
    */
   updateRAGConfiguration?: Maybe<Response_RagConfiguration>;
   userField?: Maybe<AclMapping>;
@@ -2341,6 +2354,13 @@ export type MutationDeleteDocTypeArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteDocTypeFieldArgs = {
+  docTypeFieldId: Scalars['ID'];
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
+};
+
+
+/** Mutation root */
 export type MutationDeleteDocTypeFieldTranslationArgs = {
   docTypeFieldId: Scalars['ID'];
   key?: InputMaybe<Scalars['String']>;
@@ -2480,6 +2500,7 @@ export type MutationDocTypeArgs = {
 export type MutationDocTypeFieldArgs = {
   docTypeFieldDTO?: InputMaybe<DocTypeFieldDtoInput>;
   docTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   docTypeId: Scalars['ID'];
   patch?: InputMaybe<Scalars['Boolean']>;
 };
@@ -2488,6 +2509,7 @@ export type MutationDocTypeFieldArgs = {
 /** Mutation root */
 export type MutationDocTypeFieldWithAnalyzerArgs = {
   docTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   docTypeFieldWithAnalyzerDTO?: InputMaybe<DocTypeFieldWithAnalyzerDtoInput>;
   docTypeId: Scalars['ID'];
   patch?: InputMaybe<Scalars['Boolean']>;
@@ -3187,7 +3209,6 @@ export type Query = {
    *
    * Returns:
    * - A list of RAGConfiguration entities that match the criteria.
-   *
    */
   unboundRAGConfigurationByBucket?: Maybe<Array<Maybe<RagConfiguration>>>;
   unboundTabsByTokenTab?: Maybe<Array<Maybe<Tab>>>;
@@ -3961,7 +3982,6 @@ export type RagConfigurationDtoInput = {
    * Controls context window merging behavior for chunk processing:
    * 0: Disables chunk merging.
    * > 0: Enables merging with specified window size.
-   *
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
@@ -3975,19 +3995,16 @@ export type RagConfigurationDtoInput = {
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
-   *
    */
   promptNoRag?: InputMaybe<Scalars['String']>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
-   *
    */
   ragToolDescription?: InputMaybe<Scalars['String']>;
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
-   *
    */
   reformulate?: InputMaybe<Scalars['Boolean']>;
   /** Prompt template used if reformulate is set to true. */
@@ -7873,6 +7890,8 @@ export const DocTypeFieldsByParentDocument = gql`
  *      searchText: // value for 'searchText'
  *      parentId: // value for 'parentId'
  *      docTypeId: // value for 'docTypeId'
+ *      first: // value for 'first'
+ *      after: // value for 'after'
  *   },
  * });
  */
@@ -14574,4 +14593,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-04-16T11:09:59+02:00
+// Generated on 2026-05-12T11:32:37+02:00

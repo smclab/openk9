@@ -57,7 +57,7 @@
     "test": "craco test",
     "eject": "react-scripts eject",
     "fetch-schema": "cd ../../core && ./mvnw -pl app/datasource -am -P '!validate,!format,graphql-schema' -q process-classes",
-    "compile-graphql": "yarn fetch-schema && TS_NODE_COMPILER_OPTIONS='{\"moduleResolution\":\"node\"}' graphql-codegen --verbose",
+    "compile-graphql": "yarn fetch-schema && graphql-codegen --verbose",
     "compile-openapi": "openapi --input https://k9-frontend.openk9.io/api/datasource/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
   },
   "eslintConfig": {
