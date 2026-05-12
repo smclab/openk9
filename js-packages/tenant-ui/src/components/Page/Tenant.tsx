@@ -23,9 +23,13 @@ export const TenantQuery = gql`
     tenant(id: $id) {
       id
       schemaName
+      tenantName
       virtualHost
+      clientId
       clientSecret
       issuerUri
+      securityConfiguration
+      realmProvisioned
     }
   }
 `;
@@ -223,21 +227,19 @@ export function Tenant() {
               },
             }}
           >
+            <TextField label="Tenant Name" value={tenant?.tenantName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Virtual Host" value={tenant?.virtualHost || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField label="Schema Name" value={tenant?.schemaName || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
+            <TextField label="Client ID" value={tenant?.clientId || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
+            <TextField label="Client Secret" value={tenant?.clientSecret || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
+            <TextField label="Issuer URI" value={tenant?.issuerUri || ""} InputProps={{ readOnly: true }} variant="outlined" fullWidth />
             <TextField
-              label="Client Secret"
-              value={tenant?.clientSecret || ""}
+              label="Security Configuration"
+              value={tenant?.securityConfiguration || ""}
               InputProps={{ readOnly: true }}
               variant="outlined"
               fullWidth
-            />
-            <TextField
-              label="Issuer URI"
-              value={tenant?.issuerUri || ""}
-              InputProps={{ readOnly: true }}
-              variant="outlined"
-              fullWidth
+              sx={{ gridColumn: "1 / -1" }}
             />
           </Box>
         </Box>
