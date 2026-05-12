@@ -404,7 +404,7 @@
 
   <profiles>
     <profile>
-      <id>graphql-schema</id>
+      <id>generate-schemas</id>
       <build>
         <plugins>
           <plugin>
@@ -413,7 +413,7 @@
             <version>2.14.2</version>
             <executions>
               <execution>
-                <id>generate-schema</id>
+                <id>generate-graphql-schema</id>
                 <goals>
                   <goal>generate-schema</goal>
                 </goals>
@@ -423,6 +423,19 @@
               <includeScalars>true</includeScalars>
               <includeDependencies>true</includeDependencies>
             </configuration>
+          </plugin>
+          <plugin>
+            <groupId>io.smallrye</groupId>
+            <artifactId>smallrye-open-api-maven-plugin</artifactId>
+            <version>4.0.5</version>
+            <executions>
+              <execution>
+                <id>generate-openapi-schema</id>
+                <goals>
+                  <goal>generate-schema</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
