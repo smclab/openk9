@@ -7,7 +7,7 @@ image:
   registry: ""
   name: smclab/openk9-youtube-connector
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "3.0.3"
+  tag: "3.0.4-SNAPSHOT"
   # Specify a imagePullPolicy
   # Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
   # ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
