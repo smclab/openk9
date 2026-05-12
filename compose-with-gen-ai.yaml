@@ -1,6 +1,6 @@
 services:
   rag-module:
-    image: smclab/openk9-rag-module:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-rag-module:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
     container_name: openk9-rag-module
     hostname: openk9-rag-module
     environment:
@@ -15,11 +15,11 @@ services:
       MAX_UPLOAD_FILE_SIZE: '10'
       MAX_UPLOAD_FILES_NUMBER: '5'
   embedding-module:
-    image: smclab/openk9-embedding-module-base:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-embedding-module-base:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
     container_name: openk9-embedding-module
     hostname: openk9-embedding-module
     environment:
       ORIGINS: '*'
   talk-to:
-    image: smclab/openk9-talk-to:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-talk-to:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
     container_name: openk9-talk-to

@@ -148,17 +148,17 @@ k9.sh — prerequisite check
 ### push — publish images to a registry
 
 ```bash
-OPENK9_REGISTRY=registry.example.com/openk9 \
+OPENK9_REGISTRY=registry.example.com \
   ./k9.sh push datasource searcher --tag=1.0.0
 ```
 
-Tags and pushes locally built images to `OPENK9_REGISTRY`. The registry
+Tags and pushes locally built images to `$OPENK9_REGISTRY/$GROUP/<service>:<tag>`. The registry
 can also be set in `.env` (see below). Images must be built for
 `linux/amd64` before pushing — if the local image is `arm64`, the
 command refuses with a rebuild instruction:
 
 ```
-✗ Image smclab/openk9-datasource:local-dev is arm64, not amd64.
+✗ Image openk9/openk9-datasource:local-dev is arm64, not amd64.
   Rebuild for the correct platform before pushing:
   ./k9.sh build datasource --tag=local-dev --platform=amd64
 ```
@@ -168,13 +168,14 @@ command refuses with a rebuild instruction:
 
 ### Configuration via .env
 
-Create an `openk9/.env` file to persist local configuration. 
+Create an `openk9/.env` file to persist local configuration.
 Shell environment variables always take precedence over `.env` values.
 
 ```bash
 # openk9/.env
 TAG=local-dev
-OPENK9_REGISTRY=registry.example.com/openk9
+GROUP=openk9
+OPENK9_REGISTRY=registry.example.com
 ```
 
 Supported variables:
@@ -182,7 +183,8 @@ Supported variables:
 | Variable | Default | Purpose |
 |---|---|---|
 | `TAG` | `local-dev` | Docker image tag used by build/push |
-| `OPENK9_REGISTRY` | _(none)_ | Target registry for `./k9.sh push` |
+| `GROUP` | `openk9` | Docker image group/org prefix (e.g. `smclab`) |
+| `OPENK9_REGISTRY` | _(none)_ | Target registry hostname for `./k9.sh push` |
 
 Run `./k9.sh` without arguments for full usage information.
 

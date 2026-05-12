@@ -46,6 +46,7 @@ _load_env_file() {
 _load_env_file
 
 # Configuration defaults — use ${VAR:-default} so .env-set values survive.
+GROUP="${GROUP:-openk9}"
 TAG="${TAG:-local-dev}"
 OPENK9_REGISTRY="${OPENK9_REGISTRY:-}"
 PROFILES=()
@@ -231,7 +232,7 @@ build_core() {
 
         echo "Building Spring Boot services..."
         ./mvnw package -DskipTests jib:dockerBuild \
-            "-Djib.to.image=smclab/openk9-api-gateway:$TAG" \
+            "-Djib.to.image=$GROUP/openk9-api-gateway:$TAG" \
             "-Djib.platform.architecture=$JIB_ARCH" \
             -f app/api-gateway/pom.xml
 
@@ -243,7 +244,7 @@ build_core() {
                 "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=false \
-                -Dquarkus.container-image.group=smclab \
+                "-Dquarkus.container-image.group=$GROUP" \
                 "-Dquarkus.container-image.name=openk9-$SVC" \
                 "-Dquarkus.container-image.tag=$TAG" \
                 "-pl" "app/$SVC"
@@ -251,24 +252,24 @@ build_core() {
     )
 
     echo "--- Building Frontend Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
 
     echo "--- Building Connectors ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
 }
 
 build_gen_ai() {
     echo "--- Building AI Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
 }
 
 build_file_handling() {
     echo "--- Building File Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
@@ -276,7 +277,7 @@ build_file_handling() {
             "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=false \
-            -Dquarkus.container-image.group=smclab \
+            "-Dquarkus.container-image.group=$GROUP" \
             "-Dquarkus.container-image.name=openk9-$SVC" \
             "-Dquarkus.container-image.tag=$TAG" \
             "-pl" "app/$SVC"
@@ -321,7 +322,7 @@ build_single() {
     case "$service" in
         api-gateway)
             (cd core && ./mvnw package -DskipTests jib:dockerBuild \
-                "-Djib.to.image=smclab/openk9-api-gateway:$TAG" \
+                "-Djib.to.image=$GROUP/openk9-api-gateway:$TAG" \
                 "-Djib.platform.architecture=$JIB_ARCH" \
                 -f app/api-gateway/pom.xml)
             ;;
@@ -331,34 +332,34 @@ build_single() {
                 "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
                 -Dquarkus.container-image.build=true \
                 -Dquarkus.container-image.push=false \
-                -Dquarkus.container-image.group=smclab \
+                "-Dquarkus.container-image.group=$GROUP" \
                 "-Dquarkus.container-image.name=openk9-$service" \
                 "-Dquarkus.container-image.tag=$TAG" \
                 "-pl" "app/$service")
             ;;
         search-frontend)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             ;;
         web-connector)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
             ;;
         minio-connector)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             ;;
         rag-module)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             ;;
         embedding-module)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
         talk-to)
-            docker build --pull --platform "$JIB_PLATFORM" -t "smclab/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             ;;
     esac
 }
@@ -459,7 +460,7 @@ do_push() {
     if [ -z "$OPENK9_REGISTRY" ]; then
         _error "OPENK9_REGISTRY is not set."
         _info  "Define it in your shell environment or in openk9/.env:"
-        _info  "  OPENK9_REGISTRY=registry.example.com/openk9"
+        _info  "  OPENK9_REGISTRY=registry.example.com"
         exit 1
     fi
 
@@ -470,8 +471,8 @@ do_push() {
 
     local push_failed=false
     for svc in "${SERVICES[@]}"; do
-        local src_image="smclab/openk9-${svc}:${TAG}"
-        local dst_image="${OPENK9_REGISTRY}/openk9-${svc}:${TAG}"
+        local src_image="$GROUP/openk9-${svc}:${TAG}"
+        local dst_image="${OPENK9_REGISTRY}/$GROUP/openk9-${svc}:${TAG}"
 
         # Verify the source image exists locally.
         if ! docker image inspect "$src_image" >/dev/null 2>&1; then
@@ -516,7 +517,7 @@ compose() {
             flags+=(-f "$overlay")
         fi
     done
-    IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
+    IMAGE_GROUP="$GROUP" IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
 }
 
 # --- Usage ---
