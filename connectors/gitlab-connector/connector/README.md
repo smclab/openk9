@@ -79,15 +79,9 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-Using the command line go in the gitlab-datasource folder\
-From this folder:
-```
-cd ..
-```
-
 Build the Docker file:
 ```
-docker build -t gitlab-connector .
+docker build -t gitlab-parser .
 ```
 
 **Command parameters**:
@@ -96,7 +90,7 @@ docker build -t gitlab-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name gitlab-connector-app gitlab-connector 
+docker run -p 5000:5000 --name gitlab-parser gitlab-parser 
 ```
 
 **Command parameters**:

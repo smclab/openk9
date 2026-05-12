@@ -8,6 +8,7 @@ colorama==0.4.6
 fastapi==0.136.1
 h11==0.16.0
 idna==3.10
+pip==26.1.1
 pydantic==2.10.6
 pydantic_core==2.27.2
 PyYAML==6.0.3

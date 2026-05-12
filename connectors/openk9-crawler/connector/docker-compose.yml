@@ -1,15 +1,21 @@
 version: "3.9"
 
 services:
-  web-connector:
-    build:
-      context: .
-      dockerfile: /Dockerfile
-      args:
-        WITH_SCRAPYDWEB: 1
-    image: web-connector:latest
-    ports:
-      - "5000:5000"
-      - "6800:6800"
-    environment:
-      - INPUT_LOG_LEVEL=INFO
+    web-connector:
+        build:
+            context: .
+            args:
+                WITH_SCRAPYDWEB: 1
+        image: web-connector:latest
+        container_name: web-connector
+        ports:
+            - "5000:5000"
+            - "6800:6800"
+            - "5001:5001" # Scrapyd Web
+        environment:
+            - INPUT_LOG_LEVEL=INFO
+        healthcheck:
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+            interval: 30s
+            timeout: 10s
+            retries: 3

@@ -89,7 +89,7 @@ cd ..
 
 Build the Docker file:
 ```
-docker build -t database-connector .
+docker build -t database-parser .
 ```
 
 **Command parameters**:
@@ -98,7 +98,7 @@ docker build -t database-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name database-parser-app Database-parser 
+docker run -p 5000:5000 --name database-parser-app database-parser
 ```
 
 **Command parameters**:

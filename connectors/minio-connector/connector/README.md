@@ -80,9 +80,6 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-
-From this folder:
-
 Build the Docker file:
 ```
 docker build -t minio-connector .
@@ -94,7 +91,7 @@ docker build -t minio-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name minio-connector-app minio-connector 
+docker run -p 5000:5000 --name minio-connector minio-connector 
 ```
 
 **Command parameters**:

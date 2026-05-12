@@ -8,7 +8,7 @@ The container takes via environment variable INGESTION_URL, which must match the
 To build images of service you can simply run:
 
 ```
-docker build -t email-connector .
+docker build -t email-parser .
 ```
 
 A pre-built image of email connector is present in Smc Docker Hub at following link: https://hub.docker.com/repository/docker/smclab/email-connector.\

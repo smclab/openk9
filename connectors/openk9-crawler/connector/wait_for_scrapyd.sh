@@ -21,7 +21,7 @@ USAGE
 }
 
 wait_for_scrapyd() {
-  until curl -fsS "$HOST:$PORT" &> /dev/null; do
+  until python -c "import urllib.request; urllib.request.urlopen('http://$HOST:$PORT/daemonstatus.json', timeout=5)" &> /dev/null; do
     echoerr "Scrapyd is unavailable on $HOST:$PORT - sleeping"
     sleep $SLEEP
   done

@@ -73,7 +73,7 @@ LOCAL_SCRAPYD_SERVER = os.environ.get("LOCAL_SCRAPYD_SERVER", '127.0.0.1:6800')
 # python -c "from os.path import abspath, isdir; from scrapyd.config import Config; path = abspath(Config().get('logs_dir')); print(path); print(isdir(path))"
 # Check out https://scrapyd.readthedocs.io/en/stable/config.html#logs-dir for more info.
 # e.g. 'C:/Users/username/logs' or '/home/username/logs'
-LOCAL_SCRAPYD_LOGS_DIR = ''
+LOCAL_SCRAPYD_LOGS_DIR = '/var/lib/scrapyd/logs'
 
 # The default is False, set it to True to automatically run LogParser as a subprocess at startup.
 # Note that you can run the LogParser service separately via command 'logparser' as you like.
@@ -376,7 +376,7 @@ VERBOSE = False
 
 # The default is '', which means saving all program data in the Python directory.
 # e.g. 'C:/Users/username/scrapydweb_data' or '/home/username/scrapydweb_data'
-DATA_PATH = os.environ.get('DATA_PATH', '')
+DATA_PATH = os.environ.get('DATA_PATH', '/var/lib/scrapydweb')
 
 # The default is '', which means saving data of Jobs and Timer Tasks in DATA_PATH using SQLite.
 # The data could be also saved in MySQL or PostgreSQL backend in order to improve concurrency.

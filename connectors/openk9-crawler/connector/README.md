@@ -287,7 +287,7 @@ docker build --build-arg WITH_SCRAPYDWEB=1 -t web-connector .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 -p 6800:6800 -p 5001:5001 --name web-connector-app web-connector 
+docker run -p 5000:5000 -p 6800:6800 -p 5001:5001 --name web-connector web-connector 
 ```
 
 **Command parameters**:

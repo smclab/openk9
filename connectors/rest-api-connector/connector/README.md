@@ -143,8 +143,6 @@ curl --location --request POST 'http://localhost:5000/sample'
 
 ### Using Dockerfile
 
-Start form the parent folder [rest-api-connector](../)
-
 Build the Docker file:
 ```
 docker build -t rest-api-parser -f .\connector\Dockerfile .
@@ -156,7 +154,7 @@ docker build -t rest-api-parser -f .\connector\Dockerfile .
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name rest-api-parser-app rest-api-parser 
+docker run -p 5000:5000 --name rest-api-parser rest-api-parser 
 ```
 
 **Command parameters**:

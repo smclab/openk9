@@ -1,13 +1,18 @@
 version: "3.9"
 
 services:
-  youtube-connector:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: youtube-connector:latest
-    container_name: youtube-connector
-    environment:
-      INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
-    ports:
-      - "5000:5000"
+    youtube-connector:
+        build:
+            context: .
+        image: youtube-connector:latest
+        container_name: youtube-connector
+        environment:
+            INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
+        ports:
+            - "5000:5000"
+        healthcheck:
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+      

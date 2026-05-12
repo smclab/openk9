@@ -139,24 +139,17 @@ Using the version with the PO Token is less prone to have errors or missing cont
 
 ### Using Dockerfile
 
-Using the command line go in the youtube-datasource parent folder\
-From this folder:
-```
-cd ..
-```
-
 Build the Docker file:
 ```
-docker build -t youtube-parser -f .\connector\Dockerfile .
+docker build -t youtube-connector .
 ```
 
 **Command parameters:
 - **-t**: Set built image name
-- **-f**: Specify the path to the Dockerfile**
 
 Run the built Docker image:
 ```
-docker run -p 5000:5000 --name youtube-parser-app youtube-parser 
+docker run -p 5000:5000 --name youtube-connector youtube-connector 
 ```
 
 Command parameters:

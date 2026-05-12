@@ -1,12 +1,19 @@
 version: "3.5"
 services:
     database-parser:
+        build:
+            context: .
         image: database-parser:latest
         container_name: database-parser
         environment:
             INGESTION_URL: "http://ingestion:8080/api/ingestion/v1/ingestion/"
         ports:
             - "5001:5000"
+        healthcheck:
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
     postgres:
         image: postgres:latest
         container_name: postgres

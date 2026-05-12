@@ -1,11 +1,19 @@
 version: "3.5"
 services:
     minio-connector:
+        build:
+            context: .
         image: minio-connector:latest
+        container_name: minio-connector
         ports:
             - "5000:5000"
         environment:
             - INPUT_LOG_LEVEL=INFO
+        healthcheck:
+            test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=5)"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
     minio:
         image: minio/minio:latest
         command: server /data --console-address ":9090"
