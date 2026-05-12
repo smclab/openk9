@@ -95,7 +95,7 @@ components:
       properties:
         status:
           type: string
-          enum: [ "UP", "DOWN", "UNKNOWN" ]
+          enum: [ "UP", "DOWN" ]
     Form:
       type: object
       properties:
