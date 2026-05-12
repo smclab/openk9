@@ -56,7 +56,7 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "fetch-schema": "cd ../../core && ./mvnw -pl app/datasource -am -P '!validate,!format,graphql-schema' -q process-classes",
+    "fetch-schema": "node ../scripts/fetch-graphql-schema.js app/datasource",
     "compile-graphql": "yarn fetch-schema && graphql-codegen --verbose",
     "compile-openapi": "openapi --input https://k9-frontend.openk9.io/api/datasource/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
   },
