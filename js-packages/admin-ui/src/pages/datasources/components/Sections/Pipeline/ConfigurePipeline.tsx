@@ -15,21 +15,11 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { ModalConfirm } from "@components/Form";
-import {
-  Box,
-  Button,
-  FormControl,
-  FormControlLabel,
-  InputLabel,
-  MenuItem,
-  Radio,
-  RadioGroup,
-  Select,
-  Typography,
-} from "@mui/material";
+import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Typography } from "@mui/material";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEnrichPipelineOptionsQuery } from "../../../../../graphql-generated";
+import { useEnrichPipelineOptions } from "../../../../../utils/RelationOneToOne";
 import { tabsType } from "../../../datasourceType";
 import { defaultModal, EnrichItemsTable, PipelineRadioType } from "../DataSource/ConfigureDatasource";
 import { ConnectionData } from "../../../types";
@@ -56,9 +46,6 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
   setIsRecap,
   setActiveTab,
 }) => {
-  const enrichPipelines = useEnrichPipelineOptionsQuery({
-    fetchPolicy: "network-only",
-  });
   const [showDialog, setShowDialog] = useState(defaultModal);
   const navigate = useNavigate();
   const [pipelineArea, setPipelineArea] = useState<PipelineRadioType>("no-pipeline");
@@ -106,36 +93,31 @@ const ConfigurePipeline: React.FC<ConfigurePipelineProps> = ({
         />
         <Box sx={{ display: "flex", flexWrap: "wrap" }}>
           <BoxArea isActive={pipelineArea === "present-pipeline"}>
-            <FormControl fullWidth>
-              <InputLabel id="my-select-pipeline">Select Pipeline</InputLabel>
-              <Select
-                labelId="my-select-pipeline"
-                id="selectMyPipeline"
-                disabled={disabled || pipelineArea !== "present-pipeline"}
-                value={dataDatasource.enrichPipeline?.id}
-                onChange={(event) => {
-                  setDataDatasource((dat) => ({
-                    ...dat,
-                    enrichPipeline: {
-                      id: "" + event?.target?.value,
-                      name:
-                        enrichPipelines?.data?.options?.edges?.find((item) => item?.node?.id === event.target.value)
-                          ?.node?.name || undefined,
-                    },
-                  }));
-                }}
-                label="Select Label"
-              >
-                <MenuItem value="">
-                  <em>Select Value</em>
-                </MenuItem>
-                {enrichPipelines?.data?.options?.edges?.map((item, index) => (
-                  <MenuItem key={index} value={"" + item?.node?.id || ""}>
-                    {item?.node?.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <AutocompleteDropdown
+              label="Select Pipeline"
+              disabled={disabled || pipelineArea !== "present-pipeline"}
+              value={
+                dataDatasource.enrichPipeline?.id
+                  ? {
+                      id: dataDatasource.enrichPipeline.id,
+                      name: dataDatasource.enrichPipeline.name || "",
+                    }
+                  : undefined
+              }
+              onChange={(val) =>
+                setDataDatasource((dat) => ({
+                  ...dat,
+                  enrichPipeline: { id: val.id, name: val.name },
+                }))
+              }
+              onClear={() =>
+                setDataDatasource((dat) => ({
+                  ...dat,
+                  enrichPipeline: undefined,
+                }))
+              }
+              useOptions={useEnrichPipelineOptions}
+            />
           </BoxArea>
         </Box>
         <FormControlLabel

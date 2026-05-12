@@ -18,14 +18,13 @@ import {
   CodeInput,
   ContainerFluid,
   CreateDataEntity,
-  CustomSelect,
   NumberInput,
   TextInput,
   TitleEntity,
   useForm,
   useToast,
 } from "@components/Form";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -127,8 +126,11 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
   const documentTypesQuery = useDocumentTypesQuery();
 
-  const chunkTypeDict = useMemo(
-    () => Object.fromEntries(Object.entries(ChunkType).filter(([, value]) => value !== ChunkType.Unrecognized)),
+  const chunkTypeOptions = useMemo(
+    () =>
+      Object.entries(ChunkType)
+        .filter(([, value]) => value !== ChunkType.Unrecognized)
+        .map(([label, value]) => ({ value, label })),
     [],
   );
 
@@ -457,16 +459,19 @@ export function SaveDataindex({ setExtraFab }: { setExtraFab: (fab: React.ReactN
 
                   {form.inputProps("knnIndex").value && (
                     <>
-                      <CustomSelect
+                      <AutocompleteDropdownWithOptions
                         label="Chunk Type"
-                        id="chunk-type-select"
-                        dict={chunkTypeDict}
+                        allowClear={false}
                         disabled={isReadOnly}
-                        value={
-                          (form.inputProps("chunkType").value as ChunkType) || ChunkType.ChunkTypeCharacterTextSplitter
-                        }
-                        onChange={(e: string) => form.inputProps("chunkType").onChange(e as ChunkType)}
-                        validationMessages={[]}
+                        optionsDefault={chunkTypeOptions}
+                        value={(() => {
+                          const current =
+                            (form.inputProps("chunkType").value as ChunkType) ||
+                            ChunkType.ChunkTypeCharacterTextSplitter;
+                          const match = chunkTypeOptions.find((o) => o.value === current);
+                          return { id: current, name: match?.label || current };
+                        })()}
+                        onChange={(val) => form.inputProps("chunkType").onChange(val.id as ChunkType)}
                       />
                       <NumberInput
                         label="Chunk Window Size"
