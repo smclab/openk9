@@ -20,7 +20,10 @@ function Field({ label, value }: { label: string; value: string | null | undefin
 }
 
 export function Step3Confirm({ values }: Props) {
-  const { data } = usePreconfigurationsQuery();
+  const { data } = usePreconfigurationsQuery({
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-only",
+  });
   const selected = (data?.preconfigurations ?? []).find((p) => p?.name === values.step2.securityConfiguration);
 
   return (

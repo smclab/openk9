@@ -25,7 +25,10 @@ type Props = {
 };
 
 export function Step2Security({ values, onChange }: Props) {
-  const { data, loading, error } = usePreconfigurationsQuery();
+  const { data, loading, error } = usePreconfigurationsQuery({
+    fetchPolicy: "cache-first",
+    nextFetchPolicy: "cache-only",
+  });
   const presets = (data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p);
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 
