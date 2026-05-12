@@ -14,8 +14,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import { CodeInput, CustomSelect, NumberInput } from "@components/Form";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
+import { CodeInput, NumberInput } from "@components/Form";
+import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -306,16 +306,19 @@ export default function DataIndexFormsource({
                 label="Enable KNN Index"
               />
               <Box sx={{ marginBottom: 1 }}>
-                <CustomSelect
+                <AutocompleteDropdownWithOptions
                   label="Chunk Type"
-                  id="chunk-type-select"
-                  dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
+                  allowClear={false}
                   disabled={isDisabled || !extraParamsDataIndex.knnIndex}
-                  value={extraParamsDataIndex.chunkType || ChunkType.ChunkTypeCharacterTextSplitter}
-                  onChange={(e: string) => {
-                    changeExtraParamsDataIndex("chunkType", e);
-                  }}
-                  validationMessages={[]}
+                  optionsDefault={Object.entries(ChunkType)
+                    .filter(([key]) => key !== "Unrecognized")
+                    .map(([label, value]) => ({ value, label }))}
+                  value={(() => {
+                    const current = extraParamsDataIndex.chunkType || ChunkType.ChunkTypeCharacterTextSplitter;
+                    const match = Object.entries(ChunkType).find(([, value]) => value === current);
+                    return { id: current, name: match?.[0] || current };
+                  })()}
+                  onChange={(val) => changeExtraParamsDataIndex("chunkType", val.id)}
                 />
               </Box>
               <NumberInput

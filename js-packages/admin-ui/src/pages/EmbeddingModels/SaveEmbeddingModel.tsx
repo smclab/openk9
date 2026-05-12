@@ -14,7 +14,8 @@ import {
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../../graphql-generated";
-import { Box, Button, Select, MenuItem, Typography } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 
 const PROVIDER_OPTIONS = [
@@ -158,23 +159,21 @@ export function SaveEmbeddingModel() {
                     <TextInput label="Name" {...form.inputProps("name")} />
                     <TextArea label="Description" {...form.inputProps("description")} />
                     <NumberInput label="Vector Size" {...form.inputProps("vectorSize")} isNumber={false} />
-                    <Typography variant="h4">Provider</Typography>
-                    <Select
-                      id="providerId"
-                      onChange={(event) => {
-                        setProviderModel((value) => ({ ...value, provider: event.target.value }));
-                        form.inputProps("provider").onChange(event.target.value);
-                      }}
-                      value={providerModel.provider || "openai"}
+                    <AutocompleteDropdownWithOptions
+                      label="Provider"
+                      allowClear={false}
                       disabled={view ? true : false}
-                      fullWidth
-                    >
-                      {PROVIDER_OPTIONS.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                      optionsDefault={PROVIDER_OPTIONS}
+                      value={(() => {
+                        const current = providerModel.provider || "openai";
+                        const match = PROVIDER_OPTIONS.find((o) => o.value === current);
+                        return { id: current, name: match?.label || current };
+                      })()}
+                      onChange={(val) => {
+                        setProviderModel((value) => ({ ...value, provider: val.id }));
+                        form.inputProps("provider").onChange(val.id);
+                      }}
+                    />
                     <TextInput
                       label="Model"
                       id="modelId"

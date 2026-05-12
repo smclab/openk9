@@ -12,7 +12,8 @@ import {
   useForm,
 } from "@components/Form";
 import { useToast } from "@components/Form/Form/ToastProvider";
-import { Box, Button, MenuItem, Select, Typography } from "@mui/material";
+import { Box, Button } from "@mui/material";
+import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { maskApiKey } from "@pages/EmbeddingModels";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -183,23 +184,21 @@ export function SaveLargeLanguageModel() {
                     </TooltipDescription>
                     <NumberInput label="Context Window" {...form.inputProps("contextWindow")} isNumber={false} />
                     <BooleanInput label="Retrieve Citations" {...form.inputProps("retrieveCitations")} />
-                    <Typography variant="h4">Provider</Typography>
-                    <Select
-                      id="providerId"
-                      onChange={(event) => {
-                        setProviderModel((value) => ({ ...value, provider: event.target.value }));
-                        form.inputProps("provider").onChange(event.target.value);
-                      }}
-                      value={providerModel.provider || "openai"}
+                    <AutocompleteDropdownWithOptions
+                      label="Provider"
+                      allowClear={false}
                       disabled={view ? true : false}
-                      fullWidth
-                    >
-                      {PROVIDER_OPTIONS.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                      optionsDefault={PROVIDER_OPTIONS}
+                      value={(() => {
+                        const current = providerModel.provider || "openai";
+                        const match = PROVIDER_OPTIONS.find((o) => o.value === current);
+                        return { id: current, name: match?.label || current };
+                      })()}
+                      onChange={(val) => {
+                        setProviderModel((value) => ({ ...value, provider: val.id }));
+                        form.inputProps("provider").onChange(val.id);
+                      }}
+                    />
                     <TextInput
                       label="Model"
                       id="modelId"

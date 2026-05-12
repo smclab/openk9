@@ -6,14 +6,17 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   TextField,
   Typography,
 } from "@mui/material";
+import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+
+const TEST_MODE_OPTIONS = [
+  { value: "regex", label: "Regex" },
+  { value: "xpath", label: "XPath" },
+  { value: "jsonpath", label: "JsonPath" },
+];
 
 type ModalStringMapProps = {
   open: boolean;
@@ -53,19 +56,17 @@ export const ModalStringMap: React.FC<ModalStringMapProps> = ({
   <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
     <DialogTitle>
       <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel id="test-mode-label">Type</InputLabel>
-          <Select
-            labelId="test-mode-label"
-            value={testMode}
-            label="Type"
-            onChange={(e) => setTestMode(e.target.value as any)}
-          >
-            <MenuItem value="regex">Regex</MenuItem>
-            <MenuItem value="xpath">XPath</MenuItem>
-            <MenuItem value="jsonpath">JsonPath</MenuItem>
-          </Select>
-        </FormControl>
+        <AutocompleteDropdownWithOptions
+          label="Type"
+          allowClear={false}
+          optionsDefault={TEST_MODE_OPTIONS}
+          value={{
+            id: testMode,
+            name: TEST_MODE_OPTIONS.find((o) => o.value === testMode)?.label || testMode,
+          }}
+          onChange={(val) => setTestMode(val.id as "regex" | "xpath" | "jsonpath")}
+          sx={{ minWidth: 160 }}
+        />
         <TextField
           size="small"
           label={testMode.charAt(0).toUpperCase() + testMode.slice(1)}

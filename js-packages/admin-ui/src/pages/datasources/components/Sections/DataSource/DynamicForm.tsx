@@ -1,5 +1,6 @@
 import { BooleanInput, KeyValue, NumberInputSimple, TextInputSimple } from "@components/Form";
 import Autocomplete from "@components/Form/Form/AutoComplete";
+import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { Box, FormControl, Grid, InputLabel, MenuItem, Select, Typography } from "@mui/material";
 import React from "react";
 import { StringMapInput } from "./StringMap/StringMap";
@@ -405,35 +406,29 @@ export function GenerateDynamicForm({
               </Select>
             </FormControl>
           );
-        case "select":
+        case "select": {
+          const selectOptions =
+            field.values && field.values.length > 0
+              ? field.values.map((option) => ({
+                  value: String(option.value),
+                  label: String(option.value),
+                }))
+              : [];
+          const selectValue = value !== undefined && value !== null && value !== "" ? String(value) : "";
           return (
-            <FormControl disabled={disabled} fullWidth key={field.name}>
-              <InputLabel>{field.label}</InputLabel>
-              {field.required && <span style={{ color: "red", marginLeft: "3px" }}>*</span>}
-              <Select
-                label={field.label}
-                value={value as string}
-                onChange={(e) => {
-                  changeValueKey(field.name, e.target.value as string);
-                }}
-              >
-                {field.values && field.values.length > 0 ? (
-                  field?.values?.map((option) => (
-                    <MenuItem
-                      key={option.value as string}
-                      value={option.value as string | number | readonly string[] | undefined}
-                    >
-                      {option.value as string}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem value="">
-                    <em>Nessuna opzione</em>
-                  </MenuItem>
-                )}
-              </Select>
-            </FormControl>
+            <Box key={field.name} sx={{ paddingBottom: "20px" }}>
+              <AutocompleteDropdownWithOptions
+                label={field.required ? `${field.label} *` : field.label}
+                description={field.info}
+                disabled={disabled}
+                optionsDefault={selectOptions}
+                value={selectValue ? { id: selectValue, name: selectValue } : undefined}
+                onChange={(val) => changeValueKey(field.name, val.id)}
+                onClear={() => changeValueKey(field.name, "")}
+              />
+            </Box>
           );
+        }
         case "list":
           return (
             <>

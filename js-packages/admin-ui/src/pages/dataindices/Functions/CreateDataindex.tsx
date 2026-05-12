@@ -1,11 +1,4 @@
-import {
-  CodeInput,
-  ContainerFluid,
-  CustomSelect,
-  CustomSelectRelationsOneToOne,
-  NumberInput,
-  TitleEntity,
-} from "@components/Form";
+import { CodeInput, ContainerFluid, NumberInput, TitleEntity } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
 import {
   Box,
@@ -28,8 +21,8 @@ import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChunkType, useDataSourcesQuery, useDocumentTypesQuery } from "../../../graphql-generated";
 import { DataindexData } from "../SaveDataindex";
-import { AutocompleteDropdown } from "@components/Form/Select/AutocompleteDropdown";
-import { useDocTypeOptions } from "../../../utils/RelationOneToOne";
+import { AutocompleteDropdown, AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
+import { useDataSources, useDocTypeOptions } from "../../../utils/RelationOneToOne";
 
 export function CreateDataindex({
   dataindexData,
@@ -51,7 +44,6 @@ export function CreateDataindex({
   const datasourcesQuery = useDataSourcesQuery();
   const documentTypesQuery = useDocumentTypesQuery();
   const { docTypesQuery } = useOptions();
-  const { datasourcersQuery, OptionDataSourceType } = useOptionsDataSource();
 
   const documentTypes = useMemo(
     () =>
@@ -79,46 +71,6 @@ export function CreateDataindex({
           }
         : null,
     );
-  };
-
-  const loadMoreOptionsDataSource = async (): Promise<{ value: string; label: string }[]> => {
-    if (!datasourcersQuery.data?.datasources?.pageInfo?.hasNextPage) return [];
-
-    try {
-      const response = await datasourcersQuery.fetchMore({
-        variables: {
-          after: datasourcersQuery.data.datasources.pageInfo.endCursor,
-        },
-      });
-
-      const newEdges = response.data?.datasources?.edges || [];
-      const newPageInfo = response.data?.datasources?.pageInfo;
-
-      if (!newEdges.length || !newPageInfo) {
-        console.warn("No new data fetched or pageInfo is missing.");
-        return [];
-      }
-
-      datasourcersQuery.updateQuery((prev) => ({
-        ...prev,
-        datasources: {
-          __typename: "DefaultConnection_Datasource",
-          ...prev.datasources,
-          edges: [...(prev.datasources?.edges || []), ...newEdges],
-          pageInfo: newPageInfo,
-        },
-      }));
-
-      return newEdges
-        .map((item) => ({
-          value: item?.node?.id || "",
-          label: item?.node?.name || "",
-        }))
-        .filter((option) => option.value && option.label);
-    } catch (error) {
-      console.error("Error loading more options for datasource:", error);
-      return [];
-    }
   };
 
   const loadMoreOptions = async (): Promise<{ value: string; label: string }[]> => {
@@ -213,36 +165,35 @@ export function CreateDataindex({
                   }
                 />
 
-                <FormControl fullWidth margin="normal">
-                  <Box sx={{ marginBottom: 1 }}>
-                    <Typography variant="subtitle1" component="label">
-                      {"Associate Datasource"}
-                    </Typography>
-                  </Box>
-                  <CustomSelectRelationsOneToOne
-                    options={OptionDataSourceType}
-                    label=""
-                    onChange={(val) => {
-                      setDataindexData((prevData) =>
-                        prevData
-                          ? {
-                              ...prevData,
-                              datasourceId: { id: val.id, name: val.name },
-                            }
-                          : null,
-                      );
-                    }}
-                    value={{
-                      id: dataindexData?.datasourceId?.id || "",
-                      name: dataindexData?.datasourceId?.name || "",
-                    }}
-                    disabled={isReadOnly}
-                    loadMoreOptions={{
-                      response: loadMoreOptionsDataSource,
-                      hasNextPage: datasourcersQuery.data?.datasources?.pageInfo?.hasNextPage || false,
-                    }}
-                  />
-                </FormControl>
+                <AutocompleteDropdown
+                  label="Associate Datasource"
+                  disabled={isReadOnly}
+                  value={{
+                    id: dataindexData?.datasourceId?.id || "",
+                    name: dataindexData?.datasourceId?.name || "",
+                  }}
+                  onChange={(val) =>
+                    setDataindexData((prevData) =>
+                      prevData
+                        ? {
+                            ...prevData,
+                            datasourceId: { id: val.id, name: val.name },
+                          }
+                        : null,
+                    )
+                  }
+                  onClear={() =>
+                    setDataindexData((prevData) =>
+                      prevData
+                        ? {
+                            ...prevData,
+                            datasourceId: null,
+                          }
+                        : null,
+                    )
+                  }
+                  useOptions={useDataSources}
+                />
               </FormControl>
               <Box sx={{ marginBottom: 1 }}>
                 <Typography variant="subtitle1" component="label">
@@ -333,23 +284,29 @@ export function CreateDataindex({
                   <>
                     <Box sx={{ marginBottom: 1 }}>
                       <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-                        <CustomSelect
+                        <AutocompleteDropdownWithOptions
                           label="Chunk Type"
-                          id="chunk-type-select"
-                          dict={Object.fromEntries(Object.entries(ChunkType).filter(([key]) => key !== "Unrecognized"))}
+                          allowClear={false}
                           disabled={isReadOnly}
-                          value={(dataindexData?.chunkType as ChunkType) || ChunkType.ChunkTypeCharacterTextSplitter}
-                          onChange={(e: string) =>
+                          optionsDefault={Object.entries(ChunkType)
+                            .filter(([key]) => key !== "Unrecognized")
+                            .map(([label, value]) => ({ value, label }))}
+                          value={(() => {
+                            const current =
+                              (dataindexData?.chunkType as ChunkType) || ChunkType.ChunkTypeCharacterTextSplitter;
+                            const match = Object.entries(ChunkType).find(([, value]) => value === current);
+                            return { id: current, name: match?.[0] || current };
+                          })()}
+                          onChange={(val) =>
                             setDataindexData((prevData) =>
                               prevData
                                 ? {
                                     ...prevData,
-                                    chunkType: e as ChunkType,
+                                    chunkType: val.id as ChunkType,
                                   }
                                 : null,
                             )
                           }
-                          validationMessages={[]}
                         />
                       </Box>
                       <NumberInput
