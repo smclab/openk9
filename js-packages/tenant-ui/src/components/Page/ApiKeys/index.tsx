@@ -25,7 +25,7 @@ import { CreateApiKeyModal } from "./CreateApiKeyModal";
 import { RevokeApiKeyDialog } from "./RevokeApiKeyDialog";
 import { deriveDisplayStatus, ApiKeyDisplayStatus } from "./labels";
 
-type ApiKey = NonNullable<NonNullable<GetApiKeysQuery["getApiKeys"]>[number]>;
+type ApiKey = NonNullable<NonNullable<GetApiKeysQuery["apiKeys"]>[number]>;
 
 const statusFilters: { value: "ALL" | ApiKeyDisplayStatus; label: string }[] = [
   { value: "ALL", label: "All statuses" },
@@ -42,7 +42,7 @@ export function ApiKeys() {
     variables: { id: tenantId },
     skip: !tenantId,
   });
-  const tenantName = tenantQuery.data?.tenant?.schemaName ?? "";
+  const tenantName = tenantQuery.data?.tenant?.tenantName ?? "";
 
   const apiKeysQuery = useGetApiKeysQuery({
     variables: { tenantId },
@@ -58,7 +58,7 @@ export function ApiKeys() {
   const [detailRow, setDetailRow] = React.useState<ApiKey | null>(null);
   const [revokeRow, setRevokeRow] = React.useState<ApiKey | null>(null);
 
-  const allRows = (apiKeysQuery.data?.getApiKeys ?? []).filter((r): r is ApiKey => !!r);
+  const allRows = (apiKeysQuery.data?.apiKeys ?? []).filter((r): r is ApiKey => !!r);
 
   const filteredRows = allRows.filter((row) => {
     const matchesSearch = !search || (row.name ?? "").toLowerCase().includes(search.toLowerCase());

@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 
 gql`
   query GetApiKeys($tenantId: String!) {
-    getApiKeys(tenantId: $tenantId) {
+    apiKeys(tenantId: $tenantId) {
       id
       tenantId
       name
@@ -19,7 +19,7 @@ gql`
 
 gql`
   query GetApiKey($id: ID!) {
-    getApiKey(id: $id) {
+    apiKey(id: $id) {
       id
       tenantId
       name

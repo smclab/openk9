@@ -3,7 +3,7 @@ import { GetApiKeysQuery } from "../../../graphql-generated";
 import { apiGroupLabel, deriveDisplayStatus } from "./labels";
 import { StatusBadge } from "./statusBadge";
 
-type ApiKey = NonNullable<NonNullable<GetApiKeysQuery["getApiKeys"]>[number]>;
+type ApiKey = NonNullable<NonNullable<GetApiKeysQuery["apiKeys"]>[number]>;
 
 type Props = {
   open: boolean;
