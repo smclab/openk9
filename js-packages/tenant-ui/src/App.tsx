@@ -12,6 +12,7 @@ import { queryClient } from "./components/client/queryClient";
 import { ModalProvider } from "./components/Modals";
 import { useFilteredMenuItems } from "./components/Navigation/menuItems";
 import { SideNavigationItem } from "./components/Navigation/SideNavigationItem";
+import { ApiKeys } from "./components/Page/ApiKeys";
 import { DashBoard } from "./components/Page/Dashboard";
 import { LoginPage } from "./components/Page/LoginPage";
 import { Tenant } from "./components/Page/Tenant";
@@ -67,7 +68,10 @@ export default function App() {
                       <Route path="tenants">
                         <Route index element={<Tenants />} />
                         <Route path="tenant-create" element={<TenantCreate />} />
-                        <Route path=":tenantId" element={<Tenant />} />
+                        <Route path=":tenantId">
+                          <Route index element={<Tenant />} />
+                          <Route path="api-keys" element={<ApiKeys />} />
+                        </Route>
                       </Route>
                     </Route>
                   </Routes>

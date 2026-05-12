@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import DomainIcon from "@mui/icons-material/Domain";
+import KeyIcon from "@mui/icons-material/Key";
 import { Button, MenuItem } from "@mui/material";
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
@@ -151,6 +152,16 @@ export function Tenant() {
           <ArrowBackIcon />
         </IconButton>
         <Box display={"flex"} gap={2}>
+          <Button
+            color="primary"
+            aria-label="manage api keys"
+            size="medium"
+            variant="outlined"
+            startIcon={<KeyIcon />}
+            onClick={() => navigate(`/tenants/${tenantId}/api-keys`)}
+          >
+            Manage API Keys
+          </Button>
           <Button
             color="primary"
             aria-label="init connector"
