@@ -4,7 +4,7 @@ const path = require('node:path');
 
 const mavenModule = process.argv[2];
 if (!mavenModule) {
-	console.error('Usage: fetch-graphql-schema.js <maven-module> (e.g. app/datasource)');
+	console.error('Usage: fetch-schemas.js <maven-module> (e.g. app/datasource)');
 	process.exit(2);
 }
 
@@ -15,7 +15,7 @@ const wrapper = path.join(coreDir, isWindows ? 'mvnw.cmd' : 'mvnw');
 const args = [
 	'-pl', mavenModule,
 	'-am',
-	'-P', '!validate,!format,graphql-schema',
+	'-P', '!validate,!format,generate-schemas',
 	'-q',
 	'process-classes',
 ];

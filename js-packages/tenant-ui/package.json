@@ -54,9 +54,10 @@
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
-    "fetch-schema": "node ../scripts/fetch-graphql-schema.js app/tenant-manager",
-    "compile-graphql": "yarn fetch-schema && graphql-codegen --verbose",
-    "compile-openapi": "openapi --input https://tenant-manager-frontend.openk9.io/api/tenant-manager/q/openapi --output ./src/openapi-generated --name OpenApiRestClient"
+    "fetch-schemas": "node ../scripts/fetch-schemas.js app/tenant-manager",
+    "compile-graphql": "yarn fetch-schemas && graphql-codegen --verbose",
+    "compile-openapi": "yarn fetch-schemas && openapi --input ../../core/app/tenant-manager/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient",
+    "compile-clients": "yarn fetch-schemas && graphql-codegen --verbose && openapi --input ../../core/app/tenant-manager/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient"
   },
   "eslintConfig": {
     "extends": [
