@@ -39,6 +39,7 @@ const PROVIDER_OPTIONS = [
   { value: "ollama", label: "Ollama" },
   { value: "watsonx", label: "IBM WatsonX" },
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
+  { value: "aws_bedrock", label: "AWS Bedrock" },
 ];
 
 export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {

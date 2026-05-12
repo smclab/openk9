@@ -43,6 +43,7 @@ const PROVIDER_OPTIONS = [
   { value: "watsonx", label: "IBM WatsonX" },
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
   { value: "chat_vertex_ai_model_garden", label: "Chat Vertex AI Model Garden" },
+  { value: "aws_bedrock", label: "AWS Bedrock" },
 ];
 
 export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
