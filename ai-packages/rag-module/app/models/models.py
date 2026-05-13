@@ -195,8 +195,6 @@ class CommonHeadersMinimal(BaseModel):
     Attributes:
         authorization (Optional[str]): Bearer token for authentication.
             Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        x_forwarded_host (Optional[str]): Original host header from the client request,
-            typically used in reverse proxy setups. Example: "example.com"
         x_tenant_id (Optional[str]): Identifier for the tenant/organization in a multi-tenant architecture.
             Example: "tenant-12345"
     """
@@ -205,11 +203,6 @@ class CommonHeadersMinimal(BaseModel):
         None,
         description="Bearer token for authentication.",
         example="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..",
-    )
-    x_forwarded_host: Optional[str] = Field(
-        None,
-        description="Original host header from the client request, typically used in reverse proxy setups.",
-        example="example.com",
     )
     x_tenant_id: Optional[str] = Field(
         None,
@@ -226,10 +219,6 @@ class CommonHeaders(CommonHeadersMinimal):
     particularly for authentication and request routing purposes.
 
     Attributes:
-        authorization (Optional[str]): Bearer token for authentication.
-            Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        x_forwarded_host (Optional[str]): Original host header from the client request,
-            typically used in reverse proxy setups. Example: "example.com"
         openk9_acl (Optional[List[str]]): Access control list for tenant resources.
             Example: ["group:admins", "project:openk9"]
     """

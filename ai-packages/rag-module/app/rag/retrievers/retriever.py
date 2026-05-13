@@ -45,7 +45,7 @@ class OpenSearchRetriever(BaseRetriever):
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
     suggestion_category_id: Optional[int] = None
-    virtual_host: str
+    tenant_id: str
     jwt: Optional[str] = None
     extra: Optional[dict] = None
     sort: Optional[list] = None
@@ -93,7 +93,7 @@ class OpenSearchRetriever(BaseRetriever):
             after_key=self.after_key,
             suggest_keyword=self.suggest_keyword,
             suggestion_category_id=self.suggestion_category_id,
-            virtual_host=self.virtual_host,
+            tenant_id=self.tenant_id,
             jwt=self.jwt,
             extra=self.extra,
             sort=self.sort,
