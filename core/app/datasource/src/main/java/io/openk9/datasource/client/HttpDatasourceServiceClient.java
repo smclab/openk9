@@ -26,6 +26,8 @@ import io.openk9.datasource.client.exception.FormEndpointException;
 import io.openk9.datasource.client.exception.InvalidUriException;
 import io.openk9.datasource.client.exception.UnexpectedResponseStatusException;
 import io.openk9.datasource.model.ResourceUri;
+import io.openk9.datasource.client.exception.HealthEndpointException;
+import io.openk9.datasource.web.dto.HealthExpectedStatusDTO;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.web.dto.HealthDTO;
 
@@ -76,13 +78,58 @@ public abstract class HttpDatasourceServiceClient {
 				resourceUri.getBaseUri() + HEALTH_PATH
 			)
 			.send()
-			.flatMap(this::checkResponseStatus)
-			.flatMap(res -> parseBody(res, HealthDTO.class))
-			.onFailure(ConstraintViolationException.class)
-			.recoverWithItem(HealthDTO
-				.builder()
-				.status(HealthDTO.Status.UNKOWN)
-				.build()
+			.onFailure()
+			.transform(HealthEndpointException::new)
+			.flatMap(this::checkHealthResponseStatus);
+	}
+
+	/**
+	 * Maps an HTTP response from {@code /health} endpoint to a {@link HealthDTO}.
+	 *
+	 * <p>Returns {@link HealthDTO.Status#UP} or {@link HealthDTO.Status#DOWN}
+	 * if the response is 2xx and the body contains a known status.
+	 * Returns {@link HealthDTO.Status#UNKOWN} otherwise.
+	 *
+	 * @param response the HTTP response from the {@code /health} endpoint
+	 * @return a {@link Uni} emitting the resulting {@link HealthDTO}
+	 */
+	protected Uni<HealthDTO> checkHealthResponseStatus(
+		HttpResponse<Buffer> response) {
+
+		if (response.statusCode() >= 200
+			&& response.statusCode() <= 299) {
+
+			var dto = response.bodyAsJson(HealthExpectedStatusDTO.class);
+
+			if(dto.getStatus() == null)
+				return Uni.createFrom().item(
+					HealthDTO.builder()
+						.status(HealthDTO.Status.UNKOWN)
+						.build()
+				);
+
+			return Uni.createFrom().item(
+				switch (dto.getStatus()) {
+					case UP -> HealthDTO.builder()
+						.status(HealthDTO.Status.UP)
+						.build();
+
+					case DOWN -> HealthDTO.builder()
+						.status(HealthDTO.Status.DOWN)
+						.build();
+
+					default -> HealthDTO.builder()
+						.status(HealthDTO.Status.UNKOWN)
+						.build();
+				}
+			);
+
+		}
+		else
+			return Uni.createFrom().item(
+				HealthDTO.builder()
+					.status(HealthDTO.Status.UNKOWN)
+					.build()
 			);
 	}
 
