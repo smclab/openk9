@@ -26,10 +26,6 @@ from google.protobuf.json_format import ParseDict
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
-from app.external_services.grpc.tenant_manager import (
-    tenant_manager_pb2,
-    tenant_manager_pb2_grpc,
-)
 from app.utils.logger import logger
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
@@ -41,7 +37,7 @@ def query_parser(
     after_key,
     suggest_keyword,
     suggestion_category_id,
-    virtual_host,
+    tenant_id,
     jwt,
     extra,
     sort,
@@ -65,8 +61,8 @@ def query_parser(
     :type suggest_keyword: str
     :param suggestion_category_id: Category ID to filter suggestions by specific category
     :type suggestion_category_id: str
-    :param virtual_host: Virtual host identifier for tenant isolation
-    :type virtual_host: str
+    :param tenant_id: identifier for tenant-specific configuration
+    :type tenant_id: str
     :param jwt: JSON Web Token for authentication and authorization
     :type jwt: str
     :param extra: Additional filter parameters and custom search options
@@ -95,7 +91,7 @@ def query_parser(
             after_key=None,
             suggest_keyword="pyt",
             suggestion_category_id="programming",
-            virtual_host="tenant1.example.com",
+            tenant_id="tenant1.example.com",
             jwt="eyJhbGciOiJIUzI1NiIs...",
             extra={"category": "docs"},
             sort=[{"field": "date", "order": "desc"}],
@@ -114,7 +110,7 @@ def query_parser(
     .. note::
         - Converts search queries to protobuf format for gRPC communication
         - Handles both regular pagination (after_key) and sorted pagination (sort_after_key)
-        - Supports multi-tenant architecture through virtual_host parameter
+        - Supports multi-tenant architecture through tenant_id parameter
         - Provides autocomplete/suggestion capabilities via suggest_keyword
         - Extra parameters are converted to protobuf Value objects
         - Language parameter enables localized search behavior
@@ -123,7 +119,7 @@ def query_parser(
         - gRPC communication failures will result in HTTP 500 errors
         - Ensure gRPC server is running and accessible at grpc_host
         - JWT token must be valid for authenticated searches
-        - Virtual host must correspond to a configured tenant
+        - tenant_id must correspond to a configured tenant
 
     .. seealso::
         - :class:`SearchTokenRequest` Protobuf message for search query structure
@@ -148,7 +144,7 @@ def query_parser(
                     afterKey=after_key,
                     suggestKeyword=suggest_keyword,
                     suggestionCategoryId=suggestion_category_id,
-                    virtualHost=virtual_host,
+                    tenantId=tenant_id,
                     jwt=jwt,
                     extra=extra,
                     sort=sort,
@@ -180,18 +176,18 @@ def query_parser(
     )
 
 
-def get_rag_configuration(grpc_host, virtual_host, rag_type):
+def get_rag_configuration(grpc_host, tenant_id, rag_type):
     """
     Retrieve RAG (Retrieval-Augmented Generation) configuration from gRPC service.
 
     This function communicates with a gRPC service to fetch RAG-specific configuration
-    for a particular virtual host/tenant and RAG type, including prompts, chunking settings,
+    for a particular tenant and RAG type, including prompts, chunking settings,
     and retrieval parameters.
 
     :param grpc_host: gRPC server host address for the configuration service
     :type grpc_host: str
-    :param virtual_host: Virtual host identifier for tenant-specific configuration
-    :type virtual_host: str
+    :param tenant_id: identifier for tenant-specific configuration
+    :type tenant_id: str
     :param rag_type: Type of RAG configuration to retrieve (e.g., "CHAT_RAG", "DOCUMENT_RAG")
     :type rag_type: str
 
@@ -206,7 +202,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
 
         config = get_rag_configuration(
             grpc_host="localhost:50051",
-            virtual_host="tenant1.example.com",
+            tenant_id="tenant1.example.com",
             rag_type="CHAT_RAG"
         )
 
@@ -224,7 +220,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
 
     .. note::
         - Supports different RAG types for various use cases
-        - Configuration is tenant-specific based on virtual_host
+        - Configuration is tenant-specific based on tenant_id
         - Includes multiple prompt templates for different scenarios
         - Handles document chunking and retrieval optimization
         - Converts protobuf JSON configuration to Python dictionary
@@ -233,7 +229,6 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
     .. warning::
         - gRPC communication failures will result in HTTP 500 errors
         - Ensure gRPC server is running and accessible at grpc_host
-        - Virtual host must correspond to a configured tenant with RAG settings
         - RAG type must match available configurations on the server
 
     .. seealso::
@@ -258,7 +253,7 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
             stub = searcher_pb2_grpc.SearcherStub(channel)
             response = stub.GetRAGConfigurations(
                 searcher_pb2.GetRAGConfigurationsRequest(
-                    virtualHost=virtual_host, ragType=rag_type
+                    tenantId=tenant_id, ragType=rag_type
                 )
             )
 
@@ -300,18 +295,18 @@ def get_rag_configuration(grpc_host, virtual_host, rag_type):
     )
 
 
-def get_llm_configuration(grpc_host, virtual_host):
+def get_llm_configuration(grpc_host, tenant_id):
     """
     Retrieve LLM (Large Language Model) configuration from gRPC service.
 
     This function communicates with a gRPC service to fetch the complete LLM configuration
-    for a specific virtual host/tenant, including API settings, model details, and
+    for a specific tenant, including API settings, model details, and
     provider-specific parameters.
 
     :param grpc_host: gRPC server host address for the configuration service
     :type grpc_host: str
-    :param virtual_host: Virtual host identifier for tenant-specific configuration
-    :type virtual_host: str
+    :param tenant_id: identifier for tenant-specific configuration
+    :type tenant_id: str
 
     :return: Dictionary containing complete LLM configuration for the tenant
     :rtype: dict
@@ -324,7 +319,7 @@ def get_llm_configuration(grpc_host, virtual_host):
 
         config = get_llm_configuration(
             grpc_host="localhost:50051",
-            virtual_host="tenant1.example.com"
+            tenant_id="tenant1.example.com"
         )
 
         # Returns:
@@ -344,7 +339,7 @@ def get_llm_configuration(grpc_host, virtual_host):
 
     .. note::
         - Supports multiple LLM providers (OpenAI, Watsonx, Vertex AI, etc.)
-        - Configuration is tenant-specific based on virtual_host
+        - Configuration is tenant-specific based on tenant_id
         - Includes both standard and provider-specific parameters
         - Converts protobuf JSON configuration to Python dictionary
         - Handles various retrieval types and citation settings
@@ -352,7 +347,6 @@ def get_llm_configuration(grpc_host, virtual_host):
     .. warning::
         - gRPC communication failures will result in HTTP 500 errors
         - Ensure gRPC server is running and accessible at grpc_host
-        - Virtual host must correspond to a configured tenant with LLM settings
         - API keys and credentials are returned as plain text - handle securely
 
     .. seealso::
@@ -378,7 +372,7 @@ def get_llm_configuration(grpc_host, virtual_host):
             stub = searcher_pb2_grpc.SearcherStub(channel)
             response = stub.GetLLMConfigurations(
                 searcher_pb2.GetLLMConfigurationsRequest(
-                    virtualHost=virtual_host,
+                    tenantId=tenant_id,
                 )
             )
 
@@ -424,18 +418,18 @@ def get_llm_configuration(grpc_host, virtual_host):
     )
 
 
-def get_embedding_model_configuration(grpc_host, virtual_host):
+def get_embedding_model_configuration(grpc_host, tenant_id):
     """
     Retrieve embedding model configuration from gRPC service.
 
     This function communicates with a gRPC service to fetch embedding model configuration
-    for a specific virtual host/tenant, including API settings, model details, and
+    for a specific tenant, including API settings, model details, and
     vector dimensions for semantic search and document embedding.
 
     :param grpc_host: gRPC server host address for the configuration service
     :type grpc_host: str
-    :param virtual_host: Virtual host identifier for tenant-specific configuration
-    :type virtual_host: str
+    :param tenant_id: identifier for tenant-specific configuration
+    :type tenant_id: str
 
     :return: Dictionary containing complete embedding model configuration for the tenant
     :rtype: dict
@@ -448,7 +442,7 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
 
         config = get_embedding_model_configuration(
             grpc_host="localhost:50051",
-            virtual_host="tenant1.example.com"
+            tenant_id="tenant1.example.com"
         )
 
         # Returns:
@@ -463,7 +457,7 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
 
     .. note::
         - Supports multiple embedding model providers (OpenAI, etc.)
-        - Configuration is tenant-specific based on virtual_host
+        - Configuration is tenant-specific based on tenant_id
         - Vector size determines the dimensionality of generated embeddings
         - JSON config contains provider-specific parameters and optimization settings
         - Used for document embedding, semantic search, and vector similarity operations
@@ -471,7 +465,7 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
     .. warning::
         - gRPC communication failures will result in HTTP 500 errors
         - Ensure gRPC server is running and accessible at grpc_host
-        - Virtual host must correspond to a configured tenant with embedding settings
+        - tenant_id host must correspond to a configured tenant with embedding settings
         - API keys are returned as plain text - handle securely
         - Vector size must match the expected dimensions for the embedding model
 
@@ -495,7 +489,7 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
             stub = searcher_pb2_grpc.SearcherStub(channel)
             response = stub.GetEmbeddingModelConfigurations(
                 searcher_pb2.GetEmbeddingModelConfigurationsRequest(
-                    virtualHost=virtual_host,
+                    tenantId=tenant_id,
                 )
             )
 
@@ -515,7 +509,7 @@ def get_embedding_model_configuration(grpc_host, virtual_host):
             "json_config": json_config,
         }
 
-            return configuration
+        return configuration
 
     except grpc.RpcError as e:
         error_message = f"gRPC communication failed: {e.details()}"
