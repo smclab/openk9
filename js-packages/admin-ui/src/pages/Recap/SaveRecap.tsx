@@ -100,6 +100,7 @@ export default function Recap({
   setExtraFab,
   forceFullScreen = false,
   actions,
+  disclaimer,
 }: {
   recapData: RecapSingleSection[];
   recapTitle?: string;
@@ -111,6 +112,7 @@ export default function Recap({
     submitLabel?: string;
     backLabel?: string;
   };
+  disclaimer?: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
   const [panelPos, setPanelPos] = React.useState<{ bottom: number; right: number } | null>(null);
@@ -292,6 +294,10 @@ export default function Recap({
                   <CloseRoundedIcon fontSize="small" />
                 </IconButton>
               </Box>
+
+              {disclaimer && (
+                <Box sx={{ px: 2, pt: 2 }}>{disclaimer}</Box>
+              )}
 
               <Box sx={{ p: 2, overflowY: "auto", flex: 1 }}>
                 <RecapDatasource area={areas} forceFullScreen={forceFullScreen} />
