@@ -146,7 +146,7 @@ class HttpPluginDriverClientTest {
 
 	@Test
 	@RunOnVertxContext
-	void should_get_health_fail_when_response_status_is_not_200(UniAsserter asserter) {
+	void should_get_health_unknown_when_response_status_is_not_200(UniAsserter asserter) {
 
 		var invalidStatusStub = wireMockServer.stubFor(WireMock
 			.get(HttpPluginDriverClient.HEALTH_PATH)
@@ -157,19 +157,17 @@ class HttpPluginDriverClientTest {
 			)
 		);
 
-		asserter.assertFailedWith(
+		asserter.assertThat(
 			() -> httpPluginDriverClient.getHealth(resourceUri),
-			err -> {
-				Assertions.assertInstanceOf(UnexpectedResponseStatusException.class, err);
-				Assertions.assertTrue(
-					err.getMessage()
-						.contains("Unexpected Response"));
+			res -> {
+				Assertions.assertEquals(HealthDTO.builder()
+					.status(HealthDTO.Status.UNKOWN)
+					.build(), res);
 				wireMockServer.removeStub(invalidStatusStub);
 			}
 		);
 
 	}
-
 
 	@Test
 	@RunOnVertxContext
