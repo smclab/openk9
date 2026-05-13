@@ -7,7 +7,7 @@ push-web-connector-helm:
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/openk9-crawler/**/*
+    - connectors/openk9-crawler/chart/**/*
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
@@ -26,7 +26,7 @@ push-email-connector-helm:
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/email-connector/**/*
+    - connectors/email-connector/chart/**/*
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
@@ -45,7 +45,7 @@ push-database-connector-helm:
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/database-connector/**/*
+    - connectors/database-connector/chart/**/*
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
@@ -64,7 +64,7 @@ push-youtube-connector-helm:
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/youtube-connector/**/*
+    - connectors/youtube-connector/chart/**/*
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
@@ -83,7 +83,7 @@ push-minio-connector-helm:
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/minio-connector/**/*
+    - connectors/minio-connector/chart/**/*
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
     when: never
@@ -93,5 +93,24 @@ push-minio-connector-helm:
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
   - cd connectors/minio-connector/chart/openk9-minio-connector && mkdir -p package
+  - helm package . -d package
+  - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
+
+push-gitlab-connector-helm:
+  stage: push
+  image: alpine:3.19
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/chart/**/*
+  # Block the first execution when branch is just created
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
+  when: manual
+  before_script:
+  - apk update
+  - apk add --update curl helm && rm -rf /var/cache/apk/*
+  script:
+  - cd connectors/gitlab-connector/chart/openk9-gitlab-connector && mkdir -p package
   - helm package . -d package
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

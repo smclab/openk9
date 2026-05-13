@@ -17,8 +17,8 @@ replicaCount: 1
 ## @param image.pullPolicy Gitlab Connector image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: ""
-  name: smclab/openk9-gitlab-connector
+  registry: "registry.smc.it:49083"
+  name: openk9/openk9-gitlab-connector
   ## Overrides the image tag whose default is the chart appVersion.
   tag: "2026.1.0-SNAPSHOT"
 
@@ -35,7 +35,7 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets:
-    - docker-registry-secret
+    - my-nexus-secret
     
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##

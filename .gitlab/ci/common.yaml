@@ -3,6 +3,10 @@
 # ================================
 
 # CONNECTORS (Docker Build)
+# Scatta SOLO su modifiche al codice del connector (connectors/<x>/connector/...),
+# non al chart Helm (connectors/<x>/chart/...) — il chart è gestito da "Trigger Helm Connectors".
+# Il pattern connectors/*/connector/**/* significa: una qualsiasi cartella dentro connectors/,
+# poi la sotto-cartella "connector", poi qualsiasi file a qualsiasi livello.
 Trigger Connectors Build:
   stage: trigger
   rules:
@@ -10,12 +14,12 @@ Trigger Connectors Build:
       when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - connectors/**/*
+        - connectors/*/connector/**/*
         - .gitlab/.gitlab-ci-connectors.yaml
     - if: '$CI_COMMIT_TAG'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
-        - connectors/**/*
+        - connectors/*/connector/**/*
   trigger:
     include: "/.gitlab/.gitlab-ci-connectors.yaml"
     strategy: depend
@@ -100,14 +104,14 @@ Trigger Helm Connectors:
       when: never
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
-        - helm-charts/05-connectors/**/*
+        - connectors/*/chart/**/*
     - if: '$CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes:
-        - helm-charts/05-connectors/**/*
+        - connectors/*/chart/**/*
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
       changes:
-        - helm-charts/05-connectors/**/*
+        - connectors/*/chart/**/*
       variables:
         RELEASE_MR: "true"
   trigger:

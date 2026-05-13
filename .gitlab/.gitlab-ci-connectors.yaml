@@ -62,14 +62,15 @@ Build Web Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/openk9-crawler/**/*
+    - connectors/openk9-crawler/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/openk9-crawler/**/*
+    - connectors/openk9-crawler/connector/**/*
 
 ###############################################################
 #                   BUILD EMAIL CONNECTOR                     #
@@ -111,14 +112,15 @@ Build Email Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/email-connector/**/*
+    - connectors/email-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/email-connector/**/*
+    - connectors/email-connector/connector/**/*
 
 ###############################################################
 #                  BUILD DATABASE CONNECTOR                   #
@@ -160,14 +162,15 @@ Build Database Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/database-connector/**/*
+    - connectors/database-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/database-connector/**/*
+    - connectors/database-connector/connector/**/*
 
 ###############################################################
 #                  BUILD YOUTUBE CONNECTOR                    #
@@ -209,14 +212,15 @@ Build YouTube Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/youtube-connector/**/*
+    - connectors/youtube-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/youtube-connector/**/*
+    - connectors/youtube-connector/connector/**/*
 
 ###############################################################
 #                  BUILD GITLAB CONNECTOR                     #
@@ -258,14 +262,15 @@ Build GitLab Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/gitlab-connector/**/*
+    - connectors/gitlab-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/gitlab-connector/**/*
+    - connectors/gitlab-connector/connector/**/*
 
 ###############################################################
 #                  BUILD MINIO CONNECTOR                      #
@@ -307,14 +312,15 @@ Build Minio Connector image:
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
         --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
     fi
+  # Solo modifiche al codice del connector, non al chart Helm
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/minio-connector/**/*
+    - connectors/minio-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
-    - connectors/minio-connector/**/*
+    - connectors/minio-connector/connector/**/*
 
 ###############################################################
 #               CONTAINER SCANNING WEB CONNECTOR              #
@@ -330,10 +336,11 @@ Container Scanning Web Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/openk9-crawler/**/*
+    - connectors/openk9-crawler/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
@@ -350,10 +357,11 @@ Container Scanning Email Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/email-connector/**/*
+    - connectors/email-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
@@ -370,10 +378,11 @@ Container Scanning Database Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/database-connector/**/*
+    - connectors/database-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
@@ -390,10 +399,11 @@ Container Scanning YouTube Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/youtube-connector/**/*
+    - connectors/youtube-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
@@ -410,10 +420,11 @@ Container Scanning GitLab Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/gitlab-connector/**/*
+    - connectors/gitlab-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
 
 ###############################################################
@@ -430,8 +441,9 @@ Container Scanning Minio Connector:
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
+  # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes:
-    - connectors/minio-connector/**/*
+    - connectors/minio-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
