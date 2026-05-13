@@ -1,0 +1,7 @@
+---
+apiVersion: "v2"
+name: "openk9-agentic-rag-module"
+description: "A Helm chart for Kubernetes"
+type: "application"
+version: "2026.1.0-SNAPSHOT"
+appVersion: "2026.1.0-SNAPSHOT"
