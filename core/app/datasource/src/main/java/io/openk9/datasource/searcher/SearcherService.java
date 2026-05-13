@@ -528,7 +528,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<AutocompleteConfigurationsResponse> getAutocompleteConfigurations(
 		AutocompleteConfigurationsRequest request) {
 
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(resolved -> cache.getAsync(
 				new CompositeCacheKey(resolved, "getTenantAndFetchRelations"),
 				key -> getTenantAndFetchRelations(resolved, false, 0)
@@ -586,7 +586,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<AutocorrectionConfigurationsResponse> getAutocorrectionConfigurations(
 			AutocorrectionConfigurationsRequest request) {
 
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(resolved -> cache.getAsync(
 				new CompositeCacheKey(resolved, "getTenantAndFetchRelations"),
 				key -> getTenantAndFetchRelations(resolved, false, 0)
@@ -647,7 +647,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetEmbeddingModelConfigurationsResponse> getEmbeddingModelConfigurations(
 		GetEmbeddingModelConfigurationsRequest request) {
 
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(tenantId -> embeddingModelService
 				.fetchCurrent(tenantId)
 				.map(embeddingModel -> {
@@ -695,7 +695,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	@Override
 	public Uni<GetLLMConfigurationsResponse> getLLMConfigurations(GetLLMConfigurationsRequest request) {
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(tenantId -> largeLanguageModelService
 				.fetchCurrentLLMAndBucket(tenantId)
 				.map(bucketLLM -> {
@@ -773,7 +773,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	public Uni<GetRAGConfigurationsResponse> getRAGConfigurations(
 		GetRAGConfigurationsRequest request) {
 
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(tenantId ->
 				bucketService.getCurrentBucket(tenantId)
 					.call(bucket -> Mutiny.fetch(bucket.getRagConfigurationChat()))
@@ -824,7 +824,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
         String mode = request.getMode();
         String finalSearchText = searchText;
 
-		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+		return tenantIdResolver.resolve(request)
 			.flatMap(tenantId -> {
 				Uni<Grammar> grammarUni = grammarProvider.getOrCreateGrammar(tenantId, jwt);
 
@@ -1001,7 +1001,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 				createTokenGroup(request);
 
 
-			return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+			return tenantIdResolver.resolve(request)
 				.flatMap(resolved -> cache.getAsync(
 					new CompositeCacheKey(resolved, "getTenantAndFetchRelations"),
 					key -> getTenantAndFetchRelations(resolved, false, 0)
@@ -1096,7 +1096,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			Map<QueryParserType, List<ParserSearchToken>> tokenGroup =
 				createTokenGroup(request);
 
-			return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+			return tenantIdResolver.resolve(request)
 				.flatMap(resolved -> cache.getAsync(
 					new CompositeCacheKey(
 						resolved,

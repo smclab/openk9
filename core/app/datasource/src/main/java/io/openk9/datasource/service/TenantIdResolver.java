@@ -20,6 +20,14 @@ package io.openk9.datasource.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.openk9.searcher.grpc.AutocompleteConfigurationsRequest;
+import io.openk9.searcher.grpc.AutocorrectionConfigurationsRequest;
+import io.openk9.searcher.grpc.GetEmbeddingModelConfigurationsRequest;
+import io.openk9.searcher.grpc.GetLLMConfigurationsRequest;
+import io.openk9.searcher.grpc.GetRAGConfigurationsRequest;
+import io.openk9.searcher.grpc.QueryAnalysisRequest;
+import io.openk9.searcher.grpc.QueryParserRequest;
+
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.smallrye.mutiny.Uni;
@@ -48,7 +56,80 @@ public class TenantIdResolver {
 	@Inject
 	TenantRegistry tenantRegistry;
 
-	public Uni<String> resolve(String tenantId, String virtualHost) {
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(AutocompleteConfigurationsRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(AutocorrectionConfigurationsRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(GetEmbeddingModelConfigurationsRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(GetLLMConfigurationsRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(GetRAGConfigurationsRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(QueryParserRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * gRPC adapter: extracts {@code tenantId} and {@code virtualHost} from the
+	 * request and delegates to {@link #resolve(String, String)}.
+	 */
+	public Uni<String> resolve(QueryAnalysisRequest request) {
+		return resolve(request.getTenantId(), request.getVirtualHost());
+	}
+
+	/**
+	 * Resolves the effective {@code tenantId} according to the following rules:
+	 * <ol>
+	 *   <li>if {@code tenantId} is provided, it is returned as-is;</li>
+	 *   <li>otherwise, if {@code virtualHost} is also missing or blank, the
+	 *       returned {@link Uni} fails with {@link Status#INVALID_ARGUMENT};</li>
+	 *   <li>otherwise, the {@code TenantRegistry} is queried to resolve the
+	 *       {@code virtualHost} (legacy path, logs a warning);</li>
+	 *   <li>if the registry returns no match, the returned {@link Uni} fails
+	 *       with {@link Status#NOT_FOUND}.</li>
+	 * </ol>
+	 *
+	 * @param tenantId    the tenant id, if already known to the caller (may be {@code null} or blank)
+	 * @param virtualHost the virtual host used as a fallback (may be {@code null} or blank)
+	 * @return a {@link Uni} emitting the resolved {@code tenantId}, or failing with
+	 *         a {@link StatusRuntimeException} in any of the error cases listed above
+	 */
+	protected Uni<String> resolve(String tenantId, String virtualHost) {
 		if (tenantId != null && !tenantId.isBlank()) {
 			return Uni.createFrom().item(tenantId);
 		}
