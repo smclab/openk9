@@ -30,7 +30,14 @@ export function Step1Form({ values, onChange }: Props) {
       <TextField label="Tenant Name" required fullWidth {...input(values, onChange, "tenantName")} helperText="Unique tenant identifier" />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
       <TextField label="Client ID" required fullWidth {...input(values, onChange, "clientId")} helperText="OAuth2 client identifier" />
-      <TextField label="Client Secret" type="password" fullWidth {...input(values, onChange, "clientSecret")} helperText="Optional, leave empty for public clients" />
+      <TextField
+        label="Client Secret"
+        type="password"
+        fullWidth
+        autoComplete="new-password"
+        {...input(values, onChange, "clientSecret")}
+        helperText="Optional, leave empty for public clients"
+      />
       <TextField
         label="Issuer URI"
         required
