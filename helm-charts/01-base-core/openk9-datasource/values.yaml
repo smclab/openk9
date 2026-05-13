@@ -142,6 +142,7 @@ scheduling:
   WorkersPerNode: '2'
   ConsumerMaxRetries: '2'
   ConsumerTimeout: '10m'
+  retentionDays: 7
 
 ## pipeline configuration
 pipeline:

@@ -65,6 +65,7 @@ data:
   IO_OPENK9_SCHEDULING_WORKERS_PER_NODE: {{ .Values.scheduling.WorkersPerNode | quote }}
   IO_OPENK9_SCHEDULING_CONSUMER_MAX_RETRIES: {{ .Values.scheduling.ConsumerMaxRetries | quote }}
   IO_OPENK9_SCHEDULING_CONSUMER_TIMEOUT: {{ .Values.scheduling.ConsumerTimeout | quote }}
+  OPENK9_SCHEDULER_RETENTION_DAYS: {{ .Values.scheduling.retentionDays | quote }}
   IO_OPENK9_PIPELINE_HTTP_TIMEOUT: {{ .Values.pipeline.HttpTimeout | quote }}
 
   QUARKUS_DATASOURCE_REACTIVE_IDLE_TIMEOUT : {{ .Values.quarkus.ReactiveIdleTimeout | quote }}
