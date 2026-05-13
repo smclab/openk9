@@ -11,23 +11,17 @@ const stripBasicAuthChallenge = (proxyRes) => {
   }
 };
 
+const tenantProxyOptions = {
+  target: TENANT_HOST,
+  changeOrigin: true,
+  on: {
+    proxyRes: stripBasicAuthChallenge,
+  },
+};
+
 module.exports = function (app) {
-  app.use(
-    "/api/tenant-manager",
-    createProxyMiddleware({
-      target: TENANT_HOST,
-      changeOrigin: true,
-      onProxyRes: stripBasicAuthChallenge,
-    })
-  );
-  app.use(
-    "/api/datasource",
-    createProxyMiddleware({
-      target: TENANT_HOST,
-      changeOrigin: true,
-      onProxyRes: stripBasicAuthChallenge,
-    })
-  );
+  app.use("/api/tenant-manager", createProxyMiddleware(tenantProxyOptions));
+  app.use("/api/datasource", createProxyMiddleware(tenantProxyOptions));
   app.use(
     "/k8s",
     createProxyMiddleware({

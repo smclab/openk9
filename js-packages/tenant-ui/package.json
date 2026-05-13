@@ -24,7 +24,6 @@
     "@types/react-dom": "^18.0.0",
     "@types/styled-components": "^5.1.25",
     "graphql": "^16.5.0",
-    "http-proxy-middleware": "^2.0.6",
     "openapi-typescript-codegen": "^0.23.0",
     "prettier": "^2.7.1",
     "react": "^18.2.0",
@@ -34,8 +33,7 @@
     "react-scripts": "5.0.1",
     "react-virtuoso": "^2.16.4",
     "typescript": "^4.4.2",
-    "web-vitals": "^2.1.0",
-    "webpack-bundle-analyzer": "^4.7.0"
+    "web-vitals": "^2.1.0"
   },
   "scripts": {
     "start": "craco start",
@@ -69,6 +67,8 @@
   },
   "devDependencies": {
     "@graphql-codegen/time": "^3.2.3",
-    "compression-webpack-plugin": "^11.1.0"
+    "compression-webpack-plugin": "^11.1.0",
+    "http-proxy-middleware": "^4.0.0",
+    "webpack-bundle-analyzer": "^4.7.0"
   }
 }
