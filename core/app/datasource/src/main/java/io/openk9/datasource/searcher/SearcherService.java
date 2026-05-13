@@ -820,7 +820,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
             searchText = searchText.substring(0, maxSearchTextLength);
         }
 
-        String mode = request.getMode();
         String finalSearchText = searchText;
 
 		return tenantIdResolver.resolve(request)

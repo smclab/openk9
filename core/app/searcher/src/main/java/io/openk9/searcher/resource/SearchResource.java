@@ -658,7 +658,7 @@ public class SearchResource {
 		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
 
 		QueryAnalysisRequest queryAnalysisRequest =
-			getQueryAnalysisRequest(searchRequest, "query-analysis");
+			getQueryAnalysisRequest(searchRequest);
 
 		return searcherClient
 			.queryAnalysis(queryAnalysisRequest)
@@ -1650,7 +1650,7 @@ public class SearchResource {
 	}
 
 	private QueryAnalysisRequest getQueryAnalysisRequest(
-		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest, String mode) {
+		io.openk9.searcher.queryanalysis.QueryAnalysisRequest searchRequest) {
 
 		QueryAnalysisRequest.Builder builder =
 			QueryAnalysisRequest.newBuilder();
@@ -1659,7 +1659,6 @@ public class SearchResource {
 		builder.setSearchText(searchRequest.getSearchText());
 		builder.setTenantId(getTenantId());
 		builder.setJwt(rawToken);
-		builder.setMode(mode);
 
 		if (searchRequest.getTokens() != null) {
 

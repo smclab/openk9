@@ -163,7 +163,7 @@ message QueryAnalysisRequest {
   repeated QueryAnalysisToken tokens = 2;
   string virtualHost = 3 [deprecated = true];
   optional string jwt = 4;
-  string mode = 5;
+  string mode = 5 [deprecated = true];
   string tenantId = 6;
 }
 
