@@ -17,10 +17,12 @@
 
 package io.openk9.datasource.web.dto;
 
-import lombok.Builder;
+import lombok.Data;
 
-@Builder
+@Data
 public class HealthExpectedStatusDTO {
+	private Status status;
+
 	public enum Status {
 		UP,
 		DOWN
