@@ -473,7 +473,7 @@ class RagGraph:
     def _llm_output_guardrail(self, result_answer):
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
-            virtual_host=self.configuration.get("virtual_host"),
+            tenant_id=self.configuration.get("tenant_id"),
         )
 
         retriever = OpenSearchGuardrailDocumentsRetriever(
@@ -583,7 +583,7 @@ class RagGraph:
             query = state.current_query
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
-                virtual_host=self.configuration.get("virtual_host"),
+                tenant_id=self.configuration.get("tenant_id"),
             )
 
             retriever = OpenSearchGuardrailDocumentsRetriever(
@@ -670,7 +670,7 @@ class RagGraph:
         query = state.current_query
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=self.configuration.get("grpc_host_datasource"),
-            virtual_host=self.configuration.get("virtual_host"),
+            tenant_id=self.configuration.get("tenant_id"),
         )
 
         retriever = OpenSearchDomainDocumentsRetriever(
@@ -722,7 +722,7 @@ class RagGraph:
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             state.messages = (
                 self._load_messages_from_checkpoints()
-                if all([self.tenant_id, self.user_id, self.chat_id])
+                if all([self.user_id, self.chat_id])
                 else self._load_messages_from_frontend()
             )
         else:
@@ -908,7 +908,7 @@ class RagGraph:
         if self.retrieve_from_uploaded_documents and self.user_id and self.tenant_id:
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
-                virtual_host=self.configuration.get("virtual_host"),
+                tenant_id=self.configuration.get("tenant_id"),
             )
 
             retriever = OpenSearchUploadedDocumentsRetriever(
@@ -921,9 +921,7 @@ class RagGraph:
                 chat_id=self.chat_id,
                 search_text=query,
             )
-        elif self.retrieve_from_uploaded_documents and (
-            not self.user_id or not self.tenant_id
-        ):
+        elif self.retrieve_from_uploaded_documents and (not self.user_id):
             unauthorized_response()
         else:
             search_query = self.configuration.get("search_query") or []
@@ -950,7 +948,7 @@ class RagGraph:
                 after_key=self.configuration.get("after_key"),
                 suggest_keyword=self.configuration.get("suggest_keyword"),
                 suggestion_category_id=self.configuration.get("suggestion_category_id"),
-                virtual_host=self.configuration.get("virtual_host"),
+                tenant_id=self.configuration.get("tenant_id"),
                 jwt=self.configuration.get("jwt"),
                 extra=self.configuration.get("extra"),
                 sort=self.configuration.get("sort"),
@@ -1254,7 +1252,6 @@ class RagGraph:
                 [
                     self.configuration.get("enable_conversation_title"),
                     self.chat_sequence_number == 1,
-                    self.tenant_id,
                     self.user_id,
                     self.chat_id,
                 ]
@@ -1263,7 +1260,7 @@ class RagGraph:
                     self.llm, state.current_query, state.response
                 )
 
-            elif self.chat_sequence_number == 1 and self.tenant_id and self.user_id:
+            elif self.chat_sequence_number == 1 and self.user_id:
                 conversation_title = state.current_query
 
             state.conversation_title = conversation_title.strip('"')
@@ -1402,7 +1399,7 @@ class RagGraph:
             workflow.add_edge("llm_response", "history_saver")
             workflow.add_edge("history_saver", END)
 
-        if self.tenant_id and self.user_id and self.chat_id:
+        if self.user_id and self.chat_id:
             checkpoint_index_name = f"{self.tenant_id}-{self.user_id}"
 
             self.checkpointer = OpenSearchSaver(
@@ -1655,7 +1652,6 @@ class RagGraph:
                 if all(
                     [
                         self.chat_sequence_number == 1,
-                        self.tenant_id,
                         self.user_id,
                         self.chat_id,
                         conversation_title := last_state.values.get(

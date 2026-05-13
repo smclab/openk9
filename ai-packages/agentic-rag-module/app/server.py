@@ -40,14 +40,12 @@ from fastapi import (
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from google.protobuf.struct_pb2 import Struct
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
-    get_tenant_manager_configuration,
 )
 from app.models import models
 from app.rag.chain import get_agentic_rag
@@ -66,7 +64,6 @@ ORIGINS = os.getenv("ORIGINS")
 ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
-GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
@@ -183,7 +180,7 @@ async def rag_generate(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -219,13 +216,13 @@ async def rag_generate(
     search_text = search_query_request.searchText
     rag_type = RagType.SIMPLE_GENERATE.value
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
     if headers.openk9_acl:
@@ -240,7 +237,7 @@ async def rag_generate(
     configurations = get_configurations(
         rag_type=rag_type,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     rag_configuration = configurations["rag_configuration"]
@@ -249,7 +246,6 @@ async def rag_generate(
 
     chat_id = None
     user_id = None
-    tenant_id = None
     retrieve_from_uploaded_documents = None
     chat_history = None
     timestamp = None
@@ -266,7 +262,6 @@ async def rag_generate(
         sort,
         sort_after_key,
         language,
-        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -319,7 +314,7 @@ async def rag_chat(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -361,21 +356,14 @@ async def rag_chat(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG.value
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
-
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -394,7 +382,7 @@ async def rag_chat(
     configurations = get_configurations(
         rag_type=rag_type,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     rag_configuration = configurations["rag_configuration"]
@@ -414,7 +402,6 @@ async def rag_chat(
         sort,
         sort_after_key,
         language,
-        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -465,7 +452,7 @@ async def rag_chat_tool(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -510,21 +497,14 @@ async def rag_chat_tool(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG_TOOL.value
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
-
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -543,7 +523,7 @@ async def rag_chat_tool(
     configurations = get_configurations(
         rag_type=rag_type,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     rag_configuration = configurations["rag_configuration"]
@@ -563,7 +543,6 @@ async def rag_chat_tool(
         sort,
         sort_after_key,
         language,
-        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -604,7 +583,7 @@ async def get_user_chats(
             - paginationSize: Number of items to return per page
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         dict: Dictionary containing:
@@ -627,21 +606,15 @@ async def get_user_chats(
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -747,7 +720,6 @@ async def get_chat(
         chat_id (str): Unique identifier of the chat to retrieve
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -771,21 +743,15 @@ async def get_chat(
         - Only returns messages belonging to the authenticated user
         - Uses OpenSearch for data storage and retrieval
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -894,7 +860,6 @@ async def delete_chat(
         chat_id (str): Unique identifier of the chat to delete
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -919,21 +884,15 @@ async def delete_chat(
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -1018,7 +977,6 @@ async def rename_chat(
             - newTitle (str): The new title to assign to the chat
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -1043,21 +1001,15 @@ async def rename_chat(
         - Only affects chats belonging to the authenticated user
         - The chat must contain at least one message to be renamed
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -1163,19 +1115,19 @@ async def evaluate(
 
     rag_type = RagType.SIMPLE_GENERATE.value
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
     configurations = get_configurations(
         rag_type=rag_type,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     rag_configuration = configurations["rag_configuration"]
@@ -1385,17 +1337,17 @@ async def embed_guardrails(
             headers={"WWW-Authenticate": "Basic"},
         )
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
     embedding_model_configuration = get_embedding_model_configuration(
-        grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
+        grpc_host=GRPC_DATASOURCE_HOST, tenant_id=tenant_id
     )
     vector_size = embedding_model_configuration.get("vector_size")
 
@@ -1513,21 +1465,15 @@ async def upload_files(
             ]
         }
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -1553,7 +1499,6 @@ async def upload_files(
             user_id,
             chat_id,
             tenant_id,
-            virtual_host,
             UPLOAD_FILE_EXTENSIONS,
             UPLOAD_DIR,
             MAX_UPLOAD_FILE_SIZE,
@@ -1714,17 +1659,17 @@ async def embed_domains(
             headers={"WWW-Authenticate": "Basic"},
         )
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
     embedding_model_configuration = get_embedding_model_configuration(
-        grpc_host=GRPC_DATASOURCE_HOST, virtual_host=virtual_host
+        grpc_host=GRPC_DATASOURCE_HOST, virtuatenant_idl_host=tenant_id
     )
     vector_size = embedding_model_configuration.get("vector_size")
 

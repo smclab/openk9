@@ -89,10 +89,10 @@ def save_google_application_credentials(credentials):
 def get_configurations(
     rag_type,
     grpc_host,
-    virtual_host,
+    tenant_id,
 ):
-    rag_configuration = get_rag_configuration(grpc_host, virtual_host, rag_type)
-    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    rag_configuration = get_rag_configuration(grpc_host, tenant_id, rag_type)
+    llm_configuration = get_llm_configuration(grpc_host, tenant_id)
 
     configurations = {
         "rag_configuration": rag_configuration,

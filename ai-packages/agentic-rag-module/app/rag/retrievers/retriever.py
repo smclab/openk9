@@ -18,12 +18,13 @@
 from typing import List, Optional
 
 import requests
-from app.external_services.grpc.grpc_client import query_parser
-from app.rag.chunk_window import get_context_window_merged
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
+
+from app.external_services.grpc.grpc_client import query_parser
+from app.rag.chunk_window import get_context_window_merged
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
@@ -44,7 +45,7 @@ class OpenSearchRetriever(BaseRetriever):
     after_key: Optional[str] = None
     suggest_keyword: Optional[str] = None
     suggestion_category_id: Optional[int] = None
-    virtual_host: str
+    tenant_id: str
     jwt: Optional[str] = None
     extra: Optional[dict] = None
     sort: Optional[list] = None
@@ -92,7 +93,7 @@ class OpenSearchRetriever(BaseRetriever):
             after_key=self.after_key,
             suggest_keyword=self.suggest_keyword,
             suggestion_category_id=self.suggestion_category_id,
-            virtual_host=self.virtual_host,
+            tenant_id=self.tenant_id,
             jwt=self.jwt,
             extra=self.extra,
             sort=self.sort,

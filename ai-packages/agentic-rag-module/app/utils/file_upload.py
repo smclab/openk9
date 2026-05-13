@@ -25,7 +25,6 @@ async def process_file(
     user_id: str,
     chat_id: str,
     tenant_id: str,
-    virtual_host: str,
     upload_file_extensions: list,
     upload_dir: str,
     max_upload_file_size: int,
@@ -53,8 +52,6 @@ async def process_file(
     :type chat_id: str
     :param tenant_id: Name of the realm/namespace for data isolation
     :type tenant_id: str
-    :param virtual_host: Virtual host identifier for multi-tenancy
-    :type virtual_host: str
     :param upload_file_extensions: List of allowed file extensions (e.g., ['.pdf', '.docx'])
     :type upload_file_extensions: list
     :param upload_dir: Directory path where temporary files are stored
@@ -174,7 +171,7 @@ async def process_file(
 
     try:
         embedding_model_configuration = get_embedding_model_configuration(
-            grpc_host=grpc_datasource_host, virtual_host=virtual_host
+            grpc_host=grpc_datasource_host, tenant_id=tenant_id
         )
         vector_size = embedding_model_configuration.get("vector_size")
 
