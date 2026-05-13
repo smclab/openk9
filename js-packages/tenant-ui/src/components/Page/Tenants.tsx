@@ -62,7 +62,9 @@ export function Tenants() {
           {
             label: "View Admin Host",
             action: (tenant) => {
-              window.open(`https://${tenant.virtualHost}/admin`, "_blank");
+              const host = (tenant.virtualHost ?? "").trim();
+              if (!/^[a-z0-9.-]+(?::\d+)?$/i.test(host)) return;
+              window.open(`https://${host}/admin`, "_blank", "noopener,noreferrer");
             },
           },
         ]}
