@@ -136,7 +136,7 @@ class HttpPluginDriverClientTest {
 			() -> httpPluginDriverClient.getHealth(resourceUri),
 			res -> {
 				Assertions.assertEquals(HealthDTO.builder()
-					.status(HealthDTO.Status.UNKOWN)
+					.status(HealthDTO.Status.UNKNOWN)
 					.build(), res);
 				wireMockServer.removeStub(invalidBodyStub);
 			}
@@ -161,7 +161,7 @@ class HttpPluginDriverClientTest {
 			() -> httpPluginDriverClient.getHealth(resourceUri),
 			res -> {
 				Assertions.assertEquals(HealthDTO.builder()
-					.status(HealthDTO.Status.UNKOWN)
+					.status(HealthDTO.Status.UNKNOWN)
 					.build(), res);
 				wireMockServer.removeStub(invalidStatusStub);
 			}

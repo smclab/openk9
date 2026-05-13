@@ -88,7 +88,7 @@ public abstract class HttpDatasourceServiceClient {
 	 *
 	 * <p>Returns {@link HealthDTO.Status#UP} or {@link HealthDTO.Status#DOWN}
 	 * if the response is 2xx and the body contains a known status.
-	 * Returns {@link HealthDTO.Status#UNKOWN} otherwise.
+	 * Returns {@link HealthDTO.Status#UNKNOWN} otherwise.
 	 *
 	 * @param response the HTTP response from the {@code /health} endpoint
 	 * @return a {@link Uni} emitting the resulting {@link HealthDTO}
@@ -104,7 +104,7 @@ public abstract class HttpDatasourceServiceClient {
 			if(dto.getStatus() == null)
 				return Uni.createFrom().item(
 					HealthDTO.builder()
-						.status(HealthDTO.Status.UNKOWN)
+						.status(HealthDTO.Status.UNKNOWN)
 						.build()
 				);
 
@@ -119,7 +119,7 @@ public abstract class HttpDatasourceServiceClient {
 						.build();
 
 					default -> HealthDTO.builder()
-						.status(HealthDTO.Status.UNKOWN)
+						.status(HealthDTO.Status.UNKNOWN)
 						.build();
 				}
 			);
@@ -128,7 +128,7 @@ public abstract class HttpDatasourceServiceClient {
 		else
 			return Uni.createFrom().item(
 				HealthDTO.builder()
-					.status(HealthDTO.Status.UNKOWN)
+					.status(HealthDTO.Status.UNKNOWN)
 					.build()
 			);
 	}

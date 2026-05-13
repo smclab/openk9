@@ -25,7 +25,7 @@ public record HealthDTO(@NotNull Status status) {
 	public enum Status {
 		UP,
 		DOWN,
-		UNKOWN
+		UNKNOWN
 	}
 
 }
