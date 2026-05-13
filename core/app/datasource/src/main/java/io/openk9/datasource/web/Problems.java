@@ -20,7 +20,10 @@ package io.openk9.datasource.web;
 import jakarta.validation.ValidationException;
 
 import io.openk9.common.model.dto.Problem;
+import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.client.exception.FormEndpointException;
+
+import java.net.ConnectException;
 
 /**
  * Factory methods for standard {@link Problem} responses used across
@@ -47,6 +50,16 @@ public final class Problems {
 		return problem;
 	}
 
+	public static Problem healthEndpointError(
+		HealthEndpointException exception) {
+
+		var problem = new Problem();
+		problem.setStatus(502);
+		problem.setTitle("Health not available");
+		problem.setDetail(healthEndpointErrorDetail(exception));
+		return problem;
+	}
+
 	private static String formEndpointErrorDetail(
 		FormEndpointException exception) {
 
@@ -59,6 +72,19 @@ public final class Problems {
 
 		return "The service does not expose"
 			+ " a form endpoint";
+	}
+
+	private static String healthEndpointErrorDetail(
+		HealthEndpointException exception) {
+
+		if (exception.getCause()
+			instanceof ConnectException) {
+
+			return "The service is currently unreachable.";
+		}
+
+		return "The service does not expose a health endpoint " +
+			"or an error occurred during the request.";
 	}
 
 }

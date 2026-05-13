@@ -26,6 +26,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.model.ResourceUri;
 import io.openk9.datasource.model.form.FormTemplate;
 import io.openk9.datasource.service.EnrichItemService;
@@ -89,7 +90,14 @@ public class EnricherResource {
 	@POST
 	@Path("/health")
 	public Uni<HealthDTO> getHealth(ResourceUri resourceUri) {
-		return service.getHealth(resourceUri);
+		return service.getHealth(resourceUri)
+			.onFailure(HealthEndpointException.class)
+			.transform(cause -> new WebApplicationException(
+				cause,
+				Response.status(502)
+					.entity(Problems.healthEndpointError(
+						(HealthEndpointException) cause))
+					.build()));
 	}
 
 	/**

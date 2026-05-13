@@ -29,6 +29,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.form.FormTemplate;
@@ -147,7 +148,14 @@ public class PluginDriverResource {
 		@Parameter(description = "Plugin Driver's id")
 		@PathParam("id") long id) {
 
-		return service.getHealth(id);
+		return service.getHealth(id)
+			.onFailure(HealthEndpointException.class)
+			.transform(cause -> new WebApplicationException(
+				cause,
+				Response.status(502)
+					.entity(Problems.healthEndpointError(
+						(HealthEndpointException) cause))
+					.build()));
 	}
 
 	@APIResponses(value = {
@@ -183,7 +191,15 @@ public class PluginDriverResource {
 	@POST
 	@Path("/health")
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
-		return service.getHealth(pluginDriverDTO);
+
+		return service.getHealth(pluginDriverDTO)
+			.onFailure(HealthEndpointException.class)
+			.transform(cause -> new WebApplicationException(
+				cause,
+				Response.status(502)
+					.entity(Problems.healthEndpointError(
+						(HealthEndpointException) cause))
+					.build()));
 	}
 
 }
