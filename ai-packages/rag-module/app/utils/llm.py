@@ -108,10 +108,10 @@ def save_google_application_credentials(credentials):
 def get_configurations(
     rag_type,
     grpc_host,
-    virtual_host,
+    tenant_id,
 ):
-    rag_configuration = get_rag_configuration(grpc_host, virtual_host, rag_type)
-    llm_configuration = get_llm_configuration(grpc_host, virtual_host)
+    rag_configuration = get_rag_configuration(grpc_host, tenant_id, rag_type)
+    llm_configuration = get_llm_configuration(grpc_host, tenant_id)
 
     configurations = {
         "rag_configuration": rag_configuration,
@@ -327,7 +327,6 @@ def stream_rag_conversation(
     after_key: str,
     suggest_keyword: str,
     suggestion_category_id: int,
-    virtual_host: str,
     jwt: str,
     extra: dict,
     sort: list,
@@ -369,8 +368,6 @@ def stream_rag_conversation(
     :type suggest_keyword: str
     :param suggestion_category_id: Category ID for suggestions
     :type suggestion_category_id: int
-    :param virtual_host: Virtual host configuration for multi-tenant isolation
-    :type virtual_host: str
     :param jwt: Authentication token for secured services
     :type jwt: str
     :param extra: Additional parameters for search customization
@@ -425,7 +422,6 @@ def stream_rag_conversation(
             after_key=None,
             suggest_keyword="machine",
             suggestion_category_id=1,
-            virtual_host="tenant1.example.com",
             jwt="eyJhbGciOiJIUzI1NiIs...",
             extra={"category": "technology"},
             sort=[{"field": "relevance", "order": "desc"}],
@@ -535,7 +531,7 @@ def stream_rag_conversation(
             after_key=after_key,
             suggest_keyword=suggest_keyword,
             suggestion_category_id=suggestion_category_id,
-            virtual_host=virtual_host,
+            tenant_id=tenant_id,
             jwt=jwt,
             extra=extra,
             sort=sort,
