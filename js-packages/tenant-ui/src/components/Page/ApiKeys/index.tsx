@@ -58,7 +58,14 @@ export function ApiKeys() {
   const [detailRow, setDetailRow] = React.useState<ApiKey | null>(null);
   const [revokeRow, setRevokeRow] = React.useState<ApiKey | null>(null);
 
-  const allRows = (apiKeysQuery.data?.apiKeys ?? []).filter((r): r is ApiKey => !!r);
+  const allRows = (apiKeysQuery.data?.apiKeys ?? [])
+    .filter((r): r is ApiKey => !!r)
+    .slice()
+    .sort((a, b) => {
+      const ta = a.createDate ? new Date(a.createDate).getTime() : 0;
+      const tb = b.createDate ? new Date(b.createDate).getTime() : 0;
+      return tb - ta;
+    });
 
   const filteredRows = allRows.filter((row) => {
     const matchesSearch = !search || (row.name ?? "").toLowerCase().includes(search.toLowerCase());
