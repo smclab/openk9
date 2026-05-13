@@ -48,6 +48,8 @@ data:
 
   # Custom variables
   OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: {{ .Values.datasource.aclQueryExtraParamsEnabled | quote }}
+  OPENK9_DATASOURCE_CLIENT_PLUGIN_DRIVER_VALIDATION_REGEXES: {{ .Values.datasource.client.pluginDriverValidationRegexes | quote }}
+  OPENK9_DATASOURCE_CLIENT_ENRICHER_VALIDATION_REGEXES: {{ .Values.datasource.client.enricherValidationRegexes | quote }}
   OPENK9_DATASOURCE_QUERY_PARSER_MAX_TEXT_QUERY_LENGTH: {{ .Values.queryParser.maxTextQueryLength | quote }}
   OPENK9_DATASOURCE_SEARCHER_SERVICE_MAX_SEARCH_PAGE_FROM: {{ .Values.search.page.from | quote }}
   OPENK9_DATASOURCE_SEARCHER_SERVICE_MAX_SEARCH_PAGE_SIZE: {{ .Values.search.page.size | quote }}
