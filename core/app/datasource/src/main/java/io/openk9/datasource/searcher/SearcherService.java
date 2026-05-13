@@ -135,6 +135,7 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
+import scala.language;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -821,172 +822,171 @@ public class SearcherService extends BaseSearchService implements Searcher {
         }
 
         String mode = request.getMode();
-
-		Uni<Grammar> grammarUni =
-			grammarProvider.getOrCreateGrammar(
-				request.getTenantId(), request.getVirtualHost(), jwt);
-
         String finalSearchText = searchText;
 
-        return grammarUni.map(grammar -> {
+		return tenantIdResolver.resolve(request.getTenantId(), request.getVirtualHost())
+			.flatMap(tenantId -> {
+				Uni<Grammar> grammarUni = grammarProvider.getOrCreateGrammar(tenantId, jwt);
 
-				Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
-					Utils.toTokenIndexMap(finalSearchText);
+				return grammarUni.map(grammar -> {
 
-				Map<Tuple<Integer>, Map<String, Object>> chart =
-					_getRequestTokensMap(tokenIndexMap, request.getTokensList());
+					Map<Integer, ? extends Utils.TokenIndex> tokenIndexMap =
+						Utils.toTokenIndexMap(finalSearchText);
 
-				List<Parse> parses = grammar.parseInput(finalSearchText);
+					Map<Tuple<Integer>, Map<String, Object>> chart =
+						_getRequestTokensMap(tokenIndexMap, request.getTokensList());
 
-				parses = parses
-					.stream()
-					.limit(20)
-					.toList();
+					List<Parse> parses = grammar.parseInput(finalSearchText);
 
-
-				if (log.isDebugEnabled()) {
-
-					JsonArray reduce = parses
+					parses = parses
 						.stream()
-						.map(Parse::toJson)
-						.reduce(
-							new JsonArray(),
-							JsonArray::add, (a, b) -> b);
+						.limit(20)
+						.toList();
 
-					log.debug(reduce.toString());
 
-				}
+					if (log.isDebugEnabled()) {
 
-				List<SemanticsPos> list = new ArrayList<>();
+						JsonArray reduce = parses
+							.stream()
+							.map(Parse::toJson)
+							.reduce(
+								new JsonArray(),
+								JsonArray::add, (a, b) -> b);
 
-				for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
-					list.add(SemanticsPos.of(e.getKey(), e.getValue()));
-				}
+						log.debug(reduce.toString());
 
-				for (int i = parses.size() - 1; i >= 0; i--) {
-					SemanticTypes semanticTypes =
-						parses.get(i).getSemantics().apply();
+					}
 
-					List<SemanticType> semanticTypeList =
-						semanticTypes.getSemanticTypes();
+					List<SemanticsPos> list = new ArrayList<>();
 
-					for (SemanticType maps : semanticTypeList) {
-						for (Map<String, Object> map : maps) {
-							Object tokenType = map.get("tokenType");
-							int startPos = maps.getPos().get(0);
-							Object keywordKey = map.get("keywordKey");
+					for (Map.Entry<Tuple<Integer>, Map<String, Object>> e : chart.entrySet()) {
+						list.add(SemanticsPos.of(e.getKey(), e.getValue()));
+					}
 
-							if (startPos >= 1) {
-								continue;
-							}
+					for (int i = parses.size() - 1; i >= 0; i--) {
+						SemanticTypes semanticTypes =
+							parses.get(i).getSemantics().apply();
 
-							if (tokenType != null && !tokenType.equals("TOKEN")) {
-								list.add(SemanticsPos.of(maps.getPos(), map));
+						List<SemanticType> semanticTypeList =
+							semanticTypes.getSemanticTypes();
+
+						for (SemanticType maps : semanticTypeList) {
+							for (Map<String, Object> map : maps) {
+								Object tokenType = map.get("tokenType");
+								int startPos = maps.getPos().get(0);
+								Object keywordKey = map.get("keywordKey");
+
+								if (startPos >= 1) {
+									continue;
+								}
+
+								if (tokenType != null && !tokenType.equals("TOKEN")) {
+									list.add(SemanticsPos.of(maps.getPos(), map));
+								}
 							}
 						}
 					}
-				}
 
-				log.debug(list.toString());
+					log.debug(list.toString());
 
-				list.sort(SemanticsPos::compareTo);
+					list.sort(SemanticsPos::compareTo);
 
-				log.debug("Sorted list: " + list);
+					log.debug("Sorted list: " + list);
 
-				Set<SemanticsPos> set = new TreeSet<>(
-					SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
+					Set<SemanticsPos> set = new TreeSet<>(
+						SemanticsPos.TOKEN_TYPE_VALUE_SCORE_COMPARATOR);
 
-				set.addAll(list);
+					set.addAll(list);
 
-				log.debug("Set: " + set);
+					log.debug("Set: " + set);
 
-				Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
-					Collectors.toCollection(LinkedHashSet::new));
+					Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
+						Collectors.toCollection(LinkedHashSet::new));
 
-				scoreOrderedSet.addAll(set);
+					scoreOrderedSet.addAll(set);
 
-				log.debug("scoreOrderedSet: " + set);
+					log.debug("scoreOrderedSet: " + set);
 
-				List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
+					List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
-				Map<Tuple<Integer>, List<Map<String, Object>>> collect =
-					scoreOrderedSet
-						.stream()
-						.collect(
-							Collectors.groupingBy(
-								SemanticsPos::getPos,
-								Collectors.mapping(
-									SemanticsPos::getSemantics,
-									Collectors.toList())
-							)
-						);
+					Map<Tuple<Integer>, List<Map<String, Object>>> collect =
+						scoreOrderedSet
+							.stream()
+							.collect(
+								Collectors.groupingBy(
+									SemanticsPos::getPos,
+									Collectors.mapping(
+										SemanticsPos::getSemantics,
+										Collectors.toList())
+								)
+							);
 
-				for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
-					collect.entrySet()) {
+					for (Map.Entry<Tuple<Integer>, List<Map<String, Object>>> entry :
+						collect.entrySet()) {
 
-					Integer startPos =
-						entry.getKey().getOrDefault(0, -1);
+						Integer startPos =
+							entry.getKey().getOrDefault(0, -1);
 
-					if (startPos < 0) {
-						continue;
+						if (startPos < 0) {
+							continue;
+						}
+
+						Utils.TokenIndex startTokenIndex =
+							tokenIndexMap.get(startPos);
+
+						if (startTokenIndex == null) {
+							continue;
+						}
+
+						Integer endPos =
+							entry.getKey().getOrDefault(1, -1);
+
+						if (endPos >= 0 && (endPos - startPos) > 1) {
+
+							Utils.TokenIndex endTokenIndex =
+								tokenIndexMap.get(endPos - 1);
+
+							result.add(
+								QueryAnalysisTokens.newBuilder()
+									.setText(
+										finalSearchText.substring(
+											startTokenIndex.getStartIndex(),
+											endTokenIndex.getEndIndex()))
+									.setStart(startTokenIndex.getStartIndex())
+									.setEnd(endTokenIndex.getEndIndex())
+									.addAllTokens(_toAnalysisTokens(entry.getValue()))
+									.addPos(startTokenIndex.getPos())
+									.addPos(endTokenIndex.getPos())
+									.build()
+							);
+
+						}
+						else {
+							result.add(
+								QueryAnalysisTokens.newBuilder()
+									.setText(
+										finalSearchText.substring(
+											startTokenIndex.getStartIndex(),
+											startTokenIndex.getEndIndex()))
+									.setStart(startTokenIndex.getStartIndex())
+									.setEnd(startTokenIndex.getEndIndex())
+									.addAllTokens(_toAnalysisTokens(entry.getValue()))
+									.addPos(startTokenIndex.getPos())
+									.build()
+							);
+						}
+
 					}
 
-					Utils.TokenIndex startTokenIndex =
-						tokenIndexMap.get(startPos);
+					return QueryAnalysisResponse.newBuilder()
+						.setSearchText(finalSearchText)
+						.addAllAnalysis(result)
+						.build();
 
-					if (startTokenIndex == null) {
-						continue;
-					}
-
-					Integer endPos =
-						entry.getKey().getOrDefault(1, -1);
-
-					if (endPos >= 0 && (endPos - startPos) > 1) {
-
-						Utils.TokenIndex endTokenIndex =
-							tokenIndexMap.get(endPos - 1);
-
-						result.add(
-							QueryAnalysisTokens.newBuilder()
-								.setText(
-									finalSearchText.substring(
-										startTokenIndex.getStartIndex(),
-										endTokenIndex.getEndIndex()))
-								.setStart(startTokenIndex.getStartIndex())
-								.setEnd(endTokenIndex.getEndIndex())
-								.addAllTokens(_toAnalysisTokens(entry.getValue()))
-								.addPos(startTokenIndex.getPos())
-								.addPos(endTokenIndex.getPos())
-								.build()
-						);
-
-					}
-					else {
-						result.add(
-							QueryAnalysisTokens.newBuilder()
-								.setText(
-									finalSearchText.substring(
-										startTokenIndex.getStartIndex(),
-										startTokenIndex.getEndIndex()))
-								.setStart(startTokenIndex.getStartIndex())
-								.setEnd(startTokenIndex.getEndIndex())
-								.addAllTokens(_toAnalysisTokens(entry.getValue()))
-								.addPos(startTokenIndex.getPos())
-								.build()
-						);
-					}
-
-				}
-
-				return QueryAnalysisResponse.newBuilder()
-					.setSearchText(finalSearchText)
-					.addAllAnalysis(result)
-					.build();
-
-			})
-			.onFailure()
-			.recoverWithItem(() -> QueryAnalysisResponse.newBuilder().build());
-
+				})
+				.onFailure()
+				.recoverWithItem(() -> QueryAnalysisResponse.newBuilder().build());
+		});
 	}
 
 	@Override

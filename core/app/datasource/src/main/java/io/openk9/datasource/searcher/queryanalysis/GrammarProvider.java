@@ -40,9 +40,9 @@ import org.hibernate.reactive.mutiny.Mutiny;
 @ApplicationScoped
 public class GrammarProvider {
 
-	public Uni<Grammar> getOrCreateGrammar(String tenantId, String virtualHost, JsonWebToken jwt) {
+	public Uni<Grammar> getOrCreateGrammar(String tenantId, JsonWebToken jwt) {
 
-		return getTenantWithBucket(tenantId, virtualHost)
+		return getTenantWithBucket(tenantId)
 			.onItem().ifNull().fail()
 			.onItem().ifNotNull().transform(tenantWithBucket -> {
 
@@ -89,27 +89,23 @@ public class GrammarProvider {
 	}
 
 	@Inject
-	TenantIdResolver tenantIdResolver;
-
-	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
 	@Inject
 	AnnotatorFactory annotatorFactory;
 
-	private Uni<TenantWithBucket> getTenantWithBucket(String tenantId, String virtualHost) {
-		return tenantIdResolver.resolve(tenantId, virtualHost)
-			.flatMap(tenantIdResolved -> cache.getAsync(
-				new CompositeCacheKey(tenantIdResolved, "grammarProvider", "getTenantWithBucket"),
+	private Uni<TenantWithBucket> getTenantWithBucket(String tenantId) {
+		return cache.getAsync(
+			new CompositeCacheKey(tenantId, "grammarProvider", "getTenantWithBucket"),
 				key -> sessionFactory.withTransaction(
-					tenantIdResolved, (s, t) -> s
+					tenantId, (s, t) -> s
 						.createNamedQuery(Bucket.FETCH_ANNOTATORS_NAMED_QUERY, Bucket.class)
 						.getSingleResult()
-						.map(bucket -> new TenantWithBucket(tenantIdResolved, bucket))
+						.map(bucket -> new TenantWithBucket(tenantId, bucket))
 						.onFailure()
 						.recoverWithNull()
 				)
-			));
+			);
 	}
 
 	@CacheName("bucket-resource")
