@@ -33,7 +33,6 @@ from sse_starlette.sse import EventSourceResponse
 
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
-    get_tenant_manager_configuration,
 )
 from app.models import models
 from app.rag.chain import get_chain, get_chat_chain, get_chat_chain_tool
@@ -50,7 +49,6 @@ ORIGINS = os.getenv("ORIGINS")
 ORIGINS = ORIGINS.split(",")
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST")
 GRPC_DATASOURCE_HOST = os.getenv("GRPC_DATASOURCE_HOST")
-GRPC_TENANT_MANAGER_HOST = os.getenv("GRPC_TENANT_MANAGER_HOST")
 GRPC_EMBEDDING_MODULE_HOST = os.getenv("GRPC_EMBEDDING_MODULE_HOST")
 RERANKER_API_URL = os.getenv("RERANKER_API_URL")
 SCHEDULE = bool(os.getenv("SCHEDULE", False))
@@ -198,13 +196,13 @@ async def rag_generate(
     language = search_query_request.language
     search_text = search_query_request.searchText
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
     if headers.openk9_acl:
@@ -219,7 +217,7 @@ async def rag_generate(
     configurations = get_configurations(
         rag_type=RagType.SIMPLE_GENERATE.value,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     rag_configuration = configurations["rag_configuration"]
@@ -235,7 +233,7 @@ async def rag_generate(
         sort,
         sort_after_key,
         language,
-        virtual_host,
+        tenant_id,
         search_text,
         rag_configuration,
         llm_configuration,
@@ -322,21 +320,14 @@ async def rag_chat(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
-
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -355,7 +346,7 @@ async def rag_chat(
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG.value,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     embedding_model_configuration = {}
@@ -363,7 +354,7 @@ async def rag_chat(
     if retrieve_from_uploaded_documents:
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=GRPC_DATASOURCE_HOST,
-            virtual_host=virtual_host,
+            tenant_id=tenant_id,
         )
 
     rag_configuration = configurations["rag_configuration"]
@@ -378,7 +369,6 @@ async def rag_chat(
         sort,
         sort_after_key,
         language,
-        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -477,21 +467,14 @@ async def rag_chat_tool(
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
-
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
 
     if headers.openk9_acl:
         extra[OPENK9_ACL_HEADER] = headers.openk9_acl
@@ -510,7 +493,7 @@ async def rag_chat_tool(
     configurations = get_configurations(
         rag_type=RagType.CHAT_RAG_TOOL.value,
         grpc_host=GRPC_DATASOURCE_HOST,
-        virtual_host=virtual_host,
+        tenant_id=tenant_id,
     )
 
     embedding_model_configuration = {}
@@ -518,7 +501,7 @@ async def rag_chat_tool(
     if retrieve_from_uploaded_documents:
         embedding_model_configuration = get_embedding_model_configuration(
             grpc_host=GRPC_DATASOURCE_HOST,
-            virtual_host=virtual_host,
+            tenant_id=tenant_id,
         )
 
     rag_configuration = configurations["rag_configuration"]
@@ -533,7 +516,6 @@ async def rag_chat_tool(
         sort,
         sort_after_key,
         language,
-        virtual_host,
         search_text,
         chat_id,
         user_id,
@@ -599,21 +581,15 @@ async def get_user_chats(
     pagination_from = user_chats.paginationFrom
     pagination_size = user_chats.paginationSize
 
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -703,21 +679,15 @@ async def get_chat(
         - Only returns messages belonging to the authenticated user
         - Uses OpenSearch for data storage and retrieval
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -821,21 +791,15 @@ async def delete_chat(
         - Only affects chats belonging to the authenticated user
         - Uses OpenSearch's delete_by_query operation
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -945,21 +909,15 @@ async def rename_chat(
         - Only affects chats belonging to the authenticated user
         - The chat must contain at least one message to be renamed
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -1125,21 +1083,15 @@ async def upload_files(
             ]
         }
     """
-    if headers.x_forwarded_host:
-        virtual_host = headers.x_forwarded_host.split(",")[0]
+    if headers.x_tenant_id:
+        tenant_id = headers.x_tenant_id
     else:
-        logger.error("x_forwarded_host header is missing or empty.")
+        logger.error("x_tenant_id header is missing or empty.")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing x_forwarded_host header.",
+            detail="Missing x_tenant_id header.",
         )
 
-    tenant_id = (
-        headers.x_tenant_id
-        or get_tenant_manager_configuration(GRPC_TENANT_MANAGER_HOST, virtual_host)[
-            TENANT_ID_KEY
-        ]
-    )
     token = (
         headers.authorization.replace(TOKEN_PREFIX, "")
         if headers.authorization
@@ -1165,7 +1117,6 @@ async def upload_files(
             user_id,
             chat_id,
             tenant_id,
-            virtual_host,
             UPLOAD_FILE_EXTENSIONS,
             UPLOAD_DIR,
             MAX_UPLOAD_FILE_SIZE,
