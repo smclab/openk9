@@ -22,7 +22,7 @@ function computeBackoff(failedAttempts: number): number {
 }
 
 async function validateCredentials(username: string, password: string): Promise<Response> {
-  const token = btoa(`${username}:${password}`);
+  const token = window.btoa(`${username}:${password}`);
   return fetch("/api/tenant-manager/graphql", {
     method: "POST",
     headers: {
@@ -37,7 +37,8 @@ export function LoginPage() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: { from?: { pathname?: string } } };
-  const redirectTo = location.state?.from?.pathname || "/";
+  const rawRedirect = location.state?.from?.pathname || "/";
+  const redirectTo = /^\/[A-Za-z0-9/_\-.]*$/.test(rawRedirect) ? rawRedirect : "/";
 
   const [username, setUsername] = React.useState("admin");
   const [password, setPassword] = React.useState("");
