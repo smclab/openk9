@@ -25,10 +25,6 @@ from google.protobuf.json_format import ParseDict
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.external_services.grpc.searcher import searcher_pb2, searcher_pb2_grpc
 from app.external_services.grpc.searcher.searcher_pb2 import SearchTokenRequest, Value
-from app.external_services.grpc.tenant_manager import (
-    tenant_manager_pb2,
-    tenant_manager_pb2_grpc,
-)
 from app.utils.logger import logger
 
 UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
@@ -368,40 +364,6 @@ def get_embedding_model_configuration(grpc_host, tenant_id):
         error_message = (
             f"GetEmbeddingModelConfigurations gRPC communication failed: {e.details()}"
         )
-        logger.error(error_message)
-    except Exception as e:
-        logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
-    raise HTTPException(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        detail=UNEXPECTED_ERROR_MESSAGE,
-    )
-
-
-def get_tenant_manager_configuration(grpc_host, virtual_host):
-    """Get tenant configuration from grpc."""
-    try:
-        with grpc.insecure_channel(grpc_host) as channel:
-            stub = tenant_manager_pb2_grpc.TenantManagerStub(channel)
-            response = stub.FindTenant(
-                tenant_manager_pb2.TenantRequest(
-                    virtualHost=virtual_host,
-                )
-            )
-
-            client_id = response.clientId
-            realm_name = response.realmName
-            server_url = response.virtualHost
-
-            configuration = {
-                "client_id": client_id,
-                "realm_name": realm_name,
-                "server_url": server_url,
-            }
-
-            return configuration
-
-    except grpc.RpcError as e:
-        error_message = f"FindTenant gRPC communication failed: {e.details()}"
         logger.error(error_message)
     except Exception as e:
         logger.error(f"{UNEXPECTED_ERROR_MESSAGE} : {e}")
