@@ -194,7 +194,6 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
         open_search_client = OpenSearch(
             hosts=[self.opensearch_host],
         )
-
         if not open_search_client.indices.exists(index=self.uploaded_documents_index):
             return []
 
@@ -205,14 +204,13 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
                 "aggs": {
                     "distinct_domains": {
                         "terms": {
-                            "field": "domain.keyword",
+                            "field": "domain",
                             "size": size,
                         }
                     }
                 },
             },
         )
-
         return [
             bucket["key"]
             for bucket in response["aggregations"]["distinct_domains"]["buckets"]
