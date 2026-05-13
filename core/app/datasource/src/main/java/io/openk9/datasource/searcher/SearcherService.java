@@ -135,7 +135,6 @@ import org.opensearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.opensearch.search.sort.FieldSortBuilder;
 import org.opensearch.search.sort.SortBuilders;
 import org.opensearch.search.sort.SortOrder;
-import scala.language;
 
 @GrpcService
 public class SearcherService extends BaseSearchService implements Searcher {
@@ -874,7 +873,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							for (Map<String, Object> map : maps) {
 								Object tokenType = map.get("tokenType");
 								int startPos = maps.getPos().get(0);
-								Object keywordKey = map.get("keywordKey");
 
 								if (startPos >= 1) {
 									continue;
@@ -903,9 +901,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					Set<SemanticsPos> scoreOrderedSet = set.stream().sorted(SemanticsPos::compareTo).collect(
 						Collectors.toCollection(LinkedHashSet::new));
 
-					scoreOrderedSet.addAll(set);
-
-					log.debug("scoreOrderedSet: " + set);
+					log.debug("scoreOrderedSet: " + scoreOrderedSet);
 
 					List<QueryAnalysisTokens> result = new ArrayList<>(set.size());
 
