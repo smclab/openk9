@@ -23,8 +23,7 @@ import lombok.Builder;
 public record HealthDTO(Status status) {
 	public enum Status {
 		UP,
-		DOWN,
-		UNKOWN
+		DOWN
 	}
 
 }
