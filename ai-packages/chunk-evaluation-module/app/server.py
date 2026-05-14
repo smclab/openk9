@@ -56,7 +56,7 @@ BUFFER_UPLOAD = os.getenv("BUFFER_UPLOAD", "").lower() == "true"
 EVALUATORS = [semantic_choerence, redundancy_bloat, layout_fidelity]
 N_MAX_DOCUMENTS = int(os.getenv("N_MAX_DOCUMENTS", 150))
 
-DO_EXPERIMENTS = os.getenv("DO_EXPERIMENTS", False).lower() == "true"
+DO_EXPERIMENTS = os.getenv("DO_EXPERIMENTS", "False").lower() == "true"
 if DO_EXPERIMENTS:
     EXPERIMENT_MODE = int(os.getenv("EXPERIMENT_MODE", 1))
 else:
