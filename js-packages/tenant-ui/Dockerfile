@@ -1,4 +1,4 @@
-FROM node:20-alpine as deps
+FROM node:22-alpine as deps
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
@@ -11,7 +11,7 @@ RUN yarn config set registry https://registry.npmjs.org/ && \
     yarn install --network-timeout 600000
 
 # Stage 2 - Build
-FROM node:20-alpine as builder
+FROM node:22-alpine as builder
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
