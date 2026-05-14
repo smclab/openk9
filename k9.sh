@@ -92,7 +92,7 @@ CORE_SERVICES=(
     api-gateway tenant-manager datasource ingestion searcher
     search-frontend admin-ui tenant-ui web-connector
 )
-GEN_AI_SERVICES=(rag-module embedding-module talk-to)
+GEN_AI_SERVICES=(rag-module embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
 FILE_HANDLING_SERVICES=(file-manager tika minio-connector)
 
 VALID_SERVICES=(
@@ -265,6 +265,8 @@ build_gen_ai() {
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+    docker build -t openk9-agentic-rag-module -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
+    docker build -t openk9-evaluator -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
 }
 
 build_file_handling() {
@@ -360,6 +362,12 @@ build_single() {
             ;;
         talk-to)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
+            ;;
+        agentic-rag-module)
+            docker build -t "openk9-agentic-rag-module:$TAG" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
+            ;;
+        evaluator)
+            docker build -t "openk9-evaluator:$TAG" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
             ;;
     esac
 }
