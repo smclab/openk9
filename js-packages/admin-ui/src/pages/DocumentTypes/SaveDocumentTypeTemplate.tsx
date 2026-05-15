@@ -12,6 +12,7 @@ import {
   useToast,
 } from "@components/Form";
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -237,6 +238,14 @@ export function SaveDocumentTypeTemplate() {
               },
             ]}
             fieldsControll={["name"]}
+            disclaimer={
+              documentTypeTemplateId !== "new" && !view ? (
+                <Alert severity="warning" variant="outlined">
+                  This action is irreversible: saving will overwrite the current template and the previous version will
+                  be permanently lost.
+                </Alert>
+              ) : undefined
+            }
           />
         </form>
       </>

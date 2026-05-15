@@ -14,6 +14,7 @@ export function RecapData({
   associateOneToOne,
   multiAssociation,
   isCreate = true,
+  disclaimer,
 }: {
   form: any;
   page: number;
@@ -21,6 +22,7 @@ export function RecapData({
   submit: boolean;
   pathBack: string;
   preSubmit?: React.ReactNode;
+  disclaimer?: React.ReactNode;
   multiAssociation:
     | {
         labelName: string;
@@ -83,6 +85,11 @@ export function RecapData({
   const navigate = useNavigate();
   const allData = Data.map((dat) => dat.content);
   const [viewPreSubmit, setViewPreSubmit] = React.useState(false);
+  const topRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const disableChildren = (element: React.ReactNode): React.ReactNode => {
     if (!React.isValidElement(element)) return element;
@@ -97,10 +104,16 @@ export function RecapData({
   return (
     <React.Fragment>
       <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
+        <Box ref={topRef} />
+        {disclaimer && <Box sx={{ width: "100%" }}>{disclaimer}</Box>}
         {viewPreSubmit && preSubmit}
         {React.Children.map(allData, (child, index) => {
           if (!React.isValidElement(child)) return null;
-          return disableChildren(child);
+          return (
+            <Box key={index} sx={{ width: "100%" }}>
+              {disableChildren(child)}
+            </Box>
+          );
         })}
         {associateOneToOne?.map((associate, index) => (
           <Box key={"association-one-to-one" + index} pb={2}>
@@ -129,7 +142,7 @@ export function RecapData({
             </Paper>
           </Box>
         ))}
-        <ContainerFluid size="md">
+        <ContainerFluid size="lg">
           <Box
             sx={{
               display: "flex",

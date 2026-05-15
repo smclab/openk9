@@ -41,6 +41,7 @@ export function CreateDataEntity({
   preSubmit,
   associationsMultiSelect,
   isFooterButton = true,
+  disclaimer,
 }: {
   page: number;
   id?: string;
@@ -48,6 +49,7 @@ export function CreateDataEntity({
   form: any;
   pathBack: string;
   preSubmit?: React.ReactNode;
+  disclaimer?: React.ReactNode;
   associations?: Array<{
     labelName: string;
     multiAssociation: boolean;
@@ -126,6 +128,7 @@ export function CreateDataEntity({
         associateOneToOne={associations}
         multiAssociation={associationsMultiSelect}
         isCreate={id === "new"}
+        disclaimer={disclaimer}
       />
     );
   }
