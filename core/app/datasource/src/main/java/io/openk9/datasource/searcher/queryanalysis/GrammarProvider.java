@@ -28,7 +28,6 @@ import io.openk9.datasource.model.QueryAnalysis;
 import io.openk9.datasource.model.Rule;
 import io.openk9.datasource.searcher.model.TenantWithBucket;
 import io.openk9.datasource.searcher.queryanalysis.annotator.AnnotatorFactory;
-import io.openk9.datasource.service.TenantIdResolver;
 
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
