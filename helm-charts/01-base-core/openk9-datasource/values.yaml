@@ -96,14 +96,15 @@ quarkus:
 ## Datasource configuration
 datasource:
   aclQueryExtraParamsEnabled: true
-  # Lists of allowed regex patterns for baseUri validation (SSRF protection).
-  # Comma-separated regexes. Override per environment.
-  # Examples:
+  # Lists of allowed regex patterns for baseUri host validation.
+  # Comma-separated regexes; full-match on URI host.
+  # An empty list rejects ALL hosts — never leave these empty in a deployed env.
+  # Default ".*" allows any host; tighten per environment, e.g.:
   #   pluginDriverValidationRegexes: "^openk9.*connector$,^openk9.*connector.*"
   #   enricherValidationRegexes:     "^openk9.*enricher$,^openk9.*enricher.*"
   client:
-    pluginDriverValidationRegexes: ""
-    enricherValidationRegexes: ""
+    pluginDriverValidationRegexes: ".*"
+    enricherValidationRegexes: ".*"
 
 ## QueryParser configuration
 queryParser:
