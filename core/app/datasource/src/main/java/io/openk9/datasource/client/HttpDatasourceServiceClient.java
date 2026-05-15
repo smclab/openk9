@@ -88,6 +88,7 @@ public abstract class HttpDatasourceServiceClient {
 	 *
 	 * <p>Returns {@link HealthDTO.Status#UP} or {@link HealthDTO.Status#DOWN}
 	 * if the response is 2xx and the body contains a known status.
+	 * Returns {@link HealthDTO.Status#DOWN} if the response status code is 503.
 	 * Returns {@link HealthDTO.Status#UNKNOWN} otherwise.
 	 *
 	 * @param response the HTTP response from the {@code /health} endpoint
