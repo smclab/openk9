@@ -220,14 +220,13 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       return;
     }
 
-    if (testResult !== "success") {
+    const connectionNotVerified = testResult !== "success";
+    if (connectionNotVerified) {
       toast({
         title: "Connection not verified",
         content: "Please test the connection before proceeding, or ensure the endpoint is reachable.",
         displayType: "warning",
       });
-      // For now, allowing to proceed as per "imposta anche la possibilità di poterlo bloccare"
-      // but keeping it as a warning unless we want to strictly block.
     }
 
     try {
@@ -241,11 +240,13 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
       }
       setStep("configureDynamic");
     } catch (e) {
-      toast({
-        title: "Error",
-        content: "Impossible to fetch dynamic form. Check connection settings.",
-        displayType: "warning",
-      });
+      if (!connectionNotVerified) {
+        toast({
+          title: "Error",
+          content: "Impossible to fetch dynamic form. Check connection settings.",
+          displayType: "warning",
+        });
+      }
       setStep("configureDynamic");
     } finally {
       setLoadingForm(false);
@@ -266,11 +267,15 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
           { key: "requestTimeout", label: "Request Timeout" },
           { key: "behaviorMergeType", label: "Behavior Merge Type" },
           { key: "behaviorOnError", label: "Behavior On Error" },
-          {
-            key: "script",
-            label: "Script",
-            jsonView: true,
-          },
+          ...(form.inputProps("type").value === EnrichItemType.GroovyScript
+            ? [
+                {
+                  key: "script",
+                  label: "Script",
+                  jsonView: true,
+                },
+              ]
+            : []),
           {
             key: "jsonConfig",
             label: "Configuration",
