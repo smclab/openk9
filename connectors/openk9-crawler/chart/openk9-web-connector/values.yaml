@@ -17,10 +17,10 @@ replicaCount: 1
 ## @param image.pullPolicy Database Connector image pull policy
 ## @param image.pullSecrets Specify docker-registry secret names as an array
 image:
-  registry: "registry.smc.it:49083"
-  name: openk9/openk9-web-connector
+  registry: ""
+  name: smclab/openk9-web-connector
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2026.1.0-SNAPSHOT"
+  tag: ""
 
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
@@ -35,7 +35,7 @@ image:
   ##   - myRegistryKeySecretName
   ##
   pullSecrets:
-    - my-nexus-secret
+    - docker-registry-secret
     
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##

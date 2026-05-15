@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  registry: "registry.smc.it:49083"
-  name: openk9/openk9-youtube-connector
+  registry: ""
+  name: smclab/openk9-youtube-connector
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "2026.1.0-SNAPSHOT"
+  tag: ""
 
   # Specify a imagePullPolicy
   # Defaults to 'Always' if image tag is '2026.1.0-SNAPSHOT', else set to 'IfNotPresent'
@@ -23,7 +23,7 @@ image:
   #   - myRegistryKeySecretName
   #
   pullSecrets:
-    - my-nexus-secret
+    - docker-registry-secret
     
 # Annotations to add to all deployed objects
 commonAnnotations: {}
