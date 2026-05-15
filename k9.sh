@@ -47,7 +47,6 @@ _load_env_file
 
 # Configuration defaults — use ${VAR:-default} so .env-set values survive.
 GROUP="${GROUP:-openk9}"
-GROUP="${GROUP:-openk9}"
 TAG="${TAG:-local-dev}"
 OPENK9_REGISTRY="${OPENK9_REGISTRY:-}"
 PROFILES=()
@@ -273,7 +272,6 @@ build_gen_ai() {
 build_file_handling() {
     echo "--- Building File Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
@@ -281,7 +279,6 @@ build_file_handling() {
             "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=false \
-            "-Dquarkus.container-image.group=$GROUP" \
             "-Dquarkus.container-image.group=$GROUP" \
             "-Dquarkus.container-image.name=openk9-$SVC" \
             "-Dquarkus.container-image.tag=$TAG" \
@@ -344,7 +341,6 @@ build_single() {
             ;;
         search-frontend)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
@@ -365,7 +361,6 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
             ;;
         talk-to)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             ;;
         agentic-rag-module)
