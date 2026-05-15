@@ -35,7 +35,7 @@ Read more about compatibility matrix on Github.
     - [Search Frontend](#search-frontend)
 5. [Openk9 Gen Ai components installation](#gen-ai-components-installation)
     - [Embedding Module](#embedding-module)
-    - [Rag Module](#rag-module)
+    - [Agentic Rag Module](#agentic-rag-module)
     - [Talk To](#talk-to)
     - [Chunk Evaluation Module](#chunk-evaluation-module)
 6. [Openk9 File Handling components installation](#file-handling-components)
@@ -1203,13 +1203,13 @@ oc -n openk9 port-forward svc/openk9-embedding-module 5000:5000
 Access to Admin Ui using url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.
 
 
-### Rag Module
+### Agentic Rag Module
 
-Rag Module is module that exposes Apis to chat with your data using Generative Apis.
+Agentic Rag Module is module that exposes Apis to chat with your data using Generative Apis.
 
-To learn more on Rag Module, read [official documentation]().
+To learn more on Agentic Rag Module, read [official documentation]().
 
-For advanced configurations read [README.md](./03-gen-ai/openk9-rag-module/README.md) inside Rag Module chart folder.
+For advanced configurations read [README.md](./03-gen-ai/openk9-agentic-rag-module/README.md) inside Agentic Rag Module chart folder.
 
 #### Installation
 
@@ -1217,13 +1217,13 @@ For advanced configurations read [README.md](./03-gen-ai/openk9-rag-module/READM
 For kubernetes/K3s execute:
 
 ```bash
-helm upgrade -i rag-module 03-gen-ai/openk9-rag-module -n openk9 -f 03-gen-ai/openk9-rag-module/scenarios/local-runtime.yaml
+helm upgrade -i agentic-rag-module 03-gen-ai/openk9-agentic-rag-module -n openk9 -f 03-gen-ai/openk9-agentic-rag-module/scenarios/local-runtime.yaml
 ```
 
 For Openshift execute:
 
 ```bash
-helm upgrade -i rag-module 03-gen-ai/openk9-rag-module -n openk9 -f 03-gen-ai/openk9-rag-module/scenarios/local-crc.yaml
+helm upgrade -i agentic-rag-module 03-gen-ai/openk9-agentic-rag-module -n openk9 -f 03-gen-ai/openk9-agentic-rag-module/scenarios/local-crc.yaml
 ```
 
 #### Verify Installation
@@ -1233,13 +1233,13 @@ Expose the http interface on the host PC and use health endpoint to verify statu
 For Kubernetes/K3s execute:
 
 ```bash
-kubectl -n openk9 port-forward svc/openk9-rag-module 5000:5000
+kubectl -n openk9 port-forward svc/openk9-agentic-rag-module 5000:5000
 ```
 
 For Openshift execute:
 
 ```bash
-oc -n openk9 port-forward svc/openk9-rag-module 5000:5000
+oc -n openk9 port-forward svc/openk9-agentic-rag-module 5000:5000
 ```
 
 Go to url [http://localhost:5000/docs](http://localhost:5000/docs). If page is reachable is ok.

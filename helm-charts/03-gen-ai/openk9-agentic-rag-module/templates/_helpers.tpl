@@ -9,16 +9,6 @@ Create PostgreSQL Reactive URL
 {{- end }}
 
 {{/*
-Create Keycloak URL
-*/}}
-{{- define "helper.keycloakURL" -}}
-{{- with .Values.keycloak -}}
-{{- $port := ( .port | toString ) -}}
-{{- printf "http://%s:%s" .host $port }}
-{{- end }}
-{{- end }}
-         
-{{/*
 Create OpenK9 Datasource URL
 */}}
 {{- define "helper.datasourceURL" -}}

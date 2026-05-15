@@ -86,18 +86,6 @@ To configure connection to Opensearch following parameters are available:
 | `opensearch.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_OPENSEARCH_PASSWORD`   |
 
 
-### Configure Keycloak
-
-Openk9 Datasource needs Keycloak to work. 
-
-To configure connection to Keycloak following parameters are available:
-
-| Name                | Description                                                                                              | Value                      |
-| ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `keycloak.url`    | Keycloak host                         | `keycloak.openk9.local`            |
-| `keycloak.clientId`  | Keycloak client                             | `openk9` |
-
-
 ### Configure connections to other Openk9 services
 
 Openk9 Datasource needs to communicate with other components to work. 

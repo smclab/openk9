@@ -177,12 +177,11 @@ ingress:
   annotations: {}
   ## @param ingress.servicePort Path for the default port.
   ##
-  servicePort: 8080
+  servicePort: 5000
   ## @param ingress.paths Paths for the default host.
   ##
   paths:
-    - /api/rag-chat
-    - /api/rag/generate
+    - /api/rag
   ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
   ##
   tls:
