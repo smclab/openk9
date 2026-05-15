@@ -125,6 +125,15 @@ public abstract class HttpDatasourceServiceClient {
 			);
 
 		}
+
+		else if (response.statusCode() == 503) {
+			return Uni.createFrom().item(
+				HealthDTO.builder()
+					.status(HealthDTO.Status.DOWN)
+					.build()
+			);
+		}
+
 		else
 			return Uni.createFrom().item(
 				HealthDTO.builder()
