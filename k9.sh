@@ -519,7 +519,11 @@ compose() {
             flags+=(-f "$overlay")
         fi
     done
-    IMAGE_GROUP="$GROUP" IMAGE_TAG="$TAG" "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
+    # Export the active profile list so the initializer can decide
+    # which connector plugin drivers to register (e.g. the Minio
+    # Connector only makes sense with --with=file-handling).
+    IMAGE_GROUP="$GROUP" IMAGE_TAG="$TAG" OPENK9_PROFILES="${PROFILES[*]}" \
+        "${DOCKER_COMPOSE_CMD[@]}" "${flags[@]}" "$@"
 }
 
 # --- Usage ---

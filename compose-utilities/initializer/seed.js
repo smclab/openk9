@@ -31,36 +31,57 @@ const TENANT_ADMIN_USER = 'k9admin';
 const TENANT_ADMIN_PASSWORD = 'openk9';
 
 // Connector plugin drivers to register on the demo tenant. Each
-// entry points at the corresponding container exposed by the
-// compose stack — no Helm chart deployment is involved because
-// the connector services are already running.
+// entry is keyed by the compose profile that has to be active for
+// the backing service to be running — so the Minio Connector is
+// only seeded when the user starts the stack with
+// `./k9.sh up --with=file-handling`. The web-connector container
+// is in the core compose file, so its plugin driver is always
+// registered.
 //
 // On 3.0.x the `PluginDriverDTO` carries the connection info as a
 // JSON string in `jsonConfig`, deserialized server-side into
 // `io.openk9.datasource.plugindriver.HttpPluginDriverInfo`:
 //   { secure: boolean, baseUri: string, path: string, method: Method, body?: object }
-const CONNECTORS = [
-  {
-    name: 'Sitemap Crawler',
-    description: 'Docker Compose Web Connector',
-    httpInfo: {
-      secure: false,
-      baseUri: 'openk9-web-connector:5000',
-      path: '/startSitemapCrawling',
-      method: 'POST',
+const CONNECTORS_BY_PROFILE = {
+  core: [
+    {
+      name: 'Sitemap Crawler',
+      description: 'Docker Compose Web Connector',
+      httpInfo: {
+        secure: false,
+        baseUri: 'openk9-web-connector:5000',
+        path: '/startSitemapCrawling',
+        method: 'POST',
+      },
     },
-  },
-  {
-    name: 'Minio Connector',
-    description: 'Docker Compose Minio Connector',
-    httpInfo: {
-      secure: false,
-      baseUri: 'openk9-minio-connector:5000',
-      path: '/',
-      method: 'POST',
+  ],
+  'file-handling': [
+    {
+      name: 'Minio Connector',
+      description: 'Docker Compose Minio Connector',
+      httpInfo: {
+        secure: false,
+        baseUri: 'openk9-minio-connector:5000',
+        path: '/execute',
+        method: 'POST',
+      },
     },
-  },
-];
+  ],
+};
+
+function resolveActiveConnectors() {
+  // `core` is always implicit; everything else comes from the
+  // OPENK9_PROFILES env exported by k9.sh.
+  const raw = process.env.OPENK9_PROFILES || '';
+  const explicit = raw.split(/\s+/).map((p) => p.trim()).filter(Boolean);
+  const profiles = new Set(['core', ...explicit]);
+  const connectors = [];
+  for (const profile of profiles) {
+    const list = CONNECTORS_BY_PROFILE[profile];
+    if (list) connectors.push(...list);
+  }
+  return { profiles: [...profiles], connectors };
+}
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -487,10 +508,11 @@ async function main() {
   console.log(`Preparing realm "${tenant.realmName}" access for datasource GraphQL...`);
   const authTenant = await prepareTenantRealmAccess(authMaster, tenant.realmName);
 
-  console.log('3/4 Registering plugin drivers...');
+  const { profiles, connectors } = resolveActiveConnectors();
+  console.log(`3/4 Registering plugin drivers (profiles: ${profiles.join(', ')})...`);
   let created = 0;
   let failed = 0;
-  for (const connector of CONNECTORS) {
+  for (const connector of connectors) {
     try {
       await createPluginDriver(authTenant, connector);
       created++;

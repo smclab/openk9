@@ -281,6 +281,12 @@ services:
   initializer:
     build: ./compose-utilities/initializer
     container_name: openk9-initializer
+    environment:
+      # Space-separated list of compose profiles enabled at startup,
+      # set by k9.sh from its --with=<profile> flags. The seeder
+      # only registers plugin drivers whose backing service is in
+      # an active profile.
+      OPENK9_PROFILES: '${OPENK9_PROFILES:-}'
     depends_on:
       tenant-manager:
         condition: service_healthy
