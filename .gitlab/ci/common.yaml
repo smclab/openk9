@@ -10,8 +10,7 @@
 Trigger Connectors Build:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - connectors/*/connector/**/*
@@ -34,8 +33,7 @@ Trigger Connectors Build:
 Trigger Helm Base Core:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/01-base-core/**/*
@@ -56,8 +54,7 @@ Trigger Helm Base Core:
 Trigger Helm File Handling:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/02-file-handling/**/*
@@ -78,8 +75,7 @@ Trigger Helm File Handling:
 Trigger Helm Gen AI:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/03-gen-ai/**/*
@@ -100,8 +96,7 @@ Trigger Helm Gen AI:
 Trigger Helm Connectors:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - connectors/*/chart/**/*
@@ -122,8 +117,7 @@ Trigger Helm Connectors:
 Trigger Helm Utilities:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes:
         - helm-charts/06-utilities/**/*

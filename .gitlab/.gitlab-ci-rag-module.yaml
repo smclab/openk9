@@ -211,7 +211,7 @@ Trigger Restart Rag Release:
   variables:
     COMPONENT_NAME: "rag-module"
     COMPONENT_TYPE: "ai"
-    TARGET_ENV: "k9-stable-2"
+    TARGET_ENV: "$RELEASE_TARGET_ENV"
   needs:
   - job: Fetch config
     artifacts: true

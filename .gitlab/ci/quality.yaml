@@ -87,8 +87,7 @@ SonarQube Check:
   allow_failure: true
   rules:
   # Block first execution when branch is just created
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
+  - !reference [.rules:antispam-new-branch, rules]
   # 1. Main Branch - trigger on any source change
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes: *all_source_files_list
@@ -120,8 +119,7 @@ Python Dependency Check:
     when: always
   rules:
   # Block on new branch creation
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
+  - !reference [.rules:antispam-new-branch, rules]
   # 1. Main Branch
   - if: '$CI_COMMIT_BRANCH == "main"'
     changes: *python_files_list

@@ -6,7 +6,18 @@
 variables:
   CS_ANALYZER_IMAGE: "registry.gitlab.com/security-products/container-scanning:8"
 
-  
+# ========================================
+# REUSABLE RULES
+# ========================================
+# Anti-spam: blocca i trigger sul primo push di un nuovo branch (BEFORE_SHA = 0000...),
+# evitando una pipeline-storm quando si crea un branch vuoto.
+# Usato via `!reference [.rules:antispam-new-branch, rules]` come prima rule.
+.rules:antispam-new-branch:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+      when: never
+
+
 .build_template:
   #image: eclipse-temurin:21-jdk
   image: maven:3.9.6-eclipse-temurin-21
@@ -401,9 +412,10 @@ variables:
 #        - Target pipeline determines namespace based on user + component type
 #        - Uses appropriate SNAPSHOT tags per component type
 #
-# ▶️ 3. ON RELEASE BRANCH (e.g. 3.0.x) or RELEASE TAG (e.g. 3.0.2):
+# ▶️ 3. ON RELEASE BRANCH (e.g. 3.0.x, 2026.1.x) or RELEASE TAG (e.g. 3.0.2, 2026.1.0):
 #    - IMAGE_TAG is read from the version file (same as main/tag logic)
-#    - TARGET_ENV must be set by the calling job (e.g. TARGET_ENV: "k9-stable-2")
+#    - TARGET_ENV must be set by the calling job (typically TARGET_ENV: "$RELEASE_TARGET_ENV",
+#      whose value is defined as a global variable in .gitlab/.gitlab-ci.yaml)
 #    - TARGET_ENV is passed to the external pipeline, which uses it as the target namespace
 #
 # ▶️ 4. OTHER BRANCHES:
@@ -555,8 +567,7 @@ variables:
     when: never
   - if: '$CI_COMMIT_BRANCH == "main"'
   - if: '$CI_COMMIT_TAG'
-  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-    when: never
+  - !reference [.rules:antispam-new-branch, rules]
   - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
 

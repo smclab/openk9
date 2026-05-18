@@ -1,7 +1,7 @@
 # OpenK9 CI/CD Pipeline Documentation
 
 > **Status:** Active & Stable
-> **Last Updated:** March 2026
+> **Last Updated:** May 2026
 > **Maintainer:** DevOps Team
 
 ---
@@ -19,6 +19,10 @@
   - [Branch-Based Triggers](#branch-based-triggers)
   - [Designated vs Generic Users](#designated-vs-generic-users)
   - [Change Detection](#change-detection)
+- [Release Branch Workflow](#release-branch-workflow)
+  - [Versioning Convention](#versioning-convention)
+  - [Reusable Rules](#reusable-rules)
+  - [Porting Branches](#porting-branches)
 - [Build Process](#build-process)
   - [Backend Java (Maven + Quarkus / JIB)](#backend-java-maven--quarkus--jib)
   - [Frontend & AI (Kaniko)](#frontend--ai-kaniko)
@@ -153,9 +157,13 @@ All reusable logic lives in `.gitlab-templates.yaml`. Child pipelines use `!refe
 
 When a developer creates a new branch, GitLab generates a push event with the special SHA `0000000000000000000000000000000000000000`. The parent pipeline detects this and **blocks all child triggers** to avoid a pipeline storm on an empty branch.
 
+The rule is defined once as `.rules:antispam-new-branch` in `.gitlab-templates.yaml` and referenced by every trigger and quality job:
+
 ```yaml
-- if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-  when: never
+rules:
+  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    changes: ...
 ```
 
 ### Branch-Based Triggers
@@ -166,7 +174,9 @@ When a developer creates a new branch, GitLab generates a push event with the sp
 | Push to feature branch (`^[0-9]+-.*`) — **generic user** | Build Verifier only (compile check, no Docker push, no restart) |
 | Merge Request opened/updated | Build Verifier (compile check, no push) + dependency checks |
 | Push to `main` | Build + push versioned image + ArgoCD restart to all shared envs + security scans |
-| Tag push | Full rebuild of affected components tagged with the release version |
+| Tag push (release tag `N.N.N`) | Full rebuild of all components tagged with the release version |
+| Push/merge to release branch (`^\d+\.\d+\.x$`) | Build + push `<version>-SNAPSHOT` tag + ArgoCD restart to `$RELEASE_TARGET_ENV` |
+| MR `porting-*` → release branch | Build Verifier only (compile check, no push); parent sets `RELEASE_MR=true` |
 
 ### Designated vs Generic Users
 
@@ -205,10 +215,53 @@ On `main` and feature branches, each child pipeline is only triggered if its rel
     - core/common/model/**/*
     - ...
 - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-  changes: *datasource_changes
+  changes:
+    paths: *datasource_changes
+    compare_to: 'refs/heads/main'
 ```
 
-Tag pushes bypass `changes:` filters — GitLab ignores `changes:` on tag events, so all affected pipelines always run on a tag.
+MR and feature-branch rules use `compare_to: 'refs/heads/main'` so the diff is computed against `main` even when the branch has been rebased. This avoids false positives where inherited commits would otherwise match `changes:`.
+
+Tag pushes bypass `changes:` filters — GitLab ignores `changes:` on tag events, so all affected pipelines always run on a tag. Release-branch rules (`^\d+\.\d+\.x$`) and release-MR rules (`porting-*` → `N.N.x`) use plain `changes:` without `compare_to`, since the natural diff against the release branch is the correct one for porting workflows.
+
+---
+
+## Release Branch Workflow
+
+A release branch isolates a published version line from ongoing development on `main`. Branch name must match `^\d+\.\d+\.x$` (e.g. `3.0.x`, `2026.1.x`). A release tag must match `^\d+\.\d+\.\d+/` (e.g. `3.0.4`, `2026.1.0`). The regexes are intentionally generic so they match any future release line without code changes.
+
+Three triggering contexts run on the release line:
+
+| Context | When | Rule referenced | Effect |
+|---|---|---|---|
+| Release branch push/merge | push or merge to `N.N.x` | `.rules:child-deploy-release` | Build + push `<version>-SNAPSHOT` image + ArgoCD restart to `$RELEASE_TARGET_ENV` |
+| Release MR (porting) | MR from `porting-*` to `N.N.x` | `.rules:child-verify-release-mr` | Build Verifier compile-only; parent passes `RELEASE_MR="true"` |
+| Release tag | tag matching `N.N.N` on the release branch | `.rules:child-deploy-release` | Full rebuild with the exact tag, Skopeo copy to Docker Hub, no auto-restart |
+
+### Versioning Convention
+
+The project moved from SemVer (`3.0.x`, `3.0.0`) to CalVer (`2026.1.x`, `2026.1.0`). Both forms remain supported by the pipeline regexes. When forking a release branch from `main`, use no leading zeros in the minor segment: `2026.1.x`, `2026.10.x` — never `2026.01.x`.
+
+### Reusable Rules
+
+Release logic is centralized in `.gitlab/ci/child-rules.yaml`:
+
+```yaml
+.rules:child-deploy-release:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+
+.rules:child-verify-release-mr:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $RELEASE_MR == "true"'
+```
+
+The target namespace is configured by the global variable `RELEASE_TARGET_ENV` in `.gitlab/.gitlab-ci.yaml`, propagated to every child via `TARGET_ENV: "$RELEASE_TARGET_ENV"`. Switching the release namespace is a one-line change in the parent.
+
+### Porting Branches
+
+Bug fixes for an active release line are developed on `porting-<issue>-<slug>` branches forked from the target release branch (e.g. `porting-2101-fix-snapshot-tarballs` from `3.0.x`). The MR targets the release branch directly; the parent pipeline detects `$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/` and sets `RELEASE_MR=true`, which the child consumes via `.rules:child-verify-release-mr` to run compile-only checks.
 
 ---
 
@@ -379,7 +432,9 @@ Every build job on `main`/tag is followed by a container scanning job using `$CS
 | Feature — generic user | ✅ compile only | ❌ | Nothing |
 | Merge Request | ✅ compile only | ❌ | Nothing |
 | `main` | ✅ | ✅ versioned | All shared integration envs |
-| Tag | ✅ | ✅ release tag | Stable / production |
+| Release branch (`N.N.x`) | ✅ | ✅ `<version>-SNAPSHOT` | `$RELEASE_TARGET_ENV` |
+| Release MR (`porting-*` → `N.N.x`) | ✅ compile only | ❌ | Nothing |
+| Tag (`N.N.N`) | ✅ | ✅ release tag | Stable / production (no auto-restart) |
 
 ### Namespace Matrix
 
@@ -403,6 +458,10 @@ When a component merges to `main`, the restart template triggers the external Ar
 | `frontend` | `k9-frontend` |
 | `ai` | `k9-ai` |
 
+#### Release Branch — Stable Namespace
+
+Push or merge to a release branch (`N.N.x`) triggers an ArgoCD restart in the namespace defined by the global variable `RELEASE_TARGET_ENV` in `.gitlab/.gitlab-ci.yaml` (default: `k9-stable-2`). Each child pipeline reads it as `TARGET_ENV: "$RELEASE_TARGET_ENV"`. Release tags (`N.N.N`) do **not** trigger an auto-restart — production deploy is handled manually by ops/ArgoCD.
+
 ### Image Tagging
 
 | Branch | Tag format | Example |
@@ -412,7 +471,8 @@ When a component merges to `main`, the restart template triggers the external Ar
 | Feature — backend (michele) | `998-SNAPSHOT` | `998-SNAPSHOT` |
 | Feature — AI (luca) | `997-SNAPSHOT` | `997-SNAPSHOT` |
 | Feature — frontend (lorenzo/giorgio) | `996-SNAPSHOT` | `996-SNAPSHOT` |
-| Tag | exact tag | `v3.1.0` |
+| Release branch (`N.N.x`) | `<version>-SNAPSHOT` from `pom.xml` / `Chart.yaml` | `3.0.4-SNAPSHOT`, `2026.1.0-SNAPSHOT` |
+| Release tag | exact tag | `3.0.4`, `2026.1.0` |
 
 ---
 

@@ -119,7 +119,7 @@ Trigger Restart File-Manager Release:
   variables:
     COMPONENT_NAME: "file-manager"
     COMPONENT_TYPE: "backend"
-    TARGET_ENV: "k9-stable-2"
+    TARGET_ENV: "$RELEASE_TARGET_ENV"
   rules:
     - !reference [.rules:child-deploy-release, rules]
 

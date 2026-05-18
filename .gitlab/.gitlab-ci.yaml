@@ -3,6 +3,12 @@
 #        Refactored / Modularized           #
 #############################################
 
+# Variabili globali propagate a tutti i child pipeline.
+# Modifica `RELEASE_TARGET_ENV` per cambiare il namespace di deploy
+# della release line in un solo punto.
+variables:
+  RELEASE_TARGET_ENV: "k9-stable-2"
+
 stages:
   - trigger
   - build

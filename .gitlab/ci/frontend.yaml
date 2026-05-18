@@ -27,8 +27,7 @@
 Trigger Search Frontend:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &search_frontend_changes
         - js-packages/search-frontend/**/*
@@ -64,8 +63,7 @@ Trigger Search Frontend:
 Trigger Admin Frontend:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &admin_ui_changes
         - js-packages/admin-ui/**/*
@@ -99,8 +97,7 @@ Trigger Admin Frontend:
 Trigger Tenant Frontend:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &tenant_ui_changes
         - js-packages/tenant-ui/**/*
@@ -134,8 +131,7 @@ Trigger Tenant Frontend:
 Trigger Talk-To Frontend:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &talk_to_changes
         - js-packages/talk-to/**/*
@@ -169,8 +165,7 @@ Trigger Talk-To Frontend:
 Trigger OpenK9-Chatbot:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &chatbot_changes
         - js-packages/openk9-chatbot/**/*
@@ -191,6 +186,14 @@ Trigger OpenK9-Chatbot:
         compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 2026.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *chatbot_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *chatbot_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-openk9-chatbot.yaml"
     strategy: depend

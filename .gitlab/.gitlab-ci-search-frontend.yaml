@@ -249,7 +249,7 @@ Trigger Restart Search Frontend Release:
   variables:
     COMPONENT_NAME: "search-frontend"
     COMPONENT_TYPE: "frontend"
-    TARGET_ENV: "k9-stable-2"
+    TARGET_ENV: "$RELEASE_TARGET_ENV"
   rules:
     - !reference [.rules:child-deploy-release, rules]
 

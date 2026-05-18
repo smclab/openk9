@@ -15,22 +15,35 @@
 Trigger Docling Processor:
   stage: trigger
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
-      when: never
+    - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &docling_processor_changes
         - enrichers/docling-processor/**/*
     - if: '$CI_COMMIT_TAG'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *docling_processor_changes
+      changes:
+        paths: *docling_processor_changes
+        compare_to: 'refs/heads/main'
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/ && $GITLAB_USER_LOGIN == "luca.callocchia"'
-      changes: *docling_processor_changes
+      changes:
+        paths: *docling_processor_changes
+        compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "designated"
     - if: '$CI_COMMIT_BRANCH =~ /^[0-9]+-.*$/'
-      changes: *docling_processor_changes
+      changes:
+        paths: *docling_processor_changes
+        compare_to: 'refs/heads/main'
       variables:
         USER_TYPE: "generic"
+    # RELEASE: push/merge su release branch (3.0.x, 2026.1.x, ...)
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: *docling_processor_changes
+    # RELEASE MR: porting-* verso release branch — compile only
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *docling_processor_changes
+      variables:
+        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-docling-processor.yaml"
     strategy: depend
