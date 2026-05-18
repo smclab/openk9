@@ -92,6 +92,64 @@ Publish OpenK9-Chatbot:
     # Run only on Main
     - !reference [.rules:child-publish, rules]
 
+# --- RELEASE BRANCH JOBS ---
+
+Build Verifier OpenK9-Chatbot Release MR:
+  stage: build-verifier
+  image: node:22.14.0
+  cache:
+    key:
+      prefix: "openk9-chatbot"
+      files:
+        - yarn.lock
+    paths:
+    - js-packages/openk9-chatbot/node_modules
+    - .yarn-cache
+    policy: pull-push
+  needs:
+  - job: Fetch version
+    artifacts: true
+  script:
+  - cd js-packages/openk9-chatbot
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder ../../.yarn-cache
+  - yarn install --prefer-offline --frozen-lockfile
+  - yarn build
+  rules:
+    - !reference [.rules:child-verify-release-mr, rules]
+
+# Publish only on release tag (N.N.N), never on release branch SNAPSHOT.
+# Library packages should not have -SNAPSHOT versions on the npm registry.
+Publish OpenK9-Chatbot Release:
+  stage: publish
+  image: node:22.14.0
+  cache:
+    key:
+      prefix: "openk9-chatbot"
+      files:
+        - yarn.lock
+    paths:
+    - js-packages/openk9-chatbot/node_modules
+    - .yarn-cache
+    policy: pull-push
+  needs:
+  - job: Fetch version
+    artifacts: true
+  script:
+  - cd js-packages/openk9-chatbot
+  - export NODE_OPTIONS="--max-old-space-size=8192"
+  - yarn config set registry https://registry.npmjs.org/
+  - yarn config set network-timeout 600000
+  - yarn config set cache-folder ../../.yarn-cache
+  - yarn install --prefer-offline --frozen-lockfile
+  - yarn build
+  - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
+  - npm publish --access public
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+
 ####################### DEPENDENCY CHECK #######################
 Dependency Check OpenK9-Chatbot:
   stage: dependency-check

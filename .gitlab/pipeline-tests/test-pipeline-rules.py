@@ -17,6 +17,7 @@ Domain → folders covered:
                + talk-to/ + openk9-chatbot/
   - ai:        ai-packages/rag-module/ + agentic-rag-module/
                + embedding-modules/ + chunk-evaluation-module/
+  - enricher:  enrichers/docling-processor/
   - unrelated: helm-charts/  (no trigger should fire)
 
 Usage:
@@ -55,7 +56,7 @@ GENERIC_USERS       = ["luca.siligato", "other.user"]
 BACKEND_TRIGGERS = [
     "Trigger Datasource", "Trigger Searcher", "Trigger Ingestion",
     "Trigger K8S-Client", "Trigger File-Manager", "Trigger Tenant-Manager",
-    "Trigger API-Gateway", "Trigger Tika", "Trigger Entity-Manager",
+    "Trigger API-Gateway", "Trigger Tika",
     "Trigger Resources-Validator",
 ]
 FRONTEND_TRIGGERS = [
@@ -67,29 +68,11 @@ AI_TRIGGERS = [
     "Trigger Rag Module", "Trigger Agentic Rag Module",
     "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
 ]
-
-# Triggers that fire on release branch (Trigger K8S-Client and chatbot/agentic/embedding/chunk
-# are NOT in 3.0.x, so they must NOT fire on release branch).
-BACKEND_TRIGGERS_RELEASE = [
-    "Trigger Datasource", "Trigger Searcher", "Trigger Ingestion",
-    "Trigger File-Manager", "Trigger Tenant-Manager",
-    "Trigger API-Gateway", "Trigger Tika", "Trigger Entity-Manager",
-    "Trigger Resources-Validator",
-]
-FRONTEND_TRIGGERS_RELEASE = [
-    "Trigger Search Frontend", "Trigger Admin Frontend",
-    "Trigger Tenant Frontend", "Trigger Talk-To Frontend",
-]
-AI_TRIGGERS_RELEASE = [
-    "Trigger Rag Module",
+ENRICHER_TRIGGERS = [
+    "Trigger Docling Processor",
 ]
 
-# Triggers that must NOT fire on release branch
-BACKEND_TRIGGERS_RELEASE_EXCLUDED = ["Trigger K8S-Client"]
-FRONTEND_TRIGGERS_RELEASE_EXCLUDED = ["Trigger OpenK9-Chatbot"]
-AI_TRIGGERS_RELEASE_EXCLUDED = [
-    "Trigger Agentic Rag Module", "Trigger Embedding Modules", "Trigger Chunk Evaluation Module",
-]
+# On release branch all triggers must fire (release rules are now uniform across all modules).
 
 # ── Domain → folders (multiple files to cover all triggers in the domain) ──────
 # backend: core/common/resources-common/ covers ALL backend triggers except
@@ -110,6 +93,7 @@ DOMAIN_FOLDERS = {
         "ai-packages/embedding-modules",
         "ai-packages/chunk-evaluation-module",
     ],
+    "enricher":  ["enrichers/docling-processor"],
     "unrelated": ["helm-charts"],
 }
 
@@ -363,54 +347,82 @@ def run_tests(verbose=False, user_filter=None):
           should_fire=[],
           should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
 
-    # ── RELEASE BRANCH (3.0.x) ─────────────────────────────────────────────────
-    # We use a generic user since release rules are user-agnostic.
-    release_user = "dmytro.moskovchenko"
+    # ── RELEASE BRANCH (2026.1.x) ──────────────────────────────────────────────
+    # Release rules match any /^\d+\.\d+\.x$/ branch. We test the next
+    # release line (2026.1.x, CalVer) that will be forked from main.
+    # The 3.0.x release line lives on its own branch with its own pipeline
+    # files, so it is NOT tested here.
+    release_user = "release.user"
+    release_branch = "2026.1.x"
 
-    t("release branch 3.0.x | backend files → release backend triggers fire (no k8s-client)",
-      release_user, "push", "backend", branch="3.0.x",
-      should_fire=BACKEND_TRIGGERS_RELEASE,
-      should_not_fire=BACKEND_TRIGGERS_RELEASE_EXCLUDED + FRONTEND_TRIGGERS + AI_TRIGGERS,
-      sec="Release branch — 3.0.x")
+    t(f"release branch {release_branch} | backend files → all backend triggers fire",
+      release_user, "push", "backend", branch=release_branch,
+      should_fire=BACKEND_TRIGGERS,
+      should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS,
+      sec=f"Release branch — {release_branch}")
 
-    t("release branch 3.0.x | frontend files → release frontend triggers fire (no chatbot)",
-      release_user, "push", "frontend", branch="3.0.x",
-      should_fire=FRONTEND_TRIGGERS_RELEASE,
-      should_not_fire=FRONTEND_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + AI_TRIGGERS)
+    t(f"release branch {release_branch} | frontend files → all frontend triggers fire",
+      release_user, "push", "frontend", branch=release_branch,
+      should_fire=FRONTEND_TRIGGERS,
+      should_not_fire=BACKEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
 
-    t("release branch 3.0.x | AI files → release AI trigger fires (rag only)",
-      release_user, "push", "ai", branch="3.0.x",
-      should_fire=AI_TRIGGERS_RELEASE,
-      should_not_fire=AI_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + FRONTEND_TRIGGERS)
+    t(f"release branch {release_branch} | AI files → all AI triggers fire",
+      release_user, "push", "ai", branch=release_branch,
+      should_fire=AI_TRIGGERS,
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + ENRICHER_TRIGGERS)
 
-    t("release branch 3.0.x | unrelated files → nothing fires",
-      release_user, "push", "unrelated", branch="3.0.x",
-      should_fire=[],
+    t(f"release branch {release_branch} | enricher files → docling fires",
+      release_user, "push", "enricher", branch=release_branch,
+      should_fire=ENRICHER_TRIGGERS,
       should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
 
-    # ── RELEASE MR (porting-* → 3.0.x) ────────────────────────────────────────
-    # We simulate CI_MERGE_REQUEST_TARGET_BRANCH_NAME=3.0.x via --variable.
+    t(f"release branch {release_branch} | unrelated files → nothing fires",
+      release_user, "push", "unrelated", branch=release_branch,
+      should_fire=[],
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
+
+    # ── RELEASE MR (porting-* → 2026.1.x) ──────────────────────────────────────
+    # Simulates CI_MERGE_REQUEST_TARGET_BRANCH_NAME via --variable.
     # gitlab-ci-local evaluates `changes:` against the real git diff,
     # so domain files must still be committed locally.
 
-    t("release MR (→3.0.x) | backend files → backend release triggers fire",
+    t(f"release MR (→{release_branch}) | backend files → all backend triggers fire",
       release_user, "merge_request_event", "backend",
-      mr_target_branch="3.0.x",
-      should_fire=BACKEND_TRIGGERS_RELEASE,
-      should_not_fire=BACKEND_TRIGGERS_RELEASE_EXCLUDED + FRONTEND_TRIGGERS + AI_TRIGGERS,
-      sec="Release MR — porting-* → 3.0.x")
+      mr_target_branch=release_branch,
+      should_fire=BACKEND_TRIGGERS,
+      should_not_fire=FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS,
+      sec=f"Release MR — porting-* → {release_branch}")
 
-    t("release MR (→3.0.x) | frontend files → frontend release triggers fire",
+    t(f"release MR (→{release_branch}) | frontend files → all frontend triggers fire",
       release_user, "merge_request_event", "frontend",
-      mr_target_branch="3.0.x",
-      should_fire=FRONTEND_TRIGGERS_RELEASE,
-      should_not_fire=FRONTEND_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + AI_TRIGGERS)
+      mr_target_branch=release_branch,
+      should_fire=FRONTEND_TRIGGERS,
+      should_not_fire=BACKEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
 
-    t("release MR (→3.0.x) | AI files → AI release trigger fires",
+    t(f"release MR (→{release_branch}) | AI files → all AI triggers fire",
       release_user, "merge_request_event", "ai",
-      mr_target_branch="3.0.x",
-      should_fire=AI_TRIGGERS_RELEASE,
-      should_not_fire=AI_TRIGGERS_RELEASE_EXCLUDED + BACKEND_TRIGGERS + FRONTEND_TRIGGERS)
+      mr_target_branch=release_branch,
+      should_fire=AI_TRIGGERS,
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + ENRICHER_TRIGGERS)
+
+    t(f"release MR (→{release_branch}) | enricher files → docling fires",
+      release_user, "merge_request_event", "enricher",
+      mr_target_branch=release_branch,
+      should_fire=ENRICHER_TRIGGERS,
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
+
+    # ── RELEASE TAG (2026.1.0) ─────────────────────────────────────────────────
+    # On tag push GitLab ignores `changes:` filters, so every domain trigger
+    # fires regardless of which files were touched in the tagged commit.
+    # No domain commit is created (domain=None) — we just verify the rule.
+    release_tag = "2026.1.0"
+    all_domain_triggers = BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS
+
+    t(f"release tag {release_tag} → every domain trigger fires (changes: bypassed)",
+      release_user, "push", None, tag=release_tag,
+      should_fire=all_domain_triggers,
+      should_not_fire=[],
+      sec=f"Release tag — {release_tag}")
 
     # ── Summary ────────────────────────────────────────────────────────────────
     total  = len(results)

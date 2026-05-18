@@ -43,23 +43,22 @@ python3 .gitlab/pipeline-tests/test-pipeline-rules.py -u mirko -v
 - **AI designated** (luca): AI fires su file AI, niente su backend/frontend
 - **Generic** (utenti non designati): fires solo sul dominio dei file modificati, niente altrove
 
-### Release branch (`3.0.x`, `3.1.x`, ...)
+### Release branch (`2026.1.x`)
 
-- Push su release branch con file backend → i 9 trigger backend release scattano; `Trigger K8S-Client` resta silenzioso (non presente in `3.0.x`)
-- Push su release branch con file frontend → i 4 trigger frontend release scattano; `Trigger OpenK9-Chatbot` resta silenzioso
-- Push su release branch con file AI → solo `Trigger Rag Module` scatta (agentic-rag, embedding, chunk-evaluation non in `3.0.x`)
+Si testa il prossimo branch di release CalVer (`2026.1.x`) che verrà staccato da `main`.
+
+La release line legacy `3.0.x` non è testata qui: vive su un branch separato con file pipeline propri, e va testata da quel branch.
+
+- Push su release branch con file backend → tutti i trigger backend scattano (incluso `Trigger K8S-Client`)
+- Push su release branch con file frontend → tutti i trigger frontend scattano (incluso `Trigger OpenK9-Chatbot`)
+- Push su release branch con file AI → tutti i trigger AI scattano (rag, agentic-rag, embedding, chunk-evaluation)
+- Push su release branch con file enricher → `Trigger Docling Processor` scatta
 - Push su release branch con file unrelated → nessun trigger
 
-### Release MR (`porting-*` → release branch)
+### Release MR (`porting-*` → `2026.1.x`)
 
-- MR verso release branch con file backend/frontend/AI → i trigger release del dominio scattano (simulando `CI_MERGE_REQUEST_TARGET_BRANCH_NAME=3.0.x`)
+- MR verso `2026.1.x` con file backend/frontend/AI/enricher → tutti i trigger release del dominio scattano (simulando `CI_MERGE_REQUEST_TARGET_BRANCH_NAME=2026.1.x`)
 
-> **Nota:** i tag release (`3.0.2`, ecc.) non sono testati automaticamente — `gitlab-ci-local` non valuta `changes:` in modo affidabile con `CI_COMMIT_TAG`.
+### Release tag (`2026.1.0`)
 
-## Moduli presenti in `3.0.x`
-
-| Dominio | Moduli inclusi | Moduli esclusi |
-|---------|---------------|----------------|
-| Backend | datasource, searcher, ingestion, file-manager, tenant-manager, api-gateway, tika, entity-manager, resources-validator | k8s-client |
-| Frontend | search-frontend, admin-ui, tenant-ui, talk-to | chatbot |
-| AI | rag-module | agentic-rag, embedding, chunk-evaluation |
+- Tag push → ogni trigger di dominio scatta (GitLab ignora `changes:` sui tag, quindi tutti i moduli vengono ricostruiti per garantire artefatti coerenti).
