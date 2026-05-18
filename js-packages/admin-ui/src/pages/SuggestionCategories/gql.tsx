@@ -181,27 +181,3 @@ gql`
   }
 `;
 
-// export const DocumentTypeFieldsParentQuery = gql`
-//   query DocTypeFieldsByParent($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
-//     docTypeFieldsFromDocTypeByParent(parentId: $parentId, searchText: $searchText, first: 30, docTypeId: $docTypeId) {
-//       edges {
-//         node {
-//           id
-//           name
-//           description
-//           fieldType
-//           boost
-//           searchable
-//           exclude
-//           fieldName
-//           jsonConfig
-//           sortable
-//           parent {
-//             id
-//             fieldName
-//           }
-//         }
-//       }
-//     }
-//   }
-// `;

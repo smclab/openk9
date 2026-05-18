@@ -12,8 +12,10 @@ import {
   keyframes,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
+import { useMutation } from "@apollo/client";
 import {
   FieldType,
   useCreateOrUpdateDocumentTypeFieldMutation,
@@ -21,11 +23,12 @@ import {
 } from "../../graphql-generated";
 import { useParams } from "react-router-dom";
 import { Logo } from "@components/common";
-import { ModalConfirm } from "@components/Form";
+import { ModalConfirm, useToast } from "@components/Form";
 import { SaveSubDocType } from "./SaveSubDocTypes";
 import { useTheme } from "@mui/material/styles";
 import SubdirectoryArrowLeftIcon from "@mui/icons-material/SubdirectoryArrowLeft";
 import { Link as LinkRRD } from "react-router-dom";
+import { DeleteDocumentTypeFieldDocument } from "./gql";
 
 type ChipProperties = {
   sortable: boolean;
@@ -76,8 +79,40 @@ export function SubDocTypes() {
     isChild: boolean;
     parentId: string;
   } | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const theme = useTheme();
+  const toast = useToast();
+
+  const [deleteDocTypeFieldMutate, { loading: deletingField }] = useMutation<
+    { deleteDocTypeField: { id: string; name: string } | null },
+    { docTypeFieldId: string; docTypeFieldName: string }
+  >(DeleteDocumentTypeFieldDocument, {
+    onCompleted: (data) => {
+      if (data?.deleteDocTypeField?.id) {
+        toast({
+          title: "Field Deleted",
+          content: "Document type field has been deleted successfully",
+          displayType: "success",
+        });
+        documentTypesQuery.refetch({
+          docTypeId: documentTypeId,
+          parentId,
+          searchText: debouncedSearch,
+          first: PAGE_SIZE,
+        });
+        setDeleteModal(null);
+      }
+    },
+    onError: (error) => {
+      console.error("Error deleting document type field:", error);
+      toast({
+        title: "Error Delete",
+        content: "Impossible to delete document type field",
+        displayType: "error",
+      });
+    },
+  });
 
   useEffect(() => {
     documentTypesQuery.refetch({ docTypeId: documentTypeId, parentId, searchText: debouncedSearch, first: PAGE_SIZE });
@@ -242,6 +277,22 @@ export function SubDocTypes() {
   return (
     <Container sx={{ position: "relative" }}>
       <>
+        {deleteModal && (
+          <ModalConfirm
+            title="Delete Document Type Field"
+            body={`Deleting the field "${deleteModal.name}" is irreversible and will remove all associated data. Type the field name to confirm.`}
+            labelConfirm="Delete"
+            type="error"
+            confirmationWord={deleteModal.name}
+            actionConfirm={() => {
+              if (deletingField) return;
+              deleteDocTypeFieldMutate({
+                variables: { docTypeFieldId: deleteModal.id, docTypeFieldName: deleteModal.name },
+              });
+            }}
+            close={() => setDeleteModal(null)}
+          />
+        )}
         {idModal && (
           <ModalConfirm
             title="Create sub doc types"
@@ -484,6 +535,18 @@ export function SubDocTypes() {
                       }}
                     >
                       Sub Doc Types
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      startIcon={<DeleteIcon />}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDeleteModal({ id: child.id, name: child.name || "" });
+                      }}
+                    >
+                      Delete
                     </Button>
                   </Box>
                 </Box>

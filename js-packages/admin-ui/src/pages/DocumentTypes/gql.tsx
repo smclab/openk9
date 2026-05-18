@@ -259,6 +259,15 @@ gql`
   }
 `;
 
+export const DeleteDocumentTypeFieldDocument = gql`
+  mutation DeleteDocumentTypeField($docTypeFieldId: ID!, $docTypeFieldName: String) {
+    deleteDocTypeField(docTypeFieldId: $docTypeFieldId, docTypeFieldName: $docTypeFieldName) {
+      id
+      name
+    }
+  }
+`;
+
 gql`
   query docTypeTemplateList($searchText: String, $after: String, $first: Int) {
     docTypeTemplates(searchText: $searchText, first: $first, after: $after) {

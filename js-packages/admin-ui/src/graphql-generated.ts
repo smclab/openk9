@@ -5125,6 +5125,14 @@ export type DeleteDocumentTypeMutationVariables = Exact<{
 
 export type DeleteDocumentTypeMutation = { __typename?: 'Mutation', deleteDocType?: { __typename?: 'DocType', id?: string | null } | null };
 
+export type DeleteDocumentTypeFieldMutationVariables = Exact<{
+  docTypeFieldId: Scalars['ID'];
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type DeleteDocumentTypeFieldMutation = { __typename?: 'Mutation', deleteDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null };
+
 export type DocTypeTemplateListQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   after?: InputMaybe<Scalars['String']>;
@@ -7996,6 +8004,44 @@ export function useDeleteDocumentTypeMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteDocumentTypeMutationHookResult = ReturnType<typeof useDeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationResult = Apollo.MutationResult<DeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>;
+export const DeleteDocumentTypeFieldDocument = gql`
+    mutation DeleteDocumentTypeField($docTypeFieldId: ID!, $docTypeFieldName: String) {
+  deleteDocTypeField(
+    docTypeFieldId: $docTypeFieldId
+    docTypeFieldName: $docTypeFieldName
+  ) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteDocumentTypeFieldMutationFn = Apollo.MutationFunction<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
+
+/**
+ * __useDeleteDocumentTypeFieldMutation__
+ *
+ * To run a mutation, you first call `useDeleteDocumentTypeFieldMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteDocumentTypeFieldMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteDocumentTypeFieldMutation, { data, loading, error }] = useDeleteDocumentTypeFieldMutation({
+ *   variables: {
+ *      docTypeFieldId: // value for 'docTypeFieldId'
+ *      docTypeFieldName: // value for 'docTypeFieldName'
+ *   },
+ * });
+ */
+export function useDeleteDocumentTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>(DeleteDocumentTypeFieldDocument, options);
+      }
+export type DeleteDocumentTypeFieldMutationHookResult = ReturnType<typeof useDeleteDocumentTypeFieldMutation>;
+export type DeleteDocumentTypeFieldMutationResult = Apollo.MutationResult<DeleteDocumentTypeFieldMutation>;
+export type DeleteDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
 export const DocTypeTemplateListDocument = gql`
     query docTypeTemplateList($searchText: String, $after: String, $first: Int) {
   docTypeTemplates(searchText: $searchText, first: $first, after: $after) {
