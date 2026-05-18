@@ -240,13 +240,14 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             model_type = embedding_model.providerModel.provider
             model = embedding_model.providerModel.model
             api_key = embedding_model.apiKey
+            api_url = embedding_model.apiUrl
             embedding_model_json_config = json_format.MessageToDict(
                 embedding_model.jsonConfig
             )
 
             configuration = {
                 "api_key": api_key,
-                "api_url": embedding_model_json_config.get("api_url"),
+                "api_url": api_url,
                 "model_type": model_type,
                 "model": model,
                 "watsonx_project_id": embedding_model_json_config.get(
