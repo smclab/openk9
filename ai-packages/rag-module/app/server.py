@@ -161,7 +161,7 @@ async def rag_generate(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         EventSourceResponse: Server-Sent Events stream containing:
@@ -278,7 +278,6 @@ async def rag_chat(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -422,7 +421,6 @@ async def rag_chat_tool(
         request (Request): FastAPI Request object
         authorization (Optional[str]): Bearer token for authentication
         openk9_acl (Optional[list[str]]): Access control list for tenant isolation
-        x_forwarded_host (Optional[str]): Original host header for reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -557,7 +555,7 @@ async def get_user_chats(
             - paginationSize: Number of items to return per page
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
+        x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
         dict: Dictionary containing:
@@ -655,7 +653,6 @@ async def get_chat(
         chat_id (str): Unique identifier of the chat to retrieve
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -766,7 +763,6 @@ async def delete_chat(
         chat_id (str): Unique identifier of the chat to delete
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
@@ -884,7 +880,6 @@ async def rename_chat(
             - newTitle (str): The new title to assign to the chat
         request (Request): FastAPI Request object
         authorization (str): JWT bearer token for authentication
-        x_forwarded_host (Optional[str]): Original host header from client, used in reverse proxy setups
         x_tenant_id (Optional[str]): Identifier for the tenant/organization
 
     Returns:
