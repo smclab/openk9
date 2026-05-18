@@ -16,7 +16,12 @@ push-file-manager-helm:
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
   - cd helm-charts/02-file-handling && mkdir package
-  - helm package openk9-file-manager -d package
+  - |
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      helm package openk9-file-manager --version "$CI_COMMIT_TAG" -d package
+    else
+      helm package openk9-file-manager -d package
+    fi
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
 push-tika-helm:
@@ -34,7 +39,12 @@ push-tika-helm:
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
   - cd helm-charts/02-file-handling && mkdir package
-  - helm package openk9-tika -d package
+  - |
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      helm package openk9-tika --version "$CI_COMMIT_TAG" -d package
+    else
+      helm package openk9-tika -d package
+    fi
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
 
 push-resources-validator-helm:
@@ -52,5 +62,10 @@ push-resources-validator-helm:
   - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
   - cd helm-charts/02-file-handling && mkdir package
-  - helm package openk9-resources-validator -d package
+  - |
+    if [ -n "$CI_COMMIT_TAG" ]; then
+      helm package openk9-resources-validator --version "$CI_COMMIT_TAG" -d package
+    else
+      helm package openk9-resources-validator -d package
+    fi
   - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v

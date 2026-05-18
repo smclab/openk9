@@ -16,5 +16,10 @@ push-openk9-k8s-client-helm:
     - apk add --update curl helm && rm -rf /var/cache/apk/*
   script:
     - cd helm-charts/06-utilities && mkdir package
-    - helm package openk9-k8s-client -d package
+    - |
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        helm package openk9-k8s-client --version "$CI_COMMIT_TAG" -d package
+      else
+        helm package openk9-k8s-client -d package
+      fi
     - curl -u $HELM_REPO_USERNAME:$HELM_REPO_PWD $HELM_REPO_URL --upload-file package/*.tgz -v
