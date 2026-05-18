@@ -5893,6 +5893,14 @@ export type DeleteDocumentTypeMutationVariables = Exact<{
 
 export type DeleteDocumentTypeMutation = { __typename?: 'Mutation', deleteDocType?: { __typename?: 'DocType', id?: string | null } | null };
 
+export type DeleteDocumentTypeFieldMutationVariables = Exact<{
+  docTypeFieldId: Scalars['ID'];
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type DeleteDocumentTypeFieldMutation = { __typename?: 'Mutation', deleteDocTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null };
+
 export type DocTypeTemplateListQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   after?: InputMaybe<Scalars['String']>;
@@ -6425,15 +6433,6 @@ export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
 
 
 export type CreateOrUpdateSuggestionCategoryMutation = { __typename?: 'Mutation', suggestionCategoryWithDocTypeField?: { __typename?: 'Response_SuggestionCategory', entity?: { __typename?: 'SuggestionCategory', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
-
-export type DocTypeFieldsByParentForSuggestionQueryVariables = Exact<{
-  searchText?: InputMaybe<Scalars['String']>;
-  parentId: Scalars['BigInteger'];
-  docTypeId: Scalars['ID'];
-}>;
-
-
-export type DocTypeFieldsByParentForSuggestionQuery = { __typename?: 'Query', docTypeFieldsFromDocTypeByParent?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null, description?: string | null, fieldType?: FieldType | null, boost?: number | null, searchable?: boolean | null, exclude?: boolean | null, fieldName?: string | null, jsonConfig?: string | null, sortable?: boolean | null, parent?: { __typename?: 'DocTypeField', id?: string | null, fieldName?: string | null } | null } | null } | null> | null } | null };
 
 export type TabsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
@@ -9295,6 +9294,44 @@ export function useDeleteDocumentTypeMutation(baseOptions?: Apollo.MutationHookO
 export type DeleteDocumentTypeMutationHookResult = ReturnType<typeof useDeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationResult = Apollo.MutationResult<DeleteDocumentTypeMutation>;
 export type DeleteDocumentTypeMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeMutation, DeleteDocumentTypeMutationVariables>;
+export const DeleteDocumentTypeFieldDocument = gql`
+    mutation DeleteDocumentTypeField($docTypeFieldId: ID!, $docTypeFieldName: String) {
+  deleteDocTypeField(
+    docTypeFieldId: $docTypeFieldId
+    docTypeFieldName: $docTypeFieldName
+  ) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteDocumentTypeFieldMutationFn = Apollo.MutationFunction<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
+
+/**
+ * __useDeleteDocumentTypeFieldMutation__
+ *
+ * To run a mutation, you first call `useDeleteDocumentTypeFieldMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteDocumentTypeFieldMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteDocumentTypeFieldMutation, { data, loading, error }] = useDeleteDocumentTypeFieldMutation({
+ *   variables: {
+ *      docTypeFieldId: // value for 'docTypeFieldId'
+ *      docTypeFieldName: // value for 'docTypeFieldName'
+ *   },
+ * });
+ */
+export function useDeleteDocumentTypeFieldMutation(baseOptions?: Apollo.MutationHookOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>(DeleteDocumentTypeFieldDocument, options);
+      }
+export type DeleteDocumentTypeFieldMutationHookResult = ReturnType<typeof useDeleteDocumentTypeFieldMutation>;
+export type DeleteDocumentTypeFieldMutationResult = Apollo.MutationResult<DeleteDocumentTypeFieldMutation>;
+export type DeleteDocumentTypeFieldMutationOptions = Apollo.BaseMutationOptions<DeleteDocumentTypeFieldMutation, DeleteDocumentTypeFieldMutationVariables>;
 export const DocTypeTemplateListDocument = gql`
     query docTypeTemplateList($searchText: String, $after: String, $first: Int) {
   docTypeTemplates(searchText: $searchText, first: $first, after: $after) {
@@ -11998,65 +12035,6 @@ export function useCreateOrUpdateSuggestionCategoryMutation(baseOptions?: Apollo
 export type CreateOrUpdateSuggestionCategoryMutationHookResult = ReturnType<typeof useCreateOrUpdateSuggestionCategoryMutation>;
 export type CreateOrUpdateSuggestionCategoryMutationResult = Apollo.MutationResult<CreateOrUpdateSuggestionCategoryMutation>;
 export type CreateOrUpdateSuggestionCategoryMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSuggestionCategoryMutation, CreateOrUpdateSuggestionCategoryMutationVariables>;
-export const DocTypeFieldsByParentForSuggestionDocument = gql`
-    query DocTypeFieldsByParentForSuggestion($searchText: String, $parentId: BigInteger!, $docTypeId: ID!) {
-  docTypeFieldsFromDocTypeByParent(
-    parentId: $parentId
-    searchText: $searchText
-    first: 30
-    docTypeId: $docTypeId
-  ) {
-    edges {
-      node {
-        id
-        name
-        description
-        fieldType
-        boost
-        searchable
-        exclude
-        fieldName
-        jsonConfig
-        sortable
-        parent {
-          id
-          fieldName
-        }
-      }
-    }
-  }
-}
-    `;
-
-/**
- * __useDocTypeFieldsByParentForSuggestionQuery__
- *
- * To run a query within a React component, call `useDocTypeFieldsByParentForSuggestionQuery` and pass it any options that fit your needs.
- * When your component renders, `useDocTypeFieldsByParentForSuggestionQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useDocTypeFieldsByParentForSuggestionQuery({
- *   variables: {
- *      searchText: // value for 'searchText'
- *      parentId: // value for 'parentId'
- *      docTypeId: // value for 'docTypeId'
- *   },
- * });
- */
-export function useDocTypeFieldsByParentForSuggestionQuery(baseOptions: Apollo.QueryHookOptions<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>(DocTypeFieldsByParentForSuggestionDocument, options);
-      }
-export function useDocTypeFieldsByParentForSuggestionLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>(DocTypeFieldsByParentForSuggestionDocument, options);
-        }
-export type DocTypeFieldsByParentForSuggestionQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentForSuggestionQuery>;
-export type DocTypeFieldsByParentForSuggestionLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentForSuggestionLazyQuery>;
-export type DocTypeFieldsByParentForSuggestionQueryResult = Apollo.QueryResult<DocTypeFieldsByParentForSuggestionQuery, DocTypeFieldsByParentForSuggestionQueryVariables>;
 export const TabsDocument = gql`
     query Tabs($searchText: String, $after: String) {
   tabs(searchText: $searchText, first: 20, after: $after) {
@@ -16294,4 +16272,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-05-05T15:24:27+02:00
+// Generated on 2026-05-18T11:58:31+02:00
