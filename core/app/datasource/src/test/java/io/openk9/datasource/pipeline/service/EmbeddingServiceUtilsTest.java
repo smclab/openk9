@@ -18,12 +18,15 @@
 package io.openk9.datasource.pipeline.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.ProviderModel;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -91,5 +94,46 @@ public class EmbeddingServiceUtilsTest {
 	}
 
 	record ItemWithNeighbors(int i, List<Integer> previous, List<Integer> next) {}
+
+	@Test
+	void mapToEmbeddingModelRequest_should_propagate_apiUrl_when_present() {
+
+		var embeddingModel = new EmbeddingModel();
+		embeddingModel.setApiKey("test-key");
+		embeddingModel.setApiUrl("https://api.openai.com/v1/embeddings");
+		var providerModel = new ProviderModel();
+		providerModel.setProvider("OPEN_AI");
+		providerModel.setModel("text-embedding-ada-002");
+		embeddingModel.setProviderModel(providerModel);
+
+		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
+
+		assertTrue(request.hasApiUrl());
+		assertEquals("https://api.openai.com/v1/embeddings", request.getApiUrl());
+		assertEquals("test-key", request.getApiKey());
+		assertEquals("OPEN_AI", request.getProviderModel().getProvider());
+		assertEquals("text-embedding-ada-002", request.getProviderModel().getModel());
+	}
+
+	@Test
+	void mapToEmbeddingModelRequest_should_omit_apiUrl_when_null() {
+
+		var embeddingModel = new EmbeddingModel();
+		embeddingModel.setApiKey("test-key");
+		embeddingModel.setApiUrl(null);
+		var providerModel = new ProviderModel();
+		providerModel.setProvider("HUGGING_FACE");
+		providerModel.setModel("sentence-transformers/all-MiniLM-L6-v2");
+		embeddingModel.setProviderModel(providerModel);
+
+		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
+
+		assertFalse(
+			request.hasApiUrl(),
+			"apiUrl must be unset on the gRPC payload when the entity does not provide one"
+		);
+		assertEquals("test-key", request.getApiKey());
+		assertEquals("HUGGING_FACE", request.getProviderModel().getProvider());
+	}
 
 }

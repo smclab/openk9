@@ -23,7 +23,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 
 import com.typesafe.config.ConfigFactory;
@@ -80,7 +79,6 @@ public class ActorSystemProvider {
 
 	@PreDestroy
 	void destroy() {
-		EmbeddingStubRegistry.clear();
 		actorSystem.terminate();
 	}
 

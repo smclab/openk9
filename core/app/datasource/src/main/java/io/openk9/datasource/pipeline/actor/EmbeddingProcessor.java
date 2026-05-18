@@ -23,6 +23,7 @@ import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
 import io.openk9.datasource.pipeline.stages.working.Processor;
 
+import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -98,8 +99,10 @@ public class EmbeddingProcessor extends AbstractBehavior<Processor.Command> {
 		this.replyTo = start.replyTo();
 		this.scheduler = start.scheduler();
 
+		var embeddingService = CDI.current().select(EmbeddingService.class).get();
+
 		this.getContext().pipeToSelf(
-			EmbeddingService.getEmbeddedPayload(
+			embeddingService.getEmbeddedPayload(
 				processKey.tenantId(), processKey.scheduleId(), payload),
 			EmbeddingResponse::new
 		);

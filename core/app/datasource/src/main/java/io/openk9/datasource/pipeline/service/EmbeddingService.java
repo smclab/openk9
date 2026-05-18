@@ -32,6 +32,7 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
 import io.openk9.datasource.service.EmbeddingModelService;
+import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.jayway.jsonpath.Configuration;
@@ -40,6 +41,7 @@ import com.jayway.jsonpath.JsonPath;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
+import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.json.JsonArray;
@@ -65,10 +67,13 @@ public class EmbeddingService {
 	@Inject
 	EmbeddingModelService embeddingModelService;
 
+	@GrpcClient("embedding")
+	Embedding embedding;
+
 	@CacheName("bucket-resource")
 	Cache cache;
 
-	public static CompletionStage<byte[]> getEmbeddedPayload(
+	public CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
 
 		return EventBusInstanceHolder
@@ -79,9 +84,6 @@ public class EmbeddingService {
 			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
 			.flatMap(message -> {
 				var embeddingChunksRequest = (EmbeddingChunksRequest) message.body();
-
-				// embedding model service url
-				var apiUrl = embeddingChunksRequest.embeddingModelUrl();
 
 				var chunkWindowSize = embeddingChunksRequest.chunkWindowSize();
 
@@ -114,9 +116,7 @@ public class EmbeddingService {
 					);
 				}
 
-				var client = EmbeddingStubRegistry.getStub(apiUrl);
-
-				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest
+				return embedding.getMessages(EmbeddingOuterClass.EmbeddingRequest
 						.newBuilder()
 						.setEmbeddingModel(embeddingChunksRequest.embeddingModel())
 						.setChunk(embeddingChunksRequest.requestChunk())
@@ -245,10 +245,8 @@ public class EmbeddingService {
 
 				EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
 					mapToEmbeddingModelRequest(embeddingModel);
-				var apiUrl = embeddingModel.getApiUrl();
 
-				var client = EmbeddingStubRegistry.getStub(apiUrl);
-				return client.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
+				return embedding.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
 					.setText(text)
 					.setEmbeddingModel(embeddingModelRequest)
 					.setChunk(REQUEST_CHUNK_DEFAULT)
@@ -278,8 +276,6 @@ public class EmbeddingService {
 								Scheduler_.SCHEDULE_ID, configurationRequest.scheduleId())
 							.getSingleResultOrNull()
 							.map(scheduler -> {
-								var embeddingModelUrl = embeddingModel.getApiUrl();
-
 								EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
 									mapToEmbeddingModelRequest(embeddingModel);
 
@@ -296,7 +292,6 @@ public class EmbeddingService {
 									.build();
 
 								return new EmbeddingChunksRequest(
-									embeddingModelUrl,
 									dataIndex.getEmbeddingDocTypeField(),
 									chunkWindowSize,
 									embeddingModelRequest,
@@ -322,11 +317,17 @@ public class EmbeddingService {
 		);
 	}
 
-	private static EmbeddingOuterClass.EmbeddingModel mapToEmbeddingModelRequest(EmbeddingModel embeddingModel) {
+	static EmbeddingOuterClass.EmbeddingModel mapToEmbeddingModelRequest(
+			EmbeddingModel embeddingModel) {
+
 		var embeddingModelBuilder = EmbeddingOuterClass.EmbeddingModel.newBuilder();
 
 		if (embeddingModel.getApiKey() != null) {
 			embeddingModelBuilder.setApiKey(embeddingModel.getApiKey());
+		}
+
+		if (embeddingModel.getApiUrl() != null) {
+			embeddingModelBuilder.setApiUrl(embeddingModel.getApiUrl());
 		}
 
 		var providerModel = embeddingModel.getProviderModel();
@@ -378,7 +379,6 @@ public class EmbeddingService {
 	) {}
 
 	private record EmbeddingChunksRequest(
-		String embeddingModelUrl,
 		DocTypeField docTypeField,
 		int chunkWindowSize,
 		EmbeddingOuterClass.EmbeddingModel embeddingModel,
