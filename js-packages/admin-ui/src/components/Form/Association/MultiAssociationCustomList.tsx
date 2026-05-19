@@ -4,7 +4,6 @@ import {
   Box,
   Button,
   Checkbox,
-  List,
   ListItemIcon,
   ListItemText,
   Paper,
@@ -15,8 +14,12 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Virtuoso } from "react-virtuoso";
 import { associateType } from "utils";
 import { ModalConfirm } from "../Modals";
+
+const VIRTUALIZED_LIST_HEIGHT = 230;
+const VIRTUALIZED_ITEM_HEIGHT = 48;
 
 type ListProps = {
   unassociated: associateType[] | undefined;
@@ -153,45 +156,45 @@ export function MultiAssociationCustomQuery<Q>({
       {isLoading ? (
         <Paper
           variant="outlined"
-          sx={{ minWidth: 200, height: 230, display: "flex", flexDirection: "column", gap: 1, padding: 2 }}
+          sx={{ minWidth: 200, height: VIRTUALIZED_LIST_HEIGHT, display: "flex", flexDirection: "column", gap: 1, padding: 2 }}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <Skeleton key={index} variant="rectangular" width="100%" height={32} />
           ))}
         </Paper>
       ) : (
-        <Paper variant="outlined" sx={{ minWidth: 200, height: 230, overflow: "auto" }}>
-          <List
-            dense
-            component="div"
+        <Paper variant="outlined" sx={{ minWidth: 200, height: VIRTUALIZED_LIST_HEIGHT }}>
+          <Virtuoso
+            style={{ height: VIRTUALIZED_LIST_HEIGHT }}
+            totalCount={items.length}
+            fixedItemHeight={VIRTUALIZED_ITEM_HEIGHT}
             role="list"
             aria-label={title}
-            sx={{ background: isLoading ? "blue" : "trasparent" }}
-          >
-            {items.map((item) => (
-              <Box
-                key={item.value}
-                role="listitem"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "8px",
-                  cursor: "pointer",
-                }}
-                onClick={() => onToggle(item)}
-              >
-                <ListItemIcon>
-                  <Checkbox
-                    checked={selected.some((sel) => sel.value === item.value)}
-                    tabIndex={-1}
-                    disableRipple
-                    disabled={disabled}
-                  />
-                </ListItemIcon>
-                <ListItemText primary={item.label} />
-              </Box>
-            ))}
-          </List>
+            increaseViewportBy={{ top: 200, bottom: 200 }}
+            itemContent={(index) => {
+              const item = items[index];
+              if (!item) return null;
+              const isSelected = selected.some((sel) => sel.value === item.value);
+              return (
+                <Box
+                  role="listitem"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "8px",
+                    cursor: disabled ? "default" : "pointer",
+                  }}
+                  onClick={() => onToggle(item)}
+                >
+                  <ListItemIcon>
+                    <Checkbox checked={isSelected} tabIndex={-1} disableRipple disabled={disabled} />
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </Box>
+              );
+            }}
+            computeItemKey={(index) => items[index]?.value ?? index}
+          />
         </Paper>
       )}
     </>
