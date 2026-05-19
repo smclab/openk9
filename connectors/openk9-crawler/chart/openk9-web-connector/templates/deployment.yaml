@@ -37,3 +37,6 @@ spec:
           env:
             - name: INGESTION_URL
               value: "{{ include "helper.ingestionURL" . }}/api/ingestion/v1/ingestion/"
+          {{- if .Values.resources }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
