@@ -234,7 +234,7 @@ gql`
   query BucketDataSources($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
-      tabs(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+      tabs(searchText: $searchText, first: 1000, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             name
@@ -242,7 +242,7 @@ gql`
           }
         }
       }
-      suggestionCategories(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+      suggestionCategories(searchText: $searchText, first: 1000, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             id
@@ -250,7 +250,7 @@ gql`
           }
         }
       }
-      datasources(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+      datasources(searchText: $searchText, first: 1000, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             id
@@ -263,7 +263,7 @@ gql`
           endCursor
         }
       }
-      languages(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+      languages(searchText: $searchText, first: 1000, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             id
@@ -365,7 +365,7 @@ export const Bucketslanguages = gql`
   query BucketLanguages($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
-      languages(searchText: $searchText, first: 20, after: $cursor, notEqual: $unassociated) {
+      languages(searchText: $searchText, first: 1000, after: $cursor, notEqual: $unassociated) {
         edges {
           node {
             id
@@ -412,7 +412,7 @@ export const BucketsTabs = gql`
   query BucketTabs($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
-      tabs(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+      tabs(searchText: $searchText, notEqual: $unassociated, first: 1000, after: $cursor) {
         edges {
           node {
             id
@@ -459,7 +459,7 @@ export const BucketsSuggestionCategories = gql`
   query BucketSuggestionCategories($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     bucket(id: $parentId) {
       id
-      suggestionCategories(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+      suggestionCategories(searchText: $searchText, notEqual: $unassociated, first: 1000, after: $cursor) {
         edges {
           node {
             id

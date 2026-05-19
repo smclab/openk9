@@ -102,7 +102,7 @@ export const TabTokensQuery = gql`
   query TabTokenTabs($parentId: ID!, $searchText: String, $cursor: String, $unassociated: Boolean!) {
     tab(id: $parentId) {
       id
-      tokenTabs(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+      tokenTabs(searchText: $searchText, notEqual: $unassociated, first: 1000, after: $cursor) {
         edges {
           node {
             id
