@@ -100,26 +100,35 @@ public abstract class HttpDatasourceServiceClient {
 		if (response.statusCode() >= 200
 			&& response.statusCode() <= 299) {
 
-			var dto = response.bodyAsJson(HealthExpectedStatusDTO.class);
+			try {
+				var dto = response.bodyAsJson(HealthExpectedStatusDTO.class);
 
-			if(dto.getStatus() == null)
+				if(dto.getStatus() == null)
+					return Uni.createFrom().item(
+						HealthDTO.builder()
+							.status(HealthDTO.Status.UNKNOWN)
+							.build()
+					);
+
 				return Uni.createFrom().item(
-					HealthDTO.builder()
-						.status(HealthDTO.Status.UNKNOWN)
-						.build()
+					switch (dto.getStatus()) {
+						case UP -> HealthDTO.builder()
+							.status(HealthDTO.Status.UP)
+							.build();
+
+						case DOWN -> HealthDTO.builder()
+							.status(HealthDTO.Status.DOWN)
+							.build();
+					}
 				);
 
-			return Uni.createFrom().item(
-				switch (dto.getStatus()) {
-					case UP -> HealthDTO.builder()
-						.status(HealthDTO.Status.UP)
-						.build();
-
-					case DOWN -> HealthDTO.builder()
-						.status(HealthDTO.Status.DOWN)
-						.build();
-				}
-			);
+			} catch (Exception e) {
+				return Uni.createFrom().item(
+					HealthDTO.builder()
+					.status(HealthDTO.Status.UNKNOWN)
+					.build()
+				);
+			}
 
 		}
 
