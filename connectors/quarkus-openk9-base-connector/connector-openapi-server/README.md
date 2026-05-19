@@ -28,7 +28,8 @@ It is the DTO that OpenK9 accepts to receive documents.
 - **datasourceId**: Unique ID that identifies the datasource the ingested message belongs to.
 - **tenantId**: Unique string that identifies the tenant the ingested message belongs to.
 - **contentId**: Unique ID by datasource that identifies the resource inside Openk9.
-- **parsingDate**: Date when scheduling associated with message is started.
+- **parsingDate**: Date when scheduling associated with message is started. It is mandatory
+  when using **last** or **type** set to LAST.
 - **rawContent**: Message raw content. Can be used to perform some elaboration or enrichment inside Openk9 pipeline.
 - **datasourcePayload**: Reference to `DatasourcePayload` class.
 - **resources**: `ResourcesDTO` object to pass resources associated with message.

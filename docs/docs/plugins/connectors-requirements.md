@@ -24,7 +24,7 @@ There are some specifications you need to respect when develop new Openk9 Connec
 
 An Openk9 connector must expose an endpoint which is then used by Openk9 to call the connector itself.
 
-This endpoint must be have following mandatory parameters:
+This endpoint must have following mandatory parameters:
 
 - **datasourceId**: Id of Datasource
 - **scheduleId**: Id of Schedule
@@ -97,7 +97,7 @@ pass to parameters resources, building object like following:
 
 When Openk9 get message, extracts binaries from message and stored them to S3 Minio storage. Then binaries are available inside Openk9 System to perform any sort of processing.
 
-Validating this parameter is not mandatory. If you don't set it, Openk9 interprets message haven't any binaris associated.
+Validating this parameter is not mandatory. If you don't set it, Openk9 interprets message haven't any binaries associated.
 
 #### Acl
 
@@ -126,8 +126,11 @@ Three different types of types are supported:
 
 #### Last
 
-Using *type* parameter is possibile to report that data extraction is finished.
-Is behaviour is the same as type parameter with value LAST.
+Using this parameter it is possibile to report that data extraction is finished.
+Its behaviour is the same as Type parameter with value LAST.
+
+>**Note**  
+`parsingDate` is mandatory when the **Type** parameter is set to LAST or when using the **Last** parameter.
 
 
 ### Asynchronous implementation of data extraction
@@ -342,7 +345,7 @@ curl -X 'GET' \
 ```
 
 This endpoint must return a JSON response respecting Ingestion Openk9 Request. In particular mapping is generated analyzing
-informations inside *datasource payload*. 
+information inside *datasource payload*. 
 
 In case, for example, of a web crawler a response could be:
 
