@@ -184,10 +184,26 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <NumberInput label="Prefix Lenght" {...form.inputProps("prefixLength")} />
-                    <NumberInput label="Min Word Length" {...form.inputProps("minWordLength")} />
-                    <NumberInput label="Max edits" {...form.inputProps("maxEdit")} />
+                    <TextInput
+                      label="Name"
+                      {...form.inputProps("name")}
+                      description="Unique identifier of the autocorrection configuration."
+                    />
+                    <NumberInput
+                      label="Prefix Lenght"
+                      {...form.inputProps("prefixLength")}
+                      description="Number of initial characters of the input term that must match exactly before correction is attempted."
+                    />
+                    <NumberInput
+                      label="Min Word Length"
+                      {...form.inputProps("minWordLength")}
+                      description="Minimum length (in characters) an input word must have before suggestions are generated."
+                    />
+                    <NumberInput
+                      label="Max edits"
+                      {...form.inputProps("maxEdit")}
+                      description="Maximum Levenshtein edit distance allowed between the input term and a suggestion. Allowed values: 1 or 2."
+                    />
                     <CustomSelect
                       label={"Sort"}
                       value={form.inputProps("sort").value}
@@ -196,6 +212,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       dict={SortType}
                       id={"HybridSearch"}
                       onChange={(e: SortType) => form.inputProps("sort").onChange(e)}
+                      description="Order in which candidate suggestions are returned (by score or by frequency)."
                     />
                     <CustomSelect
                       label={"Suggest Mode"}
@@ -205,10 +222,16 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       dict={SuggestMode}
                       id={"HybridSearch"}
                       onChange={(e: SuggestMode) => form.inputProps("suggestMode").onChange(e)}
+                      description="When suggestions are produced: MISSING (only for terms not in index), POPULAR (only more frequent than input), ALWAYS."
                     />
-                    <BooleanInput label="Search with correction" {...form.inputProps("enableSearchWithCorrection")} />
+                    <BooleanInput
+                      label="Search with correction"
+                      {...form.inputProps("enableSearchWithCorrection")}
+                      description="If enabled, when a correction is found the search is executed using the corrected term instead of the original."
+                    />
                     <AutocompleteDropdown
                       label="Doc type fields"
+                      description="Document Type Field used by the suggester to look up candidate corrections."
                       onChange={(val) => form.inputProps("docTypeFields").onChange({ id: val.id, name: val.name })}
                       value={
                         !form?.inputProps("docTypeFields")?.value?.id

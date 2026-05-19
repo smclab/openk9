@@ -20,6 +20,7 @@ import {
   CustomSelect,
   fromFieldValidators,
   TitleEntity,
+  TooltipDescription,
   useForm,
   useToast,
 } from "@components/Form";
@@ -234,8 +235,18 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
               {
                 content: (
                   <>
-                    <TextInput label="Name" {...form.inputProps("name")} disabled={view === "view"} />
-                    <TextArea label="Description" {...form.inputProps("description")} disabled={view === "view"} />
+                    <TextInput
+                      label="Name"
+                      {...form.inputProps("name")}
+                      disabled={view === "view"}
+                      description="Unique identifier of the RAG Configuration."
+                    />
+                    <TextArea
+                      label="Description"
+                      {...form.inputProps("description")}
+                      disabled={view === "view"}
+                      description="Free-text description explaining the purpose of this RAG Configuration."
+                    />
                     {ragConfigId === "new" && (
                       <CustomSelect
                         label="Type"
@@ -252,19 +263,21 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         disabled={view === "view" || page === 1}
                         description="The main prompt for the RAG system"
                       />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            name="Reformulate"
-                            checked={form.inputProps("reformulate").value}
-                            onChange={(e, checked) => form.inputProps("reformulate").onChange(checked)}
-                            disabled={view === "view" || page === 1}
-                          />
-                        }
-                        sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
-                        label="Reformulate"
-                        labelPlacement="start"
-                      />
+                      <TooltipDescription informationDescription="If enabled, the user question is reformulated using the Rephrase Prompt before being sent to the retriever.">
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="Reformulate"
+                              checked={form.inputProps("reformulate").value}
+                              onChange={(e, checked) => form.inputProps("reformulate").onChange(checked)}
+                              disabled={view === "view" || page === 1}
+                            />
+                          }
+                          sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
+                          label="Reformulate"
+                          labelPlacement="start"
+                        />
+                      </TooltipDescription>
                       <TextArea
                         label="Rephrase Prompt"
                         {...form.inputProps("rephrasePrompt")}
@@ -285,19 +298,21 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         disabled={view === "view" || page === 1}
                         description="JSON configuration for the RAG system"
                       />
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            name="EnableConversationTitle"
-                            checked={form.inputProps("enableConversationTitle").value}
-                            onChange={(e: any, checked: any) => form.inputProps("enableConversationTitle").onChange(checked)}
-                            disabled={view === "view" || page === 1}
-                          />
-                        }
-                        sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
-                        label="Enable Conversation Title"
-                        labelPlacement="start"
-                      />
+                      <TooltipDescription informationDescription="If enabled, an automatic title is generated for each conversation based on its content.">
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              name="EnableConversationTitle"
+                              checked={form.inputProps("enableConversationTitle").value}
+                              onChange={(e: any, checked: any) => form.inputProps("enableConversationTitle").onChange(checked)}
+                              disabled={view === "view" || page === 1}
+                            />
+                          }
+                          sx={{ marginLeft: "0", marginRight: "0", marginBottom: "16px" }}
+                          label="Enable Conversation Title"
+                          labelPlacement="start"
+                        />
+                      </TooltipDescription>
 
                       <Box sx={{ display: "flex", gap: 2 }}>
                         <NumberInput

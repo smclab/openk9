@@ -28,6 +28,7 @@ import {
   NumberInput,
   TextInput,
   TitleEntity,
+  TooltipDescription,
   useForm,
 } from "../../components/Form";
 import {
@@ -198,10 +199,27 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <CustomSelect label="Fuzziness" dict={Fuzziness} {...form.inputProps("fuzziness")} />
-                    <TextInput label="Min should Match" {...form.inputProps("minimumShouldMatch")} />
-                    <NumberInput label="Result Size" {...form.inputProps("resultSize")} />
+                    <TextInput
+                      label="Name"
+                      {...form.inputProps("name")}
+                      description="Unique identifier of the autocomplete configuration."
+                    />
+                    <CustomSelect
+                      label="Fuzziness"
+                      dict={Fuzziness}
+                      {...form.inputProps("fuzziness")}
+                      description="Edit distance tolerance applied when matching the input term against indexed values (AUTO, ZERO, ONE, TWO)."
+                    />
+                    <TextInput
+                      label="Min should Match"
+                      {...form.inputProps("minimumShouldMatch")}
+                      description="Minimum number (e.g. 2) or percentage (e.g. 75%) of input terms that must match for a document to be selected."
+                    />
+                    <NumberInput
+                      label="Result Size"
+                      {...form.inputProps("resultSize")}
+                      description="Maximum number of autocomplete suggestions returned to the user."
+                    />
                     <CustomSelect
                       label={"Operator"}
                       value={form.inputProps("operator").value}
@@ -210,9 +228,20 @@ export function SaveAutocomplete({ setExtraFab }: { setExtraFab: (fab: React.Rea
                       dict={BooleanOperator}
                       id={"HybridSearch"}
                       onChange={(e: BooleanOperator) => form.inputProps("operator").onChange(e)}
+                      description="Boolean operator (AND / OR) used to combine the input terms in the underlying query."
                     />
                     <Box paddingBlock={2}>
-                      <BooleanInput label="Perfect Match Included" {...form.inputProps("perfectMatchIncluded")} />
+                      <BooleanInput
+                        label="Perfect Match Included"
+                        {...form.inputProps("perfectMatchIncluded")}
+                        description="If enabled, exact matches are also included among the autocomplete suggestions."
+                      />
+                    </Box>
+                    <Box display="flex" flexDirection="row" alignItems="center" gap="4px">
+                      <Box component="label" sx={{ fontWeight: 600 }}>
+                        Fields
+                      </Box>
+                      <TooltipDescription informationDescription="Document Type Fields scanned to build autocomplete suggestions." />
                     </Box>
                     <MultiAssociationCustomQuery
                       {...form.inputProps("fieldIds")}

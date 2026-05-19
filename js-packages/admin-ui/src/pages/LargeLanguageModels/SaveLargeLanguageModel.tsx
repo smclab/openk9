@@ -198,8 +198,16 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
               content: (
                 <>
                   <ContainerFluid flexColumn>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
+                    <TextInput
+                      label="Name"
+                      {...form.inputProps("name")}
+                      description="Unique identifier of the Large Language Model configuration."
+                    />
+                    <TextArea
+                      label="Description"
+                      {...form.inputProps("description")}
+                      description="Free-text description of the LLM (e.g. provider, intended usage)."
+                    />
                     <TooltipDescription informationDescription="Api key in case of external api service">
                       <TextInput
                         label="Api key"
@@ -221,9 +229,21 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                     <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
                       <TextInput label="Api url" {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
-                    <NumberInput label="Context Window" {...form.inputProps("contextWindow")} isNumber={false} />
-                    <BooleanInput label="Retrieve Citations" {...form.inputProps("retrieveCitations")} />
-                    <Typography variant="h4">Provider</Typography>
+                    <NumberInput
+                      label="Context Window"
+                      {...form.inputProps("contextWindow")}
+                      isNumber={false}
+                      description="Maximum number of tokens the model can handle in a single request (input + output)."
+                    />
+                    <BooleanInput
+                      label="Retrieve Citations"
+                      {...form.inputProps("retrieveCitations")}
+                      description="If enabled, the model is asked to return citations to the source documents used to generate the answer."
+                    />
+                    <Box display="flex" flexDirection="row" alignItems="center" gap="4px">
+                      <Typography variant="h4">Provider</Typography>
+                      <TooltipDescription informationDescription="LLM provider/integration to use (e.g. OpenAI, Ollama, Hugging Face Custom, IBM WatsonX, Vertex AI, AWS Bedrock)." />
+                    </Box>
                     <Select
                       id="providerId"
                       onChange={(event) => {
@@ -250,6 +270,7 @@ export function SaveLargeLanguageModel({ setExtraFab }: { setExtraFab: (fab: Rea
                       validationMessages={[]}
                       value={providerModel.model || ""}
                       disabled={view ? true : false}
+                      description="Specific model identifier of the selected provider (e.g. gpt-4o-mini, llama3.1:8b)."
                     />
                   </ContainerFluid>
                   <ContainerFluid size="md" style={{ marginRight: 0 }}>

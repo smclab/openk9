@@ -194,10 +194,26 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
               {
                 content: (
                   <div>
-                    <TextInput label="Name" {...form.inputProps("name")} />
-                    <TextArea label="Description" {...form.inputProps("description")} />
-                    <NumberInput label="Vector Size" {...form.inputProps("vectorSize")} isNumber={false} />
-                    <Typography variant="h4">Provider</Typography>
+                    <TextInput
+                      label="Name"
+                      {...form.inputProps("name")}
+                      description="Unique identifier of the Embedding Model configuration."
+                    />
+                    <TextArea
+                      label="Description"
+                      {...form.inputProps("description")}
+                      description="Free-text description of the embedding model (e.g. provider, intended usage)."
+                    />
+                    <NumberInput
+                      label="Vector Size"
+                      {...form.inputProps("vectorSize")}
+                      isNumber={false}
+                      description="Dimensionality of the embedding vectors produced by the model. Must match the model output."
+                    />
+                    <Box display="flex" flexDirection="row" alignItems="center" gap="4px">
+                      <Typography variant="h4">Provider</Typography>
+                      <TooltipDescription informationDescription="Embedding provider/integration to use (e.g. OpenAI, Ollama, IBM WatsonX, Vertex AI, AWS Bedrock)." />
+                    </Box>
                     <Select
                       id="providerId"
                       onChange={(event) => {
@@ -223,6 +239,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       validationMessages={[]}
                       value={providerModel.model || ""}
                       disabled={view ? true : false}
+                      description="Specific embedding model identifier of the selected provider (e.g. text-embedding-3-small, nomic-embed-text)."
                     />
                     <TooltipDescription informationDescription="Api key in case of external api service">
                       <TextInput
