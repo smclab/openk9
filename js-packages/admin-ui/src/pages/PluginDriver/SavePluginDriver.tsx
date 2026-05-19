@@ -148,6 +148,23 @@ export const SavePluginnDriverModel = React.forwardRef(
     };
 
     const handleAddField = () => {
+      const userFieldValue = form.inputProps("userFieldsSelectedOptions").value;
+      if (!userFieldValue?.id || !userFieldValue?.name) {
+        toast({
+          title: "User field required",
+          content: "Select a user field option before adding ACL mappings.",
+          displayType: "warning",
+        });
+        return;
+      }
+      if (selectedItems.length === 0) {
+        toast({
+          title: "Document type field required",
+          content: "Select at least one document type field before adding ACL mappings.",
+          displayType: "warning",
+        });
+        return;
+      }
       const duplicates: { fieldName: string; userField: string }[] = [];
       const newFields = selectedItems
         .filter((item) => {
@@ -267,6 +284,15 @@ export const SavePluginnDriverModel = React.forwardRef(
       },
       isLoading: pluginDriverQuery.loading || pluginDriverWithDocTypeMutation.loading,
       onSubmit(data) {
+        const invalidMapping = fields?.some((field) => !field.userFieldId || !field.docTypeId);
+        if (invalidMapping) {
+          toast({
+            title: "Incomplete ACL mapping",
+            content: "Each ACL mapping must have both a user field option and a document type field.",
+            displayType: "error",
+          });
+          return;
+        }
         pluginDriverWithDocType({
           variables: {
             id: pluginDriverId !== "new" ? pluginDriverId : undefined,
