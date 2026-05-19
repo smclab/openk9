@@ -7,7 +7,7 @@ import requests
 from sqlalchemy import create_engine, Table, MetaData, text
 from sqlalchemy.orm import Session
 from sqlalchemy.inspection import inspect
-from .util.utility import post_message, validate_model
+from .util.utility import validate_model, IngestionHandler
 from .util.log_config import LogConfig
 
 dictConfig(LogConfig().dict())
@@ -38,6 +38,7 @@ class DataExtraction(threading.Thread):
 
         self.url_extract = self.dialect + "+" + self.driver + "://" + self.username + ":" + self.password + "@" + self.host + ":" + self.port + "/" + self.db
 
+        self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id, do_raise_error=False)
         self.status_logger = logging.getLogger("database-parser")
 
     def manage_data(self, results, primary_keys):
@@ -69,13 +70,15 @@ class DataExtraction(threading.Thread):
 
                 try:
                     self.status_logger.info(payload)
-                    post_message(self.ingestion_url, payload)
+                    self.ingestion_handler.post_message(payload)
                     row_numbers = row_numbers + 1
-                except requests.RequestException:
+                except requests.RequestException as e:
                     self.status_logger.error("Problems during posting of row with id: ")
+                    self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
                     continue
 
-            except json.decoder.JSONDecodeError:
+            except json.decoder.JSONDecodeError as e:
+                self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
                 continue
 
         self.status_logger.info("Posting ended")
@@ -104,10 +107,11 @@ class DataExtraction(threading.Thread):
                 primary_keys = [key.name for key in inspect(table).primary_key.columns]
                 self.manage_data(results, primary_keys)
 
-        except requests.RequestException:
+        except requests.RequestException as e:
             self.status_logger.error("No row extracted. Extraction process aborted.")
+            self.ingestion_handler.post_halt(e, None)
             return
 
         self.status_logger.info("Extraction ended")
-
+        self.ingestion_handler.post_last(None)
         return

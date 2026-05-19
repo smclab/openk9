@@ -24,10 +24,10 @@ class YoutubeRequest(BaseModel):
 	doExtractAudio: bool = False
 	audioFormat: str = "m4a"
 	doExtractComments: bool = False
-	maxTotalComments: int = None
-	maxRootComments: int = None
-	maxTotalReplies: int = None
-	maxRootCommentsReplies: int = None
+	maxTotalComments: Optional[int] = None
+	maxRootComments: Optional[int] = None
+	maxTotalReplies: Optional[int] = None
+	maxRootCommentsReplies: Optional[int] = None # TODO: Change to Field 
 	socketTimeout: int = 20
 	sleepIntervalSubtitles: int = 60
 	sleepIntervalRequests: int = 5
@@ -43,9 +43,9 @@ class YoutubeRequest(BaseModel):
 	tenantId: str
 
 	@model_validator(mode='after')
-	def validate(self) -> 'YoutubeRequest':
+	def validate_model(self) -> 'YoutubeRequest':
 		if self.doUseRandomWaitTime and self.maxSleepInterval < self.sleepInterval:
-			logger.warning(f"maxSleepInterval less than sleepInterval: Setting maxSleepInterval to sleepInterval + 5 seconds")
+			logger.warning("maxSleepInterval less than sleepInterval: Setting maxSleepInterval to sleepInterval + 5 seconds")
 			self.maxSleepInterval = self.sleepInterval + 5
 		return self
 

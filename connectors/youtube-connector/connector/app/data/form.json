@@ -42,7 +42,7 @@
     {
       "label": "Do Extract Audio?",
       "name": "doExtractAudio",
-      "type": "boolean",
+      "type": "checkbox",
       "size": 4,
       "required": false,
       "values": [
@@ -162,7 +162,7 @@
     {
       "label": "Use Random Wait Time",
       "name": "doUseRandomWaitTime",
-      "type": "boolean",
+      "type": "checkbox",
       "size": 4,
       "required": false,
       "values": [
@@ -242,7 +242,7 @@
     {
       "label": "Do Extract Comments?",
       "name": "doExtractComments",
-      "type": "boolean",
+      "type": "checkbox",
       "size": 4,
       "required": false,
       "values": [
@@ -342,7 +342,7 @@
     {
       "label": "Verbose Logs",
       "name": "verbose",
-      "type": "boolean",
+      "type": "checkbox",
       "size": 4,
       "required": false,
       "values": [

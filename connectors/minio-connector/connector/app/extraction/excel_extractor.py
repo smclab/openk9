@@ -40,7 +40,7 @@ class ExcelMinioExtractor(BaseMinioExtractor):
                                                   datasource_id, timestamp, schedule_id, tenant_id, ingestion_url)
 
         self.columns = columns
-        self.datasource_payload_key = datasource_payload_key
+        self.datasource_payload_key = datasource_payload_key or "file"
         self.do_try_extract_header = do_try_extract_header
         self.file_extractor = FileExtractor(self.do_try_extract_header)
 

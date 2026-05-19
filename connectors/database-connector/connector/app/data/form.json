@@ -2,7 +2,7 @@
 	"fields": [
       {
         "label": "Dialect",
-        "field": "dialect",
+        "name": "dialect",
         "type": "text",
         "size": 4,
         "required": true,
@@ -17,7 +17,7 @@
       },
       {
         "label": "Username",
-        "field": "username",
+        "name": "username",
         "type": "text",
         "size": 4,
         "required": true,
@@ -47,7 +47,7 @@
       },
             {
         "label": "Host",
-        "field": "host",
+        "name": "host",
         "type": "text",
         "size": 4,
         "required": true,
@@ -62,7 +62,7 @@
       },
       {
         "label": "Port",
-        "field": "port",
+        "name": "port",
         "type": "text",
         "size": 4,
         "required": true,
@@ -77,7 +77,7 @@
       },
       {
         "label": "Database",
-        "field": "db",
+        "name": "db",
         "type": "text",
         "size": 4,
         "required": true,
@@ -92,7 +92,7 @@
       },
       {
         "label": "Schema",
-        "field": "schema",
+        "name": "dbSchema",
         "type": "text",
         "size": 4,
         "required": false,
@@ -107,7 +107,7 @@
       },
       {
         "label": "Table",
-        "field": "table",
+        "name": "table",
         "type": "text",
         "size": 4,
         "required": true,
@@ -122,7 +122,7 @@
       },
       {
         "label": "Columns",
-        "field": "columns",
+        "name": "columns",
         "type": "list",
         "size": 4,
         "required": false,
@@ -136,7 +136,7 @@
       },
       {
         "label": "Where condition",
-        "field": "where",
+        "name": "where",
         "type": "text",
         "size": 4,
         "required": false,

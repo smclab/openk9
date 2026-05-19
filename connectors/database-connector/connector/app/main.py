@@ -6,7 +6,6 @@ from enum import Enum
 import requests
 import json
 from fastapi import FastAPI, status
-from pydantic import BaseModel, model_validator
 from typing import List, Optional, Self
 from database_api.data_extraction import DataExtraction
 
@@ -65,7 +64,7 @@ class DatabaseRequest(BaseModel):
     host: str
     port: str
     db: str
-    schema: Optional[str] = None
+    dbSchema: Optional[str] = None
     table: str
     columns: Optional[List[str]] = None
     where: Optional[str] = None
@@ -87,7 +86,7 @@ def get_data(request: DatabaseRequest):
     host = request["host"]
     port = request["port"]
     db = request["db"]
-    schema = request["schema"]
+    schema = request["dbSchema"]
     table = request["table"]
     columns = request["columns"]
     where = request["where"]

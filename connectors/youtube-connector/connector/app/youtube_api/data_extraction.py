@@ -13,7 +13,7 @@ from yt_dlp import YoutubeDL
 from yt_dlp.utils import DateRange
 
 from .util.log_config import LogConfig
-from .util.utility import format_raw_content, post_message, hash_str_to_int, get_as_base64, FutureResult, FileData
+from .util.utility import format_raw_content, hash_str_to_int, get_as_base64, FutureResult, FileData, IngestionHandler
 from .util.yt_dlp_logger import YtDlpLogger
 
 dictConfig(LogConfig().dict())
@@ -54,6 +54,8 @@ class DataExtraction(threading.Thread):
 
 		self.do_extract_comments = do_extract_comments
 		self.max_comments = max_comments
+
+		self.ingestion_handler = IngestionHandler(ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id, do_raise_error=False)
 
 		self.status_logger = logging.getLogger("youtube_logger")
 
@@ -268,29 +270,14 @@ class DataExtraction(threading.Thread):
 
 			try:
 				self.status_logger.info(datasource_payload)
-				post_message(ingestion_url, payload, 10)
+				self.ingestion_handler.post_message(payload)
 				return True
 			except requests.RequestException:
 				self.status_logger.error("Problems during posting")
 				return False
 		except Exception as e:
-			payload = {
-				"datasourceId": self.datasource_id,
-				"scheduleId": self.schedule_id,
-				"tenantId": self.tenant_id,
-				"contentId": -1,
-				"parsingDate": int(end_timestamp),
-				"rawContent": e,
-				"datasourcePayload": {
-
-				},
-				"resources": {
-					"binaries": []
-				},
-				"type": "HALT"
-			}
 			self.status_logger.error(e)
-			post_message(ingestion_url, payload, 10)
+			self.ingestion_handler.post_halt(e, end_timestamp)
 			return False
 
 	# Thread worker handles IO Tasks
@@ -411,27 +398,5 @@ class DataExtraction(threading.Thread):
 			count = self.__get_entries(info)
 
 			self.status_logger.info('Extracted: ' + str(count) + ' videos')
-		self.post_last()
-
-	def post_last(self):
-		end_timestamp = datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000
-
-		payload = {
-			"datasourceId": self.datasource_id,
-			"parsingDate": int(end_timestamp),
-			"contentId": None,
-			"rawContent": None,
-			"datasourcePayload": {},
-			"resources": {
-				"binaries": []
-			},
-			"acl": {
-				"type": ["deleted"]
-			},
-			"scheduleId": self.schedule_id,
-			"tenantId": self.tenant_id,
-			"last": True
-		}
-
-		post_message(ingestion_url, payload)
+		self.ingestion_handler.post_last(None)
 

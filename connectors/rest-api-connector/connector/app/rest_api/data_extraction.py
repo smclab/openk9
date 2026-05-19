@@ -9,7 +9,7 @@ from datetime import datetime, UTC
 
 from requests import HTTPError, JSONDecodeError
 
-from .util.utility import post_message, handle_response_content, HandleResponseContentReturnObject
+from .util.utility import handle_response_content, HandleResponseContentReturnObject, IngestionHandler
 from .util.base_model import RequestModel, AuthModel, RequestMethod, ExtractedData, PaginationModel
 from .util.log_config import LogConfig
 
@@ -31,34 +31,9 @@ class DataExtraction(threading.Thread):
 		self.schedule_id = schedule_id
 		self.tenant_id = tenant_id
 
+		self.ingestion_handler = IngestionHandler(ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id, do_raise_error=False)
+
 		self.status_logger = logging.getLogger("rest_api_logger")
-
-	def post_halt_message(self, exception: Exception):
-		"""
-		Handles posting HALT message based on exception.
-
-		:param exception: Exception to send in payload rawContent
-		"""
-
-		end_timestamp = datetime.now(UTC).timestamp() * 1000
-
-		payload = {
-			"datasourceId": self.datasource_id,
-			"scheduleId": self.schedule_id,
-			"tenantId": self.tenant_id,
-			"contentId": -1,
-			"parsingDate": int(end_timestamp),
-			"rawContent": exception,
-			"datasourcePayload": {
-
-			},
-			"resources": {
-				"binaries": []
-			},
-			"type": "HALT"
-		}
-		self.status_logger.error(exception)
-		post_message(ingestion_url, payload, 10)
 
 	def manage_data_payload(self, extracted_data: ExtractedData, raw_content: str, content_id: int, binary: dict | None, datasource_payload: dict) -> ExtractedData:
 		"""
@@ -89,19 +64,19 @@ class DataExtraction(threading.Thread):
 		}
 		try:
 			self.status_logger.info(datasource_payload)
-			post_message(ingestion_url, payload, 10)
+			self.ingestion_handler.post_message(payload)
 			extracted_data.count += 1
 			extracted_data.is_clean_finish = True
 		except requests.RequestException as e:
 			self.status_logger.error("Problems during posting")
-			self.post_halt_message(exception=e)
+			self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
 			extracted_data.is_clean_finish = False
 
 		return extracted_data
 
 	def get_response_data(self, response: requests.Response) -> HandleResponseContentReturnObject | None:
 		"""
-		Handles response and data errors. Halts extraction if an error occurs 'self.post_halt_message'
+		Handles response and data errors. Halts extraction if an error occurs 'self.ingestion_handler.post_halt'
 
 		:param response: The response of request
 		:return: data or None: data is based on response content
@@ -116,7 +91,7 @@ class DataExtraction(threading.Thread):
 				return None
 		except HTTPError as e:
 			self.status_logger.error(f"Error on request: method={response.request.method}, url={response.request.url}")
-			self.post_halt_message(exception=e)
+			self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
 			return None
 		except JSONDecodeError:
 			pass
@@ -128,7 +103,7 @@ class DataExtraction(threading.Thread):
 			return data
 		except Exception as e:
 			self.status_logger.error(f"Error on get_response_data: response={response}")
-			self.post_halt_message(exception=e)
+			self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
 		return None
 
 	def execute_request(self, request_method: str, request_url: str, request_auth: tuple[str, str] | None, request_item_list: str | None, request_params: Optional[dict] = None) -> tuple[HandleResponseContentReturnObject | None, ExtractedData]:
@@ -286,3 +261,4 @@ class DataExtraction(threading.Thread):
 				extraction_count += extracted_data.count
 				self.status_logger.info("Extracted: " + str(extracted_data.count) + " elements from request: " + str(extracted_data.url) + " extraction ended " + ("without errors" if extracted_data.is_clean_finish else "with halting error"))
 		self.status_logger.info("Extracted: " + str(extraction_count) + " elements")
+		self.ingestion_handler.post_last(None)
