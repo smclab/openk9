@@ -118,10 +118,6 @@ public abstract class HttpDatasourceServiceClient {
 					case DOWN -> HealthDTO.builder()
 						.status(HealthDTO.Status.DOWN)
 						.build();
-
-					default -> HealthDTO.builder()
-						.status(HealthDTO.Status.UNKNOWN)
-						.build();
 				}
 			);
 
