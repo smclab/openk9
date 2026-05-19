@@ -87,7 +87,7 @@ export const UnassociatedEnrichPipelineEnrichItemsQuery = gql`
   query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
     enrichPipeline(id: $enrichPipelineId) {
       id
-      enrichItems(searchText: $searchText, not: true, first: 20) {
+      enrichItems(searchText: $searchText, not: true, first: 1000) {
         edges {
           node {
             id
