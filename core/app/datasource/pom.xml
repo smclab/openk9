@@ -342,14 +342,6 @@
 		  <scope>test</scope>
 	  </dependency>
 
-	  <!--	in order to activate elasticsearch dev-service,
-	  		we need to add an elasticsearch extension -->
-	  <dependency>
-		  <groupId>io.quarkus</groupId>
-		  <artifactId>quarkus-elasticsearch-rest-client</artifactId>
-		  <scope>test</scope>
-	  </dependency>
-
     <!-- Test dependencies // -->
 
   </dependencies>
