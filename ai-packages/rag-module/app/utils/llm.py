@@ -188,6 +188,7 @@ def initialize_language_model(configuration):
                 openai_api_key=api_key,
                 openai_api_base=api_url,
                 stream_usage=True,
+                max_retries=0,
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]

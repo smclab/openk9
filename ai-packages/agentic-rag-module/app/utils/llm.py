@@ -19,6 +19,11 @@ import json
 import os
 from enum import Enum
 
+from app.external_services.grpc.grpc_client import (
+    get_llm_configuration,
+    get_rag_configuration,
+)
+from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from google.auth import default, transport
 from langchain_aws import ChatBedrockConverse
 from langchain_core.output_parsers import StrOutputParser
@@ -27,12 +32,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ibm import ChatWatsonx
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-
-from app.external_services.grpc.grpc_client import (
-    get_llm_configuration,
-    get_rag_configuration,
-)
-from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -170,6 +169,7 @@ def initialize_language_model(configuration):
                 openai_api_key=api_key,
                 openai_api_base=api_url,
                 stream_usage=True,
+                max_retries=0,
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
