@@ -121,6 +121,10 @@ debug:
 ## GraphQL configuration
 graphql:
   uiAlwaysInclude: true
+  ## Controls visibility of the GraphQL schema fields exposed via introspection.
+  ## Allowed values: "default" (introspection enabled) or "no-introspection".
+  ## Production environments should set this to "no-introspection".
+  fieldVisibility: default
 
 ## RabbitMQ messaging configuration
 messaging:

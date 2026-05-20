@@ -30,6 +30,7 @@ data:
   QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
 
   JAVA_DEBUG: "true"
+  QUARKUS_SMALLRYE_GRAPHQL_FIELD_VISIBILITY: {{ .Values.graphql.fieldVisibility | quote }}
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
   QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}

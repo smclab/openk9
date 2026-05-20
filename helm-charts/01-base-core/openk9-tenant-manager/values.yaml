@@ -58,6 +58,13 @@ config:
     enabled: true
     pattern: "%h %l %u %t \"%r\" %s %b %D"
 
+## GraphQL configuration
+graphql:
+  ## Controls visibility of the GraphQL schema fields exposed via introspection.
+  ## Allowed values: "default" (introspection enabled) or "no-introspection".
+  ## Production environments should set this to "no-introspection".
+  fieldVisibility: default
+
 ## JVM configuration
 jvm:
   toolOptions: ""
