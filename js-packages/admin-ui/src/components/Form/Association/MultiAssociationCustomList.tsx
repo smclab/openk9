@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { NamePath, useSideNavigation } from "@components/sideNavigationContext";
 import AddIcon from "@mui/icons-material/Add";
 import {
@@ -19,7 +35,6 @@ import { associateType } from "utils";
 import { ModalConfirm } from "../Modals";
 
 const VIRTUALIZED_LIST_HEIGHT = 230;
-const VIRTUALIZED_ITEM_HEIGHT = 48;
 
 type ListProps = {
   unassociated: associateType[] | undefined;
@@ -156,7 +171,14 @@ export function MultiAssociationCustomQuery<Q>({
       {isLoading ? (
         <Paper
           variant="outlined"
-          sx={{ minWidth: 200, height: VIRTUALIZED_LIST_HEIGHT, display: "flex", flexDirection: "column", gap: 1, padding: 2 }}
+          sx={{
+            minWidth: 200,
+            height: VIRTUALIZED_LIST_HEIGHT,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            padding: 2,
+          }}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <Skeleton key={index} variant="rectangular" width="100%" height={32} />
@@ -167,7 +189,6 @@ export function MultiAssociationCustomQuery<Q>({
           <Virtuoso
             style={{ height: VIRTUALIZED_LIST_HEIGHT }}
             totalCount={items.length}
-            fixedItemHeight={VIRTUALIZED_ITEM_HEIGHT}
             role="list"
             aria-label={title}
             increaseViewportBy={{ top: 200, bottom: 200 }}
