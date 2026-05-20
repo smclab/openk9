@@ -1,5 +1,4 @@
 import abc
-import inspect
 import logging
 from logging.config import dictConfig
 
@@ -9,7 +8,7 @@ from minio.error import MinioException
 from requests import HTTPError
 
 from .log_config import LogConfig
-from .utility import IngestionHandler, log_error_location
+from .utility import IngestionHandler
 
 dictConfig(LogConfig().dict())
 
@@ -31,12 +30,12 @@ class BaseMinioExtractor(abc.ABC):
 		self.timestamp = timestamp
 		self.url = str(host) + ":" + str(port)
 
-		self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id, do_raise_error=False)
+		self.ingestion_handler = IngestionHandler(self.ingestion_url, self.datasource_id, self.schedule_id, self.tenant_id, verbose=True)
 		self.status_logger = logging.getLogger("status-logger")
 
 	@abc.abstractmethod
 	def manage_data(self, client: Minio, obj: Object, end_timestamp: float):
-		raise NotImplementedError(f"Method '{inspect.currentframe().f_code.co_name}' not implemented in {self.__class__.__name__}")
+		raise NotImplementedError(f"Method not implemented in {self.__class__.__name__}")
 
 	def extract_data(self):
 		try:
@@ -47,7 +46,6 @@ class BaseMinioExtractor(abc.ABC):
 			objects = client.list_objects(self.bucket_name, self.prefix, recursive=True)
 
 		except MinioException as e:
-			log_error_location(e)
 			self.ingestion_handler.post_halt(exception=e, end_timestamp=None)
 			return
 
@@ -57,27 +55,6 @@ class BaseMinioExtractor(abc.ABC):
 
 			self.ingestion_handler.post_last(end_timestamp=end_timestamp)
 
-		except (HTTPError, Exception) as e:
+		except Exception as e:
 			self.status_logger.error("Something went wrong")
-
-			# Checks for generic error
-			if not isinstance(e, HTTPError):
-				try:
-					# Try to post HALT Request
-					self.status_logger.error("Generic Error: Posting HALT")
-					self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
-				except HTTPError as ex:
-					# post_halt raise HTTPError
-					e = ex
-
-			# Checks for HTTPError
-			if isinstance(e, HTTPError):
-				# Checks status code
-				status_code = e.response.status_code
-				error_msg = f"HTTPError ({status_code}): Client Error. Error while posting to ingestion_url."
-
-				# if status_code > 500 means it failed to post to ingestion_url (Server Failure)
-				if 500 <= status_code < 600:
-					error_msg = f"HTTPError ({status_code}): Server Error. Failed posting to ingestion_url."
-				self.status_logger.error(error_msg)
-				self.status_logger.error(e)
+			self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
