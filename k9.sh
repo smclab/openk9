@@ -232,7 +232,7 @@ build_mvn_shared_deps() {
             -f "../vendor/hibernate-rx-multitenancy/pom.xml"
 
         echo "Installing all shared modules..."
-        for module in common client api service; do
+        for module in common api client service; do
             echo "Installing $module..."
             ./mvnw install -DskipTests -f "$module/pom.xml"
         done
