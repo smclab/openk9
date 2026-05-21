@@ -7,8 +7,15 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install dependencies with optimizations
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# build-essential is required to compile native extensions (e.g. chonkie's Cython
+# split extension) when no prebuilt wheel is available for the target platform.
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y build-essential && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y --auto-remove build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy application code
 COPY app/ ./
