@@ -64,6 +64,7 @@ Openk9 Datasource service is based on Quarkus Framework. Use following parameter
 | `quarkus.LogLevelHibernate`  | Default log level for Hibernate                 | `INFO`             |
 | `debug.enabled`    | Enable Java debug mode                             | `false`            |
 | `graphql.uiAlwaysInclude`    | Always include GraphQL UI in the application                             | `true`            |
+| `graphql.fieldVisibility`    | Controls visibility of GraphQL schema fields via introspection. Allowed values: `default` (introspection enabled) or `no-introspection`. **Production environments must set this to `no-introspection`** to mitigate the GraphQL introspection vulnerability (see issue #1904 and WAPT report § 5.8). | `default` |
 
 ### Scheduling configurations
 
