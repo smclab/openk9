@@ -35,10 +35,10 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the browser binaries from builder
-COPY --from=builder /ms-playwright /ms-playwright
+COPY --from=builder /ms-playwright /app/ms-playwright
 
 # Copy the tldextract cache from builder
-COPY --from=builder --chown=1001:1001 /tld_cache /tld_cache
+COPY --from=builder /tld_cache /app/tld_cache
 
 COPY ./app /app
 
