@@ -340,7 +340,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 round(end - start, 2),
             )
 
-            do_eval = bool(os.getenv("DO_EVAL", False))  ##fix
+            do_eval = os.getenv("DO_EVAL", "false").lower() == "true"
 
             if do_eval:
                 rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
