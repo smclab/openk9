@@ -1,1 +1,1 @@
-export type jsonObjPost = {userId: string, chatSequenceNumber?: number, paginationFrom: number, paginationSize: number };
+export type jsonObjPost = { chatSequenceNumber?: number, paginationFrom: number, paginationSize: number };

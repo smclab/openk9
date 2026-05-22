@@ -73,7 +73,6 @@ export function HistoryChat({
 		const fetchData = async () => {
 			if (userId) {
 				const json: jsonObjPost = {
-					userId,
 					paginationFrom: 0,
 					paginationSize: PAGE_SIZE,
 				};
@@ -99,7 +98,6 @@ export function HistoryChat({
 		setLoadingMore(true);
 		try {
 			const json: jsonObjPost = {
-				userId,
 				paginationFrom: paginationFromRef.current,
 				paginationSize: PAGE_SIZE,
 			};
