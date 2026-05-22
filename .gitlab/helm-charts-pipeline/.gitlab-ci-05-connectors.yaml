@@ -9,7 +9,8 @@ push-web-connector-helm:
     changes:
     - connectors/openk9-crawler/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
@@ -27,7 +28,8 @@ push-email-connector-helm:
     changes:
     - connectors/email-connector/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
@@ -45,7 +47,8 @@ push-database-connector-helm:
     changes:
     - connectors/database-connector/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
@@ -63,7 +66,8 @@ push-youtube-connector-helm:
     changes:
     - connectors/youtube-connector/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
@@ -81,7 +85,8 @@ push-minio-connector-helm:
     changes:
     - connectors/minio-connector/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
@@ -99,7 +104,8 @@ push-gitlab-connector-helm:
     changes:
     - connectors/gitlab-connector/chart/**/*
   # Block the first execution when branch is just created
-  - !reference [.rules:antispam-new-branch, rules]
+  - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
+    when: never
   when: manual
   before_script:
   - apk update
