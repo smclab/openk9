@@ -25,6 +25,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
+import org.eclipse.microprofile.graphql.DefaultValue;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
@@ -41,44 +42,59 @@ public class HighlightGraphqlResource {
 	@Inject
 	HighlightService highlighterService;
 
-	@Description("""
-		Retrieves an Highlight configuration by its ID.
-		""")
+	@Description("Retrieves an Highlight by its ID")
 	@Query
 	public Uni<Highlight> getHighlight(@Id long id) {
 		return highlighterService.findById(id);
 	}
 
-	@Description("""
-		Retrieves all Highlight configurations.
-		""")
+	@Description("Retrieves all Highlights")
 	@Query
 	public Uni<List<Highlight>> getAllHighlights() {
 		return highlighterService.findAll();
 	}
 
-	@Description("""
-		Create a new Highlight configuration.
-		""")
+	@Description("Create a new Highlight")
 	@Mutation
 	public Uni<Response<Highlight>> createHighlight(HighlightDTO highlightDTO) {
 		return highlighterService.getValidator().create(highlightDTO);
 	}
 
 	@Description("""
-		Update an existed Highlight configuration by its ID
-		""")
+		Update or patch an Highlight entity based on the provided input.
+		
+		Arguments:
+		- `id` (Long): The ID of the Highlight to update.
+		- `highlightDTO` (HighlightDTO!): The input object with data for creation or update.
+		- `patch` (Boolean): Whether to perform a partial update. Defaults to false.
+		
+		Returns:
+		- The Highlight entity created.
+		"""
+	)
 	@Mutation
-	public Uni<Response<Highlight>> updateHighlight(@Id long id,HighlightDTO highlightDTO) {
-		return highlighterService.getValidator().update(id, highlightDTO);
+	public Uni<Response<Highlight>> updateHighlight(
+		@Id long id,
+		HighlightDTO highlightDTO,
+		@DefaultValue("false") boolean patch) {
+
+		return patch
+			? patchHighlight(id, highlightDTO)
+			: updateHighlight(id, highlightDTO);
 	}
 
-	@Description("""
-		Delete an Highlight configuration by its ID.
-		""")
+	@Description("Delete an Highlight by its ID")
 	@Mutation
 	public Uni<Highlight> deleteHighlight(@Id long id) {
 		return highlighterService.deleteById(id);
+	}
+
+	private Uni<Response<Highlight>> updateHighlight(long id, HighlightDTO highlightDTO) {
+		return highlighterService.getValidator().update(id, highlightDTO);
+	}
+
+	private Uni<Response<Highlight>> patchHighlight(long id, HighlightDTO highlightDTO) {
+		return highlighterService.getValidator().patch(id, highlightDTO);
 	}
 
 }
