@@ -127,16 +127,18 @@ export const InformationNotification = () => {
           value={info?.status || ""}
           InputProps={{ readOnly: true }}
         />
-        <TextField
-          label="Error Description"
-          id="errorDescription"
-          fullWidth
-          margin="normal"
-          value={info?.errorDescription || ""}
-          InputProps={{ readOnly: true }}
-          multiline
-          minRows={4}
-        />
+        {(info?.status === "ERROR" || info?.status === "FAILURE") && (
+          <TextField
+            label="Error Description"
+            id="errorDescription"
+            fullWidth
+            margin="normal"
+            value={info?.errorDescription || ""}
+            InputProps={{ readOnly: true }}
+            multiline
+            minRows={4}
+          />
+        )}
       </Box>
 
       <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>
