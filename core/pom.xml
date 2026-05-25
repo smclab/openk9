@@ -90,11 +90,11 @@
 		<failsafe.useModulePath>false</failsafe.useModulePath>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<quarkus-plugin.version>3.27.2</quarkus-plugin.version>
+		<quarkus-plugin.version>3.27.4</quarkus-plugin.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-		<quarkus.platform.version>3.27.2</quarkus.platform.version>
-		<quarkus.version>3.27.2</quarkus.version>
+		<quarkus.platform.version>3.27.4</quarkus.platform.version>
+		<quarkus.version>3.27.4</quarkus.version>
 		<quarkiverse.opensearch.version>2.2.0</quarkiverse.opensearch.version>
 		<quarkiverse.rabbitmq.version>3.2.1</quarkiverse.rabbitmq.version>
 		<quarkus-minio.version>3.8.6</quarkus-minio.version>
@@ -112,9 +112,14 @@
 		<pekko.management.version>1.1.1</pekko.management.version>
 		<lucene.version>9.12.3</lucene.version>
 		<zstd-jni.version>1.5.6-3</zstd-jni.version>
-
+		<netty.groupd-id>io.netty</netty.groupd-id>
+		<netty.artifact-id>netty-bom</netty.artifact-id>
+		<!-- Spring Boot 4 ships Netty on the 4.2.x line; this BOM is imported by spring-boot-app.
+		     Quarkus apps continue to use ${netty.version} (4.1.x line). -->
+		<netty-springboot.version>4.2.13.Final</netty-springboot.version>
+		<postgresql-springboot.version>42.7.11</postgresql-springboot.version>
 		<spring-cloud.version>2025.1.1</spring-cloud.version>
-		<spring-boot.version>4.0.5</spring-boot.version>
+		<spring-boot.version>4.0.6</spring-boot.version>
 		<jib-plugin.version>3.5.1</jib-plugin.version>
 		<jib.platform.architecture>amd64</jib.platform.architecture>
 
@@ -276,6 +281,13 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
 				<version>3.18.0</version>
+			</dependency>
+			<!-- FIXME: fixes CVE-2025-12183, review when org.lz4:lz4-java is bumped past 1.8.0
+				   by pekko-bom->pekko-serialization-jackson -->
+			<dependency>
+				<groupId>org.lz4</groupId>
+				<artifactId>lz4-java</artifactId>
+				<version>1.8.1</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

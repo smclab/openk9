@@ -33,6 +33,15 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<!-- Override Netty version to fix the netty-codec-* CVE block
+			     on the 4.2.x line for api-gateway. -->
+			<dependency>
+				<groupId>${netty.groupd-id}</groupId>
+				<artifactId>${netty.artifact-id}</artifactId>
+				<version>${netty-springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
