@@ -60,8 +60,11 @@ WORKDIR /app
 
 # Convert line endings and set permissions
 RUN dos2unix /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
-    chmod +x /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh && \
-    chmod g+rw /app
+    chmod +x /app/wait_for_scrapyd.sh /etc/docker-entrypoint.sh
+
+# Assegna i permessi della cartella /app per OpenShift
+RUN chgrp -R 0 /app && \
+    chmod -R g=u /app
 
 # Security best practice: run as non-root
 USER 1001
