@@ -38,7 +38,11 @@ class BaseMinioExtractor(abc.ABC):
 		raise NotImplementedError(f"Method not implemented in {self.__class__.__name__}")
 
 	def _is_object_modified_after(self, obj: Object, timestamp_ms: float) -> bool:
-		return obj.last_modified is not None and obj.last_modified.timestamp() >= timestamp_ms
+		if not obj.last_modified:
+			return False
+
+		last_modified = obj.last_modified.timestamp() * 1000
+		return last_modified >= timestamp_ms
 
 	def extract_data(self):
 		try:

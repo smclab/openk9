@@ -16,6 +16,7 @@ services:
             retries: 3
     minio:
         image: minio/minio:latest
+        hostname: minio-connector-data
         command: server /data --console-address ":9090"
         ports:
             - "9000:9000"
@@ -24,4 +25,7 @@ services:
             - MINIO_ROOT_USER=minio
             - MINIO_ROOT_PASSWORD=minio123
         volumes:
-            - ./data:/data
+            - minio-connector-data:/data
+
+volumes:
+    minio-connector-data:
