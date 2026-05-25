@@ -259,7 +259,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                         }}
                       />
                     </TooltipDescription>
-                    <TooltipDescription informationDescription="Url where Embedding Module is hosted">
+                    <TooltipDescription informationDescription="Api url in case of service hosted on on premise service">
                       <TextInput label="Api url" {...form.inputProps("apiUrl")} />
                     </TooltipDescription>
                     <ContainerFluid size="md" style={{ marginRight: 0 }}>

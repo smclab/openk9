@@ -197,7 +197,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                     <NumberInput
                       label="Min Word Length"
                       {...form.inputProps("minWordLength")}
-                      description="Minimum length (in characters) an input word must have before suggestions are generated."
+                      description="The minimum length a suggestion must be in order to be included."
                     />
                     <NumberInput
                       label="Max edits"

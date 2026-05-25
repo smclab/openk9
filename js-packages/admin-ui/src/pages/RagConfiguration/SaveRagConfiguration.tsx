@@ -289,7 +289,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         label="Chunk Window"
                         {...form.inputProps("chunkWindow")}
                         disabled={view === "view" || page === 1}
-                        description="Number of chunks to consider"
+                        description="Number of chunk to consider during retrieve"
                       />
 
                       <TextArea
