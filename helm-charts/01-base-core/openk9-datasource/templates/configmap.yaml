@@ -34,6 +34,11 @@ data:
     "unknown"
   {{- end }}
 
+  {{- if eq .Values.database.type "postgresql" }}
+  QUARKUS_DATASOURCE_REACTIVE_POSTGRESQL_SSL_MODE: {{ .Values.database.postgresql.sslMode | quote }}
+  QUARKUS_DATASOURCE_REACTIVE_TRUST_ALL: {{ .Values.database.postgresql.trustAll | quote }}
+  {{- end }}
+
   QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION: {{ .Values.hibernate.orm.databaseGeneration | quote }}
   QUARKUS_HIBERNATE_ORM_LOG_SQL: {{ .Values.hibernate.orm.logSql | quote }}
 

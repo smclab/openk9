@@ -152,6 +152,8 @@ database:
     passwordSecretName: "postgres-password"
     keyPasswordSecret: "user-password"
     keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+    sslMode: "require"
+    trustAll: "true"
 
   # ---- Parameters Oracle ----
   oracle:
