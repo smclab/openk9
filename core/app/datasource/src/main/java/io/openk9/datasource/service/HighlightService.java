@@ -21,14 +21,18 @@ import io.openk9.datasource.mapper.HighlightMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
-import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.hibernate.reactive.mutiny.Mutiny;
+import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
+
+import java.util.Set;
 
 @ApplicationScoped
 public class HighlightService extends BaseK9EntityService<Highlight, HighlightDTO> {
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
 
 	private static final Logger LOGGER = Logger.getLogger(HighlightService.class);
 
@@ -42,16 +46,10 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	@Override
-	public Uni<Highlight> create(Highlight entity) {
-		return sessionFactory.withTransaction(
-			(session, transaction) -> create(session, entity)
-		);
-	}
-
-	@Override
 	public Uni<Highlight> create(HighlightDTO dto) {
 		return sessionFactory.withTransaction(
-				(session, transaction) -> createHighlightWithFields(session, dto)
+				(session, transaction) ->
+					createTransient(dto)
 					.flatMap(highlight ->
 						create(session, highlight)
 					)
@@ -59,40 +57,29 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	@Override
-	public Uni<Highlight> update(long id, HighlightDTO dto) {
+	public Uni<Highlight> update(long id , HighlightDTO dto) {
 		return sessionFactory.withTransaction(
 			(session, transaction) -> findById(session, id)
-				.flatMap(highlight ->
-					update(id, dto)
-				)
+				.flatMap(highlight -> update(session, id, dto))
 		);
 	}
 
-	private Uni<Highlight> createHighlightWithFields(Mutiny.Session session, HighlightDTO dto) {
-		Highlight highlight = mapper.create(dto);
+	private Uni<Highlight> createTransient(HighlightDTO dto) {
+		var transientHighlight = mapper.create(dto);
 
-		if (dto.getMatchedFieldIds() != null) {
-			Multi.createFrom().items(dto.getMatchedFieldIds())
-				.onItem()
-				.transformToUniAndConcatenate(fieldId ->
-					session.find(DocTypeField.class, fieldId)
-				)
-				.collect().asSet()
-				.map(matchedFields -> {
-					highlight.setMatchedFields(matchedFields);
-					return highlight;
-				});
-		}
+		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+		var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-		return Multi.createFrom().iterable(dto.getFieldIds())
-			.onItem()
-			.transformToUniAndConcatenate(fieldId ->
-				session.find(DocTypeField.class, fieldId)
-			)
-			.collect().asSet()
-			.map(fields -> {
-				highlight.setFields(fields);
-				return highlight;
+		return Uni.combine().all().unis(docTypeFieldIds, matchedDocTypeFieldIds)
+			.asTuple()
+			.flatMap(tuple -> {
+				Set<DocTypeField> fields = Set.copyOf(tuple.getItem1());
+				Set<DocTypeField> matchedFields = Set.copyOf(tuple.getItem2());
+
+				transientHighlight.setFields(fields);
+				transientHighlight.setMatchedFields(matchedFields);
+
+				return Uni.createFrom().item(transientHighlight);
 			});
 	}
 }
