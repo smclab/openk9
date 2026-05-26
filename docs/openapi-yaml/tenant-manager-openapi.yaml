@@ -62,9 +62,12 @@ components:
             \ RAG). An empty list skips ingress creation entirely."
     DeleteTenantRequest:
       type: object
+      required:
+      - virtualHost
       properties:
         virtualHost:
           type: string
+          minLength: 1
     DeleteTenantResponse:
       type: object
       properties:
@@ -72,11 +75,16 @@ components:
           type: string
     EffectiveDeleteTenantRequest:
       type: object
+      required:
+      - virtualHost
+      - token
       properties:
         virtualHost:
           type: string
+          minLength: 1
         token:
           type: string
+          minLength: 1
     IngressScope:
       type: string
       enum:

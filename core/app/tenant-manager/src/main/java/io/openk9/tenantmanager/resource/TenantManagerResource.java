@@ -234,7 +234,7 @@ public class TenantManagerResource {
 	@Path("/delete")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<DeleteTenantResponse> requestDeleteTenant(
-		DeleteTenantRequest deleteTenantRequest) {
+		@Valid DeleteTenantRequest deleteTenantRequest) {
 
 		return provisioningService
 			.requestDeletion(deleteTenantRequest)
@@ -287,7 +287,7 @@ public class TenantManagerResource {
 	@Path("/delete")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<DeleteTenantResponse> deleteTenant(
-		EffectiveDeleteTenantRequest request) {
+		@Valid EffectiveDeleteTenantRequest request) {
 
 		return provisioningService.delete(request)
 			.onFailure(InvalidDeletionTokenException.class)

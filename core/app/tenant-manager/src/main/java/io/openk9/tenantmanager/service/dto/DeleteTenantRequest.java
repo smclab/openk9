@@ -17,9 +17,9 @@
 
 package io.openk9.tenantmanager.service.dto;
 
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotEmpty;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public record DeleteTenantRequest(@Nonnull String virtualHost) {}
+public record DeleteTenantRequest(@NotEmpty String virtualHost) {}
