@@ -90,6 +90,7 @@ Build Verifier Admin Frontend:
       policy: pull
   script:
   - export NODE_OPTIONS="--max-old-space-size=8192"
+  - export GENERATE_SOURCEMAP=false
   - yarn config set registry https://registry.npmjs.org/
   - yarn config set network-timeout 600000
   - yarn config set cache-folder .yarn-cache
