@@ -31,6 +31,9 @@ class OpenApiDescriptorTest {
 	void exposesExpectedOperationIdsAndTags() {
 
 		given()
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
 			.get("/q/openapi")
 			.then()
 			.statusCode(200)
