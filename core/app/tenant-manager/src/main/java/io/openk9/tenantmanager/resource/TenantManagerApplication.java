@@ -24,6 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.info.Contact;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.annotations.servers.Server;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @OpenAPIDefinition(
@@ -41,6 +42,13 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 		)
 	),
 	security = @SecurityRequirement(name = "SecurityScheme"),
+	servers = {
+		@Server(
+			url = "/api/tenant-manager",
+			description = "Public URL prefix served by the OpenK9 "
+				+ "API gateway; mirrors quarkus.http.root-path."
+		)
+	},
 	tags = {
 		@Tag(
 			name = "Tenant Provisioning",
