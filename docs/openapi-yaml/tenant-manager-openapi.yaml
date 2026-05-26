@@ -189,9 +189,11 @@ paths:
       description: "Deploys the Helm chart of the selected preset connector for the\
         \ target tenant and registers the corresponding plugin driver. The preset\
         \ is selected from the supported values (YOUTUBE, CRAWLER, EMAIL, GITLAB,\
-        \ SITEMAP, DATABASE, MINIO). The saga runs asynchronously and the response's\
-        \ `result` field carries the saga outcome (SUCCESS, ERROR, COMPENSATION or\
-        \ COMPENSATION_ERROR)."
+        \ SITEMAP, DATABASE, MINIO). The saga runs asynchronously and the endpoint\
+        \ always returns HTTP 200: the response's `result` field carries either the\
+        \ saga outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when\
+        \ the orchestrator itself fails (e.g. ask timeout), the failure message. Callers\
+        \ must inspect `result` to determine the actual outcome."
       operationId: createConnector
       tags:
       - Tenant Provisioning
@@ -215,9 +217,6 @@ paths:
                 result: demo-CRAWLER-2026_1_0-SNAPSHOT
               schema:
                 $ref: "#/components/schemas/CreateConnectorResponse"
-        "500":
-          description: "Saga orchestrator failure (e.g. ask timeout, actor system\
-            \ error)"
   /provisioning/initTenant:
     post:
       summary: Initialize the default bucket for an existing tenant
