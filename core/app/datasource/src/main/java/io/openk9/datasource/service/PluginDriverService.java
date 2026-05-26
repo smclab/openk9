@@ -385,7 +385,10 @@ public class PluginDriverService
 		return findById(id)
 			.flatMap(pluginDriver -> {
 				ResourceUri resourceUri = pluginDriver.getResourceUri();
-				return httpPluginDriverClient.getHealth(resourceUri);
+				return httpPluginDriverClient
+					.validateBaseUri(resourceUri, regexValidations)
+					.flatMap(validResourceUri ->
+						httpPluginDriverClient.getHealth(validResourceUri));
 				}
 			);
 	}
