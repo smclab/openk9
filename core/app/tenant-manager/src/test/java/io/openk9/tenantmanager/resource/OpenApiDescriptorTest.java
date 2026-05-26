@@ -30,10 +30,14 @@ class OpenApiDescriptorTest {
 	@Test
 	void exposesExpectedOperationIdsAndTags() {
 
+		// /q/openapi is configured as an absolute path
+		// (microprofile-config.properties) and exposed publicly under
+		// the /q/* permission rule. Override RestAssured's base path
+		// so the call does not get prefixed with quarkus.http.root-path
+		// (= /api/tenant-manager), which would otherwise route the
+		// request through the admin policy.
 		given()
-			.header(
-				Constants.AUTHORIZATION_HEADER,
-				Constants.BASIC_CREDENTIALS)
+			.basePath("")
 			.get("/q/openapi")
 			.then()
 			.statusCode(200)
