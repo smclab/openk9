@@ -202,7 +202,7 @@ public abstract class HttpDatasourceServiceClient {
 		URI uri = URI.create(resourceUri.getBaseUri());
 		if(uri.getHost() == null) {
 			return Uni.createFrom().failure(
-				new InvalidUriException("baseUri is not valid")
+				new InvalidUriException("The provided baseUri is not a valid URI")
 			);
 		}
 
@@ -211,7 +211,8 @@ public abstract class HttpDatasourceServiceClient {
 				return Uni.createFrom().item(resourceUri);
 		}
 		return Uni.createFrom().failure(
-			new InvalidUriException("baseUri does not match the expected pattern")
+			new InvalidUriException("The provided baseUri " +
+				"is not allowed by the configured whitelist")
 		);
 	}
 
