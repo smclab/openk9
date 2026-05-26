@@ -252,7 +252,7 @@ paths:
                 summary: Minimal tenant with Keycloak auto-provisioning
                 description: "Only the required fields. OpenK9 provisions a Keycloak\
                   \ realm and exposes the default ingress (SEARCH, ADMINISTRATION,\
-                  \ RAG). The tenant name is auto-generated from the virtual host."
+                  \ RAG). The tenant name is auto-generated."
                 value:
                   virtualHost: demo.openk9.io
                   securityConfiguration: OAUTH2_ADMIN_ONLY
@@ -340,7 +340,7 @@ paths:
           content:
             application/json:
               example:
-                message: 9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a
+                message: "Deletion token: 9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a"
               schema:
                 $ref: "#/components/schemas/DeleteTenantResponse"
     delete:
@@ -367,7 +367,7 @@ paths:
           content:
             application/json:
               example:
-                message: Tenant demo deleted
+                message: Tenant deletion started.
               schema:
                 $ref: "#/components/schemas/DeleteTenantResponse"
   /tenant-manager/tenant/{id}/tables:

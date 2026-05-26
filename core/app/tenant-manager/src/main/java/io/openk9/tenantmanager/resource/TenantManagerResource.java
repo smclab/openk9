@@ -91,8 +91,8 @@ public class TenantManagerResource {
 						description = "Only the required fields. OpenK9 "
 							+ "provisions a Keycloak realm and exposes "
 							+ "the default ingress (SEARCH, "
-							+ "ADMINISTRATION, RAG). The tenant name is "
-							+ "auto-generated from the virtual host.",
+							+ "ADMINISTRATION, RAG). The tenant name "
+							+ "is auto-generated.",
 						value = TenantManagerRequestExamples.CREATE_TENANT_MINIMAL_REQUEST
 					),
 					@ExampleObject(

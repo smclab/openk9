@@ -116,7 +116,7 @@ public class TenantManagerRequestExamples {
 	public static final String REQUEST_DELETE_TENANT_RESPONSE =
 		"""
 			{
-			\t"message": "9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a"
+			\t"message": "Deletion token: 9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a"
 			}""";
 
 	public static final String DELETE_TENANT_REQUEST =
@@ -129,7 +129,7 @@ public class TenantManagerRequestExamples {
 	public static final String DELETE_TENANT_RESPONSE =
 		"""
 			{
-			\t"message": "Tenant demo deleted"
+			\t"message": "Tenant deletion started."
 			}""";
 
 }
