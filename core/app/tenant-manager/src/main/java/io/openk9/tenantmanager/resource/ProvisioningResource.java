@@ -24,7 +24,9 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
@@ -109,7 +111,9 @@ public class ProvisioningResource {
 			+ "corresponding plugin driver. The preset is selected "
 			+ "from the supported values (YOUTUBE, CRAWLER, EMAIL, "
 			+ "GITLAB, SITEMAP, DATABASE, MINIO). The saga runs "
-			+ "asynchronously and returns the resolved connector name."
+			+ "asynchronously and the response's `result` field "
+			+ "carries the saga outcome (SUCCESS, ERROR, COMPENSATION "
+			+ "or COMPENSATION_ERROR)."
 	)
 	@Tag(name = "Tenant Provisioning")
 	@APIResponses(value = {
@@ -123,6 +127,11 @@ public class ProvisioningResource {
 					example = TenantManagerRequestExamples.CREATE_CONNECTOR_RESPONSE
 				)
 			}
+		),
+		@APIResponse(
+			responseCode = "500",
+			description = "Saga orchestrator failure "
+				+ "(e.g. ask timeout, actor system error)"
 		),
 	})
 	@RequestBody(
@@ -173,15 +182,10 @@ public class ProvisioningResource {
 				Duration.ofMinutes(2),
 				actorSystem.scheduler()
 			))
-			.onItemOrFailure()
-			.transform((responses, throwable) -> {
-				if (throwable != null) {
-					return new CreateConnectorResponse(throwable.getMessage());
-				}
-				else {
-					return new CreateConnectorResponse(responses.name());
-				}
-			});
+			.map(responses -> new CreateConnectorResponse(responses.name()))
+			.onFailure()
+			.transform(cause -> new WebApplicationException(
+				cause, Response.Status.INTERNAL_SERVER_ERROR));
 	}
 
 	public record InitTenantRequest(@NotEmpty String tenantName) {}
