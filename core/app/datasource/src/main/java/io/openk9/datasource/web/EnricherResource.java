@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.web;
 
+import io.openk9.datasource.client.exception.InvalidUriException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -94,10 +95,21 @@ public class EnricherResource {
 			.onFailure(HealthEndpointException.class)
 			.transform(cause -> new WebApplicationException(
 				cause,
-				Response.status(502)
+				Response.status(Response.Status.BAD_GATEWAY)
 					.entity(Problems.healthEndpointError(
 						(HealthEndpointException) cause))
-					.build()));
+					.build())
+			)
+			.onFailure(InvalidUriException.class)
+			.transform(cause -> new WebApplicationException(
+				cause,
+				Response.status(Response.Status.BAD_REQUEST)
+					.entity(Problems.invalidUri(
+						(InvalidUriException) cause,
+						Response.Status.BAD_REQUEST)
+					)
+					.build())
+			);
 	}
 
 	/**
@@ -144,7 +156,7 @@ public class EnricherResource {
 			.onFailure(FormEndpointException.class)
 			.transform(cause -> new WebApplicationException(
 					cause, 
-					Response.status(502)
+					Response.status(Response.Status.BAD_GATEWAY)
 						.entity(Problems.formEndpointError(
 						(FormEndpointException) cause))
 						.build()));
