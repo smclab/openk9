@@ -514,6 +514,30 @@ do_push() {
     fi
 }
 
+# --- openapi-docs command ---
+#
+# Refreshes docs/openapi-yaml/tenant-manager-openapi.yaml, the snapshot
+# consumed by the Docusaurus site (docs/docusaurus.config.js). Runs the
+# smallrye-open-api-maven-plugin via the `generate-schemas` profile and
+# copies the produced YAML into docs/.
+#
+# Kept separate from `yarn fetch-schemas` (frontend codegen) so the
+# committed docs file is refreshed deliberately, not on every frontend
+# regeneration.
+
+do_openapi_docs() {
+    _info "Regenerating OpenAPI YAML for tenant-manager..."
+    (
+        cd core
+        ./mvnw -pl app/tenant-manager -am \
+            -P '!validate,!format,generate-schemas' \
+            -q process-classes
+    )
+    cp core/app/tenant-manager/target/generated/openapi.yaml \
+        docs/openapi-yaml/tenant-manager-openapi.yaml
+    _ok "Updated docs/openapi-yaml/tenant-manager-openapi.yaml"
+}
+
 # --- Compose helper ---
 
 compose() {
@@ -545,6 +569,7 @@ Commands:
   logs    [services...]   Follow container logs
   doctor                  Check prerequisites (java, docker, node, ...)
   push    <services...>   Tag and push images to OPENK9_REGISTRY
+  openapi-docs            Regenerate docs/openapi-yaml/tenant-manager-openapi.yaml
 
 Options:
   -b, --build            Build images before starting/restarting
@@ -702,6 +727,9 @@ case "$CMD" in
         ;;
     push)
         do_push
+        ;;
+    openapi-docs)
+        do_openapi_docs
         ;;
     *)
         usage
