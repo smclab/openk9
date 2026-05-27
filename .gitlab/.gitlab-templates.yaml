@@ -574,7 +574,7 @@ variables:
 # ========================================
 # TEMPLATE: .skopeo-copy-to-dockerhub
 # ========================================
-# Runs on Git tag (e.g. 3.2.0, 3.0.1) and on push to main.
+# Runs on Git tag only (e.g. 2026.1.0, 3.0.1) — release images go to Docker Hub.
 #
 # Purpose: after the build job pushes the image to the internal registry,
 # this job copies it to Docker Hub (smclab/*) WITHOUT rebuilding.
@@ -627,4 +627,3 @@ variables:
       "$SRC" "$DST"
   rules:
   - if: '$CI_COMMIT_TAG'
-  - if: '$CI_COMMIT_BRANCH == "main"'

@@ -56,7 +56,7 @@ Trigger Restart Ingestion:
     COMPONENT_NAME: "ingestion"
     COMPONENT_TYPE: "backend"
   rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---

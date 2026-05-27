@@ -205,7 +205,7 @@ Trigger Restart:
     artifacts: false
   rules:
     # Run only on main/tag or designated feature branch
-    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---

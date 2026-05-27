@@ -139,8 +139,8 @@ Trigger Restart:
     COMPONENT_NAME: "search-frontend"
     COMPONENT_TYPE: "frontend"
   rules:
-    # Run on Main/Tag and Feature
-    - !reference [.rules:child-deploy-main-tag, rules]
+    # Run on main and designated feature branches — NOT on tags (no auto-restart)
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 ####################### PUBLISH SEARCH FRONTEND #######################

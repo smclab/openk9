@@ -55,7 +55,7 @@ Trigger Restart Resources-Validator:
     COMPONENT_NAME: "resources-validator"
     COMPONENT_TYPE: "backend"
   rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---

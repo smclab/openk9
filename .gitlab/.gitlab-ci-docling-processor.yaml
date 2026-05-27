@@ -141,8 +141,8 @@ Trigger Restart:
   - job: Build Docling Image
     artifacts: false
   rules:
-    # Run only on main/tag or designated feature branch
-    - !reference [.rules:child-deploy-main-tag, rules]
+    # Run on main or designated feature branch — NOT on tags (no auto-restart)
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---

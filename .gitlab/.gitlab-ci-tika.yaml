@@ -55,7 +55,7 @@ Trigger Restart Tika:
     COMPONENT_NAME: "tika"
     COMPONENT_TYPE: "backend"
   rules:
-    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---

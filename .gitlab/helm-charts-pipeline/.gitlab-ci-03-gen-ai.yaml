@@ -7,6 +7,8 @@ push-openk9-rag-module-helm:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+    - if: '$CI_COMMIT_TAG'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -20,6 +22,8 @@ push-openk9-agentic-rag-module-helm:
   image: alpine:3.19
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - if: '$CI_COMMIT_TAG'
       when: manual
   before_script:
     - apk update
@@ -35,6 +39,8 @@ push-openk9-embedding-module-helm:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
+    - if: '$CI_COMMIT_TAG'
+      when: manual
   before_script:
     - apk update
     - apk add --update curl helm && rm -rf /var/cache/apk/*
@@ -48,6 +54,8 @@ push-talk-to-helm:
   image: alpine:3.19
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - if: '$CI_COMMIT_TAG'
       when: manual
   before_script:
     - apk update
