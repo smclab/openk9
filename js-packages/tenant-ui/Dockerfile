@@ -5,7 +5,8 @@ COPY ./yarn.lock /app
 
 WORKDIR /app
 
-RUN yarn install
+RUN yarn install --network-timeout 600000 || \
+    (echo "retry yarn install after network failure" && yarn install --network-timeout 600000)
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
