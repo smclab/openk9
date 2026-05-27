@@ -14,7 +14,7 @@ export const apolloClient = new ApolloClient({
       if (response.status === 401) {
         forceSignOut();
         if (!window.location.pathname.endsWith("/login")) {
-          window.location.assign("/tenant/login");
+          window.location.assign("/admin/login");
         }
       } else if (response.ok) {
         touchSession();

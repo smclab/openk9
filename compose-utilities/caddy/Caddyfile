@@ -1,3 +1,20 @@
+tenant-manager.openk9.localhost {
+    tls internal
+
+    handle /api/tenant-manager/* {
+        reverse_proxy openk9-tenant-manager:8080
+    }
+
+    @adminPaths {
+        path /admin /admin/*
+    }
+    handle @adminPaths {
+        reverse_proxy tenant-ui:8080
+    }
+
+    redir / /admin/
+}
+
 localhost, *.localhost, *.*.localhost {
     tls internal
 
@@ -26,13 +43,6 @@ localhost, *.localhost, *.*.localhost {
     }
     handle @adminPaths {
         reverse_proxy admin-ui:8080
-    }
-
-    @tenantPaths {
-        path /tenant /tenant/*
-    }
-    handle @tenantPaths {
-        reverse_proxy tenant-ui:8080
     }
 
     @chatPaths {

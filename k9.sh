@@ -629,7 +629,7 @@ Startup behavior:
 
 Access:
   After startup, the services are available at:
-    Tenant UI:   https://demo.openk9.localhost/tenant
+    Tenant UI:   https://tenant-manager.openk9.localhost/admin
     Admin UI:    https://demo.openk9.localhost/admin
     Search:      https://demo.openk9.localhost
 
