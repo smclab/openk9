@@ -19,6 +19,14 @@ import { apiGroupLabel, authSchemeColor, authSchemeLabel, securityConfigDescript
 
 type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["preconfigurations"]>[number]>;
 
+// NO_GATEWAY_AUTH is a development-only configuration and must not be
+// selectable from the wizard.
+const HIDDEN_SECURITY_CONFIGURATIONS = ["NO_GATEWAY_AUTH"];
+
+export function selectablePresets<T extends { name?: unknown }>(presets: T[]): T[] {
+  return presets.filter((p) => !HIDDEN_SECURITY_CONFIGURATIONS.includes(p.name as string));
+}
+
 type Props = {
   values: WizardState["step2"];
   onChange: (next: WizardState["step2"]) => void;
@@ -29,7 +37,7 @@ export function Step2Security({ values, onChange }: Props) {
     fetchPolicy: "cache-first",
     nextFetchPolicy: "cache-only",
   });
-  const presets = (data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p);
+  const presets = selectablePresets((data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p));
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 
   if (loading) {
