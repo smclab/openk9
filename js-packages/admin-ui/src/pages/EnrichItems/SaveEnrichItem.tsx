@@ -41,6 +41,7 @@ import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
 import { useRestClient } from "@components/queryClient";
+import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import {
   ChangeValueKey,
@@ -51,10 +52,13 @@ import useDynamicForm from "../datasources/components/Sections/DataSource/Dynami
 
 export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
   const { enrichItemId = "new", name, view } = useParams();
-  const [testResult, setTestResult] = React.useState<"success" | "error" | null>(null);
+  const [testResult, setTestResult] = React.useState<"success" | "down" | "unknown" | "error" | null>(null);
+  const [testError, setTestError] = React.useState<{ title?: string; detail?: string } | null>(null);
   const STATUS_CONFIG = {
     null: { color: "text.secondary", label: "Waiting for test" },
     success: { color: "success.main", label: "Connection successful" },
+    down: { color: "error.main", label: "Service unavailable" },
+    unknown: { color: "warning.main", label: "Service status unknown" },
     error: { color: "error.main", label: "Endpoint unreachable" },
   } as const;
 
@@ -336,24 +340,31 @@ export function SaveEnrichItem({ setExtraFab }: { setExtraFab: (fab: React.React
                                 baseUri: form.inputProps("baseUri").value,
                                 path: form.inputProps("path").value,
                               });
-                              setTestResult(res ? "success" : "error");
-                            } catch {
+                              setTestError(null);
+                              setTestResult(mapHealthStatus((res as { status?: string } | null)?.status));
+                            } catch (err) {
                               setTestResult("error");
+                              setTestError(extractProblemDetails(err));
                             }
                           }}
                           variant="outlined"
                         >
                           Test Connection
                         </Button>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column" }}>
                           <Typography
                             variant="body2"
                             color={color}
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color, fontSize: 18 }} />
-                            {label}
+                            {testResult === "error" ? testError?.title ?? label : label}
                           </Typography>
+                          {testResult === "error" && testError?.detail && (
+                            <Typography variant="caption" color={color} sx={{ ml: 3 }}>
+                              {testError.detail}
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                       <NumberInput

@@ -50,6 +50,7 @@ import {
   UserField,
 } from "../../graphql-generated";
 import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-generated/models/PluginDriverType";
+import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
@@ -126,7 +127,8 @@ export const SavePluginnDriverModel = React.forwardRef(
 
     const [selectedItems, setSelectedItems] = React.useState<SelectedValue[]>([]);
     const [fields, setFields] = React.useState<FieldDocType[]>([]);
-    const [testResult, setTestResult] = React.useState<"success" | "error" | null>(null);
+    const [testResult, setTestResult] = React.useState<"success" | "down" | "unknown" | "error" | null>(null);
+    const [testError, setTestError] = React.useState<{ title?: string; detail?: string } | null>(null);
 
     React.useEffect(() => {
       const mappings = pluginDriverQuery.data?.pluginDriver?.aclMappings;
@@ -229,6 +231,7 @@ export const SavePluginnDriverModel = React.forwardRef(
 
     React.useEffect(() => {
       setTestResult(null);
+      setTestError(null);
     }, [config?.baseUri, config?.path]);
 
     const form = useForm({
@@ -396,7 +399,6 @@ export const SavePluginnDriverModel = React.forwardRef(
                         <Button
                           onClick={async () => {
                             try {
-                              console.log("prova", form.inputProps("type").value);
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
                                 type: (form.inputProps("type").value as PluginDriverType.Http)
@@ -404,9 +406,11 @@ export const SavePluginnDriverModel = React.forwardRef(
                                   : OpenApiPluginDriverType.HTTP,
                                 resourceUri: config,
                               });
-                              setTestResult(res ? "success" : "error");
-                            } catch {
+                              setTestError(null);
+                              setTestResult(mapHealthStatus(res?.status));
+                            } catch (err) {
                               setTestResult("error");
+                              setTestError(extractProblemDetails(err));
                             }
                           }}
                           variant="outlined"
@@ -435,15 +439,42 @@ export const SavePluginnDriverModel = React.forwardRef(
                             Connection successful
                           </Typography>
                         )}
-                        {testResult === "error" && (
+                        {testResult === "down" && (
                           <Typography
                             variant="body2"
                             color="error.main"
                             sx={{ display: "flex", alignItems: "center", gap: 1 }}
                           >
                             <FiberManualRecordIcon sx={{ color: "error.main", fontSize: 18 }} />
-                            Endpoint unreachable
+                            Service unavailable
                           </Typography>
+                        )}
+                        {testResult === "unknown" && (
+                          <Typography
+                            variant="body2"
+                            color="warning.main"
+                            sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                          >
+                            <FiberManualRecordIcon sx={{ color: "warning.main", fontSize: 18 }} />
+                            Service status unknown
+                          </Typography>
+                        )}
+                        {testResult === "error" && (
+                          <Box sx={{ display: "flex", flexDirection: "column" }}>
+                            <Typography
+                              variant="body2"
+                              color="error.main"
+                              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                            >
+                              <FiberManualRecordIcon sx={{ color: "error.main", fontSize: 18 }} />
+                              {testError?.title ?? "Endpoint unreachable"}
+                            </Typography>
+                            {testError?.detail && (
+                              <Typography variant="caption" color="error.main" sx={{ ml: 3 }}>
+                                {testError.detail}
+                              </Typography>
+                            )}
+                          </Box>
                         )}
                       </Box>
                       {/* <ConnectorManager /> */}
