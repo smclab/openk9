@@ -23,6 +23,11 @@ COPY --from=deps /app/js-packages/tenant-ui/node_modules ./node_modules
 # Copy source code
 COPY ./js-packages/tenant-ui .
 
+# Dev mode exposes development-only options (e.g. NO_GATEWAY_AUTH) in the UI.
+# Off by default; k9.sh enables it for dev image tags.
+ARG DEV_MODE=false
+ENV REACT_APP_DEV_MODE=$DEV_MODE
+
 # Build
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations

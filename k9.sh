@@ -346,7 +346,9 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+            local dev_mode=false
+            case "$TAG" in *dev*) dev_mode=true ;; esac
+            docker build --pull --platform "$JIB_PLATFORM" --build-arg "DEV_MODE=$dev_mode" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
             ;;
         web-connector)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
