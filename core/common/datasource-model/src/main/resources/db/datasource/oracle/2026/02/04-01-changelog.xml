@@ -20,7 +20,8 @@
 	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
+	objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS"
 	logicalFilePath="db/datasource/2026/02/04-01-changelog.xml">
 
 	<changeSet id="1770199022-1" author="openk9">
@@ -57,7 +58,7 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 							 primaryKeyName="highlight_doc_type_fields_pk"/>
 			</column>
 			<column name="doc_type_field_id" type="NUMBER(38)">
-				<constraints nullable="true" primaryKey="true"
+				<constraints nullable="false" primaryKey="true"
 							 primaryKeyName="highlight_doc_type_fields_pk"/>
 			</column>
 		</createTable>
@@ -70,7 +71,9 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 								 onDelete="NO ACTION" onUpdate="NO ACTION"
 								 referencedTableName="highlight"
 								 referencedColumnNames="id"/>
+	</changeSet>
 
+	<changeSet id="1770199022-4" author="openk9">
 		<addForeignKeyConstraint baseTableName="highlight_fields"
 								 baseColumnNames="doc_type_field_id"
 								 constraintName="fk_doc_type_fields_highlight"
@@ -79,33 +82,41 @@ http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd"
 								 referencedColumnNames="id"/>
 	</changeSet>
 
-	<changeSet id="1770199022-4" author="openk9">
+	<changeSet id="1770199022-5" author="openk9">
 		<createTable tableName="highlight_matched_fields">
 			<column name="highlight_id" type="NUMBER(38)">
 				<constraints nullable="false" primaryKey="true"
 							 primaryKeyName="highlight_matched_doc_type_fields_pk"/>
 			</column>
 			<column name="doc_type_field_id" type="NUMBER(38)">
-				<constraints nullable="true" primaryKey="true"
+				<constraints nullable="false" primaryKey="true"
 							 primaryKeyName="highlight_matched_doc_type_fields_pk"/>
 			</column>
 		</createTable>
 	</changeSet>
 
-	<changeSet id="1770199022-5" author="openk9">
+	<changeSet id="1770199022-6" author="openk9">
 		<addForeignKeyConstraint baseTableName="highlight_matched_fields"
 								 baseColumnNames="highlight_id"
 								 constraintName="fk_highlight_matched_doc_type_fields"
 								 onDelete="NO ACTION" onUpdate="NO ACTION"
 								 referencedTableName="highlight"
 								 referencedColumnNames="id"/>
+	</changeSet>
 
+	<changeSet id="1770199022-7" author="openk9">
 		<addForeignKeyConstraint baseTableName="highlight_matched_fields"
 								 baseColumnNames="doc_type_field_id"
 								 constraintName="fk_matched_doc_type_fields_highlight"
 								 onDelete="NO ACTION" onUpdate="NO ACTION"
 								 referencedTableName="doc_type_field"
 								 referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet id="1770199022-8" author="openk9">
+		<addUniqueConstraint tableName="highlight"
+							 columnNames="name"
+							 constraintName="uk_highlight_name"/>
 	</changeSet>
 
 </databaseChangeLog>
