@@ -180,9 +180,6 @@ tags:
     \ their default content."
 - name: Tenant Management
   description: Maintenance endpoints on existing tenants.
-servers:
-- url: /api/tenant-manager
-  description: Public URL prefix served by the OpenK9 API gateway; mirrors quarkus.http.root-path.
 security:
 - SecurityScheme: []
 paths:
