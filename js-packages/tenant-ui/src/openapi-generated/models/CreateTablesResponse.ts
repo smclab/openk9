@@ -5,3 +5,4 @@
 export type CreateTablesResponse = {
     message?: string;
 };
+

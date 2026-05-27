@@ -8,3 +8,4 @@ export type CreateConnectorRequest = {
     tenantName: string;
     preset?: Preset;
 };
+

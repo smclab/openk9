@@ -58,7 +58,7 @@ export function Tenant() {
             setIsLoading(true);
             try {
               if (selectedConnector) {
-                await restClient.provisioningResource.postApiTenantManagerProvisioningConnector({
+                await restClient.tenantProvisioning.createConnector({
                   tenantName: tenant?.tenantName || "",
                   preset: selectedConnector,
                 });
@@ -115,7 +115,7 @@ export function Tenant() {
             setIsLoading(true);
             try {
               if (tenant?.tenantName) {
-                await restClient.provisioningResource.postApiTenantManagerProvisioningInitTenant({
+                await restClient.tenantProvisioning.initTenant({
                   tenantName: tenant.tenantName,
                 });
                 showToast({

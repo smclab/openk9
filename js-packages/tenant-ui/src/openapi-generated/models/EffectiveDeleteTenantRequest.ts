@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 export type EffectiveDeleteTenantRequest = {
-    virtualHost?: string;
-    token?: string;
+    virtualHost: string;
+    token: string;
 };
+
