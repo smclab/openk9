@@ -21,8 +21,8 @@ export const queryClient = new QueryClient();
 const RestClientContext = React.createContext(
   new OpenApiRestClient(
     {
-      // The OpenAPI spec produced at build time carries bare JAX-RS
-      // paths (no quarkus.http.root-path prefix), so prepend it here.
+      // The OpenAPI spec produced at build time carries bare paths,
+      // so prepend it here.
       BASE: "/api/tenant-manager",
       async HEADERS() {
         const authHeader = getAuthHeader();
