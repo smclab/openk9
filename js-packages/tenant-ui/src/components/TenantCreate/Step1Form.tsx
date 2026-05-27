@@ -29,7 +29,7 @@ export function Step1Form({ values, onChange }: Props) {
     >
       <TextField label="Tenant Name" required fullWidth {...input(values, onChange, "tenantName")} helperText="Unique tenant identifier" />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
-      <TextField label="Client ID" required fullWidth {...input(values, onChange, "clientId")} helperText="OAuth2 client identifier" />
+      <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />
       <TextField
         label="Client Secret"
         type="password"
@@ -40,10 +40,9 @@ export function Step1Form({ values, onChange }: Props) {
       />
       <TextField
         label="Issuer URI"
-        required
         fullWidth
         {...input(values, onChange, "issuerUri")}
-        helperText="OIDC issuer URI"
+        helperText="Optional — leave empty for Keycloak auto-managed realm"
         sx={{ gridColumn: "1 / -1" }}
       />
     </Box>
@@ -51,5 +50,12 @@ export function Step1Form({ values, onChange }: Props) {
 }
 
 export function isStep1Valid(values: WizardState["step1"]): boolean {
-  return values.tenantName.trim().length > 0 && values.virtualHost.trim().length > 0 && values.clientId.trim().length > 0 && values.issuerUri.trim().length > 0;
+  if (values.tenantName.trim().length === 0 || values.virtualHost.trim().length === 0) {
+    return false;
+  }
+  // clientId and issuerUri are optional, but OAuth2Settings needs both: allow
+  // either both filled (external IdP) or both empty (Keycloak auto-managed realm).
+  const hasClientId = values.clientId.trim().length > 0;
+  const hasIssuerUri = values.issuerUri.trim().length > 0;
+  return hasClientId === hasIssuerUri;
 }

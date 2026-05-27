@@ -3,8 +3,9 @@ import DomainIcon from "@mui/icons-material/Domain";
 import { Box, Button, CircularProgress, Container, IconButton, Step, StepLabel, Stepper, Toolbar, Typography } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useCreateTenantMutation } from "../../graphql-generated";
+import { useRestClient } from "../client/queryClient";
 import { useToast } from "../ToastProvider";
+import { buildCreateTenantRequest } from "./payload";
 import { isStep1Valid, Step1Form } from "./Step1Form";
 import { isStep2Valid, Step2Security } from "./Step2Security";
 import { Step3Confirm } from "./Step3Confirm";
@@ -18,34 +19,11 @@ type CreatedTenant = { id: string; tenantName: string };
 export function TenantCreate() {
   const navigate = useNavigate();
   const showToast = useToast();
+  const restClient = useRestClient();
   const [activeStep, setActiveStep] = React.useState(0);
   const [state, setState] = React.useState<WizardState>(initialWizardState);
   const [created, setCreated] = React.useState<CreatedTenant | null>(null);
-
-  const [createTenant, { loading }] = useCreateTenantMutation({
-    onCompleted(data) {
-      const entity = data.tenant?.entity;
-      const validators = data.tenant?.fieldValidators ?? [];
-      if (validators.length > 0) {
-        showToast({
-          displayType: "error",
-          title: "Validation errors",
-          content: validators
-            .filter((v): v is { field?: string | null; message?: string | null } => !!v)
-            .map((v) => `${v.field ?? ""}: ${v.message ?? ""}`)
-            .join("\n"),
-        });
-        return;
-      }
-      if (entity?.id) {
-        setCreated({ id: String(entity.id), tenantName: entity.tenantName ?? state.step1.tenantName });
-        showToast({ displayType: "success", title: "Tenant created", content: "" });
-      }
-    },
-    onError(error) {
-      showToast({ displayType: "error", title: "Tenant creation failed", content: error.message });
-    },
-  });
+  const [loading, setLoading] = React.useState(false);
 
   function handleNext() {
     if (activeStep === 0 && !isStep1Valid(state.step1)) return;
@@ -55,20 +33,22 @@ export function TenantCreate() {
   function handleBack() {
     setActiveStep((s) => Math.max(0, s - 1));
   }
-  function handleSubmit() {
+  async function handleSubmit() {
     if (!state.step2.securityConfiguration) return;
-    createTenant({
-      variables: {
-        tenantRequestDTO: {
-          tenantName: state.step1.tenantName.trim(),
-          virtualHost: state.step1.virtualHost.trim(),
-          clientId: state.step1.clientId.trim(),
-          clientSecret: state.step1.clientSecret || null,
-          issuerUri: state.step1.issuerUri.trim(),
-          securityConfiguration: state.step2.securityConfiguration as any,
-        },
-      },
-    });
+    setLoading(true);
+    try {
+      const tenant = await restClient.tenantProvisioning.createTenant(buildCreateTenantRequest(state));
+      setCreated({ id: String(tenant.id), tenantName: tenant.tenantName ?? state.step1.tenantName });
+      showToast({ displayType: "success", title: "Tenant created", content: "" });
+    } catch (error: any) {
+      showToast({
+        displayType: "error",
+        title: "Tenant creation failed",
+        content: error?.body?.message ?? error?.message ?? "Unknown error",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
   function handleCreateAnother() {
     setState(initialWizardState);
