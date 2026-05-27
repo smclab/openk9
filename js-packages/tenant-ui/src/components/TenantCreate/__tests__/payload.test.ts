@@ -1,5 +1,5 @@
 import { buildCreateTenantRequest } from "../payload";
-import { isStep1Valid } from "../Step1Form";
+import { deriveVirtualHost, isStep1Valid } from "../Step1Form";
 import { SecurityConfigurationKey, WizardState } from "../types";
 
 function makeState(
@@ -61,5 +61,17 @@ describe("isStep1Valid", () => {
 
   it("is invalid without virtualHost", () => {
     expect(isStep1Valid(makeState({ virtualHost: "" }).step1)).toBe(false);
+  });
+});
+
+describe("deriveVirtualHost", () => {
+  it("prepends tenantName to the last two labels of the hostname", () => {
+    expect(deriveVirtualHost("demo", "tenant-manager.openk9.localhost")).toBe("demo.openk9.localhost");
+    expect(deriveVirtualHost("acme", "tenant-manager-x.ok9.it")).toBe("acme.ok9.it");
+  });
+
+  it("returns an empty string when tenantName is blank", () => {
+    expect(deriveVirtualHost("", "tenant-manager.openk9.localhost")).toBe("");
+    expect(deriveVirtualHost("   ", "tenant-manager.openk9.localhost")).toBe("");
   });
 });

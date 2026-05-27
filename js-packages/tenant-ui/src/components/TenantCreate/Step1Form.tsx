@@ -13,7 +13,18 @@ function input(values: WizardState["step1"], onChange: Props["onChange"], key: k
   };
 }
 
+// Suggest a virtual host as <tenantName>.<base domain>, where the base domain
+// is the last two labels of the host serving the wizard (e.g. openk9.localhost).
+export function deriveVirtualHost(tenantName: string, hostname: string): string {
+  const name = tenantName.trim();
+  if (!name) {
+    return "";
+  }
+  return `${name}.${hostname.split(".").slice(-2).join(".")}`;
+}
+
 export function Step1Form({ values, onChange }: Props) {
+  const baseHostname = window.location.hostname;
   return (
     <Box
       sx={{
@@ -27,7 +38,22 @@ export function Step1Form({ values, onChange }: Props) {
         },
       }}
     >
-      <TextField label="Tenant Name" fullWidth {...input(values, onChange, "tenantName")} helperText="Optional — schema name auto-generated if empty" />
+      <TextField
+        label="Tenant Name"
+        fullWidth
+        value={values.tenantName}
+        onChange={(e) => {
+          const tenantName = e.target.value;
+          // Keep auto-filling virtualHost until the user diverges from the suggestion.
+          const tracksSuggestion = values.virtualHost === "" || values.virtualHost === deriveVirtualHost(values.tenantName, baseHostname);
+          onChange({
+            ...values,
+            tenantName,
+            virtualHost: tracksSuggestion ? deriveVirtualHost(tenantName, baseHostname) : values.virtualHost,
+          });
+        }}
+        helperText="Optional — tenant name auto-generated if empty"
+      />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
       <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />
       <TextField
