@@ -4,8 +4,8 @@ RUN mkdir -p /app/js-packages/admin-ui
 
 COPY ./js-packages/admin-ui /app/js-packages/admin-ui
 WORKDIR /app/js-packages/admin-ui
-RUN yarn install --frozen-lockfile --network-timeout 600000 || \
-    (echo "retry yarn install after network failure" && yarn install --frozen-lockfile --network-timeout 600000)
+RUN yarn install --network-timeout 600000 || \
+    (echo "retry yarn install after network failure" && yarn install --network-timeout 600000)
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" NODE_ENV=production yarn build
 
 # Stage 2 - the production environment
