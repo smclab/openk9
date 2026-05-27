@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import io.openk9.datasource.model.Highlight;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
@@ -39,51 +40,34 @@ public class HighlightDTO extends K9EntityDTO{
 
 	@NotNull
 	@NotEmpty
-	@Description("""
-		The field used to chose the highlighter.
-		""")
-	private String type;
+	@Description("The field used to choose the highlighter")
+	private Highlight.HighlightType type;
 
 	@NotNull
 	@NotEmpty
-	@Description("""
-		Set of unique DocTypeField IDs, it's used to add the fields to highlight.
-		""")
+	@Description("Set of unique DocTypeField IDs, it's used to add the fields to highlight")
 	private Set<Long> fieldIds;
 
-	@Description("""
-		Specifies how to split fragments of text, for unified and fvh highlighters.
-		""")
-	private String boundaryScanner;
+	@Description("Specifies how to split fragments of text, for unified and fvh highlighters")
+	private Highlight.BoundaryScannerType boundaryScanner;
 
-	@Description("""
-		Chars allowed to split fragments of text, only for fvh highlighter.
-		""")
+	@Description("Chars allowed to split fragments of text, only for fvh highlighter")
 	private String boundaryChars;
 
-	@Description("""
-		Specifies how to split fragments of text, only for plain highlighter.
-		""")
-	private String fragmenter;
+	@Description("Specifies how to split fragments of text, only for plain highlighter")
+	private Highlight.FragmenterType fragmenter;
 
-	@Description("""
-		Maximum length of each fragment.
-		""")
+	@Description("Maximum length of each fragment")
 	private Integer fragmentSize;
 
-	@Description("""
-		Maximum number of fragments to return.
-		""")
+	@Description("Maximum number of fragments to return")
 	private Integer numberOfFragments;
 
-	@Description("""
-		Field that decides how to order fragments of text.
-		""")
-	private String order;
+	@Description("Field that decides how to order fragments of text")
+	private Highlight.OrderType order;
 
-	@Description("""
-		Set of unique DocTypeField IDs, it's used to highlighting fields indexed with different analyzers.
-		""")
+	@Description("Set of unique DocTypeField IDs, it's used to highlighting fields " +
+		"indexed with different analyzers, only for fvh highlighter")
 	private Set<Long> matchedFieldIds;
 
 }
