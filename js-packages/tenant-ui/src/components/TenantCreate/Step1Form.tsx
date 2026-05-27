@@ -27,7 +27,7 @@ export function Step1Form({ values, onChange }: Props) {
         },
       }}
     >
-      <TextField label="Tenant Name" required fullWidth {...input(values, onChange, "tenantName")} helperText="Unique tenant identifier" />
+      <TextField label="Tenant Name" fullWidth {...input(values, onChange, "tenantName")} helperText="Optional — schema name auto-generated if empty" />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
       <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />
       <TextField
@@ -50,7 +50,8 @@ export function Step1Form({ values, onChange }: Props) {
 }
 
 export function isStep1Valid(values: WizardState["step1"]): boolean {
-  if (values.tenantName.trim().length === 0 || values.virtualHost.trim().length === 0) {
+  // tenantName is optional (schema name is auto-generated when omitted).
+  if (values.virtualHost.trim().length === 0) {
     return false;
   }
   // clientId and issuerUri are optional, but OAuth2Settings needs both: allow

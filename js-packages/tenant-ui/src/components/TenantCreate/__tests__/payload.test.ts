@@ -21,6 +21,12 @@ describe("buildCreateTenantRequest", () => {
     expect(req.securityConfiguration).toBe("OAUTH2_ADMIN_ONLY");
   });
 
+  it("omits tenantName when left empty", () => {
+    const req = buildCreateTenantRequest(makeState({ tenantName: "" }));
+    expect(req.tenantName).toBeUndefined();
+    expect(req.virtualHost).toBe("demo.openk9.io");
+  });
+
   it("populates oAuth2Settings when both clientId and issuerUri are present", () => {
     const req = buildCreateTenantRequest(makeState({ clientId: "cid", issuerUri: "https://idp" }));
     expect(req.oAuth2Settings).toEqual({ clientId: "cid", issuerUri: "https://idp", clientSecret: undefined });
@@ -49,7 +55,11 @@ describe("isStep1Valid", () => {
     expect(isStep1Valid(makeState({ issuerUri: "https://idp" }).step1)).toBe(false);
   });
 
-  it("is invalid without tenantName", () => {
-    expect(isStep1Valid(makeState({ tenantName: "" }).step1)).toBe(false);
+  it("is valid without tenantName", () => {
+    expect(isStep1Valid(makeState({ tenantName: "" }).step1)).toBe(true);
+  });
+
+  it("is invalid without virtualHost", () => {
+    expect(isStep1Valid(makeState({ virtualHost: "" }).step1)).toBe(false);
   });
 });

@@ -14,7 +14,7 @@ export function buildCreateTenantRequest(state: WizardState): CreateTenantReques
       : undefined;
 
   return {
-    tenantName: tenantName.trim(),
+    tenantName: tenantName.trim() || undefined,
     virtualHost: virtualHost.trim(),
     securityConfiguration: state.step2.securityConfiguration as SecurityConfiguration,
     oAuth2Settings,
