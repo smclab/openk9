@@ -4,7 +4,7 @@ The **OpenK9 Admin UI** is the management frontend for the OpenK9 platform. Buil
 
 ## Key Features
 - **Datasources Management:** Create and configure connections to external data systems.
-- **Analyzers & Tokenizers:** Define custom text analysis pipelines for Elasticsearch/OpenSearch.
+- **Analyzers & Tokenizers:** Define custom text analysis pipelines for OpenSearch.
 - **Enrich Items & Pipelines:** Configure dynamic data enrichment flows using external services or Groovy scripting.
 - **RAG Configuration:** Setup and manage Retrieval-Augmented Generation flows using LLMs and Embedding Models.
 - **Search Configs:** Manage and test specific search layouts and configurations.

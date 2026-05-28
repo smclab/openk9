@@ -56,7 +56,7 @@ For third party services follows owners guidelines.
 
 ## Storage sizing guidelines
 
-### OpenSearch/Elasticsearch
+### OpenSearch
 
 To estimate the storage required for OpenSearch, consider a **medium document size** of approximately **10 KB per indexed document**. Additionally, factor in the **monthly growth rate** of the database size.
 

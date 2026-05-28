@@ -166,7 +166,7 @@ export function SaveSubDocType({
           label="Field Type"
           dict={FieldType}
           {...form.inputProps("fieldType")}
-          description="Type associated to field. See Elasticsearch documentation for field data types"
+          description="Type associated to field. See OpenSearch documentation for field data types"
         />
         <CustomSelectRelationsOneToOne
           options={analyzerOption}
