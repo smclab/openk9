@@ -39,7 +39,6 @@ import java.util.Set;
 public class HighlightDTO extends K9EntityDTO{
 
 	@NotNull
-	@NotEmpty
 	@Description("The field used to choose the highlighter")
 	private Highlight.HighlightType type;
 
