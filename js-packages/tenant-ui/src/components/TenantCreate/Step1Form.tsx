@@ -52,7 +52,7 @@ export function Step1Form({ values, onChange }: Props) {
             virtualHost: tracksSuggestion ? deriveVirtualHost(tenantName, baseHostname) : values.virtualHost,
           });
         }}
-        helperText="Optional — tenant name auto-generated if empty"
+        helperText="Optional — tenant name auto-generated if empty. Also fills Virtual Host."
       />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
       <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />

@@ -80,6 +80,7 @@ export function Step2Security({ values, onChange }: Props) {
                           size="small"
                           color="warning"
                           label="dev"
+                          aria-label="Development mode only"
                           sx={{ height: 16, fontSize: "0.6rem", "& .MuiChip-label": { px: 0.625 } }}
                         />
                       )}
