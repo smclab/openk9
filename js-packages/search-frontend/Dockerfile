@@ -8,7 +8,8 @@ COPY ./yarn.lock /app
 COPY ./js-packages/search-frontend/package.json /app/js-packages/search-frontend/
 
 WORKDIR /app
-RUN yarn install --frozen-lockfile
+RUN yarn install --network-timeout 600000 || \
+    (echo "retry yarn install after network failure" && yarn install --network-timeout 600000)
 
 COPY ./js-packages/search-frontend /app/js-packages/search-frontend
 WORKDIR /app/js-packages/search-frontend
