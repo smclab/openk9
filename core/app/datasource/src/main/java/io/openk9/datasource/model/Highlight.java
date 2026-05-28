@@ -36,16 +36,13 @@ import lombok.ToString;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Entity(name = Highlight.ENTITY_NAME)
-@Table(name = Highlight.TABLE_NAME)
+@Entity
+@Table(name = "highlight")
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 public class Highlight extends K9Entity {
-
-	public static final String ENTITY_NAME = "Highlight";
-	public static final String TABLE_NAME = "highlight";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
