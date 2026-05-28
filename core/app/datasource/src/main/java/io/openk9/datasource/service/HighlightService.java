@@ -25,6 +25,7 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @ApplicationScoped
@@ -45,22 +46,21 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	@Override
 	public Uni<Highlight> create(HighlightDTO dto) {
 		return sessionFactory.withTransaction(
-				(session, transaction) ->
-					createTransient(dto)
+			(session, transaction) ->
+				createTransient(dto)
 					.flatMap(highlight ->
 						create(session, highlight)
 					)
-			);
+		);
 	}
 
 	@Override
-	public Uni<Highlight> update(long id , HighlightDTO dto) {
+	public Uni<Highlight> update(long id, HighlightDTO dto) {
 		return sessionFactory.withTransaction(
 			(session, transaction) ->
 				findById(session, id)
 					.flatMap(highlight -> {
 						var newStateHighlight = mapper.update(highlight, dto);
-						newStateHighlight.setBoundaryChars(dto.getBoundaryChars().toCharArray());
 
 						var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
 						var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
@@ -81,17 +81,14 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	@Override
-	public Uni<Highlight> patch(long id , HighlightDTO dto) {
+	public Uni<Highlight> patch(long id, HighlightDTO dto) {
 		return sessionFactory.withTransaction(
 			(session, transaction) ->
 				findById(session, id)
 					.flatMap(highlight -> {
 						var newStateHighlight = mapper.patch(highlight, dto);
 
-						if(!dto.getBoundaryChars().isEmpty())
-							newStateHighlight.setBoundaryChars(dto.getBoundaryChars().toCharArray());
-
-						if(!dto.getFieldIds().isEmpty() || !dto.getMatchedFieldIds().isEmpty()) {
+						if (!dto.getFieldIds().isEmpty() || !dto.getMatchedFieldIds().isEmpty()) {
 
 							var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
 							var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
@@ -116,21 +113,22 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 
 	private Uni<Highlight> createTransient(HighlightDTO dto) {
 		var transientHighlight = mapper.create(dto);
-		transientHighlight.setBoundaryChars(dto.getBoundaryChars().toCharArray());
 
 		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
-		var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-		return Uni.combine().all().unis(docTypeFieldIds, matchedDocTypeFieldIds)
-			.asTuple()
-			.flatMap(tuple -> {
-				Set<DocTypeField> fields = Set.copyOf(tuple.getItem1());
-				Set<DocTypeField> matchedFields = Set.copyOf(tuple.getItem2());
+		return docTypeFieldIds.flatMap(docTypeFields -> {
+			transientHighlight.setFields(new LinkedHashSet<>(docTypeFields));
 
-				transientHighlight.setFields(fields);
-				transientHighlight.setMatchedFields(matchedFields);
+			if (dto.getMatchedFieldIds() != null && !dto.getMatchedFieldIds().isEmpty()) {
+				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-				return Uni.createFrom().item(transientHighlight);
-			});
+				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
+					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+					return Uni.createFrom().item(transientHighlight);
+				});
+			}
+
+			return Uni.createFrom().item(transientHighlight);
+		});
 	}
 }
