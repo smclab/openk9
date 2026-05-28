@@ -65,10 +65,10 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy the browser binaries from builder
-COPY --from=builder /ms-playwright /ms-playwright
+COPY --from=builder /ms-playwright /app/ms-playwright
 
 # Copy the tldextract cache from builder
-COPY --from=builder /tld_cache /tld_cache
+COPY --from=builder /tld_cache /app/tld_cache
 
 COPY ./scrapydweb_settings_v11.py /app/scrapydweb_settings_v11.py
 
@@ -95,6 +95,10 @@ COPY --from=builder --chown=1001:0 /var/lib/scrapydweb /var/lib/scrapydweb
 
 # Copy the built scrapyd egg
 COPY --from=builder --chown=1001:0 /project.egg /var/lib/scrapyd/eggs/generic_crawler/1.egg
+
+# Adds permissions OpenShift
+RUN chgrp -R 0 /app /var/lib/scrapyd /var/lib/scrapydweb && \
+    chmod -R g=u /app /var/lib/scrapyd /var/lib/scrapydweb
 
 # Security best practice: run as non-root
 USER 1001
