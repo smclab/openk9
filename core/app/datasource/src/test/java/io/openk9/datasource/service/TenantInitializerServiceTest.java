@@ -49,19 +49,16 @@ public class TenantInitializerServiceTest {
 		// the test boot already runs createDefault(TENANT_ID) via Initializer,
 		// so this call is at least the second invocation on the same schema
 
-		// 1. Re-invoke createDefault on the already-initialized tenant.
-		// Without the fix this raises LazyInitializationException
-		// on SearchConfig.queryParserConfigs (HR000056).
+		// 1. Re-invoke createDefault more than once
+		// on the already-initialized tenant.
+		assertDoesNotThrow(() -> tenantInitializerService
+			.createDefault(TENANT_ID)
+			.await().indefinitely());
 		assertDoesNotThrow(() -> tenantInitializerService
 			.createDefault(TENANT_ID)
 			.await().indefinitely());
 
-		// 2. Invoke once more to confirm stable behavior across calls.
-		assertDoesNotThrow(() -> tenantInitializerService
-			.createDefault(TENANT_ID)
-			.await().indefinitely());
-
-		// 3. The default SearchConfig must keep exactly the expected
+		// 2. The default SearchConfig must keep exactly the expected
 		// number of associated QueryParserConfigs, with no duplicates.
 		var defaultSearchConfig = EntitiesUtils.getSearchConfig(
 			SearchConfig.INSTANCE.getName(),
@@ -82,7 +79,7 @@ public class TenantInitializerServiceTest {
 			)
 		);
 
-		// 4. No orphan query_parser_config rows must exist:
+		// 3. No orphan query_parser_config rows must exist:
 		// the fix must not regress on the orphan-removal guarantee.
 		assertEquals(
 			0L,
