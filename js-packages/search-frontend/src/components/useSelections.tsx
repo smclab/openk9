@@ -30,7 +30,14 @@ export function useSelections({
   const [state, dispatch] = React.useReducer(
     reducer,
     defaultSearch,
-    (defaultSearch) => loadQueryString<SelectionsState>(defaultSearch),
+    (defaultSearch) => {
+      const loaded = loadQueryString<SelectionsState>(defaultSearch);
+      return {
+        ...loaded,
+        text: String(loaded.text ?? ""),
+        textOnChange: String(loaded.textOnChange ?? ""),
+      };
+    },
   );
 
   const [canSave, setCanSave] = React.useState(false);
@@ -108,25 +115,28 @@ function reducer(
 ): SelectionsState {
   switch (action.type) {
     case "set-text": {
+      const nextText = String(action.text ?? "");
+      const nextTextOnChange = String(action.textOnchange ?? "");
       return {
-        text: action.text,
+        text: nextText,
         filters: state.filters,
-        textOnChange: action.textOnchange,
+        textOnChange: nextTextOnChange,
         selection: shiftSelection(
           state.textOnChange,
-          action.textOnchange,
+          nextTextOnChange,
           state.selection,
         ),
       };
     }
     case "set-text-btn": {
+      const nextTextOnChange = String(action.textOnchange ?? "");
       return {
         text: state.text,
         filters: state.filters,
-        textOnChange: action.textOnchange,
+        textOnChange: nextTextOnChange,
         selection: shiftSelection(
           state.textOnChange,
-          action.textOnchange,
+          nextTextOnChange,
           state.selection,
         ),
       };
