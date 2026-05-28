@@ -36,13 +36,16 @@ import lombok.ToString;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@Entity
-@Table(name = "highlight")
+@Entity(name = Highlight.ENTITY_NAME)
+@Table(name = Highlight.TABLE_NAME)
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 public class Highlight extends K9Entity {
+
+	public static final String ENTITY_NAME = "Highlight";
+	public static final String TABLE_NAME = "highlight";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -62,6 +65,7 @@ public class Highlight extends K9Entity {
 	)
 	@ManyToMany
 	@ToString.Exclude
+	@NotNull
 	@NotEmpty
 	private Set<DocTypeField> fields = new LinkedHashSet<>();
 
@@ -70,7 +74,7 @@ public class Highlight extends K9Entity {
 	private BoundaryScannerType boundaryScanner;
 
 	@Column(name = "boundary_chars")
-	private char[] boundaryChars;
+	private String boundaryChars;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragmenter")
