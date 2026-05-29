@@ -27,4 +27,6 @@ RUN python -m grpc_tools.protoc \
 
 EXPOSE 5000
 
+USER 1001
+
 CMD ["python", "-m", "app.server"]

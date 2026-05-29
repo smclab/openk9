@@ -95,6 +95,7 @@ serviceAccount:
   ## @param serviceAccount.name Name of the created serviceAccount
   ## If not set and create is true, a name is generated using the fullname template
   ##
+  automountServiceAccountToken: false
   name: ""
 
 ## @param podAnnotations Chunk Evaluation Module Pod annotations. Evaluated as a template
@@ -111,15 +112,18 @@ podAnnotations: {}
 ## @param podSecurityContext.fsGroup Set Chunk Evaluation Module pod's Security Context fsGroup
 ##
 podSecurityContext:
-  fsGroup: 1000
+  runAsNonRoot: true
+  # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
 
 securityContext:
-  capabilities:
-    drop:
-    - ALL
+  allowPrivilegeEscalation: false
   readOnlyRootFilesystem: false
   runAsNonRoot: true
-  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
 
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/

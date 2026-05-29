@@ -30,4 +30,6 @@ RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
 
 EXPOSE 5000
 
+USER 1001
+
 CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "5000"]

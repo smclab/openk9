@@ -125,6 +125,7 @@ serviceAccount:
   ## @param serviceAccount.name Name of the created serviceAccount
   ## If not set and create is true, a name is generated using the fullname template
   ##
+  automountServiceAccountToken: false
   name: ""
 
 ## @param podAnnotations Resources Validator Pod annotations. Evaluated as a template
@@ -140,17 +141,19 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Resources Validator pod's Security Context fsGroup
 ##
-podSecurityContext: {}
-  # fsGroup: 2000
-
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
+podSecurityContext:
+  runAsNonRoot: true
   # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
+
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 
 ## Configure the ingress resource that allows you to access the
 ## Resources Validator installation. Set up the URL
