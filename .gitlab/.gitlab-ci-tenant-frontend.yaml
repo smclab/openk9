@@ -48,8 +48,9 @@ Build Tenant Frontend Release:
       "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
   - |
     if [[ -n "$CI_COMMIT_TAG" ]]; then
-      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:$CI_COMMIT_TAG"
-      echo "=== Release tag: push $CI_COMMIT_TAG ==="
+      IMAGE_TAG="${CI_COMMIT_TAG#v}"
+      KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:$IMAGE_TAG"
+      echo "=== Release tag: push $IMAGE_TAG ==="
     else
       source $CI_PROJECT_DIR/version.env
       KANIKO_PUSH="--destination $CI_REGISTRY_NAME/openk9/openk9-tenant-ui:$VERSION"

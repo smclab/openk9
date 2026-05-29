@@ -9,7 +9,7 @@ push-datasource-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -18,7 +18,7 @@ push-datasource-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-datasource --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-datasource --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-datasource -d package
       fi
@@ -32,7 +32,7 @@ push-ingestion-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -41,7 +41,7 @@ push-ingestion-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-ingestion --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-ingestion --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-ingestion -d package
       fi
@@ -56,7 +56,7 @@ push-searcher-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -65,7 +65,7 @@ push-searcher-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-searcher --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-searcher --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-searcher -d package
       fi
@@ -80,7 +80,7 @@ push-tenant-manager-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -89,7 +89,7 @@ push-tenant-manager-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-tenant-manager --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-tenant-manager --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-tenant-manager -d package
       fi
@@ -104,7 +104,7 @@ push-tenant-ui-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -113,7 +113,7 @@ push-tenant-ui-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-tenant-ui --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-tenant-ui --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-tenant-ui -d package
       fi
@@ -128,7 +128,7 @@ push-admin-ui-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -137,7 +137,7 @@ push-admin-ui-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-admin-ui --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-admin-ui --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-admin-ui -d package
       fi
@@ -152,7 +152,7 @@ push-search-frontend-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
     - apk update
@@ -161,7 +161,7 @@ push-search-frontend-helm:
     - cd helm-charts/01-base-core && mkdir package
     - |
       if [ -n "$CI_COMMIT_TAG" ]; then
-        helm package openk9-search-frontend --version "$CI_COMMIT_TAG" -d package
+        helm package openk9-search-frontend --version "${CI_COMMIT_TAG#v}" -d package
       else
         helm package openk9-search-frontend -d package
       fi

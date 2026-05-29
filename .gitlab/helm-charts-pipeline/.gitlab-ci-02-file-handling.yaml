@@ -9,7 +9,7 @@ push-file-manager-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
   - apk update
@@ -18,7 +18,7 @@ push-file-manager-helm:
   - cd helm-charts/02-file-handling && mkdir package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package openk9-file-manager --version "$CI_COMMIT_TAG" -d package
+      helm package openk9-file-manager --version "${CI_COMMIT_TAG#v}" -d package
     else
       helm package openk9-file-manager -d package
     fi
@@ -32,7 +32,7 @@ push-tika-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
   - apk update
@@ -41,7 +41,7 @@ push-tika-helm:
   - cd helm-charts/02-file-handling && mkdir package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package openk9-tika --version "$CI_COMMIT_TAG" -d package
+      helm package openk9-tika --version "${CI_COMMIT_TAG#v}" -d package
     else
       helm package openk9-tika -d package
     fi
@@ -55,7 +55,7 @@ push-resources-validator-helm:
       when: manual
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       when: manual
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
       when: manual
   before_script:
   - apk update
@@ -64,7 +64,7 @@ push-resources-validator-helm:
   - cd helm-charts/02-file-handling && mkdir package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package openk9-resources-validator --version "$CI_COMMIT_TAG" -d package
+      helm package openk9-resources-validator --version "${CI_COMMIT_TAG#v}" -d package
     else
       helm package openk9-resources-validator -d package
     fi

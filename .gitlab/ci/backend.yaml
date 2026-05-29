@@ -34,7 +34,7 @@ Trigger Datasource:
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
     # 2. release tag
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     # 3. push porting-*
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *datasource_changes
@@ -62,7 +62,7 @@ Trigger Searcher:
         - core/client/common/**/*
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *searcher_changes
       variables:
@@ -85,7 +85,7 @@ Trigger Ingestion:
         - core/app/ingestion/**/*
         - core/common/util/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *ingestion_changes
       variables:
@@ -113,7 +113,7 @@ Trigger K8S-Client:
         - core/common/util/**/*
         - core/client/common/**/*
         - core/api/tenant-manager-api/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *k8s_client_changes
       variables:
@@ -136,7 +136,7 @@ Trigger File-Manager:
         - core/app/file-manager/**/*
         - core/common/resources-common/**/*
         - core/client/grpc/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *file_manager_changes
       variables:
@@ -165,7 +165,7 @@ Trigger Tenant-Manager:
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tenant_manager_changes
       variables:
@@ -187,7 +187,7 @@ Trigger Tika:
       changes: &tika_changes
         - core/app/tika/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *tika_changes
       variables:
@@ -209,7 +209,7 @@ Trigger Resources-Validator:
       changes: &resources_validator_changes
         - core/app/resources-validator/**/*
         - core/common/resources-common/**/*
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     - if: '$CI_COMMIT_BRANCH =~ /^porting-/ && $GITLAB_USER_LOGIN != "luca.callocchia" && $GITLAB_USER_LOGIN != "lorenzo.venneri" && $GITLAB_USER_LOGIN != "giorgio.bartolomeo"'
       changes: *resources_validator_changes
       variables:

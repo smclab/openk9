@@ -65,7 +65,7 @@ Build Rag Release:
     KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/rag-module --dockerfile ${CI_PROJECT_DIR}/ai-packages/rag-module/Dockerfile"
 
     if [ -n "$CI_COMMIT_TAG" ]; then
-      IMAGE_TAG="$CI_COMMIT_TAG"
+      IMAGE_TAG="${CI_COMMIT_TAG#v}"
       echo "[RAG Release] Tag: push $IMAGE_TAG"
     else
       IMAGE_TAG="$VERSION"

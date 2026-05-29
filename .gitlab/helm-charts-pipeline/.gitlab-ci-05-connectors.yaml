@@ -9,7 +9,7 @@ push-web-connector-helm:
     changes:
     - connectors/openk9-crawler/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -21,7 +21,7 @@ push-web-connector-helm:
   - cd connectors/openk9-crawler/chart/openk9-web-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi
@@ -35,7 +35,7 @@ push-email-connector-helm:
     changes:
     - connectors/email-connector/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -47,7 +47,7 @@ push-email-connector-helm:
   - cd connectors/email-connector/chart/openk9-email-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi
@@ -61,7 +61,7 @@ push-database-connector-helm:
     changes:
     - connectors/database-connector/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -73,7 +73,7 @@ push-database-connector-helm:
   - cd connectors/database-connector/chart/openk9-database-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi
@@ -87,7 +87,7 @@ push-youtube-connector-helm:
     changes:
     - connectors/youtube-connector/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -99,7 +99,7 @@ push-youtube-connector-helm:
   - cd connectors/youtube-connector/chart/openk9-youtube-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi
@@ -113,7 +113,7 @@ push-minio-connector-helm:
     changes:
     - connectors/minio-connector/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -125,7 +125,7 @@ push-minio-connector-helm:
   - cd connectors/minio-connector/chart/openk9-minio-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi
@@ -139,7 +139,7 @@ push-gitlab-connector-helm:
     changes:
     - connectors/gitlab-connector/chart/**/*
     when: manual
-  - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+  - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
     when: manual
   # Block the first execution when branch is just created
   - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"'
@@ -151,7 +151,7 @@ push-gitlab-connector-helm:
   - cd connectors/gitlab-connector/chart/openk9-gitlab-connector && mkdir -p package
   - |
     if [ -n "$CI_COMMIT_TAG" ]; then
-      helm package . -d package --version "$CI_COMMIT_TAG"
+      helm package . -d package --version "${CI_COMMIT_TAG#v}"
     else
       helm package . -d package
     fi

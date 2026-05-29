@@ -270,7 +270,7 @@ Push `3.0.x` e tag non passano variabili — le rule matchano direttamente
 .rules:child-build-release:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 # RESTART: solo push 3.0.x (tag NON auto-restartano)
 .rules:child-restart-release:
@@ -280,7 +280,7 @@ Push `3.0.x` e tag non passano variabili — le rule matchano direttamente
 # SKOPEO a Docker Hub: solo tag 3.0.N
 .rules:child-skopeo-release:
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 # VERIFY MR porting-* → 3.0.x
 .rules:child-verify-release-mr:
