@@ -242,10 +242,11 @@ Build Embedding ST Release:
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
     else
-      SNAP_TAG="${VERSION}-SNAPSHOT"
-      echo "[ST Release] Branch: push $SNAP_TAG"
+      # The version comes from python_modules_config.txt, which already carries
+      # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
+      echo "[ST Release] Branch: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$SNAP_TAG"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
     fi
   rules:
     - !reference [.rules:child-deploy-release, rules]
@@ -282,10 +283,11 @@ Build Embedding OpenAI Release:
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     else
-      SNAP_TAG="${VERSION}-SNAPSHOT"
-      echo "[OA Release] Branch: push $SNAP_TAG"
+      # The version comes from python_modules_config.txt, which already carries
+      # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
+      echo "[OA Release] Branch: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$SNAP_TAG"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-openai-module:$VERSION"
     fi
   rules:
     - !reference [.rules:child-deploy-release, rules]
@@ -314,7 +316,7 @@ Trigger Restart Embedding Release:
   - job: Build Embedding ST Release
     artifacts: false
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs only on Git tag. Two jobs: one per image (openai-module + sentence-transformers-module).
@@ -327,7 +329,7 @@ Copy Embedding OpenAI to DockerHub:
   needs:
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
-    - job: Build Embedding OpenAI
+    - job: Build Embedding OpenAI Release
       artifacts: false  # image is on the registry, no artifacts needed from this job
 
 Copy Embedding ST to DockerHub:
@@ -337,5 +339,5 @@ Copy Embedding ST to DockerHub:
   needs:
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
-    - job: Build Embedding ST
+    - job: Build Embedding ST Release
       artifacts: false  # image is on the registry, no artifacts needed from this job

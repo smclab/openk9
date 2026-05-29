@@ -31,7 +31,9 @@
 .rules:child-deploy-main-tag:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_COMMIT_TAG'
+    # NOTE: tags are NOT handled here. A release tag (vN.N.N) belongs to the
+    # release line (child-deploy-release), never to the main line — this keeps
+    # the two binaries mutually exclusive on a tag (no double build).
 
 # Restart and full build+push run only for DESIGNATED developers on feature branches
 .rules:child-restart-feature:
@@ -65,22 +67,32 @@
 
 # ── RELEASE BRANCH RULES ──────────────────────────────────────────────────────
 #
-# child-deploy-release: fires on push/merge to any release branch (3.0.x, 3.1.x, ...)
-#   or on a release tag (3.0.1, 3.0.2, ...).
-#   Used by: Build Release + Trigger Restart Release jobs.
+# child-deploy-release: fires on push/merge to any release branch (2026.1.x, ...)
+#   or on a v-prefixed release tag (v2026.1.2, ...).
+#   Used by: Build Release + Trigger Restart Release + Copy-to-DockerHub jobs.
+#   The release line owns the tags — a tag never triggers the main-line build.
 #
 # child-verify-release-mr: fires when the parent passes RELEASE_MR="true",
 #   which happens on MR from porting-* toward a release branch.
 #   Used by: Build Verifier Release MR jobs.
 #
 # The regex /^\d+\.\d+\.x$/ matches any future release branch automatically.
-# The regex /^\d+\.\d+\.\d+/ matches any semver release tag.
+# The regex /^v\d+\.\d+\.\d+$/ matches a v-prefixed release tag (the team
+# convention); the v is stripped where the tag becomes an image/chart version.
 # ──────────────────────────────────────────────────────────────────────────────
 
 .rules:child-deploy-release:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+
+# child-restart-release: restart on RELEASE BRANCH push only — NOT on tags.
+# A release tag builds the clean image and copies it to Docker Hub, but does
+# NOT auto-restart: production rollout is handled manually by ops/ArgoCD.
+# Used by: Trigger Restart <X> Release jobs.
+.rules:child-restart-release:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
 
 .rules:child-verify-release-mr:
   rules:

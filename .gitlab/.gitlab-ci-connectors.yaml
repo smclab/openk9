@@ -56,8 +56,10 @@ Build Web Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-web-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-web-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -106,8 +108,10 @@ Build Email Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-email-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-email-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -156,8 +160,10 @@ Build Database Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-database-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-database-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -206,8 +212,10 @@ Build YouTube Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-youtube-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -256,8 +264,10 @@ Build GitLab Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-gitlab-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -306,8 +316,10 @@ Build Minio Connector image:
       echo "MR: build only, no push"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX --no-push
     elif [ -n "$CI_COMMIT_TAG" ]; then
+      # Strip the leading 'v': images are versioned without it (openk9-minio-connector:2026.1.0).
+      # The 'v' is only the pipeline-trigger convention, never part of the image tag.
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
-        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$CI_COMMIT_TAG"
+        --destination "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:${CI_COMMIT_TAG#v}"
     else
       echo "main: push :$VERSION"
       /kaniko/executor $KANIKO_FLAGS $KANIKO_CTX \
@@ -333,7 +345,8 @@ Container Scanning Web Connector:
   needs:
   - "Build Web Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
@@ -354,7 +367,8 @@ Container Scanning Email Connector:
   needs:
   - "Build Email Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
@@ -375,7 +389,8 @@ Container Scanning Database Connector:
   needs:
   - "Build Database Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
@@ -396,7 +411,8 @@ Container Scanning YouTube Connector:
   needs:
   - "Build YouTube Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
@@ -417,7 +433,8 @@ Container Scanning GitLab Connector:
   needs:
   - "Build GitLab Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
@@ -438,7 +455,8 @@ Container Scanning Minio Connector:
   needs:
   - "Build Minio Connector image"
   before_script:
-  - export VERSION=${CI_COMMIT_TAG:-latest}
+  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
+  - export VERSION=${CI_COMMIT_TAG#v}
   script:
   - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION ==="
   - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
@@ -464,7 +482,7 @@ Copy Web Connector to DockerHub:
     - job: Build Web Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Email Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -476,7 +494,7 @@ Copy Email Connector to DockerHub:
     - job: Build Email Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Database Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -488,7 +506,7 @@ Copy Database Connector to DockerHub:
     - job: Build Database Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy YouTube Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -500,7 +518,7 @@ Copy YouTube Connector to DockerHub:
     - job: Build YouTube Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy GitLab Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -512,7 +530,7 @@ Copy GitLab Connector to DockerHub:
     - job: Build GitLab Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Minio Connector to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -524,4 +542,4 @@ Copy Minio Connector to DockerHub:
     - job: Build Minio Connector image
       artifacts: false
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
