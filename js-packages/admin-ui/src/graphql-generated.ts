@@ -5101,6 +5101,7 @@ export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFr
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   documentTypeId: Scalars['ID'];
   documentTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   fieldName: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
@@ -7907,10 +7908,11 @@ export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeF
 export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
 export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
 export const CreateOrUpdateDocumentTypeFieldDocument = gql`
-    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger) {
+    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $docTypeFieldName: String, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger) {
   docTypeFieldWithAnalyzer(
     docTypeId: $documentTypeId
     docTypeFieldId: $documentTypeFieldId
+    docTypeFieldName: $docTypeFieldName
     docTypeFieldWithAnalyzerDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable, analyzerId: $analyzerId}
   ) {
     entity {

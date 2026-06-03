@@ -109,6 +109,7 @@ export function SaveSubDocType({
           variables: {
             documentTypeId: documentTypeId,
             documentTypeFieldId: subDocTypesId !== "new" ? subDocTypesId : undefined,
+            docTypeFieldName: subDocTypesId !== "new" ? documentTypeFieldQuery.data?.docTypeField?.name : undefined,
             ...data,
             ...(data.analyzer.id !== "-1" ? { analyzerId: data.analyzer.id } : {}),
           },

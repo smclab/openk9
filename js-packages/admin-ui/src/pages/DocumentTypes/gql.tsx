@@ -211,6 +211,7 @@ gql`
   mutation CreateOrUpdateDocumentTypeField(
     $documentTypeId: ID!
     $documentTypeFieldId: ID
+    $docTypeFieldName: String
     $name: String!
     $fieldName: String!
     $description: String
@@ -225,6 +226,7 @@ gql`
     docTypeFieldWithAnalyzer(
       docTypeId: $documentTypeId
       docTypeFieldId: $documentTypeFieldId
+      docTypeFieldName: $docTypeFieldName
       docTypeFieldWithAnalyzerDTO: {
         name: $name
         description: $description
