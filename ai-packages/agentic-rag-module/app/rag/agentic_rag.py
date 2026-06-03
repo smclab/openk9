@@ -432,7 +432,8 @@ class RagGraph:
 
         if self.input_guardrail_provider == GuardrailType.AWS_BEDROCK.value:
             llm_guardrail = initialize_guardrail(
-                self.input_guardrail.get("input_guardrail_aws_bedrock")
+                self.input_guardrail.get("input_guardrail_aws_bedrock"),
+                guardrail_type=GuardrailType.AWS_BEDROCK.value,
             )
             guardrail_chain = guardrail_prompt_template | llm_guardrail
             guardrail_response = guardrail_chain.invoke({"query": query})
@@ -440,7 +441,8 @@ class RagGraph:
             return guardrail_response.content[0].get("text")
         elif self.input_guardrail_provider == GuardrailType.GOOGLE_MODEL_ARMOR.value:
             llm_guardrail = initialize_guardrail(
-                self.input_guardrail.get("input_guardrail_google_model_armor")
+                self.input_guardrail.get("input_guardrail_google_model_armor"),
+                guardrail_type=GuardrailType.GOOGLE_MODEL_ARMOR.value,
             )
             try:
                 guardrail_response = llm_guardrail.invoke({"query": query})
@@ -452,7 +454,8 @@ class RagGraph:
                     raise e
         elif self.input_guardrail_provider == GuardrailType.OPENAI_MODERATION.value:
             llm_guardrail = initialize_guardrail(
-                self.input_guardrail.get("input_guardrail_openai_moderation")
+                self.input_guardrail.get("input_guardrail_openai_moderation"),
+                guardrail_type=GuardrailType.OPENAI_MODERATION.value,
             )
             guardrail_response = llm_guardrail.invoke({"input": query})
             if guardrail_response.get("input") == guardrail_response.get("output"):
@@ -522,7 +525,8 @@ class RagGraph:
 
                 if self.output_guardrail_provider == GuardrailType.AWS_BEDROCK.value:
                     llm_guardrail = initialize_guardrail(
-                        self.output_guardrail.get("output_guardrail_aws_bedrock")
+                        self.output_guardrail.get("output_guardrail_aws_bedrock"),
+                        guardrail_type=GuardrailType.AWS_BEDROCK.value,
                     )
                     guardrail_chain = guardrail_prompt_template | llm_guardrail
                     guardrail_response = guardrail_chain.invoke(
@@ -535,7 +539,10 @@ class RagGraph:
                     == GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value
                 ):
                     llm_guardrail = initialize_guardrail(
-                        self.output_guardrail.get("output_guardrail_google_model_armor")
+                        self.output_guardrail.get(
+                            "output_guardrail_google_model_armor"
+                        ),
+                        guardrail_type=GuardrailType.GOOGLE_MODEL_ARMOR_RESPONSE.value,
                     )
                     try:
                         guardrail_response = llm_guardrail.invoke(
@@ -552,7 +559,8 @@ class RagGraph:
                     == GuardrailType.OPENAI_MODERATION.value
                 ):
                     llm_guardrail = initialize_guardrail(
-                        self.output_guardrail.get("output_guardrail_openai_moderation")
+                        self.output_guardrail.get("output_guardrail_openai_moderation"),
+                        guardrail_type=GuardrailType.OPENAI_MODERATION.value,
                     )
                     guardrail_response = llm_guardrail.invoke({"input": result_answer})
                     if guardrail_response.get("input") == guardrail_response.get(
