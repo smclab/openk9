@@ -16,6 +16,7 @@
 #
 
 import json
+import logging
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
@@ -581,6 +582,12 @@ class RagGraph:
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         if self.input_guardrail.get("enable_input_guardrail"):
             query = state.current_query
+            logger.debug(
+                f"[input_guardrail] enabled with "
+                f"provider={self.input_guardrail_provider}, "
+                f"threshold={self.input_guardrail.get('input_guardrail_threshold')}, "
+                f"query={query!r}"
+            )
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
                 tenant_id=self.configuration.get("tenant_id"),
@@ -597,15 +604,37 @@ class RagGraph:
 
             retrieved_docs = retriever.invoke(query)
 
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    f"[input_guardrail] retrieved {len(retrieved_docs)} docs "
+                    f"from guardrails index"
+                )
+                for doc in retrieved_docs:
+                    logger.debug(
+                        f"[input_guardrail] doc "
+                        f"document_id={doc.metadata['document_id']}, "
+                        f"score={doc.metadata['score']}"
+                    )
+
             for doc in retrieved_docs:
                 document_id = doc.metadata["document_id"]
                 score = doc.metadata["score"]
                 if score >= self.input_guardrail.get("input_guardrail_threshold"):
                     llm_guardrail = self._llm_input_guardrail(query)
+                    logger.debug(
+                        f"[input_guardrail] score {score} above threshold, "
+                        f"llm classifier outcome={llm_guardrail}"
+                    )
                     if llm_guardrail != "NONE":
                         state.guardrail_check = True
                         state.guardrail_category = llm_guardrail
+                        logger.debug(
+                            f"[input_guardrail] BLOCKED with "
+                            f"category={state.guardrail_category}"
+                        )
                     break
+        else:
+            logger.debug("[input_guardrail] disabled, skipping")
 
         return state
 
@@ -683,6 +712,19 @@ class RagGraph:
         )
         retrieved_docs = retriever.invoke(query)
 
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                f"[input_domain] retrieved {len(retrieved_docs)} docs "
+                f"from domain index, "
+                f"threshold={self.configuration.get('domain_threshold')}"
+            )
+            for doc in retrieved_docs:
+                logger.debug(
+                    f"[input_domain] doc "
+                    f"domain={doc.metadata.get('domain')}, "
+                    f"score={doc.metadata['score']}"
+                )
+
         high_score_docs = []
         found_domains = set()
         for doc in retrieved_docs:
@@ -693,11 +735,17 @@ class RagGraph:
 
         if len(found_domains) > 0:
             state.domain = list(found_domains)
+            logger.debug(f"[input_domain] domains above threshold: {state.domain}")
         else:
             found_domains = set(retriever.get_domains())
 
+            logger.debug(
+                f"[input_domain] no domain above threshold, falling back to "
+                f"LLM domain detection with candidates={found_domains}"
+            )
             llm_domain = self._llm_input_domain(query, found_domains)
             state.domain = llm_domain.domain
+            logger.debug(f"[input_domain] LLM detected domain={state.domain}")
 
         return state
 
@@ -705,8 +753,10 @@ class RagGraph:
         self, state: GraphState
     ) -> Literal["input_domain", "rag_router"]:
         if not state.domain or "NEW_QUESTION" in state.domain:
+            logger.debug(f"[intent_detection] domain={state.domain} -> input_domain")
             return "input_domain"
         else:
+            logger.debug(f"[intent_detection] domain={state.domain} -> rag_router")
             return "rag_router"
 
     def input_guardrail_route_decision(
@@ -825,6 +875,9 @@ class RagGraph:
 
         if bypass_rag:
             state.use_rag = False
+            logger.debug(
+                f"[rag_router] bypass_rag={bypass_rag} -> use_rag=False (DIRECT)"
+            )
         else:
             query = state.current_query
             messages = state.messages
@@ -857,6 +910,10 @@ class RagGraph:
             )
 
         state.use_rag = "RAG" in decision.response.value
+        logger.debug(
+            f"[rag_router] bypass_rag={bypass_rag} -> use_rag={state.use_rag} "
+            f"({'RAG' if state.use_rag else 'DIRECT'})"
+        )
 
         return state
 
@@ -893,19 +950,25 @@ class RagGraph:
     ) -> Literal["opensearch_retriever", "llm_response"]:
         """Separate function for conditional routing decision"""
         if state.use_rag:
+            logger.debug(
+                f"[route_decision] use_rag={state.use_rag} -> opensearch_retriever"
+            )
             return "opensearch_retriever"
         else:
+            logger.debug(f"[route_decision] use_rag={state.use_rag} -> llm_response")
             return "llm_response"
 
     def opensearch_retriever_node(self, state: GraphState) -> GraphState:
         """Opensearch RAG processing"""
         if not state.use_rag:
+            logger.debug("[retriever] retrieval skipped (use_rag=False)")
             state.context = []
             return state
 
         query = state.current_query
 
         if self.retrieve_from_uploaded_documents and self.user_id and self.tenant_id:
+            logger.debug("[retriever] retrieving from uploaded documents index")
             embedding_model_configuration = get_embedding_model_configuration(
                 grpc_host=self.configuration.get("grpc_host_datasource"),
                 tenant_id=self.configuration.get("tenant_id"),
@@ -927,6 +990,7 @@ class RagGraph:
             search_query = self.configuration.get("search_query") or []
 
             if state.domain:
+                logger.debug(f"[retriever] domain_filter={state.domain}")
                 domain_filter = models.SearchToken(
                     tokenType="TEXT",
                     keywordKey="domain",
@@ -963,6 +1027,17 @@ class RagGraph:
 
         retrieved_docs = retriever.invoke(query)
         state.context = retrieved_docs
+
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"[retriever] retrieved {len(retrieved_docs)} docs")
+            for doc in retrieved_docs:
+                logger.debug(
+                    f"[retriever] doc "
+                    f"score={doc.metadata.get('score')}, "
+                    f"document_id={doc.metadata.get('document_id')}, "
+                    f"title={doc.metadata.get('title')!r}, "
+                    f"url={doc.metadata.get('url')!r}"
+                )
 
         return state
 
