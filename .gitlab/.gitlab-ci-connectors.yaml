@@ -71,6 +71,15 @@ Build Web Connector image:
     changes:
     - connectors/openk9-crawler/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/openk9-crawler/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/openk9-crawler/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/openk9-crawler/connector/**/*
@@ -123,6 +132,15 @@ Build Email Connector image:
     changes:
     - connectors/email-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/email-connector/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/email-connector/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/email-connector/connector/**/*
@@ -175,6 +193,15 @@ Build Database Connector image:
     changes:
     - connectors/database-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/database-connector/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/database-connector/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/database-connector/connector/**/*
@@ -227,6 +254,15 @@ Build YouTube Connector image:
     changes:
     - connectors/youtube-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/youtube-connector/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/youtube-connector/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/youtube-connector/connector/**/*
@@ -279,6 +315,15 @@ Build GitLab Connector image:
     changes:
     - connectors/gitlab-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/gitlab-connector/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/gitlab-connector/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/gitlab-connector/connector/**/*
@@ -331,6 +376,15 @@ Build Minio Connector image:
     changes:
     - connectors/minio-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
+  # Release branch (N.N.x) — same convention as backend/AI/FE: push :<version>-SNAPSHOT
+  # to the internal registry (OPENK9_VERSION already carries -SNAPSHOT on the branch).
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/minio-connector/connector/**/*
+  # Porting MR toward a release branch — verifier-only build, no push.
+  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+    changes:
+    - connectors/minio-connector/connector/**/*
   - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     changes:
     - connectors/minio-connector/connector/**/*

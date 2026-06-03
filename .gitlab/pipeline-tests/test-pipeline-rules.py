@@ -94,8 +94,13 @@ DOMAIN_FOLDERS = {
         "ai-packages/chunk-evaluation-module",
     ],
     "enricher":  ["enrichers/docling-processor"],
+    # connector code paths — used to exercise `Trigger Connectors Build`
+    # rules (release branch + porting MR added in #2133).
+    "connector": ["connectors/openk9-crawler/connector"],
     "unrelated": ["helm-charts"],
 }
+
+CONNECTOR_TRIGGER = ["Trigger Connectors Build"]
 
 # ── Git helpers ────────────────────────────────────────────────────────────────
 
@@ -376,6 +381,12 @@ def run_tests(verbose=False, user_filter=None):
       should_fire=ENRICHER_TRIGGERS,
       should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
 
+    # #2133: connectors must rebuild on release branch (parity with other modules).
+    t(f"release branch {release_branch} | connector files → connectors trigger fires",
+      release_user, "push", "connector", branch=release_branch,
+      should_fire=CONNECTOR_TRIGGER,
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
+
     t(f"release branch {release_branch} | unrelated files → nothing fires",
       release_user, "push", "unrelated", branch=release_branch,
       should_fire=[],
@@ -410,6 +421,13 @@ def run_tests(verbose=False, user_filter=None):
       mr_target_branch=release_branch,
       should_fire=ENRICHER_TRIGGERS,
       should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS)
+
+    # #2133: porting MR toward release branch must trigger connectors build.
+    t(f"release MR (→{release_branch}) | connector files → connectors trigger fires",
+      release_user, "merge_request_event", "connector",
+      mr_target_branch=release_branch,
+      should_fire=CONNECTOR_TRIGGER,
+      should_not_fire=BACKEND_TRIGGERS + FRONTEND_TRIGGERS + AI_TRIGGERS + ENRICHER_TRIGGERS)
 
     # ── RELEASE TAG (2026.1.0) ─────────────────────────────────────────────────
     # On tag push GitLab ignores `changes:` filters, so every domain trigger

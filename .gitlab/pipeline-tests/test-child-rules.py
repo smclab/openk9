@@ -235,6 +235,26 @@ def run(verbose=False, kfilter=None):
               fire=build_jobs,
               no_fire=copy_jobs, verbose=verbose)
 
+        # ── #2133: release-branch and porting-MR parity ────────────────────────
+        # On the release branch / porting MR the connector Build jobs are gated
+        # by `changes:` against the connector code paths. We can't simulate
+        # `changes:` from an isolated child run without a real diff, so we verify
+        # the observable behaviour: Fetch config (rule: always) fires, while
+        # the Copy-to-DockerHub jobs do NOT fire (they require a v-tag).
+        # The parent-trigger and per-job rules are exercised end-to-end by the
+        # empirical reproduction in test-pipeline-rules.py once it includes the
+        # `connectors/<x>/connector` paths in its commit fixture (follow-up).
+        check(f"release branch {BRANCH} → Fetch config fires, NO Copy to Docker Hub",
+              list_jobs(f, branch=BRANCH, source="push"),
+              fire=["Fetch config"],
+              no_fire=copy_jobs, verbose=verbose)
+
+        check(f"porting MR (→{BRANCH}) → Fetch config fires, NO Copy to Docker Hub",
+              list_jobs(f, source="merge_request_event",
+                        extra={"CI_MERGE_REQUEST_TARGET_BRANCH_NAME": BRANCH}),
+              fire=["Fetch config"],
+              no_fire=copy_jobs, verbose=verbose)
+
     # ── Summary ────────────────────────────────────────────────────────────────
     total = len(results)
     passed = sum(results)
