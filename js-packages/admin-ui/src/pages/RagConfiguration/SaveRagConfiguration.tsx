@@ -195,7 +195,8 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
           { key: "enableConversationTitle", label: "Enable Conversation Title" },
           { key: "rangeStart", label: "Range Start" },
           { key: "rangeEnd", label: "Range End" },
-          ...(form.inputProps("type").value === RagType.ChatRagTool
+          ...(form.inputProps("type").value === RagType.ChatRag ||
+            form.inputProps("type").value === RagType.ChatRagTool
             ? [
               { key: "ragToolDescription", label: "RAG Tool Description" },
               { key: "promptNoRag", label: "Prompt No RAG" },
@@ -334,7 +335,7 @@ export function SaveRagConfiguration({ setExtraFab }: { setExtraFab: (fab: React
                         </FormHelperText>
                       )}
 
-                      {selectedType === RagType.ChatRagTool && (
+                      {(selectedType === RagType.ChatRag || selectedType === RagType.ChatRagTool) && (
                         <>
                           <TextArea
                             label="RAG Tool Description"
