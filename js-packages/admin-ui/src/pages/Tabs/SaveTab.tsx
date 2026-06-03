@@ -268,6 +268,7 @@ const useTabData = ({
 
   const TabTokenQuery = useTabTokensQuery({
     skip: skipRecoveryAllInformation,
+    fetchPolicy: "cache-and-network",
   });
 
   const data = React.useMemo(

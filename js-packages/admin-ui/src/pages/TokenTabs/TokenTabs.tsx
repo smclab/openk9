@@ -26,6 +26,7 @@ import {
   useTabTokensQuery,
   useUnassociatedTokenTabsInTabQuery,
 } from "../../graphql-generated";
+import { evictTokenTabAssociationLists } from "./gql";
 
 export function TokenTabs() {
   const tabTokensQuery = useTabTokensQuery();
@@ -33,6 +34,11 @@ export function TokenTabs() {
   const toast = useToast();
   const [deleteTabMutate] = useDeleteTabTokenMutation({
     refetchQueries: ["TabTokens"],
+    update(cache, { data }) {
+      if (data?.deleteTokenTab?.id) {
+        evictTokenTabAssociationLists(cache);
+      }
+    },
     onCompleted(data) {
       if (data.deleteTokenTab?.id) {
         toast({
