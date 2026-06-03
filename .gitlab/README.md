@@ -1,7 +1,7 @@
 # OpenK9 CI/CD Pipeline Documentation
 
 > **Status:** Active & Stable
-> **Last Updated:** May 2026
+> **Last Updated:** June 2026
 > **Maintainer:** DevOps Team
 
 ---
@@ -22,6 +22,7 @@
 - [Release Branch Workflow](#release-branch-workflow)
   - [Versioning Convention](#versioning-convention)
   - [Reusable Rules](#reusable-rules)
+  - [Docker Hub Publication (Skopeo)](#docker-hub-publication-skopeo)
   - [Porting Branches](#porting-branches)
 - [Build Process](#build-process)
   - [Backend Java (Maven + Quarkus / JIB)](#backend-java-maven--quarkus--jib)
@@ -58,8 +59,12 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 │   ├── ai.yaml                        ← AI module change detection triggers
 │   ├── enrichers.yaml                 ← enricher change detection triggers
 │   ├── common.yaml                    ← connectors + Helm chart triggers
-│   ├── child-rules.yaml               ← shared job rules (MR, main, tag, feature)
+│   ├── child-rules.yaml               ← shared job rules (MR, main, tag, feature, release)
 │   └── quality.yaml                   ← SonarQube, OWASP, pip-audit dep checks
+├── pipeline-tests/                    ← local test suites for parent + child rules
+│   ├── test-pipeline-rules.py         ← parent triggers (which domain fires)
+│   ├── test-child-rules.py            ← child job rules (Build vs Build Release vs Copy)
+│   └── README.md
 ├── helm-charts-pipeline/              ← Helm chart packaging pipelines (manual, main/tag only)
 │   ├── .gitlab-ci-01-base-core.yaml
 │   ├── .gitlab-ci-02-file-handling.yaml
@@ -93,7 +98,7 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 ├── .gitlab-ci-docling-processor.yaml
 │
 │   # Connectors child pipeline
-└── .gitlab-ci-connectors.yaml        ← all connectors in one file (main + MR)
+└── .gitlab-ci-connectors.yaml        ← all 6 connectors in one file (main / tag / MR / release branch / porting MR)
 ```
 
 ---
@@ -174,9 +179,9 @@ rules:
 | Push to feature branch (`^[0-9]+-.*`) — **generic user** | Build Verifier only (compile check, no Docker push, no restart) |
 | Merge Request opened/updated | Build Verifier (compile check, no push) + dependency checks |
 | Push to `main` | Build + push versioned image + ArgoCD restart to all shared envs + security scans |
-| Tag push (release tag `N.N.N`) | Full rebuild of all components tagged with the release version |
-| Push/merge to release branch (`^\d+\.\d+\.x$`) | Build + push `<version>-SNAPSHOT` tag + ArgoCD restart to `$RELEASE_TARGET_ENV` |
+| Push/merge to release branch (`^\d+\.\d+\.x$`) | Build Release + push `<version>-SNAPSHOT` tag + ArgoCD restart to `$RELEASE_TARGET_ENV` |
 | MR `porting-*` → release branch | Build Verifier only (compile check, no push); parent sets `RELEASE_MR=true` |
+| Tag push, v-prefixed (`^v\d+\.\d+\.\d+$`) | Build Release (clean image, no `-SNAPSHOT`) + Skopeo copy to Docker Hub. **No restart.** |
 
 ### Designated vs Generic Users
 
@@ -224,23 +229,25 @@ MR and feature-branch rules use `compare_to: 'refs/heads/main'` so the diff is c
 
 Tag pushes bypass `changes:` filters — GitLab ignores `changes:` on tag events, so all affected pipelines always run on a tag. Release-branch rules (`^\d+\.\d+\.x$`) and release-MR rules (`porting-*` → `N.N.x`) use plain `changes:` without `compare_to`, since the natural diff against the release branch is the correct one for porting workflows.
 
+Only **v-prefixed** tags (`vN.N.N`) trigger the release pipeline — a bare `N.N.N` tag does **not** start any build (this enforces the team tagging convention). The leading `v` is the trigger marker only; image and chart versions are always the clean `N.N.N` from the source files (`pom.xml`, `package.json`, `python_modules_config.txt`), never the tag name. The single exception are connector Build jobs, where the tag is used directly as the image tag and the `v` is stripped via `${CI_COMMIT_TAG#v}`.
+
 ---
 
 ## Release Branch Workflow
 
-A release branch isolates a published version line from ongoing development on `main`. Branch name must match `^\d+\.\d+\.x$` (e.g. `3.0.x`, `2026.1.x`). A release tag must match `^\d+\.\d+\.\d+/` (e.g. `3.0.4`, `2026.1.0`). The regexes are intentionally generic so they match any future release line without code changes.
+A release branch isolates a published version line from ongoing development on `main`. Branch name must match `^\d+\.\d+\.x$` (e.g. `3.0.x`, `2026.1.x`). A release tag must match `^v\d+\.\d+\.\d+$` (e.g. `v3.0.4`, `v2026.1.0`) — the `v` is mandatory and is the trigger marker, not part of the image version. The regexes are intentionally generic so they match any future release line without code changes.
 
-Three triggering contexts run on the release line:
+Three triggering contexts run on the release line, all mutually exclusive on a tag (no double build):
 
 | Context | When | Rule referenced | Effect |
 |---|---|---|---|
-| Release branch push/merge | push or merge to `N.N.x` | `.rules:child-deploy-release` | Build + push `<version>-SNAPSHOT` image + ArgoCD restart to `$RELEASE_TARGET_ENV` |
+| Release branch push/merge | push or merge to `N.N.x` | `.rules:child-deploy-release` + `.rules:child-restart-release` | Build Release + push `<version>-SNAPSHOT` image (single suffix) + ArgoCD restart to `$RELEASE_TARGET_ENV` |
 | Release MR (porting) | MR from `porting-*` to `N.N.x` | `.rules:child-verify-release-mr` | Build Verifier compile-only; parent passes `RELEASE_MR="true"` |
-| Release tag | tag matching `N.N.N` on the release branch | `.rules:child-deploy-release` | Full rebuild with the exact tag, Skopeo copy to Docker Hub, no auto-restart |
+| Release tag (v-prefixed) | tag matching `vN.N.N` | `.rules:child-deploy-release` only | Build Release with the clean version from the source files + Skopeo copy to Docker Hub. **No auto-restart** (production rollout is manual via ops/ArgoCD). |
 
 ### Versioning Convention
 
-The project moved from SemVer (`3.0.x`, `3.0.0`) to CalVer (`2026.1.x`, `2026.1.0`). Both forms remain supported by the pipeline regexes. When forking a release branch from `main`, use no leading zeros in the minor segment: `2026.1.x`, `2026.10.x` — never `2026.01.x`.
+The project moved from SemVer (`3.0.x`, `3.0.0`) to CalVer (`2026.1.x`, `2026.1.0`). Both forms remain supported by the pipeline regexes. Before cutting a tag the release manager bumps the version in **all** source files (`pom.xml`, `package.json`, `Chart.yaml`, `python_modules_config.txt`) to the exact clean version (`2026.1.1`, no `-SNAPSHOT`), then tags `vN.N.N`. On a release branch those same files carry the next `<version>-SNAPSHOT`, which is pushed as-is — pipeline scripts never append a second `-SNAPSHOT`.
 
 ### Reusable Rules
 
@@ -250,7 +257,12 @@ Release logic is centralized in `.gitlab/ci/child-rules.yaml`:
 .rules:child-deploy-release:
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
+
+# Restart only on release-branch push — never on a tag.
+.rules:child-restart-release:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
 
 .rules:child-verify-release-mr:
   rules:
@@ -258,6 +270,10 @@ Release logic is centralized in `.gitlab/ci/child-rules.yaml`:
 ```
 
 The target namespace is configured by the global variable `RELEASE_TARGET_ENV` in `.gitlab/.gitlab-ci.yaml`, propagated to every child via `TARGET_ENV: "$RELEASE_TARGET_ENV"`. Switching the release namespace is a one-line change in the parent.
+
+### Docker Hub Publication (Skopeo)
+
+The `Copy <X> to DockerHub` jobs use the `.skopeo-copy-to-dockerhub` template (in `.gitlab-templates.yaml`) to copy images from the internal registry to `docker.io/smclab/*` **without** rebuilding. The rule fires only on `^v\d+\.\d+\.\d+$`, so only clean tagged releases reach Docker Hub — never `-SNAPSHOT` images from `main` or `N.N.x` pushes.
 
 ### Porting Branches
 
@@ -434,7 +450,7 @@ Every build job on `main`/tag is followed by a container scanning job using `$CS
 | `main` | ✅ | ✅ versioned | All shared integration envs |
 | Release branch (`N.N.x`) | ✅ | ✅ `<version>-SNAPSHOT` | `$RELEASE_TARGET_ENV` |
 | Release MR (`porting-*` → `N.N.x`) | ✅ compile only | ❌ | Nothing |
-| Tag (`N.N.N`) | ✅ | ✅ release tag | Stable / production (no auto-restart) |
+| Tag (`vN.N.N`) | ✅ | ✅ clean `N.N.N` + Skopeo to Docker Hub | No auto-restart (manual via ops/ArgoCD) |
 
 ### Namespace Matrix
 
@@ -471,8 +487,8 @@ Push or merge to a release branch (`N.N.x`) triggers an ArgoCD restart in the na
 | Feature — backend (michele) | `998-SNAPSHOT` | `998-SNAPSHOT` |
 | Feature — AI (luca) | `997-SNAPSHOT` | `997-SNAPSHOT` |
 | Feature — frontend (lorenzo/giorgio) | `996-SNAPSHOT` | `996-SNAPSHOT` |
-| Release branch (`N.N.x`) | `<version>-SNAPSHOT` from `pom.xml` / `Chart.yaml` | `3.0.4-SNAPSHOT`, `2026.1.0-SNAPSHOT` |
-| Release tag | exact tag | `3.0.4`, `2026.1.0` |
+| Release branch (`N.N.x`) | `<version>-SNAPSHOT` from `pom.xml` / `Chart.yaml` | `3.0.4-SNAPSHOT`, `2026.1.1-SNAPSHOT` |
+| Release tag (`vN.N.N`) | clean version from source files (the `v` is stripped) | `3.0.4`, `2026.1.0` |
 
 ---
 

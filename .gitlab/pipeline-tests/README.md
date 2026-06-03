@@ -61,11 +61,13 @@ La release line legacy `3.0.x` non è testata qui: vive su un branch separato co
 - Push su release branch con file frontend → tutti i trigger frontend scattano (incluso `Trigger OpenK9-Chatbot`)
 - Push su release branch con file AI → tutti i trigger AI scattano (rag, agentic-rag, embedding, chunk-evaluation)
 - Push su release branch con file enricher → `Trigger Docling Processor` scatta
+- Push su release branch con file connector → `Trigger Connectors Build` scatta (#2133, prima silenzioso)
 - Push su release branch con file unrelated → nessun trigger
 
 ### Release MR (`porting-*` → `2026.1.x`)
 
 - MR verso `2026.1.x` con file backend/frontend/AI/enricher → tutti i trigger release del dominio scattano (simulando `CI_MERGE_REQUEST_TARGET_BRANCH_NAME=2026.1.x`)
+- MR verso `2026.1.x` con file connector → `Trigger Connectors Build` scatta (#2133)
 
 ### Release tag (`2026.1.0`)
 
@@ -95,6 +97,7 @@ Verifica i tre contesti del refactor #2132 su backend (datasource), AI
 - **tag `v2026.10.3`** (minor/patch a più cifre) → la regex `^v\d+\.\d+\.\d+$` matcha comunque.
 - **tag senza `v`** (`2026.1.0`) → i Copy a Docker Hub **non** scattano (solo immagini pulite e taggate `v` finiscono su Docker Hub). NB: per i connettori i `Build`/`Scan` scattano comunque (rule permissiva `$CI_COMMIT_TAG`), ma **non** i Copy.
 - **MR release** (`RELEASE_MR=true`) → solo `Build Verifier Release MR`.
+- **connettori su release branch / porting MR** (#2133) → `Fetch config` scatta, `Copy to DockerHub` resta gated al tag `v` (i singoli Build sono coperti dalla suite parent perché dipendono da `changes:`).
 
 ### Limiti noti (scenari NON riproducibili in locale)
 
