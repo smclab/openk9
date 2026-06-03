@@ -656,8 +656,11 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					}
 
 					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
-						.setApiUrl(embeddingModel.getApiUrl())
 						.setVectorSize(embeddingModel.getVectorSize());
+
+					if (embeddingModel.getApiUrl() != null) {
+						responseBuilder.setApiUrl(embeddingModel.getApiUrl());
+					}
 
 					if (embeddingModel.getProviderModel() != null) {
 						responseBuilder

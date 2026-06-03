@@ -136,4 +136,25 @@ public class EmbeddingServiceUtilsTest {
 		assertEquals("HUGGING_FACE", request.getProviderModel().getProvider());
 	}
 
+	@Test
+	void mapToEmbeddingModelRequest_should_omit_apiUrl_when_blank() {
+
+		var embeddingModel = new EmbeddingModel();
+		embeddingModel.setApiKey("test-key");
+		embeddingModel.setApiUrl("");
+		var providerModel = new ProviderModel();
+		providerModel.setProvider("HUGGING_FACE");
+		providerModel.setModel("sentence-transformers/all-MiniLM-L6-v2");
+		embeddingModel.setProviderModel(providerModel);
+
+		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
+
+		assertFalse(
+			request.hasApiUrl(),
+			"apiUrl must be unset on the gRPC payload when the entity provides a blank value"
+		);
+		assertEquals("test-key", request.getApiKey());
+		assertEquals("HUGGING_FACE", request.getProviderModel().getProvider());
+	}
+
 }

@@ -25,6 +25,14 @@
 	logicalFilePath="db/datasource/2026/05/15-01-changelog.xml"
 >
 
+	<changeSet id="1778843787-0" author="openk9">
+		<comment>
+			api_url is now an optional external provider URL: drop the NOT NULL
+			constraint before clearing the obsolete internal-target values.
+		</comment>
+		<dropNotNullConstraint tableName="embedding_model" columnName="api_url"/>
+	</changeSet>
+
 	<changeSet id="1778843787-1" author="openk9">
 		<comment>
 			Reset embedding_model.api_url: the column semantics changed from internal

@@ -322,11 +322,11 @@ public class EmbeddingService {
 
 		var embeddingModelBuilder = EmbeddingOuterClass.EmbeddingModel.newBuilder();
 
-		if (embeddingModel.getApiKey() != null) {
+		if (embeddingModel.getApiKey() != null && !embeddingModel.getApiKey().isBlank()) {
 			embeddingModelBuilder.setApiKey(embeddingModel.getApiKey());
 		}
 
-		if (embeddingModel.getApiUrl() != null) {
+		if (embeddingModel.getApiUrl() != null && !embeddingModel.getApiUrl().isBlank()) {
 			embeddingModelBuilder.setApiUrl(embeddingModel.getApiUrl());
 		}
 
