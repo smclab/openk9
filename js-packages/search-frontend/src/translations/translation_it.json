@@ -1,6 +1,7 @@
 {
   "translation": {
     "after-days": "giorni avanti",
+    "guardrail-violation": "La tua richiesta non può essere evasa perché viola le linee guida sui contenuti.",
     "active-filters": "Filtri Attivi",
     "any": "Qualunque",
     "add-filters": "Applica i Filtri",

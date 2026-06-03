@@ -1,6 +1,7 @@
 {
 	"translation": {
 		"error": "Por favor inténtalo de nuevo, ocurrió un error...",
+		"guardrail-violation": "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
 		"version": "Versión",
 		"welcome-to": "Bienvenidos a",
 		"where-knowledge-has-no-limits": "donde el conocimiento no tiene límites!",

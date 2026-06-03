@@ -1,6 +1,7 @@
 {
   "translation": {
     "after-days": "días adelante",
+    "guardrail-violation": "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
     "active-filters": "Filtros Activos",
     "asc": "creciente",
     "any": "Cualquier",

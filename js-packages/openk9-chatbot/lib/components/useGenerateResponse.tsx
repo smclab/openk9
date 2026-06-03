@@ -17,6 +17,7 @@
 import React, { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useLanguage } from "./useLanguage";
+import { getTranslation } from "./Translate";
 import { OpenK9Client } from "./client";
 
 type Source = { source?: string; title?: string; url?: string };
@@ -201,6 +202,24 @@ const useGenerateResponse = ({
                         ),
                       );
                       setIsChatting(false);
+                      break;
+
+                    case "GUARDRAIL":
+                      setMessages((prev) =>
+                        prev.map((msg) =>
+                          msg.id === id
+                            ? {
+                                ...msg,
+                                answer: getTranslation(
+                                  "guardrailViolation",
+                                  language,
+                                ),
+                              }
+                            : msg,
+                        ),
+                      );
+                      setIsChatting(false);
+                      setIsLoading(null);
                       break;
 
                     default:

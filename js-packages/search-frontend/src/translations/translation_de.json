@@ -1,6 +1,7 @@
 {
   "translation": {
     "after-days": "Tage vorwärts",
+    "guardrail-violation": "Ihre Anfrage kann nicht bearbeitet werden, da sie gegen die Inhaltsrichtlinien verstößt.",
     "active-filters": "Aktive Filter",
     "asc": "aufsteigend",
     "add-filters": "Filter anwenden",
