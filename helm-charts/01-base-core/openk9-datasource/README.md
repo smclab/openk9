@@ -212,6 +212,8 @@ To configure connection to Tenant Manager following parameters are available:
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
+| `openk9.embedding.host`        | Embedding Module gRPC host                  | `openk9-embedding-module`          |
+| `openk9.embedding.port`        | Embedding Module gRPC port                  | `5000`                             |
 
 
 ### Configure Opentelemetry

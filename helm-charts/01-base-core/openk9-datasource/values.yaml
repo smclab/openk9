@@ -203,6 +203,9 @@ rabbitmq:
 openk9:
   tenantManager:
     host: "openk9-tenant-manager"
+  embedding:
+    host: "openk9-embedding-module"
+    port: "5000"
 
 ## Search Page Configuration
 search:
