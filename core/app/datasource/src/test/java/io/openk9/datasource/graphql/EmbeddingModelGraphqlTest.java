@@ -53,8 +53,8 @@ public class EmbeddingModelGraphqlTest {
 	private static final String API_KEY = "apiKey";
 	private static final String EMBEDDING_MODEL = "embeddingModel";
 	private static final String EMBEDDING_MODEL_DTO = "embeddingModelDTO";
-	private static final String EMBEDDING_MODEL_LOCAL = "embedding-model.local";
-	private static final String EMBEDDING_MODEL_LOCAL_UPDATED = "embedding-model.local_updated";
+	private static final String EMBEDDING_MODEL_LOCAL = "https://api.acmeai.com/v1/embeddings";
+	private static final String EMBEDDING_MODEL_LOCAL_UPDATED = "https://api.acmeai.com/v2/embeddings";
 	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
 	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
 	private static final String EMBEDDING_MODEL_TWO_NAME = ENTITY_NAME_PREFIX + "Embedding model 2 ";
