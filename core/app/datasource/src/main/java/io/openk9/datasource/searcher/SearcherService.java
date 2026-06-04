@@ -658,7 +658,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					var responseBuilder = GetEmbeddingModelConfigurationsResponse.newBuilder()
 						.setVectorSize(embeddingModel.getVectorSize());
 
-					if (embeddingModel.getApiUrl() != null) {
+					if (embeddingModel.getApiUrl() != null
+							&& !embeddingModel.getApiUrl().isBlank()) {
+
 						responseBuilder.setApiUrl(embeddingModel.getApiUrl());
 					}
 
@@ -671,7 +673,9 @@ public class SearcherService extends BaseSearchService implements Searcher {
 							);
 					}
 
-					if (embeddingModel.getApiKey() != null) {
+					if (embeddingModel.getApiKey() != null
+							&& !embeddingModel.getApiKey().isBlank()) {
+
 						responseBuilder
 							.setApiKey(embeddingModel.getApiKey());
 					}

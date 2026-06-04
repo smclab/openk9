@@ -384,11 +384,63 @@ public class SearcherGrpcTest {
 
 				log.info(String.format("getEmbeddingModelConfigurations response: %s", response));
 
+				assertTrue(response.hasApiUrl());
+				assertTrue(response.hasApiKey());
 				Assertions.assertEquals(EM_API_URL, response.getApiUrl());
 				Assertions.assertEquals(EM_API_KEY, response.getApiKey());
 				Assertions.assertEquals(STRUCT_JSON_CONFIG, response.getJsonConfig());
 				assertEquals(PROVIDER, response.getProviderModel().getProvider());
 				assertEquals(MODEL, response.getProviderModel().getModel());
+				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_omit_apiUrl_and_apiKey_when_blank(UniAsserter asserter) {
+		asserter.execute(() -> sessionFactory.withTransaction(session ->
+			embeddingModelService.findByName(session, EMBEDDING_MODEL_ONE)
+				.invoke(embeddingModel -> {
+					embeddingModel.setApiUrl("");
+					embeddingModel.setApiKey("");
+				})
+		));
+
+		asserter.assertThat(
+			() -> searcher.getEmbeddingModelConfigurations(
+				GetEmbeddingModelConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+				assertFalse(response.hasApiUrl());
+				assertFalse(response.hasApiKey());
+				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
+			}
+		);
+	}
+
+	@Test
+	@RunOnVertxContext
+	void should_omit_apiUrl_and_apiKey_when_null(UniAsserter asserter) {
+		asserter.execute(() -> sessionFactory.withTransaction(session ->
+			embeddingModelService.findByName(session, EMBEDDING_MODEL_ONE)
+				.invoke(embeddingModel -> {
+					embeddingModel.setApiUrl(null);
+					embeddingModel.setApiKey(null);
+				})
+		));
+
+		asserter.assertThat(
+			() -> searcher.getEmbeddingModelConfigurations(
+				GetEmbeddingModelConfigurationsRequest.newBuilder()
+					.setVirtualHost(VIRTUAL_HOST)
+					.build()
+			),
+			response -> {
+				assertFalse(response.hasApiUrl());
+				assertFalse(response.hasApiKey());
 				assertEquals(EM_VECTOR_SIZE, response.getVectorSize());
 			}
 		);
