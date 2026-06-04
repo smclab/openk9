@@ -60,6 +60,9 @@ public class EmbeddingService {
 	private static final String GET_EMBEDDING_CHUNKS_CONFIGURATION =
 		"EmbeddingService#getEmbeddingChunksConfiguration";
 
+	private static final String GET_EMBEDDED_PAYLOAD =
+		"EmbeddingService#getEmbeddedPayload";
+
 	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
 	@Inject
@@ -73,13 +76,27 @@ public class EmbeddingService {
 	@CacheName("bucket-resource")
 	Cache cache;
 
-	public CompletionStage<byte[]> getEmbeddedPayload(
+	public static CompletionStage<byte[]> getEmbeddedPayload(
 		String tenantId, String scheduleId, byte[] payload) {
 
 		return EventBusInstanceHolder
 			.request(
+				GET_EMBEDDED_PAYLOAD,
+				new GetEmbeddedPayloadRequest(tenantId, scheduleId, payload)
+			)
+			.map(message -> ((EmbeddedPayload) message.body()).payload())
+			.subscribeAsCompletionStage();
+	}
+
+	@ConsumeEvent(GET_EMBEDDED_PAYLOAD)
+	Uni<EmbeddedPayload> getEmbeddedPayload(GetEmbeddedPayloadRequest request) {
+
+		var payload = request.payload();
+
+		return EventBusInstanceHolder
+			.request(
 				GET_EMBEDDING_CHUNKS_CONFIGURATION,
-				new GetConfigurationRequest(tenantId, scheduleId)
+				new GetConfigurationRequest(request.tenantId(), request.scheduleId())
 			)
 			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
 			.flatMap(message -> {
@@ -122,11 +139,10 @@ public class EmbeddingService {
 						.setChunk(embeddingChunksRequest.requestChunk())
 						.setText(text)
 						.build())
-					.map(embeddingResponse -> EmbeddingService
+					.map(embeddingResponse -> new EmbeddedPayload(EmbeddingService
 						.mapToPayload(embeddingResponse, root, chunkWindowSize)
-					);
-			})
-			.subscribeAsCompletionStage();
+					));
+			});
 	}
 
 	protected static <T> List<T> getNextWindow(
@@ -387,5 +403,9 @@ public class EmbeddingService {
 
 	private record GetConfigurationRequest(String tenantId, String scheduleId) {}
 
+	private record GetEmbeddedPayloadRequest(
+		String tenantId, String scheduleId, byte[] payload) {}
+
+	private record EmbeddedPayload(byte[] payload) {}
 
 }
