@@ -115,6 +115,7 @@ def documents_embedding(
         "apiKey": api_key,
         "providerModel": provider_model,
         "jsonConfig": json_config,
+        "apiUrl": api_url,
     }
 
     embedded_documents = generate_documents_embeddings(
