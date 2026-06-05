@@ -25,7 +25,6 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 @ApplicationScoped
@@ -63,19 +62,21 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 						var newStateHighlight = mapper.update(highlight, dto);
 
 						var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
-						var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-						return Uni.combine().all().unis(docTypeFieldIds, matchedDocTypeFieldIds)
-							.asTuple()
-							.flatMap(tuple -> {
-								Set<DocTypeField> fields = Set.copyOf(tuple.getItem1());
-								Set<DocTypeField> matchedFields = Set.copyOf(tuple.getItem2());
+						return docTypeFieldIds.flatMap(docTypeFields -> {
+							newStateHighlight.setFields(Set.copyOf(docTypeFields));
 
-								newStateHighlight.setFields(fields);
-								newStateHighlight.setMatchedFields(matchedFields);
+							if (dto.getMatchedFieldIds() != null && !dto.getMatchedFieldIds().isEmpty()) {
+								var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-								return session.merge(newStateHighlight);
-							});
+								return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
+									newStateHighlight.setMatchedFields(Set.copyOf(matchedDocTypeFields));
+									return session.merge(newStateHighlight);
+								});
+							}
+
+							return session.merge(newStateHighlight);
+						});
 					})
 		);
 	}
@@ -117,13 +118,13 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return docTypeFieldIds.flatMap(docTypeFields -> {
-			transientHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+			transientHighlight.setFields(Set.copyOf(docTypeFields));
 
 			if (dto.getMatchedFieldIds() != null && !dto.getMatchedFieldIds().isEmpty()) {
 				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
 				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+					transientHighlight.setMatchedFields(Set.copyOf(matchedDocTypeFields));
 					return Uni.createFrom().item(transientHighlight);
 				});
 			}
