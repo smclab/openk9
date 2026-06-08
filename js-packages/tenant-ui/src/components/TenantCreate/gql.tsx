@@ -11,20 +11,3 @@ gql`
     }
   }
 `;
-
-gql`
-  mutation CreateTenant($tenantRequestDTO: TenantRequestDTOInput!) {
-    tenant(tenantRequestDTO: $tenantRequestDTO) {
-      entity {
-        id
-        tenantName
-        virtualHost
-        securityConfiguration
-      }
-      fieldValidators {
-        field
-        message
-      }
-    }
-  }
-`;

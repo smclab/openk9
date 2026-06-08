@@ -13,8 +13,11 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  /** Scalar for BigDecimal */
   BigDecimal: any;
+  /** Scalar for BigInteger */
   BigInteger: any;
+  /** Scalar for DateTime */
   DateTime: any;
 };
 
@@ -289,13 +292,6 @@ export type PreconfigurationsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type PreconfigurationsQuery = { __typename?: 'Query', preconfigurations?: Array<{ __typename?: 'Preconfiguration', name?: SecurityConfiguration | null, configs?: Array<{ __typename?: 'Config', apiGroup?: ApiGroup | null, authScheme?: AuthorizationScheme | null } | null> | null } | null> | null };
-
-export type CreateTenantMutationVariables = Exact<{
-  tenantRequestDTO: TenantRequestDtoInput;
-}>;
-
-
-export type CreateTenantMutation = { __typename?: 'Mutation', tenant?: { __typename?: 'Response_TenantResponseDTO', entity?: { __typename?: 'TenantResponseDTO', id?: string | null, tenantName?: string | null, virtualHost?: string | null, securityConfiguration?: SecurityConfiguration | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
 
 export const GetApiKeysDocument = gql`
@@ -572,46 +568,4 @@ export function usePreconfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type PreconfigurationsQueryHookResult = ReturnType<typeof usePreconfigurationsQuery>;
 export type PreconfigurationsLazyQueryHookResult = ReturnType<typeof usePreconfigurationsLazyQuery>;
 export type PreconfigurationsQueryResult = Apollo.QueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
-export const CreateTenantDocument = gql`
-    mutation CreateTenant($tenantRequestDTO: TenantRequestDTOInput!) {
-  tenant(tenantRequestDTO: $tenantRequestDTO) {
-    entity {
-      id
-      tenantName
-      virtualHost
-      securityConfiguration
-    }
-    fieldValidators {
-      field
-      message
-    }
-  }
-}
-    `;
-export type CreateTenantMutationFn = Apollo.MutationFunction<CreateTenantMutation, CreateTenantMutationVariables>;
-
-/**
- * __useCreateTenantMutation__
- *
- * To run a mutation, you first call `useCreateTenantMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useCreateTenantMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [createTenantMutation, { data, loading, error }] = useCreateTenantMutation({
- *   variables: {
- *      tenantRequestDTO: // value for 'tenantRequestDTO'
- *   },
- * });
- */
-export function useCreateTenantMutation(baseOptions?: Apollo.MutationHookOptions<CreateTenantMutation, CreateTenantMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<CreateTenantMutation, CreateTenantMutationVariables>(CreateTenantDocument, options);
-      }
-export type CreateTenantMutationHookResult = ReturnType<typeof useCreateTenantMutation>;
-export type CreateTenantMutationResult = Apollo.MutationResult<CreateTenantMutation>;
-export type CreateTenantMutationOptions = Apollo.BaseMutationOptions<CreateTenantMutation, CreateTenantMutationVariables>;
-// Generated on 2026-05-12T16:33:01+02:00
+// Generated on 2026-06-08T14:44:10+02:00
