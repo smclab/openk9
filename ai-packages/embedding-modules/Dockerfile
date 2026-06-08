@@ -4,7 +4,7 @@ FROM python:${PYTHON_BASE_DOCKER_IMAGE}
 
 ARG MODE=cpu
 
-RUN mkdir -p /var/log/openk9
+RUN mkdir -p /var/log/openk9 && chown -R 1001:0 /var/log/openk9 && chmod -R g=u /var/log/openk9
 
 WORKDIR /embedding_module/
 
