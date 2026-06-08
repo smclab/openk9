@@ -1829,7 +1829,7 @@ class RagGraph:
             if last_state.values.get("guardrail_check"):
                 yield json.dumps(
                     {
-                        "chunk": f"{last_state.values.get('response')} - ({last_state.values.get('guardrail_category')})",
+                        "chunk": f"{last_state.values.get('response')}",
                         "type": "GUARDRAIL",
                     }
                 )
