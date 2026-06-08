@@ -466,13 +466,30 @@ Every build job on `main`/tag is followed by a container scanning job using `$CS
 
 #### Main Branch — Component-Based Routing
 
-When a component merges to `main`, the restart template triggers the external ArgoCD pipeline which restarts the relevant namespaces based on `COMPONENT_TYPE`:
+When a component merges to `main`, the restart template triggers the external ArgoCD
+pipeline. The image is set to the `main` snapshot tag (`2026.1.0-SNAPSHOT`) and the
+component is restarted in every shared environment **except the personal environment of
+the developers who own that domain** — so a `main` merge never overwrites the
+`99x-SNAPSHOT` work-in-progress those owners have running in their own namespace.
 
-| Component type | Restarts in |
-|---|---|
-| `backend` | `k9-backend`, `k9-backend01`, `k9-test` |
-| `frontend` | `k9-frontend` |
-| `ai` | `k9-ai` |
+The mapping is therefore "cross-domain": a component of type T is refreshed everywhere
+T is only a *consumer*, and skipped where T is being *actively developed*.
+
+| `COMPONENT_TYPE` | Restarts in | Skipped (owner's dev env) |
+|---|---|---|
+| `backend` | `k9-ai`, `k9-frontend`, `k9-test` | `k9-backend` (mirko), `k9-backend01` (michele) |
+| `ai` | `k9-backend`, `k9-backend01`, `k9-frontend`, `k9-test` | `k9-ai` (luca) |
+| `frontend` | `k9-backend`, `k9-backend01`, `k9-ai`, `k9-test` | `k9-frontend` (lorenzo/giorgio) |
+| `backend-oracle` | `k9-backend-oracle` | — |
+| `test` | `k9-test` | — |
+
+`k9-test` has no owner, so it always receives every domain's `main` state (this is what
+the backend → `k9-test` propagation fix restored — backend components were previously
+missing from it).
+
+> The namespace logic lives in the **external** repo `openk9-helm-local/.gitlab-ci.yml`
+> (job `restart-component`), not in this repo. The owner→namespace mapping is the set of
+> `*_NAMESPACES` variables at the top of that file.
 
 #### Release Branch — Stable Namespace
 

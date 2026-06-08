@@ -439,6 +439,10 @@ variables:
   - |
     bash -c '
     if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
+      # The "$CI_COMMIT_TAG" arm is defensive only: restart jobs never run on a tag
+      # (their rules exclude tags by design — see template rules above). On main this
+      # branch is the live path; on a tag it is unreachable, kept as a safety net in case
+      # a future rule change lets a tag through.
       echo "🔁 Merge on main or tag: calculating IMAGE_TAG for $COMPONENT_NAME"
 
       # 🔁 Dynamically retrieve IMAGE_TAG based on component type
@@ -476,7 +480,9 @@ variables:
         "${RESTART_TRIGGER_URL}"
 
     elif echo "$CI_COMMIT_BRANCH" | grep -qE "^[0-9]+\.[0-9]+\.x$" || echo "$CI_COMMIT_TAG" | grep -qE "^[0-9]+\.[0-9]+\.[0-9]+"; then
-      # 🔁 Release branch (3.0.x) or release tag (3.0.2): restart in TARGET_ENV
+      # Live path: push/merge on a release branch (N.N.x). The release-tag grep is
+      # defensive only — .rules:child-restart-release fires on the branch, never on a tag,
+      # so a tag never reaches this restart (production rollout is manual after the tag).
       echo "🚀 Release branch/tag: calculating IMAGE_TAG for $COMPONENT_NAME"
 
       if [ "$COMPONENT_TYPE" = "frontend" ] && [ -f "$CI_PROJECT_DIR/version.env" ]; then
@@ -567,7 +573,11 @@ variables:
   - if: '$CI_MERGE_REQUEST_IID'
     when: never
   - if: '$CI_COMMIT_BRANCH == "main"'
-  - if: '$CI_COMMIT_TAG'
+  # NOTE: no `$CI_COMMIT_TAG` rule here. On a release tag (vN.N.N) the restart must NOT
+  # run — production rollout is performed manually by ops/ArgoCD after the tag. The child
+  # restart jobs that extend this template override `rules:` anyway and never include tags
+  # (see .rules:child-deploy-main-tag / .rules:child-restart-release in child-rules.yaml),
+  # so the tag branches inside the script below are unreachable on a real tag event.
   - !reference [.rules:antispam-new-branch, rules]
   - if: '$CI_COMMIT_BRANCH =~ /^([0-9]+-.*)$/'
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
