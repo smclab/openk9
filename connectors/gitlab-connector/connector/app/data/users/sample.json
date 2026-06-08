@@ -1,0 +1,24 @@
+{
+  "datasourceId": 1,
+  "scheduleId": "1",
+  "tenantId": "1",
+  "contentId": 3062252989527342,
+  "parsingDate": 1705326198961,
+  "rawContent": "Raw Content data based on extraction",
+  "datasourcePayload": {
+    "user": {
+      "id": 1,
+      "username": "john_smith",
+      "name": "John Smith",
+      "state": "active",
+      "locked": false,
+      "avatar_url": "http://localhost:3000/uploads/user/avatar/1/cd8.jpeg",
+      "web_url": "http://localhost:3000/john_smith"
+    }
+  },
+  "resources":{
+    "binaries":[
+
+    ]
+  }
+}

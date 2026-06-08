@@ -1,0 +1,196 @@
+{
+  "fields": [
+    {
+      "label": "Domain",
+      "name": "domain",
+      "type": "text",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "https://gitlab.com",
+      "info": "",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Access Token",
+      "name": "accessToken",
+      "type": "password",
+      "size": 4,
+      "required": true,
+      "values": [],
+      "placeholder": "",
+      "info": "Gitlab user access token",
+      "validator": {
+        "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Items Per Page",
+      "name": "itemsPerPage",
+      "type": "number",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Filter Active",
+      "name": "filterActive",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only active users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Filter External",
+      "name": "filterExternal",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only external users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Filter Blocked",
+      "name": "filterBlocked",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only blocked users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Filter Human",
+      "name": "filterHuman",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only regular users that are not bot or internal users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Exclude Active",
+      "name": "excludeActive",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only non active users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Exclude External",
+      "name": "excludeExternal",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only non external users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Exclude Humans",
+      "name": "excludeHumans",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only bot or internal users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Exclude Internal",
+      "name": "excludeInternal",
+      "type": "boolean",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Filters only non internal users",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    }
+  ]
+}

@@ -8,6 +8,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from starlette import status
 from logging.config import dictConfig
+from api.routers import (
+    users_router,
+    projects_router
+)
 from gitlab_api.data_extraction import DataExtraction, DataExtractionType
 from gitlab_api.data.util.log_config import LogConfig
 
@@ -16,6 +20,8 @@ logger = logging.getLogger("gitlab_logger")
 
 app = FastAPI()
 
+app.include_router(router=users_router.users_router)
+app.include_router(router=projects_router.projects_router)
 
 class GitlabRequest(BaseModel):
     domain: str
