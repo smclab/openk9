@@ -69,7 +69,7 @@ public class HighlightGraphqlResource {
 		- `patch` (Boolean): Whether to perform a partial update. Defaults to false.
 		
 		Returns:
-		- The Highlight entity created.
+		- The Highlight entity updated.
 		"""
 	)
 	@Mutation
