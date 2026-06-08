@@ -72,34 +72,36 @@ Build Search Frontend Release:
   rules:
     - !reference [.rules:child-build-release, rules]
 
-######################## BUILD VERIFIER (yarn install + lerna build) ########################
-# Avoids Kaniko/yarn-on-runner-disk to prevent ENOSPC.
+######################## BUILD VERIFIER (KANIKO --no-push) ########################
+# Compile-check via Kaniko --no-push on the same Dockerfile as the release image
+# build. Avoids the heavy Webpack build on the runner (yarn install + build on
+# node:), which exceeded the 2h job timeout. Reuses the shared Kaniko layer cache.
 # Runs on MR porting-* → 3.0.x and on push porting-* (compile only, no push).
 Build Verifier Search Frontend:
   stage: build-verifier
-  image: node:22.14.0
-  cache:
-    - key:
-        prefix: "shared-yarn"
-        files:
-          - yarn.lock
-      paths:
-        - .yarn-cache
-      policy: pull
-    - key:
-        prefix: "search-frontend-nm"
-        files:
-          - js-packages/search-frontend/package.json
-      paths:
-        - js-packages/search-frontend/node_modules
-      policy: pull
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [ "" ]
+  variables:
+    DOCKER_CONFIG: "/kaniko/.docker"
+    GENERATE_SOURCEMAP: "false"
+  needs:
+  - job: Fetch version
+    artifacts: false
   script:
-  - export NODE_OPTIONS="--max-old-space-size=8192"
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - yarn config set cache-folder .yarn-cache
-  - yarn install --prefer-offline --frozen-lockfile
-  - CI=false npx lerna run build --scope @openk9ui/search-frontend
+  - mkdir -p /kaniko/.docker
+  - printf '{}' > /kaniko/.docker/config.json
+  - |
+    /kaniko/executor \
+      --cache=true \
+      --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache \
+      --cache-ttl=72h \
+      --snapshot-mode=time \
+      --compressed-caching=false \
+      --context "${CI_PROJECT_DIR}" \
+      --dockerfile "${CI_PROJECT_DIR}/js-packages/search-frontend/Dockerfile" \
+      --no-push \
+      --build-arg NODE_OPTIONS="--max-old-space-size=8192"
   rules:
     - !reference [.rules:child-verify-release-mr, rules]
     - !reference [.rules:child-verify-porting-push, rules]
