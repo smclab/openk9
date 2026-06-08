@@ -254,10 +254,20 @@ build_core() {
     echo "--- Building Frontend Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+    build_tenant_ui
 
     echo "--- Building Connectors ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+}
+
+build_tenant_ui() {
+    # Dev image tags (those containing "dev", e.g. the default local-dev tag) build
+    # tenant-ui with DEV_MODE on, which exposes dev-only UI options such as the
+    # NO_GATEWAY_AUTH security preset. Release tags build with dev mode off.
+    # Shared by build_core and build_single so the two paths cannot drift.
+    local dev_mode=false
+    case "$TAG" in *dev*) dev_mode=true ;; esac
+    docker build --pull --platform "$JIB_PLATFORM" --build-arg "DEV_MODE=$dev_mode" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
 }
 
 build_gen_ai() {
@@ -346,9 +356,7 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            local dev_mode=false
-            case "$TAG" in *dev*) dev_mode=true ;; esac
-            docker build --pull --platform "$JIB_PLATFORM" --build-arg "DEV_MODE=$dev_mode" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+            build_tenant_ui
             ;;
         web-connector)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
