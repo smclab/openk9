@@ -11,11 +11,19 @@ WORKDIR /embedding_module/
 COPY ./requirements.txt ./
 
 
-RUN if [ "$MODE" = "cpu" ]; then \
+# Single-layer RUN: install build tools, build python packages, then purge the
+# build tools so they don't bloat the final image (and to avoid Kaniko OOM-137 spikes).
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        build-essential && \
+    if [ "$MODE" = "cpu" ]; then \
         sed -i '1i\--extra-index-url https://download.pytorch.org/whl/cpu\n' requirements.txt; \
-    fi
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    fi && \
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y --auto-remove build-essential && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY ./app ./app
 
