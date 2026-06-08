@@ -18,14 +18,14 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.HighlightMapper;
-import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.hibernate.reactive.mutiny.Mutiny;
 
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 @ApplicationScoped
 public class HighlightService extends BaseK9EntityService<Highlight, HighlightDTO> {
@@ -58,25 +58,11 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		return sessionFactory.withTransaction(
 			(session, transaction) ->
 				findById(session, id)
+					.call(highlight -> Mutiny.fetch(highlight.getFields()))
+					.call(highlight -> Mutiny.fetch(highlight.getMatchedFields()))
 					.flatMap(highlight -> {
 						var newStateHighlight = mapper.update(highlight, dto);
-
-						var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
-
-						return docTypeFieldIds.flatMap(docTypeFields -> {
-							newStateHighlight.setFields(Set.copyOf(docTypeFields));
-
-							if (dto.getMatchedFieldIds() != null && !dto.getMatchedFieldIds().isEmpty()) {
-								var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
-
-								return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-									newStateHighlight.setMatchedFields(Set.copyOf(matchedDocTypeFields));
-									return session.merge(newStateHighlight);
-								});
-							}
-
-							return session.merge(newStateHighlight);
-						});
+						return updateHighlight(dto, session, newStateHighlight);
 					})
 		);
 	}
@@ -86,30 +72,13 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		return sessionFactory.withTransaction(
 			(session, transaction) ->
 				findById(session, id)
+					.call(highlight -> Mutiny.fetch(highlight.getFields()))
+					.call(highlight -> Mutiny.fetch(highlight.getMatchedFields()))
 					.flatMap(highlight -> {
-						var newStateHighlight = mapper.patch(highlight, dto);
-
-						if (!dto.getFieldIds().isEmpty() || !dto.getMatchedFieldIds().isEmpty()) {
-
-							var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
-							var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
-
-							return Uni.combine().all().unis(docTypeFieldIds, matchedDocTypeFieldIds)
-								.asTuple()
-								.flatMap(tuple -> {
-									Set<DocTypeField> fields = Set.copyOf(tuple.getItem1());
-									Set<DocTypeField> matchedFields = Set.copyOf(tuple.getItem2());
-
-									newStateHighlight.setFields(fields);
-									newStateHighlight.setMatchedFields(matchedFields);
-
-									return session.merge(newStateHighlight);
-								});
+							var newStateHighlight = mapper.patch(highlight, dto);
+							return updateHighlight(dto, session, newStateHighlight);
 						}
-
-						return session.merge(newStateHighlight);
-					})
-		);
+					));
 	}
 
 	private Uni<Highlight> createTransient(HighlightDTO dto) {
@@ -118,18 +87,38 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return docTypeFieldIds.flatMap(docTypeFields -> {
-			transientHighlight.setFields(Set.copyOf(docTypeFields));
+			transientHighlight.setFields(new LinkedHashSet<>(docTypeFields));
 
-			if (dto.getMatchedFieldIds() != null && !dto.getMatchedFieldIds().isEmpty()) {
+			if (dto.getMatchedFieldIds() != null) {
 				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
 				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-					transientHighlight.setMatchedFields(Set.copyOf(matchedDocTypeFields));
+					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
 					return Uni.createFrom().item(transientHighlight);
 				});
 			}
 
 			return Uni.createFrom().item(transientHighlight);
+		});
+	}
+
+	private Uni<Highlight> updateHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+
+		return docTypeFieldIds.flatMap(docTypeFields -> {
+			newStateHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+
+			if (dto.getMatchedFieldIds() != null) {
+				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
+
+				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
+					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+					return session.merge(newStateHighlight);
+				});
+			} else
+				newStateHighlight.setMatchedFields(new LinkedHashSet<>());
+
+			return session.merge(newStateHighlight);
 		});
 	}
 }
