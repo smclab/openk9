@@ -101,7 +101,8 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
     Unauthenticated requests return only public projects with a limited subset of attributes.
 
     Args:
-        archived (bool): Limit by archived status.. Default is false.
+        projectList (list | None): List of project ids to be extracted. Default is None.
+        archived (bool): Limit by archived status. Default is false.
         membership (bool): Limit by projects that the current user is a member of. Default is false.
         owned (bool): Limit by projects explicitly owned by the current user. Default is false.
         starred (bool): Limit by projects starred by the current user. Default is false.
@@ -123,6 +124,7 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
             - Test
     """
     
+    projectList: list | None = Field(default=None, frozen=True)
     archived: bool = Field(default=False, frozen=True)
     membership: bool = Field(default=False, frozen=True)
     owned: bool = Field(default=False, frozen=True)
@@ -162,7 +164,6 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
     # Merge Requests extract + Filters
     doExtractMergeRequests: bool = Field(default=True, frozen=True)
     mergeRequestEnvironment: str | None = Field(default=None, frozen=True)
-    mergeRequestNonArchived: bool = Field(default=False, frozen=True)
     mergeRequestScope: Literal['created_by_me', 'assigned_to_me', 'reviews_for_me', 'all'] = Field(default='all', frozen=True)
     mergeRequestState: Literal['all', 'opened', 'closed', 'locked', 'merged'] = Field(default='all', frozen=True)
     mergeRequestDraft: Literal['NoFilter', 'draft', 'non-draft'] = Field(default='NoFilter', frozen=True)
@@ -177,6 +178,7 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
             schedule_id=self.scheduleId,
             tenant_id=self.tenantId,
             items_per_page=self.itemsPerPage,
+            project_list=self.projectList,
             archived=self.archived,
             membership=self.membership,
             owned=self.owned,
@@ -211,7 +213,6 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
             
             do_extract_merge_requests=self.doExtractMergeRequests,
             merge_request_environment=self.mergeRequestEnvironment,
-            merge_request_non_archived=self.mergeRequestNonArchived,
             merge_request_scope=self.mergeRequestScope,
             merge_request_state=self.mergeRequestState,
             merge_request_draft=self.mergeRequestDraft,

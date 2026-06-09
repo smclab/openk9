@@ -14,7 +14,8 @@ from ..models.util.models_utility import (
 
 from .util.utility import (
     format_raw_content,
-    get_object_content_id
+    get_object_content_id,
+    strftime_datetime_filter,
 )
 
 from .base_extractor import BaseExtractor
@@ -34,6 +35,7 @@ class ProjectData:
 class ProjectDataExtractor(BaseExtractor):
     def __init__(self, *, 
                 domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int,
+                project_list: list | None,
                 archived: bool, membership: bool, owned: bool, starred: bool, with_issues_enabled: bool, with_merge_requests_enabled: bool, active: bool, 
                 min_access_level: ProjectMinAccessLevelStrings, visibility: Literal['NoFilter', 'public', 'internal', 'private'], 
                 
@@ -58,14 +60,16 @@ class ProjectDataExtractor(BaseExtractor):
                 
                 # Merge Requests
                 do_extract_merge_requests: bool, 
-                merge_request_environment: str | None, merge_request_non_archived: bool, merge_request_scope: Literal['created_by_me', 'assigned_to_me', 'reviews_for_me', 'all'],
+                merge_request_environment: str | None, merge_request_scope: Literal['created_by_me', 'assigned_to_me', 'reviews_for_me', 'all'],
                 merge_request_state: Literal['all', 'opened', 'closed', 'locked', 'merged'], merge_request_draft: Literal['NoFilter', 'draft', 'non-draft']
             ) -> None:
         super().__init__(domain, access_token, timestamp, datasource_id, schedule_id, tenant_id, items_per_page)
         
+        self.project_list = project_list
+        
         # Issues
         self.do_extract_issues = do_extract_issues
-        self.issue_filters = {
+        self.issue_filters: dict[str, Any] = {
             **({'confidential': issues_confidential == 'confidential'} if issues_confidential != 'NoFilter' else {}),
             'due_date': issue_due_date,
             **({'issue_type': issue_type} if issue_type != 'NoFilter' else {}),
@@ -75,7 +79,7 @@ class ProjectDataExtractor(BaseExtractor):
         
         # Commits
         self.do_extract_commits = do_extract_commits
-        self.commit_filters = {
+        self.commit_filters: dict[str, Any] = {
             'first_parent': commit_first_parent,
             'with_stats': commit_with_stats,
         }
@@ -85,7 +89,7 @@ class ProjectDataExtractor(BaseExtractor):
         
         # Labels
         self.do_extract_labels = do_extract_labels
-        self.label_filters = {
+        self.label_filters: dict[str, Any] = {
             'with_counts': label_with_count,
             'include_ancestor_groups': label_include_ancestor_groups,
             'archived': label_archived_only,
@@ -93,22 +97,21 @@ class ProjectDataExtractor(BaseExtractor):
         
         # Milestones
         self.do_extract_milestones = do_extract_milestones
-        self.milestone_filters = {
+        self.milestone_filters: dict[str, Any] = {
             **({'state': milestone_state} if milestone_state != 'NoFilter' else {}),
             'include_ancestors': milestone_include_ancestors,
         }
         
         # Merge Requests
         self.do_extract_merge_requests = do_extract_merge_requests
-        self.merge_request_filters = {
+        self.merge_request_filters: dict[str, Any] = {
             **({'environment': merge_request_environment} if merge_request_environment else {}),
-            'non_archived': merge_request_non_archived,
             'scope': merge_request_scope,
             'state': merge_request_state,
             **({'draft': merge_request_draft == 'draft'} if merge_request_draft != 'NoFilter' else {})
         }
         
-        self.project_filters = {
+        self.project_filters: dict[str, Any] = {
             'archived': archived,
             'membership': membership,
             **({'min_access_level': PROJECT_MIN_ACCESS_LEVEL_MAP[min_access_level]} if min_access_level != 'NoFilter' else {}),
@@ -121,9 +124,18 @@ class ProjectDataExtractor(BaseExtractor):
         }
     
     def extract_data(self, gl: Gitlab, time_stamp_date: datetime) -> Iterator[Project | ProjectIssue | ProjectCommit | ProjectBranch | ProjectLabel | ProjectMilestone | ProjectMergeRequest]:
+        if self.project_list:
+            for project_id in self.project_list:
+                project = gl.projects.get(id=project_id)
+                last_activity: datetime | None = project.attributes.get('last_activity_at')
+                if last_activity and last_activity >= time_stamp_date:
+                    yield project
+            return
+        
+        datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
         projects = gl.projects.list(
             iterator=True, 
-            created_after=time_stamp_date,
+            created_after=datetime_filter,
             **self.project_filters
         )
         
@@ -135,22 +147,48 @@ class ProjectDataExtractor(BaseExtractor):
         
         for project in projects:
             if self.do_extract_issues:
-                yield from project.issues.list(iterator=True, **self.issue_filters)
+                yield from project.issues.list(
+                    iterator=True, 
+                    updated_after=datetime_filter,
+                    **self.issue_filters
+                )
                 
             if self.do_extract_commits:
-                yield from project.commits.list(iterator=True, **self.commit_filters)
+                yield from project.commits.list(
+                    iterator=True, 
+                    since=datetime_filter, 
+                    **self.commit_filters
+                )
             
             if self.do_extract_branches:
-                yield from project.branches.list(iterator=True,)
+                for branch in project.branches.list(
+                            sort='desc', order_by='updated',
+                            iterator=True,
+                        ):
+                    if committed_date := branch.attributes.get('commit', {}).get('committed_date', None):
+                        commit_date = datetime.fromisoformat(committed_date)
+                        if commit_date >= time_stamp_date:
+                            yield branch
+                        else:
+                            break
             
             if self.do_extract_labels:
                 yield from project.labels.list(iterator=True, **self.label_filters)
                 
             if self.do_extract_milestones:
-                yield from project.milestones.list(iterator=True, **self.milestone_filters)
+                yield from project.milestones.list(
+                    iterator=True, 
+                    updated_after=datetime_filter,
+                    **self.milestone_filters
+                )
                 
             if self.do_extract_merge_requests:
-                yield from project.mergerequests.list(iterator=True, **self.merge_request_filters)
+                self.merge_request_filters['updated_after'] = time_stamp_date
+                yield from project.mergerequests.list(
+                    iterator=True, 
+                    updated_after=datetime_filter, 
+                    **self.merge_request_filters
+                )
             
             yield project
     

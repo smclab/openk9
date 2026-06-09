@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 
@@ -58,3 +59,7 @@ def get_object_content_id(resource: RESTObject)-> UUID:
         
     else:
         raise ValueError(f"Resource {type(resource).__name__} lacks an identifier.")
+
+
+def strftime_datetime_filter(dt: datetime) -> str:
+    return dt.strftime(format="%Y-%m-%dT%H:%M:%SZ")

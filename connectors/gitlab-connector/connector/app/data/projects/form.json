@@ -27,53 +27,6 @@
       }
     },
     {
-        "label": "Elements",
-        "name": "types",
-        "field": "types",
-        "type": "list",
-        "size": 4,
-        "required": true,
-        "values": [
-          {
-            "value": "User",
-            "isDefault": false
-          },
-          {
-            "value": "Project",
-            "isDefault": false
-          },
-          {
-            "value": "Project Issue",
-            "isDefault": false
-          },
-          {
-            "value": "Project Commit",
-            "isDefault": false
-          },
-          {
-            "value": "Project Branch",
-            "isDefault": false
-          },
-          {
-            "value": "Project Labels",
-            "isDefault": false
-          },
-          {
-            "value": "Project Milestone",
-            "isDefault": false
-          },
-          {
-            "value": "Project Merge Request",
-            "isDefault": false
-          }
-        ],
-        "info": "",
-        "placeholder": "string",
-        "validator": {
-          "regex": "/[[:alnum:]]+/"
-        }
-      },
-    {
       "label": "Items Per Page",
       "name": "itemsPerPage",
       "type": "number",
@@ -98,6 +51,746 @@
       "info": "List of project ids to be extracted",
       "validator": {
         "regex": "/[[:alnum:]]+/"
+      }
+    },
+    {
+      "label": "Archived?",
+      "name": "archived",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by archived status",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Membership?",
+      "name": "membership",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects that the current user is a member of",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Owned?",
+      "name": "owned",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects explicitly owned by the current user",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Starred?",
+      "name": "starred",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects starred by the current user",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "With Issue enabled?",
+      "name": "withIssuesEnabled",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by enabled issues feature",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "With Merge Request enabled?",
+      "name": "withMergeRequestsEnabled",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by enabled merge requests feature",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Active?",
+      "name": "active",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects that are not archived and not marked for deletion",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Min Access Level",
+      "name": "minAccessLevel",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "MinimalAccess",
+          "isDefault": false
+        },
+        {
+          "value": "Guest",
+          "isDefault": false
+        },
+        {
+          "value": "Planner",
+          "isDefault": false
+        },
+        {
+          "value": "Reporter",
+          "isDefault": false
+        },
+        {
+          "value": "SecurityManager",
+          "isDefault": false
+        },
+        {
+          "value": "Developer",
+          "isDefault": false
+        },
+        {
+          "value": "Maintainer",
+          "isDefault": false
+        },
+        {
+          "value": "Owner",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects that are not archived and not marked for deletion",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Visibility Level",
+      "name": "visibility",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "public",
+          "isDefault": false
+        },
+        {
+          "value": "internal",
+          "isDefault": false
+        },
+        {
+          "value": "private",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Limit by projects that are not archived and not marked for deletion",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Issues?",
+      "name": "doExtractIssues",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project issues",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Issues Confidential Level",
+      "name": "issuesConfidential",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "public",
+          "isDefault": false
+        },
+        {
+          "value": "confidential",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Filter confidential or public issues",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Issue Due Date",
+      "name": "issueDueDate",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "any",
+          "isDefault": true
+        },
+        {
+          "value": "0",
+          "isDefault": false
+        },
+        {
+          "value": "today",
+          "isDefault": false
+        },
+        {
+          "value": "tomorrow",
+          "isDefault": false
+        },
+        {
+          "value": "overdue",
+          "isDefault": false
+        },
+        {
+          "value": "week",
+          "isDefault": false
+        },
+        {
+          "value": "month",
+          "isDefault": false
+        },
+        {
+          "value": "next_month_and_previous_two_weeks",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Return issues that have no due date, are overdue, or whose due date is this week, this month, or between two weeks ago and next month. Accepts: 0 (no due date), any, today, tomorrow, overdue, week, month, next_month_and_previous_two_weeks",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Issues Type",
+      "name": "issueType",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "issue",
+          "isDefault": false
+        },
+        {
+          "value": "incident",
+          "isDefault": false
+        },
+        {
+          "value": "test_case",
+          "isDefault": false
+        },
+        {
+          "value": "task",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Filter to a given type of issue. One of issue, incident, test_case or task",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Issues Scope",
+      "name": "issueScope",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "all",
+          "isDefault": true
+        },
+        {
+          "value": "created_by_me",
+          "isDefault": false
+        },
+        {
+          "value": "assigned_to_me",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Return issues for the given scope: created_by_me, assigned_to_me or all. Defaults to all",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Issues State",
+      "name": "issueState",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "all",
+          "isDefault": true
+        },
+        {
+          "value": "opened",
+          "isDefault": false
+        },
+        {
+          "value": "closed",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Return all issues or just those that are opened or closed",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Commits?",
+      "name": "doExtractCommits",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project commits",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Commits first parent only?",
+      "name": "commitFirstParent",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "If true, follows only the first parent commit upon seeing a merge commit",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Commits with stats?",
+      "name": "commitWithStats",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "If true, retrieve stats about each commit",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Branches?",
+      "name": "doExtractBranches",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project branches",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Labels?",
+      "name": "doExtractLabels",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project labels",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Label With Count?",
+      "name": "labelWithCount",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Whether or not to include issue and merge request counts. Defaults to false",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Label Include Ancestor Groups?",
+      "name": "labelIncludeAncestorGroups",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Include ancestor groups. Defaults to true",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Label Archived Only?",
+      "name": "labelArchivedOnly",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "If true, returns only archived labels. If false, returns all labels",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Milestones?",
+      "name": "doExtractMilestones",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project milestones",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Milestone State",
+      "name": "milestoneState",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "active",
+          "isDefault": false
+        },
+        {
+          "value": "closed",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Return only active or closed milestones",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Milestone Include Ancestors?",
+      "name": "doExtractMilestones",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Include milestones from all parent groups",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Do extract Merge Requests?",
+      "name": "doExtractMergeRequests",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Should extract project merge requests",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Merge Request Environment",
+      "name": "mergeRequestEnvironment",
+      "type": "text",
+      "size": 4,
+      "required": false,
+      "values": [],
+      "placeholder": "",
+      "info": "Returns merge requests deployed to the given environment",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Merge Request Scope",
+      "name": "mergeRequestScope",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "all",
+          "isDefault": true
+        },
+        {
+          "value": "created_by_me",
+          "isDefault": false
+        },
+        {
+          "value": "assigned_to_me",
+          "isDefault": false
+        },
+        {
+          "value": "reviews_for_me",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Returns merge requests for the given scope: created_by_me, assigned_to_me, reviews_for_me, or all. reviews_for_me returns merge requests where the current user is assigned as a reviewer. Defaults to all.",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Merge Request State",
+      "name": "mergeRequestState",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "all",
+          "isDefault": true
+        },
+        {
+          "value": "opened",
+          "isDefault": false
+        },
+        {
+          "value": "closed",
+          "isDefault": false
+        },
+        {
+          "value": "locked",
+          "isDefault": false
+        },
+        {
+          "value": "merged",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Returns all merge requests (all) or just those that are opened, closed, locked, or merged. Defaults to all.",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "label": "Merge Request Draft",
+      "name": "mergeRequestDraft",
+      "type": "select",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": "NoFilter",
+          "isDefault": true
+        },
+        {
+          "value": "draft",
+          "isDefault": false
+        },
+        {
+          "value": "non-draft",
+          "isDefault": false
+        }
+      ],
+      "placeholder": "",
+      "info": "Filter merge requests by their draft status. Defaults to NoFilter.",
+      "validator": {
+        "min": 0,
+        "max": 100
       }
     }
   ]
