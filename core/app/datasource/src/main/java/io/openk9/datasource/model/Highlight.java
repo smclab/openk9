@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -61,6 +62,7 @@ public class Highlight extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "doc_type_field_id", referencedColumnName = "id")
 	)
 	@ManyToMany
+	@JsonIgnore
 	@ToString.Exclude
 	@NotNull
 	@NotEmpty
@@ -93,6 +95,7 @@ public class Highlight extends K9Entity {
 		inverseJoinColumns = @JoinColumn(name = "doc_type_field_id", referencedColumnName = "id")
 	)
 	@ManyToMany
+	@JsonIgnore
 	@ToString.Exclude
 	private Set<DocTypeField> matchedFields = new LinkedHashSet<>();
 

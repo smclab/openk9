@@ -18,6 +18,7 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.HighlightMapper;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
 import io.smallrye.mutiny.Uni;
@@ -26,6 +27,7 @@ import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 @ApplicationScoped
 public class HighlightService extends BaseK9EntityService<Highlight, HighlightDTO> {
@@ -120,5 +122,23 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 
 			return session.merge(newStateHighlight);
 		});
+	}
+
+	public Uni<Set<DocTypeField>> getFields(long  id) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			findById(session, id)
+				.flatMap(highlight ->
+					Mutiny.fetch(highlight.getFields())
+				)
+		);
+	}
+
+	public Uni<Set<DocTypeField>> getMatchedFields(long id) {
+		return sessionFactory.withTransaction((session, transaction) ->
+			findById(session, id)
+				.flatMap(highlight ->
+					Mutiny.fetch(highlight.getMatchedFields())
+				)
+		);
 	}
 }

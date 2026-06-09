@@ -18,6 +18,7 @@
 package io.openk9.datasource.graphql;
 
 import io.openk9.common.util.web.Response;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
 import io.openk9.datasource.service.HighlightService;
@@ -31,8 +32,10 @@ import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Id;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Source;
 
 import java.util.List;
+import java.util.Set;
 
 @GraphQLApi
 @ApplicationScoped
@@ -52,6 +55,14 @@ public class HighlightGraphqlResource {
 	@Query
 	public Uni<List<Highlight>> getAllHighlights() {
 		return highlighterService.findAll();
+	}
+
+	public Uni<Set<DocTypeField>> fields(@Source Highlight highlight) {
+		return highlighterService.getFields(highlight.getId());
+	}
+
+	public Uni<Set<DocTypeField>> matchedFields(@Source Highlight highlight) {
+		return highlighterService.getMatchedFields(highlight.getId());
 	}
 
 	@Description("Create a new Highlight")
