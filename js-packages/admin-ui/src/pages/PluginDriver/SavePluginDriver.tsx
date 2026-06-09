@@ -34,7 +34,8 @@ import { FieldDocType, SelectedValue } from "@components/Form/Association/MultiL
 import CheckboxList from "@components/Form/List/CheckboxList";
 import { useRestClient } from "@components/queryClient";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
-import { Box, Button, MenuItem, Select, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
+import { ApolloError } from "@apollo/client";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -134,7 +135,7 @@ export const SavePluginnDriverModel = React.forwardRef(
       const mappings = pluginDriverQuery.data?.pluginDriver?.aclMappings;
       if (!mappings) return;
 
-      const initialFields: FieldDocType[] = mappings.map((field: any) => ({
+      const initialFields: FieldDocType[] = mappings.map((field) => ({
         docTypeId: field?.docTypeField?.id ?? "",
         userField: field?.userField ?? "",
         userFieldId: field?.userField ?? "",
@@ -210,7 +211,7 @@ export const SavePluginnDriverModel = React.forwardRef(
     const toast = useToast();
     const [pluginDriverWithDocType, pluginDriverWithDocTypeMutation] = usePluginDriverWithDocTypeMutation({
       refetchQueries: ["PluginDriver", "PluginDrivers", "DataSource"],
-      onCompleted(data: any) {
+      onCompleted(data) {
         if (data.pluginDriverWithDocType?.entity) {
           const isNew = pluginDriverId === "new" ? "created" : "updated";
           toast({
@@ -230,9 +231,9 @@ export const SavePluginnDriverModel = React.forwardRef(
       onError(error) {
         const isNew = pluginDriverId === "new" ? "create" : "update";
         setPage(0);
-        const extracted = extractSampleEndpointGraphQLError(error);
+        const extracted = extractCustomGraphQLError(error);
 
-        if (extracted.isSampleEndpointError) {
+        if (extracted.hasCustomError) {
           toast({
             title: extracted.title,
             content: extracted.content,
@@ -288,7 +289,7 @@ export const SavePluginnDriverModel = React.forwardRef(
             }
           : undefined,
         docTypeUserDTOSet:
-          pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field: any) => ({
+          pluginDriverQuery.data?.pluginDriver?.aclMappings?.map((field) => ({
             docTypeId: Number(field?.docTypeField?.id),
             userField: field?.userField as InputMaybe<UserField> | undefined,
           })) || [],
@@ -646,26 +647,27 @@ function DesctructuringJsonConfig(data: string) {
   }
 }
 
-function extractSampleEndpointGraphQLError(error: any): {
-  isSampleEndpointError: boolean;
+function extractCustomGraphQLError(error: ApolloError): {
+  hasCustomError: boolean;
   title: string;
   content: string;
 } {
-  const gqlErr = error?.graphQLErrors?.[0];
-  const extensions = gqlErr?.extensions ?? {};
-  const code = extensions?.code;
+  const extensions = error.graphQLErrors?.[0]?.extensions ?? {};
+  const code = typeof extensions.code === "string" ? extensions.code : undefined;
+  const exception = typeof extensions.exception === "string" ? extensions.exception : undefined;
+  const description = typeof extensions.description === "string" ? extensions.description : undefined;
 
   if (!code) {
     return {
-      isSampleEndpointError: false,
+      hasCustomError: false,
       title: "Error",
-      content: extensions?.description,
+      content: description ?? error.message,
     };
   }
 
   return {
-    isSampleEndpointError: true,
-    title: "Sample endpoint error",
-    content: extensions.exception,
+    hasCustomError: true,
+    title: description ?? "Connector error",
+    content: exception ?? description ?? error.message,
   };
 }
