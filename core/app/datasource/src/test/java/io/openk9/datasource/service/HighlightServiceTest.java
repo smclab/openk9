@@ -22,16 +22,23 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
+import io.openk9.datasource.model.util.K9Entity;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @QuarkusTest
 public class HighlightServiceTest {
@@ -45,54 +52,224 @@ public class HighlightServiceTest {
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
 
-	private static final String DOC_TYPE_FIELD_NAME = "docTypeFieldTEST";
+	private static final String FIELD_1 = "field1";
+	private static final String FIELD_2 = "field2";
+	private static final String MATCHED_FIELD = FIELD_2 + ".content";
+	private static final String HIGHLIGHT_NAME = "highlightTest";
+	private static final List<String> DOC_TYPE_FIELD_LIST =
+		List.of(FIELD_1, FIELD_2, MATCHED_FIELD);
 
 	@BeforeEach
 	void setup() {
-		createDocTypeField();
+		DOC_TYPE_FIELD_LIST.forEach(this::createDocTypeField);
 	}
 
 	@Test
-	void should_create_highlight() {
-		var docTypeField = EntitiesUtils.getEntity(
-			DOC_TYPE_FIELD_NAME,
-			docTypeFieldService,
-			sessionFactory
-		);
+	void should_create_highlight_with_only_mandatory_fields() {
+		var result = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.build()
+		).await().indefinitely();
 
-		var highlightDTO = HighlightDTO.builder()
-			.name("highlight")
+		assertNotNull(result);
+	}
+
+	@Test
+	void should_create_highlight_with_matched_fields() {
+		var highlight = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.FVH)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)))
+				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
+				.build()
+		).await().indefinitely();
+
+		assertEquals(
+			Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)),
+			highlight.getFields()
+				.stream()
+				.map(K9Entity::getId)
+				.collect(Collectors.toSet())
+		);
+		assertEquals(
+			Set.of(getDocTypeFieldId(MATCHED_FIELD)),
+			highlight.getMatchedFields()
+				.stream()
+				.map(K9Entity::getId)
+				.collect(Collectors.toSet())
+		);
+	}
+
+	@Test
+	void should_fail_when_fields_are_missing() {
+		var highlight = HighlightDTO.builder()
+			.name(HIGHLIGHT_NAME)
 			.type(Highlight.HighlightType.UNIFIED)
-			.fieldIds(Set.of(docTypeField.getId()))
+			.order(Highlight.OrderType.NONE)
 			.build();
 
-		Assertions.assertDoesNotThrow(() -> highlightService.create(highlightDTO));
+		assertThrows(NullPointerException.class, ()->
+			highlightService.create(highlight)
+			.await()
+			.indefinitely());
+	}
+
+	@Test
+	void should_find_all_highlights() {
+		highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME + "1")
+				.type(Highlight.HighlightType.FVH)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.boundaryScanner(Highlight.BoundaryScannerType.SENTENCE)
+				.numberOfFragments(5)
+				.build()
+		).await().indefinitely();
+
+		highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME + "2")
+				.type(Highlight.HighlightType.PLAIN)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
+				.fragmenter(Highlight.FragmenterType.SPAM)
+				.numberOfFragments(8)
+				.build()
+		).await().indefinitely();
+
+		var result = highlightService.findAll().await().indefinitely();
+
+		assertNotNull(result);
+	}
+
+	@Test
+	void should_update_fields() {
+		var highlight = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.build()
+		).await().indefinitely();
+
+		var result = highlightService.update(
+			highlight.getId(),
+			HighlightDTO.builder()
+				.name("highlight")
+				.type(Highlight.HighlightType.FVH)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)))
+				.build()
+		).await().indefinitely();
+
+		assertEquals(
+			Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)),
+			result.getFields()
+				.stream()
+				.map(K9Entity::getId)
+				.collect(Collectors.toSet())
+		);
+	}
+
+	@Test
+	void should_update_empty_matched_fields_when_null() {
+		var highlight = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
+				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
+				.build()
+		).await().indefinitely();
+
+		var result = highlightService.update(
+			highlight.getId(),
+			HighlightDTO.builder()
+				.name("highlight")
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.build()
+		).await().indefinitely();
+
+		assertNull(result.getMatchedFields());
+	}
+
+	@Test
+	void should_patch_ignore_matched_fields_when_null() {
+		var highlight = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
+				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
+				.build()
+		).await().indefinitely();
+
+		var result = highlightService.patch(
+			highlight.getId(),
+			HighlightDTO.builder()
+				.name("highlight")
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.build()
+		).await().indefinitely();
+
+		assertFalse(result.getMatchedFields().isEmpty());
+	}
+
+	@Test
+	void should_delete_highlight() {
+		var highlight = highlightService.create(
+			HighlightDTO.builder()
+				.name(HIGHLIGHT_NAME)
+				.type(Highlight.HighlightType.UNIFIED)
+				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
+				.build()
+		).await().indefinitely();
+
+		highlightService.deleteById(highlight.getId())
+			.await()
+			.indefinitely();
+
+		var result = highlightService.findById(highlight.getId())
+			.await()
+			.indefinitely();
+
+		assertNull(result);
 	}
 
 	@AfterEach
 	void tearDown() {
-		deleteDocTypeField();
+		highlightService.findAll()
+			.await()
+			.indefinitely()
+			.forEach(highlight ->
+				highlightService.deleteById(highlight.getId())
+					.await()
+					.indefinitely()
+			);
+
+		DOC_TYPE_FIELD_LIST.forEach(name ->
+			EntitiesUtils.removeEntity(name, docTypeFieldService, sessionFactory));
 	}
 
-	private void createDocTypeField() {
-		var docTypeFieldDTO = DocTypeFieldDTO.builder()
-			.name(DOC_TYPE_FIELD_NAME)
-			.fieldName("fieldName1")
+	private Long getDocTypeFieldId(String name) {
+		return EntitiesUtils.getEntity(name, docTypeFieldService, sessionFactory).getId();
+	}
+
+	private void createDocTypeField(String name) {
+		var docTypeField = DocTypeFieldDTO.builder()
+			.name(name)
+			.fieldName(name)
 			.searchable(true)
 			.sortable(true)
 			.fieldType(FieldType.BINARY)
 			.build();
 
 		EntitiesUtils.createEntity(
-			docTypeFieldDTO,
-			docTypeFieldService,
-			sessionFactory
-		);
-	}
-
-	private void deleteDocTypeField() {
-		EntitiesUtils.removeEntity(
-			DOC_TYPE_FIELD_NAME,
+			docTypeField,
 			docTypeFieldService,
 			sessionFactory
 		);
