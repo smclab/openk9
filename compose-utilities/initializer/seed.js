@@ -28,7 +28,7 @@ async function fetchWithRetry(url, options, label) {
 }
 
 async function ensureTenant() {
-  console.log('1/6 Creating Tenant...');
+  console.log('1/7 Creating Tenant...');
 
   const response = await fetchWithRetry(
     `${TENANT_API}/api/tenant-manager/tenant-manager/tenant`,
@@ -49,12 +49,12 @@ async function ensureTenant() {
 
   if (response.ok) {
     const data = await response.json();
-    console.log(`1/6 Tenant created. Schema: ${data.tenantName}`);
+    console.log(`1/7 Tenant created. Schema: ${data.tenantName}`);
     return data.tenantName;
   }
 
   if (response.status === 409) {
-    console.log('1/6 Tenant already exists, skipping.');
+    console.log('1/7 Tenant already exists, skipping.');
     return `${TENANT_NAME}`;
   }
 
@@ -63,7 +63,7 @@ async function ensureTenant() {
 }
 
 async function initTenant(schemaName) {
-  console.log('2/6 Initializing Tenant Data...');
+  console.log('2/7 Initializing Tenant Data...');
 
   const response = await fetchWithRetry(
     `${TENANT_API}/api/tenant-manager/provisioning/initTenant`,
@@ -79,7 +79,7 @@ async function initTenant(schemaName) {
   );
 
   if (response.ok) {
-    console.log('2/6 Tenant initialized.');
+    console.log('2/7 Tenant initialized.');
     return;
   }
 
@@ -208,6 +208,217 @@ async function ensurePluginDriver(schemaName, name, description, resourceUri) {
   }
 }
 
+async function getDocTypeFieldMap(schemaName) {
+  const data = await graphqlQuery(
+    schemaName,
+    `{ docTypeFields(first: 500) { edges { node { id name } } } }`,
+    'Query DocTypeFields'
+  );
+
+  const map = new Map();
+  for (const edge of data?.docTypeFields?.edges ?? []) {
+    map.set(edge.node.name, edge.node.id);
+  }
+  return map;
+}
+
+async function findEntityIdByName(schemaName, queryField, name, label) {
+  const data = await graphqlQuery(
+    schemaName,
+    `{ ${queryField}(first: 100) { edges { node { id name } } } }`,
+    label
+  );
+
+  return data?.[queryField]?.edges?.find(e => e.node.name === name)?.node.id ?? null;
+}
+
+async function ensureSubField(schemaName, fieldMap, parentName, leafName) {
+  const fullName = `${parentName}.${leafName}`;
+
+  if (fieldMap.has(fullName)) {
+    console.log(`  Sub-field "${fullName}": already exists, skipping.`);
+    return fieldMap.get(fullName);
+  }
+
+  const parentId = fieldMap.get(parentName);
+
+  if (parentId == null) {
+    console.warn(`  Parent field "${parentName}" not found, cannot create "${fullName}".`);
+    return null;
+  }
+
+  const data = await graphqlQuery(
+    schemaName,
+    `mutation {
+      createSubField(parentDocTypeFieldId: ${parentId}, docTypeFieldDTO: {
+        name: "${fullName}"
+        fieldName: "${leafName}"
+        fieldType: SEARCH_AS_YOU_TYPE
+        searchable: true
+        sortable: false
+      }) { entity { id } }
+    }`,
+    `Create sub-field ${fullName}`
+  );
+
+  const id = data?.createSubField?.entity?.id ?? null;
+  console.log(id != null
+    ? `  Sub-field "${fullName}" created.`
+    : `  Sub-field "${fullName}": creation failed.`);
+  return id;
+}
+
+async function ensureAutocorrection(schemaName, name, docTypeFieldId) {
+  const existing = await findEntityIdByName(schemaName, 'autocorrections', name, 'Query Autocorrections');
+
+  if (existing != null) {
+    console.log(`  Autocorrection "${name}": already exists, skipping.`);
+    return existing;
+  }
+
+  const data = await graphqlQuery(
+    schemaName,
+    `mutation {
+      autocorrection(autocorrectionDTO: {
+        name: "${name}"
+        autocorrectionDocTypeFieldId: ${docTypeFieldId}
+      }) { entity { id } }
+    }`,
+    `Create Autocorrection ${name}`
+  );
+
+  const id = data?.autocorrection?.entity?.id ?? null;
+  console.log(id != null
+    ? `  Autocorrection "${name}" created.`
+    : `  Autocorrection "${name}": creation failed.`);
+  return id;
+}
+
+async function ensureAutocomplete(schemaName, name, fieldId) {
+  const existing = await findEntityIdByName(schemaName, 'autocompletes', name, 'Query Autocompletes');
+
+  if (existing != null) {
+    console.log(`  Autocomplete "${name}": already exists, skipping.`);
+    return existing;
+  }
+
+  const data = await graphqlQuery(
+    schemaName,
+    `mutation {
+      autocomplete(autocompleteDTO: {
+        name: "${name}"
+        fieldIds: [${fieldId}]
+      }) { entity { id } }
+    }`,
+    `Create Autocomplete ${name}`
+  );
+
+  const id = data?.autocomplete?.entity?.id ?? null;
+  console.log(id != null
+    ? `  Autocomplete "${name}" created.`
+    : `  Autocomplete "${name}": creation failed.`);
+  return id;
+}
+
+async function ensureSuggestionCategory(schemaName, name, priority, docTypeFieldId) {
+  const existing = await findEntityIdByName(schemaName, 'suggestionCategories', name, 'Query Suggestion Categories');
+
+  if (existing != null) {
+    console.log(`  Suggestion Category "${name}": already exists, skipping.`);
+    return existing;
+  }
+
+  const data = await graphqlQuery(
+    schemaName,
+    `mutation {
+      suggestionCategoryWithDocTypeField(suggestionCategoryWithDocTypeFieldDTO: {
+        name: "${name}"
+        priority: ${priority}
+        multiSelect: true
+        docTypeFieldId: ${docTypeFieldId}
+      }) { entity { id } }
+    }`,
+    `Create Suggestion Category ${name}`
+  );
+
+  const id = data?.suggestionCategoryWithDocTypeField?.entity?.id ?? null;
+  console.log(id != null
+    ? `  Suggestion Category "${name}" created.`
+    : `  Suggestion Category "${name}": creation failed.`);
+  return id;
+}
+
+async function bindToBucket(schemaName, mutation, idArg, bucketId, entityId, label) {
+  const result = await graphqlQuery(
+    schemaName,
+    `mutation { ${mutation}(bucketId: ${bucketId}, ${idArg}: ${entityId}) { left { id } } }`,
+    `Bind ${label}`
+  );
+
+  console.log(result
+    ? `  ${label} bound to Default Bucket.`
+    : `  ${label}: bind failed.`);
+}
+
+async function configureSearchFeatures(schemaName) {
+  console.log('4/7 Configuring search features...');
+
+  const bucketData = await graphqlQuery(
+    schemaName,
+    `{ buckets(first: 10, searchText: "Default Bucket") { edges { node { id name } } } }`,
+    'Query Default Bucket'
+  );
+
+  const bucketId = bucketData?.buckets?.edges
+    ?.find(e => e.node.name === 'Default Bucket')?.node.id;
+
+  if (bucketId == null) {
+    console.warn('  Default Bucket not found, skipping search features.');
+    return;
+  }
+
+  // DocTypeFields are auto-generated when the plugin driver is registered (step 3).
+  const fieldMap = await getDocTypeFieldMap(schemaName);
+
+  // Autocorrection on web.content
+  const contentFieldId = fieldMap.get('web.content');
+  if (contentFieldId == null) {
+    console.warn('  web.content not found, skipping Autocorrection.');
+  }
+  else {
+    const id = await ensureAutocorrection(schemaName, 'Default Autocorrection', contentFieldId);
+    if (id != null) {
+      await bindToBucket(schemaName, 'bindAutocorrectionToBucket', 'autocorrectionId', bucketId, id, 'Autocorrection');
+    }
+  }
+
+  // Autocomplete on web.title.search_as_you_type (sub-field of web.title)
+  const saytFieldId = await ensureSubField(schemaName, fieldMap, 'web.title', 'search_as_you_type');
+  if (saytFieldId == null) {
+    console.warn('  search_as_you_type field unavailable, skipping Autocomplete.');
+  }
+  else {
+    const id = await ensureAutocomplete(schemaName, 'Default Autocomplete', saytFieldId);
+    if (id != null) {
+      await bindToBucket(schemaName, 'bindAutocompleteToBucket', 'autocompleteId', bucketId, id, 'Autocomplete');
+    }
+  }
+
+  // Suggestion Category on web.title.keyword
+  const titleKeywordFieldId = fieldMap.get('web.title.keyword');
+  if (titleKeywordFieldId == null) {
+    console.warn('  web.title.keyword not found, skipping Suggestion Category.');
+  }
+  else {
+    const id = await ensureSuggestionCategory(schemaName, 'Web Title', 1.0, titleKeywordFieldId);
+    if (id != null) {
+      await bindToBucket(schemaName, 'addSuggestionCategoryToBucket', 'suggestionCategoryId', bucketId, id, 'Suggestion Category');
+    }
+  }
+
+  console.log('4/7 Search features done.');
+}
+
 async function getExistingDatasourceNames(schemaName) {
   const data = await graphqlQuery(
     schemaName,
@@ -244,8 +455,36 @@ async function getPluginDriverIdByName(schemaName, name) {
   return match.node.id;
 }
 
-async function ensureDatasource(schemaName, name, description, pluginDriverId, jsonConfig, dataIndex) {
+async function getSelectedDocTypeIds(schemaName, pluginDriverId) {
+  const response = await fetchWithRetry(
+    `${DATASOURCE_API}/api/datasource/pluginDrivers/documentTypes/${pluginDriverId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': authHeader,
+        'X-TENANT-ID': schemaName
+      }
+    },
+    `Get DocTypes for PluginDriver ${pluginDriverId}`
+  );
+
+  if (!response.ok) {
+    console.warn(`  Could not fetch document types for plugin driver ${pluginDriverId} (${response.status}).`);
+    return [];
+  }
+
+  const body = await response.json();
+  const docTypes = Array.isArray(body) ? body : (body.docTypes ?? []);
+  return docTypes.filter(dt => dt.selected).map(dt => dt.docTypeId);
+}
+
+async function ensureDatasource(schemaName, name, description, pluginDriverId, jsonConfig, dataIndex, docTypeIds) {
   const jsonConfigEscaped = JSON.stringify(jsonConfig).replace(/"/g, '\\"');
+
+  const docTypeIdsField = docTypeIds && docTypeIds.length
+    ? `\n          docTypeIds: [${docTypeIds.join(', ')}]`
+    : '';
 
   const payload = {
     query: `mutation {
@@ -256,7 +495,7 @@ async function ensureDatasource(schemaName, name, description, pluginDriverId, j
         jsonConfig: "${jsonConfigEscaped}"
         schedulable: false
         dataIndex: {
-          name: "${dataIndex.name}"
+          name: "${dataIndex.name}"${docTypeIdsField}
         }
       }) {
         entity { id name }
@@ -314,7 +553,7 @@ async function main() {
   await initTenant(schemaName);
 
   // --- Step 3: Connectors ---
-  console.log('3/6 Configuring Connectors...');
+  console.log('3/7 Configuring Connectors...');
   const existingDrivers = await getExistingPluginDriverNames(schemaName);
 
   const connectors = [
@@ -357,10 +596,13 @@ async function main() {
     }
   }
 
-  console.log(`3/6 Connectors done (${created} created, ${skipped} skipped, ${failed} failed).`);
+  console.log(`3/7 Connectors done (${created} created, ${skipped} skipped, ${failed} failed).`);
 
-  // --- Step 4: Datasources ---
-  console.log('4/6 Configuring Datasources...');
+  // --- Step 4: Search features ---
+  await configureSearchFeatures(schemaName);
+
+  // --- Step 5: Datasources ---
+  console.log('5/7 Configuring Datasources...');
   const existingDatasources = await getExistingDatasourceNames(schemaName);
 
   const datasources = [
@@ -388,13 +630,15 @@ async function main() {
     else {
       try {
         const pluginDriverId = await getPluginDriverIdByName(schemaName, ds.pluginDriverName);
+        const docTypeIds = await getSelectedDocTypeIds(schemaName, pluginDriverId);
         await ensureDatasource(
           schemaName,
           ds.name,
           ds.description,
           pluginDriverId,
           ds.jsonConfig,
-          ds.dataIndex
+          ds.dataIndex,
+          docTypeIds
         );
         created++;
       }
@@ -405,10 +649,10 @@ async function main() {
     }
   }
 
-  console.log(`4/6 Datasources done (${created} created, ${skipped} skipped, ${failed} failed).`);
+  console.log(`5/7 Datasources done (${created} created, ${skipped} skipped, ${failed} failed).`);
 
-  // --- Step 5: Link datasources to Default Bucket ---
-  console.log('5/6 Linking Datasources to Default Bucket...');
+  // --- Step 6: Link datasources to Default Bucket ---
+  console.log('6/7 Linking Datasources to Default Bucket...');
 
   const bucketData = await graphqlQuery(
     schemaName,
@@ -467,10 +711,10 @@ async function main() {
       }
     }
 
-    console.log(`5/6 Bucket linking done (${linked} linked).`);
+    console.log(`6/7 Bucket linking done (${linked} linked).`);
   }
 
-  console.log('6/6 Done.');
+  console.log('7/7 Done.');
 }
 
 main().catch(err => {
