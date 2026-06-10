@@ -11,6 +11,7 @@ from ..services import (
 
 from .util.models_utility import (
     ProjectMinAccessLevelStrings,
+    BoolFilter,
 )
 
 
@@ -125,48 +126,51 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
     """
     
     projectList: list | None = Field(default=None, frozen=True)
-    archived: bool = Field(default=False, frozen=True)
-    membership: bool = Field(default=False, frozen=True)
-    owned: bool = Field(default=False, frozen=True)
-    starred: bool = Field(default=False, frozen=True)
-    withIssuesEnabled: bool = Field(default=False, frozen=True)
-    withMergeRequestsEnabled: bool = Field(default=False, frozen=True)
-    active: bool = Field(default=False, frozen=True)
+    
+    # Project list filters
+    archived: BoolFilter = Field(default='NoFilter', frozen=True)
+    membership: BoolFilter = Field(default='NoFilter', frozen=True)
+    owned: BoolFilter = Field(default='NoFilter', frozen=True)
+    starred: BoolFilter = Field(default='NoFilter', frozen=True)
+    withIssuesEnabled: BoolFilter = Field(default='NoFilter', frozen=True)
+    withMergeRequestsEnabled: BoolFilter = Field(default='NoFilter', frozen=True)
+    active: BoolFilter = Field(default='NoFilter', frozen=True)
     minAccessLevel: ProjectMinAccessLevelStrings = Field(default='NoFilter', frozen=True)
     visibility: Literal['NoFilter', 'public', 'internal', 'private'] = Field(default='NoFilter', frozen=True)
+    
     # Issues extract + Filters
     doExtractIssues: bool = Field(default=True, frozen=True)
-    issuesConfidential: Literal['confidential', 'public', 'NoFilter'] = Field(default='NoFilter', frozen=True)
-    issueDueDate: Literal['0', 'any', 'today', 'tomorrow', 'overdue', 'week', 'month', 'next_month_and_previous_two_weeks']= Field(default='any', frozen=True)
-    issueType: Literal['issue', 'incident', 'test_case', 'task', 'NoFilter'] = Field(default='NoFilter', frozen=True)
-    issueScope: Literal['created_by_me', 'assigned_to_me', 'all'] = Field(default='all', frozen=True)
-    issueState: Literal['opened', 'closed', 'all'] = Field(default='all', frozen=True)
+    issuesConfidential: BoolFilter = Field(default='NoFilter', frozen=True)
+    issueDueDate: Literal['NoFilter', '0', 'any', 'today', 'tomorrow', 'overdue', 'week', 'month', 'next_month_and_previous_two_weeks']= Field(default='NoFilter', frozen=True)
+    issueType: Literal['NoFilter', 'issue', 'incident', 'test_case', 'task'] = Field(default='NoFilter', frozen=True)
+    issueScope: Literal['NoFilter', 'created_by_me', 'assigned_to_me', 'all'] = Field(default='NoFilter', frozen=True)
+    issueState: Literal['NoFilter', 'opened', 'closed'] = Field(default='NoFilter', frozen=True)
     
     # Commits extract + Filters
     doExtractCommits: bool = Field(default=True, frozen=True)
-    commitFirstParent: bool = Field(default=False, frozen=True)
-    commitWithStats: bool = Field(default=False, frozen=True)
+    commitFirstParent: BoolFilter = Field(default='NoFilter', frozen=True)
+    commitWithStats: BoolFilter = Field(default='NoFilter', frozen=True)
     
     # Branches extract + Filters
     doExtractBranches: bool = Field(default=True, frozen=True)
     
     # Labels extract + Filters
     doExtractLabels: bool = Field(default=True, frozen=True)
-    labelWithCount: bool = Field(default=False, frozen=True)
-    labelIncludeAncestorGroups: bool = Field(default=True, frozen=True)
-    labelArchivedOnly: bool = Field(default=False, frozen=True)
+    labelWithCount: BoolFilter = Field(default='NoFilter', frozen=True)
+    labelIncludeAncestorGroups: BoolFilter = Field(default='NoFilter', frozen=True)
+    labelArchivedOnly: BoolFilter = Field(default='NoFilter', frozen=True)
     
     # Milestones extract + Filters
     doExtractMilestones: bool = Field(default=True, frozen=True)
-    milestoneState: Literal['active', 'closed', 'NoFilter'] = Field(default='NoFilter', frozen=True)
-    milestoneIncludeAncestors: bool = Field(default=False, frozen=True)
+    milestoneState: Literal['NoFilter', 'active', 'closed'] = Field(default='NoFilter', frozen=True)
+    milestoneIncludeAncestors: BoolFilter = Field(default='NoFilter', frozen=True)
     
     # Merge Requests extract + Filters
     doExtractMergeRequests: bool = Field(default=True, frozen=True)
     mergeRequestEnvironment: str | None = Field(default=None, frozen=True)
-    mergeRequestScope: Literal['created_by_me', 'assigned_to_me', 'reviews_for_me', 'all'] = Field(default='all', frozen=True)
-    mergeRequestState: Literal['all', 'opened', 'closed', 'locked', 'merged'] = Field(default='all', frozen=True)
-    mergeRequestDraft: Literal['NoFilter', 'draft', 'non-draft'] = Field(default='NoFilter', frozen=True)
+    mergeRequestScope: Literal['NoFilter', 'created_by_me', 'assigned_to_me', 'reviews_for_me', 'all'] = Field(default='NoFilter', frozen=True)
+    mergeRequestState: Literal['NoFilter', 'all', 'opened', 'closed', 'locked', 'merged'] = Field(default='NoFilter', frozen=True)
+    mergeRequestDraft: BoolFilter = Field(default='NoFilter', frozen=True)
     
     
     def create_extractor(self) -> projects_extractor.ProjectDataExtractor:

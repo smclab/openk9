@@ -1,4 +1,8 @@
-from typing import Literal
+from abc import ABC
+from typing import Any, Literal
+
+
+BoolFilter = Literal['True', 'False', 'NoFilter']
 
 
 ProjectMinAccessLevelStrings = Literal[
@@ -17,3 +21,20 @@ PROJECT_MIN_ACCESS_LEVEL_MAP: dict[ProjectMinAccessLevelStrings, int] = {
     'Maintainer': 40,
     'Owner': 50
 }
+
+
+
+class FilterComposite(ABC):
+    @classmethod
+    def parse_value(cls, value: Any) -> Any:
+        if value in BoolFilter:
+            return value == 'True'
+        return value
+        
+    @classmethod
+    def compose_params(cls, filters: dict[str, Any]) -> dict[str, Any]:
+        return {
+            name: cls.parse_value(value)
+            for name, value in filters.items()
+            if value != 'NoFilter'
+        }

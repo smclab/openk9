@@ -56,17 +56,25 @@
     {
       "label": "Archived?",
       "name": "archived",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by archived status",
+      "info": "Limit by archived status. True only archived, False only active",
       "validator": {
         "min": 0,
         "max": 100
@@ -75,17 +83,25 @@
     {
       "label": "Membership?",
       "name": "membership",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by projects that the current user is a member of",
+      "info": "Limit by projects that the current user is a member of. True only member, False only non member.",
       "validator": {
         "min": 0,
         "max": 100
@@ -94,17 +110,25 @@
     {
       "label": "Owned?",
       "name": "owned",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by projects explicitly owned by the current user",
+      "info": "Limit by projects explicitly owned by the current user. True only owned, False only non owned.",
       "validator": {
         "min": 0,
         "max": 100
@@ -113,17 +137,25 @@
     {
       "label": "Starred?",
       "name": "starred",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by projects starred by the current user",
+      "info": "Limit by projects starred by the current user. True only starred, False only non starred.",
       "validator": {
         "min": 0,
         "max": 100
@@ -132,17 +164,25 @@
     {
       "label": "With Issue enabled?",
       "name": "withIssuesEnabled",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by enabled issues feature",
+      "info": "Limit by enabled issues feature. True only enabled, False only disabled.",
       "validator": {
         "min": 0,
         "max": 100
@@ -151,17 +191,25 @@
     {
       "label": "With Merge Request enabled?",
       "name": "withMergeRequestsEnabled",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by enabled merge requests feature",
+      "info": "Limit by enabled merge requests feature. True only enabled, False only disabled.",
       "validator": {
         "min": 0,
         "max": 100
@@ -170,17 +218,25 @@
     {
       "label": "Active?",
       "name": "active",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Limit by projects that are not archived and not marked for deletion",
+      "info": "Limit by projects that are not archived and not marked for deletion. True only active, False only non active.",
       "validator": {
         "min": 0,
         "max": 100
@@ -288,7 +344,7 @@
       }
     },
     {
-      "label": "Issues Confidential Level",
+      "label": "Issues Confidential?",
       "name": "issuesConfidential",
       "type": "select",
       "size": 4,
@@ -299,16 +355,16 @@
           "isDefault": true
         },
         {
-          "value": "public",
+          "value": "True",
           "isDefault": false
         },
         {
-          "value": "confidential",
+          "value": "False",
           "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Filter confidential or public issues",
+      "info": "True only confidential, False only public issues",
       "validator": {
         "min": 0,
         "max": 100
@@ -322,8 +378,12 @@
       "required": false,
       "values": [
         {
-          "value": "any",
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "any",
+          "isDefault": false
         },
         {
           "value": "0",
@@ -404,8 +464,12 @@
       "required": false,
       "values": [
         {
-          "value": "all",
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "all",
+          "isDefault": false
         },
         {
           "value": "created_by_me",
@@ -431,8 +495,12 @@
       "required": false,
       "values": [
         {
-          "value": "all",
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "all",
+          "isDefault": false
         },
         {
           "value": "opened",
@@ -472,17 +540,25 @@
     {
       "label": "Commits first parent only?",
       "name": "commitFirstParent",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "If true, follows only the first parent commit upon seeing a merge commit",
+      "info": "If True, follows only the first parent commit upon seeing a merge commit",
       "validator": {
         "min": 0,
         "max": 100
@@ -491,17 +567,25 @@
     {
       "label": "Commits with stats?",
       "name": "commitWithStats",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "If true, retrieve stats about each commit",
+      "info": "If True, retrieve stats about each commit",
       "validator": {
         "min": 0,
         "max": 100
@@ -548,13 +632,21 @@
     {
       "label": "Label With Count?",
       "name": "labelWithCount",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -567,13 +659,21 @@
     {
       "label": "Label Include Ancestor Groups?",
       "name": "labelIncludeAncestorGroups",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": true,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -586,17 +686,25 @@
     {
       "label": "Label Archived Only?",
       "name": "labelArchivedOnly",
-      "type": "checkbox",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "If true, returns only archived labels. If false, returns all labels",
+      "info": "True only archived labels, False only active labels. NoFilter all labels",
       "validator": {
         "min": 0,
         "max": 100
@@ -650,14 +758,22 @@
     },
     {
       "label": "Milestone Include Ancestors?",
-      "name": "doExtractMilestones",
-      "type": "checkbox",
+      "name": "milestoneIncludeAncestors",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -708,8 +824,12 @@
       "required": false,
       "values": [
         {
-          "value": "all",
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "all",
+          "isDefault": false
         },
         {
           "value": "created_by_me",
@@ -739,8 +859,12 @@
       "required": false,
       "values": [
         {
-          "value": "all",
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "all",
+          "isDefault": false
         },
         {
           "value": "opened",
@@ -778,16 +902,16 @@
           "isDefault": true
         },
         {
-          "value": "draft",
+          "value": "True",
           "isDefault": false
         },
         {
-          "value": "non-draft",
+          "value": "False",
           "isDefault": false
         }
       ],
       "placeholder": "",
-      "info": "Filter merge requests by their draft status. Defaults to NoFilter.",
+      "info": "True only draft merge request, False only non draft. NoFilter all merge requests.",
       "validator": {
         "min": 0,
         "max": 100

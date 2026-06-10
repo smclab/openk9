@@ -55,7 +55,7 @@ class BaseExtractor(ABC):
 
             self.ingestion_handler.post_last(end_timestamp=end_timestamp)
         except Exception as e:
-            self.status_logger.error("Something went wrong")
+            self.status_logger.error(f"Something went wrong {str(e)}")
             self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
 
         
