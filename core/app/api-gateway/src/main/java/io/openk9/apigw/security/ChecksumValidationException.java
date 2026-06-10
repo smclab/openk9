@@ -17,7 +17,9 @@
 
 package io.openk9.apigw.security;
 
-public class ChecksumValidationException extends RuntimeException {
+import org.springframework.security.core.AuthenticationException;
+
+public class ChecksumValidationException extends AuthenticationException {
 	public ChecksumValidationException(String message) {
 		super(message);
 	}

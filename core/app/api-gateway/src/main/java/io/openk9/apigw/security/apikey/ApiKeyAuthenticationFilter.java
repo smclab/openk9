@@ -17,43 +17,32 @@
 
 package io.openk9.apigw.security.apikey;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
+import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
 
 /**
  * A specialized version of the {@link AuthenticationWebFilter} for the
  * {@code ApiKey} credential scheme, that use the same logic.
+ * <p>
+ * Authentication failures are delegated to
+ * {@link ApiKeyAuthenticationEntryPoint} so that every {@code 401} on the API
+ * key branch carries an {@code ApiKey} {@code WWW-Authenticate} challenge.
  */
-@Slf4j
 public class ApiKeyAuthenticationFilter extends AuthenticationWebFilter {
 
 	private static final ApiKeyAuthenticationConverter AUTHENTICATION_CONVERTER =
 		new ApiKeyAuthenticationConverter();
 
-	public ApiKeyAuthenticationFilter(ReactiveAuthenticationManager authenticationManager) {
+	private static final ServerAuthenticationEntryPointFailureHandler
+		FAILURE_HANDLER = new ServerAuthenticationEntryPointFailureHandler(
+			new ApiKeyAuthenticationEntryPoint());
+
+	public ApiKeyAuthenticationFilter(
+		ReactiveAuthenticationManager authenticationManager) {
 
 		super(authenticationManager);
 		setServerAuthenticationConverter(AUTHENTICATION_CONVERTER);
-
-	}
-
-	@Override
-	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-
-		return super.filter(exchange, chain)
-				.onErrorResume(
-					ApiKeyMalformedException.class, exception -> {
-					log.warn(exception.getMessage());
-
-					ServerHttpResponse response = exchange.getResponse();
-					response.setStatusCode(HttpStatus.BAD_REQUEST);
-					return response.writeWith(Mono.just(response.bufferFactory().allocateBuffer(0)));
-			});
+		setAuthenticationFailureHandler(FAILURE_HANDLER);
 	}
 }

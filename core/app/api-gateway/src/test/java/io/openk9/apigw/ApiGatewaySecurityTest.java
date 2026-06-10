@@ -525,7 +525,11 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, "ApiKey ")
 				.exchange()
-				.expectStatus().isBadRequest();
+				.expectStatus().isUnauthorized()
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
+					assertThat(value).contains(
+						"ApiKey realm=\"openk9\"",
+						"error=\"malformed_api_key\""));
 		}
 
 		@Test
@@ -712,9 +716,82 @@ class ApiGatewaySecurityTest {
 				HttpHeaders.AUTHORIZATION,
 				"ApiKey sk_9a6efxxxxxxxxx404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667")
 				.exchange()
-				.expectStatus().isBadRequest();
+				.expectStatus().isUnauthorized()
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
+					assertThat(value).contains(
+						"ApiKey realm=\"openk9\"",
+						"error=\"invalid_checksum\""));
 		}
 
+	}
+
+	@Nested
+	@DisplayName("API Key WWW-Authenticate Error Responses")
+	class ApiKeyAuthErrorTests {
+
+		@Test
+		@DisplayName("Unknown API key returns 401 invalid_api_key")
+		void testUnknownApiKeyReturnsInvalidApiKey() {
+			// a well-formed but unregistered key against a keychain tenant
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
+				.exchange()
+				// 401 with the ApiKey challenge and the invalid_api_key code
+				.expectStatus().isUnauthorized()
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
+					assertThat(value).contains(
+						"ApiKey realm=\"openk9\"",
+						"error=\"invalid_api_key\""));
+		}
+
+		@Test
+		@DisplayName("Expired API key returns 401 expired_api_key")
+		void testExpiredApiKeyReturnsExpiredApiKey() {
+			// a registered key past its expiration date
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, SABAODY_EXPIRED_API_KEY)
+				.exchange()
+				// 401 with the ApiKey challenge and the expired_api_key code
+				.expectStatus().isUnauthorized()
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
+					assertThat(value).contains(
+						"ApiKey realm=\"openk9\"",
+						"error=\"expired_api_key\""));
+		}
+
+		@Test
+		@DisplayName("Invalid Bearer token keeps the Bearer challenge")
+		void testBearerBranchNotAffected() {
+			// an OAuth2 route must keep its Bearer entry point untouched
+			webTestClient.get()
+				.uri("/api/datasource/test")
+				.header(HttpHeaders.HOST, ALABASTA_HOST)
+				.header(HttpHeaders.AUTHORIZATION, INVALID_JWT_TOKEN)
+				.exchange()
+				// 401 with a Bearer challenge, never the ApiKey scheme
+				.expectStatus().isUnauthorized()
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
+					assertThat(value)
+						.contains("Bearer")
+						.doesNotContain("ApiKey"));
+		}
+
+		@Test
+		@DisplayName("Every API key 401 carries a WWW-Authenticate header")
+		void testWwwAuthenticateHeaderAlwaysPresent() {
+			// RFC 7235 §4.1: a 401 must include a WWW-Authenticate header
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
+				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
+				.exchange()
+				.expectStatus().isUnauthorized()
+				.expectHeader().exists(HttpHeaders.WWW_AUTHENTICATE);
+		}
 	}
 
 	@Nested

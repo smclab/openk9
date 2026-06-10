@@ -17,15 +17,14 @@
 
 package io.openk9.apigw.security.apikey;
 
-public class ApiKeyMalformedException extends RuntimeException {
+import org.springframework.security.core.AuthenticationException;
+
+public class ApiKeyMalformedException extends AuthenticationException {
 
 	public ApiKeyMalformedException(String msg) {
 		super(msg);
 	}
 
-	public ApiKeyMalformedException(Throwable cause) {
-		super(cause);
-	}
 	public ApiKeyMalformedException(String msg, Throwable cause) {
 		super(msg, cause);
 	}

@@ -36,7 +36,6 @@ import io.openk9.apigw.security.Tenant;
 import io.openk9.apigw.security.TenantIdResolverFilter;
 import io.openk9.apigw.security.TenantSecurityService;
 import io.openk9.apigw.security.apikey.ApiKeyAuthenticationToken;
-import io.openk9.apigw.security.apikey.ApiKeyMalformedException;
 import io.openk9.apigw.security.oauth2.OAuth2Settings;
 import io.openk9.event.tenant.ApiGroup;
 
@@ -257,11 +256,7 @@ public class TenantSecurityServiceR2dbc implements TenantSecurityService {
 				catch (ChecksumValidationException e) {
 					sink.error(e);
 				}
-			})
-			.onErrorMap(
-				ChecksumValidationException.class,
-				ApiKeyMalformedException::new
-			);
+			});
 	}
 
 	/**
