@@ -78,7 +78,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 					.call(highlight -> Mutiny.fetch(highlight.getMatchedFields()))
 					.flatMap(highlight -> {
 							var newStateHighlight = mapper.patch(highlight, dto);
-							return updateHighlight(dto, session, newStateHighlight);
+							return patchHighlight(dto, session, newStateHighlight);
 						}
 					));
 	}
@@ -118,7 +118,26 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 					return session.merge(newStateHighlight);
 				});
 			} else
-				newStateHighlight.setMatchedFields(new LinkedHashSet<>());
+				newStateHighlight.setMatchedFields(null);
+
+			return session.merge(newStateHighlight);
+		});
+	}
+
+	private Uni<Highlight> patchHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+
+		return docTypeFieldIds.flatMap(docTypeFields -> {
+			newStateHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+
+			if (dto.getMatchedFieldIds() != null) {
+				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
+
+				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
+					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+					return session.merge(newStateHighlight);
+				});
+			}
 
 			return session.merge(newStateHighlight);
 		});
