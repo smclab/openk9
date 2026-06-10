@@ -120,6 +120,9 @@
 					<to>
 						<image>openk9/${project.artifactId}</image>
 					</to>
+					<container>
+						<user>1000</user>
+					</container>
 				</configuration>
 			</plugin>
 		</plugins>
