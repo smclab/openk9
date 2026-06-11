@@ -168,28 +168,28 @@ def run(verbose=False, kfilter=None):
               no_fire=["Build Datasource Release", "Copy Datasource to DockerHub"],
               verbose=verbose)
 
-    # ── AI — embedding (two images: OpenAI + sentence-transformers) ─────────────
+    # ── AI — embedding (single image: OpenAI — ST removed, see #2162) ──────────
     f = ".gitlab-ci-embedding-module.yaml"
     if want(f):
-        section("AI — embedding (two images, Kaniko)")
+        section("AI — embedding (Kaniko)")
 
-        check(f"tag {TAG_V} → both Release builds + both Copy jobs",
+        check(f"tag {TAG_V} → Release build + Copy job",
               list_jobs(f, tag=TAG_V),
-              fire=["Build Embedding OpenAI Release", "Build Embedding ST Release",
-                    "Copy Embedding OpenAI to DockerHub", "Copy Embedding ST to DockerHub"],
+              fire=["Build Embedding OpenAI Release",
+                    "Copy Embedding OpenAI to DockerHub"],
               no_fire=["Trigger Restart Embedding Release"], verbose=verbose)
 
-        check(f"release branch {BRANCH} → both Release builds + Restart Release; NO Copy",
+        check(f"release branch {BRANCH} → Release build + Restart Release; NO Copy",
               list_jobs(f, branch=BRANCH, source="push"),
-              fire=["Build Embedding OpenAI Release", "Build Embedding ST Release",
+              fire=["Build Embedding OpenAI Release",
                     "Trigger Restart Embedding Release"],
-              no_fire=["Copy Embedding OpenAI to DockerHub", "Copy Embedding ST to DockerHub"],
+              no_fire=["Copy Embedding OpenAI to DockerHub"],
               verbose=verbose)
 
-        check(f"tag {TAG_NOV} (no v) → NO Copy jobs (Docker Hub clean only)",
+        check(f"tag {TAG_NOV} (no v) → NO Copy job (Docker Hub clean only)",
               list_jobs(f, tag=TAG_NOV),
               fire=[],
-              no_fire=["Copy Embedding OpenAI to DockerHub", "Copy Embedding ST to DockerHub"],
+              no_fire=["Copy Embedding OpenAI to DockerHub"],
               verbose=verbose)
 
     # ── AI — rag (single image) ────────────────────────────────────────────────

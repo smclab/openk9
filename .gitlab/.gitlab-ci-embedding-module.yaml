@@ -32,8 +32,8 @@ Fetch config:
   rules:
     - !reference [.rules:child-build-always, rules]
 
-######################## BUILD EMBEDDING ST IMAGE (KANIKO) ########################
-Build Embedding ST:
+######################## BUILD EMBEDDING OPENAI IMAGE (KANIKO) ########################
+Build Embedding OpenAI:
   stage: build
   image:
     name: $KANIKO_IMAGE
@@ -45,72 +45,6 @@ Build Embedding ST:
     # Shared pip cache across all AI modules (rag, agentic-rag, embedding).
     # These modules share many heavy dependencies (torch, transformers, etc.).
     # Removed 'when: always' to avoid writing a partial/corrupt cache on job failure.
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
-  script:
-  - source $CI_PROJECT_DIR/config.env
-  - echo "=== Configuring Kaniko credentials ==="
-  - mkdir -p /kaniko/.docker
-  - |
-    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
-    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
-    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
-      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
-  - |
-    # ── Kaniko layer cache flags ──────────────────────────────────────────────────
-    # --cache=true          enables Docker layer cache
-    # --cache-repo          registry:2 on MinIO (bucket: kaniko-cache)
-    # --cache-ttl=72h      layers older than 7 days are ignored
-    # --snapshot-mode=redo  uses mtime instead of sha256 → avoids ~900s filesystem snapshots
-    # --compressed-caching=false  prevents OOM (exit 137) on large layers (e.g. PyTorch)
-    # ─────────────────────────────────────────────────────────────────────────────
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/embedding-modules --dockerfile ${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile"
-
-    if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-      echo "[ST] Build & push as :$VERSION"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
-
-    elif [ -n "$CI_MERGE_REQUEST_IID" ] || [ "$CI_PIPELINE_SOURCE" = "merge_request_event" ] || \
-         { [ "$CI_PIPELINE_SOURCE" = "parent_pipeline" ] && [ -z "$CI_COMMIT_BRANCH" ] && [ -z "$CI_COMMIT_TAG" ]; }; then
-      echo "[ST] MR: build only, no push"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
-
-    elif echo "$CI_COMMIT_BRANCH" | grep -qE '^[0-9]+-.*$'; then
-      if [ "$USER_TYPE" = "designated" ]; then
-        echo "[ST] Feature (designated) => build & push :997-SNAPSHOT"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-          --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:997-SNAPSHOT"
-      else
-        echo "[ST] Feature (generic) => build only, no push"
-        /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT --no-push
-      fi
-    fi
-  rules:
-    # main: push versione; feature designated: push 997-SNAPSHOT; feature generic
-    # e MR: build --no-push (per gli AI il docker build È la verifica MR, il
-    # Build Verifier fa solo py_compile). Niente tag: su vN.N.N builda solo il
-    # job Release — mutua esclusione main/release come backend/frontend (#2160).
-    - !reference [.rules:child-deploy-main-tag, rules]
-    - !reference [.rules:child-restart-feature, rules]
-    - !reference [.rules:child-build-feature-generic, rules]
-    - !reference [.rules:child-verify-mr, rules]
-
-######################## BUILD EMBEDDING OPENAI IMAGE (KANIKO) ########################
-Build Embedding OpenAI:
-  stage: build
-  image:
-    name: $KANIKO_IMAGE
-    entrypoint: [""]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  cache:
     key: "shared-pip"
     paths:
     - .pip-cache/
@@ -215,55 +149,12 @@ Trigger Restart:
     artifacts: true
   - job: Build Embedding OpenAI
     artifacts: false
-  - job: Build Embedding ST
-    artifacts: false
   rules:
     # Run only on main/tag or designated feature branch
     - !reference [.rules:child-restart-main, rules]
     - !reference [.rules:child-restart-feature, rules]
 
 # --- RELEASE BRANCH JOBS ---
-
-Build Embedding ST Release:
-  stage: build
-  image:
-    name: $KANIKO_IMAGE
-    entrypoint: [""]
-  needs:
-  - job: Fetch config
-    artifacts: true
-  cache:
-    key: "shared-pip"
-    paths:
-    - .pip-cache/
-    policy: pull-push
-  before_script:
-  - mkdir -p .pip-cache
-  script:
-  - source $CI_PROJECT_DIR/config.env
-  - mkdir -p /kaniko/.docker
-  - |
-    REGISTRY_AUTH=$(printf "%s:%s" "${CI_REGISTRY_USERNAME}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
-    DOCKERHUB_AUTH=$(printf "%s:%s" "${DOCKER_HUB_USER}" "${DOCKER_HUB_PASSWORD}" | base64 | tr -d '\n')
-    printf '{"auths":{"registry.smc.it:49083":{"auth":"%s"},"https://index.docker.io/v1/":{"auth":"%s"}}}' \
-      "${REGISTRY_AUTH}" "${DOCKERHUB_AUTH}" > /kaniko/.docker/config.json
-  - |
-    KANIKO_CACHE_FLAGS="--cache=true --cache-repo=kaniko-cache-registry.openk9.io/kaniko-cache --cache-ttl=72h --snapshot-mode=redo --compressed-caching=false"
-    KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/embedding-modules --dockerfile ${CI_PROJECT_DIR}/ai-packages/embedding-modules/Dockerfile"
-
-    if [ -n "$CI_COMMIT_TAG" ]; then
-      echo "[ST Release] Tag: push $VERSION"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
-    else
-      # The version comes from python_modules_config.txt, which already carries
-      # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
-      echo "[ST Release] Branch: push $VERSION"
-      /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-sentence-transformers-module:$VERSION"
-    fi
-  rules:
-    - !reference [.rules:child-deploy-release, rules]
 
 Build Embedding OpenAI Release:
   stage: build
@@ -327,14 +218,11 @@ Trigger Restart Embedding Release:
     artifacts: true
   - job: Build Embedding OpenAI Release
     artifacts: false
-  - job: Build Embedding ST Release
-    artifacts: false
   rules:
     - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
-# Runs only on Git tag. Two jobs: one per image (openai-module + sentence-transformers-module).
-# Copies already-built images to Docker Hub without rebuilding.
+# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Embedding OpenAI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
@@ -344,14 +232,4 @@ Copy Embedding OpenAI to DockerHub:
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
     - job: Build Embedding OpenAI Release
-      artifacts: false  # image is on the registry, no artifacts needed from this job
-
-Copy Embedding ST to DockerHub:
-  extends: .skopeo-copy-to-dockerhub
-  variables:
-    REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
-  needs:
-    - job: Fetch config
-      artifacts: true  # downloads config.env — needed to resolve the image version
-    - job: Build Embedding ST Release
       artifacts: false  # image is on the registry, no artifacts needed from this job
