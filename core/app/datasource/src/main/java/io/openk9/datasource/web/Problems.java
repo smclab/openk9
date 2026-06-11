@@ -20,8 +20,10 @@ package io.openk9.datasource.web;
 import jakarta.validation.ValidationException;
 
 import io.openk9.common.model.dto.Problem;
+import io.openk9.datasource.client.exception.InvalidUriException;
 import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.client.exception.FormEndpointException;
+import jakarta.ws.rs.core.Response;
 
 import java.net.ConnectException;
 
@@ -57,6 +59,17 @@ public final class Problems {
 		problem.setStatus(502);
 		problem.setTitle("Health not available");
 		problem.setDetail(healthEndpointErrorDetail(exception));
+		return problem;
+	}
+
+	public static Problem invalidUri(
+		InvalidUriException exception,
+		Response.Status status) {
+
+		var problem = new Problem();
+		problem.setStatus(status.getStatusCode());
+		problem.setTitle("Invalid baseUri");
+		problem.setDetail(exception.getMessage());
 		return problem;
 	}
 

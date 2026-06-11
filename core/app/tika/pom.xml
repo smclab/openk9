@@ -61,6 +61,17 @@
 		</plugins>
 	</build>
 
+	<dependencyManagement>
+		<dependencies>
+			<!-- Force junrar above the 7.5.8 pulled in transitively by quarkus-tika (tika-parser-pkg-module) -->
+			<dependency>
+				<groupId>com.github.junrar</groupId>
+				<artifactId>junrar</artifactId>
+				<version>7.5.10</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.quarkus</groupId>

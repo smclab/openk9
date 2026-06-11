@@ -1,6 +1,7 @@
 {
 	"translation": {
 		"error": "Bitte versuchen Sie es erneut, ein Fehler ist aufgetreten...",
+		"guardrail-violation": "Ihre Anfrage kann nicht bearbeitet werden, da sie gegen die Inhaltsrichtlinien verstößt.",
 		"version": "Version",
 		"welcome-to": "Willkommen bei",
 		"where-knowledge-has-no-limits": "wo Wissen keine Grenzen kennt!",

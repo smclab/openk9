@@ -254,10 +254,20 @@ build_core() {
     echo "--- Building Frontend Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+    build_tenant_ui
 
     echo "--- Building Connectors ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+}
+
+build_tenant_ui() {
+    # Dev image tags (those containing "dev", e.g. the default local-dev tag) build
+    # tenant-ui with DEV_MODE on, which exposes dev-only UI options such as the
+    # NO_GATEWAY_AUTH security preset. Release tags build with dev mode off.
+    # Shared by build_core and build_single so the two paths cannot drift.
+    local dev_mode=false
+    case "$TAG" in *dev*) dev_mode=true ;; esac
+    docker build --pull --platform "$JIB_PLATFORM" --build-arg "DEV_MODE=$dev_mode" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
 }
 
 build_gen_ai() {
@@ -346,7 +356,7 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
             ;;
         tenant-ui)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-tenant-ui:$TAG" -f js-packages/tenant-ui/Dockerfile .
+            build_tenant_ui
             ;;
         web-connector)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
@@ -514,6 +524,30 @@ do_push() {
     fi
 }
 
+# --- openapi-docs command ---
+#
+# Refreshes docs/openapi-yaml/tenant-manager-openapi.yaml, the snapshot
+# consumed by the Docusaurus site (docs/docusaurus.config.js). Runs the
+# smallrye-open-api-maven-plugin via the `generate-schemas` profile and
+# copies the produced YAML into docs/.
+#
+# Kept separate from `yarn fetch-schemas` (frontend codegen) so the
+# committed docs file is refreshed deliberately, not on every frontend
+# regeneration.
+
+do_openapi_docs() {
+    _info "Regenerating OpenAPI YAML for tenant-manager..."
+    (
+        cd core
+        ./mvnw -pl app/tenant-manager -am \
+            -P '!validate,!format,generate-schemas' \
+            -q process-classes
+    )
+    cp core/app/tenant-manager/target/generated/openapi.yaml \
+        docs/openapi-yaml/tenant-manager-openapi.yaml
+    _ok "Updated docs/openapi-yaml/tenant-manager-openapi.yaml"
+}
+
 # --- Compose helper ---
 
 compose() {
@@ -545,6 +579,7 @@ Commands:
   logs    [services...]   Follow container logs
   doctor                  Check prerequisites (java, docker, node, ...)
   push    <services...>   Tag and push images to OPENK9_REGISTRY
+  openapi-docs            Regenerate docs/openapi-yaml/tenant-manager-openapi.yaml
 
 Options:
   -b, --build            Build images before starting/restarting
@@ -604,7 +639,7 @@ Startup behavior:
 
 Access:
   After startup, the services are available at:
-    Tenant UI:   https://demo.openk9.localhost/tenant
+    Tenant UI:   https://tenant-manager.openk9.localhost/admin
     Admin UI:    https://demo.openk9.localhost/admin
     Search:      https://demo.openk9.localhost
 
@@ -702,6 +737,9 @@ case "$CMD" in
         ;;
     push)
         do_push
+        ;;
+    openapi-docs)
+        do_openapi_docs
         ;;
     *)
         usage

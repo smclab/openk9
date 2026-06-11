@@ -183,6 +183,20 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 											setIsChatting(false);
 											setIsLoading(null);
 											break;
+										case "GUARDRAIL":
+											setMessages((prev) =>
+												prev.map((msg) =>
+													msg.id === id
+														? {
+																...msg,
+																answer: t("guardrail-violation"),
+														  }
+														: msg,
+												),
+											);
+											setIsChatting(false);
+											setIsLoading(null);
+											break;
 										default:
 											console.warn("Tipo di chunk non riconosciuto:", data.type);
 											break;
@@ -220,7 +234,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 				return updated;
 			});
 		},
-		[loading, userInfo, messages, client, language],
+		[loading, userInfo, messages, client, language, t],
 	);
 
 	const cancelResponse = (id: string) => {

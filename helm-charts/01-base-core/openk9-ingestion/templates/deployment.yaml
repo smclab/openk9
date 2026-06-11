@@ -26,6 +26,9 @@ spec:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config

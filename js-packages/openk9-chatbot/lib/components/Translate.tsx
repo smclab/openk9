@@ -18,6 +18,10 @@ import { useLanguage } from "./useLanguage";
 
 export function Translate({ label }: { label: TranslationKey }): string {
   const { language } = useLanguage();
+  return getTranslation(label, language);
+}
+
+export function getTranslation(label: TranslationKey, language: string): string {
   const htmlLang = language as Language;
   const translation = translations[label]?.[htmlLang];
   return translation || label;
@@ -82,6 +86,13 @@ const translations: {
     es_ES: "Buscar en el chatbot",
     de_DE: "Im Chatbot suchen",
   },
+  guardrailViolation: {
+    it_IT: "La tua richiesta non può essere evasa perché viola le linee guida sui contenuti.",
+    en_US: "Your request cannot be processed because it violates the content guidelines.",
+    fr_FR: "Votre demande ne peut pas être traitée car elle enfreint les règles relatives au contenu.",
+    es_ES: "Tu solicitud no puede ser procesada porque infringe las directrices de contenido.",
+    de_DE: "Ihre Anfrage kann nicht bearbeitet werden, da sie gegen die Inhaltsrichtlinien verstößt.",
+  },
 };
 
 type Language = "it_IT" | "en_US" | "fr_FR" | "es_ES" | "de_DE";
@@ -94,5 +105,6 @@ type TranslationKey =
   | "youSendMessage"
   | "sendMessage"
   | "customPlaceholder"
-  | "searchLabel";
+  | "searchLabel"
+  | "guardrailViolation";
 

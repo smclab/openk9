@@ -75,6 +75,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
+			<version>${postgresql-springboot.version}</version>
 			<scope>runtime</scope>
 		</dependency>
 

@@ -19,6 +19,17 @@ import { apiGroupLabel, authSchemeColor, authSchemeLabel, securityConfigDescript
 
 type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["preconfigurations"]>[number]>;
 
+// Development-only configurations: hidden from the wizard unless the image
+// is built in dev mode (REACT_APP_DEV_MODE, set from the build tag).
+const HIDDEN_SECURITY_CONFIGURATIONS = ["NO_GATEWAY_AUTH"];
+
+export function selectablePresets<T extends { name?: unknown }>(presets: T[], devMode: boolean): T[] {
+  if (devMode) {
+    return presets;
+  }
+  return presets.filter((p) => !HIDDEN_SECURITY_CONFIGURATIONS.includes(p.name as string));
+}
+
 type Props = {
   values: WizardState["step2"];
   onChange: (next: WizardState["step2"]) => void;
@@ -29,7 +40,8 @@ export function Step2Security({ values, onChange }: Props) {
     fetchPolicy: "cache-first",
     nextFetchPolicy: "cache-only",
   });
-  const presets = (data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p);
+  const devMode = process.env.REACT_APP_DEV_MODE === "true";
+  const presets = selectablePresets((data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p), devMode);
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 
   if (loading) {
@@ -59,9 +71,20 @@ export function Step2Security({ values, onChange }: Props) {
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
                   <Radio checked={isSelected} size="small" sx={{ p: 0, mt: 0.5 }} />
                   <Box>
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {securityConfigLabel[key] ?? key}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        {securityConfigLabel[key] ?? key}
+                      </Typography>
+                      {HIDDEN_SECURITY_CONFIGURATIONS.includes(key) && (
+                        <Chip
+                          size="small"
+                          color="warning"
+                          label="dev"
+                          aria-label="Development mode only"
+                          sx={{ height: 16, fontSize: "0.6rem", "& .MuiChip-label": { px: 0.625 } }}
+                        />
+                      )}
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {securityConfigDescription[key] ?? ""}
                     </Typography>

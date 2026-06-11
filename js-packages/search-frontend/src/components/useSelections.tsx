@@ -67,11 +67,16 @@ export function useSelections({
       : {}),
   };
 
-  const [state, dispatch] = React.useReducer(reducer, defaultSearch, (def) =>
-    persistInQueryString
+  const [state, dispatch] = React.useReducer(reducer, defaultSearch, (def) => {
+    const loaded = persistInQueryString
       ? loadQueryString<SelectionsState>(def, buildMap)
-      : loadLocalStorage<SelectionsState>(def, localStorageKey, buildMap),
-  );
+      : loadLocalStorage<SelectionsState>(def, localStorageKey, buildMap);
+    return {
+      ...loaded,
+      text: String(loaded.text ?? ""),
+      textOnChange: String(loaded.textOnChange ?? ""),
+    };
+  });
 
   const [canSave, setCanSave] = React.useState(false);
   const client = useOpenK9Client();
@@ -142,13 +147,15 @@ function reducer(
         action.pageSize && action.pageSize > 0
           ? action.pageSize
           : state.range[1] ?? 10;
+      const nextText = String(action.text ?? "");
+      const nextTextOnChange = String(action.textOnchange ?? "");
       return {
         ...state,
-        text: action.text,
-        textOnChange: action.textOnchange,
+        text: nextText,
+        textOnChange: nextTextOnChange,
         selection: shiftSelection(
           state.textOnChange,
-          action.textOnchange,
+          nextTextOnChange,
           state.selection,
         ),
         range: [0, size],
@@ -156,12 +163,13 @@ function reducer(
       };
     }
     case "set-text-btn": {
+      const nextTextOnChange = String(action.textOnchange ?? "");
       return {
         ...state,
-        textOnChange: action.textOnchange,
+        textOnChange: nextTextOnChange,
         selection: shiftSelection(
           state.textOnChange,
-          action.textOnchange,
+          nextTextOnChange,
           state.selection,
         ),
       };

@@ -34,6 +34,11 @@ data:
     "unknown"
   {{- end }}
 
+  {{- if eq .Values.database.type "postgresql" }}
+  QUARKUS_DATASOURCE_REACTIVE_POSTGRESQL_SSL_MODE: {{ .Values.database.postgresql.sslMode | quote }}
+  QUARKUS_DATASOURCE_REACTIVE_TRUST_ALL: {{ .Values.database.postgresql.trustAll | quote }}
+  {{- end }}
+
   QUARKUS_HIBERNATE_ORM_LOG_SQL: {{ .Values.hibernate.orm.logSql | quote }}
 
   # Quarkus env generic variables
@@ -56,6 +61,8 @@ data:
   OPENK9_DATASOURCE_SEARCHER_SERVICE_MAX_SEARCH_PAGE_SIZE: {{ .Values.search.page.size | quote }}
   OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: {{ .Values.queryAnalysis.searchTextLength | quote }}
   QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
+  QUARKUS_GRPC_CLIENTS__EMBEDDING__HOST: {{ .Values.openk9.embedding.host | quote }}
+  QUARKUS_GRPC_CLIENTS__EMBEDDING__PORT: {{ .Values.openk9.embedding.port | quote }}
 
   # Pekko env variables
   PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: {{ .Values.quarkus.PekkoClusterBootstrapServiceName | quote }}

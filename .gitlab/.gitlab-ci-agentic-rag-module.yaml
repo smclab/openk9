@@ -188,10 +188,11 @@ Build Agentic Rag Release:
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-agentic-rag-module:$VERSION"
     else
-      SNAP_TAG="${VERSION}-SNAPSHOT"
-      echo "[AGENTIC-RAG Release] Branch: push $SNAP_TAG"
+      # The version comes from python_modules_config.txt, which already carries
+      # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
+      echo "[AGENTIC-RAG Release] Branch: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-agentic-rag-module:$SNAP_TAG"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-agentic-rag-module:$VERSION"
     fi
   rules:
     - !reference [.rules:child-deploy-release, rules]
@@ -218,7 +219,7 @@ Trigger Restart Agentic Rag Release:
   - job: Build Agentic Rag Release
     artifacts: false
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
@@ -230,5 +231,5 @@ Copy Agentic Rag to DockerHub:
   needs:
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
-    - job: Build Agentic Rag Image
+    - job: Build Agentic Rag Release
       artifacts: false  # image is on the registry, no artifacts needed from this job

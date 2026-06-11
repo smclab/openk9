@@ -95,7 +95,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     isChild: boolean;
     parentId: string;
   } | null>(null);
-  const [deleteModal, setDeleteModal] = useState<{ id: string; name: string } | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{ id: string; name: string; step: 1 | 2 } | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const theme = useTheme();
   const toast = useToast();
@@ -122,11 +122,13 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     },
     onError: (error) => {
       console.error("Error deleting document type field:", error);
+      const serverMessage = error.graphQLErrors?.[0]?.message || error.message;
       toast({
         title: "Error Delete",
-        content: "Impossible to delete document type field",
+        content: serverMessage || "Impossible to delete document type field. The field may be in use by other configurations.",
         displayType: "error",
       });
+      setDeleteModal(null);
     },
   });
 
@@ -293,10 +295,22 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
   return (
     <Container sx={{ position: "relative" }}>
       <>
-        {deleteModal && (
+        {deleteModal && deleteModal.step === 1 && (
           <ModalConfirm
             title="Delete Document Type Field"
-            body={`Deleting the field "${deleteModal.name}" is irreversible and will remove all associated data. Type the field name to confirm.`}
+            body={`You are about to delete the field "${deleteModal.name}". This action is irreversible and will remove all associated data. Do you want to continue?`}
+            labelConfirm="Continue"
+            type="warning"
+            actionConfirm={() => {
+              setDeleteModal((prev) => (prev ? { ...prev, step: 2 } : null));
+            }}
+            close={() => setDeleteModal((prev) => (prev?.step === 1 ? null : prev))}
+          />
+        )}
+        {deleteModal && deleteModal.step === 2 && (
+          <ModalConfirm
+            title="Confirm Deletion"
+            body={`To definitively delete the field "${deleteModal.name}", please type the field name to confirm. If the field is used by other configurations, the operation will be blocked.`}
             labelConfirm="Delete"
             type="error"
             confirmationWord={deleteModal.name}
@@ -560,7 +574,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
                       startIcon={<DeleteIcon />}
                       onClick={(event) => {
                         event.stopPropagation();
-                        setDeleteModal({ id: child.id, name: child.name || "" });
+                        setDeleteModal({ id: child.id, name: child.name || "", step: 1 });
                       }}
                     >
                       Delete

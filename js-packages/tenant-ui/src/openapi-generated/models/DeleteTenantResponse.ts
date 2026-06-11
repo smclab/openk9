@@ -5,3 +5,4 @@
 export type DeleteTenantResponse = {
     message?: string;
 };
+

@@ -1,6 +1,7 @@
 {
 	"translation": {
 		"error": "Veuillez réessayer, une erreur s'est produite......",
+		"guardrail-violation": "Votre demande ne peut pas être traitée car elle enfreint les règles relatives au contenu.",
 		"version": "Version",
 		"welcome-to": "Bienvenue sur",
 		"where-knowledge-has-no-limits": "là où la connaissance n'a pas de limites!",

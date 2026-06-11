@@ -253,7 +253,7 @@ message GetRAGConfigurationsResponse{
 }
 
 message GetEmbeddingModelConfigurationsResponse {
-  string apiUrl = 1;
+  optional string apiUrl = 1;
   optional string apiKey = 2;
   .google.protobuf.Struct jsonConfig = 3;
   ProviderModel providerModel = 4;

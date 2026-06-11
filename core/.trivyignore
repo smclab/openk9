@@ -1,0 +1,20 @@
+# CVE-2026-45292 — io.opentelemetry:opentelemetry-api, io.opentelemetry:opentelemetry-extension-trace-propagators
+# Suppressed for the following reasons:
+#   - CVE record is still in RESERVED state, no official details published on MITRE/NVD yet.
+#   - Severity is MEDIUM (CVSS 5.3), Availability impact only (Low); no Confidentiality or Integrity impact.
+#   - opentelemetry-api is a transitive dependency pulled in via the Quarkus BOM. Overriding its version
+#     individually may introduce inconsistencies between OpenTelemetry modules, which are expected to be
+#     version-aligned by the BOM. Bumping it out-of-band is likely riskier than the vulnerability itself.
+# Expiration: re-evaluate before the next openk9 release. The next Quarkus bump should bring an updated
+# OpenTelemetry BOM that includes the fix (>= 1.62.0).
+CVE-2026-45292 exp:2026-07-06
+
+# CVE-2025-14969 — org.hibernate.reactive:hibernate-reactive-core
+# Suppressed for the following reasons:
+#   - False positive for this project: the bug (upstream Quarkus issue #51576, "DB connection might
+#     leak if the HTTP client closes the HTTP connection") was fixed in upstream Quarkus 3.27.2.
+#     OpenK9 runs on Quarkus 3.27.4, so the fix is already included.
+#   - The NVD "affected" record targets the Red Hat build of Quarkus and lists hibernate-reactive-core
+#     with an open-ended version range (*) and no fixed-version boundary. Trivy therefore matches the
+#     transitive 3.1.x artifact pulled in by the upstream Quarkus BOM regardless of the applied fix.
+CVE-2025-14969

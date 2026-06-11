@@ -37,6 +37,7 @@ import { TokenType, useCreateOrUpdateTabTokenMutation, useTabTokenTabQuery } fro
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { AutocompleteOptionsList } from "@components/Form/Select/AutocompleteOptionsList";
 import Recap, { mappingCardRecap } from "@pages/Recap/SaveRecap";
+import { evictTokenTabAssociationLists } from "./gql";
 
 enum fuzziness {
   ZERO = "ZERO",
@@ -168,6 +169,11 @@ export function SaveTokenTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNo
 
   const [createOrUpdateTabTokenMutate, createOrUpdateTabTokenMutation] = useCreateOrUpdateTabTokenMutation({
     refetchQueries: ["TabTokenTab", "TabTokens"],
+    update(cache, { data }) {
+      if (data?.tokenTabWithDocTypeField?.entity) {
+        evictTokenTabAssociationLists(cache);
+      }
+    },
     onCompleted(data: any) {
       if (data.tokenTabWithDocTypeField?.entity) {
         const isNew = tokenTabId === "new" ? "created" : "updated";

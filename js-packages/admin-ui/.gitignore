@@ -143,7 +143,7 @@ hs_err_pid*
 postgres
 postgres-keycloak
 rabbitmq
-elasticsearch
+opensearch
 neo4j
 
 # python cache

@@ -1,6 +1,7 @@
 {
   "translation": {
     "after-days": "days forward",
+    "guardrail-violation": "Your request cannot be processed because it violates the content guidelines.",
     "active-filters": "Active Filters",
     "asc": "asc",
     "add-filters": "Apply Filters",

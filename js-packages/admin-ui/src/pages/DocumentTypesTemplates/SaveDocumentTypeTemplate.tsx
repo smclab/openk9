@@ -28,6 +28,7 @@ import {
   useToast,
 } from "@components/Form";
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -158,8 +159,8 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
           { key: "templateType", label: "Template Type" },
           ...(form.inputProps("templateType").value === "JAVASCRIPT_SOURCE" ||
             form.inputProps("templateType").value === "TYPESCRIPT_SOURCE"
-            ? [{ key: "source" }]
-            : [{ key: "compiled" }]),
+            ? [{ key: "source", jsonView: true }]
+            : [{ key: "compiled", jsonView: true }]),
         ],
         label: "Recap Document Type Template",
       },
@@ -291,6 +292,13 @@ export function SaveDocumentTypeTemplate({ setExtraFab }: { setExtraFab: (fab: R
           submitLabel: isNew ? "Create entity" : "Update entity",
           backLabel: "Back",
         }}
+        disclaimer={
+          !isNew && !view ? (
+            <Alert severity="warning" variant="outlined">
+              This action is irreversible: saving will overwrite the current template and the previous version will be permanently lost.
+            </Alert>
+          ) : undefined
+        }
       />
     </Box>
   );

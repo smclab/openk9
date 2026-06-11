@@ -1,26 +1,25 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import { NamePath, useSideNavigation } from "@components/sideNavigationContext";
 import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
   Button,
   Checkbox,
-  List,
   ListItemIcon,
   ListItemText,
   Paper,
@@ -31,8 +30,11 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Virtuoso } from "react-virtuoso";
 import { associateType } from "utils";
 import { ModalConfirm } from "../Modals";
+
+const VIRTUALIZED_LIST_HEIGHT = 230;
 
 type ListProps = {
   unassociated: associateType[] | undefined;
@@ -169,45 +171,51 @@ export function MultiAssociationCustomQuery<Q>({
       {isLoading ? (
         <Paper
           variant="outlined"
-          sx={{ minWidth: 200, height: 230, display: "flex", flexDirection: "column", gap: 1, padding: 2 }}
+          sx={{
+            minWidth: 200,
+            height: VIRTUALIZED_LIST_HEIGHT,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+            padding: 2,
+          }}
         >
           {Array.from({ length: 5 }).map((_, index) => (
             <Skeleton key={index} variant="rectangular" width="100%" height={32} />
           ))}
         </Paper>
       ) : (
-        <Paper variant="outlined" sx={{ minWidth: 200, height: 230, overflow: "auto" }}>
-          <List
-            dense
-            component="div"
+        <Paper variant="outlined" sx={{ minWidth: 200, height: VIRTUALIZED_LIST_HEIGHT }}>
+          <Virtuoso
+            style={{ height: VIRTUALIZED_LIST_HEIGHT }}
+            totalCount={items.length}
             role="list"
             aria-label={title}
-            sx={{ background: isLoading ? "blue" : "trasparent" }}
-          >
-            {items.map((item) => (
-              <Box
-                key={item.value}
-                role="listitem"
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "8px",
-                  cursor: "pointer",
-                }}
-                onClick={() => onToggle(item)}
-              >
-                <ListItemIcon>
-                  <Checkbox
-                    checked={selected.some((sel) => sel.value === item.value)}
-                    tabIndex={-1}
-                    disableRipple
-                    disabled={disabled}
-                  />
-                </ListItemIcon>
-                <ListItemText primary={item.label} />
-              </Box>
-            ))}
-          </List>
+            increaseViewportBy={{ top: 200, bottom: 200 }}
+            itemContent={(index) => {
+              const item = items[index];
+              if (!item) return null;
+              const isSelected = selected.some((sel) => sel.value === item.value);
+              return (
+                <Box
+                  role="listitem"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "8px",
+                    cursor: disabled ? "default" : "pointer",
+                  }}
+                  onClick={() => onToggle(item)}
+                >
+                  <ListItemIcon>
+                    <Checkbox checked={isSelected} tabIndex={-1} disableRipple disabled={disabled} />
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </Box>
+              );
+            }}
+            computeItemKey={(index) => items[index]?.value ?? index}
+          />
         </Paper>
       )}
     </>
@@ -276,4 +284,3 @@ export function MultiAssociationCustomQuery<Q>({
     </Box>
   );
 }
-

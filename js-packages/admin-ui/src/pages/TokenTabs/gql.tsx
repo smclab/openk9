@@ -14,7 +14,24 @@
 * You should have received a copy of the GNU Affero General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import { gql } from "@apollo/client";
+import { ApolloCache, gql } from "@apollo/client";
+
+/**
+ * Invalida in cache tutte le liste che alimentano l'associazione Tab <-> Token Tab
+ * (tabella Token Tabs e liste "associati/non associati" nell'editor della Tab), così
+ * un token tab creato/aggiornato/eliminato altrove compare senza ricaricare la pagina.
+ *
+ * `refetchQueries` da solo non basta: rifà solo le query con observer attivi, ma quando
+ * si crea il token le pagine che mostrano queste liste sono smontate.
+ */
+export function evictTokenTabAssociationLists(cache: ApolloCache<unknown>) {
+  // lista globale dei token tab (tabella + percorso "tab nuova" dell'associazione)
+  cache.evict({ id: "ROOT_QUERY", fieldName: "totalTokenTabs" });
+  // tab(id).tokenTabs(notEqual: ...) usati per liste associati/non associati nell'editor Tab
+  cache.evict({ id: "ROOT_QUERY", fieldName: "tab" });
+  cache.evict({ id: "ROOT_QUERY", fieldName: "tabs" });
+  cache.gc();
+}
 
 gql`
   query TabTokenTab($id: ID!) {

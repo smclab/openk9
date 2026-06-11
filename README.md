@@ -29,7 +29,7 @@ Once started, OpenK9 is running at **https://demo.openk9.localhost**.
 | Panel | URL | Credentials |
 |---|---|---|
 | Admin UI | [https://demo.openk9.localhost/admin](https://demo.openk9.localhost/admin) | `admin` / `admin` |
-| Tenant UI | [https://demo.openk9.localhost/tenant](https://demo.openk9.localhost/tenant) | `admin` / `admin` |
+| Tenant UI | [https://tenant-manager.openk9.localhost/admin](https://tenant-manager.openk9.localhost/admin) | `admin` / `admin` |
 | Search | [https://demo.openk9.localhost](https://demo.openk9.localhost) | — |
 
 All administration panels use **HTTP Basic Authentication** with `admin` / `admin`.

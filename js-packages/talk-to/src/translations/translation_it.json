@@ -1,6 +1,7 @@
 {
 	"translation": {
 		"error": "Si prega di riprovare, è stato effettuato un errore ...",
+		"guardrail-violation": "La tua richiesta non può essere evasa perché viola le linee guida sui contenuti.",
 		"version": "Versione",
 		"welcome-to": "Benvenuti su",
 		"where-knowledge-has-no-limits": "dove la conoscenza non ha limiti!",

@@ -171,7 +171,7 @@ export function MonitoringTab({ id }: { id: string }) {
         <>
           <Button onClick={() => handleOpen("closeScheduling", item.node.id)}>Close</Button>
           <Button onClick={() => handleOpen("cancelScheduling", item.node.id)}>Cancel</Button>
-          <Button onClick={() => handleOpen("rerouteScheduling", item.node.id)}>Reroute</Button>
+          <Button onClick={() => handleOpen("rerouteScheduling", item.node.id)}>Reprocess failed messages</Button>
           <Button onClick={handleViewInfoClick}>View Info</Button>
         </>
       );
@@ -182,7 +182,9 @@ export function MonitoringTab({ id }: { id: string }) {
 
   const handleOpen = (action: string, id: number) => {
     setSchedulingId(id);
-    setModalMessage(`Do you want to ${action.replace("Scheduling", "").toLowerCase()} this scheduling?`);
+    const actionLabel =
+      action === "rerouteScheduling" ? "reprocess failed messages for" : action.replace("Scheduling", "").toLowerCase();
+    setModalMessage(`Do you want to ${actionLabel} this scheduling?`);
     dataSourceInformationQuery.refetch();
     dataSourceSchedulers.refetch();
     setModalAction(action);

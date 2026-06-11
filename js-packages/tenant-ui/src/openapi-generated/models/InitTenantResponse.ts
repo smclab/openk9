@@ -5,3 +5,4 @@
 export type InitTenantResponse = {
     bucketId?: number;
 };
+

@@ -17,12 +17,12 @@
 
 package io.openk9.tenantmanager.service.dto;
 
-import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.NotEmpty;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public record EffectiveDeleteTenantRequest(
-	@Nonnull String virtualHost,
-	@Nonnull String token
+	@NotEmpty String virtualHost,
+	@NotEmpty String token
 ) {}

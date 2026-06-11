@@ -30,4 +30,13 @@ RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
 
 EXPOSE 5000
 
+# arize-phoenix writes its working dir to $HOME/.phoenix. Under USER 1001 (no /etc/passwd entry)
+# HOME defaults to "/" (root-owned) -> PermissionError. Point HOME at the writable WORKDIR.
+# USER is also unset for uid 1001; some libs read it, so set it explicitly too.
+ENV HOME=/agentic-rag-module
+ENV USER=agentic-rag-module
+RUN mkdir -p /agentic-rag-module/.phoenix && chown -R 1001:0 /agentic-rag-module && chmod -R g=u /agentic-rag-module
+
+USER 1001
+
 CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "5000"]

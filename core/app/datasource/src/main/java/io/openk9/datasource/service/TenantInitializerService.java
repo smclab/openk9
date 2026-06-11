@@ -116,17 +116,20 @@ public class TenantInitializerService {
 		return defaultQueryParserConfigs(s)
 			.flatMap(queryParserConfigs -> searchConfigService
 				.upsert(s, searchConfigDTO)
-				.flatMap(searchConfig -> {
+				.flatMap(searchConfig -> s
+					.fetch(searchConfig.getQueryParserConfigs())
+					.flatMap(existing -> {
 
-					searchConfig.getQueryParserConfigs().clear();
+						existing.clear();
 
-					for (QueryParserConfig queryParserConfig : queryParserConfigs) {
-						queryParserConfig.setSearchConfig(searchConfig);
-					}
+						for (QueryParserConfig queryParserConfig : queryParserConfigs) {
+							queryParserConfig.setSearchConfig(searchConfig);
+						}
 
-					searchConfig.getQueryParserConfigs().addAll(queryParserConfigs);
-					return searchConfigService.merge(s, searchConfig);
-				})
+						existing.addAll(queryParserConfigs);
+						return searchConfigService.merge(s, searchConfig);
+					})
+				)
 			);
 	}
 

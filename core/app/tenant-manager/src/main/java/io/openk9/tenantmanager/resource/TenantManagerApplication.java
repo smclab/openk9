@@ -24,6 +24,7 @@ import org.eclipse.microprofile.openapi.annotations.info.Contact;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @OpenAPIDefinition(
 	info = @Info(
@@ -39,7 +40,19 @@ import org.eclipse.microprofile.openapi.annotations.security.SecurityRequirement
 			email = "dev@openk9.io"
 		)
 	),
-	security = @SecurityRequirement(name = "SecurityScheme")
+	security = @SecurityRequirement(name = "SecurityScheme"),
+	tags = {
+		@Tag(
+			name = "Tenant Provisioning",
+			description = "Endpoints that create new tenants, request "
+				+ "deletion, and bootstrap their default content."
+		),
+		@Tag(
+			name = "Tenant Management",
+			description = "Maintenance endpoints on "
+				+ "existing tenants."
+		)
+	}
 )
-public class TenantManagerApplication  extends Application {
+public class TenantManagerApplication extends Application {
 }

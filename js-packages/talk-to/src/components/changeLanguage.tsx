@@ -138,6 +138,6 @@ function languageMapped(value: string | undefined) {
 		case "de_DE":
 			return "DE";
 		default:
-			return "en_US";
+			return "EN";
 	}
 }

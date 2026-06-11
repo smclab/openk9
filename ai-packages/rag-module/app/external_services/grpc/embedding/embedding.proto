@@ -52,6 +52,7 @@ message EmbeddingModel {
     optional string apiKey = 1;
     ProviderModel providerModel = 2;
     .google.protobuf.Struct jsonConfig = 3;
+    optional string apiUrl = 4;
 }
 
 message ResponseChunk {

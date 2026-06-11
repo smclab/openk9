@@ -143,6 +143,8 @@ Configure these when database type is postgresql
 | `postgresql.passwordSecretName` | Name of the secret where password is stored                            | `postgres-password`                       |
 | `postgresql.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `user-password`                    |
 | `postgresql.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
+| `postgresql.sslMode`  | SSL mode for the reactive PostgreSQL connection (`QUARKUS_DATASOURCE_REACTIVE_POSTGRESQL_SSL_MODE`)       | `require`   |
+| `postgresql.trustAll`  | Trust all certificates for the reactive PostgreSQL connection (`QUARKUS_DATASOURCE_REACTIVE_TRUST_ALL`)       | `true`   |
 
 Configure these when database type is oracle
 
@@ -210,6 +212,8 @@ To configure connection to Tenant Manager following parameters are available:
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `openk9.tenantManager.host`    | Tenant Manager host                         | `openk9-tenant-manager`            |
+| `openk9.embedding.host`        | Embedding Module gRPC host                  | `openk9-embedding-module`          |
+| `openk9.embedding.port`        | Embedding Module gRPC port                  | `5000`                             |
 
 
 ### Configure Opentelemetry

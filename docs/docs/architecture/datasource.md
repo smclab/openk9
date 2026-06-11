@@ -18,7 +18,7 @@ and links these to the data. Then send again data to queuing system.
 
 ### Reindex
 
-Defines the logic to launch a reindex of specific datasource. A reindex action deletes data from elasticsearch index,
+Defines the logic to launch a reindex of specific datasource. A reindex action deletes data from OpenSearch index,
 reset last ingestion date information and starts a new data ingestion flow from external data parser.
 
 ### Scheduler

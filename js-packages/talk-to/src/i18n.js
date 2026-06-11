@@ -16,7 +16,17 @@ const resources = {
 
 i18n.use(initReactI18next).init({
 	resources,
-	lng: "en",
+	lng: "en_US",
+	fallbackLng: {
+		en: ["en_US"],
+		it: ["it_IT", "en_US"],
+		fr: ["fr_FR", "en_US"],
+		es: ["es_ES", "en_US"],
+		de: ["de_DE", "en_US"],
+		default: ["en_US"],
+	},
+	supportedLngs: Object.keys(resources),
+	nonExplicitSupportedLngs: true,
 	interpolation: {
 		escapeValue: false,
 	},

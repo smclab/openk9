@@ -378,14 +378,18 @@ public class PluginDriverService
 	public Uni<HealthDTO> getHealth(PluginDriverDTO pluginDriverDTO) {
 		return httpPluginDriverClient
 			.validateBaseUri(pluginDriverDTO.getResourceUri(), regexValidations)
-			.flatMap(validResourceUri -> httpPluginDriverClient.getHealth(validResourceUri));
+			.flatMap(validResourceUri ->
+				httpPluginDriverClient.getHealth(validResourceUri));
 	}
 
 	public Uni<HealthDTO> getHealth(long id) {
 		return findById(id)
 			.flatMap(pluginDriver -> {
 				ResourceUri resourceUri = pluginDriver.getResourceUri();
-				return httpPluginDriverClient.getHealth(resourceUri);
+				return httpPluginDriverClient
+					.validateBaseUri(resourceUri, regexValidations)
+					.flatMap(validResourceUri ->
+						httpPluginDriverClient.getHealth(validResourceUri));
 				}
 			);
 	}

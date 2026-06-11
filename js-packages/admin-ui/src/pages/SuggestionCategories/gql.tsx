@@ -65,7 +65,7 @@ gql`
       id
       docTypeField {
         name
-        subFields(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+        subFields(searchText: $searchText, notEqual: $unassociated, first: 1000, after: $cursor) {
           edges {
             node {
               id
@@ -162,6 +162,15 @@ export const DocTypeFields = gql`
         hasNextPage
         endCursor
       }
+    }
+  }
+`;
+
+export const DocTypeFieldsByType = gql`
+  query DocTypeFieldsByType($fieldType: FieldType) {
+    docTypeFieldsByType(fieldType: $fieldType) {
+      id
+      name
     }
   }
 `;

@@ -16,10 +16,12 @@
 */
 import {
   RagType,
+  useDataSourcesQuery,
   useDocTypeFieldOptionsAnnotatorsQuery,
   useDocTypeFieldOptionsTokenTabQuery,
   useDocTypeFieldsQuery,
   useDocTypeTemplateListQuery,
+  useEnrichPipelineOptionsQuery,
   useLanguagesQuery,
   useQueryAnalysesQuery,
   useSearchConfigsQuery,
@@ -159,6 +161,35 @@ export const useRagConfigurationChatRag: UseOptionsHook = makeUseOptionsHook({
 export const useDocTypeOptions: UseOptionsHook = makeUseOptionsHook({
   useQuery: useDocTypeFieldsQuery,
   connectionKey: "docTypeFields",
+  first: 20,
+});
+export const useDataSources: UseOptionsHook = makeUseOptionsHook({
+  useQuery: useDataSourcesQuery,
+  connectionKey: "datasources",
+  first: 20,
+});
+export const useEnrichPipelineOptions: UseOptionsHook = makeUseOptionsHook({
+  useQuery: ({ variables, ...rest }) => {
+    const inner = useEnrichPipelineOptionsQuery({
+      variables: {
+        searchText: variables.searchText as string,
+        cursor: (variables.after as string | null) ?? undefined,
+      },
+      ...rest,
+    });
+    return {
+      ...inner,
+      fetchMore: (opts: any) =>
+        inner.fetchMore({
+          ...opts,
+          variables: {
+            searchText: opts.variables.searchText,
+            cursor: opts.variables.after ?? undefined,
+          },
+        }),
+    } as any;
+  },
+  connectionKey: "options",
   first: 20,
 });
 export const useQuery: UseOptionsHook = makeUseOptionsHook({

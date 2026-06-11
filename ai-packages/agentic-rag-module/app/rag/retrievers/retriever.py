@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import logging
 from typing import List, Optional
 
 import requests
@@ -25,6 +26,7 @@ from opensearchpy import OpenSearch
 
 from app.external_services.grpc.grpc_client import query_parser
 from app.rag.chunk_window import get_context_window_merged
+from app.utils.logger import logger
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
@@ -110,7 +112,19 @@ class OpenSearchRetriever(BaseRetriever):
             else None
         )
 
+        if logger.isEnabledFor(logging.DEBUG):
+            query_body = query.decode("utf-8") if isinstance(query, bytes) else query
+            logger.debug(
+                f"[opensearch_query] retrieve_type={self.retrieve_type}, "
+                f"index_name={index_name}, "
+                f"params={params}, "
+                f"body={query_body}"
+            )
+
         documents = []
+
+        if len(index_name) == 0:
+            logger.debug("[opensearch_query] empty index list, search skipped")
 
         if len(index_name) > 0:
             client = OpenSearch(

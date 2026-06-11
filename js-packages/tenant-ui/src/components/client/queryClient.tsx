@@ -21,6 +21,9 @@ export const queryClient = new QueryClient();
 const RestClientContext = React.createContext(
   new OpenApiRestClient(
     {
+      // The OpenAPI spec produced at build time carries bare paths,
+      // so prepend it here.
+      BASE: "/api/tenant-manager",
       async HEADERS() {
         const authHeader = getAuthHeader();
         if (authHeader) {

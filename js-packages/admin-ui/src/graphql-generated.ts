@@ -13,9 +13,13 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  /** Scalar for BigDecimal */
   BigDecimal: any;
+  /** Scalar for BigInteger */
   BigInteger: any;
+  /** Scalar for DateTime */
   DateTime: any;
+  /** Scalar for FormConfigurations */
   FormConfigurations: any;
 };
 
@@ -157,7 +161,6 @@ export type Autocomplete = {
    *
    * Returns:
    * - The Set with all the associated DocTypeField, or null if not found.
-   *
    */
   fields?: Maybe<Connection_DocTypeField>;
   fuzziness?: Maybe<Fuzziness>;
@@ -185,37 +188,21 @@ export type AutocompleteFieldsArgs = {
 export type AutocompleteDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   /**
-   * 	The field list used in the autocomplete query,
-   * 	must not be empty, all the docTypeField must be of type search_as_you_type
-   * 	 and must have a parent.
-   *
+   * The field list used in the autocomplete query,
+   * must not be empty, all the docTypeField must be of type search_as_you_type
+   *  and must have a parent.
    */
   fieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
-  /**
-   * 	Edit distance allowed for fuzzy matching (e.g., "0", "1", "2", or "AUTO")
-   *
-   */
+  /** 	Edit distance allowed for fuzzy matching (e.g., "0", "1", "2", or "AUTO") */
   fuzziness?: InputMaybe<Fuzziness>;
-  /**
-   * 	Minimum number of optional clauses that must match for a document to be returned
-   *
-   */
+  /** 	Minimum number of optional clauses that must match for a document to be returned */
   minimumShouldMatch?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
-  /**
-   * 	Boolean operator to combine query terms (AND or OR)
-   *
-   */
+  /** 	Boolean operator to combine query terms (AND or OR) */
   operator?: InputMaybe<BooleanOperator>;
-  /**
-   * 	When disabled, perfect matches with the searched text are removed from suggestions
-   *
-   */
+  /** 	When disabled, perfect matches with the searched text are removed from suggestions */
   perfectMatchIncluded?: InputMaybe<Scalars['Boolean']>;
-  /**
-   * 	Maximum number of results to return.
-   *
-   */
+  /** 	Maximum number of results to return. */
   resultSize?: InputMaybe<Scalars['Int']>;
 };
 
@@ -228,7 +215,6 @@ export type Autocorrection = {
    *
    * Returns:
    * - The associated DocTypeField, or null if not found.
-   *
    */
   autocorrectionDocTypeField?: Maybe<DocTypeField>;
   /** ISO-8601 */
@@ -248,49 +234,40 @@ export type Autocorrection = {
 
 export type AutocorrectionDtoInput = {
   /**
-   * 	The field used in the autocorrection query,
-   * 	must be a valid docTypeFieldId.
-   *
+   * The field used in the autocorrection query,
+   * must be a valid docTypeFieldId.
    */
   autocorrectionDocTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
   description?: InputMaybe<Scalars['String']>;
-  /**
-   * 	If enabled, the search query will automatically be replaced with the corrected version from the autocorrection suggester.
-   *
-   */
+  /** 	If enabled, the search query will automatically be replaced with the corrected version from the autocorrection suggester. */
   enableSearchWithCorrection?: InputMaybe<Scalars['Boolean']>;
   /**
-   * 	The maximum allowed edit distance for suggestions. Valid values are in the range [1, 2].
-   * 	The default value is 2. Higher edit distances can lead to more suggestions, but also to less relevant ones.
-   *
+   * The maximum allowed edit distance for suggestions. Valid values are in the range [1, 2].
+   * The default value is 2. Higher edit distances can lead to more suggestions, but also to less relevant ones.
    */
   maxEdit?: InputMaybe<Scalars['Int']>;
   /**
-   * 	The minimum length of a word for it to be considered for suggestions.
-   * 	Terms shorter than this length will not generate suggestions.
-   *
+   * The minimum length of a word for it to be considered for suggestions.
+   * Terms shorter than this length will not generate suggestions.
    */
   minWordLength?: InputMaybe<Scalars['Int']>;
   name: Scalars['String'];
   /**
-   * 	An integer specifying the minimum length the matching prefix must have to start returning suggestions.
-   * 	For example, if 'prefix_length' is 3, an input of "ap" will not generate suggestions, while "app" will.
-   *
+   * An integer specifying the minimum length the matching prefix must have to start returning suggestions.
+   * For example, if 'prefix_length' is 3, an input of "ap" will not generate suggestions, while "app" will.
    */
   prefixLength?: InputMaybe<Scalars['Int']>;
   /**
-   * 	Specifies how suggestions should be ordered in the response. Valid values are:
-   * 	- 'score' (Default): Orders by similarity score (edit distance), then by document frequency, and finally by the term itself.
-   * 	- 'frequency': Orders by document frequency, then by similarity score, and finally by the term itself.
-   *
+   * Specifies how suggestions should be ordered in the response. Valid values are:
+   * - 'score' (Default): Orders by similarity score (edit distance), then by document frequency, and finally by the term itself.
+   * - 'frequency': Orders by document frequency, then by similarity score, and finally by the term itself.
    */
   sort?: InputMaybe<SortType>;
   /**
-   * 	Controls for which terms suggestions should be included in the response. Valid values are:
-   * 	- 'missing' (Default): Returns suggestions only for input terms not found in the index.
-   * 	- 'popular': Returns suggestions only if the suggested terms appear more frequently in documents than the original query term.
-   * 	- 'always': Always returns matching suggestions for every term in the input text, regardless of its presence or frequency in the index.
-   *
+   * Controls for which terms suggestions should be included in the response. Valid values are:
+   * - 'missing' (Default): Returns suggestions only for input terms not found in the index.
+   * - 'popular': Returns suggestions only if the suggested terms appear more frequently in documents than the original query term.
+   * - 'always': Always returns matching suggestions for every term in the input text, regardless of its presence or frequency in the index.
    */
   suggestMode?: InputMaybe<SuggestMode>;
 };
@@ -753,7 +730,6 @@ export type CreateRagConfigurationDtoInput = {
    * Controls context window merging behavior for chunk processing:
    * 0: Disables chunk merging.
    * > 0: Enables merging with specified window size.
-   *
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
@@ -767,13 +743,11 @@ export type CreateRagConfigurationDtoInput = {
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
-   *
    */
   promptNoRag?: InputMaybe<Scalars['String']>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
-   *
    */
   ragToolDescription?: InputMaybe<Scalars['String']>;
   /** The range filter configuration with start and end values (default are [0, 5]). */
@@ -781,7 +755,6 @@ export type CreateRagConfigurationDtoInput = {
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
-   *
    */
   reformulate?: InputMaybe<Scalars['Boolean']>;
   /** Prompt template used if reformulate is set to true. */
@@ -1711,14 +1684,12 @@ export type EmbeddingModelDtoInput = {
    * Authentication API key required for accessing the embedding model's service.
    * Necessary for providers that require authentication to use their embedding API.
    * Ensure this key is kept confidential.
-   *
    */
   apiKey?: InputMaybe<Scalars['String']>;
   /**
    * The API URL for the embedding model's endpoint.
    * Required only when using a custom embedding service or a model hosted
    * on a private/internal network.
-   *
    */
   apiUrl?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
@@ -1737,7 +1708,6 @@ export type EmbeddingModelDtoInput = {
    * 768 dimensions: Standard for many BERT-based models
    * 1,024 dimensions: High-performance models
    * 1,536 dimensions: Ultra-high performance models
-   *
    */
   vectorSize: Scalars['Int'];
 };
@@ -2020,7 +1990,6 @@ export type Mutation = {
    *
    * Returns:
    * - A Response containing the created or updated Autocomplete configuration.
-   *
    */
   autocomplete?: Maybe<Response_Autocomplete>;
   /**
@@ -2037,7 +2006,6 @@ export type Mutation = {
    *
    * Returns:
    * - A Response containing the created or updated Autocorrection configuration.
-   *
    */
   autocorrection?: Maybe<Response_Autocorrection>;
   bindAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
@@ -2053,7 +2021,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket with the linked Autocomplete.
    *   - `autocomplete`: The linked Autocomplete.
-   *
    */
   bindAutocompleteToBucket?: Maybe<Tuple2_Bucket_Autocomplete>;
   /**
@@ -2067,7 +2034,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket with the linked Autocorrection.
    *   - `autocorrection`: The linked Autocorrection.
-   *
    */
   bindAutocorrectionToBucket?: Maybe<Tuple2_Bucket_Autocorrection>;
   bindDataIndexToDatasource?: Maybe<Tuple2_Datasource_DataIndex>;
@@ -2092,7 +2058,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket with the linked RAGConfiguration.
    *   - `ragConfiguration`: The linked RAGConfiguration.
-   *
    */
   bindRAGConfigurationToBucket?: Maybe<Tuple2_Bucket_RagConfiguration>;
   bindSearchAnalyzerToDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
@@ -2111,7 +2076,6 @@ export type Mutation = {
    *
    * Returns:
    * - The RAGConfiguration entity created.
-   *
    */
   createRAGConfiguration?: Maybe<Response_RagConfiguration>;
   createSubField?: Maybe<Response_DocTypeField>;
@@ -2127,7 +2091,6 @@ export type Mutation = {
    *
    * Returns:
    * - The deleted Autocomplete configuration.
-   *
    */
   deleteAutocomplete?: Maybe<Autocomplete>;
   /**
@@ -2138,7 +2101,6 @@ export type Mutation = {
    *
    * Returns:
    * - The deleted Autocorrection configuration.
-   *
    */
   deleteAutocorrection?: Maybe<Autocorrection>;
   deleteBucket?: Maybe<Bucket>;
@@ -2147,7 +2109,6 @@ export type Mutation = {
    * Deletes a DataIndex entity by its ID after validating the provided name matches the entity.
    * Requires both the dataIndexId and dataIndexName (as a confirmation mechanism) to prevent
    * accidental deletions.
-   *
    */
   deleteDataIndex?: Maybe<DataIndex>;
   deleteDatasource?: Maybe<Datasource>;
@@ -2155,14 +2116,12 @@ export type Mutation = {
    * Deletes a DocType entity by its ID after validating the provided name matches the entity.
    * Requires both the docTypeId and docTypeName (as a confirmation mechanism) to prevent
    * accidental deletions.
-   *
    */
   deleteDocType?: Maybe<DocType>;
   /**
    * Deletes a DocTypeField entity by its ID after validating the provided name matches the entity.
    * Requires both the docTypeFieldId and docTypeFieldName (as a confirmation mechanism) to prevent
    * accidental deletions.
-   *
    */
   deleteDocTypeField?: Maybe<DocTypeField>;
   deleteDocTypeFieldTranslation?: Maybe<Tuple2_String_String>;
@@ -2193,7 +2152,6 @@ export type Mutation = {
    * Returns validation errors if the provided DTO fails validation.
    * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
    * when updating or patching an existing DocTypeField.
-   *
    */
   docTypeField?: Maybe<Response_DocTypeField>;
   /**
@@ -2202,7 +2160,6 @@ export type Mutation = {
    * Otherwise, updates or patches the existing DocTypeField depending on the patch flag.
    * Requires docTypeFieldName (as a confirmation mechanism) to prevent accidental modifications
    * when updating or patching an existing DocTypeField.
-   *
    */
   docTypeFieldWithAnalyzer?: Maybe<Response_DocTypeField>;
   docTypeTemplate?: Maybe<Response_DocTypeTemplate>;
@@ -2270,7 +2227,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket after unbinding the Autocomplete.
    *   - `autocomplete`: Always null.
-   *
    */
   unbindAutocompleteFromBucket?: Maybe<Tuple2_Bucket_Autocomplete>;
   /**
@@ -2285,7 +2241,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket after unbinding the Autocorrection.
    *   - `autocorrection`: Always null.
-   *
    */
   unbindAutocorrectionFromBucket?: Maybe<Tuple2_Bucket_Autocorrection>;
   unbindDataIndexFromDatasource?: Maybe<Datasource>;
@@ -2312,7 +2267,6 @@ export type Mutation = {
    * - A tuple containing:
    *   - `bucket`: The updated Bucket after unbinding the RAGConfiguration.
    *   - `ragConfiguration`: Always null.
-   *
    */
   unbindRAGConfigurationFromBucket?: Maybe<Tuple2_Bucket_RagConfiguration>;
   unbindSearchAnalyzerFromDocTypeField?: Maybe<Tuple2_DocTypeField_Analyzer>;
@@ -2329,7 +2283,6 @@ export type Mutation = {
    *
    * Returns:
    * - The RAGConfiguration entity created.
-   *
    */
   updateRAGConfiguration?: Maybe<Response_RagConfiguration>;
   userField?: Maybe<AclMapping>;
@@ -3553,7 +3506,6 @@ export type Query = {
    *
    * Returns:
    * - The requested Autocomplete configuration, or null if not found.
-   *
    */
   autocomplete?: Maybe<Autocomplete>;
   /**
@@ -3573,7 +3525,6 @@ export type Query = {
    *
    * Returns:
    * - A Connection containing the requested Autocomplete configurations with pagination info.
-   *
    */
   autocompletes?: Maybe<Connection_Autocomplete>;
   /**
@@ -3584,7 +3535,6 @@ export type Query = {
    *
    * Returns:
    * - The requested Autocorrection configuration, or null if not found.
-   *
    */
   autocorrection?: Maybe<Autocorrection>;
   /**
@@ -3604,7 +3554,6 @@ export type Query = {
    *
    * Returns:
    * - A Connection containing the requested Autocorrection configurations with pagination info.
-   *
    */
   autocorrections?: Maybe<Connection_Autocorrection>;
   bucket?: Maybe<Bucket>;
@@ -3689,7 +3638,6 @@ export type Query = {
    *
    * Returns:
    * - A list of unbound Autocomplete configurations available for the specified Bucket.
-   *
    */
   unboundAutocompleteByBucket?: Maybe<Array<Maybe<Autocomplete>>>;
   /**
@@ -3702,7 +3650,6 @@ export type Query = {
    *
    * Returns:
    * - A list of unbound Autocorrection configurations available for the specified Bucket.
-   *
    */
   unboundAutocorrectionByBucket?: Maybe<Array<Maybe<Autocorrection>>>;
   unboundBucketsByDatasource?: Maybe<Array<Maybe<Bucket>>>;
@@ -3720,7 +3667,6 @@ export type Query = {
    *
    * Returns:
    * - A list of unbound DocTypeFields available for the specified Autocomplete.
-   *
    */
   unboundDocTypeFieldByAutocomplete?: Maybe<Array<Maybe<DocTypeField>>>;
   /**
@@ -3734,7 +3680,6 @@ export type Query = {
    *
    * Returns:
    * - A list of unbound DocTypeFields available for the specified Autocorrection.
-   *
    */
   unboundDocTypeFieldByAutocorrection?: Maybe<Array<Maybe<DocTypeField>>>;
   /** Fetches DocTypeFields unbound to the provided SuggestionCategory ID with FieldType KEYWORD or I18N. */
@@ -3754,7 +3699,6 @@ export type Query = {
    *
    * Returns:
    * - A list of RAGConfiguration entities that match the criteria.
-   *
    */
   unboundRAGConfigurationByBucket?: Maybe<Array<Maybe<RagConfiguration>>>;
   unboundTabsByTokenTab?: Maybe<Array<Maybe<Tab>>>;
@@ -4593,7 +4537,6 @@ export type RagConfigurationDtoInput = {
    * Controls context window merging behavior for chunk processing:
    * 0: Disables chunk merging.
    * > 0: Enables merging with specified window size.
-   *
    */
   chunkWindow?: InputMaybe<Scalars['Int']>;
   description?: InputMaybe<Scalars['String']>;
@@ -4607,13 +4550,11 @@ export type RagConfigurationDtoInput = {
   /**
    * Prompt template used specifically in RAG-as-tool configurations when the RAG
    * tool is available but not invoked by the LLM.
-   *
    */
   promptNoRag?: InputMaybe<Scalars['String']>;
   /**
    * Description of the RAG tool's capabilities, used in RAG-as-tool implementations
    * to help the LLM decide when to invoke it.
-   *
    */
   ragToolDescription?: InputMaybe<Scalars['String']>;
   /** The range filter configuration with start and end values (default are [0, 5]). */
@@ -4621,7 +4562,6 @@ export type RagConfigurationDtoInput = {
   /**
    * Boolean flag that controls whether a large language model should reformulate
    * the input prompt before processing it using rephrasePrompt.
-   *
    */
   reformulate?: InputMaybe<Scalars['Boolean']>;
   /** Prompt template used if reformulate is set to true. */
@@ -5869,6 +5809,7 @@ export type DocTypeFieldsByParentQuery = { __typename?: 'Query', docTypeFieldsFr
 export type CreateOrUpdateDocumentTypeFieldMutationVariables = Exact<{
   documentTypeId: Scalars['ID'];
   documentTypeFieldId?: InputMaybe<Scalars['ID']>;
+  docTypeFieldName?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   fieldName: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
@@ -6421,6 +6362,13 @@ export type DocTypeFieldsQueryVariables = Exact<{
 
 
 export type DocTypeFieldsQuery = { __typename?: 'Query', docTypeFields?: { __typename?: 'DefaultConnection_DocTypeField', edges?: Array<{ __typename?: 'DefaultEdge_DocTypeField', node?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type DocTypeFieldsByTypeQueryVariables = Exact<{
+  fieldType?: InputMaybe<FieldType>;
+}>;
+
+
+export type DocTypeFieldsByTypeQuery = { __typename?: 'Query', docTypeFieldsByType?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
 
 export type CreateOrUpdateSuggestionCategoryMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -7054,7 +7002,7 @@ export type DataSourcesQueryVariables = Exact<{
 }>;
 
 
-export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename: 'DefaultConnection_Datasource', edges?: Array<{ __typename: 'DefaultEdge_Datasource', node?: { __typename: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, lastIngestionDate?: any | null, scheduling?: string | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+export type DataSourcesQuery = { __typename?: 'Query', datasources?: { __typename: 'DefaultConnection_Datasource', edges?: Array<{ __typename: 'DefaultEdge_Datasource', node?: { __typename: 'Datasource', id?: string | null, name?: string | null, schedulable?: boolean | null, scheduling?: string | null, reindexable?: boolean | null, reindexing?: string | null, lastIngestionDate?: any | null, jsonConfig?: string | null, description?: string | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
 
 export type DeleteDataSourceMutationVariables = Exact<{
   id: Scalars['ID'];
@@ -9206,10 +9154,11 @@ export type DocTypeFieldsByParentQueryHookResult = ReturnType<typeof useDocTypeF
 export type DocTypeFieldsByParentLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByParentLazyQuery>;
 export type DocTypeFieldsByParentQueryResult = Apollo.QueryResult<DocTypeFieldsByParentQuery, DocTypeFieldsByParentQueryVariables>;
 export const CreateOrUpdateDocumentTypeFieldDocument = gql`
-    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger, $searchAnalyzerId: BigInteger) {
+    mutation CreateOrUpdateDocumentTypeField($documentTypeId: ID!, $documentTypeFieldId: ID, $docTypeFieldName: String, $name: String!, $fieldName: String!, $description: String, $fieldType: FieldType!, $boost: Float, $searchable: Boolean!, $exclude: Boolean, $jsonConfig: String, $sortable: Boolean!, $analyzerId: BigInteger, $searchAnalyzerId: BigInteger) {
   docTypeFieldWithAnalyzer(
     docTypeId: $documentTypeId
     docTypeFieldId: $documentTypeFieldId
+    docTypeFieldName: $docTypeFieldName
     docTypeFieldWithAnalyzerDTO: {name: $name, description: $description, fieldType: $fieldType, boost: $boost, searchable: $searchable, exclude: $exclude, fieldName: $fieldName, jsonConfig: $jsonConfig, sortable: $sortable, analyzerId: $analyzerId, searchAnalyzerId: $searchAnalyzerId}
   ) {
     entity {
@@ -9239,6 +9188,7 @@ export type CreateOrUpdateDocumentTypeFieldMutationFn = Apollo.MutationFunction<
  *   variables: {
  *      documentTypeId: // value for 'documentTypeId'
  *      documentTypeFieldId: // value for 'documentTypeFieldId'
+ *      docTypeFieldName: // value for 'docTypeFieldName'
  *      name: // value for 'name'
  *      fieldName: // value for 'fieldName'
  *      description: // value for 'description'
@@ -10561,7 +10511,7 @@ export const QueryAnalysesRulesDocument = gql`
     rules(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -11717,7 +11667,7 @@ export const SuggestionCategoryDocumentTypeFieldsDocument = gql`
       subFields(
         searchText: $searchText
         notEqual: $unassociated
-        first: 20
+        first: 1000
         after: $cursor
       ) {
         edges {
@@ -11987,6 +11937,42 @@ export function useDocTypeFieldsLazyQuery(baseOptions?: Apollo.LazyQueryHookOpti
 export type DocTypeFieldsQueryHookResult = ReturnType<typeof useDocTypeFieldsQuery>;
 export type DocTypeFieldsLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsLazyQuery>;
 export type DocTypeFieldsQueryResult = Apollo.QueryResult<DocTypeFieldsQuery, DocTypeFieldsQueryVariables>;
+export const DocTypeFieldsByTypeDocument = gql`
+    query DocTypeFieldsByType($fieldType: FieldType) {
+  docTypeFieldsByType(fieldType: $fieldType) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useDocTypeFieldsByTypeQuery__
+ *
+ * To run a query within a React component, call `useDocTypeFieldsByTypeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocTypeFieldsByTypeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocTypeFieldsByTypeQuery({
+ *   variables: {
+ *      fieldType: // value for 'fieldType'
+ *   },
+ * });
+ */
+export function useDocTypeFieldsByTypeQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>(DocTypeFieldsByTypeDocument, options);
+      }
+export function useDocTypeFieldsByTypeLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>(DocTypeFieldsByTypeDocument, options);
+        }
+export type DocTypeFieldsByTypeQueryHookResult = ReturnType<typeof useDocTypeFieldsByTypeQuery>;
+export type DocTypeFieldsByTypeLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByTypeLazyQuery>;
+export type DocTypeFieldsByTypeQueryResult = Apollo.QueryResult<DocTypeFieldsByTypeQuery, DocTypeFieldsByTypeQueryVariables>;
 export const CreateOrUpdateSuggestionCategoryDocument = gql`
     mutation CreateOrUpdateSuggestionCategory($id: ID, $name: String!, $description: String, $priority: Float!, $multiSelect: Boolean!, $docTypeFieldId: BigInteger) {
   suggestionCategoryWithDocTypeField(
@@ -12296,7 +12282,7 @@ export const TabTokenTabsDocument = gql`
     tokenTabs(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -14048,7 +14034,7 @@ export const BucketDataSourcesDocument = gql`
     id
     tabs(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -14061,7 +14047,7 @@ export const BucketDataSourcesDocument = gql`
     }
     suggestionCategories(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -14074,7 +14060,7 @@ export const BucketDataSourcesDocument = gql`
     }
     datasources(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -14091,7 +14077,7 @@ export const BucketDataSourcesDocument = gql`
     }
     languages(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -14284,7 +14270,7 @@ export const BucketLanguagesDocument = gql`
     id
     languages(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -14419,7 +14405,7 @@ export const BucketTabsDocument = gql`
     tabs(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -14704,7 +14690,7 @@ export const BucketSuggestionCategoriesDocument = gql`
     suggestionCategories(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -15202,8 +15188,10 @@ export const DataSourcesDocument = gql`
         id
         name
         schedulable
-        lastIngestionDate
         scheduling
+        reindexable
+        reindexing
+        lastIngestionDate
         jsonConfig
         description
         __typename
@@ -16007,7 +15995,7 @@ export const UnassociatedEnrichPipelineEnrichItemsDocument = gql`
     query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
   enrichPipeline(id: $enrichPipelineId) {
     id
-    enrichItems(searchText: $searchText, not: true, first: 20) {
+    enrichItems(searchText: $searchText, not: true, first: 1000) {
       edges {
         node {
           id
@@ -16272,4 +16260,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-05-18T11:58:31+02:00
+// Generated on 2026-06-05T18:05:24+02:00

@@ -3,5 +3,6 @@
 /* eslint-disable */
 
 export type DeleteTenantRequest = {
-    virtualHost?: string;
+    virtualHost: string;
 };
+

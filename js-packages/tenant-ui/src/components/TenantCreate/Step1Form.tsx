@@ -13,7 +13,18 @@ function input(values: WizardState["step1"], onChange: Props["onChange"], key: k
   };
 }
 
+// Suggest a virtual host as <tenantName>.<base domain>, where the base domain
+// is the last two labels of the host serving the wizard (e.g. openk9.localhost).
+export function deriveVirtualHost(tenantName: string, hostname: string): string {
+  const name = tenantName.trim();
+  if (!name) {
+    return "";
+  }
+  return `${name}.${hostname.split(".").slice(-2).join(".")}`;
+}
+
 export function Step1Form({ values, onChange }: Props) {
+  const baseHostname = window.location.hostname;
   return (
     <Box
       sx={{
@@ -27,9 +38,24 @@ export function Step1Form({ values, onChange }: Props) {
         },
       }}
     >
-      <TextField label="Tenant Name" required fullWidth {...input(values, onChange, "tenantName")} helperText="Unique tenant identifier" />
+      <TextField
+        label="Tenant Name"
+        fullWidth
+        value={values.tenantName}
+        onChange={(e) => {
+          const tenantName = e.target.value;
+          // Keep auto-filling virtualHost until the user diverges from the suggestion.
+          const tracksSuggestion = values.virtualHost === "" || values.virtualHost === deriveVirtualHost(values.tenantName, baseHostname);
+          onChange({
+            ...values,
+            tenantName,
+            virtualHost: tracksSuggestion ? deriveVirtualHost(tenantName, baseHostname) : values.virtualHost,
+          });
+        }}
+        helperText="Optional — tenant name auto-generated if empty. Also fills Virtual Host."
+      />
       <TextField label="Virtual Host" required fullWidth {...input(values, onChange, "virtualHost")} helperText="e.g. pikachu.openk9.io" />
-      <TextField label="Client ID" required fullWidth {...input(values, onChange, "clientId")} helperText="OAuth2 client identifier" />
+      <TextField label="Client ID" fullWidth {...input(values, onChange, "clientId")} helperText="Optional — leave empty for Keycloak auto-managed realm" />
       <TextField
         label="Client Secret"
         type="password"
@@ -40,10 +66,9 @@ export function Step1Form({ values, onChange }: Props) {
       />
       <TextField
         label="Issuer URI"
-        required
         fullWidth
         {...input(values, onChange, "issuerUri")}
-        helperText="OIDC issuer URI"
+        helperText="Optional — leave empty for Keycloak auto-managed realm"
         sx={{ gridColumn: "1 / -1" }}
       />
     </Box>
@@ -51,5 +76,13 @@ export function Step1Form({ values, onChange }: Props) {
 }
 
 export function isStep1Valid(values: WizardState["step1"]): boolean {
-  return values.tenantName.trim().length > 0 && values.virtualHost.trim().length > 0 && values.clientId.trim().length > 0 && values.issuerUri.trim().length > 0;
+  // tenantName is optional (schema name is auto-generated when omitted).
+  if (values.virtualHost.trim().length === 0) {
+    return false;
+  }
+  // clientId and issuerUri are optional, but OAuth2Settings needs both: allow
+  // either both filled (external IdP) or both empty (Keycloak auto-managed realm).
+  const hasClientId = values.clientId.trim().length > 0;
+  const hasIssuerUri = values.issuerUri.trim().length > 0;
+  return hasClientId === hasIssuerUri;
 }

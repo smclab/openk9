@@ -2,7 +2,7 @@
   "name": "openk9-tenant",
   "version": "2026.1.0-SNAPSHOT",
   "private": true,
-  "homepage": "tenant",
+  "homepage": "admin",
   "dependencies": {
     "@apollo/client": "^3.7.2",
     "@craco/craco": "^7.0.0",

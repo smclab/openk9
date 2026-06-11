@@ -40,8 +40,8 @@ export const securityConfigLabel: Record<SecurityConfigurationKey, string> = {
 };
 
 export const securityConfigDescription: Record<SecurityConfigurationKey, string> = {
-  OAUTH2_ADMIN_ONLY: "Admin routes require OAuth2. Public, search, and ingestion are open.",
-  OAUTH2_SEARCH: "Admin and search require OAuth2. Public and ingestion are open.",
+  OAUTH2_ADMIN_ONLY: "Admin routes require OAuth2. Public and search are open; ingestion requires API keys.",
+  OAUTH2_SEARCH: "Admin and search require OAuth2. Public is open; ingestion requires API keys.",
   OAUTH2_SEARCH_WITH_API_KEY: "Admin and search require OAuth2. Public and ingestion require API keys.",
   OAUTH2_ADMIN_WITH_API_KEY: "Admin requires OAuth2. Public, search, and ingestion require API keys.",
   NO_GATEWAY_AUTH: "No gateway-level authorization on any route. Downstream services handle security.",

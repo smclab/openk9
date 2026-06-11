@@ -23,6 +23,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 import io.openk9.app.manager.grpc.AppManifest;
 import io.openk9.datasource.grpc.CreatePresetPluginDriverRequest;
@@ -35,6 +37,14 @@ import io.smallrye.mutiny.Uni;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.apache.pekko.actor.typed.javadsl.AskPattern;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 @Path("/provisioning")
 public class ProvisioningResource {
@@ -46,16 +56,97 @@ public class ProvisioningResource {
 	@ConfigProperty(name = "quarkus.application.version")
 	String applicationVersion;
 
+	@Operation(
+		operationId = "initTenant",
+		summary = "Initialize the default bucket for an existing tenant",
+		description = "Triggers the post-provisioning step that creates "
+			+ "the default datasource bucket for an existing tenant "
+			+ "schema. Returns the identifier of the bucket created "
+			+ "in the datasource service."
+	)
+	@Tag(name = "Tenant Provisioning")
+	@APIResponses(value = {
+		@APIResponse(
+			responseCode = "200",
+			description = "Tenant initialization successful",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = InitTenantResponse.class),
+					example = TenantManagerRequestExamples.INIT_TENANT_RESPONSE
+				)
+			}
+		),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = InitTenantRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "init tenant",
+						value = TenantManagerRequestExamples.INIT_TENANT_REQUEST
+					)
+				}
+			)
+		}
+	)
 	@POST
 	@Path("/initTenant")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<InitTenantResponse> initTenant(@Valid InitTenantRequest request) {
 		return tenantProvisioningService
 			.initTenant(request.tenantName())
 			.map(InitTenantResponse::new);
 	}
 
+	@Operation(
+		operationId = "createConnector",
+		summary = "Create a preset connector plugin driver for a tenant",
+		description = "Deploys the Helm chart of the selected preset "
+			+ "connector for the target tenant and registers the "
+			+ "corresponding plugin driver. The preset is selected "
+			+ "from the supported values (YOUTUBE, CRAWLER, EMAIL, "
+			+ "GITLAB, SITEMAP, DATABASE, MINIO). The saga runs "
+			+ "asynchronously and the endpoint always returns HTTP "
+			+ "200: the response's `result` field carries either the "
+			+ "saga outcome (SUCCESS, ERROR, COMPENSATION, "
+			+ "COMPENSATION_ERROR) or, when the orchestrator itself "
+			+ "fails (e.g. ask timeout), the failure message. Callers "
+			+ "must inspect `result` to determine the actual outcome."
+	)
+	@Tag(name = "Tenant Provisioning")
+	@APIResponses(value = {
+		@APIResponse(
+			responseCode = "200",
+			description = "Connector creation saga completed",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = CreateConnectorResponse.class),
+					example = TenantManagerRequestExamples.CREATE_CONNECTOR_RESPONSE
+				)
+			}
+		),
+	})
+	@RequestBody(
+		content = {
+			@Content(
+				mediaType = MediaType.APPLICATION_JSON,
+				schema = @Schema(implementation = CreateConnectorRequest.class),
+				examples = {
+					@ExampleObject(
+						name = "create connector",
+						value = TenantManagerRequestExamples.CREATE_CONNECTOR_REQUEST
+					)
+				}
+			)
+		}
+	)
 	@POST
 	@Path("/connector")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<CreateConnectorResponse> createConnector(@Valid CreateConnectorRequest request) {
 
 		var connectorName = String.format(

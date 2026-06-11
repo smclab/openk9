@@ -42,7 +42,7 @@ public class EmbeddingModelServiceTest {
 	public static final String EMBEDDING_MODEL_NAME = "EMST.embeddingmodeltest";
 	public static final int VECTOR_SIZE = 1330;
 	public static final String API_KEY = "EMST.asdfkaslf01432kl4l1";
-	public static final String URL = "http://EMST.embeddingapi.local";
+	public static final String URL = "https://api.acmeai.com/v1/embeddings";
 
 	private static final String ENTITY_NAME_PREFIX = "EmbeddingModelGraphqlTest - ";
 	private static final String EMBEDDING_MODEL_ONE_NAME = ENTITY_NAME_PREFIX + "Embedding model 1 ";
@@ -117,8 +117,8 @@ public class EmbeddingModelServiceTest {
 		var dto = EmbeddingModelDTO
 			.builder()
 			.name(EMBEDDING_MODEL_ONE_NAME)
-			.apiUrl("embedding-model.local")
-			.apiKey("secret-key")
+			.apiUrl(URL)
+			.apiKey(API_KEY)
 			.vectorSize(1500)
 			.jsonConfig(JSON_CONFIG_EMPTY)
 			.providerModel(

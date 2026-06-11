@@ -24,8 +24,10 @@ export const DataSourcesQuery = gql`
           id
           name
           schedulable
-          lastIngestionDate
           scheduling
+          reindexable
+          reindexing
+          lastIngestionDate
           jsonConfig
           description
           __typename

@@ -109,7 +109,7 @@ export const TemplateTokenizer: TemplateType[] = [
         value: ["letter"],
         type: "multi-select",
         description:
-          "Character classes that should be included in a token. Elasticsearch will split on characters that don’t belong to the classes specified. Defaults to [] (keep all characters).",
+          "Character classes that should be included in a token. OpenSearch will split on characters that don’t belong to the classes specified. Defaults to [] (keep all characters).",
       },
     ],
   },
@@ -157,7 +157,7 @@ export const TemplateTokenizer: TemplateType[] = [
         value: ["letter"],
         type: "multi-select",
         description:
-          "Character classes that should be included in a token. Elasticsearch will split on characters that don’t belong to the classes specified. Defaults to [] (keep all characters).",
+          "Character classes that should be included in a token. OpenSearch will split on characters that don’t belong to the classes specified. Defaults to [] (keep all characters).",
       },
       {
         name: "custom_token_chars",

@@ -2,24 +2,6 @@
 openapi: 3.1.0
 components:
   schemas:
-    BackgroundProcess:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        createDate:
-          $ref: "#/components/schemas/OffsetDateTime"
-        modifiedDate:
-          $ref: "#/components/schemas/OffsetDateTime"
-        status:
-          $ref: "#/components/schemas/Status"
-        message:
-          type: string
-        processId:
-          $ref: "#/components/schemas/UUID"
-        name:
-          type: string
     CreateConnectorRequest:
       type: object
       required:
@@ -41,15 +23,51 @@ components:
         message:
           type: string
     CreateTenantRequest:
+      description: Request payload for creating a new tenant.
       type: object
+      required:
+      - virtualHost
+      - securityConfiguration
       properties:
         virtualHost:
           type: string
+          description: Hostname that identifies this tenant (e.g. demo.openk9.io).
+            Used as Ingress host and Keycloak realm alias.
+          examples:
+          - demo.openk9.io
+          minLength: 1
+        securityConfiguration:
+          description: "Gateway-level authorization model. Determines which routes\
+            \ require OAuth2, API keys, or no auth."
+          type: string
+          $ref: "#/components/schemas/SecurityConfiguration"
+        oAuth2Settings:
+          description: "External identity provider credentials. When provided, Keycloak\
+            \ realm provisioning is skipped and these values are stored directly.\
+            \ Omit to auto-provision via Keycloak (if available)."
+          type: object
+          $ref: "#/components/schemas/OAuth2Settings"
+        tenantName:
+          type: string
+          description: "Tenant identifier used as database schema name and Kubernetes\
+            \ resource prefix. Must match [a-z][a-z0-9]{0,62}. Omit to auto-generate."
+          examples:
+          - demo
+        ingressScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/IngressScope"
+          description: "Route groups to expose on the Kubernetes Ingress: SEARCH,\
+            \ ADMINISTRATION, RAG, INGESTION. Omit for the default set (SEARCH, ADMINISTRATION,\
+            \ RAG). An empty list skips ingress creation entirely."
     DeleteTenantRequest:
       type: object
+      required:
+      - virtualHost
       properties:
         virtualHost:
           type: string
+          minLength: 1
     DeleteTenantResponse:
       type: object
       properties:
@@ -57,11 +75,24 @@ components:
           type: string
     EffectiveDeleteTenantRequest:
       type: object
+      required:
+      - virtualHost
+      - token
       properties:
         virtualHost:
           type: string
+          minLength: 1
         token:
           type: string
+          minLength: 1
+    IngressScope:
+      type: string
+      enum:
+      - SEARCH
+      - ADMINISTRATION
+      - RAG
+      - INGESTION
+      - UNRECOGNIZED
     InitTenantRequest:
       type: object
       required:
@@ -76,11 +107,25 @@ components:
         bucketId:
           type: integer
           format: int64
-    OffsetDateTime:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T12:15:50-04:00
+    OAuth2Settings:
+      type: object
+      description: "External OAuth2 identity provider credentials. When provided,\
+        \ Keycloak realm auto-provisioning is skipped."
+      required:
+      - issuerUri
+      - clientId
+      properties:
+        issuerUri:
+          type: string
+          description: OpenID Connect issuer URI.
+          examples:
+          - https://idp.example.com/realms/myrealm
+        clientId:
+          type: string
+          description: OAuth2 client identifier.
+        clientSecret:
+          type: string
+          description: OAuth2 client secret. Omit for public clients.
     Preset:
       type: string
       enum:
@@ -92,26 +137,20 @@ components:
       - DATABASE
       - MINIO
       - UNRECOGNIZED
-    Status:
+    SecurityConfiguration:
       type: string
       enum:
-      - IN_PROGRESS
-      - FINISHED
-      - FAILED
-      - ROOLBACK
-    Tenant:
+      - OAUTH2_ADMIN_ONLY
+      - OAUTH2_SEARCH
+      - OAUTH2_SEARCH_WITH_API_KEY
+      - OAUTH2_ADMIN_WITH_API_KEY
+      - NO_GATEWAY_AUTH
+    TenantResponseDTO:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-        createDate:
-          $ref: "#/components/schemas/OffsetDateTime"
-        modifiedDate:
-          $ref: "#/components/schemas/OffsetDateTime"
-        schemaName:
           type: string
-        liquibaseSchemaName:
+        tenantName:
           type: string
         virtualHost:
           type: string
@@ -119,262 +158,251 @@ components:
           type: string
         clientSecret:
           type: string
-        realmName:
+        issuerUri:
           type: string
-    UUID:
-      type: string
-      format: uuid
-      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-  securitySchemes:
-    SecurityScheme:
-      type: openIdConnect
-      description: Authentication
-      openIdConnectUrl: https://keycloak-test.openk9.io/realms/tenant-manager/.well-known/openid-configuration
+        securityConfiguration:
+          $ref: "#/components/schemas/SecurityConfiguration"
+        realmProvisioned:
+          type: boolean
+info:
+  contact:
+    email: dev@openk9.io
+    name: OpenK9 Support
+  description: Create and manage the tenants within this OpenK9 installation
+  license:
+    name: GNU Affero General Public License v3.0
+    url: https://github.com/smclab/openk9/blob/main/LICENSE
+  title: Tenant Manager Service
+  version: 2026.1.0-SNAPSHOT
+tags:
+- name: Tenant Provisioning
+  description: "Endpoints that create new tenants, request deletion, and bootstrap\
+    \ their default content."
+- name: Tenant Management
+  description: Maintenance endpoints on existing tenants.
+security:
+- SecurityScheme: []
 paths:
-  /api/tenant-manager/oauth2/settings.js:
-    get:
-      responses:
-        "200":
-          description: OK
-          content:
-            text/javascript:
-              schema:
-                type: string
-      summary: Settings Js
-      tags:
-      - O Auth 2 Settings Resource
-  /api/tenant-manager/provisioning/connector:
+  /provisioning/connector:
     post:
+      summary: Create a preset connector plugin driver for a tenant
+      description: "Deploys the Helm chart of the selected preset connector for the\
+        \ target tenant and registers the corresponding plugin driver. The preset\
+        \ is selected from the supported values (YOUTUBE, CRAWLER, EMAIL, GITLAB,\
+        \ SITEMAP, DATABASE, MINIO). The saga runs asynchronously and the endpoint\
+        \ always returns HTTP 200: the response's `result` field carries either the\
+        \ saga outcome (SUCCESS, ERROR, COMPENSATION, COMPENSATION_ERROR) or, when\
+        \ the orchestrator itself fails (e.g. ask timeout), the failure message. Callers\
+        \ must inspect `result` to determine the actual outcome."
+      operationId: createConnector
+      tags:
+      - Tenant Provisioning
       requestBody:
         content:
           application/json:
+            examples:
+              create connector:
+                value:
+                  tenantName: demo
+                  preset: CRAWLER
             schema:
               $ref: "#/components/schemas/CreateConnectorRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Connector creation saga completed
           content:
             application/json:
+              example:
+                result: demo-CRAWLER-2026_1_0-SNAPSHOT
               schema:
                 $ref: "#/components/schemas/CreateConnectorResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Create Connector
-      tags:
-      - Provisioning Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/provisioning/initTenant:
+  /provisioning/initTenant:
     post:
+      summary: Initialize the default bucket for an existing tenant
+      description: Triggers the post-provisioning step that creates the default datasource
+        bucket for an existing tenant schema. Returns the identifier of the bucket
+        created in the datasource service.
+      operationId: initTenant
+      tags:
+      - Tenant Provisioning
       requestBody:
         content:
           application/json:
+            examples:
+              init tenant:
+                value:
+                  tenantName: demo
             schema:
               $ref: "#/components/schemas/InitTenantRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Tenant initialization successful
           content:
             application/json:
+              example:
+                bucketId: 42
               schema:
                 $ref: "#/components/schemas/InitTenantResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Init Tenant
-      tags:
-      - Provisioning Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/background-process/all:
-    get:
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/BackgroundProcess"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Find All Background Process
-      tags:
-      - Background Process Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/background-process/id/{id}:
-    get:
-      parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/BackgroundProcess"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Find Background Process By Id
-      tags:
-      - Background Process Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/background-process/status/{status}:
-    get:
-      parameters:
-      - name: status
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/Status"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/BackgroundProcess"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Find All Background Process
-      tags:
-      - Background Process Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/tenant:
+  /tenant-manager/tenant:
     post:
+      summary: Create and provision a new tenant
+      description: "Provisions a new tenant: assigns a virtual host, creates the database\
+        \ schema, configures the security model, optionally bootstraps a Keycloak\
+        \ realm, and exposes the configured ingress routes. Returns the descriptor\
+        \ of the created tenant."
+      operationId: createTenant
+      tags:
+      - Tenant Provisioning
       requestBody:
         content:
           application/json:
+            examples:
+              minimal:
+                summary: Minimal tenant with Keycloak auto-provisioning
+                description: "Only the required fields. OpenK9 provisions a Keycloak\
+                  \ realm and exposes the default ingress (SEARCH, ADMINISTRATION,\
+                  \ RAG). The tenant name is auto-generated."
+                value:
+                  virtualHost: demo.openk9.io
+                  securityConfiguration: OAUTH2_ADMIN_ONLY
+              external-idp:
+                summary: Tenant authenticated by an external OAuth2 identity provider
+                description: Provide oAuth2Settings to skip Keycloak provisioning
+                  and reuse an existing IdP. The clientId/clientSecret pair authenticates
+                  against the issuer.
+                value:
+                  virtualHost: demo.openk9.io
+                  securityConfiguration: OAUTH2_ADMIN_ONLY
+                  tenantName: demo
+                  oAuth2Settings:
+                    issuerUri: https://idp.example.com/realms/demo
+                    clientId: openk9-admin
+                    clientSecret: s3cr3t
+              search-only-public:
+                summary: Anonymous public search-only deployment
+                description: "**WARNING — development-only configuration.** Use only\
+                  \ in local development environments, or in deployments shipped via\
+                  \ Docker Compose for evaluation / PoC. Do not enable in production.\
+                  \ No gateway authentication: only the SEARCH ingress is exposed\
+                  \ and search is reachable anonymously. Administration, RAG and ingestion\
+                  \ routes are not configured."
+                value:
+                  virtualHost: search.example.io
+                  securityConfiguration: NO_GATEWAY_AUTH
+                  ingressScopes:
+                  - SEARCH
+              api-key-ingestion:
+                summary: "OAuth2 admin/search, API key on data and ingestion paths"
+                description: "Admin and search routes use OAuth2; data and ingestion\
+                  \ routes are protected by API keys. Full ingress (SEARCH, ADMINISTRATION,\
+                  \ RAG, INGESTION) exposed."
+                value:
+                  virtualHost: demo.openk9.io
+                  securityConfiguration: OAUTH2_SEARCH_WITH_API_KEY
+                  tenantName: demo
+                  ingressScopes:
+                  - SEARCH
+                  - ADMINISTRATION
+                  - RAG
+                  - INGESTION
             schema:
               $ref: "#/components/schemas/CreateTenantRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Tenant created
           content:
             application/json:
+              example:
+                id: "42"
+                tenantName: demo
+                virtualHost: demo.openk9.io
+                clientId: demo-client
+                clientSecret: s3cr3t
+                issuerUri: https://keycloak.openk9.io/realms/demo
+                securityConfiguration: OAUTH2_ADMIN_ONLY
+                realmProvisioned: true
               schema:
-                $ref: "#/components/schemas/Tenant"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Create Tenant
-      tags:
-      - Tenant Manager Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/tenant/delete:
-    delete:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EffectiveDeleteTenantRequest"
-        required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DeleteTenantResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Delete Tenant
-      tags:
-      - Tenant Manager Resource
-      security:
-      - SecurityScheme:
-        - admin
+                $ref: "#/components/schemas/TenantResponseDTO"
+  /tenant-manager/tenant/delete:
     post:
+      summary: Request the deletion of a tenant
+      description: Issues a deletion request for the tenant identified by virtual
+        host. Returns a confirmation token that must be supplied to the DELETE endpoint
+        to actually remove the tenant.
+      operationId: requestDeleteTenant
+      tags:
+      - Tenant Provisioning
       requestBody:
         content:
           application/json:
+            examples:
+              request delete tenant:
+                value:
+                  virtualHost: demo.openk9.io
             schema:
               $ref: "#/components/schemas/DeleteTenantRequest"
         required: true
       responses:
         "200":
-          description: OK
+          description: Deletion token issued
           content:
             application/json:
+              example:
+                message: "Deletion token: 9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a"
               schema:
                 $ref: "#/components/schemas/DeleteTenantResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
-      summary: Delete Tenant
+    delete:
+      summary: Confirm and execute a tenant deletion
+      description: "Permanently removes the tenant identified by virtual host, using\
+        \ the confirmation token previously issued by the POST /delete endpoint."
+      operationId: deleteTenant
       tags:
-      - Tenant Manager Resource
-      security:
-      - SecurityScheme:
-        - admin
-  /api/tenant-manager/tenant-manager/tenant/{id}/tables:
+      - Tenant Provisioning
+      requestBody:
+        content:
+          application/json:
+            examples:
+              delete tenant:
+                value:
+                  virtualHost: demo.openk9.io
+                  token: 9f1e0b8c-4f2a-4f7d-9e5f-3c2a1b0d4e6a
+            schema:
+              $ref: "#/components/schemas/EffectiveDeleteTenantRequest"
+        required: true
+      responses:
+        "200":
+          description: Tenant deleted
+          content:
+            application/json:
+              example:
+                message: Tenant deletion started.
+              schema:
+                $ref: "#/components/schemas/DeleteTenantResponse"
+  /tenant-manager/tenant/{id}/tables:
     post:
+      summary: Populate the database schema of an existing tenant
+      description: Creates the application tables for the tenant identified by the
+        path parameter. The tenant's database schema must already exist.
+      operationId: createTables
+      tags:
+      - Tenant Management
       parameters:
-      - name: id
+      - description: Identifier of the tenant whose tables must be created.
         in: path
+        name: id
         required: true
         schema:
           type: integer
           format: int64
       responses:
         "200":
-          description: OK
+          description: Tables created
           content:
             application/json:
+              example:
+                message: Tables created for tenant 42
               schema:
                 $ref: "#/components/schemas/CreateTablesResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Create Tables
-      tags:
-      - Tenant Manager Resource
-      security:
-      - SecurityScheme:
-        - admin
-info:
-  title: tenant-manager API
-  version: 3.1.0-SNAPSHOT

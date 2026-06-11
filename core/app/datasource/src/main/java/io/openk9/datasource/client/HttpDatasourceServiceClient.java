@@ -199,20 +199,22 @@ public abstract class HttpDatasourceServiceClient {
 	}
 
 	public Uni<ResourceUri> validateBaseUri(ResourceUri resourceUri, List<String> regexValidations) {
-		URI uri = URI.create(resourceUri.getBaseUri());
-		if(uri.getHost() == null) {
+		try {
+			URI uri = URI.create(resourceUri.getBaseUri());
+
+			for (String regex : regexValidations) {
+				if(uri.getHost().matches(regex))
+					return Uni.createFrom().item(resourceUri);
+			}
 			return Uni.createFrom().failure(
-				new InvalidUriException("baseUri is not valid")
+				new InvalidUriException("The provided baseUri " +
+					"is not allowed by the configured whitelist")
+			);
+		} catch (NullPointerException | IllegalArgumentException e) {
+			return Uni.createFrom().failure(
+				new InvalidUriException("The provided baseUri is not a valid URI")
 			);
 		}
-
-		for (String regex : regexValidations) {
-			if(uri.getHost().matches(regex))
-				return Uni.createFrom().item(resourceUri);
-		}
-		return Uni.createFrom().failure(
-			new InvalidUriException("baseUri does not match the expected pattern")
-		);
 	}
 
 }

@@ -97,7 +97,7 @@ Trigger Restart Datasource Release:
     COMPONENT_TYPE: "backend"
     TARGET_ENV: "$RELEASE_TARGET_ENV"
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs only on Git tag. Copies the image already pushed to the internal registry
@@ -108,5 +108,7 @@ Copy Datasource to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-datasource"
   needs:
-    - job: Build Datasource image
+    # On a tag the release line builds the image, so depend on the Release job
+    # (Build Datasource image runs only on main now, not on tags).
+    - job: Build Datasource Release
       artifacts: true  # downloads .version file — needed to resolve the image tag

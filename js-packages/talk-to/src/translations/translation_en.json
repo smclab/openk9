@@ -1,6 +1,7 @@
 {
 	"translation": {
 		"error": "Please try again, an error occurred...",
+		"guardrail-violation": "Your request cannot be processed because it violates the content guidelines.",
 		"version": "Version",
 		"welcome-to": "Welcome to",
 		"where-knowledge-has-no-limits": "where knowledge knows no limits!",

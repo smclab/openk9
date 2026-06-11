@@ -38,15 +38,80 @@ class TenantManagerResourceTest {
 				Constants.AUTHORIZATION_HEADER,
 				Constants.BASIC_CREDENTIALS)
 			.body(JsonObject.of(
-				"virtualHost", 
+				"virtualHost",
 				"my.openk9.local",
-				"securityConfiguration", 
+				"securityConfiguration",
 				"OAUTH2_ADMIN_ONLY"
 			).toString())
 			.log().everything()
 			.post()
 			.then()
 			.statusCode(200);
+
+	}
+
+	@Test
+	void requestDeleteTenant_emptyBody_returns400() {
+
+		given()
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body("{}")
+			.post("/delete")
+			.then()
+			.statusCode(400);
+
+	}
+
+	@Test
+	void requestDeleteTenant_blankVirtualHost_returns400() {
+
+		given()
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body(JsonObject.of("virtualHost", "").toString())
+			.post("/delete")
+			.then()
+			.statusCode(400);
+
+	}
+
+	@Test
+	void deleteTenant_missingToken_returns400() {
+
+		given()
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body(JsonObject.of(
+				"virtualHost", "demo.openk9.io"
+			).toString())
+			.delete("/delete")
+			.then()
+			.statusCode(400);
+
+	}
+
+	@Test
+	void deleteTenant_blankToken_returns400() {
+
+		given()
+			.contentType(ContentType.JSON)
+			.header(
+				Constants.AUTHORIZATION_HEADER,
+				Constants.BASIC_CREDENTIALS)
+			.body(JsonObject.of(
+				"virtualHost", "demo.openk9.io",
+				"token", ""
+			).toString())
+			.delete("/delete")
+			.then()
+			.statusCode(400);
 
 	}
 

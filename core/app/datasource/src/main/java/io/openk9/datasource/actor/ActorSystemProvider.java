@@ -17,13 +17,15 @@
 
 package io.openk9.datasource.actor;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 
-import io.openk9.datasource.pipeline.service.EmbeddingStubRegistry;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 
 import com.typesafe.config.ConfigFactory;
@@ -32,6 +34,7 @@ import io.vertx.mutiny.core.eventbus.EventBus;
 import lombok.Getter;
 import org.apache.pekko.actor.typed.ActorSystem;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Startup
@@ -39,6 +42,8 @@ public class ActorSystemProvider {
 
 	public static final String INITIALIZED =
 		"io.openk9.datasource.actor.ActorSystemProvider#INITIALIZED";
+	private static final long TERMINATION_TIMEOUT_SECONDS = 10;
+	private static final Logger log = Logger.getLogger(ActorSystemProvider.class);
 	@Inject
 	Instance<ActorSystemInitializer> actorSystemInitializerInstance;
 	@Inject
@@ -80,8 +85,18 @@ public class ActorSystemProvider {
 
 	@PreDestroy
 	void destroy() {
-		EmbeddingStubRegistry.clear();
 		actorSystem.terminate();
+		try {
+			actorSystem.getWhenTerminated()
+				.toCompletableFuture()
+				.get(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+		catch (TimeoutException | ExecutionException e) {
+			log.warn("Actor system did not terminate cleanly within timeout", e);
+		}
 	}
 
 }

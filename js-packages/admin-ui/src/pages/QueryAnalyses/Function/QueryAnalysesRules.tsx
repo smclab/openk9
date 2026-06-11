@@ -20,7 +20,7 @@ gql`
   query QueryAnalysesRules($parentId: ID!, $searchText: String, $unassociated: Boolean!, $cursor: String) {
     queryAnalysis(id: $parentId) {
       id
-      rules(searchText: $searchText, notEqual: $unassociated, first: 20, after: $cursor) {
+      rules(searchText: $searchText, notEqual: $unassociated, first: 1000, after: $cursor) {
         edges {
           node {
             id

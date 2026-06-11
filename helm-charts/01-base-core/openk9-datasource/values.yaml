@@ -166,6 +166,8 @@ database:
     passwordSecretName: "postgres-password"
     keyPasswordSecret: "user-password"
     keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
+    sslMode: "require"
+    trustAll: "true"
 
   # ---- Parameters Oracle ----
   oracle:
@@ -201,6 +203,9 @@ rabbitmq:
 openk9:
   tenantManager:
     host: "openk9-tenant-manager"
+  embedding:
+    host: "openk9-embedding-module"
+    port: "5000"
 
 ## Search Page Configuration
 search:
@@ -226,6 +231,7 @@ serviceAccount:
   ## @param serviceAccount.name Name of the created serviceAccount
   ## If not set and create is true, a name is generated using the fullname template
   ##
+  automountServiceAccountToken: true  # required: Pekko cluster discovery uses K8s API (get/list/watch pods)
   name: "datasource"
 
 ## Role Based Access
@@ -266,15 +272,18 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Datasource pod's Security Context fsGroup
 ##
-podSecurityContext: {} # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
+podSecurityContext:
+  runAsNonRoot: true
   # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/

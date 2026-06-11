@@ -128,6 +128,7 @@ export function SaveSubDocType({
           variables: {
             documentTypeId: documentTypeId,
             documentTypeFieldId: subDocTypesId !== "new" ? subDocTypesId : undefined,
+            docTypeFieldName: subDocTypesId !== "new" ? documentTypeFieldQuery.data?.docTypeField?.name : undefined,
             ...data,
             ...(data.analyzer.id !== "-1" ? { analyzerId: data.analyzer.id } : {}),
             ...(data.searchAnalyzer.id && data.searchAnalyzer.id !== "-1"
@@ -166,7 +167,7 @@ export function SaveSubDocType({
           label="Field Type"
           dict={FieldType}
           {...form.inputProps("fieldType")}
-          description="Type associated to field. See Elasticsearch documentation for field data types"
+          description="Type associated to field. See OpenSearch documentation for field data types"
         />
         <CustomSelectRelationsOneToOne
           options={analyzerOption}

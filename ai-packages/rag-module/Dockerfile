@@ -30,4 +30,12 @@ RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
 
 EXPOSE 5000
 
+# Under USER 1001 (no /etc/passwd entry) HOME and USER are unset, and the WORKDIR
+# is root-owned -> startup crashes on first write. Set USER and make the WORKDIR
+# writable by uid 1001 (chown 1001:0 + g=u, OpenShift-friendly for arbitrary UIDs).
+ENV USER=rag-module
+RUN chown -R 1001:0 /rag-module && chmod -R g=u /rag-module
+
+USER 1001
+
 CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "5000"]

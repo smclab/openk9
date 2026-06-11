@@ -72,6 +72,7 @@ serviceAccount:
   ## @param serviceAccount.name Name of the created serviceAccount
   ## If not set and create is true, a name is generated using the fullname template
   ##
+  automountServiceAccountToken: false
   name: ""
 
 ## @param podAnnotations Rag Module Pod annotations. Evaluated as a template
@@ -87,17 +88,19 @@ podAnnotations: {}
 ## @param podSecurityContext.supplementalGroups Set filesystem extra groups
 ## @param podSecurityContext.fsGroup Set Rag Module pod's Security Context fsGroup
 ##
-podSecurityContext: {}
-  # fsGroup: 2000
-
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
+podSecurityContext:
+  runAsNonRoot: true
   # runAsUser: 1000
+  # runAsGroup: 1000
+  # fsGroup: 1000
+
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
 
 
 ## @param hostAliases Deployment pod host aliases
@@ -158,7 +161,13 @@ route:
 ##     cpu: 3
 ##     memory: 1024Mi
 ##
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
 
 autoscaling:
   enabled: false

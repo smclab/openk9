@@ -173,10 +173,11 @@ Build Docling Release:
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$VERSION"
     else
-      SNAP_TAG="${VERSION}-SNAPSHOT"
-      echo "[DOCLING Release] Branch: push $SNAP_TAG"
+      # The version comes from python_modules_config.txt, which already carries
+      # -SNAPSHOT on a release branch. Push it as-is — appending would double it.
+      echo "[DOCLING Release] Branch: push $VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG \
-        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$SNAP_TAG"
+        --destination "${CI_REGISTRY_NAME}/openk9/openk9-docling-processor:$VERSION"
     fi
   rules:
     - !reference [.rules:child-deploy-release, rules]
@@ -203,7 +204,7 @@ Trigger Restart Docling Release:
   - job: Build Docling Release
     artifacts: false
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
@@ -215,5 +216,5 @@ Copy Docling Processor to DockerHub:
   needs:
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
-    - job: Build Docling Image
+    - job: Build Docling Release
       artifacts: false  # image is on the registry, no artifacts needed from this job

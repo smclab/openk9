@@ -48,6 +48,8 @@ rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
 rabbit_user = os.getenv("RABBITMQ_USER", "user")
 rabbit_pass = os.getenv("RABBITMQ_PASS", "pass")
 
+setup_rabbitmq()
+
 MAX_RETRIES = os.getenv("RABBITMQ_MAX_RETRIES", 3)
 MIN_TIME_DELAY = int(os.getenv("MIN_TIME_DELAY_MINUTES", 5))
 BUFFER_TRESHOLD = int(os.getenv("BUFFER_TRESHOLD", 50))

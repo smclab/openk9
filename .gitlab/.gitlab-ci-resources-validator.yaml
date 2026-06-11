@@ -94,7 +94,7 @@ Trigger Restart Resources-Validator Release:
     COMPONENT_TYPE: "backend"
     TARGET_ENV: "$RELEASE_TARGET_ENV"
   rules:
-    - !reference [.rules:child-deploy-release, rules]
+    - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
@@ -104,5 +104,5 @@ Copy Resources Validator to DockerHub:
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
   needs:
-    - job: Build Resources-Validator Image
+    - job: Build Resources-Validator Release
       artifacts: true  # downloads .version file — needed to resolve the image tag

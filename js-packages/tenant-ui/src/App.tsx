@@ -45,7 +45,7 @@ export default function App() {
         <ApolloProvider client={apolloClient}>
           <ToastProvider>
             <ModalProvider>
-              <BrowserRouter basename="/tenant">
+              <BrowserRouter basename="/admin">
                 <AuthProvider>
                   <Routes>
                     <Route

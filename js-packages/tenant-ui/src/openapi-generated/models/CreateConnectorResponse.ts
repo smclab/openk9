@@ -5,3 +5,4 @@
 export type CreateConnectorResponse = {
     result?: string;
 };
+

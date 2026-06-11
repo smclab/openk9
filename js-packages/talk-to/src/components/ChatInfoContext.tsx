@@ -19,7 +19,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export const ChatInfoContext: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const client = OpenK9Client();
 	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-	const [language, setLanguage] = useState<string>("es_US");
+	const [language, setLanguage] = useState<string>("en_US");
 
 	const { data, isLoading, error } = useQuery(
 		"user-info",

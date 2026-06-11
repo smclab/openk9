@@ -230,149 +230,167 @@ def initialize_embedding_model(configuration):
 
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
-        start = time.time()
+        try:
+            start = time.time()
 
-        chunk = request.chunk
-        chunk_type = chunk.type
-        chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
-        embedding_model = request.embeddingModel
-        model_type = embedding_model.providerModel.provider
-        model = embedding_model.providerModel.model
-        api_key = embedding_model.apiKey
-        embedding_model_json_config = json_format.MessageToDict(
-            embedding_model.jsonConfig
-        )
-
-        configuration = {
-            "api_key": api_key,
-            "api_url": embedding_model_json_config.get("api_url"),
-            "model_type": model_type,
-            "model": model,
-            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
-            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
-                "chat_vertex_ai_model_garden"
-            ),
-            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
-        }
-        embeddings = initialize_embedding_model(configuration)
-
-        text = clean_text(request.text)
-        text_splitted = []
-        chunks = []
-
-        info_chunk = {
-            "text": text,
-            "chunk_type": chunk_type,
-            "provider": model_type,
-            "model": model,
-            "chunk_config": chunk_json_config,
-        }
-
-        logger.info(info_chunk)
-
-        def _is_int_like(value):
-            """Checks if an input can be casted to int."""
-            try:
-                int(value)
-                return True
-            except (ValueError, TypeError):
-                return False
-
-        signature = {
-            name: hint
-            for name, hint in get_type_hints(chunk_types[chunk_type].__init__).items()
-            if name != "return"
-        }
-
-        arguments = {
-            hit: chunk_json_config[hit]
-            for hit in chunk_json_config
-            if (hit in signature.keys())
-            and (
-                isinstance(chunk_json_config[hit], signature[hit])
-                or (
-                    isinstance(chunk_json_config[hit], (float, str))
-                    and _is_int_like(chunk_json_config[hit])
-                    and isinstance(int(chunk_json_config[hit]), signature[hit])
-                )
+            chunk = request.chunk
+            chunk_type = chunk.type
+            chunk_json_config = json_format.MessageToDict(chunk.jsonConfig)
+            embedding_model = request.embeddingModel
+            model_type = embedding_model.providerModel.provider
+            model = embedding_model.providerModel.model
+            api_key = embedding_model.apiKey
+            api_url = embedding_model.apiUrl
+            embedding_model_json_config = json_format.MessageToDict(
+                embedding_model.jsonConfig
             )
-        }
 
-        info_arguments = {
-            "using_arguments": arguments,
-            "unused_arguments": {
-                k: v for k, v in chunk_json_config.items() if k not in arguments
-            },
-            "possible_arguments": signature,
-        }
-        logger.info(info_arguments)
-        if chunk_type not in chunk_types:
-            context.abort(
-                grpc.StatusCode.INVALID_ARGUMENT,
-                f"Unsupported chunk type: {chunk_type}",
-            )
-            return
-
-        text_splitter = chunk_types[chunk_type](**arguments)
-        text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
-
-        total_chunks = len(text_splitted)
-
-        for index, chunk_text in enumerate(text_splitted, start=1):
-            chunk_result = {
-                "number": index,
-                "total": total_chunks,
-                "text": chunk_text,
-                "vectors": embeddings.embed_query(chunk_text),
+            configuration = {
+                "api_key": api_key,
+                "api_url": api_url,
+                "model_type": model_type,
+                "model": model,
+                "watsonx_project_id": embedding_model_json_config.get(
+                    "watsonx_project_id"
+                ),
+                "chat_vertex_ai_model_garden": embedding_model_json_config.get(
+                    "chat_vertex_ai_model_garden"
+                ),
+                "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
             }
-            chunks.append(chunk_result)
+            embeddings = initialize_embedding_model(configuration)
 
-        end = time.time()
+            text = clean_text(request.text)
+            text_splitted = []
+            chunks = []
 
-        logger.info(
-            "text splitted in %s chunks in %s seconds",
-            total_chunks,
-            round(end - start, 2),
-        )
-        do_eval = bool(os.getenv("DO_EVAL", False))
-        if do_eval:
-            rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
-            rabbit_user = os.getenv("RABBITMQ_USER", "openk9")
-            rabbit_pass = os.getenv("RABBITMQ_PASS", "openk9")
+            # info_chunk = {
+            #     "text": text,
+            #     "chunk_type": chunk_type,
+            #     "provider": model_type,
+            #     "model": model,
+            #     "chunk_config": chunk_json_config,
+            # }
 
-            credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
-            connection = pika.BlockingConnection(
-                pika.ConnectionParameters(host=rabbit_host, credentials=credentials)
-            )
-            try:
-                channel = connection.channel()
+            # logger.info(info_chunk)
 
-                data = [
-                    {
-                        f"chunk_{i}": {
-                            "text": chunk["text"],
-                            "embedding": chunk["vectors"],
-                        }
-                    }
-                    for i, chunk in enumerate(chunks)
-                ]
-                data_pack = {"chunks": data, "text": text}
+            def _is_int_like(value):
+                """Checks if an input can be casted to int."""
+                try:
+                    int(value)
+                    return True
+                except (ValueError, TypeError):
+                    return False
 
-                body = json.dumps(data_pack).encode("utf-8")
+            signature = {
+                name: hint
+                for name, hint in get_type_hints(
+                    chunk_types[chunk_type].__init__
+                ).items()
+                if name != "return"
+            }
 
-                channel.basic_publish(
-                    exchange="main.exchange",
-                    routing_key="main",
-                    body=body,
-                    properties=pika.BasicProperties(
-                        delivery_mode=2,  # messaggio persistente
-                        headers={"retry-count": 0},  # header custom per i retry
-                    ),
+            arguments = {
+                hit: chunk_json_config[hit]
+                for hit in chunk_json_config
+                if (hit in signature.keys())
+                and (
+                    isinstance(chunk_json_config[hit], signature[hit])
+                    or (
+                        isinstance(chunk_json_config[hit], (float, str))
+                        and _is_int_like(chunk_json_config[hit])
+                        and isinstance(int(chunk_json_config[hit]), signature[hit])
+                    )
                 )
-            finally:
-                connection.close()
+            }
 
-        return embedding_pb2.EmbeddingResponse(chunks=chunks)
+            info_arguments = {
+                "using_arguments": arguments,
+                "unused_arguments": {
+                    k: v for k, v in chunk_json_config.items() if k not in arguments
+                },
+                "possible_arguments": signature,
+            }
+            logger.info(info_arguments)
+            if chunk_type not in chunk_types:
+                context.abort(
+                    grpc.StatusCode.INVALID_ARGUMENT,
+                    f"Unsupported chunk type: {chunk_type}",
+                )
+                return
+
+            text_splitter = chunk_types[chunk_type](**arguments)
+            text_splitted = [chunk.text for chunk in text_splitter.chunk(text)]
+
+            total_chunks = len(text_splitted)
+
+            for index, chunk_text in enumerate(text_splitted, start=1):
+                chunk_result = {
+                    "number": index,
+                    "total": total_chunks,
+                    "text": chunk_text,
+                    "vectors": embeddings.embed_query(chunk_text),
+                }
+                chunks.append(chunk_result)
+
+            end = time.time()
+
+            logger.info(
+                "text splitted in %s chunks in %s seconds",
+                total_chunks,
+                round(end - start, 2),
+            )
+
+            do_eval = os.getenv("DO_EVAL", "false").lower() == "true"
+
+            if do_eval:
+                rabbit_host = os.getenv("RABBITMQ_HOST", "localhost")
+                rabbit_user = os.getenv("RABBITMQ_USER", "openk9")
+                rabbit_pass = os.getenv("RABBITMQ_PASS", "openk9")
+
+                connection = None
+                try:
+                    credentials = pika.PlainCredentials(rabbit_user, rabbit_pass)
+                    connection = pika.BlockingConnection(
+                        pika.ConnectionParameters(
+                            host=rabbit_host, credentials=credentials
+                        )
+                    )
+                    channel = connection.channel()
+
+                    data = [
+                        {
+                            f"chunk_{i}": {
+                                "text": chunk["text"],
+                                "embedding": chunk["vectors"],
+                            }
+                        }
+                        for i, chunk in enumerate(chunks)
+                    ]
+                    data_pack = {"chunks": data, "text": text}
+
+                    body = json.dumps(data_pack).encode("utf-8")
+
+                    channel.basic_publish(
+                        exchange="main.exchange",
+                        routing_key="main",
+                        body=body,
+                        properties=pika.BasicProperties(
+                            delivery_mode=2,  # messaggio persistente
+                            headers={"retry-count": 0},  # header custom per i retry
+                        ),
+                    )
+                except Exception as e:
+                    logger.info(f"Failed: {e}")
+                finally:
+                    if connection:
+                        connection.close()
+
+            return embedding_pb2.EmbeddingResponse(chunks=chunks)
+        except Exception as e:
+            logger.exception("GetMessages Error")
+
+            context.abort(grpc.StatusCode.INTERNAL, str(e))
 
 
 def serve():

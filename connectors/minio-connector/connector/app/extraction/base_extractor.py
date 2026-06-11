@@ -37,6 +37,13 @@ class BaseMinioExtractor(abc.ABC):
 	def manage_data(self, client: Minio, obj: Object, end_timestamp: float):
 		raise NotImplementedError(f"Method not implemented in {self.__class__.__name__}")
 
+	def _is_object_modified_after(self, obj: Object, timestamp_ms: float) -> bool:
+		if not obj.last_modified:
+			return False
+
+		last_modified = obj.last_modified.timestamp() * 1000
+		return last_modified >= timestamp_ms
+
 	def extract_data(self):
 		try:
 			client = Minio(self.url, self.access_key, self.secret_key, secure=False)
@@ -51,6 +58,8 @@ class BaseMinioExtractor(abc.ABC):
 
 		try:
 			for obj in objects:
+				if not self._is_object_modified_after(obj, self.timestamp):
+					continue
 				self.manage_data(client, obj, end_timestamp)
 
 			self.ingestion_handler.post_last(end_timestamp=end_timestamp)

@@ -16,6 +16,7 @@
  */
 import { ContainerFluid, ModalConfirm, ModalConfirmRadio, useForm, useToast } from "@components/Form";
 import { useRestClient } from "@components/queryClient";
+import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import Recap, { mappingCardRecap, RecapSingleSection } from "@pages/Recap/SaveRecap";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -120,27 +121,34 @@ export function SaveDatasource({ setExtraFab }: { setExtraFab: (fab: React.React
   const getHealthInfo = async (id: number) => {
     try {
       const response = await restClient.pluginDriverResource.getApiDatasourcePluginDriversHealth(id);
-
-      toast({
-        displayType: "success",
-        title: "Success",
-        content: `Status: ${response.status}`,
-      });
+      const ui = mapHealthStatus(response.status);
+      if (ui === "success") {
+        toast({ displayType: "success", title: "Success", content: "Connection successful" });
+      } else if (ui === "down") {
+        toast({ displayType: "error", title: "Service unavailable", content: "The service is reachable but reports DOWN" });
+      } else {
+        toast({ displayType: "warning", title: "Service status unknown", content: `Unexpected status: ${response.status}` });
+      }
     } catch (error) {
-      toast({
-        displayType: "error",
-        title: "Error",
-        content: `${error}`,
-      });
+      const { title, detail } = extractProblemDetails(error);
+      toast({ displayType: "error", title, content: detail ?? "Unable to reach the service" });
     }
   };
 
   const getHealthInfoWithoutId = async () => {
     try {
       const response = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth(requestBody);
-      alert(response.status);
+      const ui = mapHealthStatus(response.status);
+      if (ui === "success") {
+        alert("Connection successful");
+      } else if (ui === "down") {
+        alert("Service unavailable: the service is reachable but reports DOWN");
+      } else {
+        alert(`Service status unknown: ${response.status}`);
+      }
     } catch (error) {
-      alert("error");
+      const { title, detail } = extractProblemDetails(error);
+      alert(detail ? `${title}: ${detail}` : title);
     }
   };
 

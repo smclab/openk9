@@ -1,6 +1,7 @@
 {
   "translation": {
     "after-days": "jours à venir",
+    "guardrail-violation": "Votre demande ne peut pas être traitée car elle enfreint les règles relatives au contenu.",
     "active-filters": "Filtres actifs",
     "any": "N'importe quel",
     "add-filters": "Appliquer des filtres",

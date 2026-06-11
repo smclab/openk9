@@ -27,6 +27,9 @@ spec:
         - name: {{ .Release.Name }}
           image: {{ template "common.images.fullname" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext: {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
            ######################  Probes  ######################
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:

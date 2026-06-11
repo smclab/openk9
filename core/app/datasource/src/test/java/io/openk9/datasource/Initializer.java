@@ -322,7 +322,7 @@ public class Initializer {
 		var testEmbeddingModel = embeddingModelService.create(EmbeddingModelDTO
 				.builder()
 				.name(EMBEDDING_MODEL_DEFAULT_PRIMARY)
-				.apiUrl("embedding-model.local")
+				.apiUrl("https://api.acmeai.com/v1/embeddings")
 				.apiKey("secret-key")
 				.vectorSize(1500)
 				.build())
@@ -364,7 +364,7 @@ public class Initializer {
 
 		embeddingModelService.create(EmbeddingModelDTO.builder()
 				.name("Test embedding model disabled")
-				.apiUrl("embedding-model.disabled.local")
+				.apiUrl("https://api.acmeai.com/v1/embeddings")
 				.apiKey("secret")
 				.vectorSize(1234)
 				.build())

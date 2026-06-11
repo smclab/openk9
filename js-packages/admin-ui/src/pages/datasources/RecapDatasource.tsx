@@ -55,7 +55,13 @@ function RecapDatasource({
       flexDirection={forceFullScreen ? undefined : "row"}
       gap={forceFullScreen ? 3 : 2}
       width={forceFullScreen ? "100%" : undefined}
-      gridTemplateColumns={forceFullScreen ? { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" } : undefined}
+      gridTemplateColumns={
+        forceFullScreen
+          ? area.length === 1
+            ? "1fr"
+            : { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" }
+          : undefined
+      }
       alignItems={forceFullScreen ? "stretch" : undefined}
     >
       {area.map((section, idx) => {
