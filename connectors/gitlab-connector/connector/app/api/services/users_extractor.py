@@ -6,38 +6,49 @@ from gitlab import Gitlab
 from gitlab.v4.objects import User
 
 from .base_extractor import BaseExtractor
-from .util.utility import format_raw_content
+from .util.utility import format_raw_content, strftime_datetime_filter
+
+from ..models.util.models_utility import  (
+	BoolFilter,
+	FilterComposite,
+)
 
 
 class UserDataExtractor(BaseExtractor):
     def __init__(self, *, domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int,
-                filter_active: bool, filter_external: bool, filter_blocked: bool, filter_human: bool, exclude_active: bool, exclude_external: bool, exclude_humans: bool, exclude_internal: bool) -> None:
+                filter_active: BoolFilter, filter_external: BoolFilter, filter_blocked: BoolFilter, filter_human: BoolFilter, exclude_active: BoolFilter, exclude_external: BoolFilter, exclude_humans: BoolFilter, exclude_internal: BoolFilter) -> None:
         super().__init__(domain, access_token, timestamp, datasource_id, schedule_id, tenant_id, items_per_page)
-        
-        self.filter_active: bool = filter_active
-        self.filter_external: bool = filter_external
-        self.filter_blocked: bool = filter_blocked
-        self.filter_human: bool = filter_human
-        self.exclude_active: bool = exclude_active
-        self.exclude_external: bool = exclude_external
-        self.exclude_humans: bool = exclude_humans
-        self.exclude_internal: bool = exclude_internal
-        
+
+        self.user_filters: dict[str, Any] = FilterComposite.compose_params(
+            filters={
+                'active': filter_active,
+                'external': filter_external,
+                'blocked': filter_blocked,
+                'humans': filter_human,
+                'exclude_active': exclude_active,
+                'exclude_external': exclude_external,
+                'exclude_humans': exclude_humans,
+                'exclude_internal': exclude_internal,
+            })
     
     @override
     def extract_data(self, gl: Gitlab, time_stamp_date: datetime) -> Iterator[User]:
-        return gl.users.list(
-            iterator=True, 
-            created_after=time_stamp_date,
-            active=self.filter_active,
-            external=self.filter_external,
-            blocked=self.filter_blocked,
-            humans=self.filter_human,
-            exclude_active=self.exclude_active,
-            exclude_external=self.exclude_external,
-            exclude_humans=self.exclude_humans,
-            exclude_internal=self.exclude_internal
-        )
+        if gl.user and gl.user.attributes.get('is_admin', False):
+            for user in gl.users.list(
+	                iterator=True, 
+	                **self.user_filters, 
+	            ):
+                if last_activity := user.attributes.get('last_activity_on', None):
+                    if datetime.strptime(last_activity, '%Y-%m-%d') >= time_stamp_date:
+                        yield user
+        else:
+            # TODO: Check why this doesn't work, Index gets CANCELLED, no data only LAST
+            datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
+            return gl.users.list(
+                iterator=True, 
+                created_after=datetime_filter,
+                **self.user_filters,
+            )
     
     @override
     def manage_data(self, data: User, end_timestamp: float) -> dict[str, Any]:

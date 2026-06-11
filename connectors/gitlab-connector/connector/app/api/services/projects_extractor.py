@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterator, Literal
-from uuid import UUID
 
 from gitlab import Gitlab
 from gitlab.base import RESTObject
+from gitlab.exceptions import GitlabListError
 from gitlab.v4.objects import Project, ProjectBranch, ProjectCommit, ProjectIssue, ProjectLabel, ProjectMergeRequest, ProjectMilestone
 
 from ..models.util.models_utility import (
@@ -132,20 +132,20 @@ class ProjectDataExtractor(BaseExtractor):
         if time_stamp_date.tzinfo is None:
             time_stamp_date = time_stamp_date.replace(tzinfo=timezone.utc)
 
+        datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
         if self.project_list:
+            projects = []
             for project_id in self.project_list:
                 project = gl.projects.get(id=project_id)
                 if last_activity := project.attributes.get('last_activity_at'):
                     if datetime.fromisoformat(last_activity) >= time_stamp_date:
-                        yield project
-            return
-        
-        datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
-        projects = gl.projects.list(
-            iterator=True, 
-            created_after=datetime_filter,
-            **self.project_filters
-        )
+                        projects.append(project)
+        else:
+            projects = gl.projects.list(
+                iterator=True, 
+                created_after=datetime_filter,
+                **self.project_filters
+            )
         
         if not any([
                     self.do_extract_issues, self.do_extract_commits, self.do_extract_branches,
@@ -156,70 +156,88 @@ class ProjectDataExtractor(BaseExtractor):
         for project in projects:
             if self.do_extract_issues:
                 self.status_logger.info("Processing issues...")
-                project.issues._list_filters
-                yield from project.issues.list(
-                    iterator=True, 
-                    updated_after=datetime_filter,
-                    order_by='updated_at',
-                    **self.issue_filters,
-                )
+                try:
+                    yield from project.issues.list(
+                        iterator=True, 
+                        updated_after=datetime_filter,
+                        order_by='updated_at',
+                        **self.issue_filters,
+                    )
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract issues: {str(e)}")
                 
             if self.do_extract_commits:
                 self.status_logger.info("Processing commits...")
-                yield from project.commits.list(
-                    iterator=True, 
-                    since=datetime_filter, 
-                    **self.commit_filters
-                )
+                try:
+                    yield from project.commits.list(
+                        iterator=True, 
+                        since=datetime_filter, 
+                        **self.commit_filters
+                    )
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract commits: {str(e)}")
             
             if self.do_extract_branches:
                 self.status_logger.info("Processing branches...")
-                for branch in project.branches.list(iterator=True,):
-                    if committed_date := branch.attributes.get('commit', {}).get('committed_date', None):
-                        if datetime.fromisoformat(committed_date) >= time_stamp_date:
-                            yield branch
+                try:
+                    for branch in project.branches.list(iterator=True,):
+                        if committed_date := branch.attributes.get('commit', {}).get('committed_date', None):
+                            if datetime.fromisoformat(committed_date) >= time_stamp_date:
+                                yield branch
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract branches: {str(e)}")
+
             
             if self.do_extract_labels:
                 self.status_logger.info("Processing labels...")
-                yield from project.labels.list(iterator=True, **self.label_filters)
+                try:
+                    yield from project.labels.list(iterator=True, **self.label_filters)
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract labels: {str(e)}")
                 
             if self.do_extract_milestones:
                 self.status_logger.info("Processing milestones...")
-                yield from project.milestones.list(
-                    iterator=True, 
-                    updated_after=datetime_filter,
-                    **self.milestone_filters
-                )
+                try:
+                    yield from project.milestones.list(
+                        iterator=True, 
+                        updated_after=datetime_filter,
+                        **self.milestone_filters
+                    )
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract milestones: {str(e)}")
                 
             if self.do_extract_merge_requests:
                 self.status_logger.info("Processing merge requests...")
-                yield from project.mergerequests.list(
-                    iterator=True, 
-                    updated_after=datetime_filter, 
-                    order_by='updated_at',
-                    **self.merge_request_filters
-                )
+                try:
+                    yield from project.mergerequests.list(
+                        iterator=True, 
+                        updated_after=datetime_filter, 
+                        order_by='updated_at',
+                        **self.merge_request_filters
+                    )
+                except GitlabListError as e:
+                    self.status_logger.warning(f"Could not extract merge requets: {str(e)}")
             
             yield project
     
     def manage_data(self, data: Project | ProjectIssue | ProjectCommit | ProjectBranch | ProjectLabel | ProjectMilestone | ProjectMergeRequest, end_timestamp: float) -> dict[str, Any]:
         info: dict[str, Any] = data.attributes
         
-        content_id: UUID = get_object_content_id(resource=data)
+        content_id: str = get_object_content_id(resource=data)
         
         
         if isinstance(data, Project):
-            raw_content_elements = [info['description'] or '', info['name'] or '', *info['topics'],]
+            raw_content_elements = [info['description'] or '', info['name'] or '', *[topic or '' for topic in info['topics']],]
             raw_content = format_raw_content(model=''.join(raw_content_elements))
             payload_key = 'project'
             
         elif isinstance(data, ProjectIssue):
-            raw_content_elements = [info['state'] or '', info['title'] or '', info['description'], *info['labels'],]
+            raw_content_elements = [info['state'] or '', info['title'] or '', info['description'] or '', *[label or '' for label in info['labels']],]
             raw_content = format_raw_content(model=''.join(raw_content_elements))
             payload_key = 'issue'
             
         elif isinstance(data, ProjectCommit):
-            raw_content_elements = [info['title'] or '', info['author_name'] or '', info['author_email'], info['committer_name'], info['committer_email'], info['message'],]
+            raw_content_elements = [info['title'] or '', info['author_name'] or '', info['author_email'] or '', info['committer_name'] or '', info['committer_email'] or '', info['message'] or '',]
             raw_content = format_raw_content(model=''.join(raw_content_elements))
             payload_key = 'commit'
             

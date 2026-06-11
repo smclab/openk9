@@ -32,7 +32,12 @@
       "type": "number",
       "size": 4,
       "required": false,
-      "values": [],
+      "values": [
+          {
+            "value": 100,
+            "isDefault": true
+          }
+      ],
       "placeholder": "",
       "info": "",
       "validator": {

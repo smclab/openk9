@@ -66,14 +66,14 @@ class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
         excludeInternal (bool): Filters only non internal users. Default is false.
     """
     
-    filterActive: bool = Field(default=False, frozen=True)
-    filterExternal: bool = Field(default=False, frozen=True)
-    filterBlocked: bool = Field(default=False, frozen=True)
-    filterHuman: bool = Field(default=False, frozen=True)
-    excludeActive: bool = Field(default=False, frozen=True)
-    excludeExternal: bool = Field(default=False, frozen=True)
-    excludeHumans: bool = Field(default=False, frozen=True)
-    excludeInternal: bool = Field(default=False, frozen=True)
+    filterActive: BoolFilter = Field(default='NoFilter', frozen=True)
+    filterExternal: BoolFilter = Field(default='NoFilter', frozen=True)
+    filterBlocked: BoolFilter = Field(default='NoFilter', frozen=True)
+    filterHuman: BoolFilter = Field(default='NoFilter', frozen=True)
+    excludeActive: BoolFilter = Field(default='NoFilter', frozen=True)
+    excludeExternal: BoolFilter = Field(default='NoFilter', frozen=True)
+    excludeHumans: BoolFilter = Field(default='NoFilter', frozen=True)
+    excludeInternal: BoolFilter = Field(default='NoFilter', frozen=True)
     
     def create_extractor(self) -> users_extractor.UserDataExtractor:
         return users_extractor.UserDataExtractor(

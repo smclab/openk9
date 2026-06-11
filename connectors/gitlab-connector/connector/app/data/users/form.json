@@ -32,7 +32,12 @@
       "type": "number",
       "size": 4,
       "required": false,
-      "values": [],
+      "values": [
+          {
+            "value": 100,
+            "isDefault": true
+          }
+      ],
       "placeholder": "",
       "info": "",
       "validator": {
@@ -43,13 +48,21 @@
     {
       "label": "Filter Active",
       "name": "filterActive",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -62,13 +75,21 @@
     {
       "label": "Filter External",
       "name": "filterExternal",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -81,13 +102,21 @@
     {
       "label": "Filter Blocked",
       "name": "filterBlocked",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -100,13 +129,21 @@
     {
       "label": "Filter Human",
       "name": "filterHuman",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -119,13 +156,21 @@
     {
       "label": "Exclude Active",
       "name": "excludeActive",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -138,13 +183,21 @@
     {
       "label": "Exclude External",
       "name": "excludeExternal",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -157,13 +210,21 @@
     {
       "label": "Exclude Humans",
       "name": "excludeHumans",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",
@@ -176,13 +237,21 @@
     {
       "label": "Exclude Internal",
       "name": "excludeInternal",
-      "type": "boolean",
+      "type": "select",
       "size": 4,
       "required": false,
       "values": [
         {
-          "value": false,
+          "value": "NoFilter",
           "isDefault": true
+        },
+        {
+          "value": "True",
+          "isDefault": false
+        },
+        {
+          "value": "False",
+          "isDefault": false
         }
       ],
       "placeholder": "",

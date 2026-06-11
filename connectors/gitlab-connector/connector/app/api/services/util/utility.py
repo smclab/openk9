@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import UUID
 
 
 import uuid
@@ -47,18 +46,19 @@ def format_raw_content(model: str | list | dict) -> str | None:
     return raw_content.replace('\t', ' ').replace("\n", " ").replace("\\", " ") \
         .replace("..", "").replace("__", "").replace(";", "").replace(",", "").lower().strip()
 
-def get_object_content_id(resource: RESTObject)-> UUID:
+def get_object_content_id(resource: RESTObject)-> str:
     primary_id = resource.get_id()
     
     if primary_id is not None:
-        return uuid.uuid3(uuid.NAMESPACE_OID, str(primary_id))
+        data = uuid.uuid3(uuid.NAMESPACE_OID, str(primary_id))
     
     # Fallback to web_url
     elif hasattr(resource, 'web_url') and resource.web_url:
-        return uuid.uuid3(uuid.NAMESPACE_URL, resource.web_url)
+        data = uuid.uuid3(uuid.NAMESPACE_URL, resource.web_url)
         
     else:
         raise ValueError(f"Resource {type(resource).__name__} lacks an identifier.")
+    return str(data)
 
 
 def strftime_datetime_filter(dt: datetime) -> str:
