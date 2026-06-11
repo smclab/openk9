@@ -41,7 +41,15 @@ Trigger Datasource:
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *datasource_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *datasource_changes
         compare_to: 'refs/heads/main'
@@ -60,11 +68,6 @@ Trigger Datasource:
     # RELEASE: push/merge su release branch (3.0.x, 3.1.x, ...)
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *datasource_changes
-    # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *datasource_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-datasource.yaml"
     strategy: depend
@@ -82,7 +85,15 @@ Trigger Searcher:
         - core/client/grpc/**/*
         - core/api/tenant-manager-api/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *searcher_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *searcher_changes
         compare_to: 'refs/heads/main'
@@ -100,10 +111,6 @@ Trigger Searcher:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *searcher_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *searcher_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-searcher.yaml"
     strategy: depend
@@ -118,7 +125,15 @@ Trigger Ingestion:
         - core/common/util/**/*
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *ingestion_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *ingestion_changes
         compare_to: 'refs/heads/main'
@@ -136,10 +151,6 @@ Trigger Ingestion:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *ingestion_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *ingestion_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-ingestion.yaml"
     strategy: depend
@@ -159,7 +170,15 @@ Trigger K8S-Client:
         - core/client/common/**/*
         - core/api/tenant-manager-api/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *k8s_client_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *k8s_client_changes
         compare_to: 'refs/heads/main'
@@ -178,11 +197,6 @@ Trigger K8S-Client:
     # RELEASE: push/merge su release branch (3.0.x, 2026.1.x, ...)
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *k8s_client_changes
-    # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *k8s_client_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-k8s-client.yaml"
     strategy: depend
@@ -197,7 +211,15 @@ Trigger File-Manager:
         - core/common/resources-common/**/*
         - core/client/grpc/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *file_manager_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *file_manager_changes
         compare_to: 'refs/heads/main'
@@ -215,10 +237,6 @@ Trigger File-Manager:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *file_manager_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *file_manager_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-file-manager.yaml"
     strategy: depend
@@ -239,7 +257,15 @@ Trigger Tenant-Manager:
         - core/api/tenant-manager-api/**/*
         - core/common/datasource-model/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *tenant_manager_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *tenant_manager_changes
         compare_to: 'refs/heads/main'
@@ -257,10 +283,6 @@ Trigger Tenant-Manager:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *tenant_manager_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *tenant_manager_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-tenant-manager.yaml"
     strategy: depend
@@ -275,7 +297,15 @@ Trigger API-Gateway:
         - core/common/resources-common/**/*
         - core/service/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *api_gateway_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *api_gateway_changes
         compare_to: 'refs/heads/main'
@@ -293,10 +323,6 @@ Trigger API-Gateway:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *api_gateway_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *api_gateway_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-api-gateway.yaml"
     strategy: depend
@@ -310,7 +336,15 @@ Trigger Tika:
         - core/app/tika/**/*
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *tika_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *tika_changes
         compare_to: 'refs/heads/main'
@@ -328,10 +362,6 @@ Trigger Tika:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *tika_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *tika_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-tika.yaml"
     strategy: depend
@@ -345,7 +375,15 @@ Trigger Resources-Validator:
         - core/app/resources-validator/**/*
         - core/common/resources-common/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *resources_validator_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *resources_validator_changes
         compare_to: 'refs/heads/main'
@@ -363,10 +401,6 @@ Trigger Resources-Validator:
         USER_TYPE: "generic"
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *resources_validator_changes
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *resources_validator_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-resources-validator.yaml"
     strategy: depend

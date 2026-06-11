@@ -62,7 +62,7 @@ Build Chunk Evaluation Image:
     KANIKO_CONTEXT="--context ${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module --dockerfile ${CI_PROJECT_DIR}/ai-packages/chunk-evaluation-module/Dockerfile"
     BUILD_ARG="--build-arg PYTHON_BASE_DOCKER_IMAGE=$PYTHON_BASE_DOCKER_IMAGE"
 
-    if [ "$CI_COMMIT_BRANCH" = "main" ] || [ -n "$CI_COMMIT_TAG" ]; then
+    if [ "$CI_COMMIT_BRANCH" = "main" ]; then
       echo "[CHUNK-EVAL] Build & push as :$VERSION"
       /kaniko/executor $KANIKO_CACHE_FLAGS $KANIKO_CONTEXT $BUILD_ARG \
         --destination "${CI_REGISTRY_NAME}/openk9/openk9-chunk-evaluation-module:$VERSION"
@@ -83,7 +83,14 @@ Build Chunk Evaluation Image:
       fi
     fi
   rules:
-    - !reference [.rules:child-build-always, rules]
+    # main: push versione; feature designated: push 997-SNAPSHOT; feature generic
+    # e MR: build --no-push (per gli AI il docker build È la verifica MR, il
+    # Build Verifier fa solo py_compile). Niente tag: su vN.N.N builda solo il
+    # job Release — mutua esclusione main/release come backend/frontend (#2160).
+    - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-restart-feature, rules]
+    - !reference [.rules:child-build-feature-generic, rules]
+    - !reference [.rules:child-verify-mr, rules]
 
 ######################## BUILD VERIFIER CHUNK EVALUATION ########################
 Build Verifier:

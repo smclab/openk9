@@ -76,13 +76,13 @@ Build Web Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/openk9-crawler/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/openk9-crawler/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/openk9-crawler/connector/**/*
+  # MR (standard o porting): nelle child pipeline le variabili CI_MERGE_REQUEST_*
+  # NON sono propagate e CI_PIPELINE_SOURCE vale "parent_pipeline" — una MR si
+  # riconosce dall'assenza di branch/tag (stessa detection di .rules:child-verify-mr).
+  # Lo script esegue kaniko --no-push. Senza changes: (nelle child da MR non c'è
+  # baseline di diff) una MR che tocca un connettore builda tutti e 6 — limitazione
+  # accettata, la kaniko cache rende veloci i non toccati (#2160).
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #                   BUILD EMAIL CONNECTOR                     #
@@ -137,13 +137,8 @@ Build Email Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/email-connector/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/email-connector/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/email-connector/connector/**/*
+  # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #                  BUILD DATABASE CONNECTOR                   #
@@ -198,13 +193,8 @@ Build Database Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/database-connector/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/database-connector/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/database-connector/connector/**/*
+  # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #                  BUILD YOUTUBE CONNECTOR                    #
@@ -259,13 +249,8 @@ Build YouTube Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/youtube-connector/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/youtube-connector/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/youtube-connector/connector/**/*
+  # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #                  BUILD GITLAB CONNECTOR                     #
@@ -320,13 +305,8 @@ Build GitLab Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/gitlab-connector/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/gitlab-connector/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/gitlab-connector/connector/**/*
+  # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #                  BUILD MINIO CONNECTOR                      #
@@ -381,13 +361,8 @@ Build Minio Connector image:
   - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/minio-connector/connector/**/*
-  # Porting MR toward a release branch — verifier-only build, no push.
-  - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-    changes:
-    - connectors/minio-connector/connector/**/*
-  - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    changes:
-    - connectors/minio-connector/connector/**/*
+  # MR: detection child-side, vedi commento su "Build Web Connector image" (#2160)
+  - if: '$CI_PIPELINE_SOURCE == "parent_pipeline" && $CI_COMMIT_BRANCH == null && $CI_COMMIT_TAG == null'
 
 ###############################################################
 #               CONTAINER SCANNING WEB CONNECTOR              #

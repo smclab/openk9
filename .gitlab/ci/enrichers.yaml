@@ -20,7 +20,15 @@ Trigger Docling Processor:
       changes: &docling_processor_changes
         - enrichers/docling-processor/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    # RELEASE MR: porting-* verso release branch — compile only. Deve stare PRIMA
+    # della rule MR generica: una porting MR è anche merge_request_event e
+    # first-match-wins la classificherebbe come MR standard (#2160).
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
+      changes: *docling_processor_changes
+      variables:
+        RELEASE_MR: "true"
+    # MR standard (target != release branch — le porting MR sono gestite sopra)
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME !~ /^\d+\.\d+\.x$/'
       changes:
         paths: *docling_processor_changes
         compare_to: 'refs/heads/main'
@@ -39,11 +47,6 @@ Trigger Docling Processor:
     # RELEASE: push/merge su release branch (3.0.x, 2026.1.x, ...)
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
       changes: *docling_processor_changes
-    # RELEASE MR: porting-* verso release branch — compile only
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes: *docling_processor_changes
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/.gitlab-ci-docling-processor.yaml"
     strategy: depend

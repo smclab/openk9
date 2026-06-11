@@ -40,6 +40,12 @@ Trigger Connectors Build:
 # ================================
 # Consolidating triggers based on Helm Chart Pipeline files structure.
 # Each trigger points to a specific group file in .gitlab/helm-charts-pipeline/
+#
+# POLICY (Issue #2160): charts are packaged/published ONLY from main or a tag
+# (manual jobs). Release branches (N.N.x) and porting MRs must NOT spawn these
+# children: the group files have no jobs for those contexts, so the child would
+# be empty and the strategy:depend trigger would fail the whole pipeline.
+# The release line publishes its charts when the release tag (vN.N.N) is cut.
 
 # 1. Base Core (Ingestion, Datasource, Searcher, etc.)
 Trigger Helm Base Core:
@@ -50,14 +56,6 @@ Trigger Helm Base Core:
       changes:
         - helm-charts/01-base-core/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/01-base-core/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/01-base-core/**/*
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-01-base-core.yaml"
     strategy: depend
@@ -71,14 +69,6 @@ Trigger Helm File Handling:
       changes:
         - helm-charts/02-file-handling/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/02-file-handling/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/02-file-handling/**/*
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-02-file-handling.yaml"
     strategy: depend
@@ -92,14 +82,6 @@ Trigger Helm Gen AI:
       changes:
         - helm-charts/03-gen-ai/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/03-gen-ai/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/03-gen-ai/**/*
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-03-gen-ai.yaml"
     strategy: depend
@@ -113,14 +95,6 @@ Trigger Helm Connectors:
       changes:
         - connectors/*/chart/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - connectors/*/chart/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - connectors/*/chart/**/*
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-05-connectors.yaml"
     strategy: depend
@@ -134,14 +108,6 @@ Trigger Helm Utilities:
       changes:
         - helm-charts/06-utilities/**/*
     - if: '$CI_COMMIT_TAG'
-    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/06-utilities/**/*
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^\d+\.\d+\.x$/'
-      changes:
-        - helm-charts/06-utilities/**/*
-      variables:
-        RELEASE_MR: "true"
   trigger:
     include: "/.gitlab/helm-charts-pipeline/.gitlab-ci-06-utilities.yaml"
     strategy: depend
