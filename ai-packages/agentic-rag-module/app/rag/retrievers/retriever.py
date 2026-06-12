@@ -151,11 +151,12 @@ class OpenSearchRetriever(BaseRetriever):
                 dynamic_metadata = {}
 
                 for document_type in document_types:
-                    if document_type in self.metadata.keys():
+                    if self.metadata and document_type in self.metadata.keys():
+                        source_section = document_source.get(document_type)
+                        if not source_section:
+                            continue
                         for key, value in self.metadata[document_type].items():
-                            if metadata_value := document_source.get(document_type).get(
-                                value
-                            ):
+                            if metadata_value := source_section.get(value):
                                 dynamic_metadata[key] = metadata_value
 
                 if self.retrieve_type in VECTORIAL_RETRIEVE_TYPES:
