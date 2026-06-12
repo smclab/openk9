@@ -76,7 +76,7 @@ public class HighlightGraphqlResource {
 		
 		Arguments:
 		- `id` (Long): The ID of the Highlight to update.
-		- `highlightDTO` (HighlightDTO!): The input object with data for creation or update.
+		- `highlightDTO` (HighlightDTO!): The input object with data to update.
 		- `patch` (Boolean): Whether to perform a partial update. Defaults to false.
 		
 		Returns:
