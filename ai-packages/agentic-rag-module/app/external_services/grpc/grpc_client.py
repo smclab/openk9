@@ -223,6 +223,8 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
 
         domain_threshold = json_config.get("domain_threshold", 0.7)
 
+        guardrail_categories = json_config.get("guardrail_categories", [])
+
         input_guardrail = {
             "enable_input_guardrail": enable_input_guardrail,
             "input_guardrail_threshold": input_guardrail_threshold,
@@ -245,6 +247,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
         guardrails_configuration = {
             "input_guardrail": input_guardrail,
             "output_guardrail": output_guardrail,
+            "guardrail_categories": guardrail_categories,
         }
 
         configuration = {
