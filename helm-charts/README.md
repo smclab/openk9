@@ -167,7 +167,7 @@ Every helm command assume you are located in root of this repository.
 
 [Opensearch](https://opensearch.org/) is a fondamental element in Openk9. It is used as search engine and vector database, to enable core functionalities of Openk9.
 
-For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.31.0 is used for Kubernetes.
+For its installation the official [Helm Charts](https://github.com/opensearch-project/helm-charts) in version 2.37.0 is used for Kubernetes.
 
 
 
@@ -207,13 +207,13 @@ Install Opensearch
 For Kubernetes execute:
 
 ```bash
-helm install opensearch opensearch/opensearch --version 2.32.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
+helm install opensearch opensearch/opensearch --version 2.37.0 -n openk9 -f 00-base-requirements/01-opensearch/local-runtime.yaml
 ```
 
 For Openshift execute:
 
 ```bash
-helm install opensearch opensearch/opensearch --version 2.32.0 -n openk9 -f 00-base-requirements/01-opensearch/local-crc.yaml
+helm install opensearch opensearch/opensearch --version 2.37.0 -n openk9 -f 00-base-requirements/01-opensearch/local-crc.yaml
 ```
 
 To customize Opensearch installation follow [official chart documentation](https://github.com/opensearch-project/helm-charts/tree/opensearch-2.20.0/charts/opensearch) for Kubernetes and Openshift.
@@ -283,7 +283,7 @@ For Kubernetes/OpenShift execute:
 ```yaml
 helm install rabbitmq oci://registry-1.docker.io/cloudpirates/rabbitmq \
   -n openk9 \
-  --version 0.7.7 \
+  --version 0.21.6 \
   -f 00-base-requirements/02-rabbitmq/local-runtime.yaml
 ```
 
@@ -336,7 +336,7 @@ For Kubernetes/OpenShift execute:
 ```bash
 helm install postgresql oci://registry-1.docker.io/cloudpirates/postgres \
   -n openk9 \
-  --version 0.11.6 \
+  --version 0.19.5 \
   -f 00-base-requirements/03-postgresql/local-runtime.yaml
 ```
 
@@ -491,7 +491,7 @@ For Kubernetes execute:
 helm install keycloak oci://registry-1.docker.io/cloudpirates/keycloak \
   --namespace openk9 \
   --values 00-base-requirements/06-keycloak/local-runtime.yaml \
-  --version 0.8.4
+  --version 0.21.10
 
 ```
 
@@ -501,7 +501,7 @@ For Openshift execute:
 helm install keycloak oci://registry-1.docker.io/cloudpirates/keycloak \
   --namespace openk9 \
   --values 00-base-requirements/06-keycloak/local-crc.yaml \
-  --version 0.8.4
+  --version 0.21.10
 ```
 
 
@@ -555,12 +555,32 @@ To learn more on Api Gateway component, read [official documentation](https://ww
 
 #### Main Configurations
 
-Edit your local yaml file to overwrite main configurations and configure Tenant Manager to run correctly in your cluster.
+Edit your local yaml file to overwrite main configurations and configure Api Gateway to run correctly in your cluster.
 
 Following are main configurations to edit:
 
 ```bash
-TO-DO
+## PostgreSQL connection used by the gateway
+database:
+  postgresql:
+    host: "postgresql"
+    database: "apigateway"
+    username: "openk9"
+## OpenK9 downstream services routed by the gateway (host/port)
+openk9:
+  searcher:
+    host: "openk9-searcher"
+    port: "8080"
+  datasource:
+    host: "openk9-datasource"
+    port: "8080"
+  ingestion:
+    host: "openk9-ingestion"
+    port: "8080"
+## Spring Cloud Gateway trusted proxies
+spring:
+  gateway:
+    trustedProxies: ".*"
 ```
 
 For advanced configurations read [README.md](./01-base-core/openk9-api-gateway/README.md) inside Api Gateway chart folder.
@@ -624,7 +644,7 @@ For Openshift execute:
 oc -n openk9 port-forward svc/openk9-api-gateway 8080:8080
 ```
 
-Access to console using url [http://localhost:8080/q/health](http://localhost:8080/q/health). If status is UP service is OK.
+Access to console using url [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health). If status is UP service is OK.
 
 ### Ingestion
 
@@ -1356,7 +1376,7 @@ For kubernetes/OpenShift execute:
 ```yaml
 helm install minio oci://registry-1.docker.io/cloudpirates/minio \
   -n openk9 \
-  --version 0.10.1 \
+  --version 0.10.3 \
   -f 00-base-requirements/08-minio/local-runtime.yaml
 ```
 

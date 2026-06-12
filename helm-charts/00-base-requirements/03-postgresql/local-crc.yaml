@@ -1,6 +1,6 @@
 image:
-  # We want latest PostgreSQL 14.x
-  tag: 14
+  # We want latest PostgreSQL 18.x
+  tag: 18
 
 auth:
   ## @param auth.enablePostgresUser Assign a password to the "postgres" admin user. Otherwise, remote access will be blocked for this user

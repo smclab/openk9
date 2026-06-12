@@ -94,7 +94,7 @@ limit:
 rabbitmq:
   host: "rabbitmq-headless"
   port: 5672
-  username: "admin"
+  username: "openk9"
   passwordSecretName: "rabbitmq-password"
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"

@@ -19,8 +19,17 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
           - |
-            psql -c "CREATE ROLE {{ .Values.database.postgresql.username }} WITH LOGIN ENCRYPTED PASSWORD '{{ .Values.database.postgresql.username }}'";
-            psql -c "CREATE DATABASE {{ .Values.database.postgresql.database }} OWNER {{ .Values.database.postgresql.username }};"
+            psql -v ON_ERROR_STOP=1 <<'EOSQL'
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '{{ .Values.database.postgresql.username }}') THEN
+                CREATE ROLE {{ .Values.database.postgresql.username }} WITH LOGIN ENCRYPTED PASSWORD '{{ .Values.database.postgresql.username }}';
+              END IF;
+            END
+            $$;
+            SELECT 'CREATE DATABASE {{ .Values.database.postgresql.database }} OWNER {{ .Values.database.postgresql.username }}'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '{{ .Values.database.postgresql.database }}')\gexec
+            EOSQL
         env:
         - name: PGHOST
           value: {{ .Values.database.postgresql.host | quote }}

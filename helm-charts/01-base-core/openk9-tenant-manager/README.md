@@ -98,7 +98,7 @@ Configure these when database type is postgresql
 | `postgresql.passwordSecretName` | Name of the secret where password is stored                            | `postgres-password`                       |
 | `postgresql.keyPasswordSecret`       | Name of the key inside the secret where password is stored                                           | `user-password`                    |
 | `postgresql.keyPasswordEnvName`       | Name of environment variable where password is set       | `QUARKUS_DATASOURCE_PASSWORD`   |
-| `postgresql.sslMode`  | SSL mode for the reactive PostgreSQL connection (`QUARKUS_DATASOURCE_REACTIVE_POSTGRESQL_SSL_MODE`)       | `require`   |
+| `postgresql.sslMode`  | SSL mode for the reactive PostgreSQL connection (`QUARKUS_DATASOURCE_REACTIVE_POSTGRESQL_SSL_MODE`)       | `disable`   |
 | `postgresql.trustAll`  | Trust all certificates for the reactive PostgreSQL connection (`QUARKUS_DATASOURCE_REACTIVE_TRUST_ALL`)       | `true`   |
 
 Configure these when database type is oracle

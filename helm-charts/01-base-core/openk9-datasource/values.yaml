@@ -166,7 +166,7 @@ database:
     passwordSecretName: "postgres-password"
     keyPasswordSecret: "user-password"
     keyPasswordEnvName: "QUARKUS_DATASOURCE_PASSWORD"
-    sslMode: "require"
+    sslMode: "disable"
     trustAll: "true"
 
   # ---- Parameters Oracle ----
@@ -194,7 +194,7 @@ opensearch:
 rabbitmq:
   host: "rabbitmq-headless"
   port: "5672"
-  username: "admin"
+  username: "openk9"
   passwordSecretName: "rabbitmq-password"
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"

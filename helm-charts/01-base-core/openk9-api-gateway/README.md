@@ -26,6 +26,8 @@ helm upgrade -i api-gateway openk9/openk9-api-gateway
 
 The command deploys Openk9 API Gateway on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured during installation.
 
+The API Gateway is based on Spring Cloud Gateway, so the service status is exposed by the Spring Boot Actuator endpoint `/actuator/health`. Port-forward the service and open [http://localhost:8080/actuator/health](http://localhost:8080/actuator/health): if the status is `UP` the service is OK.
+
 # Parameters
 
 ### Configure Image

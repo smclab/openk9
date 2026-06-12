@@ -1,10 +1,10 @@
 # PostgreSQL Cloud Pirates - Essential Configuration
 
-# Official PostgreSQL 16.0 image from Docker Hub
+# Official PostgreSQL 18 image from Docker Hub
 image:
   registry: docker.io
   repository: postgres
-  tag: "16.0"
+  tag: "18"
   imagePullPolicy: IfNotPresent
 
 # References Kubernetes secret: postgres-password
