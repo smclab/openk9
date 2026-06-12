@@ -107,8 +107,11 @@ class GenericCrawlSpider(AbstractBaseCrawlSpider, CrawlSpider):
 
             datasource_payload = {
                 "web": dict(web_item),
-                "custom": dict(custom_item)
             }
+
+            custom_payload = dict(custom_item)
+            if any(value is not None for value in custom_payload.values()):
+                datasource_payload["custom"] = custom_payload
 
             anchors = response.css('a')
 

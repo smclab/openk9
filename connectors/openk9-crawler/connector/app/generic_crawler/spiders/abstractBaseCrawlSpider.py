@@ -171,8 +171,11 @@ class AbstractBaseCrawlSpider(ABC, Spider):
 		datasource_payload = {
 			"file": dict(file_item),
 			"document": dict(document_item),
-			"custom": dict(custom_item)
 		}
+
+		custom_payload = dict(custom_item)
+		if any(value is not None for value in custom_payload.values()):
+			datasource_payload["custom"] = custom_payload
 
 		for key, value in self.additional_metadata.items():
 			datasource_payload[key] = value
