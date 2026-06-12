@@ -86,16 +86,16 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	private Uni<Highlight> createTransient(HighlightDTO dto) {
 		var transientHighlight = mapper.create(dto);
 
-		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
-		return docTypeFieldIds.flatMap(docTypeFields -> {
-			transientHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+		return fieldsUniList.flatMap(fieldsList -> {
+			transientHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
-				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
+				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return Uni.createFrom().item(transientHighlight);
 				});
 			}
@@ -105,16 +105,16 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	private Uni<Highlight> updateHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
-		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
-		return docTypeFieldIds.flatMap(docTypeFields -> {
-			newStateHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+		return fieldsUniList.flatMap(fieldsList -> {
+			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
-				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
+				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return session.merge(newStateHighlight);
 				});
 			} else
@@ -125,16 +125,16 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	private Uni<Highlight> patchHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
-		var docTypeFieldIds = docTypeFieldService.findByIds(dto.getFieldIds());
+		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
-		return docTypeFieldIds.flatMap(docTypeFields -> {
-			newStateHighlight.setFields(new LinkedHashSet<>(docTypeFields));
+		return fieldsUniList.flatMap(fieldsList -> {
+			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
-				var matchedDocTypeFieldIds = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
+				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
-				return matchedDocTypeFieldIds.flatMap(matchedDocTypeFields -> {
-					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedDocTypeFields));
+				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return session.merge(newStateHighlight);
 				});
 			}
