@@ -49,6 +49,9 @@ _load_env_file
 GROUP="${GROUP:-openk9}"
 TAG="${TAG:-local-dev}"
 OPENK9_REGISTRY="${OPENK9_REGISTRY:-}"
+# Override per build chatbot build: SEARCH_FRONTEND_BUILD_ENV=chatbot ./k9.sh build search-frontend
+# (or set SEARCH_FRONTEND_BUILD_ENV in .env)
+SEARCH_FRONTEND_BUILD_ENV="${SEARCH_FRONTEND_BUILD_ENV:-oauth2}"
 PROFILES=()
 
 # Detect host architecture for container image builds.
@@ -252,7 +255,7 @@ build_core() {
     )
 
     echo "--- Building Frontend Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+    docker build --pull --platform "$JIB_PLATFORM" --build-arg "BUILD_ENV=$SEARCH_FRONTEND_BUILD_ENV" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
     build_tenant_ui
 
@@ -350,7 +353,7 @@ build_single() {
                 "-pl" "app/$service")
             ;;
         search-frontend)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+            docker build --pull --platform "$JIB_PLATFORM" --build-arg "BUILD_ENV=$SEARCH_FRONTEND_BUILD_ENV" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
             ;;
         admin-ui)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
