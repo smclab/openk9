@@ -115,6 +115,7 @@ export function OpenK9Client({
         chatId?: string;
         chatSequenceNumber: number;
         timestamp: string;
+        language?: string;
         chatHistory?: Array<{
           question: string;
           answer: string;

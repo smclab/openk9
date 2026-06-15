@@ -118,7 +118,7 @@ const useGenerateResponse = ({
             messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
           timestamp,
           chatHistory,
-          // language,
+          language,
         };
 
       try {

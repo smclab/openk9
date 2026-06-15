@@ -90,7 +90,7 @@ export function App() {
     return () => document.body.classList.remove("no-scroll");
   }, [isVisibleFilters, isVisibleSearchMobile, isVisibleCalendar]);
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const debouncedUpdateSearch = debounce((search) => {
     const text = search?.[0]?.values?.[0] || undefined;
@@ -971,6 +971,7 @@ export function App() {
           `}
         >
           <Chatbot
+            language={i18n.language}
             callbackAuthorization={() => {
               const token = getCachedAccessToken();
               return token ? `Bearer ${token}` : null;
