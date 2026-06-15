@@ -35,6 +35,10 @@ from app.rag.retrievers.uploaded_documents_retriever import (
     OpenSearchUploadedDocumentsRetriever,
 )
 from app.utils.authentication import unauthorized_response
+from app.utils.conversation_history import (
+    load_messages_from_frontend,
+    load_messages_from_snapshot,
+)
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
@@ -248,28 +252,6 @@ class RagGraph:
 
         # Image(self.graph.get_graph().draw_mermaid_png(output_file_path="./graph.png"))
 
-    def _load_messages_from_checkpoints(self) -> List[Any]:
-        """Load messages from OpenSearch checkpoints"""
-        messages = {}
-
-        try:
-            states = list(self.graph.get_state_history(self.config))
-
-            for state in states:
-                query = state.values.get("current_query")
-                response = state.values.get("response")
-                if query and query not in messages:
-                    messages[query] = HumanMessage(content=query)
-                if response and response not in messages:
-                    messages[response] = AIMessage(content=response)
-
-        except Exception as e:
-            logger.error(f"Error loading messages from checkpoints: {e}")
-
-        messages.popitem()
-
-        return list(messages.values())
-
     def _load_domain_from_checkpoints(self) -> List[Any]:
         """Load messages from OpenSearch checkpoints"""
         domain: Domain = None
@@ -284,22 +266,6 @@ class RagGraph:
             logger.error(f"Error loading domain from checkpoints: {e}")
 
         return domain
-
-    def _load_messages_from_frontend(self) -> List[Any]:
-        """Load messages from frontend"""
-        messages = []
-
-        try:
-            for item in self.chat_history:
-                question = item["question"]
-                answer = item["answer"]
-                messages.append(HumanMessage(content=question))
-                messages.append(AIMessage(content=answer))
-
-        except Exception as e:
-            logger.error(f"Error loading messages from frontend: {e}")
-
-        return messages
 
     def _get_conversation_context(self, messages: List[Any]) -> str:
         """Extract conversation context from messages"""
@@ -836,9 +802,9 @@ class RagGraph:
     def history_handler_node(self, state: GraphState) -> GraphState:
         if self.rag_type != "SIMPLE_GENERATE" and self.chat_sequence_number > 1:
             state.messages = (
-                self._load_messages_from_checkpoints()
+                load_messages_from_snapshot(self.graph, self.config)
                 if all([self.user_id, self.chat_id])
-                else self._load_messages_from_frontend()
+                else load_messages_from_frontend(self.chat_history)
             )
         else:
             state.messages = []
