@@ -1644,7 +1644,10 @@ class RagGraph:
                                 llm_output_guardrail = self._llm_output_guardrail(
                                     result_answer
                                 )
-                                if llm_output_guardrail != "NONE":
+                                if (
+                                    llm_output_guardrail
+                                    and llm_output_guardrail != "NONE"
+                                ):
                                     yield json.dumps(
                                         {
                                             "chunk": "Inappropriate content",
@@ -1671,7 +1674,7 @@ class RagGraph:
                 if chunk_batch:
                     llm_output_guardrail = self._llm_output_guardrail(result_answer)
 
-                    if llm_output_guardrail != "NONE":
+                    if llm_output_guardrail and llm_output_guardrail != "NONE":
                         yield json.dumps(
                             {"chunk": "Inappropriate content", "type": "CANCEL"}
                         )
