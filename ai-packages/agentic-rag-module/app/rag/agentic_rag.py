@@ -20,22 +20,6 @@ import logging
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
-from IPython.display import Image
-from langchain_core.documents import Document
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.checkpoint.opensearch import OpenSearchSaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from opensearchpy import OpenSearch
-from phoenix.evals import (
-    TOOL_CALLING_PROMPT_TEMPLATE,
-)
-from pydantic import BaseModel, Field, field_validator
-
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
@@ -54,6 +38,21 @@ from app.utils.authentication import unauthorized_response
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
+from IPython.display import Image
+from langchain_core.documents import Document
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.opensearch import OpenSearchSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from opensearchpy import OpenSearch
+from phoenix.evals import (
+    TOOL_CALLING_PROMPT_TEMPLATE,
+)
+from pydantic import BaseModel, Field, field_validator
 
 
 class GraphState(BaseModel):
@@ -1645,10 +1644,13 @@ class RagGraph:
                                 llm_output_guardrail = self._llm_output_guardrail(
                                     result_answer
                                 )
-                                result_answer = ""
-
                                 if llm_output_guardrail != "NONE":
-                                    yield json.dumps({"chunk": "", "type": "END"})
+                                    yield json.dumps(
+                                        {
+                                            "chunk": "Inappropriate content",
+                                            "type": "CANCEL",
+                                        }
+                                    )
                                     return
 
                                 else:
@@ -1670,7 +1672,9 @@ class RagGraph:
                     llm_output_guardrail = self._llm_output_guardrail(result_answer)
 
                     if llm_output_guardrail != "NONE":
-                        yield json.dumps({"chunk": "", "type": "END"})
+                        yield json.dumps(
+                            {"chunk": "Inappropriate content", "type": "CANCEL"}
+                        )
                         return
                     else:
                         for chunk in chunk_batch:
