@@ -23,24 +23,6 @@ public class SchedulerDtoExamples {
     public static final String GET_DELETED_CONTENT_IDS_RESPONSE =
             """
             ["121321321, "432342343"]""";
-    public static final String STATUS_RESPONSE =
-            """
-            {
-                "datasources": [
-                    {
-                        "id": 209,
-                        "name": "test",
-                        "status": "IDLE"
-                    },
-                    {
-                        "id": 237,
-                        "name": "test2",
-                        "status": "ERROR"
-                    }
-                ],
-                "total": 1,
-                "errors": 1
-             }""";
     public static final String TRIGGER_REQUEST =
             """
             {

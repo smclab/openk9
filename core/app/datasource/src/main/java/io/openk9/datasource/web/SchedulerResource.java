@@ -31,7 +31,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 
 import io.openk9.datasource.service.SchedulerService;
-import io.openk9.datasource.web.dto.StatusResponse;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
@@ -46,7 +45,6 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.jboss.resteasy.reactive.RestResponse;
 
 @ApplicationScoped
 @Path("/schedulers")
@@ -161,42 +159,6 @@ public class SchedulerResource {
 			@PathParam("schedulerId") long schedulerId) {
 		return schedulerService.rereouteScheduling(
 			routingContext.get("_tenantId"), schedulerId);
-	}
-
-	@Operation(operationId = "status")
-	@APIResponses(value = {
-			@APIResponse(responseCode = "200", description = "success"),
-			@APIResponse(responseCode = "404", description = "not found"),
-			@APIResponse(responseCode = "400", description = "invalid"),
-			@APIResponse(
-					responseCode = "200",
-					description = "Status of scheduling system up",
-					content = {
-							@Content(
-									mediaType = MediaType.APPLICATION_JSON,
-									schema = @Schema(implementation = Response.class),
-									example = SchedulerDtoExamples.STATUS_RESPONSE
-							)
-					}
-			),
-			@APIResponse(ref = "#/components/responses/bad-request"),
-			@APIResponse(ref = "#/components/responses/not-found"),
-			@APIResponse(ref = "#/components/responses/internal-server-error"),
-	})
-	@Path("/status")
-	@GET
-	public Uni<RestResponse<StatusResponse>> status() {
-		return schedulerService.getHealthStatusList()
-			.map(StatusResponse::new)
-			.map(statusResponse -> {
-				var status = RestResponse.Status.OK;
-
-				if (statusResponse.getErrors() > 0) {
-					status = RestResponse.Status.INTERNAL_SERVER_ERROR;
-				}
-
-				return RestResponse.status(status, statusResponse);
-			});
 	}
 
 	@Inject

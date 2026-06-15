@@ -180,22 +180,26 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	/**
-	 * Asynchronously retrieves a status for every datasource in the system.
+	 * Asynchronously retrieves the health status of every datasource for the
+	 * given tenant.
 	 * <p>
 	 * The status is determined by the most recent (latest {@code createDate})
-	 * scheduler execution for each datasource. It uses an efficient JPQL query
-	 * that implements the "greatest N per group" pattern to fetch only the
-	 * single most recent record per datasource.
+	 * scheduler execution for each datasource.
 	 * <p>
 	 * Datasources that have never been executed are also included in the result set,
 	 * allowing the subsequent mapping process to assign an appropriate default status.
+	 * <p>
+	 * The transaction is bound to the supplied {@code tenantId}, so this works
+	 * outside of an HTTP request flow, for example from a health check that
+	 * aggregates all tenants.
 	 *
+	 * @param tenantId the schema name of the tenant to query.
 	 * @return A {@link Uni} that emits a list of {@link DatasourceHealthStatus} objects,
 	 *         representing each datasource and its derived status.
 	 * @see #mapToHealthStatusList(List)
 	 */
-	public Uni<List<DatasourceHealthStatus>> getHealthStatusList() {
-		return sessionFactory.withTransaction((session, transaction) -> session
+	public Uni<List<DatasourceHealthStatus>> getHealthStatusList(String tenantId) {
+		return sessionFactory.withTransaction(tenantId, (session, transaction) -> session
 			.createQuery(
 				"""
 					SELECT a.id, a.name, b.status

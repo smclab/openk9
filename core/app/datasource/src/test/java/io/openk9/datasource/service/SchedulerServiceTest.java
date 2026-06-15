@@ -44,7 +44,7 @@ class SchedulerServiceTest {
 			.get();
 
 
-		var statusList = schedulerService.getHealthStatusList()
+		var statusList = schedulerService.getHealthStatusList("public")
 			.await().indefinitely();
 
 		assertEquals(
