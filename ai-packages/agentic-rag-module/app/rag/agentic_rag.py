@@ -57,6 +57,7 @@ from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
 from pydantic import BaseModel, Field, field_validator
+from app.utils.query_rewrite import shares_significant_terms
 
 
 class GraphState(BaseModel):
@@ -201,8 +202,9 @@ class Domain(BaseModel):
 
 
 class RagGraph:
-    def __init__(self, llm, configuration):
+    def __init__(self, llm, configuration, utility_llm=None):
         self.llm = llm
+        self.utility_llm = utility_llm if utility_llm is not None else llm
         self.configuration = configuration
         self.rag_type = configuration.get("rag_type")
         self.tenant_id = configuration.get("tenant_id")
@@ -369,7 +371,7 @@ class RagGraph:
 
         parser = StrOutputParser()
 
-        rewrite_query_chain = rewrite_query_prompt_template | self.llm | parser
+        rewrite_query_chain = rewrite_query_prompt_template | self.utility_llm | parser
 
         response = rewrite_query_chain.invoke(
             {
@@ -378,6 +380,9 @@ class RagGraph:
                 "previous_response": previous_response,
             }
         )
+
+        if not shares_significant_terms(response, previous_query):
+            return f"{previous_query} {response}".strip()
 
         return response
 
@@ -706,7 +711,7 @@ class RagGraph:
         """
 
         domain_prompt_template = PromptTemplate.from_template(domain_prompt)
-        chain = domain_prompt_template | self.llm
+        chain = domain_prompt_template | self.utility_llm
         raw_output = chain.invoke(
             {
                 "query": query,
@@ -872,7 +877,7 @@ class RagGraph:
 
             analyze_query_chain = (
                 analyze_query_prompt_template
-                | self.llm.with_structured_output(
+                | self.utility_llm.with_structured_output(
                     schema=AnalyzeQuestion, include_raw=False, method="function_calling"
                 )
             )

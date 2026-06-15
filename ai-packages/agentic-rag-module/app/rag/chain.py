@@ -108,6 +108,7 @@ def get_agentic_rag(
         }
 
         llm = initialize_language_model(llm_configuration)
+        utility_llm = initialize_language_model(llm_configuration, temperature=0)
 
         graph_configuration = {
             "rag_type": rag_type,
@@ -147,7 +148,7 @@ def get_agentic_rag(
             "domain_threshold": domain_threshold,
         }
 
-        router = RagGraph(llm, graph_configuration)
+        router = RagGraph(llm, graph_configuration, utility_llm=utility_llm)
         # result = router.invoke(search_text)
         yield from router.stream(search_text)
 

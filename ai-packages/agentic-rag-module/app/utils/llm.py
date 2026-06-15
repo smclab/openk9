@@ -19,11 +19,6 @@ import json
 import os
 from enum import Enum
 
-from app.external_services.grpc.grpc_client import (
-    get_llm_configuration,
-    get_rag_configuration,
-)
-from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 from google.auth import default, transport
 from langchain_aws import ChatBedrockConverse
 from langchain_core.output_parsers import StrOutputParser
@@ -32,6 +27,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ibm import ChatWatsonx
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+
+from app.external_services.grpc.grpc_client import (
+    get_llm_configuration,
+    get_rag_configuration,
+)
+from app.rag.custom_hugging_face_model import CustomChatHuggingFaceModel
 
 DEFAULT_MODEL_TYPE = "openai"
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -102,13 +103,18 @@ def get_configurations(
     return configurations
 
 
-def initialize_language_model(configuration):
+def initialize_language_model(configuration, temperature=None):
     """
     Initialize and return a language model based on the specified model type
     and configuration settings.
 
     Parameters:
     ----------
+
+    temperature : float, optional
+        Sampling temperature to apply to the model. When ``None`` (default) the
+        provider default is left untouched. Pass ``0`` to obtain deterministic
+        output for utility steps such as query rewriting.
 
     configuration : dict
         A dictionary containing configuration settings required for model initialization.
@@ -170,10 +176,16 @@ def initialize_language_model(configuration):
                 openai_api_base=api_url,
                 stream_usage=True,
                 max_retries=0,
+                temperature=temperature,
             )
         case ModelType.OLLAMA.value:
             context_window = configuration["context_window"]
-            llm = ChatOllama(model=model, base_url=api_url, num_ctx=context_window)
+            llm = ChatOllama(
+                model=model,
+                base_url=api_url,
+                num_ctx=context_window,
+                temperature=temperature,
+            )
         case ModelType.HUGGING_FACE_CUSTOM.value:
             llm = CustomChatHuggingFaceModel(base_url=api_url)
         case ModelType.IBM_WATSONX.value:
@@ -182,7 +194,7 @@ def initialize_language_model(configuration):
                 "decoding_method": "sample",
                 "max_new_tokens": 100,
                 "min_new_tokens": 1,
-                "temperature": 0.5,
+                "temperature": temperature,
                 "top_k": 50,
                 "top_p": 1,
             }
@@ -202,7 +214,7 @@ def initialize_language_model(configuration):
                 model=model,
                 backend="vertex",
                 project=project_id,
-                temperature=0,
+                temperature=temperature,
                 max_tokens=None,
                 max_retries=6,
                 stop=None,
@@ -222,7 +234,12 @@ def initialize_language_model(configuration):
             api_key = credentials.token
             base_url = f"https://{endpoint_id}/v1/projects/{project_id}/locations/{location}/endpoints/openapi"
 
-            llm = ChatOpenAI(model=model, api_key=api_key, base_url=base_url)
+            llm = ChatOpenAI(
+                model=model,
+                api_key=api_key,
+                base_url=base_url,
+                temperature=temperature,
+            )
         case ModelType.AWS_BEDROCK.value:
             os.environ["AWS_BEARER_TOKEN_BEDROCK"] = api_key
             aws_bedrock = configuration["aws_bedrock"]
@@ -231,9 +248,12 @@ def initialize_language_model(configuration):
             llm = ChatBedrockConverse(
                 model=model,
                 region_name=region_name,
+                temperature=temperature,
             )
         case _:
-            llm = ChatOpenAI(model=model, openai_api_key=api_key)
+            llm = ChatOpenAI(
+                model=model, openai_api_key=api_key, temperature=temperature
+            )
 
     return llm
 
