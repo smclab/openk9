@@ -24,25 +24,6 @@ public class SchedulerDtoExamples {
 		"""
 		["121321321, "432342343"]
 		""";
-	public static final String STATUS_RESPONSE =
-		"""
-		{
-			"datasources": [
-				{
-					"id": 209,
-					"name": "test",
-					"status": "IDLE"
-				},
-				{
-					"id": 237,
-					"name": "test2",
-					"status": "ERROR"
-				}
-			],
-			"total": 1,
-			"errors": 1
-		}
-		""";
 	public static final String TRIGGER_V2_RESOURCE_DTO_SAMPLE =
 		"""
 		{
