@@ -97,6 +97,10 @@ class GraphState(BaseModel):
         default=None, description="guardrail check category"
     )
     domain: Optional[List[str]] = Field(default=None, description="Detected domain")
+    retrieve_from_uploaded_documents: Optional[bool] = Field(
+        default=None,
+        description="Whether retrieval operates on user uploaded documents",
+    )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -838,6 +842,9 @@ class RagGraph:
             )
         else:
             state.messages = []
+            state.retrieve_from_uploaded_documents = (
+                self.retrieve_from_uploaded_documents
+            )
 
         state.domain = self._load_domain_from_checkpoints()
 

@@ -788,6 +788,9 @@ async def get_chat(
             answer = channel_values.get("response")
             # title = channel_values.get("conversation_title")
             chat_sequence_number = channel_values.get("chat_sequence_number")
+            retrieve_from_uploaded_documents = channel_values.get(
+                "retrieve_from_uploaded_documents"
+            )
             context = channel_values.get("context", [])
             metadata = source.get("metadata", {})
             step = int(metadata.get("step", 0))
@@ -819,6 +822,7 @@ async def get_chat(
                 "answer": answer,
                 "timestamp": timestamp,
                 "chat_sequence_number": chat_sequence_number,
+                "retrieve_from_uploaded_documents": retrieve_from_uploaded_documents,
                 "sources": sources,
                 "step": step,
             }
