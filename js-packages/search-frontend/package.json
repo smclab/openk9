@@ -129,7 +129,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@openk9ui/openk9-chatbot": "npm:@openk9ui/openk9-chatbot@3.1.1-SNAPSHOT",
+    "@openk9ui/openk9-chatbot": "npm:@openk9ui/openk9-chatbot@2026.1.1-SNAPSHOT",
     "i18next": "^22.5.1",
     "oidc-client-ts": "^3.1.0",
     "react-i18next": "^12.3.1",
