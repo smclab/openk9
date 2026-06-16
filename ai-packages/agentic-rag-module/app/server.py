@@ -939,6 +939,13 @@ async def delete_chat(
             detail="Item not found.",
         )
 
+    writes_index = f"{index_name}-writes"
+
+    if open_search_client.indices.exists(index=writes_index):
+        open_search_client.delete_by_query(
+            index=writes_index, body=delete_messages_query
+        )
+
     uploaded_documents_index = f"{tenant_id}-uploaded-documents-index"
 
     if open_search_client.indices.exists(index=uploaded_documents_index):

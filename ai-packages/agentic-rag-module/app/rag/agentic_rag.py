@@ -1558,7 +1558,7 @@ class RagGraph:
             self.checkpointer = OpenSearchSaver(
                 client=self.open_search_client,
                 checkpoint_index_name=checkpoint_index_name,
-                writes_index_name=self.chat_id,
+                writes_index_name=f"{checkpoint_index_name}-writes",
             )
         else:
             self.checkpointer = InMemorySaver()
