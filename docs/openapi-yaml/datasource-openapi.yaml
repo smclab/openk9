@@ -4042,39 +4042,6 @@ paths:
       security:
       - SecurityScheme:
         - k9-admin
-  /api/datasource/schedulers/status:
-    get:
-      operationId: status
-      tags:
-      - Get scheduling status API
-      responses:
-        "200":
-          description: Status of scheduling system up
-          content:
-            application/json:
-              example:
-                datasources:
-                - id: 209
-                  name: test
-                  status: IDLE
-                - id: 237
-                  name: test2
-                  status: ERROR
-                total: 1
-                errors: 1
-              schema: {}
-        "404":
-          description: not found
-        "400":
-          description: invalid
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Status
-      security:
-      - SecurityScheme:
-        - k9-admin
   /api/datasource/schedulers/{schedulerId}/cancelScheduling:
     post:
       operationId: cancelScheduling
@@ -5138,8 +5105,6 @@ tags:
   description: Get mappings generate from a list of document types.
 - name: Get Settings from DocumentTypes API
   description: Get settings generate from a list of document types.
-- name: Get scheduling status API
-  description: Return status of scheduling system
 - name: Health API
   description: Perform health check for specific plugin driver by id
 - name: Health with DTO API
