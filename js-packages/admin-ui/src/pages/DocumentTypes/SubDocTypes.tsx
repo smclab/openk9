@@ -31,7 +31,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SearchIcon from "@mui/icons-material/Search";
-import { useMutation } from "@apollo/client";
+import { ApolloError, useMutation } from "@apollo/client";
 import {
   FieldType,
   useCreateOrUpdateDocumentTypeFieldMutation,
@@ -195,6 +195,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
           documentTypeId: documentTypeId,
           documentTypeFieldId: child.id,
           name: child.name,
+          docTypeFieldName: child.name,
           description: child.description || "",
           fieldType: child.fieldType || FieldType.AnnotatedText,
           boost: child.boost || 0,
@@ -226,6 +227,12 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
       setData((prev) => updateTree(prev));
     } catch (error) {
       console.error("Error updating document type field:", error);
+      const serverMessage = error instanceof ApolloError ? error.graphQLErrors?.[0]?.message || error.message : undefined;
+      toast({
+        title: "Error Update",
+        content: serverMessage || "Impossible to update document type field.",
+        displayType: "error",
+      });
     }
   };
 
