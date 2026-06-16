@@ -213,16 +213,6 @@ components:
           type: boolean
         scheduling:
           type: string
-    DatasourceHealthStatus:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        name:
-          type: string
-        status:
-          $ref: "#/components/schemas/HealthStatus"
     DatasourceJobStatus:
       type: object
       properties:
@@ -648,12 +638,6 @@ components:
           items:
             type: integer
             format: int64
-    HealthStatus:
-      type: string
-      enum:
-      - RUNNING
-      - ERROR
-      - IDLE
     HybridSearchPipelineDTO:
       type: object
       properties:
@@ -960,19 +944,6 @@ components:
       - UP
       - DOWN
       - UNKOWN
-    StatusResponse:
-      type: object
-      properties:
-        datasources:
-          type: array
-          items:
-            $ref: "#/components/schemas/DatasourceHealthStatus"
-        total:
-          type: integer
-          format: int32
-        errors:
-          type: integer
-          format: int32
     SuggestionCategory:
       type: object
       properties:
@@ -4179,25 +4150,6 @@ paths:
       summary: Get Health
       tags:
       - Plugin Driver Resource
-      security:
-      - SecurityScheme:
-        - k9-admin
-  /api/datasource/schedulers/status:
-    get:
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/StatusResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Status
-      tags:
-      - Scheduler Resource
       security:
       - SecurityScheme:
         - k9-admin
