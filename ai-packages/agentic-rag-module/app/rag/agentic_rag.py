@@ -1105,7 +1105,9 @@ class RagGraph:
                     f"score={doc.metadata.get('score')}, "
                     f"document_id={doc.metadata.get('document_id')}, "
                     f"title={doc.metadata.get('title')!r}, "
-                    f"url={doc.metadata.get('url')!r}"
+                    f"url={doc.metadata.get('url')!r}, "
+                    f"file_extension={doc.metadata.get('file_extension')!r}, "
+                    f"filename={doc.metadata.get('filename')!r}"
                 )
 
         return state

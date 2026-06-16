@@ -475,19 +475,30 @@ def generate_documents_embeddings(grpc_host, chunk, embedding_model, document):
                 )
             )
 
+            document_id = document.get("document_id")
+            user_id = document.get("user_id")
+            chat_id = document.get("chat_id")
+            filename = document.get("filename")
+            file_extension = document.get("file_extension")
+
             documents = []
             chunks = response.chunks
             for chunk in chunks:
                 timestamp = int(time.time() * 1000)
-                document = {
-                    "timestamp": timestamp,
-                    "document_id": document.get("document_id"),
-                    "chunk_number": chunk.number,
-                    "total_chunks": chunk.total,
-                    "chunkText": chunk.text,
-                    "vector": list(chunk.vectors),
-                }
-                documents.append(document)
+                documents.append(
+                    {
+                        "timestamp": timestamp,
+                        "document_id": document_id,
+                        "user_id": user_id,
+                        "chat_id": chat_id,
+                        "filename": filename,
+                        "file_extension": file_extension,
+                        "chunk_number": chunk.number,
+                        "total_chunks": chunk.total,
+                        "chunkText": chunk.text,
+                        "vector": list(chunk.vectors),
+                    }
+                )
 
             return documents
 
