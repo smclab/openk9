@@ -26,6 +26,19 @@ from typing import Annotated
 from urllib.parse import urlparse, urlunparse
 
 import uvicorn
+from app.external_services.grpc.grpc_client import (
+    get_embedding_model_configuration,
+)
+from app.models import models
+from app.rag.chain import get_agentic_rag
+from app.rag.evaluations import evaluations
+from app.utils import openapi_definitions as openapi
+from app.utils.authentication import decode_token, unauthorized_response
+from app.utils.embedding import documents_embedding
+from app.utils.file_upload import process_file
+from app.utils.llm import get_configurations
+from app.utils.logger import logger
+from app.utils.scheduler import start_document_deletion_scheduler
 from dotenv import load_dotenv
 from fastapi import (
     Depends,
@@ -43,20 +56,6 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from opensearchpy import OpenSearch
 from phoenix.otel import register
 from sse_starlette.sse import EventSourceResponse
-
-from app.external_services.grpc.grpc_client import (
-    get_embedding_model_configuration,
-)
-from app.models import models
-from app.rag.chain import get_agentic_rag
-from app.rag.evaluations import evaluations
-from app.utils import openapi_definitions as openapi
-from app.utils.authentication import decode_token, unauthorized_response
-from app.utils.embedding import documents_embedding
-from app.utils.file_upload import process_file
-from app.utils.llm import get_configurations
-from app.utils.logger import logger
-from app.utils.scheduler import start_document_deletion_scheduler
 
 load_dotenv()
 
@@ -1680,7 +1679,7 @@ async def embed_domains(
         )
 
     embedding_model_configuration = get_embedding_model_configuration(
-        grpc_host=GRPC_DATASOURCE_HOST, virtuatenant_idl_host=tenant_id
+        grpc_host=GRPC_DATASOURCE_HOST, tenant_id=tenant_id
     )
     vector_size = embedding_model_configuration.get("vector_size")
 
