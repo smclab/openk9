@@ -57,6 +57,7 @@ const useGenerateResponse = ({
     () => OpenK9Client({ callbackAuthorization }),
     [callbackAuthorization],
   );
+  const chatIdRef = React.useRef<string | null>(null);
 
   const generateResponse = useCallback(
     async (query: string) => {
@@ -67,17 +68,9 @@ const useGenerateResponse = ({
       // 	return;
       // }
       const timestamp = "" + Date.now();
-      const nonLoggedUserId = `anonymous_${uuidv4()}_${timestamp}`;
 
-      const chatHistory = messages.map((msg) => ({
-        question: msg.question,
-        answer: msg.answer,
-        title: "",
-        sources: msg.sources || [],
-        chat_id: nonLoggedUserId, //keycloak.authenticated ? chatId : nonLoggedUserId,
-        timestamp: msg.timestamp || "",
-        chat_sequence_number: msg.chat_sequence_number,
-      }));
+      const token = callbackAuthorization?.();
+      const isAuthenticated = Boolean(token);
 
       setMessages((prevMessages) => {
         const chat_sequence_number =
@@ -104,22 +97,40 @@ const useGenerateResponse = ({
       const url = `${tenant}/api/rag/chat-tool`;
       // const url = "/api/rag/chat-tool";
 
-      const searchQuery =
-        // keycloak.authenticated ? {
-        // 	searchText: query,
-        // 	chatId,
-        // 	chatSequenceNumber: messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
-        // 	timestamp,
-        // // language,
-        // } :
-        {
+      const chatSequenceNumber =
+        messages[messages.length - 1]?.chat_sequence_number + 1 || 1;
+
+      let searchQuery;
+      if (isAuthenticated) {
+        if (!chatIdRef.current) {
+          chatIdRef.current = uuidv4();
+        }
+        searchQuery = {
           searchText: query,
-          chatSequenceNumber:
-            messages[messages.length - 1]?.chat_sequence_number + 1 || 1,
+          chatId: chatIdRef.current,
+          chatSequenceNumber,
+          timestamp,
+          language,
+        };
+      } else {
+        const nonLoggedUserId = `anonymous_${uuidv4()}_${timestamp}`;
+        const chatHistory = messages.map((msg) => ({
+          question: msg.question,
+          answer: msg.answer,
+          title: "",
+          sources: msg.sources || [],
+          chat_id: nonLoggedUserId,
+          timestamp: msg.timestamp || "",
+          chat_sequence_number: msg.chat_sequence_number,
+        }));
+        searchQuery = {
+          searchText: query,
+          chatSequenceNumber,
           timestamp,
           chatHistory,
           language,
         };
+      }
 
       try {
         const response = await client.GenerateResponse({
@@ -264,7 +275,7 @@ const useGenerateResponse = ({
         return updated;
       });
     },
-    [messages, client, tenant, language], //loading, userInfo,
+    [messages, client, tenant, language, callbackAuthorization],
   );
 
   const cancelResponse = (id: string) => {
@@ -316,6 +327,7 @@ const useGenerateResponse = ({
 
   const resetMessage = () => {
     setMessages([]);
+    chatIdRef.current = null;
   };
 
   return {
