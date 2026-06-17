@@ -18,8 +18,6 @@
 package io.openk9.datasource.model.dto.base;
 
 import io.openk9.datasource.model.Highlight;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,12 +36,9 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 public class HighlightDTO extends K9EntityDTO{
 
-	@NotNull
 	@Description("The field used to choose the highlighter")
 	private Highlight.HighlightType type;
 
-	@NotNull
-	@NotEmpty
 	@Description("Set of unique DocTypeField IDs, it's used to add the fields to highlight")
 	private Set<Long> fieldIds;
 
