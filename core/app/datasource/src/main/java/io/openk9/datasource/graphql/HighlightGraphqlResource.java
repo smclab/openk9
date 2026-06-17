@@ -43,32 +43,32 @@ import java.util.Set;
 public class HighlightGraphqlResource {
 
 	@Inject
-	HighlightService highlighterService;
+	HighlightService highlightService;
 
 	@Description("Retrieves an Highlight by its ID")
 	@Query
 	public Uni<Highlight> getHighlight(@Id long id) {
-		return highlighterService.findById(id);
+		return highlightService.findById(id);
 	}
 
 	@Description("Retrieves all Highlights")
 	@Query
 	public Uni<List<Highlight>> getAllHighlights() {
-		return highlighterService.findAll();
+		return highlightService.findAll();
 	}
 
 	public Uni<Set<DocTypeField>> fields(@Source Highlight highlight) {
-		return highlighterService.getFields(highlight.getId());
+		return highlightService.getFields(highlight.getId());
 	}
 
 	public Uni<Set<DocTypeField>> matchedFields(@Source Highlight highlight) {
-		return highlighterService.getMatchedFields(highlight.getId());
+		return highlightService.getMatchedFields(highlight.getId());
 	}
 
 	@Description("Create a new Highlight")
 	@Mutation
 	public Uni<Response<Highlight>> createHighlight(HighlightDTO highlightDTO) {
-		return highlighterService.getValidator().create(highlightDTO);
+		return highlightService.getValidator().create(highlightDTO);
 	}
 
 	@Description("""
@@ -97,15 +97,15 @@ public class HighlightGraphqlResource {
 	@Description("Delete an Highlight by its ID")
 	@Mutation
 	public Uni<Highlight> deleteHighlight(@Id long id) {
-		return highlighterService.deleteById(id);
+		return highlightService.deleteById(id);
 	}
 
 	private Uni<Response<Highlight>> updateHighlight(long id, HighlightDTO highlightDTO) {
-		return highlighterService.getValidator().update(id, highlightDTO);
+		return highlightService.getValidator().update(id, highlightDTO);
 	}
 
 	private Uni<Response<Highlight>> patchHighlight(long id, HighlightDTO highlightDTO) {
-		return highlighterService.getValidator().patch(id, highlightDTO);
+		return highlightService.getValidator().patch(id, highlightDTO);
 	}
 
 }
