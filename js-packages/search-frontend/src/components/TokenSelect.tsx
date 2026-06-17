@@ -1,19 +1,19 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
 import { css } from "styled-components";
 import { AnalysisResponseEntry, AnalysisToken } from "./client";
@@ -201,6 +201,7 @@ export function TokenSelect({
               option.tokenType === selected?.tokenType &&
               option.value === selected.value;
             const isHighlighted = optionIndex === index + 1;
+            const isSingleSuggestion = span.tokens.length === 1;
             return (
               <div
                 key={index}
@@ -212,7 +213,13 @@ export function TokenSelect({
                 onMouseEnter={() => {
                   onOptionIndexChange(index + 1);
                 }}
-                className="openk9-token-select-container-highlighted"
+                className={`openk9-token-select-container-highlighted${
+                  isSelected ? " openk9-token-select-selected" : ""
+                }${
+                  isSingleSuggestion
+                    ? " openk9-token-select-single-suggestion"
+                    : ""
+                }`}
                 css={css`
                   ${entryStyle(isSelected, isHighlighted)};
                   display: flex;
@@ -351,4 +358,3 @@ function FactoryTokenType({
       break;
   }
 }
-
