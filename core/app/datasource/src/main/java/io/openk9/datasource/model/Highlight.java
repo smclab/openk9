@@ -109,7 +109,7 @@ public class Highlight extends K9Entity {
 	}
 
 	public enum FragmenterType {
-		SPAM, SIMPLE
+		SPAN, SIMPLE
 	}
 
 	public enum OrderType {

@@ -135,7 +135,7 @@ public class HighlightServiceTest {
 				.name(HIGHLIGHT_NAME + "2")
 				.type(Highlight.HighlightType.PLAIN)
 				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
-				.fragmenter(Highlight.FragmenterType.SPAM)
+				.fragmenter(Highlight.FragmenterType.SPAN)
 				.numberOfFragments(8)
 				.build()
 		).await().indefinitely();
