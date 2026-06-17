@@ -538,6 +538,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							bucket.setAutocomplete(autocomplete);
 						}
 
+						//Highlight
+						if(bucketWithListsDTO.getHighlightId() != null) {
+							var highlight =
+								s.getReference(
+									Highlight.class,
+									bucketWithListsDTO.getHighlightId()
+								);
+
+							bucket.setHighlight(highlight);
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1182,6 +1193,17 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 							builder.add(s.persist(bucket));
 						}
 
+						//Highlight
+						if(bucketWithListsDTO.getHighlightId() != null) {
+							var highlight =
+								s.getReference(
+									Highlight.class, bucketWithListsDTO.getHighlightId()
+								);
+
+							bucket.setHighlight(highlight);
+							builder.add(s.persist(bucket));
+						}
+
 						return builder.joinAll()
 							.usingConcurrencyOf(1)
 							.andCollectFailures()
@@ -1588,6 +1610,18 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						}
 
 						bucket.setAutocomplete(autocomplete);
+
+						//Highlight
+						Highlight highlight = null;
+
+						if(bucketWithListsDTO.getHighlightId() != null) {
+							highlight =
+								s.getReference(
+									Highlight.class, bucketWithListsDTO.getHighlightId()
+								);
+						}
+
+						bucket.setHighlight(highlight);
 
 						builder.add(s.persist(bucket));
 
