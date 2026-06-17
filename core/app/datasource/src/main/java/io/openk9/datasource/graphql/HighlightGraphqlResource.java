@@ -53,7 +53,7 @@ public class HighlightGraphqlResource {
 
 	@Description("Retrieves all Highlights")
 	@Query
-	public Uni<List<Highlight>> getAllHighlights() {
+	public Uni<List<Highlight>> getHighlights() {
 		return highlightService.findAll();
 	}
 
