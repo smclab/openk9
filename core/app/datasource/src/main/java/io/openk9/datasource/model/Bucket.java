@@ -222,6 +222,12 @@ public class Bucket extends K9Entity {
 	@JsonIgnore
 	private Autocomplete autocomplete;
 
+	@ManyToOne
+	@JoinColumn(name = "highlight_id")
+	@JsonIgnore
+	private Highlight highlight;
+
+
 	public boolean removeTab(
 		Collection<Tab> tabs, long tabId) {
 
