@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class HighlightServiceTest {
@@ -66,7 +66,7 @@ public class HighlightServiceTest {
 
 	@Test
 	void should_create_highlight_with_only_mandatory_fields() {
-		var result = highlightService.create(
+		highlightService.create(
 			HighlightDTO.builder()
 				.name(HIGHLIGHT_NAME)
 				.type(Highlight.HighlightType.UNIFIED)
@@ -74,7 +74,11 @@ public class HighlightServiceTest {
 				.build()
 		).await().indefinitely();
 
-		assertNotNull(result);
+		var persisted = EntitiesUtils
+			.getEntity(HIGHLIGHT_NAME, highlightService, sessionFactory);
+
+		assertNotNull(persisted);
+		assertEquals(Highlight.HighlightType.UNIFIED, persisted.getType());
 	}
 
 	@Test
@@ -112,10 +116,13 @@ public class HighlightServiceTest {
 			.order(Highlight.OrderType.NONE)
 			.build();
 
-		assertThrows(NullPointerException.class, ()->
-			highlightService.create(highlight)
+		var response = highlightService.getValidator()
+			.create(highlight)
 			.await()
-			.indefinitely());
+			.indefinitely();
+
+		assertNull(response.getEntity());
+		assertFalse(response.getFieldValidators().isEmpty());
 	}
 
 	@Test
@@ -193,7 +200,7 @@ public class HighlightServiceTest {
 				.build()
 		).await().indefinitely();
 
-		assertNull(result.getMatchedFields());
+		assertTrue(result.getMatchedFields().isEmpty());
 	}
 
 	@Test
