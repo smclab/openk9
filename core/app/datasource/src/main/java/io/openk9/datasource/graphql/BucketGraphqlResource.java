@@ -149,6 +149,24 @@ public class BucketGraphqlResource {
 		return bucketService.bindAutocorrection(bucketId, autocorrectionId);
 	}
 
+	@Description("""
+		Binds an existing Highlight to a specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to bind the Highlight to.
+		- `highlightId` (ID!): The ID of the Highlight to be bound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket with the linked Highlight.
+		  - `highlight`: The linked Highlight.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Highlight>> bindHighlight(
+		@Id long bucketId, @Id long highlightId) {
+		return bucketService.bindHighlight(bucketId, highlightId);
+	}
+
 	@Mutation
 	public Uni<Tuple2<Bucket, Language>> bindLanguageToBucket(
 		@Id long bucketId, @Id long languageId) {
@@ -471,6 +489,24 @@ public class BucketGraphqlResource {
 	@Mutation
 	public Uni<Tuple2<Bucket, Language>> unbindLanguageFromBucket(@Id long bucketId) {
 		return bucketService.unbindLanguage(bucketId);
+	}
+
+	@Description("""
+		Unbinds the Highlight from a specified Bucket.
+		
+		This mutation removes the link between a Highlight and a Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket from which the Highlight will be unbound.
+		
+		Returns:
+		- A tuple containing:
+		  - `bucket`: The updated Bucket after unbinding the Highlight.
+		  - `highlight`: Always null.
+		""")
+	@Mutation
+	public Uni<Tuple2<Bucket, Highlight>> unbindHighlightFromBucket(@Id long bucketId) {
+		return bucketService.unbindHighlight(bucketId);
 	}
 
 	@Mutation

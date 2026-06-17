@@ -88,8 +88,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	DatasourceService datasourceService;
 	@Inject
 	IndexService indexService;
-	 @Inject
-	 LanguageService languageService;
+	@Inject
+	LanguageService languageService;
 	@Inject
 	Logger logger;
 	@Inject
@@ -106,6 +106,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	TabService tabService;
 	@Inject
 	TranslationService translationService;
+	@Inject
+	HighlightService highlightService;
 
 	@Inject
 	BucketResourceMapper bucketResourceMapper;
@@ -1637,5 +1639,31 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	public Uni<Highlight> getHighlight(Long bucketId) {
 		return sessionFactory.withTransaction(session -> findById(session, bucketId)
 			.flatMap(bucket -> session.fetch(bucket.getHighlight())));
+	}
+
+	public Uni<Tuple2<Bucket, Highlight>> bindHighlight(long bucketId, long highlightId) {
+		return sessionFactory.withTransaction((session, transaction) -> findById(session, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> highlightService.findById(session, highlightId)
+				.onItem()
+				.ifNotNull()
+				.transformToUni(highlight -> {
+					bucket.setHighlight(highlight);
+					return persist(session, bucket).map(t -> Tuple2.of(t, highlight));
+				})
+			)
+		);
+	}
+
+	public Uni<Tuple2<Bucket, Highlight>> unbindHighlight(long bucketId) {
+		return sessionFactory.withTransaction((session, transaction) -> findById(session, bucketId)
+			.onItem()
+			.ifNotNull()
+			.transformToUni(bucket -> {
+				bucket.setHighlight(null);
+				return persist(session, bucket).map(t -> Tuple2.of(t, null));
+			})
+		);
 	}
 }
