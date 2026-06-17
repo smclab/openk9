@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import io.openk9.datasource.mapper.BucketResourceMapper;
+import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.TenantBinding_;
 import io.openk9.datasource.model.TokenTab;
@@ -1633,4 +1634,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return s.createQuery(criteriaQuery).getResultList();
 	}
 
+	public Uni<Highlight> getHighlight(Long bucketId) {
+		return sessionFactory.withTransaction(session -> findById(session, bucketId)
+			.flatMap(bucket -> session.fetch(bucket.getHighlight())));
+	}
 }

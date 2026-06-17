@@ -19,6 +19,8 @@ package io.openk9.datasource.graphql;
 
 import java.util.List;
 import java.util.Set;
+
+import io.openk9.datasource.model.Highlight;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Context;
@@ -97,6 +99,10 @@ public class BucketGraphqlResource {
 	public Uni<Tuple2<Bucket, Tab>> addTabToBucket(
 		@Id long id, @Id long tabId) {
 		return bucketService.addTabToBucket(id, tabId);
+	}
+
+	public Uni<Highlight> highlight(@Source Bucket bucket) {
+		return bucketService.getHighlight(bucket.getId());
 	}
 
 	public Uni<Autocomplete> autocomplete(@Source Bucket bucket) {
