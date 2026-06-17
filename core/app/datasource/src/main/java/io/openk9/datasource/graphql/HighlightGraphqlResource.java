@@ -65,39 +65,45 @@ public class HighlightGraphqlResource {
 		return highlightService.getMatchedFields(highlight.getId());
 	}
 
-	@Description("Create a new Highlight")
-	@Mutation
-	public Uni<Response<Highlight>> createHighlight(HighlightDTO highlightDTO) {
-		return highlightService.getValidator().create(highlightDTO);
-	}
-
 	@Description("""
-		Update or patch an Highlight entity based on the provided input.
+		Creates or updates an Highlight configuration.
+		
+		This mutation handles both creation and updates/patch of Highlight configurations based on the provided ID.
+		If no ID is provided, a new Highlight is created. If an ID is provided, the existing Highlight
+		is either fully updated or partially patched based on the patch parameter.
 		
 		Arguments:
-		- `id` (Long): The ID of the Highlight to update.
-		- `highlightDTO` (HighlightDTO!): The input object with data to update.
-		- `patch` (Boolean): Whether to perform a partial update. Defaults to false.
+		- `id` (ID): The ID of the Highlight to update. If null, creates a new Highlight.
+		- `HighlightDTO` (highlightDTO!): The Highlight data to create or update.
+		- `patch` (Boolean): If true, performs a partial update (patch). If false, performs a full update. Defaults to false.
 		
 		Returns:
-		- The Highlight entity updated.
-		"""
-	)
+		- A Response containing the created or updated Highlight configuration.
+		""")
 	@Mutation
-	public Uni<Response<Highlight>> updateHighlight(
-		@Id long id,
+	public Uni<Response<Highlight>> highlight(
+		@Id Long id,
 		HighlightDTO highlightDTO,
 		@DefaultValue("false") boolean patch) {
 
-		return patch
-			? patchHighlight(id, highlightDTO)
-			: updateHighlight(id, highlightDTO);
+		if (id == null) {
+			return createHighlight(highlightDTO);
+		}
+		else {
+			return patch
+				? patchHighlight(id, highlightDTO)
+				: updateHighlight(id, highlightDTO);
+		}
 	}
 
 	@Description("Delete an Highlight by its ID")
 	@Mutation
 	public Uni<Highlight> deleteHighlight(@Id long id) {
 		return highlightService.deleteById(id);
+	}
+
+	private Uni<Response<Highlight>> createHighlight(HighlightDTO highlightDTO) {
+		return highlightService.getValidator().create(highlightDTO);
 	}
 
 	private Uni<Response<Highlight>> updateHighlight(long id, HighlightDTO highlightDTO) {
