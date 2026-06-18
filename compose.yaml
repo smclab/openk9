@@ -47,7 +47,8 @@ services:
     volumes:
       - opensearch-data:/usr/share/opensearch/data
   postgresql:
-    image: postgres:17
+    build:
+      context: ./compose-utilities/postgresql
     container_name: postgresql
     hostname: postgresql
     environment:
@@ -64,7 +65,6 @@ services:
       timeout: 10s
       retries: 10
     volumes:
-      - ./compose-utilities/postgresql:/docker-entrypoint-initdb.d
       - postgres-data:/var/lib/postgresql/data
   caddy:
     image: caddy:2
