@@ -22,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.List;
 
+import io.openk9.apigw.security.ApiRoute;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,6 +35,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -973,6 +976,26 @@ class ApiGatewaySecurityTest {
 					.exchange()
 					.expectStatus().isOk();
 			}
+		}
+	}
+
+	@Nested
+	@DisplayName("RAG Route Default Tests")
+	class RagRouteDefaultTests {
+
+		@Test
+		@DisplayName("RAG route forwards to openk9-agentic-rag-module by default")
+		void testRagRouteDefaultsToAgenticModule() {
+			// get the RAG route from the gateway's RouteLocator
+			var routeLocator = applicationContext.getBean(RouteLocator.class);
+			var ragRoute = routeLocator.getRoutes()
+				.filter(route -> ApiRoute.RAG.name().equals(route.getId()))
+				.blockFirst();
+
+			// the route must exist and target the agentic module by default
+			assertThat(ragRoute).isNotNull();
+			assertThat(ragRoute.getUri())
+				.hasToString("http://openk9-agentic-rag-module:5000");
 		}
 	}
 }
