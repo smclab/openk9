@@ -57,6 +57,21 @@ services:
     hostname: openk9-minio-connector
     ports:
       - "5002:5000"
+  docling-processor:
+    image: ${IMAGE_GROUP:-openk9}/openk9-docling-processor:${IMAGE_TAG:-2026.1.0-SNAPSHOT}
+    container_name: openk9-docling-processor
+    hostname: openk9-docling-processor
+    environment:
+      FILE_MANAGER_HOST: 'http://openk9-file-manager:8080'
+      DATASOURCE_HOST: 'http://openk9-datasource:8080'
+    depends_on:
+      file-manager:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:5000/health\", timeout=2)'"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
 volumes:
   minio-data:

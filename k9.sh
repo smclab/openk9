@@ -96,7 +96,7 @@ CORE_SERVICES=(
     search-frontend admin-ui tenant-ui web-connector
 )
 GEN_AI_SERVICES=(rag-module embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
-FILE_HANDLING_SERVICES=(file-manager tika minio-connector)
+FILE_HANDLING_SERVICES=(file-manager tika minio-connector docling-processor)
 
 VALID_SERVICES=(
     "${CORE_SERVICES[@]}" "${GEN_AI_SERVICES[@]}" "${FILE_HANDLING_SERVICES[@]}"
@@ -284,6 +284,7 @@ build_gen_ai() {
 build_file_handling() {
     echo "--- Building File Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+    docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
@@ -365,6 +366,9 @@ build_single() {
             ;;
         minio-connector)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
+            ;;
+        docling-processor)
+            docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
             ;;
         rag-module)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
