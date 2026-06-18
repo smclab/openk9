@@ -275,11 +275,10 @@ build_tenant_ui() {
 
 build_gen_ai() {
     echo "--- Building AI Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
-    docker build --pull -t "openk9-agentic-rag-module" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
-    docker build --pull -t "openk9-evaluator" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-agentic-rag-module:$TAG" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-evaluator:$TAG" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
 }
 
 build_file_handling() {
@@ -377,10 +376,10 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
             ;;
         agentic-rag-module)
-            docker build --pull -t "openk9-agentic-rag-module:$TAG" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-agentic-rag-module:$TAG" -f ai-packages/agentic-rag-module/Dockerfile ai-packages/agentic-rag-module
             ;;
         evaluator)
-            docker build --pull -t "openk9-evaluator:$TAG" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-evaluator:$TAG" -f ai-packages/chunk-evaluation-module/Dockerfile ai-packages/chunk-evaluation-module
             ;;
     esac
 }
@@ -601,7 +600,7 @@ Profiles (--with):
                  API Gateway, Datasource, Tenant Manager, Ingestion,
                  Searcher, frontends, Caddy reverse proxy (default)
   file-handling  Core + file handling: MinIO, Tika, File Manager
-  gen-ai         Core + AI services: RAG module, Embedding, Talk-To
+  gen-ai         Core + AI services: Agentic RAG module, Embedding, Talk-To
   oauth2         Core + Keycloak OAuth2/OIDC identity provider
 
   Profiles are additive. Combine multiple --with flags to
@@ -610,7 +609,7 @@ Profiles (--with):
 Services (for targeted build/restart):
   api-gateway  tenant-manager  datasource  ingestion  searcher
   search-frontend  admin-ui  tenant-ui  web-connector
-  rag-module  embedding-module  talk-to
+  rag-module  agentic-rag-module  embedding-module  talk-to
   file-manager  tika  minio-connector
 
 Build details:
@@ -651,9 +650,9 @@ Access:
     Talk-To:     https://demo.openk9.localhost/chat
 
   Talk-To is a conversational AI frontend that uses the RAG and
-  Embedding modules to provide chat-based search. All three AI
-  services (rag-module, embedding-module, talk-to) start together
-  with the with-gen-ai profile.
+  Embedding modules to provide chat-based search. The gen-ai
+  services (agentic-rag-module, embedding-module, talk-to,
+  evaluator) start together with the with-gen-ai profile.
 
 Custom overlays:
   After starting the stack with k9.sh, you can attach
