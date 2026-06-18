@@ -456,27 +456,44 @@ async function getPluginDriverIdByName(schemaName, name) {
 }
 
 async function getSelectedDocTypeIds(schemaName, pluginDriverId) {
-  const response = await fetchWithRetry(
-    `${DATASOURCE_API}/api/datasource/pluginDrivers/documentTypes/${pluginDriverId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': authHeader,
-        'X-TENANT-ID': schemaName
+  // retry on failure or empty result instead of silently returning [],
+  // which would create a dataIndex with no doc types (and thus an empty mapping).
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const response = await fetchWithRetry(
+      `${DATASOURCE_API}/api/datasource/pluginDrivers/documentTypes/${pluginDriverId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': authHeader,
+          'X-TENANT-ID': schemaName
+        }
+      },
+      `Get DocTypes for PluginDriver ${pluginDriverId}`
+    );
+
+    if (response.ok) {
+      const body = await response.json();
+      const docTypes = Array.isArray(body) ? body : (body.docTypes ?? []);
+      const ids = docTypes.filter(dt => dt.selected).map(dt => dt.docTypeId);
+      if (ids.length) {
+        return ids;
       }
-    },
-    `Get DocTypes for PluginDriver ${pluginDriverId}`
-  );
+    }
+    else {
+      console.warn(`  Could not fetch document types for plugin driver ${pluginDriverId} (${response.status}).`);
+    }
 
-  if (!response.ok) {
-    console.warn(`  Could not fetch document types for plugin driver ${pluginDriverId} (${response.status}).`);
-    return [];
+    if (attempt === MAX_RETRIES) {
+      throw new Error(
+        `No selected document types for plugin driver ${pluginDriverId} after ${MAX_RETRIES} attempts ` +
+        `(connector /sample not ready?). Refusing to create a dataIndex with an empty mapping.`
+      );
+    }
+
+    console.log(`  DocTypes for plugin driver ${pluginDriverId} not ready, retrying in ${RETRY_DELAY_MS / 1000}s... (${attempt}/${MAX_RETRIES})`);
+    await sleep(RETRY_DELAY_MS);
   }
-
-  const body = await response.json();
-  const docTypes = Array.isArray(body) ? body : (body.docTypes ?? []);
-  return docTypes.filter(dt => dt.selected).map(dt => dt.docTypeId);
 }
 
 async function ensureDatasource(schemaName, name, description, pluginDriverId, jsonConfig, dataIndex, docTypeIds) {
