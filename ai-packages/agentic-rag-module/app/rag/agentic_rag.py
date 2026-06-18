@@ -1029,7 +1029,7 @@ class RagGraph:
         elif self.retrieve_from_uploaded_documents and (not self.user_id):
             unauthorized_response()
         else:
-            search_query = self.configuration.get("search_query") or []
+            search_query = list(self.configuration.get("search_query") or [])
 
             if state.domain:
                 logger.debug(f"[retriever] domain_filter={state.domain}")
