@@ -34,6 +34,10 @@ _STUBBED_MODULES = [
     "langchain_google_community",
     "langchain_google_community.model_armor",
     "app.utils.llm",
+    # gRPC stack: heavy (grpc/protobuf/generated pb2) and not needed for the
+    # pure list-building logic under test; query_parser is patched per-test.
+    "grpc",
+    "app.external_services.grpc.grpc_client",
 ]
 
 for module_name in _STUBBED_MODULES:
