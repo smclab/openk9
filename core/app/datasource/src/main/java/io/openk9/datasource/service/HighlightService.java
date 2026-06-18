@@ -21,6 +21,7 @@ import io.openk9.datasource.mapper.HighlightMapper;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
+import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,7 +29,10 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class HighlightService extends BaseK9EntityService<Highlight, HighlightDTO> {
@@ -90,6 +94,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
+			validateFields(dto.getFieldIds(), fieldsList);
 			transientHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
@@ -111,6 +116,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
+			validateFields(dto.getFieldIds(), fieldsList);
 			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
@@ -134,6 +140,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
+			validateFields(dto.getFieldIds(), fieldsList);
 			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
@@ -149,7 +156,37 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		});
 	}
 
-	public Uni<Set<DocTypeField>> getFields(long  id) {
+	/**
+	 * Checks that the field ids requested in the {@code HighlightDTO} match the ones found on
+	 * the database.
+	 * <p>
+	 * If the list of found fields is {@code null} (no id exists) it is treated as an empty set,
+	 * and any {@code null} entries (single missing ids) are filtered out, so that only the ids
+	 * actually found are compared against the requested ones.
+	 * <p>
+	 * If the two sets do not match, an {@link InvalidDocTypeFieldSetException} is thrown.
+	 *
+	 * @param requestedIds    the field ids requested in the {@code HighlightDTO}
+	 * @param persistedFields the fields found on the database
+	 * @throws InvalidDocTypeFieldSetException if any requested id does not exist on the database
+	 */
+	private static void validateFields(
+		Set<Long> requestedIds, List<DocTypeField> persistedFields) {
+
+		var persistedIds = persistedFields == null
+			? Set.<Long>of()
+			: persistedFields.stream()
+				.filter(Objects::nonNull)
+				.map(DocTypeField::getId)
+				.collect(Collectors.toSet());
+
+		if (!persistedIds.equals(requestedIds)) {
+			throw new InvalidDocTypeFieldSetException("One or more fields " +
+				"do not match the persisted docTypeFields");
+		}
+	}
+
+	public Uni<Set<DocTypeField>> getFields(long id) {
 		return sessionFactory.withTransaction((session, transaction) ->
 			findById(session, id)
 				.flatMap(highlight ->
