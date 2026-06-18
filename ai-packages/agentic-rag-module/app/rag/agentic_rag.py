@@ -1399,8 +1399,6 @@ class RagGraph:
             state.messages.append(HumanMessage(content=state.current_query))
             state.messages.append(AIMessage(content=state.response))
 
-            conversation_title = ""
-
             if all(
                 [
                     self.configuration.get("enable_conversation_title"),
@@ -1412,11 +1410,10 @@ class RagGraph:
                 conversation_title = generate_conversation_title(
                     self.llm, state.current_query, state.response
                 )
+                state.conversation_title = conversation_title.strip('"')
 
             elif self.chat_sequence_number == 1 and self.user_id:
-                conversation_title = state.current_query
-
-            state.conversation_title = conversation_title.strip('"')
+                state.conversation_title = state.current_query.strip('"')
 
         return state
 
