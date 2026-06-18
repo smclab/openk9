@@ -100,6 +100,7 @@ services:
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       OPENK9_TENANT_MANAGER_KEYCLOAK_BASE_ISSUER_URI: 'http://keycloak.openk9.localhost:8081/realms/'
       OPENK9_SECURITY_ADMIN_PASSWORD: 'admin'
+      QUARKUS_SMALLRYE_GRAPHQL_FIELD_VISIBILITY: 'default'
     ports:
       - 8186:8080
     depends_on:
@@ -166,6 +167,7 @@ services:
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
       QUARKUS_LOG_LEVEL: 'INFO'
+      QUARKUS_SMALLRYE_GRAPHQL_FIELD_VISIBILITY: 'default'
       RABBITMQ_HOST: 'rabbitmq'
       RABBITMQ_PASSWORD: 'openk9'
       RABBITMQ_PORT: '5672'
