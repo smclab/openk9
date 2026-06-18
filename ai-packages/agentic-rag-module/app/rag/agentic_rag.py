@@ -1793,8 +1793,10 @@ class RagGraph:
                 ):
                     yield from self._stream_title(conversation_title)
 
-                if self.rag_type != "SIMPLE_GENERATE" and (
-                    documents := last_state.values.get("context")
+                if (
+                    self.rag_type != "SIMPLE_GENERATE"
+                    and not last_state.values.get("guardrail_check")
+                    and (documents := last_state.values.get("context"))
                 ):
                     yield from self._stream_documents(documents)
 
