@@ -26,6 +26,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -104,7 +105,9 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		});
 	}
 
-	private Uni<Highlight> updateHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+	private Uni<Highlight> updateHighlight(
+		HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
@@ -117,14 +120,17 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return session.merge(newStateHighlight);
 				});
-			} else
-				newStateHighlight.setMatchedFields(null);
+			} else {
+				newStateHighlight.setMatchedFields(Collections.emptySet());
+			}
 
 			return session.merge(newStateHighlight);
 		});
 	}
 
-	private Uni<Highlight> patchHighlight(HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+	private Uni<Highlight> patchHighlight(
+		HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
+
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
