@@ -19,14 +19,13 @@ import logging
 from typing import List, Optional
 
 import requests
+from app.external_services.grpc.grpc_client import query_parser
+from app.rag.chunk_window import get_context_window_merged
+from app.utils.logger import logger
 from langchain_core.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from opensearchpy import OpenSearch
-
-from app.external_services.grpc.grpc_client import query_parser
-from app.rag.chunk_window import get_context_window_merged
-from app.utils.logger import logger
 
 TOKEN_SIZE = 3.5
 MAX_CONTEXT_WINDOW_PERCENTAGE = 0.85
@@ -62,8 +61,20 @@ class OpenSearchRetriever(BaseRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
-        search_query = (
-            [
+        search_query = [
+            {
+                "entityType": "",
+                "entityName": "",
+                "tokenType": self.retrieve_type,
+                "keywordKey": "",
+                "values": [query],
+                "extra": {},
+                "filter": True,
+            }
+        ]
+
+        if self.search_query:
+            search_query += [
                 {
                     "entityType": query_element.entityType,
                     "entityName": query_element.entityName,
@@ -75,19 +86,6 @@ class OpenSearchRetriever(BaseRetriever):
                 }
                 for query_element in self.search_query
             ]
-            if self.search_query
-            else [
-                {
-                    "entityType": "",
-                    "entityName": "",
-                    "tokenType": self.retrieve_type,
-                    "keywordKey": "",
-                    "values": [query],
-                    "extra": {},
-                    "filter": True,
-                }
-            ]
-        )
 
         query_data = query_parser(
             search_query=search_query,
