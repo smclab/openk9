@@ -836,7 +836,15 @@ async def get_chat(
 
         messages.sort(key=lambda m: int(m["chat_sequence_number"]))
 
-        return messages
+        return {
+            "chat_id": chat_id,
+            "messages": messages,
+            "retrieve_from_uploaded_documents": (
+                messages[-1]["retrieve_from_uploaded_documents"]
+                if messages
+                else None
+            ),
+        }
 
     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
