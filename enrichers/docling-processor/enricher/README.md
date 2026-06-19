@@ -40,6 +40,10 @@ The prerequisites for this enricher are:
 - A running File Manager service
 - An Openk9 pipeline callback endpoint
 
+> **Build platform note:** the `cpu` mode pins `torch`/`torchvision` `+cpu`
+> wheels that are published only for `linux/amd64` (it runs under emulation on
+> Apple Silicon, so build and startup are slower).
+ 
 ### Local Setup
 To run the enricher in local you have to:
 1. Create a virtual environment from the ernicher folder project, run:

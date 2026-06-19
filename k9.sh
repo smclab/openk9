@@ -284,7 +284,10 @@ build_gen_ai() {
 build_file_handling() {
     echo "--- Building File Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
-    docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
+    # docling-processor pins torch/torchvision +cpu wheels, published only for
+    # linux/amd64; force that platform so the build works on arm64 hosts too
+    # (runs under emulation on Apple Silicon).
+    docker build --pull --platform "linux/amd64" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
     (cd core && for SVC in file-manager tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
@@ -368,7 +371,9 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-minio-connector:$TAG" -f connectors/minio-connector/connector/Dockerfile connectors/minio-connector/connector
             ;;
         docling-processor)
-            docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
+            # Pinned +cpu torch/torchvision wheels exist only for linux/amd64;
+            # force that platform (emulated on Apple Silicon).
+            docker build --pull --platform "linux/amd64" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
             ;;
         rag-module)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
