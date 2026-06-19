@@ -294,6 +294,7 @@ Trigger API-Gateway:
     - if: '$CI_COMMIT_BRANCH == "main"'
       changes: &api_gateway_changes
         - core/app/api-gateway/**/*
+        - core/app/spring-boot-app/**/*
         - core/common/resources-common/**/*
         - core/service/**/*
     - if: '$CI_COMMIT_TAG'
