@@ -533,15 +533,22 @@ export function OpenK9Client({
       return data.map(({ id }: any) => id);
     },
     async loadTemplate<E>(id: string): Promise<Template<E> | null> {
+      let blobUrl: string | null = null;
       try {
-        const jsURL = tenant + `/api/datasource/templates/${id}/compiled`;
+        const res = await authFetch(`/api/datasource/templates/${id}/compiled`);
+        if (!res.ok) throw new Error(String(res.status));
+        const src = await res.text();
+        const blob = new Blob([src], { type: "text/javascript" });
+        blobUrl = URL.createObjectURL(blob);
         // @ts-ignore
 
-        const code = await import(/* @vite-ignore */ /* webpackIgnore: true */ jsURL);
+        const code = await import(/* @vite-ignore */ /* webpackIgnore: true */ blobUrl);
         return code.exports.template;
       } catch (err) {
         console.warn(err);
         return null;
+      } finally {
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
       }
     },
     async fetchQueryAnalysis(

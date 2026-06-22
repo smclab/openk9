@@ -48,19 +48,19 @@ export function OpenK9Client() {
 		},
 
 		async getAvailableLanguages() {
-			const res = await fetch(resolveTenantUrl("/api/datasource/buckets/current/availableLanguage"));
+			const res = await authFetch("/api/datasource/buckets/current/availableLanguage");
 			if (!res.ok) throw new Error("Failed to fetch languages");
 			return res.json();
 		},
 
 		async getDefaultLanguage() {
-			const res = await fetch(resolveTenantUrl("/api/datasource/buckets/current/defaultLanguage"));
+			const res = await authFetch("/api/datasource/buckets/current/defaultLanguage");
 			if (!res.ok) throw new Error("Failed to fetch default language");
 			return res?.statusText !== "No Content" ? res.json() : { value: "en_US" };
 		},
 
 		async getUserInfo() {
-			const response = await fetch(resolveTenantUrl(`/api/datasource/buckets/current`));
+			const response = await authFetch(`/api/datasource/buckets/current`);
 			if (!response.ok) throw new Error("Network response was not ok");
 			return response.json();
 		},
