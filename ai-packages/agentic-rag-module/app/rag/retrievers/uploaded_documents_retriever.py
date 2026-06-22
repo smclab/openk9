@@ -191,6 +191,7 @@ class OpenSearchUploadedDocumentsRetriever(BaseRetriever):
                         "document_id": document_id,
                         "filename": filename,
                         "file_extension": file_extension,
+                        "title": f"{filename or ''}{file_extension or ''}",
                         "score": score,
                     },
                 )

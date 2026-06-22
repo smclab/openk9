@@ -16,9 +16,13 @@
 #
 
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from app.rag.agentic_rag import GraphState, RagGraph
+from app.rag.retrievers import uploaded_documents_retriever
+from app.rag.retrievers.uploaded_documents_retriever import (
+    OpenSearchUploadedDocumentsRetriever,
+)
 
 
 def test_graph_state_persists_retrieve_from_uploaded_documents():
@@ -40,6 +44,56 @@ def test_history_handler_writes_flag_into_state_on_first_turn():
 
     # First turn -> the flag is written into the state so it gets checkpointed.
     assert state.retrieve_from_uploaded_documents is True
+
+
+def _build_retriever():
+    return OpenSearchUploadedDocumentsRetriever(
+        opensearch_host="http://localhost:9200",
+        grpc_host_embedding="localhost:50053",
+        embedding_model_configuration={},
+        uploaded_documents_index="test-index",
+        retrieve_type="TEXT",
+        user_id="user-1",
+        chat_id="chat-1",
+        search_text="zephyr",
+    )
+
+
+def test_uploaded_document_metadata_includes_title_built_from_filename():
+    retriever = _build_retriever()
+
+    client = MagicMock()
+    client.indices.exists.return_value = True
+    client.search.return_value = {
+        "hits": {
+            "hits": [
+                {
+                    "_source": {
+                        "document_id": "doc-1",
+                        "filename": "zephyr2",
+                        "file_extension": ".md",
+                        "chunkText": "some content",
+                    },
+                    "_score": 3.65,
+                }
+            ]
+        }
+    }
+
+    with patch.object(
+        uploaded_documents_retriever, "OpenSearch", return_value=client
+    ), patch.object(
+        uploaded_documents_retriever,
+        "documents_embedding",
+        return_value=[{"vector": [0.1, 0.2]}],
+    ):
+        documents = retriever._get_relevant_documents(
+            "zephyr", run_manager=MagicMock()
+        )
+
+    assert len(documents) == 1
+    # The source card title must be the original file name with its extension.
+    assert documents[0].metadata["title"] == "zephyr2.md"
 
 
 def test_history_handler_preserves_flag_on_followup_turn():
