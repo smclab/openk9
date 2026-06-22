@@ -42,6 +42,7 @@ from app.utils.conversation_history import (
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
+from app.utils.query_rewrite import shares_significant_terms
 from IPython.display import Image
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -57,7 +58,6 @@ from phoenix.evals import (
     TOOL_CALLING_PROMPT_TEMPLATE,
 )
 from pydantic import BaseModel, Field, field_validator
-from app.utils.query_rewrite import shares_significant_terms
 
 
 class GraphState(BaseModel):
@@ -1036,7 +1036,19 @@ class RagGraph:
         elif self.retrieve_from_uploaded_documents and (not self.user_id):
             unauthorized_response()
         else:
-            search_query = list(self.configuration.get("search_query") or [])
+            query_token = models.SearchToken(
+                tokenType=self.configuration.get("retrieve_type"),
+                keywordKey="",
+                values=[query],
+                filter=True,
+                entityType="",
+                entityName="",
+                extra={},
+            )
+
+            search_query = [query_token] + list(
+                self.configuration.get("search_query") or []
+            )
 
             if state.domain:
                 logger.debug(f"[retriever] domain_filter={state.domain}")
