@@ -118,6 +118,7 @@ def get_agentic_rag(
             "chat_id": chat_id,
             "chat_sequence_number": chat_sequence_number,
             "chat_history": chat_history,
+            "reformulate": reformulate,
             "rerank": rerank,
             "bypass_rag": bypass_rag,
             "chunk_window": chunk_window,

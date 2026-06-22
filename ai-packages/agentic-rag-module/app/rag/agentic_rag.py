@@ -212,6 +212,7 @@ class RagGraph:
         self.chat_id = configuration.get("chat_id")
         self.chat_sequence_number = configuration.get("chat_sequence_number")
         self.chat_history = configuration.get("chat_history")
+        self.reformulate = configuration.get("reformulate")
         self.retrieve_from_uploaded_documents = configuration.get(
             "retrieve_from_uploaded_documents"
         )
@@ -905,10 +906,11 @@ class RagGraph:
                 )
 
                 if previous_query and previous_response:
-                    rewrited_query = self._rewrite_query(
-                        query, previous_query, previous_response
-                    )
-                    state.current_query = rewrited_query
+                    if self.reformulate:
+                        rewrited_query = self._rewrite_query(
+                            query, previous_query, previous_response
+                        )
+                        state.current_query = rewrited_query
                 else:
                     state.domain = ["NEW_QUESTION"]
             else:
