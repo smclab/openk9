@@ -37,6 +37,17 @@ _REWRITE_STOPWORDS = {
 }
 
 
+def escape_curly_braces(text):
+    """Escape literal curly braces so dynamic content is safe inside a
+    ``PromptTemplate``.
+
+    Tenant-configured prompts may contain literal ``{``/``}`` (e.g. JSON
+    examples). Doubling them prevents ``PromptTemplate.from_template`` from
+    interpreting them as template variables.
+    """
+    return text.replace("{", "{{").replace("}", "}}")
+
+
 def _strip_accents(text):
     """Remove diacritics so that accented Italian words match their stopwords."""
     return "".join(

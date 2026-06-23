@@ -20,6 +20,22 @@ import logging
 from enum import Enum
 from typing import Annotated, Any, Dict, Iterator, List, Literal, Optional
 
+from IPython.display import Image
+from langchain_core.documents import Document
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.output_parsers.string import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.checkpoint.opensearch import OpenSearchSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from opensearchpy import OpenSearch
+from phoenix.evals import (
+    TOOL_CALLING_PROMPT_TEMPLATE,
+)
+from pydantic import BaseModel, Field, field_validator
+
 from app.external_services.grpc.grpc_client import (
     get_embedding_model_configuration,
 )
@@ -42,22 +58,7 @@ from app.utils.conversation_history import (
 from app.utils.guardrails import GuardrailType, initialize_guardrail
 from app.utils.llm import generate_conversation_title
 from app.utils.logger import logger
-from app.utils.query_rewrite import shares_significant_terms
-from IPython.display import Image
-from langchain_core.documents import Document
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.output_parsers.string import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
-from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.checkpoint.opensearch import OpenSearchSaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.graph.message import add_messages
-from opensearchpy import OpenSearch
-from phoenix.evals import (
-    TOOL_CALLING_PROMPT_TEMPLATE,
-)
-from pydantic import BaseModel, Field, field_validator
+from app.utils.query_rewrite import escape_curly_braces, shares_significant_terms
 
 
 class GraphState(BaseModel):
@@ -235,15 +236,13 @@ class RagGraph:
         self.output_guardrail_provider = self.output_guardrail.get(
             "output_guardrail_provider"
         )
-        self.guardrail_categories = (
+        self.guardrail_categories = escape_curly_braces(
             "\n".join(
                 f"{i}. {g.get('name', '')} - {g.get('description', '')}"
                 for i, g in enumerate(
                     self.guardrails_configuration.get("guardrail_categories") or [], 1
                 )
             )
-            .replace("{", "{{")
-            .replace("}", "}}")
         )
         self.config = {
             "configurable": {
@@ -320,8 +319,8 @@ class RagGraph:
         """
 
         if self.configuration.get("rephrase_prompt_template"):
-            rephrase_prompt_template = self.configuration.get(
-                "rephrase_prompt_template"
+            rephrase_prompt_template = escape_curly_braces(
+                self.configuration.get("rephrase_prompt_template")
             )
 
             rewrite_query_prompt = rephrase_prompt_template + (
@@ -837,8 +836,8 @@ class RagGraph:
             conversation_context = self._get_conversation_context(messages)
 
             if self.configuration.get("analyze_query_prompt_template"):
-                analyze_query_prompt_template = self.configuration.get(
-                    "analyze_query_prompt_template"
+                analyze_query_prompt_template = escape_curly_braces(
+                    self.configuration.get("analyze_query_prompt_template")
                 )
 
                 analyze_query_prompt = (
@@ -939,7 +938,9 @@ class RagGraph:
 
             conversation_context = self._get_conversation_context(messages)
 
-            rag_tool_description = self.configuration.get("rag_tool_description")
+            rag_tool_description = escape_curly_braces(
+                self.configuration.get("rag_tool_description")
+            )
 
             rag_router_prompt = (
                 rag_tool_description
@@ -1329,7 +1330,7 @@ class RagGraph:
         conversation_history = self._format_conversation_history(messages)
 
         if state.use_rag and context:
-            prompt = self.configuration.get("prompt_template")
+            prompt = escape_curly_braces(self.configuration.get("prompt_template"))
             context_text = "\n\n".join([doc.page_content for doc in context])
 
             rag_prompt = ChatPromptTemplate.from_template(
@@ -1356,7 +1357,7 @@ class RagGraph:
                 }
             )
         else:
-            prompt_no_rag = (
+            prompt_no_rag = escape_curly_braces(
                 self.configuration.get("prompt_no_rag")
                 if self.configuration.get("prompt_no_rag")
                 else """You are a helpful, concise assistant that provides accurate, clear, and self-contained answers without using external retrieval."""
