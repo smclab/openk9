@@ -35,6 +35,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -45,6 +46,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class Highlight extends K9Entity {
 
+	public static final int DEFAULT_NUMBER_OF_FRAGMENTS = 5;
+	public static final int DEFAULT_FRAGMENT_SIZE = 100;
+	public static final String DEFAULT_BOUNDARY_CHARS = ".,!? \\t\\n";
+
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
 
@@ -54,7 +59,7 @@ public class Highlight extends K9Entity {
 	@NotNull
 	@Enumerated(EnumType.STRING)
 	@Column(name = "type", nullable = false)
-	private HighlightType type;
+	private HighlightType type = HighlightType.UNIFIED;
 
 	@JoinTable(
 		name = "highlight_fields",
@@ -70,24 +75,24 @@ public class Highlight extends K9Entity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "boundary_scanner")
-	private BoundaryScannerType boundaryScanner;
+	private BoundaryScannerType boundaryScanner = BoundaryScannerType.SENTENCE;
 
 	@Column(name = "boundary_chars")
-	private String boundaryChars;
+	private String boundaryChars = DEFAULT_BOUNDARY_CHARS;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragmenter")
-	private FragmenterType fragmenter;
+	private FragmenterType fragmenter = FragmenterType.SPAN;
 
 	@Column(name = "fragment_size")
-	private int fragmentSize;
+	private Integer fragmentSize = DEFAULT_FRAGMENT_SIZE;
 
 	@Column(name = "number_of_fragments")
-	private int numberOfFragments;
+	private Integer numberOfFragments = DEFAULT_NUMBER_OF_FRAGMENTS;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragments_order")
-	private OrderType order;
+	private OrderType order = OrderType.NONE;
 
 	@JoinTable(
 		name = "highlight_matched_fields",
@@ -114,5 +119,35 @@ public class Highlight extends K9Entity {
 
 	public enum OrderType {
 		NONE, SCORE
+	}
+
+	public void setNumberOfFragments(Integer numberOfFragments) {
+		this.numberOfFragments =
+			Objects.requireNonNullElse(numberOfFragments, DEFAULT_NUMBER_OF_FRAGMENTS);
+	}
+
+	public void setFragmentSize(Integer fragmentSize) {
+		this.fragmentSize =
+			Objects.requireNonNullElse(fragmentSize, DEFAULT_FRAGMENT_SIZE);
+	}
+
+	public void setOrder(OrderType order) {
+		this.order =
+			Objects.requireNonNullElse(order, OrderType.NONE);
+	}
+
+	public void setBoundaryChars(String boundaryChars) {
+		this.boundaryChars =
+			Objects.requireNonNullElse(boundaryChars, DEFAULT_BOUNDARY_CHARS);
+	}
+
+	public void setFragmenter(FragmenterType fragmenter) {
+		this.fragmenter =
+			Objects.requireNonNullElse(fragmenter, FragmenterType.SPAN);
+	}
+
+	public void setBoundaryScanner(BoundaryScannerType boundaryScanner) {
+		this.boundaryScanner =
+			Objects.requireNonNullElse(boundaryScanner, BoundaryScannerType.SENTENCE);
 	}
 }
