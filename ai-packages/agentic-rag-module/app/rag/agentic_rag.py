@@ -789,6 +789,12 @@ class RagGraph:
     def intent_detection_decision(
         self, state: GraphState
     ) -> Literal["input_domain", "rag_router"]:
+        if self.rag_type == "SIMPLE_GENERATE":
+            logger.debug(
+                "[intent_detection] rag_type=SIMPLE_GENERATE -> rag_router "
+                "(intent detection skipped)"
+            )
+            return "rag_router"
         if not state.domain or "NEW_QUESTION" in state.domain:
             logger.debug(f"[intent_detection] domain={state.domain} -> input_domain")
             return "input_domain"
