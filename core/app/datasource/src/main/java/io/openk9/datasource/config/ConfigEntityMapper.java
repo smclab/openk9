@@ -1,0 +1,169 @@
+/*
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package io.openk9.datasource.config;
+
+import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
+import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.Autocomplete;
+import io.openk9.datasource.model.Autocorrection;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.CharFilter;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeTemplate;
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.LargeLanguageModel;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.ProviderModel;
+import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.Range;
+import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.Tokenizer;
+import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.dto.base.AnalyzerDTO;
+import io.openk9.datasource.model.dto.base.AnnotatorDTO;
+import io.openk9.datasource.model.dto.base.AutocompleteDTO;
+import io.openk9.datasource.model.dto.base.AutocorrectionDTO;
+import io.openk9.datasource.model.dto.base.BucketDTO;
+import io.openk9.datasource.model.dto.base.CharFilterDTO;
+import io.openk9.datasource.model.dto.base.DatasourceDTO;
+import io.openk9.datasource.model.dto.base.DocTypeDTO;
+import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
+import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
+import io.openk9.datasource.model.dto.base.EnrichItemDTO;
+import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.LanguageDTO;
+import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
+import io.openk9.datasource.model.dto.base.PluginDriverDTO;
+import io.openk9.datasource.model.dto.base.ProviderModelDTO;
+import io.openk9.datasource.model.dto.base.QueryAnalysisDTO;
+import io.openk9.datasource.model.dto.base.QueryParserConfigDTO;
+import io.openk9.datasource.model.dto.base.RangeDTO;
+import io.openk9.datasource.model.dto.base.RuleDTO;
+import io.openk9.datasource.model.dto.base.SearchConfigDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
+import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
+import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.base.TokenFilterDTO;
+import io.openk9.datasource.model.dto.base.TokenTabDTO;
+import io.openk9.datasource.model.dto.base.TokenizerDTO;
+import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
+
+/**
+ * Entity → typed DTO mapping for the export side of the import/export feature.
+ * <p>
+ * The existing MapStruct mappers only map DTO → entity; this single mapper
+ * provides the inverse for every exportable type, populating the {@code attributes}
+ * of a {@code ConfigEntity}. The base DTOs are scalar projections, so MapStruct
+ * maps only the configuration fields and ignores the entity relationships (carried
+ * separately as references). {@code unmappedTargetPolicy = IGNORE} also means the
+ * FK-id fields that exist on a few DTOs ({@code AutocompleteDTO.fieldIds},
+ * {@code AutocorrectionDTO.autocorrectionDocTypeFieldId}) are intentionally left
+ * null here and emitted as references by the collector.
+ */
+@Mapper(
+	componentModel = MappingConstants.ComponentModel.CDI,
+	unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
+public interface ConfigEntityMapper {
+
+	BucketDTO dto(Bucket entity);
+
+	DatasourceDTO dto(Datasource entity);
+
+	PluginDriverDTO dto(PluginDriver entity);
+
+	EnrichPipelineDTO dto(EnrichPipeline entity);
+
+	EnrichPipelineItemRepresentation dto(EnrichPipelineItem entity);
+
+	EnrichItemDTO dto(EnrichItem entity);
+
+	DocTypeDTO dto(DocType entity);
+
+	DocTypeFieldDTO dto(DocTypeField entity);
+
+	DocTypeTemplateDTO dto(DocTypeTemplate entity);
+
+	AnalyzerDTO dto(Analyzer entity);
+
+	CharFilterDTO dto(CharFilter entity);
+
+	TokenFilterDTO dto(TokenFilter entity);
+
+	TokenizerDTO dto(Tokenizer entity);
+
+	AclMappingRepresentation dto(AclMapping entity);
+
+	QueryAnalysisDTO dto(QueryAnalysis entity);
+
+	AnnotatorDTO dto(Annotator entity);
+
+	RuleDTO dto(Rule entity);
+
+	QueryParserConfigDTO dto(QueryParserConfig entity);
+
+	SearchConfigDTO dto(SearchConfig entity);
+
+	EmbeddingModelDTO dto(EmbeddingModel entity);
+
+	LargeLanguageModelDTO dto(LargeLanguageModel entity);
+
+	LanguageDTO dto(Language entity);
+
+	CreateRAGConfigurationDTO dto(RAGConfiguration entity);
+
+	SuggestionCategoryDTO dto(SuggestionCategory entity);
+
+	TabDTO dto(Tab entity);
+
+	SortingDTO dto(Sorting entity);
+
+	TokenTabDTO dto(TokenTab entity);
+
+	AutocompleteDTO dto(Autocomplete entity);
+
+	AutocorrectionDTO dto(Autocorrection entity);
+
+	// Nested value objects, reused as sub-mappings by the methods above.
+
+	ProviderModelDTO dto(ProviderModel providerModel);
+
+	RangeDTO dto(Range range);
+
+}
