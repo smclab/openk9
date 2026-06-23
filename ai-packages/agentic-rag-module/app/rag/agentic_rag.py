@@ -1042,19 +1042,23 @@ class RagGraph:
         elif self.retrieve_from_uploaded_documents and (not self.user_id):
             unauthorized_response()
         else:
-            query_token = models.SearchToken(
-                tokenType=self.configuration.get("retrieve_type"),
-                keywordKey="",
-                values=[query],
-                filter=True,
-                entityType="",
-                entityName="",
-                extra={},
-            )
+            search_query = list(self.configuration.get("search_query") or [])
 
-            search_query = [query_token] + list(
-                self.configuration.get("search_query") or []
-            )
+            if not search_query:
+                logger.debug(
+                    f"[opensearch_retriever_node] not search_query={search_query}"
+                )
+                search_query = [
+                    models.SearchToken(
+                        tokenType=self.configuration.get("retrieve_type"),
+                        keywordKey="",
+                        values=[query],
+                        filter=True,
+                        entityType="",
+                        entityName="",
+                        extra={},
+                    )
+                ]
 
             if state.domain:
                 logger.debug(f"[retriever] domain_filter={state.domain}")
