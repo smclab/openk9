@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidPositiveInteger;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -84,9 +85,11 @@ public class Highlight extends K9Entity {
 	@Column(name = "fragmenter")
 	private FragmenterType fragmenter = FragmenterType.SPAN;
 
+	@ValidPositiveInteger
 	@Column(name = "fragment_size")
 	private Integer fragmentSize = DEFAULT_FRAGMENT_SIZE;
 
+	@ValidPositiveInteger
 	@Column(name = "number_of_fragments")
 	private Integer numberOfFragments = DEFAULT_NUMBER_OF_FRAGMENTS;
 
