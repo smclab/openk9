@@ -65,6 +65,9 @@ class GraphState(BaseModel):
     current_query: Annotated[str, "current_query"] = Field(
         "", description="The current user query"
     )
+    original_query: Annotated[str, "original_query"] = Field(
+        "", description="The original user query before any rewriting"
+    )
     chat_sequence_number: Annotated[int, "chat_sequence_number"] = Field(
         1, description="Sequence number of the chat"
     )
@@ -915,6 +918,7 @@ class RagGraph:
                         rewrited_query = self._rewrite_query(
                             query, previous_query, previous_response
                         )
+                        state.original_query = query
                         state.current_query = rewrited_query
                 else:
                     state.domain = ["NEW_QUESTION"]
