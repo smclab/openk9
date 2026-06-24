@@ -43,7 +43,7 @@
 				<constraints nullable="false"/>
 			</column>
 			<column name="boundary_scanner" type="VARCHAR2(255)"/>
-			<column name="boundary_chars" type="VARCHAR(255)"/>
+			<column name="boundary_chars" type="VARCHAR2(255)"/>
 			<column name="fragmenter" type="VARCHAR2(255)"/>
 			<column name="fragment_size" type="NUMBER(10)"/>
 			<column name="number_of_fragments" type="NUMBER(10)"/>
