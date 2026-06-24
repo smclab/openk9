@@ -29,7 +29,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 @OpenAPIDefinition(
 	info = @Info(
 		title = "Tenant Manager Service",
-		version = "2026.1.0-SNAPSHOT",
+		version = "2026.2.0-SNAPSHOT",
 		description = "Create and manage the tenants within this OpenK9 installation",
 		license = @License(
 			name = "GNU Affero General Public License v3.0",

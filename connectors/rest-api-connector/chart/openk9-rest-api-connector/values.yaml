@@ -8,7 +8,6 @@
 ## @param replicaCount Number of Rest Api Connector replicas to deploy
 ##
 replicaCount: 1
-
 ## @section Rest Api Connector Image parameters
 ## Docker Rest Api Connector image version
 ## ref: https://hub.docker.com/u/smclab
@@ -20,13 +19,11 @@ image:
   registry: ""
   name: smclab/openk9-rest-api-connector
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2026.1.0-SNAPSHOT"
-
+  tag: "2026.2.0-SNAPSHOT"
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
   ##
   pullPolicy: Always
-
   ## Optionally specify an array of imagePullSecrets.
   ## Secrets must be manually created in the namespace.
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -36,21 +33,17 @@ image:
   ##
   pullSecrets:
     - docker-registry-secret
-    
 ## @param commonAnnotations Annotations to add to all deployed objects
 ##
 commonAnnotations:
   prometheus.io/scheme: http
   prometheus.io/scrape: "false"
-
 ## @param nameOverride String to partially override fullname template (will maintain the release name)
 ##
 nameOverride: ""
-
 ## @param fullnameOverride String to fully override fullname template
 ##
 fullnameOverride: ""
-
 ## Kubernetes service type
 ##
 service:
@@ -60,14 +53,11 @@ service:
   ## Service ports
   ## @param service.port Http service port
   port: 5000
-
 ## Openk9 Ingestion configuration
 openk9:
   ingestion:
     host: openk9-ingestion
     port: 8080
-
-
 ## Rest Api Connector pods ServiceAccount
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
 ##
@@ -82,12 +72,10 @@ serviceAccount:
   ## If not set and create is true, a name is generated using the fullname template
   ##
   name: ""
-
 ## @param podAnnotations Datasource Pod annotations. Evaluated as a template
 ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 ##
 podAnnotations: {}
-
 ## Datasource pods' Security Context
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 ## @param podSecurityContext.enabled Enable Datasource pods' Security Context
@@ -97,24 +85,20 @@ podAnnotations: {}
 ## @param podSecurityContext.fsGroup Set Datasource pod's Security Context fsGroup
 ##
 podSecurityContext: {}
-  # fsGroup: 2000
-
+# fsGroup: 2000
 
 securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-  
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
 
 ## @param hostAliases Deployment pod host aliases
 ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
 ##
 hostAliases: []
-
-
 ## @param resources Set container requests and limits for different resources like CPU or memory (essential for production workloads)
 ## Example:
 ## resources:
@@ -126,30 +110,25 @@ hostAliases: []
 ##     memory: 1024Mi
 ##
 resources: {}
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 5
   averageCpuUtilizationPercentage: 80
   averageMemoryUtilizationPercentage: 80
-
 ## @param nodeSelector Node labels for pod assignment. Evaluated as a template
 ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 ##
 nodeSelector: {}
-
 ## @param tolerations Tolerations for pod assignment. Evaluated as a template
 ## Ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 ##
 tolerations: []
-
 ## @param affinity Affinity for pod assignment. Evaluated as a template
 ## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
 ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
 ##
 affinity: {}
-
 ## Configure Rest Api Connector containers' extra options for startup probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param startupProbe.enabled Enable startupProbe
@@ -166,7 +145,6 @@ startupProbe:
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5
-
 ## Configure Rest Api Connector containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
@@ -183,7 +161,6 @@ livenessProbe:
   timeoutSeconds: 5
   successThreshold: 1
   failureThreshold: 5
-
 ## Configure Rest Api Connector containers' extra options for readiness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param readinessProbe.enabled Enable readinessProbe
