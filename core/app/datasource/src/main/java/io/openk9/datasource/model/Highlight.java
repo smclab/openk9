@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidHighlightFragmentSize;
 import io.openk9.datasource.validation.ValidPositiveInteger;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,8 +46,10 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@ValidHighlightFragmentSize
 public class Highlight extends K9Entity {
 
+	public static final int MIN_FVH_FRAGMENT_SIZE = 18;
 	public static final int DEFAULT_NUMBER_OF_FRAGMENTS = 5;
 	public static final int DEFAULT_FRAGMENT_SIZE = 100;
 	public static final String DEFAULT_BOUNDARY_CHARS = ".,!? \\t\\n";
