@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.K9Entity;
+import io.openk9.datasource.validation.ValidHighlightBoundaryScanner;
 import io.openk9.datasource.validation.ValidHighlightFragmentSize;
 import io.openk9.datasource.validation.ValidPositiveInteger;
 import jakarta.persistence.Column;
@@ -47,6 +48,7 @@ import java.util.Set;
 @ToString
 @RequiredArgsConstructor
 @ValidHighlightFragmentSize
+@ValidHighlightBoundaryScanner
 public class Highlight extends K9Entity {
 
 	public static final int MIN_FVH_FRAGMENT_SIZE = 18;
