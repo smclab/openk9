@@ -783,7 +783,11 @@ async def get_chat(
             checkpoint = json.loads(source.get("checkpoint", "{}"))
             timestamp = checkpoint.get("ts")
             channel_values = checkpoint.get("channel_values", {})
-            question = channel_values.get("current_query")
+            # The original query is preserved before any rewriting; fall back to
+            # current_query for turns that were never rewritten (or older data).
+            question = channel_values.get("original_query") or channel_values.get(
+                "current_query"
+            )
             answer = channel_values.get("response")
             # title = channel_values.get("conversation_title")
             chat_sequence_number = channel_values.get("chat_sequence_number")
