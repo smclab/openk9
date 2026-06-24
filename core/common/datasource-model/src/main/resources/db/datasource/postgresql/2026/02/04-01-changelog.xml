@@ -39,15 +39,15 @@
 			<column name="name" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="type" type="TEXT">
+			<column name="type" type="VARCHAR(255)">
 				<constraints nullable="false"/>
 			</column>
-			<column name="boundary_scanner" type="TEXT"/>
-			<column name="boundary_chars" type="TEXT"/>
-			<column name="fragmenter" type="TEXT"/>
+			<column name="boundary_scanner" type="VARCHAR(255)"/>
+			<column name="boundary_chars" type="VARCHAR(255)"/>
+			<column name="fragmenter" type="VARCHAR(255)"/>
 			<column name="fragment_size" type="INTEGER"/>
 			<column name="number_of_fragments" type="INTEGER"/>
-			<column name="fragments_order" type="TEXT"/>
+			<column name="fragments_order" type="VARCHAR(255)"/>
 		</createTable>
 	</changeSet>
 
