@@ -50,9 +50,6 @@ import java.util.Set;
 public class Highlight extends K9Entity {
 
 	public static final int MIN_FVH_FRAGMENT_SIZE = 18;
-	public static final int DEFAULT_NUMBER_OF_FRAGMENTS = 5;
-	public static final int DEFAULT_FRAGMENT_SIZE = 100;
-	public static final String DEFAULT_BOUNDARY_CHARS = ".,!? \\t\\n";
 
 	@Column(name = "name", nullable = false, unique = true)
 	private String name;
@@ -82,7 +79,7 @@ public class Highlight extends K9Entity {
 	private BoundaryScannerType boundaryScanner = BoundaryScannerType.SENTENCE;
 
 	@Column(name = "boundary_chars")
-	private String boundaryChars = DEFAULT_BOUNDARY_CHARS;
+	private String boundaryChars;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragmenter")
@@ -90,11 +87,11 @@ public class Highlight extends K9Entity {
 
 	@ValidPositiveInteger
 	@Column(name = "fragment_size")
-	private Integer fragmentSize = DEFAULT_FRAGMENT_SIZE;
+	private Integer fragmentSize;
 
 	@ValidPositiveInteger
 	@Column(name = "number_of_fragments")
-	private Integer numberOfFragments = DEFAULT_NUMBER_OF_FRAGMENTS;
+	private Integer numberOfFragments;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragments_order")
@@ -127,24 +124,9 @@ public class Highlight extends K9Entity {
 		NONE, SCORE
 	}
 
-	public void setNumberOfFragments(Integer numberOfFragments) {
-		this.numberOfFragments =
-			Objects.requireNonNullElse(numberOfFragments, DEFAULT_NUMBER_OF_FRAGMENTS);
-	}
-
-	public void setFragmentSize(Integer fragmentSize) {
-		this.fragmentSize =
-			Objects.requireNonNullElse(fragmentSize, DEFAULT_FRAGMENT_SIZE);
-	}
-
 	public void setOrder(OrderType order) {
 		this.order =
 			Objects.requireNonNullElse(order, OrderType.NONE);
-	}
-
-	public void setBoundaryChars(String boundaryChars) {
-		this.boundaryChars =
-			Objects.requireNonNullElse(boundaryChars, DEFAULT_BOUNDARY_CHARS);
 	}
 
 	public void setFragmenter(FragmenterType fragmenter) {
