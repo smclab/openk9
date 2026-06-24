@@ -93,6 +93,32 @@ def _checkpoint(seq, retrieve):
     }
 
 
+def _rewritten_checkpoint(seq, original, rewritten, answer):
+    """A turn whose query was reformulated by analyze_and_rewrite_query.
+
+    The checkpoint keeps the user's original query in `original_query` while
+    `current_query` holds the rewritten one used for retrieval.
+    """
+    return {
+        "_source": {
+            "checkpoint": json.dumps(
+                {
+                    "ts": f"2026-01-01T00:0{seq}:00",
+                    "channel_values": {
+                        "original_query": original,
+                        "current_query": rewritten,
+                        "response": answer,
+                        "chat_sequence_number": seq,
+                        "retrieve_from_uploaded_documents": False,
+                        "context": [],
+                    },
+                }
+            ),
+            "metadata": {"step": 1},
+        }
+    }
+
+
 def _opensearch_mock(hits):
     client = MagicMock()
     client.indices.exists.return_value = True
@@ -129,6 +155,41 @@ def test_get_chat_returns_object_with_messages(client, monkeypatch):
 
     # Surfaced at top level from the latest turn (sequence 2 -> True).
     assert body["retrieve_from_uploaded_documents"] is True
+
+
+def test_get_chat_returns_original_question_not_rewritten(client, monkeypatch):
+    """A reformulated turn must surface the query the user typed.
+
+    analyze_and_rewrite_query overwrites `current_query` with the reformulated
+    query but preserves the typed one in `original_query`; get_chat must prefer
+    `original_query` while still returning the final answer.
+    """
+    original = "dimmi di piu sul primo prodotto"
+    rewritten = "Puoi fornire maggiori dettagli sulla garanzia Infortuni del Conducente?"
+    final_answer = "La garanzia Infortuni del Conducente copre..."
+
+    hits = [_rewritten_checkpoint(2, original, rewritten, final_answer)]
+    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: _opensearch_mock(hits))
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.status_code == 200
+    turn = response.json()["messages"][0]
+
+    assert turn["question"] == original
+    assert turn["answer"] == final_answer
+
+
+def test_get_chat_falls_back_to_current_query_when_not_rewritten(client, monkeypatch):
+    """Turns that were never rewritten have no `original_query`; get_chat must
+    fall back to `current_query` (also covers data predating original_query)."""
+    hits = [_checkpoint(1, retrieve=False)]
+    monkeypatch.setattr(server, "OpenSearch", lambda *a, **k: _opensearch_mock(hits))
+
+    response = client.get(f"/api/rag/chat/{CHAT_ID}", headers=HEADERS)
+
+    assert response.status_code == 200
+    assert response.json()["messages"][0]["question"] == "question 1"
 
 
 def test_get_chat_returns_404_when_chat_missing(client, monkeypatch):
