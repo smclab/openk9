@@ -687,7 +687,9 @@ async def get_user_chats(
             checkpoint = json.loads(max_step_document.get("checkpoint"))
             timestamp = checkpoint.get("ts")
             channel_values = checkpoint.get("channel_values", {})
-            question = channel_values.get("current_query")
+            question = channel_values.get("original_query") or channel_values.get(
+                "current_query"
+            )
             title = channel_values.get("conversation_title")
             result["result"].append(
                 {
