@@ -39,12 +39,21 @@ Build Verifier Resources-Validator:
 
 # SCANNING JOB
 Container Scanning Resources-Validator:
-  dependencies: [ Build Resources-Validator Image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build Resources-Validator Image", release line
+  # builds "Build Resources-Validator Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build Resources-Validator Image
+    artifacts: true
+    optional: true
+  - job: Build Resources-Validator Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-resources-validator"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Resources-Validator:

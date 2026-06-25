@@ -4,7 +4,11 @@
 # GLOBAL VARIABLES
 # ========================================
 variables:
-  CS_ANALYZER_IMAGE: "registry.gitlab.com/security-products/container-scanning:8"
+  # Trivy unification (Issue #2004): single pinned binary for both image and
+  # dependency scanning, replacing the old gtcs wrapper ($CS_ANALYZER_IMAGE) and
+  # the npm-audit/OWASP/pip-audit dep tools. Bump in ONE place. Never use :latest.
+  TRIVY_IMAGE: "aquasec/trivy:0.71.2"
+  TRIVY_CACHE_DIR: ".trivycache/"
 
 # ========================================
 # REUSABLE RULES
@@ -354,43 +358,175 @@ variables:
   script:
   - !reference [.springboot-verifier-logic, script]
 
-.container-scanning-template:
+# ========================================
+# TRIVY IMAGE SCAN (Issue #2004)
+# Replaces .container-scanning-template (gtcs scan).
+#
+# Scans a pushed image with the pure aquasec/trivy binary. The calling job
+# passes its image ref via SCAN_IMAGE (and a human label via COMPONENT_NAME
+# for the artifact filenames) plus the path to its own .trivyignore via
+# IGNOREFILE. Output is optimised for GitLab CE (no Security Dashboard):
+# a readable table in the job log + downloadable JSON + CycloneDX SBOM.
+#
+# The gate (last step, --exit-code 1) blocks ONLY on CRITICAL/HIGH with a fix
+# available. Phase 1 of the rollout keeps allow_failure: true; Phase 2 flips it
+# to false once the backlog is triaged into the .trivyignore files.
+# ========================================
+.trivy-image-scan:
   stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
+  image:
+    name: $TRIVY_IMAGE
+    entrypoint: [ "" ]            # the trivy image entrypoint is the binary itself
   variables:
-    CS_REGISTRY_USER: "$CI_REGISTRY_USERNAME"
-    CS_REGISTRY_PASSWORD: "$CI_REGISTRY_PASSWORD"
-    GIT_STRATEGY: fetch
-  allow_failure: true
-  artifacts:
-    reports:
-      container_scanning: gl-container-scanning-report.json
-      cyclonedx: "**/gl-sbom-*.cdx.json"
-    paths: [ gl-container-scanning-report.json, gl-dependency-scanning-report.json, "**/gl-sbom-*.cdx.json" ]
-  #dependencies: [$DEPENDS_ON]
-  before_script:
-  - export VERSION=$(cat $CI_PROJECT_DIR/.version)
-  - export CS_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
-  - echo "Using version $VERSION"
+    GIT_STRATEGY: fetch           # checkout needed to read the module .trivyignore
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_USERNAME: "$CI_REGISTRY_USERNAME"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    # Calling job MUST set: SCAN_IMAGE (full ref with tag), COMPONENT_NAME.
+    # Calling job MAY set:  IGNOREFILE (defaults to core/.trivyignore below).
+    IGNOREFILE: "core/.trivyignore"
+  cache:
+    key: "trivy-db"               # SINGLE shared key — one DB copy on the runner host disk
+    paths: [ ".trivycache/" ]
+    policy: pull-push
+  allow_failure: true             # Phase 1; flip to false in Phase 2
   script:
-  - gtcs scan
-
-.dependency_check_frontend_template:
-  image: "registry.gitlab.com/gitlab-org/security-products/analyzers/npm-audit:1.4.0"
-  variables:
-    TOOL: yarn
+    # 1) readable table in the job log (never blocks)
+    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
+        --format table --exit-code 0 "$SCAN_IMAGE"
+    # 2) full JSON as a downloadable artifact (CE: no Security Dashboard)
+    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --ignore-unfixed --format json --output "trivy-$COMPONENT_NAME.json"
+        --exit-code 0 "$SCAN_IMAGE"
+    # 3) CycloneDX SBOM (audit/compliance)
+    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --format cyclonedx --output "sbom-$COMPONENT_NAME.cdx.json"
+        --exit-code 0 "$SCAN_IMAGE"
+    # 4) GATE (Phase 2): only CRITICAL/HIGH with a fix available
+    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --ignore-unfixed --severity CRITICAL,HIGH --exit-code 1 "$SCAN_IMAGE"
   artifacts:
-    reports:
-      dependency_scanning: gl-dependency-scanning-report.json
+    when: always
+    expire_in: 1 week
     paths:
-    - gl-dependency-scanning-report.json
-  rules:
-  - if: '$CI_COMMIT_BRANCH == "main"'
-    changes:
-    - js-packages/**/*
-  - if: '$CI_COMMIT_TAG'
-    changes:
-    - js-packages/**/*
+      - "trivy-*.json"
+      - "sbom-*.cdx.json"
+
+# ========================================
+# TRIVY FS SCAN (Issue #2004)
+# Replaces OWASP dependency-check (Java), pip-audit (Python) and the
+# npm-audit analyzer (.dependency_check_frontend_template, JS).
+#
+# trivy fs reads the manifests/lockfiles STATICALLY — it does NOT run
+# `yarn install` or `pip install`. This kills the npm-audit segfault that
+# forced the DS_PROJECT_DIR workaround, and cuts disk pressure on the runner.
+#
+# The calling job sets SCAN_DIR (dir to scan) and IGNOREFILE. Rules live on
+# the calling job (the parent quality.yaml jobs), not here.
+# ========================================
+.trivy-fs-scan:
+  stage: dependency-check
+  image:
+    name: $TRIVY_IMAGE
+    entrypoint: [ "" ]
+  variables:
+    GIT_STRATEGY: fetch
+    TRIVY_NO_PROGRESS: "true"
+    SCAN_DIR: "."
+    IGNOREFILE: "core/.trivyignore"
+  cache:
+    key: "trivy-db"               # same shared key as the image scans
+    paths: [ ".trivycache/" ]
+    policy: pull-push
+  allow_failure: true             # Phase 1; flip to false in Phase 2
+  script:
+    - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
+        --format table --exit-code 0 "$SCAN_DIR"
+    - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --scanners vuln --format json --output "trivy-deps-$CI_JOB_NAME_SLUG.json"
+        --exit-code 0 "$SCAN_DIR"
+    # GATE (Phase 2)
+    - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
+        --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH
+        --exit-code 1 "$SCAN_DIR"
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths: [ "trivy-deps-*.json" ]
+
+# ========================================
+# TRIVY IMAGE SCAN — BACKEND JAVA bridge (Issue #2004)
+# Drop-in replacement for the old .container-scanning-template: the 9 backend
+# child jobs keep `extends:` + their single `REGISTRY_COMPONENT_NAME` variable
+# and only need to switch the extends target to this. It resolves the version
+# from the `.version` artifact (built by the module's Build job) and feeds
+# SCAN_IMAGE/COMPONENT_NAME into .trivy-image-scan. IGNOREFILE stays the shared
+# core/.trivyignore (suppressions are per-reactor, not per-module).
+# ========================================
+.trivy-image-scan-backend:
+  extends: .trivy-image-scan
+  before_script:
+    - export VERSION=$(cat $CI_PROJECT_DIR/.version)
+    - export COMPONENT_NAME="$REGISTRY_COMPONENT_NAME"
+    - export SCAN_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Scanning image $SCAN_IMAGE"
+
+# ========================================
+# TRIVY IMAGE SCAN — FRONTEND bridge (Issue #2004)
+# Frontend (nginx) child jobs resolve the version from version.env (produced by
+# the `Fetch version` job) and pass REGISTRY_COMPONENT_NAME. Adds --image-src
+# remote so trivy reads the image manifest/layers straight from the registry
+# instead of materialising the whole image on the runner disk (ENOSPC guard).
+# ========================================
+.trivy-image-scan-frontend:
+  extends: .trivy-image-scan
+  variables:
+    GIT_STRATEGY: fetch
+    TRIVY_NO_PROGRESS: "true"
+    TRIVY_USERNAME: "$CI_REGISTRY_USERNAME"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    IGNOREFILE: "core/.trivyignore"
+    TRIVY_IMAGE_SRC: "remote"      # read from registry, don't pull the full image to disk
+  before_script:
+    - source version.env
+    - export COMPONENT_NAME="$REGISTRY_COMPONENT_NAME"
+    - export SCAN_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Scanning image $SCAN_IMAGE"
+
+# ========================================
+# TRIVY IMAGE SCAN — AI/PYTHON bridge (Issue #2004)
+# AI child jobs resolve the version from config.env (produced by `Fetch config`,
+# = $OPENK9_VERSION from python_modules_config.txt) and pass
+# REGISTRY_COMPONENT_NAME. The calling job keeps its own `needs:` (Fetch config
+# + the relevant Build job — they differ per module, e.g. embedding OA vs ST).
+# ========================================
+.trivy-image-scan-ai:
+  extends: .trivy-image-scan
+  before_script:
+    - source $CI_PROJECT_DIR/config.env
+    - export COMPONENT_NAME="$REGISTRY_COMPONENT_NAME"
+    - export SCAN_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Scanning image $SCAN_IMAGE"
+
+# ========================================
+# TRIVY IMAGE SCAN — CONNECTORS bridge (Issue #2004)
+# Connectors resolve the version the SAME way their Build job does:
+#   - on main/N.N.x: $VERSION from config.env (= $OPENK9_VERSION)
+#   - on a tag:      ${CI_COMMIT_TAG#v}
+# This FIXES the latent bug where the old scan used ${CI_COMMIT_TAG#v} on main
+# (empty tag → scanned an image ref with an empty tag). The calling job MUST set
+# REGISTRY_COMPONENT_NAME and keep its own `needs:` (Fetch config + its Build).
+# ========================================
+.trivy-image-scan-connectors:
+  extends: .trivy-image-scan
+  before_script:
+    - source $CI_PROJECT_DIR/config.env
+    - if [ -n "$CI_COMMIT_TAG" ]; then export VERSION="${CI_COMMIT_TAG#v}"; fi
+    - export COMPONENT_NAME="$REGISTRY_COMPONENT_NAME"
+    - export SCAN_IMAGE="$CI_REGISTRY_NAME/openk9/$REGISTRY_COMPONENT_NAME:$VERSION"
+    - echo "Scanning image $SCAN_IMAGE"
 
 # ========================================
 # TEMPLATE: .restart_job_template (UPDATED)

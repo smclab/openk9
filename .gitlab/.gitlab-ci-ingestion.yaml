@@ -40,12 +40,21 @@ Build Verifier Ingestion:
 
 # SCANNING JOB
 Container Scanning Ingestion:
-  dependencies: [ Build Ingestion image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build Ingestion image", release line
+  # builds "Build Ingestion Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build Ingestion image
+    artifacts: true
+    optional: true
+  - job: Build Ingestion Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-ingestion"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Ingestion:

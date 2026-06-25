@@ -55,12 +55,21 @@ Build Verifier File-Manager:
 
 # SCANNING JOB
 Container Scanning File-Manager:
-  dependencies: [ Build File-Manager Image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build File-Manager Image", release line
+  # builds "Build File-Manager Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build File-Manager Image
+    artifacts: true
+    optional: true
+  - job: Build File-Manager Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-file-manager"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart File-Manager:

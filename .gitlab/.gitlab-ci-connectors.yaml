@@ -368,20 +368,19 @@ Build Minio Connector image:
 #               CONTAINER SCANNING WEB CONNECTOR              #
 ###############################################################
 Container Scanning Web Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build Web Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-web-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-web-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/openk9-crawler/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/openk9-crawler/connector/**/*
   - if: '$CI_COMMIT_TAG'
@@ -390,20 +389,19 @@ Container Scanning Web Connector:
 #               CONTAINER SCANNING EMAIL CONNECTOR            #
 ###############################################################
 Container Scanning Email Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build Email Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-email-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-email-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/email-connector/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/email-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
@@ -412,20 +410,19 @@ Container Scanning Email Connector:
 #             CONTAINER SCANNING DATABASE CONNECTOR           #
 ###############################################################
 Container Scanning Database Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build Database Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-database-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-database-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/database-connector/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/database-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
@@ -434,20 +431,19 @@ Container Scanning Database Connector:
 #             CONTAINER SCANNING YOUTUBE CONNECTOR            #
 ###############################################################
 Container Scanning YouTube Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build YouTube Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-youtube-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-youtube-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/youtube-connector/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/youtube-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
@@ -456,20 +452,19 @@ Container Scanning YouTube Connector:
 #             CONTAINER SCANNING GITLAB CONNECTOR             #
 ###############################################################
 Container Scanning GitLab Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build GitLab Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-gitlab-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-gitlab-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/gitlab-connector/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/gitlab-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'
@@ -478,20 +473,19 @@ Container Scanning GitLab Connector:
 #             CONTAINER SCANNING MINIO CONNECTOR             #
 ###############################################################
 Container Scanning Minio Connector:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
+  extends: .trivy-image-scan-connectors
   needs:
+  - job: Fetch config
+    artifacts: true
   - "Build Minio Connector image"
-  before_script:
-  # Strip the leading 'v': the image was pushed as :2026.1.0, not :v2026.1.0
-  - export VERSION=${CI_COMMIT_TAG#v}
-  script:
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-minio-connector:$VERSION"
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
+    changes:
+    - connectors/minio-connector/connector/**/*
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
     changes:
     - connectors/minio-connector/connector/**/*
   - if: '$CI_COMMIT_TAG'

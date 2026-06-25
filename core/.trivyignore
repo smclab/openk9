@@ -18,3 +18,65 @@ CVE-2026-45292 exp:2026-07-06
 #     with an open-ended version range (*) and no fixed-version boundary. Trivy therefore matches the
 #     transitive 3.1.x artifact pulled in by the upstream Quarkus BOM regardless of the applied fix.
 CVE-2025-14969
+
+# =====================================================================================
+# Migrated from core/dependency-check-suppressions.xml (OWASP) — Issue #2004.
+# OWASP suppressed per JAR filePath + CVE; Trivy suppresses per CVE id only. Each CVE
+# below maps 1:1 to the package named in its comment, so a global suppression here is
+# equivalent in practice. Permanent false positives have no exp:; mitigations that
+# should be re-checked carry exp: (re-evaluate before the next openk9 release).
+# Keep the XML file until both tools have run in parallel for one sprint and every
+# entry is confirmed translated.
+# =====================================================================================
+
+# CVE-2021-43858, CVE-2023-28433, CVE-2023-28434, CVE-2021-21287, CVE-2018-1000538,
+# CVE-2020-11012, CVE-2021-21362, CVE-2021-21390, CVE-2022-35919 — quarkus-minio 3.7.7
+# False positive: scanner flags quarkus-minio 3.7.7 as the vulnerable minio:minio 3.7.7.
+# Our dependency tree uses the non-vulnerable transitive minio:minio 8.5.x.
+CVE-2021-43858
+CVE-2023-28433
+CVE-2023-28434
+CVE-2021-21287
+CVE-2018-1000538
+CVE-2020-11012
+CVE-2021-21362
+CVE-2021-21390
+CVE-2022-35919
+
+# CVE-2022-2403 — openshift-model 7.1.0
+# False positive: server-side OpenShift Container Platform vulnerability, not a flaw in
+# the Fabric8 client / openshift-model JAR. The scanner attributed a platform CVE to a
+# client library; the only fix is upgrading the OCP cluster.
+CVE-2022-2403
+
+# CVE-2025-46548 — pekko-management 1.1.1 (_2.13)
+# Severity downgraded Medium→Low: applies to the Pekko Management port, exposed only
+# internally inside the k8s cluster network, not from the public internet. Scheduled as
+# low-priority tech debt.
+CVE-2025-46548 exp:2026-09-23
+
+# CVE-2025-15104, CVE-2023-1932 — quarkus-hibernate-validator / -spi / smallrye-config-validator
+# Not applicable: SSRF affects Nu Html Checker (validator.nu). We use Hibernate Validator
+# for bean validation only; nu.validator is not present in the dependency tree.
+CVE-2025-15104
+CVE-2023-1932
+
+# CVE-2022-41904 — lit-element-state 1.7.0
+# Not applicable: affects Element iOS (Matrix mobile client). This is a Java/Quarkus
+# backend with no Matrix protocol integration.
+CVE-2022-41904
+
+# CVE-2025-68161 — log4j-api 2.24.3, log4j-jul 2.21.0
+# Not applicable: affects the Log4j Socket Appender (network log transmission). We log
+# only to local files and stdout; the Socket Appender is not configured.
+CVE-2025-68161
+
+# CVE-2025-67735 — netty-transport / -codec / -native-epoll 4.1.128.Final (and variants)
+# Not applicable: no public Netty-based HTTP endpoints, only headless/internal ones. No
+# attacker-controlled request URIs reach HttpRequestEncoder, so CRLF injection / request
+# smuggling is not feasible in the current architecture.
+CVE-2025-67735 exp:2026-09-23
+
+# CVE-2024-34517 — quarkus-neo4j 5.0.0
+# Not applicable: the neo4j module was removed and is not in any deployment artifact.
+CVE-2024-34517

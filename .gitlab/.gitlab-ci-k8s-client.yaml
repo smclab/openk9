@@ -40,12 +40,21 @@ Build Verifier K8S-Client:
 
 # SCANNING JOB
 Container Scanning K8S-Client:
-  dependencies: [ Build K8S-Client Image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build K8S-Client Image", release line
+  # builds "Build K8S-Client Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build K8S-Client Image
+    artifacts: true
+    optional: true
+  - job: Build K8S-Client Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-k8s-client"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart K8S-Client:

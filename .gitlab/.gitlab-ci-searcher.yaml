@@ -42,12 +42,21 @@ Build Verifier Searcher:
 
 # SCANNING JOB
 Container Scanning Searcher:
-  dependencies: [ Build Searcher Image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build Searcher Image", release line
+  # builds "Build Searcher Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build Searcher Image
+    artifacts: true
+    optional: true
+  - job: Build Searcher Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-searcher"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Searcher:

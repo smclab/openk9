@@ -117,19 +117,22 @@ Build Verifier:
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  dependencies:
-  - "Fetch version"
-  - "Build Talk-To"
-  script:
-  - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-talk-to:$VERSION"
+  extends: .trivy-image-scan-frontend
+  # needs: Fetch version (always) + the build that ran in this context —
+  # "Build Talk-To" on main, "Build Talk-To Release" on the release line (optional:true).
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Talk-To
+    optional: true
+  - job: Build Talk-To Release
+    optional: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-talk-to"
   rules:
-    # Run only on Main/Tag
+    # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -234,23 +237,7 @@ Trigger Restart Talk-To Release:
     - !reference [.rules:child-restart-release, rules]
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Talk-To:
-  stage: dependency-check
-  needs:
-  - job: Fetch version
-  - job: Build Verifier
-    optional: true
-  extends: .dependency_check_frontend_template
-  allow_failure: true
-  variables:
-    # Tell the npm-audit analyzer to scan only the talk-to subdirectory,
-    # NOT the monorepo root. Without this, the analyzer finds the root yarn.lock
-    # and tries to install ALL workspace packages → segfault in yarn 1.22.5
-    DS_PROJECT_DIR: "js-packages/talk-to"
-  script:
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - /analyzer run
+# Moved to the parent pipeline (.gitlab/ci/quality.yaml → "Trivy FS JS"). See Issue #2004.
 ######################## COPY TO DOCKER HUB ########################
 # Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.

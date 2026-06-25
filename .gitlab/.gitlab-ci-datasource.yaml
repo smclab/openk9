@@ -42,12 +42,22 @@ Build Verifier Datasource:
 
 # SCANNING JOB
 Container Scanning Datasource:
-  dependencies: [ Build Datasource image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): on main the image is built by "Build Datasource image",
+  # on the release line by "Build Datasource Release". optional:true makes the scan
+  # wait for whichever exists in the current pipeline and pull its .version artifact.
+  needs:
+  - job: Build Datasource image
+    artifacts: true
+    optional: true
+  - job: Build Datasource Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-datasource"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Datasource:

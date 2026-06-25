@@ -116,19 +116,22 @@ Build Verifier:
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  dependencies:
-  - "Fetch version"
-  - "Build Search Frontend"
-  script:
-  - source version.env # Loads version from artifact
-  - echo "Scanning image $CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION"
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-search-frontend:$VERSION" # Scans the image
+  extends: .trivy-image-scan-frontend
+  # needs: Fetch version (always) + the build that ran in this context —
+  # "Build Search Frontend" on main, "...Release" on the release line (optional:true).
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Search Frontend
+    optional: true
+  - job: Build Search Frontend Release
+    optional: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-search-frontend"
   rules:
-    # Run only on Main
+    # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -259,23 +262,7 @@ Trigger Restart Search Frontend Release:
     - !reference [.rules:child-restart-release, rules]
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Search Frontend:
-  stage: dependency-check
-  needs:
-  - job: Fetch version
-  - job: Build Verifier
-    optional: true
-  extends: .dependency_check_frontend_template
-  allow_failure: true
-  variables:
-    # Point the npm-audit analyzer to the specific subdirectory.
-    # Without this, it finds the root yarn.lock and installs the entire
-    # workspace → segfault in yarn 1.22.5 inside the analyzer container.
-    DS_PROJECT_DIR: "js-packages/search-frontend"
-  script:
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - /analyzer run
+# Moved to the parent pipeline (.gitlab/ci/quality.yaml → "Trivy FS JS"). See Issue #2004.
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
