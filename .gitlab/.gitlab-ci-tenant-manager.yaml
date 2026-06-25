@@ -39,12 +39,21 @@ Build Verifier Tenant-Manager:
 
 # SCANNING JOB
 Container Scanning Tenant-Manager:
-  dependencies: [ Build Tenant-Manager image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build Tenant-Manager image", release line
+  # builds "Build Tenant-Manager Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build Tenant-Manager image
+    artifacts: true
+    optional: true
+  - job: Build Tenant-Manager Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tenant-manager"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Tenant-Manager:

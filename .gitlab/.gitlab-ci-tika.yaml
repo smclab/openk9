@@ -39,12 +39,21 @@ Build Verifier Tika:
 
 # SCANNING JOB
 Container Scanning Tika:
-  dependencies: [ Build Tika ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build Tika", release line builds
+  # "Build Tika Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build Tika
+    artifacts: true
+    optional: true
+  - job: Build Tika Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tika"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 # RESTART JOB
 Trigger Restart Tika:

@@ -1,0 +1,12 @@
+# .trivyignore — per-module Trivy suppressions (Issue #2004)
+#
+# Suppress a CVE only with a documented rationale and (for non-permanent cases)
+# an expiry. Format — comment block + the CVE id on its own LAST line:
+#
+#   # CVE-YYYY-NNNNN — <package:version>
+#   # Reason: <why not exploitable / why no fix yet>
+#   # Re-evaluate by <month YYYY> or when <dep> is upgraded
+#   CVE-YYYY-NNNNN exp:YYYY-MM-DD
+#
+# Rules: exp: is mandatory for temporary suppressions (max ~90 days); permanent
+# false positives may omit it. Never suppress without a reason (rejected in review).

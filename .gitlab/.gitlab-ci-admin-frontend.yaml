@@ -122,19 +122,23 @@ Build Verifier:
 
 ######################## CONTAINER SCANNING ########################
 Container Scanning:
-  stage: container-scanning
-  image: $CS_ANALYZER_IMAGE
-  allow_failure: true
-  dependencies:
-  - "Fetch version"
-  - "Build Admin Frontend"
-  script:
-  - source version.env
-  - echo "=== Scanning image $CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION ==="
-  - gtcs scan --image "$CI_REGISTRY_NAME/openk9/openk9-admin-ui:$VERSION"
+  extends: .trivy-image-scan-frontend
+  # needs: Fetch version (always, gives version.env) + the build that ran in this
+  # context — "Build Admin Frontend" on main, "Build Admin Frontend Release" on the
+  # release line. optional:true on both builds → scan waits for whichever exists.
+  needs:
+  - job: Fetch version
+    artifacts: true
+  - job: Build Admin Frontend
+    optional: true
+  - job: Build Admin Frontend Release
+    optional: true
+  variables:
+    REGISTRY_COMPONENT_NAME: "openk9-admin-ui"
   rules:
-    # Run only on Main/Tag
+    # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 ######################## TRIGGER RESTART ########################
 Trigger Restart:
@@ -240,28 +244,10 @@ Trigger Restart Admin Frontend Release:
     - !reference [.rules:child-restart-release, rules]
 
 ####################### DEPENDENCY CHECK #######################
-Dependency Check Admin UI:
-  stage: dependency-check
-  needs:
-  - job: Fetch version
-  - job: Build Verifier
-    optional: true
-  extends: .dependency_check_frontend_template
-  allow_failure: true
-  variables:
-    # Point the npm-audit analyzer to the specific subdirectory.
-    # Without this, it finds the root yarn.lock and installs the entire
-    # workspace → segfault in yarn 1.22.5 inside the analyzer container.
-    DS_PROJECT_DIR: "js-packages/admin-ui"
-  script:
-  - yarn config set registry https://registry.npmjs.org/
-  - yarn config set network-timeout 600000
-  - /analyzer run
-# Rules for dependency check are in the template, which uses standard logic.
-# But template uses 'changes' filter. It should be fine as parent already filtered changes.
-# Actually, the template .dependency_check_frontend_template also has rules!
-# We might need to override them if they are too restrictive, but they seem to be Main/MR based.
-# Let's keep it as extended.
+# Moved to the parent pipeline (.gitlab/ci/quality.yaml → "Trivy FS JS").
+# trivy fs scans the whole js-packages/ tree statically (no yarn install),
+# so the old per-component npm-audit jobs + the DS_PROJECT_DIR segfault
+# workaround are gone (Issue #2004).
 
 ######################## COPY TO DOCKER HUB ########################
 # Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.

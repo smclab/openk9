@@ -47,12 +47,21 @@ Build Verifier API-Gateway:
 
 #################### CONTAINER SCANNING API-GATEWAY ####################
 Container Scanning API-Gateway:
-  dependencies: [ Build API-Gateway Image ]
-  extends: .container-scanning-template
+  extends: .trivy-image-scan-backend
+  # needs (not dependencies): main builds "Build API-Gateway Image", release line
+  # builds "Build API-Gateway Release". optional:true → scan waits for whichever runs.
+  needs:
+  - job: Build API-Gateway Image
+    artifacts: true
+    optional: true
+  - job: Build API-Gateway Release
+    artifacts: true
+    optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-api-gateway"
   rules:
     - !reference [.rules:child-deploy-main-tag, rules]
+    - !reference [.rules:child-deploy-release, rules]
 
 ##################### TRIGGER RESTART API-GATEWAY #####################
 Trigger Restart API-Gateway:
