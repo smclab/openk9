@@ -105,12 +105,18 @@ Trigger Restart API-Gateway Release:
     - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
-# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy API-Gateway to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-api-gateway"
   needs:
+    # Resolve the version from whichever build job exists in this context:
+    #   main → Build API-Gateway Image; branch N.N.x / tag vN.N.N → Build API-Gateway Release.
+    - job: Build API-Gateway Image
+      artifacts: true
+      optional: true
     - job: Build API-Gateway Release
-      artifacts: true  # downloads .version file — needed to resolve the image tag
+      artifacts: true
+      optional: true

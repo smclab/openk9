@@ -585,8 +585,13 @@ variables:
 # ========================================
 # TEMPLATE: .skopeo-copy-to-dockerhub
 # ========================================
-# Runs ONLY on a release tag (vN.N.N) — never on main/branch pushes,
-# so only clean (non-SNAPSHOT) images are published to Docker Hub.
+# Runs on main, release branches (N.N.x) and release tags (vN.N.N).
+# Each context publishes the image with its own version as-is:
+#   - main         → <version>-SNAPSHOT  (dev line, e.g. 2026.1.0-SNAPSHOT)
+#   - branch N.N.x → <version>-SNAPSHOT  (bugfix line, e.g. 2026.1.1-SNAPSHOT)
+#   - tag vN.N.N   → clean <version>     (e.g. 2026.1.1)
+# SNAPSHOT lines never collide: main stays on .0-SNAPSHOT, the release branch
+# increments the patch (.1, .2, ...), so each Docker Hub tag is distinct.
 #
 # Purpose: after the build job pushes the image to the internal registry,
 # this job copies it to Docker Hub (smclab/*) WITHOUT rebuilding.
@@ -638,7 +643,10 @@ variables:
       --dest-creds "$DOCKER_HUB_USER:$DOCKER_HUB_PASSWORD" \
       "$SRC" "$DST"
   rules:
-  # Only on a release tag (vN.N.N). NOT on main/branch pushes: those produce
-  # -SNAPSHOT images that must never reach Docker Hub — only clean tagged
-  # releases are published. The v is stripped elsewhere so the image stays N.N.N.
+  # Publish to Docker Hub on three mutually-exclusive contexts:
+  #   - main         → dev SNAPSHOT
+  #   - branch N.N.x → bugfix SNAPSHOT
+  #   - tag vN.N.N   → clean release
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
   - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
