@@ -94,13 +94,14 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
-			validateFields(dto.getFieldIds(), fieldsList);
+			validateDocTypeFieldIds(dto.getFieldIds(), fieldsList);
 			transientHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
 				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
 				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					validateDocTypeFieldIds(dto.getMatchedFieldIds(), matchedFieldsList);
 					transientHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return Uni.createFrom().item(transientHighlight);
 				});
@@ -116,13 +117,14 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
-			validateFields(dto.getFieldIds(), fieldsList);
+			validateDocTypeFieldIds(dto.getFieldIds(), fieldsList);
 			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
 				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
 				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					validateDocTypeFieldIds(dto.getMatchedFieldIds(), matchedFieldsList);
 					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return session.merge(newStateHighlight);
 				});
@@ -140,13 +142,14 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
 
 		return fieldsUniList.flatMap(fieldsList -> {
-			validateFields(dto.getFieldIds(), fieldsList);
+			validateDocTypeFieldIds(dto.getFieldIds(), fieldsList);
 			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
 
 			if (dto.getMatchedFieldIds() != null) {
 				var matchedFieldsUniList = docTypeFieldService.findByIds(dto.getMatchedFieldIds());
 
 				return matchedFieldsUniList.flatMap(matchedFieldsList -> {
+					validateDocTypeFieldIds(dto.getMatchedFieldIds(), matchedFieldsList);
 					newStateHighlight.setMatchedFields(new LinkedHashSet<>(matchedFieldsList));
 					return session.merge(newStateHighlight);
 				});
@@ -170,7 +173,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	 * @param persistedFields the fields found on the database
 	 * @throws InvalidDocTypeFieldSetException if any requested id does not exist on the database
 	 */
-	private static void validateFields(
+	private static void validateDocTypeFieldIds(
 		Set<Long> requestedIds, List<DocTypeField> persistedFields) {
 
 		var persistedIds = persistedFields == null
