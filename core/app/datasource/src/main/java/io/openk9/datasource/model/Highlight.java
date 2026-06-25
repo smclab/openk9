@@ -38,7 +38,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -78,14 +77,14 @@ public class Highlight extends K9Entity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "boundary_scanner")
-	private BoundaryScannerType boundaryScanner = BoundaryScannerType.SENTENCE;
+	private BoundaryScannerType boundaryScanner;
 
 	@Column(name = "boundary_chars")
 	private String boundaryChars;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragmenter")
-	private FragmenterType fragmenter = FragmenterType.SPAN;
+	private FragmenterType fragmenter;
 
 	@ValidPositiveInteger
 	@Column(name = "fragment_size")
@@ -97,7 +96,7 @@ public class Highlight extends K9Entity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "fragments_order")
-	private OrderType order = OrderType.NONE;
+	private OrderType order;
 
 	@JoinTable(
 		name = "highlight_matched_fields",
@@ -126,18 +125,4 @@ public class Highlight extends K9Entity {
 		NONE, SCORE
 	}
 
-	public void setOrder(OrderType order) {
-		this.order =
-			Objects.requireNonNullElse(order, OrderType.NONE);
-	}
-
-	public void setFragmenter(FragmenterType fragmenter) {
-		this.fragmenter =
-			Objects.requireNonNullElse(fragmenter, FragmenterType.SPAN);
-	}
-
-	public void setBoundaryScanner(BoundaryScannerType boundaryScanner) {
-		this.boundaryScanner =
-			Objects.requireNonNullElse(boundaryScanner, BoundaryScannerType.SENTENCE);
-	}
 }
