@@ -46,4 +46,9 @@ RUN rm /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh \
 COPY ./js-packages/tenant-ui/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 USER 1001
+# The slim nginx base declares ENTRYPOINT ["/docker-entrypoint.sh"] but does
+# not ship that script, so the inherited entrypoint fails at container start.
+# Reset it and run nginx directly via CMD (the static nginx.conf needs none of
+# the /docker-entrypoint.d template processing).
+ENTRYPOINT []
 CMD ["nginx", "-g", "daemon off;"]
