@@ -229,14 +229,21 @@ Trigger Restart Agentic Rag Release:
     - !reference [.rules:child-restart-release, rules]
 
 ######################## COPY TO DOCKER HUB ########################
-# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Agentic Rag to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-agentic-rag-module"
   needs:
+    # Fetch config runs in every context and carries config.env (the image version).
     - job: Fetch config
       artifacts: true  # downloads config.env — needed to resolve the image version
+    # Order gate only (image already on the registry): wait for whichever build ran.
+    #   main / branch N.N.x → Build Agentic Rag Image; tag vN.N.N → Build Agentic Rag Release.
+    - job: Build Agentic Rag Image
+      artifacts: false
+      optional: true
     - job: Build Agentic Rag Release
-      artifacts: false  # image is on the registry, no artifacts needed from this job
+      artifacts: false
+      optional: true

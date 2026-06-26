@@ -264,14 +264,21 @@ Dependency Check Admin UI:
 # Let's keep it as extended.
 
 ######################## COPY TO DOCKER HUB ########################
-# Runs only on Git tag. Copies the already-built image to Docker Hub without rebuilding.
+# Runs on main, release branch (N.N.x) and tag. Copies the already-built image to Docker Hub without rebuilding.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 Copy Admin UI to DockerHub:
   extends: .skopeo-copy-to-dockerhub
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-admin-ui"
   needs:
+    # Fetch version runs in every context and carries version.env (the image version).
     - job: Fetch version
       artifacts: true  # downloads version.env — needed to resolve the image version
+    # Order gate only (image already on the registry): wait for whichever build ran.
+    #   main / branch N.N.x → Build Admin Frontend; tag vN.N.N → Build Admin Frontend Release.
+    - job: Build Admin Frontend
+      artifacts: false
+      optional: true
     - job: Build Admin Frontend Release
-      artifacts: false  # image is on the registry, no artifacts needed from this job
+      artifacts: false
+      optional: true

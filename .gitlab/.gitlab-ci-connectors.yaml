@@ -497,8 +497,10 @@ Container Scanning Minio Connector:
   - if: '$CI_COMMIT_TAG'
 
 ######################## COPY TO DOCKER HUB ########################
-# Runs only on Git tag. Copies the already-built image from the internal
-# registry to Docker Hub (smclab/*) without rebuilding.
+# Runs on main, release branch (N.N.x) and tag. Copies the already-built image from the
+# internal registry to Docker Hub (smclab/*) without rebuilding.
+# On main / branch the rule mirrors the Build job's `changes:` so only a connector that
+# was actually rebuilt in this commit is republished; on a tag all six are copied.
 # See .skopeo-copy-to-dockerhub in .gitlab-templates.yaml for full details.
 
 Copy Web Connector to DockerHub:
@@ -511,6 +513,12 @@ Copy Web Connector to DockerHub:
     - job: Build Web Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/openk9-crawler/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/openk9-crawler/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Email Connector to DockerHub:
@@ -523,6 +531,12 @@ Copy Email Connector to DockerHub:
     - job: Build Email Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/email-connector/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/email-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Database Connector to DockerHub:
@@ -535,6 +549,12 @@ Copy Database Connector to DockerHub:
     - job: Build Database Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/database-connector/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/database-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy YouTube Connector to DockerHub:
@@ -547,6 +567,12 @@ Copy YouTube Connector to DockerHub:
     - job: Build YouTube Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/youtube-connector/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/youtube-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy GitLab Connector to DockerHub:
@@ -559,6 +585,12 @@ Copy GitLab Connector to DockerHub:
     - job: Build GitLab Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/gitlab-connector/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/gitlab-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 Copy Minio Connector to DockerHub:
@@ -571,4 +603,10 @@ Copy Minio Connector to DockerHub:
     - job: Build Minio Connector image
       artifacts: false
   rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes:
+        - connectors/minio-connector/connector/**/*
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes:
+        - connectors/minio-connector/connector/**/*
     - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'

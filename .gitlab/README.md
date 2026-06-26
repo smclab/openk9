@@ -273,7 +273,15 @@ The target namespace is configured by the global variable `RELEASE_TARGET_ENV` i
 
 ### Docker Hub Publication (Skopeo)
 
-The `Copy <X> to DockerHub` jobs use the `.skopeo-copy-to-dockerhub` template (in `.gitlab-templates.yaml`) to copy images from the internal registry to `docker.io/smclab/*` **without** rebuilding. The rule fires only on `^v\d+\.\d+\.\d+$`, so only clean tagged releases reach Docker Hub — never `-SNAPSHOT` images from `main` or `N.N.x` pushes.
+The `Copy <X> to DockerHub` jobs use the `.skopeo-copy-to-dockerhub` template (in `.gitlab-templates.yaml`) to copy images from the internal registry to `docker.io/smclab/*` **without** rebuilding. The rule fires on three mutually-exclusive contexts, each publishing the image with its own version as-is:
+
+| Context | Docker Hub tag | Example |
+| --- | --- | --- |
+| Push to `main` | `<version>-SNAPSHOT` (dev line) | `2026.1.0-SNAPSHOT` |
+| Push to release branch `N.N.x` | `<version>-SNAPSHOT` (bugfix line) | `2026.1.1-SNAPSHOT` |
+| Tag `vN.N.N` | clean `<version>` | `2026.1.1` |
+
+SNAPSHOT tags never collide across the two lines: `main` stays on the `.0-SNAPSHOT` while the release branch increments the patch (`.1`, `.2`, …), so each Docker Hub tag is distinct. The version is resolved from the build artifact (`.version` / `config.env` / `version.env`); each `Copy` job depends (via `optional` needs) on whichever build job exists in the current context. Connector `Copy` jobs additionally inherit the Build job's `changes:` filter on `main`/`N.N.x`, so only a connector actually rebuilt in that commit is republished.
 
 ### Porting Branches
 
