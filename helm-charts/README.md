@@ -806,19 +806,20 @@ oc -n openk9 create secret generic postgresql-tenant-manager-secret \
   --from-literal=password=openk9
 ```
 
-Then create a Secret with the password for tenant manager admin user.
+Then create a Secret with the OpenK9 admin password. This single Secret is
+shared by the tenant-manager and the agentic-rag-module.
 
 For Kubernetes execute:
 
 ```bash
-kubectl -n openk9 create secret generic tenant-manager-admin-password \
+kubectl -n openk9 create secret generic openk9-admin-password \
   --from-literal=password=openk9
 ```
 
 For Openshift execute:
 
 ```bash
-oc -n openk9 create secret generic tenant-manager-admin-password-secret \
+oc -n openk9 create secret generic openk9-admin-password \
   --from-literal=password=openk9
 ```
 

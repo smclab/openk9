@@ -104,7 +104,7 @@ timeoutDb:
 
 ## Security configuration
 security:
-  adminPasswordSecretName: "tenant-manager-admin-password"
+  adminPasswordSecretName: "openk9-admin-password"
   adminPasswordSecretKey: "password"
 
 ## Rabbitmq configuration
