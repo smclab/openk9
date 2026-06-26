@@ -49,8 +49,13 @@ _load_env_file
 GROUP="${GROUP:-openk9}"
 TAG="${TAG:-local-dev}"
 OPENK9_REGISTRY="${OPENK9_REGISTRY:-}"
-# Override per build chatbot build: SEARCH_FRONTEND_BUILD_ENV=chatbot ./k9.sh build search-frontend
-# (or set SEARCH_FRONTEND_BUILD_ENV in .env)
+# search-frontend feature flags.
+#
+# SEARCH_FRONTEND_BUILD_ENV 
+# The preset is just the starting point. Either flag can be overridden
+# independently on the command line to obtain any combination, e.g.:
+#   ./k9.sh build search-frontend chatbot=disable generative=enable
+# Accepted values: enable/disable (also on/off, true/false, yes/no, 1/0).
 SEARCH_FRONTEND_BUILD_ENV="${SEARCH_FRONTEND_BUILD_ENV:-oauth2}"
 PROFILES=()
 
@@ -74,6 +79,17 @@ _info()  { printf '%s\n'         "$*"; }
 _ok()    { printf '\033[0;32m✓\033[0m %s\n' "$*"; }
 _warn()  { printf '\033[0;33m!\033[0m %s\n' "$*" >&2; }
 _error() { printf '\033[0;31m✗\033[0m %s\n' "$*" >&2; }
+
+# Normalise a human-friendly boolean (enable/disable, on/off, ...) to
+# "true"/"false". Returns non-zero on an unrecognised value so callers
+# can report the offending input.
+_to_bool() {
+    case "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" in
+        enable|enabled|on|true|yes|1)   echo "true" ;;
+        disable|disabled|off|false|no|0) echo "false" ;;
+        *) return 1 ;;
+    esac
+}
 
 # --- Profile to compose file mapping ---
 
@@ -122,6 +138,8 @@ parse_args() {
     SERVICES=()
     OTHER_ARGS=()
     PLATFORM_OVERRIDE=""
+    CHATBOT_OVERRIDE=""
+    GENERATIVE_OVERRIDE=""
 
     for arg in "$@"; do
         if [ "$arg" == "--build" ] || [ "$arg" == "-b" ]; then
@@ -155,6 +173,18 @@ parse_args() {
                 echo "Valid profiles: $VALID_PROFILES"
                 exit 1
             fi
+        elif [[ "$arg" == chatbot=* || "$arg" == --chatbot=* ]]; then
+            local cval="${arg#*=}"
+            CHATBOT_OVERRIDE="$(_to_bool "$cval")" || {
+                _error "invalid chatbot value '$cval' (use enable/disable)"
+                exit 1
+            }
+        elif [[ "$arg" == generative=* || "$arg" == --generative=* ]]; then
+            local gval="${arg#*=}"
+            GENERATIVE_OVERRIDE="$(_to_bool "$gval")" || {
+                _error "invalid generative value '$gval' (use enable/disable)"
+                exit 1
+            }
         elif [[ "$arg" == -* ]]; then
             OTHER_ARGS+=("$arg")
         else
@@ -162,6 +192,16 @@ parse_args() {
             SERVICES+=("$arg")
         fi
     done
+
+    # Resolve the effective search-frontend feature flags: start from the
+    # SEARCH_FRONTEND_BUILD_ENV preset, then let explicit chatbot=/generative=
+    # overrides win so any combination is reachable.
+    case "$SEARCH_FRONTEND_BUILD_ENV" in
+        chatbot) SF_CHATBOT=true;  SF_GENERATIVE=true ;;
+        *)       SF_CHATBOT=false; SF_GENERATIVE=false ;;
+    esac
+    [ -n "$CHATBOT_OVERRIDE" ]    && SF_CHATBOT="$CHATBOT_OVERRIDE"
+    [ -n "$GENERATIVE_OVERRIDE" ] && SF_GENERATIVE="$GENERATIVE_OVERRIDE"
 
     # Apply platform override after all args are parsed, so it wins
     # over the host-architecture auto-detection at the top of the script.
@@ -255,12 +295,25 @@ build_core() {
     )
 
     echo "--- Building Frontend Services ---"
-    docker build --pull --platform "$JIB_PLATFORM" --build-arg "BUILD_ENV=$SEARCH_FRONTEND_BUILD_ENV" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+    build_search_frontend
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
     build_tenant_ui
 
     echo "--- Building Connectors ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-web-connector:$TAG" -f connectors/openk9-crawler/connector/Dockerfile connectors/openk9-crawler/connector
+}
+
+build_search_frontend() {
+    # Shared by build_core and build_single so the chatbot/generative
+    # feature flags are wired identically in both paths. SF_CHATBOT and
+    # SF_GENERATIVE are resolved in parse_args from the build env preset
+    # plus any chatbot=/generative= overrides.
+    docker build --pull --platform "$JIB_PLATFORM" \
+        --build-arg "BUILD_ENV=$SEARCH_FRONTEND_BUILD_ENV" \
+        --build-arg "CHATBOT_ENABLED=$SF_CHATBOT" \
+        --build-arg "GENERATIVE_ENABLED=$SF_GENERATIVE" \
+        -t "$GROUP/openk9-search-frontend:$TAG" \
+        -f js-packages/search-frontend/Dockerfile .
 }
 
 build_tenant_ui() {
@@ -356,7 +409,7 @@ build_single() {
                 "-pl" "app/$service")
             ;;
         search-frontend)
-            docker build --pull --platform "$JIB_PLATFORM" --build-arg "BUILD_ENV=$SEARCH_FRONTEND_BUILD_ENV" -t "$GROUP/openk9-search-frontend:$TAG" -f js-packages/search-frontend/Dockerfile .
+            build_search_frontend
             ;;
         admin-ui)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-admin-ui:$TAG" -f js-packages/admin-ui/Dockerfile .
@@ -598,6 +651,10 @@ Options:
   --platform=ARCH        Override build platform: amd64 or arm64
   --with=PROFILE         Enable a compose profile (repeatable)
   -a, --all              Shorthand for --with all profiles
+  chatbot=VALUE          (search-frontend) Toggle the chatbot widget:
+                         enable/disable (also on/off, true/false)
+  generative=VALUE       (search-frontend) Toggle the generative widget:
+                         enable/disable (also on/off, true/false)
   --skip-shared-core     Skip Java core shared dependencies
                          (root POM, hibernate-rx-multitenancy,
                          common/, client/, tenant-events/).
@@ -691,6 +748,11 @@ Examples:
   ./k9.sh build --with=gen-ai         Build core + AI images
   ./k9.sh build --all                 Build all profiles
   ./k9.sh build datasource --tag=test Build datasource with custom tag
+  ./k9.sh build search-frontend chatbot=disable generative=enable
+                                      Build search-frontend with the chatbot
+                                      widget off and the generative widget on
+  SEARCH_FRONTEND_BUILD_ENV=chatbot ./k9.sh build search-frontend
+                                      Build search-frontend with both widgets on
   ./k9.sh restart datasource --build  Rebuild and restart datasource
   ./k9.sh logs datasource             Follow datasource logs
   ./k9.sh down                        Stop containers (keep volumes)

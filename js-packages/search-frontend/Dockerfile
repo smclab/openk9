@@ -1,6 +1,8 @@
 # Stage 1 - build environment
 FROM node:20-alpine AS react-build
 ARG BUILD_ENV=oauth2
+ARG CHATBOT_ENABLED
+ARG GENERATIVE_ENABLED
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
@@ -36,7 +38,12 @@ WORKDIR /app/js-packages/search-frontend
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
 # DISABLE_NEW_JSX_TRANSFORM=true fixes compatibility issues with older craco/babel configurations
 
-RUN if [ "$BUILD_ENV" = "oauth2" ]; then \
+RUN if [ -n "$CHATBOT_ENABLED" ] || [ -n "$GENERATIVE_ENABLED" ]; then \
+  echo "Building with explicit flags: chatbot=${CHATBOT_ENABLED:-false}, generative=${GENERATIVE_ENABLED:-false}..." && \
+  CI=false NODE_ENV=production \
+  CHATBOT_ENABLED="${CHATBOT_ENABLED:-false}" GENERATIVE_ENABLED="${GENERATIVE_ENABLED:-false}" \
+  yarn build:flags; \
+  elif [ "$BUILD_ENV" = "oauth2" ]; then \
   echo "Building for OAuth2 environment..." && \
   CI=false NODE_ENV=production yarn build:oauth2; \
   elif [ "$BUILD_ENV" = "chatbot" ]; then \
