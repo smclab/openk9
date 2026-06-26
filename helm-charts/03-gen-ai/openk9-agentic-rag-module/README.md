@@ -105,7 +105,7 @@ Openk9 Agentic Rag Module requires an admin password to protect privileged endpo
 
 | Name                                | Description                                                       | Value                                  |
 | ----------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
-| `security.adminPasswordSecretName`  | Name of the Secret holding the admin password                     | `agentic-rag-module-admin-password`    |
+| `security.adminPasswordSecretName`  | Name of the Secret holding the admin password                     | `openk9-admin-password`    |
 | `security.adminPasswordSecretKey`   | Key inside the Secret containing the password                     | `password`                             |
 
 The referenced Secret must exist in the release namespace before deploying the chart.

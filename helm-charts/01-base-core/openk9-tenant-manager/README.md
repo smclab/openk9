@@ -120,7 +120,7 @@ Openk9 Tenant Manager uses HTTP Basic Authentication as the default authenticati
 
 | Name                                | Description                                                        | Value                            |
 | ----------------------------------- | ------------------------------------------------------------------ | -------------------------------- |
-| `security.adminPasswordSecretName`  | K8s Secret name containing the admin password for Basic Auth       | `tenant-manager-admin-password`  |
+| `security.adminPasswordSecretName`  | K8s Secret name containing the admin password for Basic Auth       | `openk9-admin-password`  |
 | `security.adminPasswordSecretKey`   | Key within the Secret holding the password                         | `password`                       |
 
 The password is injected as the `OPENK9_SECURITY_ADMIN_PASSWORD` environment variable.

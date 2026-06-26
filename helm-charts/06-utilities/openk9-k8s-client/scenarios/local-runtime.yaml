@@ -3,7 +3,7 @@ image:
   registry: ""
   name: smclab/openk9-k8s-client
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.0"
+  tag: ""
 
 ## Quarkus configuration
 quarkus:

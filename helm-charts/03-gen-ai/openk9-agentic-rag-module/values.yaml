@@ -69,7 +69,7 @@ opensearch:
 
 ## Security configuration
 security:
-  adminPasswordSecretName: "agentic-rag-module-admin-password"
+  adminPasswordSecretName: "openk9-admin-password"
   adminPasswordSecretKey: "password"
 
 ## Logging configuration
