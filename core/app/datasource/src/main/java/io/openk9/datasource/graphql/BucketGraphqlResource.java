@@ -162,7 +162,7 @@ public class BucketGraphqlResource {
 		  - `highlight`: The linked Highlight.
 		""")
 	@Mutation
-	public Uni<Tuple2<Bucket, Highlight>> bindHighlight(
+	public Uni<Tuple2<Bucket, Highlight>> bindHighlightToBucket(
 		@Id long bucketId, @Id long highlightId) {
 		return bucketService.bindHighlight(bucketId, highlightId);
 	}
