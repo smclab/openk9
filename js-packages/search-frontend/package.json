@@ -49,6 +49,7 @@
     "build:embeddable:dev": "vite build --config vite/embeddable.dev.ts",
     "build:oauth2": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=false VITE_GENERATIVE_ENABLED=false vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
     "build:chatbot": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=true VITE_GENERATIVE_ENABLED=true vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
+    "build:flags": "vite build --config vite/embeddable.prod.ts && cross-env VITE_CHATBOT_ENABLED=${CHATBOT_ENABLED:-false} VITE_GENERATIVE_ENABLED=${GENERATIVE_ENABLED:-false} vite build --config vite/standalone.prod.ts --mode production && rollup -c && cp public/* dist/",
     "preview": "vite preview --config vite/standalone.dev.ts",
     "lint": "eslint --ext js,ts,tsx src",
     "format": "prettier --list-different --write \"{scripts,src}/**/*.{js,md,tsx,ts,html,json}\"",
