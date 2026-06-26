@@ -42,6 +42,7 @@ Read more about compatibility matrix on Github.
     - [Minio](#minio)
     - [File Manager](#file-manager)
     - [Tika](#tika)
+    - [Docling Processor](#docling-processor)
 
     
 ## Prerequisites
@@ -1507,6 +1508,68 @@ oc -n openk9 port-forward svc/openk9-tika 8080:8080
 ```
 
 Access to console using url "http://localhost:8080/q/health". If status is UP service is OK.
+
+
+### Docling Processor
+
+Docling Processor is the component delegated to convert binaries coming from external data sources into Markdown. It is developed wrapping [Docling](https://github.com/docling-project/docling) and depends on the File Manager (to download binaries) and the Datasource.
+
+#### Main Configurations
+
+Edit your local yaml file to overwrite main configurations and configure Docling Processor to run correctly in your cluster.
+
+Following are main configurations to edit:
+
+```bash
+## Docling Processor image
+image:
+  name: smclab/openk9-docling-processor
+## Http service port
+service:
+  port: 5000
+## OpenK9 services configuration
+openk9:
+  fileManager:
+    host: "openk9-file-manager"
+    port: 8080
+  datasource:
+    host: "openk9-datasource"
+    port: 8080
+```
+
+For advanced configurations read [README.md](./02-file-handling/openk9-docling-processor/README.md) inside Docling Processor chart folder.
+
+Now you can install the Docling Processor.
+
+For Kubernetes execute:
+
+```bash
+helm upgrade -i docling-processor 02-file-handling/openk9-docling-processor -n openk9 -f 02-file-handling/openk9-docling-processor/scenarios/local-runtime.yaml
+```
+
+For Openshift execute:
+
+```bash
+helm upgrade -i docling-processor 02-file-handling/openk9-docling-processor -n openk9 -f 02-file-handling/openk9-docling-processor/scenarios/local-crc.yaml
+```
+
+#### Verify Installation
+
+Expose the http interface on the host PC and use health endpoint to verify status of component.
+
+For Kubernetes execute:
+
+```bash
+kubectl -n openk9 port-forward svc/openk9-docling-processor 5000:5000
+```
+
+For Openshift execute:
+
+```bash
+oc -n openk9 port-forward svc/openk9-docling-processor 5000:5000
+```
+
+Access to console using url "http://localhost:5000/health". If response is `{"status": "UP"}` service is OK.
 
 
 ## Connectors
