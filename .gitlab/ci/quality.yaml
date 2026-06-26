@@ -40,6 +40,11 @@
 # Suppressions live in core/.trivyignore (migrated from dependency-check-suppressions.xml).
 # Runs where Java deps can change: main, MR→main, push N.N.x.
 # NOT on tags — a tag is only a version bump, deps are identical to main/N.N.x.
+# --offline-scan is REQUIRED here: the core/ reactor leaves most versions to the
+# remote quarkus-bom (no inline <version>), so without it trivy fetches hundreds
+# of poms from Maven Central on an empty .m2 → HTTP 429 + ~30min runner IP ban.
+# Cost: BOM-managed transitives needing a remote pom are skipped — the per-module
+# image scan covers the real resolved JARs. Do not drop the flag.
 Trivy FS Java:
   extends: .trivy-fs-scan
   variables:
@@ -48,18 +53,18 @@ Trivy FS Java:
     - for d in core vendor; do
         echo "=== trivy fs (table) $d ===";
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
+          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
           --format table --exit-code 0 "$d";
       done
     - for d in core vendor; do
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --format json --output "trivy-deps-java-$d.json"
+          --scanners vuln --offline-scan --format json --output "trivy-deps-java-$d.json"
           --exit-code 0 "$d";
       done
     # GATE (Phase 2): fail if core/ or vendor/ has a fixable CRITICAL/HIGH
     - RC=0; for d in core vendor; do
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH
+          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH
           --exit-code 1 "$d" || RC=1;
       done; exit $RC
   rules:
@@ -119,22 +124,26 @@ Trivy FS Python:
   extends: .trivy-fs-scan
   variables:
     IGNOREFILE: "core/.trivyignore"
+  # --offline-scan kept for parity with the Java/template scans. It is a no-op
+  # for requirements.txt (versions are fully pinned, no remote lookup needed),
+  # but keeps all three trivy fs jobs consistent and immune to any future
+  # manifest that might trigger a remote resolution.
   script:
     - for d in ai-packages enrichers connectors; do
         echo "=== trivy fs (table) $d ===";
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
+          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
           --format table --exit-code 0 "$d";
       done
     - for d in ai-packages enrichers connectors; do
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --format json --output "trivy-deps-python-$d.json"
+          --scanners vuln --offline-scan --format json --output "trivy-deps-python-$d.json"
           --exit-code 0 "$d";
       done
     # GATE (Phase 2): fail if any of the three trees has a fixable CRITICAL/HIGH
     - RC=0; for d in ai-packages enrichers connectors; do
         trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH
+          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH
           --exit-code 1 "$d" || RC=1;
       done; exit $RC
   rules:

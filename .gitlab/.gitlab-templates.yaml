@@ -440,16 +440,23 @@ variables:
     paths: [ ".trivycache/" ]
     policy: pull-push
   allow_failure: true             # Phase 1; flip to false in Phase 2
+  # --offline-scan: never contact remote Maven repos to resolve BOM-managed
+  # versions. Without it, trivy fs on the Java reactor (versions live in the
+  # remote quarkus-bom, not inline) fires hundreds of pom fetches against Maven
+  # Central from an empty .m2 → HTTP 429 + a ~30min IP ban on the runner. The
+  # flag is a no-op for fully-pinned lockfiles (yarn.lock, requirements.txt).
+  # It does NOT disable the vuln-DB download. Trade-off: BOM-managed transitives
+  # that need a remote pom are skipped here — covered by the per-module image scan.
   script:
     - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-        --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
+        --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
         --format table --exit-code 0 "$SCAN_DIR"
     - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-        --scanners vuln --format json --output "trivy-deps-$CI_JOB_NAME_SLUG.json"
+        --scanners vuln --offline-scan --format json --output "trivy-deps-$CI_JOB_NAME_SLUG.json"
         --exit-code 0 "$SCAN_DIR"
     # GATE (Phase 2)
     - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-        --scanners vuln --ignore-unfixed --severity CRITICAL,HIGH
+        --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH
         --exit-code 1 "$SCAN_DIR"
   artifacts:
     when: always
