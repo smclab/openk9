@@ -53,8 +53,29 @@ type ChatbotProps = {
   language?: string;
   tenant?: string;
   callbackAuthorization?: () => string | undefined | null;
+  /**
+   * @deprecated use `numberOfSources` instead (`numberOfSources: 0` hides the
+   * sources, equivalent to `useSource: false`).
+   */
   useSource?: boolean;
+  /**
+   * how many sources to display under each answer. `0` hides the sources block
+   * entirely. When omitted, falls back to `useSource` (deprecated) or `8`.
+   */
+  numberOfSources?: number;
 };
+
+const DEFAULT_NUMBER_OF_SOURCES = 8;
+
+/** resolves the effective sources limit honoring the deprecated `useSource` flag */
+function resolveNumberOfSources(
+  numberOfSources: number | undefined,
+  useSource: boolean | undefined,
+): number {
+  if (numberOfSources !== undefined) return numberOfSources;
+  if (useSource === false) return 0;
+  return DEFAULT_NUMBER_OF_SOURCES;
+}
 
 const Chatbot: React.FC<ChatbotProps> = ({
   icon,
@@ -65,8 +86,13 @@ const Chatbot: React.FC<ChatbotProps> = ({
   language,
   tenant,
   callbackAuthorization,
-  useSource = true,
+  useSource,
+  numberOfSources,
 }) => {
+  const resolvedNumberOfSources = resolveNumberOfSources(
+    numberOfSources,
+    useSource,
+  );
   return (
     <React.Fragment>
       <ThemeProvider theme={themeCustom || defaultThemeK9}>
@@ -78,7 +104,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
             nameChatbot={nameChatbot}
             tenant={tenant}
             callbackAuthorization={callbackAuthorization}
-            useSource={useSource}
+            numberOfSources={resolvedNumberOfSources}
           />
         </LanguageProvider>
       </ThemeProvider>
@@ -93,7 +119,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
   nameChatbot,
   tenant = "",
   callbackAuthorization,
-  useSource,
+  numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
 }) => {
   const [isView, setIsView] = React.useState(false);
   const [welcomeMessageTime, setWelcomeMessageTime] = React.useState("");
@@ -186,7 +212,7 @@ const StructureChatbot: React.FC<ChatbotProps> = ({
             isGenerateMessage={isGenerateMessage}
             messagesEndRef={messagesEndRef}
             nameChatbot={nameChatbot}
-            useSource={useSource}
+            numberOfSources={numberOfSources}
           />
           <Search
             handleSearch={generateResponse}
@@ -317,7 +343,7 @@ const MessageList: React.FC<{
   messagesEndRef: React.RefObject<HTMLDivElement>;
   nameChatbot?: string;
   welcomeMessageTime?: string;
-  useSource?: boolean;
+  numberOfSources?: number;
 }> = ({
   messages,
   icon,
@@ -326,7 +352,7 @@ const MessageList: React.FC<{
   messagesEndRef,
   nameChatbot,
   welcomeMessageTime = "",
-  useSource,
+  numberOfSources = DEFAULT_NUMBER_OF_SOURCES,
 }) => (
   <Box
     className="openk9-message-list-container"
@@ -385,7 +411,8 @@ const MessageList: React.FC<{
               <SingleMessage
                 contentMessage={message.answer}
                 status={message.status}
-                sources={useSource ? message?.sources : []}
+                sources={message?.sources}
+                numberOfSources={numberOfSources}
                 isChatbot={true}
                 timeMessage={responseTime}
                 icon={icon.chatbotIcon}

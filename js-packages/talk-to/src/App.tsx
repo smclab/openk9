@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import "./App.css";
 import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
+import { getNumberOfSources } from "./config/sources";
 import { InitialConversation } from "./components/InitialConversation";
 import { kc } from "./auth/kc";
 import { DocumentPreviewProvider } from "./components/DocumentPreview";
@@ -41,6 +42,7 @@ function App() {
 
 	const isNewChat = messages.length === 0;
 	const client = OpenK9Client();
+	const numberOfSources = getNumberOfSources();
 	const handleSearch = (query: string, retrieveFromUploadedDocumentsParam?: boolean) => {
 		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
 		chatId?.id && generateResponse(query, chatId?.id || "", flag, selectedDatasourceIds);
@@ -179,7 +181,11 @@ function App() {
 									{!isNewChat
 										? messages.map((message, index) => (
 												<React.Fragment key={index}>
-													<MessageCard message={message} isGenerateMessage={isGenerateMessage} />
+													<MessageCard
+														message={message}
+														isGenerateMessage={isGenerateMessage}
+														numberOfSources={numberOfSources}
+													/>
 													{index === messages.length - 1 && <div ref={messagesEndRef} />}
 												</React.Fragment>
 										  ))

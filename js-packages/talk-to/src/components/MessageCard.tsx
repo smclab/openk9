@@ -18,6 +18,7 @@ type Theme = "light" | "dark";
 export function MessageCard({
 	message,
 	isGenerateMessage,
+	numberOfSources = 8,
 	theme = "light",
 }: {
 	message: Message;
@@ -25,6 +26,7 @@ export function MessageCard({
 		isLoading: boolean;
 		id: string;
 	} | null;
+	numberOfSources?: number;
 	theme?: Theme;
 }) {
 	const [copiedSource, setCopiedSource] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function MessageCard({
 	const { t } = useTranslation();
 
 	const sources = message.sources || [];
-	const maxVisibleSources = 8;
+	const maxVisibleSources = numberOfSources;
 	const visibleSources = sources.slice(0, maxVisibleSources);
 	const remainingSources = sources.length - maxVisibleSources;
 
@@ -371,7 +373,7 @@ export function MessageCard({
 				</Box>
 			</Box>
 
-			{sources.length > 0 && (
+			{maxVisibleSources > 0 && sources.length > 0 && (
 				<Box ml={9}>
 					<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 						<Typography variant="body2" color="text.secondary">
