@@ -66,8 +66,14 @@ export function SingleMessage({
   const [showAllSources, setShowAllSources] = useState(false);
   const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
   const maxVisibleSources = numberOfSources;
+  const INITIAL_VISIBLE_SOURCES = 3;
+  // sources kept within the configured cap (the rest is truncated, not reachable)
   const visibleSources = sources.slice(0, maxVisibleSources);
-  const remainingSources = sources.length - maxVisibleSources;
+  // collapsed view shows the first few; the toggle reveals the rest up to the cap
+  const displayedSources = showAllSources
+    ? visibleSources
+    : visibleSources.slice(0, INITIAL_VISIBLE_SOURCES);
+  const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
 
   const copySource = async (source: any) => {
     try {
@@ -84,14 +90,8 @@ export function SingleMessage({
 
     if (newSet.has(url)) {
       newSet.delete(url);
-      if (newSet.size < sources.length) {
-        setShowAllSources(false);
-      }
     } else {
       newSet.add(url);
-      if (newSet.size === sources.length) {
-        setShowAllSources(true);
-      }
     }
 
     setExpandedChips(newSet);
@@ -267,40 +267,34 @@ export function SingleMessage({
                     sx={{ overflowX: "hidden" }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {sources.length} sources
+                      {visibleSources.length} sources
                     </Typography>
-                    <Box
-                      component="button"
-                      onClick={() => {
-                        const newState = !showAllSources;
-                        setShowAllSources(newState);
-
-                        if (newState) {
-                          const allExpanded = new Set(
-                            sources.map((s) => s.url || ""),
-                          );
-                          setExpandedChips(allExpanded);
-                        } else {
-                          setExpandedChips(new Set());
-                        }
-                      }}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.5,
-                        color: "#12518f",
-                        fontSize: "0.75rem",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        "&:hover": { color: "#2782ea" },
-                      }}
-                    >
-                      <VisibilityIcon sx={{ fontSize: "0.75rem" }} />
-                      <Typography variant="caption">
-                        {showAllSources ? "Hide all" : "Show all"}
-                      </Typography>
-                    </Box>
+                    {canToggleSources && (
+                      <Box
+                        component="button"
+                        onClick={() => setShowAllSources((prev) => !prev)}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          color: "#12518f",
+                          fontSize: "0.75rem",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          "&:hover": { color: "#2782ea" },
+                        }}
+                      >
+                        <VisibilityIcon sx={{ fontSize: "0.75rem" }} />
+                        <Typography variant="caption">
+                          {showAllSources
+                            ? "Show less"
+                            : `Show ${
+                                visibleSources.length - INITIAL_VISIBLE_SOURCES
+                              } more`}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
 
                   <Box
@@ -309,7 +303,7 @@ export function SingleMessage({
                     gap={1}
                     sx={{ overflowX: "hidden" }}
                   >
-                    {visibleSources.map((source, index) => {
+                    {displayedSources.map((source, index) => {
                       const typeColors = getTypeColor(source.url || "");
                       return (
                         <Chip
@@ -413,30 +407,6 @@ export function SingleMessage({
                         />
                       );
                     })}
-
-                    {remainingSources > 0 && (
-                      <Chip
-                        label={
-                          <Box display="flex" alignItems="center" gap={0.5}>
-                            <OpenInFullIcon sx={{ fontSize: "0.75rem" }} />
-                            <Typography variant="caption">
-                              +{remainingSources}
-                            </Typography>
-                          </Box>
-                        }
-                        sx={{
-                          backgroundColor:
-                            themeInfo === "light" ? "#f5f5f5" : "#2d2d2d",
-                          color: themeInfo === "light" ? "#616161" : "#b0b0b0",
-                          cursor: "pointer",
-                          "&:hover": {
-                            backgroundColor:
-                              themeInfo === "light" ? "#e0e0e0" : "#404040",
-                          },
-                        }}
-                        size="small"
-                      />
-                    )}
                   </Box>
                 </Box>
               )}

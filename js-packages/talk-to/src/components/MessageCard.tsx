@@ -30,15 +30,18 @@ export function MessageCard({
 	theme?: Theme;
 }) {
 	const [copiedSource, setCopiedSource] = useState<string | null>(null);
-	const [showSourcesModal, setShowSourcesModal] = useState(false);
 	const [showAllSources, setShowAllSources] = useState(false);
 	const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
 	const { t } = useTranslation();
 
 	const sources = message.sources || [];
 	const maxVisibleSources = numberOfSources;
+	const INITIAL_VISIBLE_SOURCES = 3;
+	// sources kept within the configured cap (the rest is truncated, not reachable)
 	const visibleSources = sources.slice(0, maxVisibleSources);
-	const remainingSources = sources.length - maxVisibleSources;
+	// collapsed view shows the first few; the toggle reveals the rest up to the cap
+	const displayedSources = showAllSources ? visibleSources : visibleSources.slice(0, INITIAL_VISIBLE_SOURCES);
+	const canToggleSources = visibleSources.length > INITIAL_VISIBLE_SOURCES;
 
 	const copySource = async (source: any) => {
 		try {
@@ -55,14 +58,8 @@ export function MessageCard({
 
 		if (newSet.has(url)) {
 			newSet.delete(url);
-			if (newSet.size < sources.length) {
-				setShowAllSources(false);
-			}
 		} else {
 			newSet.add(url);
-			if (newSet.size === sources.length) {
-				setShowAllSources(true);
-			}
 		}
 
 		setExpandedChips(newSet);
@@ -377,40 +374,32 @@ export function MessageCard({
 				<Box ml={9}>
 					<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 						<Typography variant="body2" color="text.secondary">
-							{t(sources.length === 1 ? "one-source" : "selected-sources", { count: sources.length })}
+							{t(visibleSources.length === 1 ? "one-source" : "selected-sources", { count: visibleSources.length })}
 						</Typography>
-						<Box
-							component="button"
-							onClick={() => {
-								const newState = !showAllSources;
-								setShowAllSources(newState);
-
-								if (newState) {
-									const allExpanded = new Set(sources.map((s) => s.url || ""));
-									setExpandedChips(allExpanded);
-								} else {
-									setExpandedChips(new Set());
-								}
-							}}
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: 0.5,
-								color: "#12518f",
-								fontSize: "0.75rem",
-								background: "none",
-								border: "none",
-								cursor: "pointer",
-								"&:hover": { color: "#2782ea" },
-							}}
-						>
-							<VisibilityIcon sx={{ fontSize: "0.75rem" }} />
-							<Typography variant="caption">{t(showAllSources ? "hide-all-sources" : "show-all-sources")}</Typography>
-						</Box>
+						{canToggleSources && (
+							<Box
+								component="button"
+								onClick={() => setShowAllSources((prev) => !prev)}
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									gap: 0.5,
+									color: "#12518f",
+									fontSize: "0.75rem",
+									background: "none",
+									border: "none",
+									cursor: "pointer",
+									"&:hover": { color: "#2782ea" },
+								}}
+							>
+								<VisibilityIcon sx={{ fontSize: "0.75rem" }} />
+								<Typography variant="caption">{t(showAllSources ? "hide-all-sources" : "show-all-sources")}</Typography>
+							</Box>
+						)}
 					</Box>
 
 					<Box display="flex" flexWrap="wrap" gap={1}>
-						{visibleSources.map((source, index) => {
+						{displayedSources.map((source, index) => {
 							const typeColors = getTypeColor(source.source || source.url || "");
 							return (
 								<Chip
@@ -497,27 +486,6 @@ export function MessageCard({
 								/>
 							);
 						})}
-
-						{remainingSources > 0 && (
-							<Chip
-								label={
-									<Box display="flex" alignItems="center" gap={0.5}>
-										<OpenInFullIcon sx={{ fontSize: "0.75rem" }} />
-										<Typography variant="caption">+{remainingSources}</Typography>
-									</Box>
-								}
-								onClick={() => setShowSourcesModal(true)}
-								sx={{
-									backgroundColor: theme === "light" ? "#f5f5f5" : "#2d2d2d",
-									color: theme === "light" ? "#616161" : "#b0b0b0",
-									cursor: "pointer",
-									"&:hover": {
-										backgroundColor: theme === "light" ? "#e0e0e0" : "#404040",
-									},
-								}}
-								size="small"
-							/>
-						)}
 					</Box>
 				</Box>
 			)}
