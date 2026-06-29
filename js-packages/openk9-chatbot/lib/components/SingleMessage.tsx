@@ -29,6 +29,7 @@ export function SingleMessage({
   nameChatbot,
   status,
   sources,
+  numberOfSources = 8,
   themeInfo = "light",
 }: {
   contentMessage: string;
@@ -39,6 +40,7 @@ export function SingleMessage({
   nameChatbot?: string;
   status?: "END" | "CHUNK" | "ERROR";
   sources?: Source[];
+  numberOfSources?: number;
   themeInfo?: Theme;
 }) {
   sources = sources || [];
@@ -48,7 +50,7 @@ export function SingleMessage({
   const [copiedSource, setCopiedSource] = useState<string | null>(null);
   const [showAllSources, setShowAllSources] = useState(false);
   const [expandedChips, setExpandedChips] = useState<Set<string>>(new Set());
-  const maxVisibleSources = 8;
+  const maxVisibleSources = numberOfSources;
   const visibleSources = sources.slice(0, maxVisibleSources);
   const remainingSources = sources.length - maxVisibleSources;
 
@@ -240,7 +242,7 @@ export function SingleMessage({
                   </FocusableSection>
                 )}
               </ParagraphMessage>
-              {sources.length > 0 && (
+              {maxVisibleSources > 0 && sources.length > 0 && (
                 <Box mb={6}>
                   <Box
                     display="flex"
