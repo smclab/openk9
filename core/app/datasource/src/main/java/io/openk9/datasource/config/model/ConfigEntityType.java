@@ -19,6 +19,35 @@ package io.openk9.datasource.config.model;
 
 import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
+import io.openk9.datasource.model.AclMapping;
+import io.openk9.datasource.model.Analyzer;
+import io.openk9.datasource.model.Annotator;
+import io.openk9.datasource.model.Autocomplete;
+import io.openk9.datasource.model.Autocorrection;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.CharFilter;
+import io.openk9.datasource.model.Datasource;
+import io.openk9.datasource.model.DocType;
+import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.model.DocTypeTemplate;
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.model.EnrichItem;
+import io.openk9.datasource.model.EnrichPipeline;
+import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.Language;
+import io.openk9.datasource.model.LargeLanguageModel;
+import io.openk9.datasource.model.PluginDriver;
+import io.openk9.datasource.model.QueryAnalysis;
+import io.openk9.datasource.model.QueryParserConfig;
+import io.openk9.datasource.model.RAGConfiguration;
+import io.openk9.datasource.model.Rule;
+import io.openk9.datasource.model.SearchConfig;
+import io.openk9.datasource.model.Sorting;
+import io.openk9.datasource.model.SuggestionCategory;
+import io.openk9.datasource.model.Tab;
+import io.openk9.datasource.model.TokenFilter;
+import io.openk9.datasource.model.TokenTab;
+import io.openk9.datasource.model.Tokenizer;
 import io.openk9.datasource.model.dto.base.AnalyzerDTO;
 import io.openk9.datasource.model.dto.base.AnnotatorDTO;
 import io.openk9.datasource.model.dto.base.AutocompleteDTO;
@@ -49,10 +78,14 @@ import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
 
 /**
  * Registry of the configuration entity types that can travel in a
- * {@link ConfigPackage}, paired with the typed DTO used as {@code attributes}
- * (ADR-0003 §3c). The existing base DTO is reused where complete; a dedicated
- * {@code *Representation} is used where the entity has no DTO (join entities)
- * or the base DTO is incomplete.
+ * {@link ConfigPackage}, paired with the JPA entity class and the typed DTO used
+ * as {@code attributes} The existing base DTO is reused where
+ * complete; a dedicated {@code *Representation} is used where the entity has no
+ * DTO (join entities) or the base DTO is incomplete.
+ * <p>
+ * This is the single source of "what is exportable": the exporter derives the
+ * reference graph from these entity classes, and a guard test asserts every
+ * persistent entity is either listed here or annotated {@code @ExportIgnore}.
  * <p>
  * Runtime entities ({@code DataIndex}, {@code Scheduler}, {@code FileResource},
  * {@code Translation*}) are intentionally absent: configuration is portable,
@@ -60,40 +93,47 @@ import io.openk9.datasource.model.dto.request.CreateRAGConfigurationDTO;
  */
 public enum ConfigEntityType {
 
-	BUCKET(BucketDTO.class),
-	DATASOURCE(DatasourceDTO.class),
-	PLUGIN_DRIVER(PluginDriverDTO.class),
-	ENRICH_PIPELINE(EnrichPipelineDTO.class),
-	ENRICH_PIPELINE_ITEM(EnrichPipelineItemRepresentation.class),
-	ENRICH_ITEM(EnrichItemDTO.class),
-	DOC_TYPE(DocTypeDTO.class),
-	DOC_TYPE_FIELD(DocTypeFieldDTO.class),
-	DOC_TYPE_TEMPLATE(DocTypeTemplateDTO.class),
-	ANALYZER(AnalyzerDTO.class),
-	CHAR_FILTER(CharFilterDTO.class),
-	TOKEN_FILTER(TokenFilterDTO.class),
-	TOKENIZER(TokenizerDTO.class),
-	ACL_MAPPING(AclMappingRepresentation.class),
-	QUERY_ANALYSIS(QueryAnalysisDTO.class),
-	ANNOTATOR(AnnotatorDTO.class),
-	RULE(RuleDTO.class),
-	QUERY_PARSER_CONFIG(QueryParserConfigDTO.class),
-	SEARCH_CONFIG(SearchConfigDTO.class),
-	EMBEDDING_MODEL(EmbeddingModelDTO.class),
-	LARGE_LANGUAGE_MODEL(LargeLanguageModelDTO.class),
-	LANGUAGE(LanguageDTO.class),
-	RAG_CONFIGURATION(CreateRAGConfigurationDTO.class),
-	SUGGESTION_CATEGORY(SuggestionCategoryDTO.class),
-	TAB(TabDTO.class),
-	SORTING(SortingDTO.class),
-	TOKEN_TAB(TokenTabDTO.class),
-	AUTOCOMPLETE(AutocompleteDTO.class),
-	AUTOCORRECTION(AutocorrectionDTO.class);
+	BUCKET(Bucket.class, BucketDTO.class),
+	DATASOURCE(Datasource.class, DatasourceDTO.class),
+	PLUGIN_DRIVER(PluginDriver.class, PluginDriverDTO.class),
+	ENRICH_PIPELINE(EnrichPipeline.class, EnrichPipelineDTO.class),
+	ENRICH_PIPELINE_ITEM(
+		EnrichPipelineItem.class, EnrichPipelineItemRepresentation.class),
+	ENRICH_ITEM(EnrichItem.class, EnrichItemDTO.class),
+	DOC_TYPE(DocType.class, DocTypeDTO.class),
+	DOC_TYPE_FIELD(DocTypeField.class, DocTypeFieldDTO.class),
+	DOC_TYPE_TEMPLATE(DocTypeTemplate.class, DocTypeTemplateDTO.class),
+	ANALYZER(Analyzer.class, AnalyzerDTO.class),
+	CHAR_FILTER(CharFilter.class, CharFilterDTO.class),
+	TOKEN_FILTER(TokenFilter.class, TokenFilterDTO.class),
+	TOKENIZER(Tokenizer.class, TokenizerDTO.class),
+	ACL_MAPPING(AclMapping.class, AclMappingRepresentation.class),
+	QUERY_ANALYSIS(QueryAnalysis.class, QueryAnalysisDTO.class),
+	ANNOTATOR(Annotator.class, AnnotatorDTO.class),
+	RULE(Rule.class, RuleDTO.class),
+	QUERY_PARSER_CONFIG(QueryParserConfig.class, QueryParserConfigDTO.class),
+	SEARCH_CONFIG(SearchConfig.class, SearchConfigDTO.class),
+	EMBEDDING_MODEL(EmbeddingModel.class, EmbeddingModelDTO.class),
+	LARGE_LANGUAGE_MODEL(LargeLanguageModel.class, LargeLanguageModelDTO.class),
+	LANGUAGE(Language.class, LanguageDTO.class),
+	RAG_CONFIGURATION(RAGConfiguration.class, CreateRAGConfigurationDTO.class),
+	SUGGESTION_CATEGORY(SuggestionCategory.class, SuggestionCategoryDTO.class),
+	TAB(Tab.class, TabDTO.class),
+	SORTING(Sorting.class, SortingDTO.class),
+	TOKEN_TAB(TokenTab.class, TokenTabDTO.class),
+	AUTOCOMPLETE(Autocomplete.class, AutocompleteDTO.class),
+	AUTOCORRECTION(Autocorrection.class, AutocorrectionDTO.class);
 
+	private final Class<?> entityType;
 	private final Class<?> attributesType;
 
-	ConfigEntityType(Class<?> attributesType) {
+	ConfigEntityType(Class<?> entityType, Class<?> attributesType) {
+		this.entityType = entityType;
 		this.attributesType = attributesType;
+	}
+
+	public Class<?> getEntityType() {
+		return entityType;
 	}
 
 	public Class<?> getAttributesType() {

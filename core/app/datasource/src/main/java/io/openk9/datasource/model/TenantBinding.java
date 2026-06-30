@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +36,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@ExportIgnore
 public class TenantBinding extends K9Entity {
 
 	@Column(name = "virtual_host", nullable = false, unique = true)

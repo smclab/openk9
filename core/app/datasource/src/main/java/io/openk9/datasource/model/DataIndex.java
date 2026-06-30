@@ -34,6 +34,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
@@ -64,6 +65,7 @@ import org.hibernate.type.SqlTypes;
 		where d.id = :datasourceId
 		"""
 )
+@ExportIgnore
 public class DataIndex extends K9Entity {
 
 	public static final String DATA_INDICES_WITH_DOC_TYPES_BY_DATASOURCE =

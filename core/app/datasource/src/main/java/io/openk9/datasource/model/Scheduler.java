@@ -35,6 +35,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.OneToOne;
 
+import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -156,6 +157,7 @@ import org.hibernate.type.SqlTypes;
 		query = "from Scheduler s where s.status in " + Scheduler.RUNNING_STATES
 	),
 })
+@ExportIgnore
 public class Scheduler extends K9Entity {
 
 	public static final String FETCH_BY_ID = "Scheduler.fetchSchedulerById";

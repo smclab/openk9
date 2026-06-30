@@ -17,6 +17,7 @@
 
 package io.openk9.datasource.model;
 
+import io.openk9.datasource.model.util.ExportIgnore;
 import io.openk9.datasource.model.util.K9Entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
@@ -49,6 +50,7 @@ import java.util.Objects;
 )
 @Getter
 @Setter
+@ExportIgnore
 public class Translation extends K9Entity {
 
 	@Embedded
