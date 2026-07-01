@@ -69,6 +69,7 @@ export const menuItems: MenuItem[] = [
       { label: "Filters", path: "/suggestion-categories", IsChildren: true, value: "suggestion-categories" },
       { label: "Tabs", path: "/tabs", IsChildren: true, value: "tabs" },
       { label: "Token Tabs", path: "/token-tabs", IsChildren: true, value: "token-tabs" },
+      { label: "Sortings", path: "/sortings", IsChildren: true, value: "sortings" },
       { label: "Autocorrections", path: "/autocorrections", IsChildren: true, value: "autocorrections" },
       { label: "Autocompletes", path: "/autocompletes", IsChildren: true, value: "autocompletes" },
     ],

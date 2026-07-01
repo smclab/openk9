@@ -31,7 +31,13 @@ import {
   TooltipDescription,
   useForm,
 } from "../../components/Form";
-import { TabQuery, useCreateOrUpdateTabMutation, useTabQuery, useTabTokensQuery } from "../../graphql-generated";
+import {
+  TabQuery,
+  useCreateOrUpdateTabMutation,
+  useSortingsQuery,
+  useTabQuery,
+  useTabTokensQuery,
+} from "../../graphql-generated";
 import { formatQueryToBE, formatQueryToFE } from "../../utils";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { ReturnUserTabData } from "./gql";
@@ -107,10 +113,11 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
     fetchPolicy: "network-only",
   });
 
-  const { tokenTab } = useTabData({
+  const { tokenTab, sorting } = useTabData({
     tabId,
     tabQuery: tabTokenTab.data,
     associatedTabQuery: associatedTabQuery.data?.tab?.tokenTabs?.edges,
+    associatedSortingQuery: associatedTabQuery.data?.tab?.sortings?.edges,
   });
   const form = useForm({
     initialValues: React.useMemo(
@@ -119,8 +126,9 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
         description: "",
         priority: 0,
         tokenTabIds: tokenTab.associated || [],
+        sortingIds: sorting.associated || [],
       }),
-      [tokenTab],
+      [tokenTab, sorting],
     ),
     originalValues: tabQuery.data?.tab,
     isLoading: tabQuery.loading || createOrUpdateTabMutation.loading,
@@ -131,6 +139,9 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           ...data,
           tokenTabIds: formatQueryToBE({
             information: data.tokenTabIds || [],
+          }) as number[],
+          sortingIds: formatQueryToBE({
+            information: data.sortingIds || [],
           }) as number[],
         },
       });
@@ -146,6 +157,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
           { key: "description" },
           { key: "priority" },
           { key: "tokenTabIds", label: "Token Tabs" },
+          { key: "sortingIds", label: "Sortings" },
         ],
         label: "Recap Tab",
       },
@@ -153,6 +165,7 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
     valueOverride: {
       tokenTabIds:
         form.inputProps("tokenTabIds").value?.map((tokentab, index) => ({ [index + 1]: tokentab.label })) || [],
+      sortingIds: form.inputProps("sortingIds").value?.map((sort, index) => ({ [index + 1]: sort.label })) || [],
     },
   });
   return (
@@ -216,6 +229,32 @@ export function SaveTab({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | 
                         }}
                       />
                     </TooltipDescription>
+                    <TooltipDescription informationDescription="Sortings associated to current Tab">
+                      <MultiAssociationCustomQuery
+                        list={{
+                          ...sorting,
+                          associated: form.inputProps("sortingIds").value,
+                        }}
+                        createPath={{ path: "/sorting/new", entity: "sortings" }}
+                        disabled={page === 1 || view === "view"}
+                        isRecap={page === 1}
+                        titleAssociation="Association with sortings"
+                        onSelect={({ items, isAdd }) => {
+                          const data = form.inputProps("sortingIds").value;
+
+                          if (isAdd) {
+                            const updatedData = [
+                              ...data,
+                              ...items.filter((item) => !data.some((d) => d.value === item.value)),
+                            ];
+                            form.inputProps("sortingIds").onChange(updatedData);
+                          } else {
+                            const updatedData = data.filter((dat) => !items.some((item) => item.value === dat.value));
+                            form.inputProps("sortingIds").onChange(updatedData);
+                          }
+                        }}
+                      />
+                    </TooltipDescription>
                   </div>
                 ),
                 page: 0,
@@ -249,6 +288,7 @@ const useTabData = ({
   tabId,
   tabQuery,
   associatedTabQuery,
+  associatedSortingQuery,
 }: {
   tabId: string;
   tabQuery: TabQuery | undefined;
@@ -263,10 +303,26 @@ const useTabData = ({
   } | null)[]
   | null
   | undefined;
+  associatedSortingQuery:
+  | ({
+    __typename?: "DefaultEdge_Sorting";
+    node?: {
+      __typename?: "Sorting";
+      name?: string | null;
+      id?: string | null;
+    } | null;
+  } | null)[]
+  | null
+  | undefined;
 }): ReturnUserTabData => {
   const skipRecoveryAllInformation = tabId !== "new";
 
   const TabTokenQuery = useTabTokensQuery({
+    skip: skipRecoveryAllInformation,
+    fetchPolicy: "cache-and-network",
+  });
+
+  const SortingsAllQuery = useSortingsQuery({
     skip: skipRecoveryAllInformation,
     fetchPolicy: "cache-and-network",
   });
@@ -282,8 +338,17 @@ const useTabData = ({
           informationId: associatedTabQuery,
         }),
       },
+      sorting: {
+        unassociated: formatQueryToFE({
+          informationId: SortingsAllQuery.data?.totalSortings?.edges || tabQuery?.tab?.sortings?.edges,
+        }),
+        isLoading: SortingsAllQuery.loading,
+        associated: formatQueryToFE({
+          informationId: associatedSortingQuery,
+        }),
+      },
     }),
-    [tabQuery, TabTokenQuery, associatedTabQuery],
+    [tabQuery, TabTokenQuery, associatedTabQuery, SortingsAllQuery, associatedSortingQuery],
   );
 
   return { ...data };

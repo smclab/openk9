@@ -2136,6 +2136,7 @@ export type Mutation = {
   deleteRAGConfiguration?: Maybe<RagConfiguration>;
   deleteRule?: Maybe<Rule>;
   deleteSearchConfig?: Maybe<SearchConfig>;
+  deleteSorting?: Maybe<Sorting>;
   deleteSortingTranslation?: Maybe<Tuple2_String_String>;
   deleteSuggestionCategory?: Maybe<SuggestionCategory>;
   deleteSuggestionCategoryTranslation?: Maybe<Tuple2_String_String>;
@@ -2204,6 +2205,7 @@ export type Mutation = {
   searchConfigWithQueryParsers?: Maybe<Response_SearchConfig>;
   sortEnrichItems?: Maybe<EnrichPipeline>;
   sorting?: Maybe<Response_Sorting>;
+  sortingWithDocTypeField?: Maybe<Response_Sorting>;
   suggestionCategory?: Maybe<Response_SuggestionCategory>;
   suggestionCategoryWithDocTypeField?: Maybe<Response_SuggestionCategory>;
   tab?: Maybe<Response_Tab>;
@@ -2796,6 +2798,12 @@ export type MutationDeleteSearchConfigArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteSortingArgs = {
+  sortingId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeleteSortingTranslationArgs = {
   key?: InputMaybe<Scalars['String']>;
   language?: InputMaybe<Scalars['String']>;
@@ -3174,6 +3182,14 @@ export type MutationSortingArgs = {
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
   sortingDTO?: InputMaybe<SortingDtoInput>;
+};
+
+
+/** Mutation root */
+export type MutationSortingWithDocTypeFieldArgs = {
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+  sortingWithDocTypeFieldDTO?: InputMaybe<SortingWithDocTypeFieldDtoInput>;
 };
 
 
@@ -4929,6 +4945,15 @@ export enum SortingType {
   Desc = 'DESC'
 }
 
+export type SortingWithDocTypeFieldDtoInput = {
+  defaultSort: Scalars['Boolean'];
+  description?: InputMaybe<Scalars['String']>;
+  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+  name: Scalars['String'];
+  priority: Scalars['Float'];
+  type: SortingType;
+};
+
 /** Subscription root */
 export type Subscription = {
   __typename?: 'Subscription';
@@ -5101,6 +5126,7 @@ export type TabWithTokenTabsDtoInput = {
   description?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   priority: Scalars['Int'];
+  sortingIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
 };
 
@@ -6290,6 +6316,41 @@ export type QueryParserConfigQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type QueryParserConfigQuery = { __typename?: 'Query', queryParserConfigFormConfigurations?: any | null };
 
+export type SortingQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type SortingQuery = { __typename?: 'Query', sorting?: { __typename?: 'Sorting', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, defaultSort: boolean, type?: SortingType | null, docTypeField?: { __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null } | null };
+
+export type CreateOrUpdateSortingMutationVariables = Exact<{
+  sortingId?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  priority: Scalars['Float'];
+  type: SortingType;
+  defaultSort: Scalars['Boolean'];
+  docTypeFieldId?: InputMaybe<Scalars['BigInteger']>;
+}>;
+
+
+export type CreateOrUpdateSortingMutation = { __typename?: 'Mutation', sortingWithDocTypeField?: { __typename?: 'Response_Sorting', entity?: { __typename?: 'Sorting', id?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type SortingsQueryVariables = Exact<{
+  searchText?: InputMaybe<Scalars['String']>;
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type SortingsQuery = { __typename?: 'Query', totalSortings?: { __typename?: 'DefaultConnection_Sorting', edges?: Array<{ __typename?: 'DefaultEdge_Sorting', node?: { __typename?: 'Sorting', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, defaultSort: boolean, type?: SortingType | null } | null } | null> | null, pageInfo?: { __typename?: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null };
+
+export type DeleteSortingMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteSortingMutation = { __typename?: 'Mutation', deleteSorting?: { __typename?: 'Sorting', id?: string | null, name?: string | null } | null };
+
 export type UnboundBucketsBySuggestionCategoryQueryVariables = Exact<{
   id: Scalars['BigInteger'];
 }>;
@@ -6420,7 +6481,7 @@ export type TabQueryVariables = Exact<{
 }>;
 
 
-export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', name?: string | null, id?: string | null } | null } | null> | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
+export type TabQuery = { __typename?: 'Query', tab?: { __typename?: 'Tab', id?: string | null, name?: string | null, description?: string | null, priority?: number | null, tokenTabs?: { __typename?: 'DefaultConnection_TokenTab', edges?: Array<{ __typename?: 'DefaultEdge_TokenTab', node?: { __typename?: 'TokenTab', name?: string | null, id?: string | null } | null } | null> | null } | null, sortings?: { __typename?: 'DefaultConnection_Sorting', edges?: Array<{ __typename?: 'DefaultEdge_Sorting', node?: { __typename?: 'Sorting', name?: string | null, id?: string | null } | null } | null> | null } | null, translations?: Array<{ __typename?: 'TranslationDTO', key?: string | null, language?: string | null, value?: string | null, description?: string | null } | null> | null } | null };
 
 export type CreateOrUpdateTabMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6428,6 +6489,7 @@ export type CreateOrUpdateTabMutationVariables = Exact<{
   description?: InputMaybe<Scalars['String']>;
   priority: Scalars['Int'];
   tokenTabIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  sortingIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
 }>;
 
 
@@ -11540,6 +11602,181 @@ export function useQueryParserConfigLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type QueryParserConfigQueryHookResult = ReturnType<typeof useQueryParserConfigQuery>;
 export type QueryParserConfigLazyQueryHookResult = ReturnType<typeof useQueryParserConfigLazyQuery>;
 export type QueryParserConfigQueryResult = Apollo.QueryResult<QueryParserConfigQuery, QueryParserConfigQueryVariables>;
+export const SortingDocument = gql`
+    query Sorting($id: ID!) {
+  sorting(id: $id) {
+    id
+    name
+    description
+    priority
+    defaultSort
+    type
+    docTypeField {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useSortingQuery__
+ *
+ * To run a query within a React component, call `useSortingQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSortingQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSortingQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useSortingQuery(baseOptions: Apollo.QueryHookOptions<SortingQuery, SortingQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SortingQuery, SortingQueryVariables>(SortingDocument, options);
+      }
+export function useSortingLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SortingQuery, SortingQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SortingQuery, SortingQueryVariables>(SortingDocument, options);
+        }
+export type SortingQueryHookResult = ReturnType<typeof useSortingQuery>;
+export type SortingLazyQueryHookResult = ReturnType<typeof useSortingLazyQuery>;
+export type SortingQueryResult = Apollo.QueryResult<SortingQuery, SortingQueryVariables>;
+export const CreateOrUpdateSortingDocument = gql`
+    mutation CreateOrUpdateSorting($sortingId: ID, $name: String!, $description: String, $priority: Float!, $type: SortingType!, $defaultSort: Boolean!, $docTypeFieldId: BigInteger) {
+  sortingWithDocTypeField(
+    id: $sortingId
+    sortingWithDocTypeFieldDTO: {name: $name, description: $description, priority: $priority, type: $type, defaultSort: $defaultSort, docTypeFieldId: $docTypeFieldId}
+  ) {
+    entity {
+      id
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateSortingMutationFn = Apollo.MutationFunction<CreateOrUpdateSortingMutation, CreateOrUpdateSortingMutationVariables>;
+
+/**
+ * __useCreateOrUpdateSortingMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateSortingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateSortingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateSortingMutation, { data, loading, error }] = useCreateOrUpdateSortingMutation({
+ *   variables: {
+ *      sortingId: // value for 'sortingId'
+ *      name: // value for 'name'
+ *      description: // value for 'description'
+ *      priority: // value for 'priority'
+ *      type: // value for 'type'
+ *      defaultSort: // value for 'defaultSort'
+ *      docTypeFieldId: // value for 'docTypeFieldId'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateSortingMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateSortingMutation, CreateOrUpdateSortingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateSortingMutation, CreateOrUpdateSortingMutationVariables>(CreateOrUpdateSortingDocument, options);
+      }
+export type CreateOrUpdateSortingMutationHookResult = ReturnType<typeof useCreateOrUpdateSortingMutation>;
+export type CreateOrUpdateSortingMutationResult = Apollo.MutationResult<CreateOrUpdateSortingMutation>;
+export type CreateOrUpdateSortingMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateSortingMutation, CreateOrUpdateSortingMutationVariables>;
+export const SortingsDocument = gql`
+    query Sortings($searchText: String, $cursor: String) {
+  totalSortings(searchText: $searchText, first: 20, after: $cursor) {
+    edges {
+      node {
+        id
+        name
+        description
+        priority
+        defaultSort
+        type
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+    `;
+
+/**
+ * __useSortingsQuery__
+ *
+ * To run a query within a React component, call `useSortingsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSortingsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSortingsQuery({
+ *   variables: {
+ *      searchText: // value for 'searchText'
+ *      cursor: // value for 'cursor'
+ *   },
+ * });
+ */
+export function useSortingsQuery(baseOptions?: Apollo.QueryHookOptions<SortingsQuery, SortingsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SortingsQuery, SortingsQueryVariables>(SortingsDocument, options);
+      }
+export function useSortingsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SortingsQuery, SortingsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SortingsQuery, SortingsQueryVariables>(SortingsDocument, options);
+        }
+export type SortingsQueryHookResult = ReturnType<typeof useSortingsQuery>;
+export type SortingsLazyQueryHookResult = ReturnType<typeof useSortingsLazyQuery>;
+export type SortingsQueryResult = Apollo.QueryResult<SortingsQuery, SortingsQueryVariables>;
+export const DeleteSortingDocument = gql`
+    mutation DeleteSorting($id: ID!) {
+  deleteSorting(sortingId: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteSortingMutationFn = Apollo.MutationFunction<DeleteSortingMutation, DeleteSortingMutationVariables>;
+
+/**
+ * __useDeleteSortingMutation__
+ *
+ * To run a mutation, you first call `useDeleteSortingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteSortingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteSortingMutation, { data, loading, error }] = useDeleteSortingMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteSortingMutation(baseOptions?: Apollo.MutationHookOptions<DeleteSortingMutation, DeleteSortingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteSortingMutation, DeleteSortingMutationVariables>(DeleteSortingDocument, options);
+      }
+export type DeleteSortingMutationHookResult = ReturnType<typeof useDeleteSortingMutation>;
+export type DeleteSortingMutationResult = Apollo.MutationResult<DeleteSortingMutation>;
+export type DeleteSortingMutationOptions = Apollo.BaseMutationOptions<DeleteSortingMutation, DeleteSortingMutationVariables>;
 export const UnboundBucketsBySuggestionCategoryDocument = gql`
     query UnboundBucketsBySuggestionCategory($id: BigInteger!) {
   unboundBucketsBySuggestionCategory(suggestionCategoryId: $id) {
@@ -12190,6 +12427,14 @@ export const TabDocument = gql`
         }
       }
     }
+    sortings(notEqual: $unasociated) {
+      edges {
+        node {
+          name
+          id
+        }
+      }
+    }
     translations {
       key
       language
@@ -12229,10 +12474,10 @@ export type TabQueryHookResult = ReturnType<typeof useTabQuery>;
 export type TabLazyQueryHookResult = ReturnType<typeof useTabLazyQuery>;
 export type TabQueryResult = Apollo.QueryResult<TabQuery, TabQueryVariables>;
 export const CreateOrUpdateTabDocument = gql`
-    mutation CreateOrUpdateTab($id: ID, $name: String!, $description: String, $priority: Int!, $tokenTabIds: [BigInteger]) {
+    mutation CreateOrUpdateTab($id: ID, $name: String!, $description: String, $priority: Int!, $tokenTabIds: [BigInteger], $sortingIds: [BigInteger]) {
   tabWithTokenTabs(
     id: $id
-    tabWithTokenTabsDTO: {name: $name, description: $description, priority: $priority, tokenTabIds: $tokenTabIds}
+    tabWithTokenTabsDTO: {name: $name, description: $description, priority: $priority, tokenTabIds: $tokenTabIds, sortingIds: $sortingIds}
   ) {
     entity {
       id
@@ -12265,6 +12510,7 @@ export type CreateOrUpdateTabMutationFn = Apollo.MutationFunction<CreateOrUpdate
  *      description: // value for 'description'
  *      priority: // value for 'priority'
  *      tokenTabIds: // value for 'tokenTabIds'
+ *      sortingIds: // value for 'sortingIds'
  *   },
  * });
  */
@@ -16261,4 +16507,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-06-05T18:05:24+02:00
+// Generated on 2026-07-01T11:51:19+02:00
