@@ -50,7 +50,6 @@ import {
   usePluginDriverWithDocTypeMutation,
   UserField,
 } from "../../graphql-generated";
-import { PluginDriverType as OpenApiPluginDriverType } from "../../openapi-generated/models/PluginDriverType";
 import { extractProblemDetails, mapHealthStatus } from "../../utils/health";
 import useOptions from "../../utils/getOptions";
 import { useConfirmModal } from "../../utils/useConfirmModal";
@@ -439,9 +438,7 @@ export const SavePluginnDriverModel = React.forwardRef(
                             try {
                               const res = await restClient.pluginDriverResource.postApiDatasourcePluginDriversHealth({
                                 name: form.inputProps("name").value,
-                                type: (form.inputProps("type").value as PluginDriverType.Http)
-                                  ? OpenApiPluginDriverType.HTTP
-                                  : OpenApiPluginDriverType.HTTP,
+                                type: "HTTP",
                                 resourceUri: config,
                               });
                               setTestError(null);

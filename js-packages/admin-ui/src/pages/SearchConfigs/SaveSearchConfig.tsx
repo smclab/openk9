@@ -58,7 +58,7 @@ import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCreateOrUpdateSearchConfigMutation, useSearchConfigQuery } from "../../graphql-generated";
-import { CombinationTechnique, HybridSearchPipelineDTO, NormalizationTechnique } from "../../openapi-generated";
+import { CombinationTechnique, HybridSearchPipelineDto, NormalizationTechnique } from "../../openapi-generated";
 import { sxControl } from "../../utils/styleConfig";
 import { useConfirmModal } from "../../utils/useConfirmModal";
 import { QueryParserConfig } from "./gql";
@@ -69,6 +69,17 @@ interface ConfigureHybridSearchInterface {
   combinationTechnique: CombinationTechnique | undefined;
   weights?: Array<number>;
 }
+
+// Runtime option maps for the selects (the generated enums are type-only string unions).
+const normalizationTechniqueDict: Record<NormalizationTechnique, NormalizationTechnique> = {
+  MIN_MAX: "MIN_MAX",
+  L2: "L2",
+};
+const combinationTechniqueDict: Record<CombinationTechnique, CombinationTechnique> = {
+  ARITHMETIC_MEAN: "ARITHMETIC_MEAN",
+  GEOMETRIC_MEAN: "GEOMETRIC_MEAN",
+  ARMONIC_MEAN: "ARMONIC_MEAN",
+};
 
 export function useConfigureHybridSearchMutation({
   searchConfigId,
@@ -84,7 +95,7 @@ export function useConfigureHybridSearchMutation({
       combinationTechnique,
       weights,
     }: ConfigureHybridSearchInterface) => {
-      const hybridSearchPipelineDTO: HybridSearchPipelineDTO = {
+      const hybridSearchPipelineDTO: HybridSearchPipelineDto = {
         normalizationTechnique,
         combinationTechnique,
         weights,
@@ -132,8 +143,8 @@ export function SaveSearchConfig({ setExtraFab }: { setExtraFab: (fab: React.Rea
   const toast = useToast();
   const initialConfigValue: ConfigureHybridSearchInterface = {
     searchConfigId,
-    normalizationTechnique: NormalizationTechnique.MIN_MAX,
-    combinationTechnique: CombinationTechnique.ARITHMETIC_MEAN,
+    normalizationTechnique: "MIN_MAX",
+    combinationTechnique: "ARITHMETIC_MEAN",
     weights: [0.5, 0.5],
   };
 
@@ -632,7 +643,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
                 value={config.normalizationTechnique}
                 disabled={false}
                 validationMessages={[configValidation.normalizationTechnique]}
-                dict={NormalizationTechnique}
+                dict={normalizationTechniqueDict}
                 id={"HybridSearch"}
                 onChange={(e) => handleSelectChange("normalizationTechnique", e)}
               />
@@ -641,7 +652,7 @@ const CustomizedDialogs: React.FC<CustomizedDialogsProps> = ({ isHybridSearch, c
                 value={config.combinationTechnique}
                 disabled={false}
                 validationMessages={[configValidation.combinationTechnique]}
-                dict={CombinationTechnique}
+                dict={combinationTechniqueDict}
                 id={"HybridSearch"}
                 onChange={(e) => handleSelectChange("combinationTechnique", e)}
               />

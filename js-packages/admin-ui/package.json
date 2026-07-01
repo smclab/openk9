@@ -15,6 +15,7 @@
     "@graphql-codegen/typescript": "^2.7.2",
     "@graphql-codegen/typescript-operations": "^2.5.2",
     "@graphql-codegen/typescript-react-apollo": "^3.3.2",
+    "@hey-api/client-fetch": "^0.13.1",
     "@mui/icons-material": "^6.0.2",
     "@mui/material": "^6.0.2",
     "@mui/styled-engine-sc": "^6.0.2",
@@ -34,7 +35,6 @@
     "jsonpath-plus": "^10.3.0",
     "monaco-editor": "^0.49.0",
     "oidc-client-ts": "^3.1.0",
-    "openapi-typescript-codegen": "^0.23.0",
     "prettier": "^2.7.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -52,8 +52,8 @@
     "test": "vitest",
     "fetch-schemas": "node ../scripts/fetch-schemas.js app/datasource",
     "compile-graphql": "yarn fetch-schemas && graphql-codegen --verbose",
-    "compile-openapi": "yarn fetch-schemas && openapi --input ../../core/app/datasource/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient",
-    "compile-clients": "yarn fetch-schemas && graphql-codegen --verbose && openapi --input ../../core/app/datasource/target/generated/openapi.yaml --output ./src/openapi-generated --name OpenApiRestClient"
+    "compile-openapi": "yarn fetch-schemas && openapi-ts",
+    "compile-clients": "yarn fetch-schemas && graphql-codegen --verbose && openapi-ts"
   },
   "eslintConfig": {
     "extends": [
@@ -75,6 +75,7 @@
   },
   "devDependencies": {
     "@graphql-codegen/time": "^3.2.3",
+    "@hey-api/openapi-ts": "0.97.0",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^7.2.2",
     "vite-plugin-compression": "^0.5.1",

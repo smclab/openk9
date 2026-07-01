@@ -16,17 +16,10 @@
 */
 import React from "react";
 import { QueryClient } from "@tanstack/react-query";
-import { OpenApiRestClient } from "../openapi-generated/OpenApiRestClient";
-import { getAuthHeaders } from "./authentication";
+import { openApiRestClient } from "./openApiRestClient";
 
 export const queryClient = new QueryClient();
-const RestClientContext = React.createContext(
-  new OpenApiRestClient({
-    async HEADERS() {
-      return (await getAuthHeaders()) as any;
-    },
-  })
-);
+const RestClientContext = React.createContext(openApiRestClient);
 export function useRestClient() {
   return React.useContext(RestClientContext);
 }
