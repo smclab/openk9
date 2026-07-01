@@ -23,6 +23,8 @@ import jakarta.inject.Inject;
 import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.Highlight;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.dto.request.BucketWithListsDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
 
@@ -40,9 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class BucketHighlightTest {
 
 	private static final String ENTITY_NAME_PREFIX = "BucketHighlightTest - ";
-	private static final String BUCKET_NAME = ENTITY_NAME_PREFIX + "Bucket";
+	private static final String BUCKET_NAME_1 = ENTITY_NAME_PREFIX + "Bucket1";
 	private static final String HIGHLIGHT_NAME = ENTITY_NAME_PREFIX + "Highlight";
 	private static final String FIELD_NAME = ENTITY_NAME_PREFIX + "field";
+	private static final String BUCKET_NAME_2 = ENTITY_NAME_PREFIX + "Bucket2";
 
 	@Inject
 	BucketService bucketService;
@@ -69,14 +72,14 @@ public class BucketHighlightTest {
 		).await().indefinitely();
 
 		EntitiesUtils.createBucket(
-			BUCKET_NAME, bucketService, sessionFactory);
+			BUCKET_NAME_1, bucketService, sessionFactory);
 	}
 
 	@Test
 	void should_bind_highlight_to_bucket() {
 		var bucket =
 			EntitiesUtils.getEntity(
-				BUCKET_NAME, bucketService, sessionFactory);
+				BUCKET_NAME_1, bucketService, sessionFactory);
 		var highlight =
 			EntitiesUtils.getEntity(
 				HIGHLIGHT_NAME, highlightService, sessionFactory);
@@ -98,7 +101,7 @@ public class BucketHighlightTest {
 	void should_unbind_highlight_from_bucket() {
 		var bucket =
 			EntitiesUtils.getEntity(
-				BUCKET_NAME, bucketService, sessionFactory);
+				BUCKET_NAME_1, bucketService, sessionFactory);
 		var highlight =
 			EntitiesUtils.getEntity(
 				HIGHLIGHT_NAME, highlightService, sessionFactory);
@@ -122,7 +125,7 @@ public class BucketHighlightTest {
 	void should_not_bind_when_highlight_does_not_exist() {
 		var bucket =
 			EntitiesUtils.getEntity(
-				BUCKET_NAME, bucketService, sessionFactory);
+				BUCKET_NAME_1, bucketService, sessionFactory);
 
 		var result = bucketService
 			.bindHighlight(bucket.getId(), 0L)
@@ -136,10 +139,38 @@ public class BucketHighlightTest {
 		assertNull(bound);
 	}
 
+	@Test
+	void should_create_bucket_with_highlight() {
+		var highlight =
+			EntitiesUtils.getEntity(
+				HIGHLIGHT_NAME, highlightService, sessionFactory);
+
+		var bucket = bucketService.create(
+			BucketWithListsDTO.builder()
+				.name(BUCKET_NAME_2)
+				.refreshOnDate(false)
+				.refreshOnQuery(false)
+				.refreshOnTab(false)
+				.refreshOnSuggestionCategory(false)
+				.retrieveType(Bucket.RetrieveType.TEXT)
+				.highlightId(highlight.getId())
+				.build()
+		).await().indefinitely();
+
+		var bound = bucketService.getHighlight(bucket.getId())
+			.await().indefinitely();
+
+		assertNotNull(bound);
+		assertEquals(highlight.getId(), bound.getId());
+
+		EntitiesUtils.removeEntity(
+			BUCKET_NAME_2, bucketService, sessionFactory);
+	}
+
 	@AfterEach
 	void tearDown() {
 		EntitiesUtils.removeEntity(
-			BUCKET_NAME, bucketService, sessionFactory);
+			BUCKET_NAME_1, bucketService, sessionFactory);
 
 		EntitiesUtils.removeEntity(
 			HIGHLIGHT_NAME, highlightService, sessionFactory);
