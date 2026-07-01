@@ -19,6 +19,7 @@ package io.openk9.datasource.model.dto.base;
 
 import jakarta.validation.constraints.NotNull;
 
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.validation.KeyName;
 import io.openk9.datasource.validation.json.Json;
@@ -65,4 +66,8 @@ public class DocTypeFieldDTO extends K9EntityDTO {
 
 	@Json
 	private String jsonConfig;
+
+	@Description("Specifies how to retrieve the offsets needed by the unified and fvh " +
+		"highlighters; for fvh the TERM_VECTOR value is also used to populate matched_fields")
+	private DocTypeField.OffsetSourceType offsetSource;
 }

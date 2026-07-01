@@ -95,6 +95,10 @@ public class DocTypeField extends BaseDocTypeField {
 	@Column(name="exclude")
 	private Boolean exclude;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "offset_source")
+	private OffsetSourceType offsetSource = OffsetSourceType.NONE;
+
 	@ToString.Exclude
 	@ManyToOne(cascade = {
 		CascadeType.PERSIST,
@@ -155,6 +159,10 @@ public class DocTypeField extends BaseDocTypeField {
 	@Setter(AccessLevel.NONE)
 	private String path;
 
+	public void setOffsetSource(OffsetSourceType offsetSource) {
+		this.offsetSource = Objects.requireNonNullElse(offsetSource, OffsetSourceType.NONE);
+	}
+
 	public Set<DocTypeField> getChildren() {
 		return subDocTypeFields;
 	}
@@ -199,6 +207,12 @@ public class DocTypeField extends BaseDocTypeField {
 	@PostUpdate
 	protected void refreshPath() {
 		this.path = DocTypeFieldUtils.fieldPath(this);
+	}
+
+	public enum OffsetSourceType {
+		TERM_VECTOR,
+		INDEX_OPTIONS,
+		NONE
 	}
 
 }
