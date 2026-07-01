@@ -30,6 +30,7 @@ import io.openk9.datasource.model.Sorting_;
 import io.openk9.datasource.model.dto.base.SortingDTO;
 import io.openk9.datasource.model.dto.base.TranslationDTO;
 import io.openk9.datasource.model.dto.base.TranslationKeyDTO;
+import io.openk9.datasource.model.dto.request.SortingWithDocTypeFieldDTO;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;
@@ -48,6 +49,88 @@ public class SortingService extends BaseK9EntityService<Sorting, SortingDTO> {
 	@Override
 	public String[] getSearchFields() {
 		return new String[] {Sorting_.NAME, Sorting_.DESCRIPTION};
+	}
+
+	@Override
+	public Uni<Sorting> create(SortingDTO dto) {
+		if (dto instanceof SortingWithDocTypeFieldDTO withDocTypeFieldDTO) {
+			var transientSorting = mapper.create(withDocTypeFieldDTO);
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> super.create(s, transientSorting)
+					.flatMap(sorting -> {
+
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						if (docTypeFieldId != null) {
+							var docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+
+							sorting.setDocTypeField(docTypeField);
+						}
+
+						return s.persist(sorting)
+							.flatMap(__ -> s.merge(sorting));
+					})
+			);
+		}
+		return super.create(dto);
+	}
+
+	@Override
+	public Uni<Sorting> patch(long id, SortingDTO dto) {
+		if (dto instanceof SortingWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, id)
+					.flatMap(sorting -> {
+
+						var newStateSorting =
+							mapper.patch(sorting, withDocTypeFieldDTO);
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						if (docTypeFieldId != null) {
+							var docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+
+							newStateSorting.setDocTypeField(docTypeField);
+						}
+
+						return s.merge(newStateSorting)
+							.map(__ -> newStateSorting);
+					})
+			);
+		}
+		return super.patch(id, dto);
+	}
+
+	@Override
+	public Uni<Sorting> update(long id, SortingDTO dto) {
+		if (dto instanceof SortingWithDocTypeFieldDTO withDocTypeFieldDTO) {
+
+			return sessionFactory.withTransaction(
+				(s, transaction) -> findById(s, id)
+					.flatMap(sorting -> {
+
+						var newStateSorting =
+							mapper.update(sorting, withDocTypeFieldDTO);
+						var docTypeFieldId = withDocTypeFieldDTO.getDocTypeFieldId();
+
+						DocTypeField docTypeField = null;
+
+						if (docTypeFieldId != null) {
+							docTypeField =
+								s.getReference(DocTypeField.class, docTypeFieldId);
+						}
+
+						newStateSorting.setDocTypeField(docTypeField);
+
+						return s.merge(newStateSorting)
+							.map(__ -> newStateSorting);
+					})
+			);
+		}
+		return super.update(id, dto);
 	}
 
 	public Uni<DocTypeField> getDocTypeField(Sorting sorting) {

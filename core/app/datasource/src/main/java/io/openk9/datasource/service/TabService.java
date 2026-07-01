@@ -123,6 +123,7 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 				(s, transaction) -> super.create(s, transientTab)
 					.flatMap(tab -> {
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+						var sortingIds = tabWithTokenTabsDTO.getSortingIds();
 
 						UniJoin.Builder<Void> builder = Uni.join().builder();
 						builder.add(Uni.createFrom().voidItem());
@@ -131,6 +132,15 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 							for (long tokenTabId : tokenTabIds) {
 								builder.add(addTokenTabToTab(
 									tab.getId(), tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						if (sortingIds != null) {
+							for (long sortingId : sortingIds) {
+								builder.add(addSortingToTab(
+									tab.getId(), sortingId)
 									.replaceWithVoid()
 								);
 							}
@@ -343,9 +353,11 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, tabId)
 					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.call(tab -> Mutiny.fetch(tab.getSortings()))
 					.flatMap(tab -> {
 						var newStateTab = mapper.patch(tab, tabWithTokenTabsDTO);
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+						var sortingIds = tabWithTokenTabsDTO.getSortingIds();
 
 						UniJoin.Builder<Void> builder = Uni.join().builder();
 						builder.add(Uni.createFrom().voidItem());
@@ -363,6 +375,24 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 
 							for (long tokenTabId : tokenTabIds) {
 								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						if (sortingIds != null) {
+							var oldSortings = newStateTab.getSortings();
+
+							//Iterate over the old Sortings to remove it from the Tab
+							for (Sorting oldSorting : oldSortings) {
+								builder.add(removeSortingToTab(
+									tabId, oldSorting.getId())
+									.replaceWithVoid()
+								);
+							}
+
+							for (long sortingId : sortingIds) {
+								builder.add(addSortingToTab(tabId, sortingId)
 									.replaceWithVoid()
 								);
 							}
@@ -428,11 +458,14 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 			return sessionFactory.withTransaction(
 				(s, transaction) -> findById(s, tabId)
 					.call(tab -> Mutiny.fetch(tab.getTokenTabs()))
+					.call(tab -> Mutiny.fetch(tab.getSortings()))
 					.flatMap(tab -> {
 						var newStateTab = mapper.update(tab, tabWithTokenTabsDTO);
 						var oldTokenTabs = newStateTab.getTokenTabs();
+						var oldSortings = newStateTab.getSortings();
 
 						var tokenTabIds = tabWithTokenTabsDTO.getTokenTabIds();
+						var sortingIds = tabWithTokenTabsDTO.getSortingIds();
 
 						UniJoin.Builder<Void> builder = Uni.join().builder();
 						builder.add(Uni.createFrom().voidItem());
@@ -448,6 +481,22 @@ public class TabService extends BaseK9EntityService<Tab, TabDTO> {
 						if (tokenTabIds != null) {
 							for (long tokenTabId : tokenTabIds) {
 								builder.add(addTokenTabToTab(tabId, tokenTabId)
+									.replaceWithVoid()
+								);
+							}
+						}
+
+						//Iterate over the old Sortings to remove it from the Tab
+						for (Sorting oldSorting : oldSortings) {
+							builder.add(removeSortingToTab(
+								tabId, oldSorting.getId())
+								.replaceWithVoid()
+							);
+						}
+
+						if (sortingIds != null) {
+							for (long sortingId : sortingIds) {
+								builder.add(addSortingToTab(tabId, sortingId)
 									.replaceWithVoid()
 								);
 							}
