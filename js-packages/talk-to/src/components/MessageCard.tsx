@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import { Logo } from "../Svg/Logo";
 import { Message } from "./useGenerateResponse";
+import { isSafeExternalUrl } from "./utils/safeExternalUrl";
 
 type Theme = "light" | "dark";
 
@@ -461,7 +462,12 @@ export function MessageCard({
 											</IconButton>
 										</Box>
 									}
-									onClick={() => !source?.filename && !source?.file_extension && window.open(source.url, "_blank")}
+									onClick={() =>
+											!source?.filename &&
+											!source?.file_extension &&
+											isSafeExternalUrl(source.url) &&
+											window.open(source.url, "_blank", "noopener,noreferrer")
+										}
 									sx={{
 										backgroundColor: typeColors.backgroundColor,
 										color: typeColors.color,

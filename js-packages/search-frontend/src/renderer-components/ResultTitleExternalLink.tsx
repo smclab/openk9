@@ -3,12 +3,14 @@ import { faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { ResultTitle } from "./ResultTitle";
 import { css } from "styled-components";
+import { safeExternalUrl } from "./safeExternalUrl";
 
 type ResultTitleExternalLinkProps = { href: string; children: React.ReactNode };
 export function ResultTitleExternalLink({
   href,
   children,
 }: ResultTitleExternalLinkProps) {
+  const safeHref = safeExternalUrl(href);
   return (
     <div
       css={css`
@@ -17,11 +19,11 @@ export function ResultTitleExternalLink({
       `}
     >
       <ResultTitle>
-        <a href={href} target="_blank">
+        <a href={safeHref} target="_blank" rel="noopener noreferrer">
           {children}
         </a>
       </ResultTitle>
-      <a href={href} target="_blank">
+      <a href={safeHref} target="_blank" rel="noopener noreferrer">
         <FontAwesomeIcon
           icon={faExternalLinkAlt}
           css={css`
