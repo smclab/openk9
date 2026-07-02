@@ -84,17 +84,14 @@ public class BucketHighlightTest {
 			EntitiesUtils.getEntity(
 				HIGHLIGHT_NAME, highlightService, sessionFactory);
 
-		var result = bucketService.bindHighlight(bucket.getId(), highlight.getId())
+		bucketService.bindHighlight(bucket.getId(), highlight.getId())
 			.await().indefinitely();
 
-		assertEquals(highlight.getId(), result.right.getId());
-
-		// the Bucket now exposes the linked Highlight
-		var bound = bucketService.getHighlight(bucket.getId())
+		var result = bucketService.getHighlight(bucket.getId())
 			.await().indefinitely();
 
-		assertNotNull(bound);
-		assertEquals(highlight.getId(), bound.getId());
+		assertNotNull(result);
+		assertEquals(highlight.getId(), result.getId());
 	}
 
 	@Test
@@ -109,16 +106,18 @@ public class BucketHighlightTest {
 		bucketService.bindHighlight(bucket.getId(), highlight.getId())
 			.await().indefinitely();
 
-		var result = bucketService.unbindHighlight(bucket.getId())
+		var highlightBound = bucketService.getHighlight(bucket.getId())
 			.await().indefinitely();
 
-		assertNull(result.right);
+		assertNotNull(highlightBound);
 
-		// the Bucket no longer exposes a Highlight
-		var bound = bucketService.getHighlight(bucket.getId())
+		bucketService.unbindHighlight(bucket.getId())
 			.await().indefinitely();
 
-		assertNull(bound);
+		var result = bucketService.getHighlight(bucket.getId())
+			.await().indefinitely();
+
+		assertNull(result);
 	}
 
 	@Test
@@ -127,16 +126,14 @@ public class BucketHighlightTest {
 			EntitiesUtils.getEntity(
 				BUCKET_NAME_1, bucketService, sessionFactory);
 
-		var result = bucketService
+		bucketService
 			.bindHighlight(bucket.getId(), 0L)
 			.await().indefinitely();
 
-		assertNull(result);
-
-		var bound = bucketService.getHighlight(bucket.getId())
+		var result = bucketService.getHighlight(bucket.getId())
 			.await().indefinitely();
 
-		assertNull(bound);
+		assertNull(result);
 	}
 
 	@Test
@@ -145,7 +142,7 @@ public class BucketHighlightTest {
 			EntitiesUtils.getEntity(
 				HIGHLIGHT_NAME, highlightService, sessionFactory);
 
-		var bucket = bucketService.create(
+		bucketService.create(
 			BucketWithListsDTO.builder()
 				.name(BUCKET_NAME_2)
 				.refreshOnDate(false)
@@ -157,11 +154,11 @@ public class BucketHighlightTest {
 				.build()
 		).await().indefinitely();
 
-		var bound = bucketService.getHighlight(bucket.getId())
-			.await().indefinitely();
+		var result =
+			EntitiesUtils.getEntity(BUCKET_NAME_2, bucketService, sessionFactory);
 
-		assertNotNull(bound);
-		assertEquals(highlight.getId(), bound.getId());
+		assertNotNull(result);
+		assertEquals(highlight.getId(), result.getHighlight().getId());
 
 		EntitiesUtils.removeEntity(
 			BUCKET_NAME_2, bucketService, sessionFactory);
@@ -181,7 +178,7 @@ public class BucketHighlightTest {
 
 	private Long getDocTypeFieldId() {
 		return EntitiesUtils.getEntity(
-			BucketHighlightTest.FIELD_NAME, docTypeFieldService, sessionFactory)
+				BucketHighlightTest.FIELD_NAME, docTypeFieldService, sessionFactory)
 			.getId();
 	}
 
