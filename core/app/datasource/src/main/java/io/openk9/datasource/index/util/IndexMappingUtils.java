@@ -250,6 +250,15 @@ public final class IndexMappingUtils {
 
 				current.put(MappingsKey.of("type"), fieldType.getType());
 
+				switch (docTypeField.getOffsetSource()) {
+					case TERM_VECTOR ->
+						current.put(MappingsKey.of("term_vector"), "with_positions_offsets");
+					case INDEX_OPTIONS ->
+						current.put(MappingsKey.of("index_options"), "offsets");
+					case NONE -> {
+					}
+				}
+
 				Analyzer analyzer = docTypeField.getAnalyzer();
 
 				if (analyzer != null) {
