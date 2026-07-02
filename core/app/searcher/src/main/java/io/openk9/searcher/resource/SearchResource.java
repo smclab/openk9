@@ -142,6 +142,7 @@ public class SearchResource {
 	protected static final String SUGGESTIONS = "suggestions";
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
 	private static final String DETAILS_FIELD = "details";
+	private static final String BEARER_PREFIX = "Bearer ";
 	private static final int NONE_STATUS_CODE = 0;
 	private static final int NOT_FOUND_STATUS_CODE = 404;
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
@@ -404,8 +405,11 @@ public class SearchResource {
 
 		if (!authorization.isEmpty()) {
 			var value = authorization.getFirst();
-			if (value != null && !value.isEmpty()) {
-				rawToken = value.trim().substring(7);
+			if (value != null) {
+				var trimmed = value.trim();
+				if (trimmed.startsWith(BEARER_PREFIX)) {
+					rawToken = trimmed.substring(BEARER_PREFIX.length());
+				}
 			}
 		}
 
