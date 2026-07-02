@@ -24,6 +24,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import io.openk9.datasource.model.util.K9Entity;
 
@@ -36,7 +37,12 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 @Entity
-@Table(name = "query_parser_config")
+@Table(name = "query_parser_config", uniqueConstraints = {
+	@UniqueConstraint(
+		name = "uk_query_parser_config_search_config_type",
+		columnNames = {"search_config", "type"}
+	)
+})
 @Getter
 @Setter
 @ToString
