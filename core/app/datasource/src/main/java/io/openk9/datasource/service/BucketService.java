@@ -1212,7 +1212,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						if(bucketWithListsDTO.getHighlightId() != null) {
 							var highlight =
 								s.getReference(
-									Highlight.class, bucketWithListsDTO.getHighlightId()
+									Highlight.class,
+									bucketWithListsDTO.getHighlightId()
 								);
 
 							bucket.setHighlight(highlight);
@@ -1643,7 +1644,8 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 						if(bucketWithListsDTO.getHighlightId() != null) {
 							highlight =
 								s.getReference(
-									Highlight.class, bucketWithListsDTO.getHighlightId()
+									Highlight.class,
+									bucketWithListsDTO.getHighlightId()
 								);
 						}
 
