@@ -165,6 +165,14 @@ public class DocTypeFieldGraphqlResource {
 		return docTypeFieldService.findDocTypeFieldByType(fieldType);
 	}
 
+	@Description("Retrieves all DocTypeField entities whose offsetSource matches the given value.")
+	@Query
+	public Uni<List<DocTypeField>> getDocTypeFieldsByOffsetSource(
+		@Description("the OffsetSource to filter by")
+		DocTypeField.OffsetSourceType offsetSource) {
+		return docTypeFieldService.findDocTypeFieldByOffsetSource(offsetSource);
+	}
+
 	public Uni<Set<TranslationDTO>> getTranslations(@Source DocTypeField docTypeField) {
 		return translationService.getTranslationDTOs(DocTypeField.class, docTypeField.getId());
 	}
