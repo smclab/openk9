@@ -4,6 +4,7 @@ import {
   GenericResultItemFields,
 } from "../components/client";
 import get from "lodash/get";
+import sanitizeHtml from "sanitize-html";
 import { HighlightedText } from "./HighlightedText";
 import { css } from "styled-components";
 
@@ -28,7 +29,7 @@ export function DetailTextContentTwo<E>({
     return (
       <div
         dangerouslySetInnerHTML={{
-          __html: textWithBreaksAndTabsAndCarriageReturns,
+          __html: sanitizeHtml(textWithBreaksAndTabsAndCarriageReturns),
         }}
       />
     );
