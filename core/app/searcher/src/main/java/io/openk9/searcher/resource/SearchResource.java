@@ -108,6 +108,7 @@ public class SearchResource {
 	private static final Pattern i18nHighlithKeyPattern = Pattern.compile(
 		"\\.i18n\\..{5,}$|\\.base$");
 	private static final String DETAILS_FIELD = "details";
+	private static final String BEARER_PREFIX = "Bearer ";
 	private static final int NONE_STASUS_CODE = 0;
 	private static final int NOT_FOUND_STATUS_CODE = 404;
 	private final Map<Object, NamedXContentRegistry> namedXContentRegistryMap =
@@ -472,8 +473,11 @@ public class SearchResource {
 
 		if (!authorization.isEmpty()) {
 			var value = authorization.getFirst();
-			if (value != null && !value.isEmpty()) {
-				rawToken = value.trim().substring(7);
+			if (value != null) {
+				var trimmed = value.trim();
+				if (trimmed.startsWith(BEARER_PREFIX)) {
+					rawToken = trimmed.substring(BEARER_PREFIX.length());
+				}
 			}
 		}
 

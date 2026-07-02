@@ -130,6 +130,21 @@ class SearchResourceTest {
 
 	}
 
+	@Test
+	void should_get_empty_rawToken_when_authorization_is_malformed() {
+		var headersMap = Map.of(
+			"Authorization", "Bearer",
+			"anotherHeader", "anotherValue"
+		);
+
+		var headers = new HttpHeadersImpl(headersMap.entrySet());
+
+		var rawToken = Assertions.assertDoesNotThrow(
+			() -> SearchResource.getRawToken(headers));
+
+		Assertions.assertEquals("", rawToken);
+	}
+
 	private Map<String, Object> getSourceMap() {
 		var sourceMap = SOURCE_JSON.copy().getMap();
 
