@@ -1,29 +1,20 @@
-FROM node:20-alpine as deps
+# Stage 1 - Build
+FROM node:22-alpine AS builder
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 WORKDIR /app
 
-
-
-# Copy only package files for better caching
-COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/yarn.lock* ./js-packages/talk-to/
-WORKDIR /app/js-packages/talk-to
+# Install from the workspace root so the root package.json
+# resolutions apply; copy only manifests for better caching
+COPY ./package.json ./yarn.lock ./
+COPY ./js-packages/talk-to/package.json ./js-packages/talk-to/package.json
 RUN yarn config set registry https://registry.npmjs.org/ && \
-    yarn install --network-timeout 600000
-
-# Stage 2 - Build
-FROM node:20-alpine as builder
-ARG NODE_OPTIONS
-ENV NODE_OPTIONS=${NODE_OPTIONS}
-
-WORKDIR /app/js-packages/talk-to
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/js-packages/talk-to/node_modules ./node_modules
+    yarn install --frozen-lockfile --network-timeout 600000
 
 # Copy source code
-COPY ./js-packages/talk-to .
+COPY ./js-packages/talk-to ./js-packages/talk-to
+WORKDIR /app/js-packages/talk-to
 
 # Build
 # CI=false prevents warnings (like outdated babel plugins) from being treated as errors
@@ -31,7 +22,7 @@ COPY ./js-packages/talk-to .
 
 RUN CI=false NODE_ENV=production yarn build
 
-# Stage 3 - Production
+# Stage 2 - Production
 FROM nginx:stable-alpine3.23-slim
 RUN mkdir -p /usr/share/nginx/html/chat/
 COPY --from=builder /app/js-packages/talk-to/build /usr/share/nginx/html/chat/

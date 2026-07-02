@@ -1,27 +1,20 @@
-FROM node:22-alpine as deps
+# Stage 1 - Build
+FROM node:22-alpine AS builder
 ARG NODE_OPTIONS
 ENV NODE_OPTIONS=${NODE_OPTIONS}
 
 WORKDIR /app
 
-# Copy only package files for better caching
-COPY ./js-packages/tenant-ui/package.json ./js-packages/tenant-ui/yarn.lock* ./js-packages/tenant-ui/
-WORKDIR /app/js-packages/tenant-ui
+# Install from the workspace root so the root package.json
+# resolutions apply; copy only manifests for better caching
+COPY ./package.json ./yarn.lock ./
+COPY ./js-packages/tenant-ui/package.json ./js-packages/tenant-ui/package.json
 RUN yarn config set registry https://registry.npmjs.org/ && \
-    yarn install --network-timeout 600000
-
-# Stage 2 - Build
-FROM node:22-alpine as builder
-ARG NODE_OPTIONS
-ENV NODE_OPTIONS=${NODE_OPTIONS}
-
-WORKDIR /app/js-packages/tenant-ui
-
-# Copy dependencies from deps stage
-COPY --from=deps /app/js-packages/tenant-ui/node_modules ./node_modules
+    yarn install --frozen-lockfile --network-timeout 600000
 
 # Copy source code
-COPY ./js-packages/tenant-ui .
+COPY ./js-packages/tenant-ui ./js-packages/tenant-ui
+WORKDIR /app/js-packages/tenant-ui
 
 # Dev mode exposes development-only options (e.g. NO_GATEWAY_AUTH) in the UI.
 # Off by default; k9.sh enables it for dev image tags.
@@ -34,7 +27,7 @@ ENV REACT_APP_DEV_MODE=$DEV_MODE
 
 RUN CI=false GENERATE_SOURCEMAP=false NODE_OPTIONS="--max-old-space-size=4096" yarn build
 
-# Stage 3 - Production
+# Stage 2 - Production
 FROM nginx:stable-alpine3.23-slim
 RUN mkdir -p /usr/share/nginx/html/admin/
 COPY --from=builder /app/js-packages/tenant-ui/build /usr/share/nginx/html/admin/
