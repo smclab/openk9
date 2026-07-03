@@ -134,6 +134,8 @@ Container Scanning:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-tenant-ui"
+    # Per-module suppressions: tenant-ui's own .trivyignore (not core/, Java-only).
+    IGNOREFILE: "js-packages/tenant-ui/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

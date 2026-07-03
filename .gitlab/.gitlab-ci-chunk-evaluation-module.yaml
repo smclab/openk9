@@ -119,6 +119,8 @@ Container Scanning Chunk Evaluation:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-chunk-evaluation-module"
+    # Per-module suppressions: chunk-evaluation-module's own .trivyignore (not core/, Java-only).
+    IGNOREFILE: "ai-packages/chunk-evaluation-module/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

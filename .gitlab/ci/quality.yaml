@@ -22,12 +22,8 @@
   - "*.ts"
   - "*.tsx"
 
-# Define Anchor for Python files list
-# Issue #2004: connectors/ added — pip-audit never covered them; trivy fs does.
-.python_files_list: &python_files_list
-  - ai-packages/**/*
-  - enrichers/**/*
-  - connectors/**/*
+# NB: the old .python_files_list anchor is gone — the Python dep scan is now split
+# per-module (see below), each job with a hardcoded changes: path on its own dir.
 
 # Define Anchor for JS/frontend files list (Issue #2004 — Trivy FS JS dep scan)
 .js_files_list: &js_files_list
@@ -112,52 +108,200 @@ SonarQube Check:
   # 3. Tag
   - if: "$CI_COMMIT_TAG"
 
+# ============================================================================
 # Trivy FS — Python dependency scan (Issue #2004, replaces pip-audit)
-# Reads every requirements*.txt under ai-packages/, enrichers/ AND connectors/
-# statically (no `pip install`). The pyproject.toml stubs hold no pinned deps,
-# so trivy ignores them — the real deps live in requirements.txt.
-# NEW vs pip-audit: connectors/ is now covered (it never was before).
-# The script is overridden (vs the generic single-dir template) to scan exactly
-# the three Python trees and nothing else — no overlap with the Java/JS scans.
-# Same context set as Trivy FS Java (no tag, no porting-MR).
-Trivy FS Python:
+# SPLIT PER-MODULE: one job per Python module, each scanning its OWN dir with
+# its OWN .trivyignore. This is what makes a per-module suppression actually
+# work (a dev suppresses a CVE in ai-packages/rag-module/.trivyignore and it
+# takes effect only there, no global leak). Python is the one tree where this
+# is clean — every module ships its own requirements.txt. Java stays a single
+# reactor job (deps shared by the parent pom) and JS stays a single job (the
+# frontends share the root yarn.lock), see below.
+#
+# Each job:
+#   - extends .trivy-fs-scan (table → json → gate, --offline-scan, --ignore-unfixed);
+#   - sets SCAN_DIR to its module dir and IGNOREFILE to its module .trivyignore;
+#   - only runs when files under its own dir change (targeted MR feedback).
+# The .trivy-fs-scan template writes trivy-deps-$CI_JOB_NAME_SLUG.json, so the
+# per-job artifact names never collide.
+#
+# Same context set as Trivy FS Java (main / MR→main / push N.N.x; no tag, no
+# porting-MR). NB: GitLab does NOT expand variables inside rules:changes: paths,
+# so each job hardcodes its own dir there (the antispam-new-branch reference and
+# the three if: conditions are identical across jobs; only the changes: path and
+# the SCAN_DIR/IGNOREFILE variables differ per module).
+# ============================================================================
+
+# --- AI modules (ai-packages/) ---
+Trivy FS rag-module:
   extends: .trivy-fs-scan
   variables:
-    IGNOREFILE: "core/.trivyignore"
-  # --offline-scan kept for parity with the Java/template scans. It is a no-op
-  # for requirements.txt (versions are fully pinned, no remote lookup needed),
-  # but keeps all three trivy fs jobs consistent and immune to any future
-  # manifest that might trigger a remote resolution.
-  script:
-    - for d in ai-packages enrichers connectors; do
-        echo "=== trivy fs (table) $d ===";
-        trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH,MEDIUM,LOW
-          --format table --exit-code 0 "$d";
-      done
-    - for d in ai-packages enrichers connectors; do
-        trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --offline-scan --format json --output "trivy-deps-python-$d.json"
-          --exit-code 0 "$d";
-      done
-    # GATE (Phase 2): fail if any of the three trees has a fixable CRITICAL/HIGH
-    - RC=0; for d in ai-packages enrichers connectors; do
-        trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
-          --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH
-          --exit-code 1 "$d" || RC=1;
-      done; exit $RC
+    SCAN_DIR: "ai-packages/rag-module"
+    IGNOREFILE: "ai-packages/rag-module/.trivyignore"
   rules:
-    # Block on new branch creation
     - !reference [.rules:antispam-new-branch, rules]
-    # 1. Main
     - if: '$CI_COMMIT_BRANCH == "main"'
-      changes: *python_files_list
-    # 2. Merge Request → main
+      changes: [ "ai-packages/rag-module/**/*" ]
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      changes: *python_files_list
-    # 3. Push on release branch N.N.x
+      changes: [ "ai-packages/rag-module/**/*" ]
     - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
-      changes: *python_files_list
+      changes: [ "ai-packages/rag-module/**/*" ]
+
+Trivy FS agentic-rag-module:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "ai-packages/agentic-rag-module"
+    IGNOREFILE: "ai-packages/agentic-rag-module/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "ai-packages/agentic-rag-module/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "ai-packages/agentic-rag-module/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "ai-packages/agentic-rag-module/**/*" ]
+
+Trivy FS chunk-evaluation-module:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "ai-packages/chunk-evaluation-module"
+    IGNOREFILE: "ai-packages/chunk-evaluation-module/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "ai-packages/chunk-evaluation-module/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "ai-packages/chunk-evaluation-module/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "ai-packages/chunk-evaluation-module/**/*" ]
+
+Trivy FS embedding-modules:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "ai-packages/embedding-modules"
+    IGNOREFILE: "ai-packages/embedding-modules/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "ai-packages/embedding-modules/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "ai-packages/embedding-modules/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "ai-packages/embedding-modules/**/*" ]
+
+# --- Enrichers (enrichers/) ---
+Trivy FS docling-processor:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "enrichers/docling-processor/enricher"
+    IGNOREFILE: "enrichers/docling-processor/enricher/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "enrichers/docling-processor/enricher/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "enrichers/docling-processor/enricher/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "enrichers/docling-processor/enricher/**/*" ]
+
+# --- Connectors (connectors/*/connector/) ---
+Trivy FS database-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/database-connector/connector"
+    IGNOREFILE: "connectors/database-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/database-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/database-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/database-connector/connector/**/*" ]
+
+Trivy FS email-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/email-connector/connector"
+    IGNOREFILE: "connectors/email-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/email-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/email-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/email-connector/connector/**/*" ]
+
+Trivy FS gitlab-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/gitlab-connector/connector"
+    IGNOREFILE: "connectors/gitlab-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/gitlab-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/gitlab-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/gitlab-connector/connector/**/*" ]
+
+Trivy FS minio-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/minio-connector/connector"
+    IGNOREFILE: "connectors/minio-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/minio-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/minio-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/minio-connector/connector/**/*" ]
+
+Trivy FS openk9-crawler:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/openk9-crawler/connector"
+    IGNOREFILE: "connectors/openk9-crawler/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/openk9-crawler/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/openk9-crawler/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/openk9-crawler/connector/**/*" ]
+
+Trivy FS rest-api-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/rest-api-connector/connector"
+    IGNOREFILE: "connectors/rest-api-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/rest-api-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/rest-api-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/rest-api-connector/connector/**/*" ]
+
+Trivy FS youtube-connector:
+  extends: .trivy-fs-scan
+  variables:
+    SCAN_DIR: "connectors/youtube-connector/connector"
+    IGNOREFILE: "connectors/youtube-connector/connector/.trivyignore"
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      changes: [ "connectors/youtube-connector/connector/**/*" ]
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      changes: [ "connectors/youtube-connector/connector/**/*" ]
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+      changes: [ "connectors/youtube-connector/connector/**/*" ]
 
 # Trivy FS — JS/frontend dependency scan (Issue #2004, replaces npm-audit analyzer)
 # Reads yarn.lock statically — no `yarn install`, so the npm-audit segfault on the
@@ -169,7 +313,10 @@ Trivy FS JS:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "js-packages"
-    IGNOREFILE: "core/.trivyignore"
+    # Single JS ignore file: the frontends share the root yarn.lock, so this one
+    # job scans the whole tree and this one file backs it (per-component split is
+    # not possible here — see js-packages/.trivyignore header).
+    IGNOREFILE: "js-packages/.trivyignore"
   rules:
     # Block on new branch creation
     - !reference [.rules:antispam-new-branch, rules]
