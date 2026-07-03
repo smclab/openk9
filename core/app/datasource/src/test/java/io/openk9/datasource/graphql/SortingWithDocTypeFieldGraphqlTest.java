@@ -72,6 +72,7 @@ public class SortingWithDocTypeFieldGraphqlTest {
 	private static final float INIT_PRIORITY = 1.0f;
 	private static final String MESSAGE = "message";
 	private static final String NAME = "name";
+	private static final long NON_EXISTENT_DOC_TYPE_FIELD_ID = 999_999_999L;
 	private static final String PATCH = "patch";
 	private static final float PATCHED_PRIORITY = 5.0f;
 	private static final String PRIORITY = "priority";
@@ -79,6 +80,7 @@ public class SortingWithDocTypeFieldGraphqlTest {
 	private static final String SORTING_DTO = "sortingWithDocTypeFieldDTO";
 	private static final String SORTING_ID = "sortingId";
 	private static final String SORTING_MUTATION = "sortingWithDocTypeField";
+	private static final String SORTING_ORPHAN_NAME = ENTITY_NAME_PREFIX + "Sorting Orphan";
 	private static final String TYPE = "type";
 
 	@Inject
@@ -268,8 +270,36 @@ public class SortingWithDocTypeFieldGraphqlTest {
 
 	@Test
 	@Order(7)
+	void should_not_persist_sorting_with_non_existent_doc_type_field() throws Exception {
+		// docTypeFieldId points to a missing row: fk_sorting_doc_type_field must
+		// reject the insert so no orphan sorting is persisted
+		try {
+			graphQLClient.executeSync(
+				sortingMutation(
+					null,
+					false,
+					inputObject(
+						prop(NAME, SORTING_ORPHAN_NAME),
+						prop(PRIORITY, INIT_PRIORITY),
+						prop(DEFAULT_SORT, false),
+						prop(TYPE, Sorting.SortingType.ASC),
+						prop(DOC_TYPE_FIELD_ID, NON_EXISTENT_DOC_TYPE_FIELD_ID)
+					)
+				)
+			);
+		}
+		catch (Exception ignored) {
+			// the constraint violation may surface as a transport error
+		}
+
+		assertNull(getSortingOrNull(SORTING_ORPHAN_NAME));
+	}
+
+	@Test
+	@Order(8)
 	void tearDown() {
 		removeSortingIfExists(SORTING_A_NAME);
+		removeSortingIfExists(SORTING_ORPHAN_NAME);
 	}
 
 	private io.smallrye.graphql.client.core.Document sortingMutation(
