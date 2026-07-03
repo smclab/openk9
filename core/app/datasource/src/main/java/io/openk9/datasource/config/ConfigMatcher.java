@@ -103,6 +103,16 @@ public class ConfigMatcher {
 	}
 
 	/**
+	 * Session-scoped variant of {@link #plan(String, ConfigPackage, ImportMode)}
+	 * used by the importer to match and apply within a single transaction.
+	 */
+	public Uni<ImportPlan> plan(
+		Mutiny.Session s, ConfigPackage pkg, ImportMode mode) {
+
+		return doPlan(s, pkg, mode);
+	}
+
+	/**
 	 * Walks the entities in dependency-first order, matching each against the
 	 * tenant on the same session and folding the results into the plan; ancestor
 	 * ids resolved along the way feed the matching of their dependents.
