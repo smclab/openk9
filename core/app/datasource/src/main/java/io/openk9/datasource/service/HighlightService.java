@@ -87,7 +87,7 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 					.call(highlight -> Mutiny.fetch(highlight.getFields()))
 					.flatMap(highlight -> {
 							var newStateHighlight = mapper.patch(highlight, dto);
-							return patchHighlight(dto, session, newStateHighlight);
+							return updateHighlight(dto, session, newStateHighlight);
 						}
 					));
 	}
@@ -134,19 +134,6 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 	}
 
 	private Uni<Highlight> updateHighlight(
-		HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
-
-		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
-
-		return fieldsUniList.flatMap(fieldsList -> {
-			validateDocTypeFieldIds(dto.getFieldIds(), fieldsList);
-			newStateHighlight.setFields(new LinkedHashSet<>(fieldsList));
-
-			return session.merge(newStateHighlight);
-		});
-	}
-
-	private Uni<Highlight> patchHighlight(
 		HighlightDTO dto, Mutiny.Session session, Highlight newStateHighlight) {
 
 		var fieldsUniList = docTypeFieldService.findByIds(dto.getFieldIds());
