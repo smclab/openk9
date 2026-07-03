@@ -135,6 +135,9 @@ Container Scanning:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-admin-ui"
+    # Per-module suppressions: this image scan reads admin-ui's own .trivyignore,
+    # not the shared core/ one (which is Java-only). See TRIVY-SCANNING.md §7.
+    IGNOREFILE: "js-packages/admin-ui/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

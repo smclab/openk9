@@ -128,6 +128,8 @@ Container Scanning Rag:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-rag-module"
+    # Per-module suppressions: rag-module's own .trivyignore (not core/, Java-only).
+    IGNOREFILE: "ai-packages/rag-module/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

@@ -121,6 +121,9 @@ Container Scanning Embedding OA:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-openai-module"
+    # Per-module suppressions: both embedding images share the embedding-modules
+    # source dir, so both scans read the same .trivyignore (not core/, Java-only).
+    IGNOREFILE: "ai-packages/embedding-modules/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
@@ -144,6 +147,8 @@ Container Scanning Embedding ST:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-sentence-transformers-module"
+    # Per-module suppressions: same embedding-modules .trivyignore as the OA scan.
+    IGNOREFILE: "ai-packages/embedding-modules/.trivyignore"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
