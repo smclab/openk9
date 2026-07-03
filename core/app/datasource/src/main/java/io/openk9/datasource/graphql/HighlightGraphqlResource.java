@@ -77,10 +77,6 @@ public class HighlightGraphqlResource {
 		return highlightService.getFields(highlight.getId());
 	}
 
-	public Uni<Set<DocTypeField>> matchedFields(@Source Highlight highlight) {
-		return highlightService.getMatchedFields(highlight.getId());
-	}
-
 	@Description("""
 		Creates or updates an Highlight configuration.
 		

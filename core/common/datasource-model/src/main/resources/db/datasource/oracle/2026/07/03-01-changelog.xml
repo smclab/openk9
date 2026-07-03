@@ -25,6 +25,10 @@
 	logicalFilePath="db/datasource/2026/07/03-01-changelog.xml"
 >
 
+	<changeSet id="1783083616259-1" author="openk9">
+		<dropTable tableName="highlight_matched_fields"/>
+	</changeSet>
+
 	<changeSet id="1783036800-1" author="openk9">
 		<comment>
 			sorting.doc_type_field_id never had a foreign key, so orphaned references

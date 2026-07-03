@@ -60,8 +60,4 @@ public class HighlightDTO extends K9EntityDTO{
 	@Description("Field that decides how to order fragments of text")
 	private Highlight.OrderType order;
 
-	@Description("Set of unique DocTypeField IDs, it's used to highlighting fields " +
-		"indexed with different analyzers, only for fvh highlighter")
-	private Set<Long> matchedFieldIds;
-
 }

@@ -38,7 +38,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
 public class HighlightServiceTest {
@@ -54,10 +53,9 @@ public class HighlightServiceTest {
 
 	private static final String FIELD_1 = "field1";
 	private static final String FIELD_2 = "field2";
-	private static final String MATCHED_FIELD = FIELD_2 + ".content";
 	private static final String HIGHLIGHT_NAME = "highlightTest";
 	private static final List<String> DOC_TYPE_FIELD_LIST =
-		List.of(FIELD_1, FIELD_2, MATCHED_FIELD);
+		List.of(FIELD_1, FIELD_2);
 
 	@BeforeEach
 	void setup() {
@@ -79,39 +77,6 @@ public class HighlightServiceTest {
 
 		assertNotNull(result);
 		assertEquals(Highlight.HighlightType.UNIFIED, result.getType());
-	}
-
-	@Test
-	void should_create_highlight_with_matched_fields() {
-		highlightService.create(
-			HighlightDTO.builder()
-				.name(HIGHLIGHT_NAME)
-				.type(Highlight.HighlightType.FVH)
-				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)))
-				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
-				.build()
-		).await().indefinitely();
-
-		var result = sessionFactory.withTransaction((s, t) ->
-			highlightService.findByName(s, HIGHLIGHT_NAME)
-				.call(h -> Mutiny.fetch(h.getFields()))
-				.call(h -> Mutiny.fetch(h.getMatchedFields()))
-		).await().indefinitely();
-
-		assertEquals(
-			Set.of(getDocTypeFieldId(FIELD_1), getDocTypeFieldId(FIELD_2)),
-			result.getFields()
-				.stream()
-				.map(K9Entity::getId)
-				.collect(Collectors.toSet())
-		);
-		assertEquals(
-			Set.of(getDocTypeFieldId(MATCHED_FIELD)),
-			result.getMatchedFields()
-				.stream()
-				.map(K9Entity::getId)
-				.collect(Collectors.toSet())
-		);
 	}
 
 	@Test
@@ -194,62 +159,6 @@ public class HighlightServiceTest {
 				.map(K9Entity::getId)
 				.collect(Collectors.toSet())
 		);
-	}
-
-	@Test
-	void should_update_empty_matched_fields_when_null() {
-		var highlight = highlightService.create(
-			HighlightDTO.builder()
-				.name(HIGHLIGHT_NAME)
-				.type(Highlight.HighlightType.UNIFIED)
-				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
-				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
-				.build()
-		).await().indefinitely();
-
-		highlightService.update(
-			highlight.getId(),
-			HighlightDTO.builder()
-				.name("highlight")
-				.type(Highlight.HighlightType.UNIFIED)
-				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
-				.build()
-		).await().indefinitely();
-
-		var result = sessionFactory.withTransaction((s, t) ->
-			highlightService.findByName(s, "highlight")
-				.call(h -> Mutiny.fetch(h.getMatchedFields()))
-		).await().indefinitely();
-
-		assertTrue(result.getMatchedFields().isEmpty());
-	}
-
-	@Test
-	void should_patch_ignore_matched_fields_when_null() {
-		var highlight = highlightService.create(
-			HighlightDTO.builder()
-				.name(HIGHLIGHT_NAME)
-				.type(Highlight.HighlightType.UNIFIED)
-				.fieldIds(Set.of(getDocTypeFieldId(FIELD_2)))
-				.matchedFieldIds(Set.of(getDocTypeFieldId(MATCHED_FIELD)))
-				.build()
-		).await().indefinitely();
-
-		highlightService.patch(
-			highlight.getId(),
-			HighlightDTO.builder()
-				.name("highlight")
-				.type(Highlight.HighlightType.UNIFIED)
-				.fieldIds(Set.of(getDocTypeFieldId(FIELD_1)))
-				.build()
-		).await().indefinitely();
-
-		var result = sessionFactory.withTransaction((s, t) ->
-			highlightService.findByName(s, "highlight")
-				.call(h -> Mutiny.fetch(h.getMatchedFields()))
-		).await().indefinitely();
-
-		assertFalse(result.getMatchedFields().isEmpty());
 	}
 
 	@Test

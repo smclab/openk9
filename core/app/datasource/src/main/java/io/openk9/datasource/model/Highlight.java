@@ -98,16 +98,6 @@ public class Highlight extends K9Entity {
 	@Column(name = "fragments_order")
 	private OrderType order;
 
-	@JoinTable(
-		name = "highlight_matched_fields",
-		joinColumns = @JoinColumn(name = "highlight_id", referencedColumnName = "id"),
-		inverseJoinColumns = @JoinColumn(name = "doc_type_field_id", referencedColumnName = "id")
-	)
-	@ManyToMany
-	@JsonIgnore
-	@ToString.Exclude
-	private Set<DocTypeField> matchedFields = new LinkedHashSet<>();
-
 
 	public enum HighlightType {
 		UNIFIED, FVH, PLAIN
