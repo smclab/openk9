@@ -89,8 +89,10 @@ Publish OpenK9-Chatbot:
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
-    # Run only on Main
-    - !reference [.rules:child-publish, rules]
+    # Run only on Main. NON usare .rules:child-publish qui: e' condivisa e
+    # include i tag, per cui su un tag vN.N.N collide col job Release qui sotto
+    # (doppio npm publish). Il tag e' gestito solo da "Publish OpenK9-Chatbot Release".
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
 # --- RELEASE BRANCH JOBS ---
 
@@ -148,7 +150,10 @@ Publish OpenK9-Chatbot Release:
   - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ~/.npmrc
   - npm publish --access public
   rules:
-    - if: '$CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+/'
+    # Tag v-prefissato (vN.N.N). Il vecchio regex /^\d+\.\d+\.\d+/ NON matcha
+    # "v2026.1.0" (prefisso v) -> su tag questo job non partiva e pubblicava
+    # invece il job di main con versione errata. Allineato a child-deploy-release.
+    - if: '$CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/'
 
 ####################### DEPENDENCY CHECK #######################
 Dependency Check OpenK9-Chatbot:

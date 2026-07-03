@@ -146,7 +146,10 @@ Trigger Restart:
 ####################### PUBLISH SEARCH FRONTEND #######################
 Publish Search Frontend:
   stage: publish
-  image: node:22.14.0
+  # node:22.15.0 (non 22.14.0): il yarn.lock condiviso del workspace risolve
+  # http-proxy-middleware@4.0.0 (dep di tenant-ui) che richiede node ^22.15.0,
+  # per cui yarn install --frozen-lockfile falliva su 22.14.0.
+  image: node:22.15.0
   needs:
   - job: Fetch version
     artifacts: true
