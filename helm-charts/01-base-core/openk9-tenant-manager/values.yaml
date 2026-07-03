@@ -126,8 +126,10 @@ keycloak:
   passwordSecretName: "keycloak-secret"
   keyPasswordSecret: "admin-password"
   keyPasswordEnvName: "QUARKUS_KEYCLOAK_ADMIN_CLIENT_PASSWORD"
-  ### Base URI for Tenant Provisioning
-  baseIssuerUri: "https://keycloak.openk9.local/realms/"
+  ### Base URI for Tenant Provisioning — REQUIRED, no default.
+  ### Must be set per environment (e.g. https://<keycloak-host>/realms/).
+  ### Local scenarios set it in scenarios/local-*.yaml.
+  baseIssuerUri: ""
 
 
 ## Database configuration

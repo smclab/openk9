@@ -150,6 +150,7 @@ To configure connection to Keycloak following parameters are available:
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `keycloak.host`    | Keycloak host                         | `keycloak.openk9.local`            |
+| `keycloak.baseIssuerUri` | Keycloak base issuer URI for tenant provisioning (REQUIRED, no default — set per environment, e.g. `https://<keycloak-host>/realms/`) | `""` |
 | `keycloak.clientId`  | Keycloak client                             | `tenant-manager` |
 | `keycloak.svcport`    | Keycloak service port                         | `80`            |
 | `keycloak.service`  | Keycloak service name                             | `keycloak` |
