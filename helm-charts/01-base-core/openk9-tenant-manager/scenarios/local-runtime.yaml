@@ -8,6 +8,7 @@ quarkus:
 ## Keycloak configuration
 keycloak:
   host: "keycloak.openk9.local"   #-TBMD
+  baseIssuerUri: "https://keycloak.openk9.local/realms/"   #-TBMD
 
 ## Ingress configuration
 ingress:

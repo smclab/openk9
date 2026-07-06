@@ -150,6 +150,7 @@ To configure connection to Keycloak following parameters are available:
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `keycloak.host`    | Keycloak host                         | `keycloak.openk9.local`            |
+| `keycloak.baseIssuerUri` | Keycloak base issuer URI for tenant provisioning (REQUIRED, no default — set per environment, e.g. `https://<keycloak-host>/realms/`) | `""` |
 | `keycloak.clientId`  | Keycloak client                             | `tenant-manager` |
 | `keycloak.svcport`    | Keycloak service port                         | `80`            |
 | `keycloak.service`  | Keycloak service name                             | `keycloak` |
@@ -396,8 +397,8 @@ keycloak:
 
 ```yaml
 keycloak:
-  ### Base URI for Tenant Provisioning
-  baseIssuerUri: "https://keycloak.openk9.local/realms/"
+  ### Base URI for Tenant Provisioning — REQUIRED, no default. Set per environment.
+  baseIssuerUri: "https://<keycloak-host>/realms/"
 ```
 
 - new configurations added to connect to Rabbitmq
