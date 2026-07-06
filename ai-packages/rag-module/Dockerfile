@@ -5,6 +5,8 @@ ARG MODE=cpu
 
 WORKDIR /rag-module/
 
+
+
 COPY ./requirements.txt ./
 
 # Optimized single-layer RUN: installs system dependencies, python packages, and then purges build tools.
