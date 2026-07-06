@@ -35,6 +35,18 @@ RUN python -m grpc_tools.protoc \
 
 EXPOSE 5000
 
+# Register the non-root user so libs resolving the user/home (getpwuid) don't
+# crash under an unregistered uid, and give it a writable HOME/cache. chown
+# 1001:0 + g=u keeps it OpenShift-friendly for arbitrary UIDs.
+RUN useradd -m -u 1001 -g 0 embedding-module
+ENV USER=embedding-module \
+    HOME=/embedding_module \
+    HF_HOME=/embedding_module/.cache/huggingface \
+    TORCH_HOME=/embedding_module/.cache/torch \
+    XDG_CACHE_HOME=/embedding_module/.cache
+RUN mkdir -p /embedding_module/.cache && \
+    chown -R 1001:0 /embedding_module && chmod -R g=u /embedding_module
+
 USER 1001
 
 CMD ["python", "-m", "app.server"]

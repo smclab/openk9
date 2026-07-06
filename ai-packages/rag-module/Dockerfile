@@ -30,11 +30,20 @@ RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. \
 
 EXPOSE 5000
 
-# Under USER 1001 (no /etc/passwd entry) HOME and USER are unset, and the WORKDIR
-# is root-owned -> startup crashes on first write. Set USER and make the WORKDIR
-# writable by uid 1001 (chown 1001:0 + g=u, OpenShift-friendly for arbitrary UIDs).
-ENV USER=rag-module
-RUN chown -R 1001:0 /rag-module && chmod -R g=u /rag-module
+# Under USER 1001 without a /etc/passwd entry, libs that resolve the user/home
+# (torch _inductor via langchain-docling, arize-phoenix) call getpwuid() and
+# crash with "uid not found". Register the user, set HOME, and point the torch/HF
+# caches at writable dirs. chown 1001:0 + g=u keeps it OpenShift-friendly for
+# arbitrary UIDs.
+RUN useradd -m -u 1001 -g 0 rag-module
+ENV USER=rag-module \
+    HOME=/rag-module \
+    HF_HOME=/rag-module/.cache/huggingface \
+    TORCH_HOME=/rag-module/.cache/torch \
+    TORCHINDUCTOR_CACHE_DIR=/tmp/torchinductor \
+    XDG_CACHE_HOME=/rag-module/.cache
+RUN mkdir -p /rag-module/.cache && \
+    chown -R 1001:0 /rag-module && chmod -R g=u /rag-module
 
 USER 1001
 
