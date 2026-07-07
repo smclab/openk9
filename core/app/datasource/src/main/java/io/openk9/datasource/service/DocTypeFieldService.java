@@ -116,6 +116,7 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 					DocTypeField docTypeField = mapper.create(docTypeFieldDTO);
 					docTypeField.setParentDocTypeField(parentDocTypeField);
 					docTypeField.setDocType(parentDocTypeField.getDocType());
+					normalizeOffsetSource(docTypeField);
 					subList.add(docTypeField);
 					return persist(s, docTypeField);
 				})
@@ -162,6 +163,8 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 				docTypeField.setSearchAnalyzer(searchAnalyzer);
 			}
 		}
+
+		normalizeOffsetSource(docTypeField);
 
 		return docTypeField;
 	}
@@ -623,6 +626,8 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			}
 		}
 
+		normalizeOffsetSource(docTypeField);
+
 		return docTypeField;
 	}
 
@@ -654,7 +659,20 @@ public class DocTypeFieldService extends BaseK9EntityService<DocTypeField, DocTy
 			docTypeField.setSearchAnalyzer(searchAnalyzer);
 		}
 
+		normalizeOffsetSource(docTypeField);
+
 		return docTypeField;
+	}
+
+	/**
+	 * Forces {@code offsetSource} back to {@code NONE} when the {@code fieldType} is not {@code TEXT}.
+	 * OpenSearch only supports {@code term_vector}/{@code index_options} on text fields,
+	 * so any other {@code fieldType} can not have an {@code offsetSource} other than {@code NONE}.
+	 */
+	private static void normalizeOffsetSource(DocTypeField docTypeField) {
+		if (docTypeField.getFieldType() != FieldType.TEXT) {
+			docTypeField.setOffsetSource(DocTypeField.OffsetSourceType.NONE);
+		}
 	}
 
 }
