@@ -329,6 +329,11 @@
 		  <artifactId>quarkus-smallrye-graphql-client</artifactId>
 		  <scope>test</scope>
 	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.pekko</groupId>
+		  <artifactId>pekko-actor-testkit-typed_${scala.version}</artifactId>
+		  <scope>test</scope>
+	  </dependency>
 
 	  <!--	in order to activate elasticsearch dev-service,
 	  		we need to add an elasticsearch extension -->

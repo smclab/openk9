@@ -1,0 +1,12 @@
+{
+  "contentId": "content-1",
+  "type": "PARTIAL_DOCUMENT",
+  "parsingDate": 1751846400000,
+  "rawContent": null,
+  "title": "Updated title",
+  "tags": ["alpha", "beta"],
+  "sample": {
+    "firstName": "John",
+    "lastName": "Doe"
+  }
+}
