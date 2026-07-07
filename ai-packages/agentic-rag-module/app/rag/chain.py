@@ -72,6 +72,7 @@ def get_agentic_rag(
             "enable_real_time_evaluation"
         )
         bypass_rag = rag_configuration.get("bypass_rag")
+        answer_only_with_context = rag_configuration.get("answer_only_with_context")
         domain_threshold = rag_configuration.get("domain_threshold")
 
         api_url = llm_configuration.get("api_url")
@@ -121,6 +122,7 @@ def get_agentic_rag(
             "reformulate": reformulate,
             "rerank": rerank,
             "bypass_rag": bypass_rag,
+            "answer_only_with_context": answer_only_with_context,
             "chunk_window": chunk_window,
             "enable_conversation_title": enable_conversation_title,
             "range_values": range_values,
