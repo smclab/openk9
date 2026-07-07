@@ -796,6 +796,11 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return Bucket.class;
 	}
 
+	public Uni<Highlight> getHighlight(Long bucketId) {
+		return sessionFactory.withTransaction(session -> findById(session, bucketId)
+			.flatMap(bucket -> session.fetch(bucket.getHighlight())));
+	}
+
 	public Uni<Language> getLanguage(Bucket bucket) {
 		return sessionFactory.withTransaction(
 			s -> s.fetch(bucket.getDefaultLanguage()));
@@ -1698,9 +1703,5 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return s.createQuery(criteriaQuery).getResultList();
 	}
 
-	public Uni<Highlight> getHighlight(Long bucketId) {
-		return sessionFactory.withTransaction(session -> findById(session, bucketId)
-			.flatMap(bucket -> session.fetch(bucket.getHighlight())));
-	}
 
 }
