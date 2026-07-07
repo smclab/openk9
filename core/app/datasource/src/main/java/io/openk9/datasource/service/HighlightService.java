@@ -18,13 +18,20 @@
 package io.openk9.datasource.service;
 
 import io.openk9.datasource.mapper.HighlightMapper;
+import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Highlight;
+import io.openk9.datasource.model.Highlight_;
 import io.openk9.datasource.model.dto.base.HighlightDTO;
 import io.openk9.datasource.service.exception.InvalidDocTypeFieldSetException;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 import java.util.Collections;
@@ -108,6 +115,34 @@ public class HighlightService extends BaseK9EntityService<Highlight, HighlightDT
 			}
 
 			return Uni.createFrom().item(transientHighlight);
+		});
+	}
+
+	public Uni<List<Highlight>> findUnboundHighlightByBucket(long bucketId) {
+		return sessionFactory.withTransaction(session -> {
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Highlight> query = cb.createQuery(Highlight.class);
+			Root<Highlight> rootHighlight = query.from(Highlight.class);
+
+			Subquery<Long> subquery = query.subquery(Long.class);
+			Root<Bucket> subRootBucket = subquery.from(Bucket.class);
+
+			var associatedHighlightPath = subRootBucket.get(Bucket_.highlight);
+
+			subquery.select(associatedHighlightPath.get(Highlight_.id));
+
+			subquery.where(
+				cb.and(
+					cb.equal(subRootBucket.get(Bucket_.id), bucketId),
+					cb.isNotNull(associatedHighlightPath)
+				)
+			);
+
+			query.select(rootHighlight);
+			query.where(cb.not(rootHighlight.get(Highlight_.id).in(subquery)));
+
+			return session.createQuery(query).getResultList();
 		});
 	}
 

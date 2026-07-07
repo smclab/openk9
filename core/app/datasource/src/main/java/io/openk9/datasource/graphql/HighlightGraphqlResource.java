@@ -57,6 +57,22 @@ public class HighlightGraphqlResource {
 		return highlightService.findAll();
 	}
 
+	@Description("""
+		Retrieves all Highlight configurations that are not bound to a specific Bucket.
+		
+		This query returns Highlight configurations that are available to be bound to the specified Bucket.
+		
+		Arguments:
+		- `bucketId` (ID!): The ID of the Bucket to check for unbound Highlight.
+		
+		Returns:
+		- A list of unbound Highlight configurations available for the specified Bucket.
+		""")
+	@Query
+	public Uni<List<Highlight>> getUnboundHighlightByBucket(long bucketId) {
+		return highlightService.findUnboundHighlightByBucket(bucketId);
+	}
+
 	public Uni<Set<DocTypeField>> fields(@Source Highlight highlight) {
 		return highlightService.getFields(highlight.getId());
 	}
