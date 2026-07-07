@@ -33,6 +33,11 @@ spec:
           volumeMounts:
             - name: log-volume
               mountPath: /var/log/openk9
+            # tiktoken (via langchain-openai) caches its BPE vocab under
+            # tempfile.gettempdir(); with readOnlyRootFilesystem the on-image
+            # /tmp is read-only, so mount a writable emptyDir over it.
+            - name: tmp
+              mountPath: /tmp
           envFrom:
             - configMapRef:
                 name: {{ template "common.names.name" . }}-config
@@ -85,4 +90,6 @@ spec:
           {{- end }}
       volumes:
         - name: log-volume
+          emptyDir: {}
+        - name: tmp
           emptyDir: {}
