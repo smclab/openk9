@@ -18,12 +18,14 @@
 package io.openk9.datasource.mapper;
 
 import io.openk9.datasource.model.Bucket;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeTemplate;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.Tab;
 import io.openk9.datasource.model.TokenTab;
 import io.openk9.datasource.web.BucketResource;
+import io.openk9.datasource.web.dto.DatasourceResponseDTO;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
@@ -59,6 +61,9 @@ public interface BucketResourceMapper {
 		DocTypeTemplate docTypeTemplate);
 
 	BucketResource.CurrentBucket toCurrentBucket(Bucket bucket);
+
+	List<DatasourceResponseDTO> toDatasourceResponseDtoList(
+		List<Datasource> datasourceList);
 
 	default List<TabResponseDTO> toTabResponseDtoList(List<Tab> tabList) {
 		return toTabResponseDtoList(tabList, null, null);

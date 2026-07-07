@@ -21,6 +21,7 @@ package io.openk9.datasource.web;
 import java.util.List;
 import java.util.stream.Stream;
 
+import io.openk9.datasource.web.dto.DatasourceResponseDTO;
 import io.openk9.datasource.web.dto.DocTypeFieldResponseDTO;
 import io.openk9.datasource.web.dto.SortingResponseDTO;
 import io.openk9.datasource.web.dto.TabResponseDTO;
@@ -45,6 +46,7 @@ import io.openk9.datasource.mapper.BucketResourceMapper;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.Bucket_;
 import io.openk9.datasource.model.DataIndex_;
+import io.openk9.datasource.model.Datasource;
 import io.openk9.datasource.model.Datasource_;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
@@ -232,6 +234,15 @@ public class BucketResource {
 		@APIResponse(ref = "#/components/responses/not-found"),
 		@APIResponse(ref = "#/components/responses/internal-server-error"),
 	})
+	@Path("/current/datasources")
+	@GET
+	public Uni<List<DatasourceResponseDTO>> getDatasources() {
+		return cache.getAsync(
+			new CompositeCacheKey(request.host(), "getDatasources"),
+			key -> getDatasourceList(request.host())
+		);
+	}
+
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
@@ -434,6 +445,42 @@ public class BucketResource {
 							.item(mapper.toSortingResponseDtoList(sortings));
 					}
 				});
+		});
+
+	}
+
+	private Uni<List<DatasourceResponseDTO>> getDatasourceList(String virtualhost) {
+		return sessionFactory.withTransaction(session -> {
+
+			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+
+			CriteriaQuery<Datasource> query = cb.createQuery(Datasource.class);
+
+			Root<Bucket> from = query.from(Bucket.class);
+
+			Join<Bucket, TenantBinding> tenantBindingJoin =
+				from.join(Bucket_.tenantBinding);
+
+			Join<Bucket, Datasource> datasourcesJoin =
+				from.join(Bucket_.datasources);
+
+			query.select(datasourcesJoin);
+
+			query.where(
+				cb.equal(
+					tenantBindingJoin.get(TenantBinding_.virtualHost),
+					virtualhost
+				)
+			);
+
+			query.orderBy(cb.asc(datasourcesJoin.get(Datasource_.name)));
+
+			query.distinct(true);
+
+			return session
+				.createQuery(query)
+				.getResultList()
+				.map(mapper::toDatasourceResponseDtoList);
 		});
 
 	}
