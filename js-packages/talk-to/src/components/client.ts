@@ -59,6 +59,12 @@ export function OpenK9Client() {
 			return res?.statusText !== "No Content" ? res.json() : { value: "en_US" };
 		},
 
+		async getDatasources() {
+			const res = await authFetch("/api/datasource/buckets/current/datasources");
+			if (!res.ok) throw new Error("Failed to fetch datasources");
+			return res.json();
+		},
+
 		async getUserInfo() {
 			const response = await authFetch(`/api/datasource/buckets/current`);
 			if (!response.ok) throw new Error("Network response was not ok");

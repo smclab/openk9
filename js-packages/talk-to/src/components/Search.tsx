@@ -19,6 +19,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import React from "react";
 import { useTranslation } from "react-i18next";
 import UnicodeSpinner from "./utils/UnicodeSpinner";
+import { DatasourceSelectMemo } from "./DatasourceSelect";
 
 export default function Search({
 	handleSearch,
@@ -28,6 +29,8 @@ export default function Search({
 	isAuthenticated,
 	retrieveFromUploadedDocuments,
 	onSetRetrieveFromUploadedDocuments,
+	selectedDatasourceIds,
+	onSetSelectedDatasourceIds,
 }: {
 	handleSearch: (message: string, retrieveFromUploadedDocuments?: boolean) => void;
 	cancelAllResponses(): void;
@@ -36,6 +39,8 @@ export default function Search({
 	isAuthenticated?: boolean;
 	retrieveFromUploadedDocuments?: boolean;
 	onSetRetrieveFromUploadedDocuments?: (value: boolean) => void;
+	selectedDatasourceIds: number[];
+	onSetSelectedDatasourceIds: (ids: number[]) => void;
 }) {
 	const [search, setSearch] = React.useState("");
 	const { t } = useTranslation();
@@ -129,6 +134,9 @@ export default function Search({
 					))}
 				</Box>
 			)}
+			<Box sx={{ display: "flex", mb: 1 }}>
+				<DatasourceSelectMemo selectedDatasourceIds={selectedDatasourceIds} onChange={onSetSelectedDatasourceIds} />
+			</Box>
 			<form
 				onSubmit={(event) => {
 					event.preventDefault();

@@ -36,7 +36,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 	}, [initialMessages]);
 
 	const generateResponse = useCallback(
-		async (query: string, chatId: string, retrieveFromUploadedDocuments?: boolean) => {
+		async (query: string, chatId: string, retrieveFromUploadedDocuments?: boolean, datasourceIds?: number[]) => {
 			const id = uuidv4();
 			setIsLoading({ id, isLoading: true });
 
@@ -87,6 +87,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						timestamp,
 						language,
 						retrieveFromUploadedDocuments: retrieveFromUploadedDocuments,
+						datasourceIds,
 				  }
 				: {
 						searchText: query,
@@ -94,6 +95,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						timestamp,
 						chatHistory,
 						language,
+						datasourceIds,
 				  };
 
 			try {

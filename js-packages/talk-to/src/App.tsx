@@ -22,6 +22,7 @@ function App() {
 	const [retrieveFromUploadedDocuments, setRetrieveFromUploadedDocuments] = React.useState<boolean | undefined>(
 		undefined,
 	);
+	const [selectedDatasourceIds, setSelectedDatasourceIds] = React.useState<number[]>([]);
 	const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 	const { initialMessages } = useChatData(userId || "", chatId);
 	const isLoadingChat = !chatId?.isNew && initialMessages.isLoadingChat;
@@ -41,7 +42,7 @@ function App() {
 	const client = OpenK9Client();
 	const handleSearch = (query: string, retrieveFromUploadedDocumentsParam?: boolean) => {
 		const flag = retrieveFromUploadedDocumentsParam ?? retrieveFromUploadedDocuments;
-		chatId?.id && generateResponse(query, chatId?.id || "", flag);
+		chatId?.id && generateResponse(query, chatId?.id || "", flag, selectedDatasourceIds);
 	};
 
 	React.useEffect(() => {
@@ -52,6 +53,7 @@ function App() {
 
 	React.useEffect(() => {
 		setRetrieveFromUploadedDocuments(undefined);
+		setSelectedDatasourceIds([]);
 	}, [chatId?.id]);
 
 	React.useEffect(() => {
@@ -208,6 +210,8 @@ function App() {
 								isAuthenticated={!!kc.authenticated}
 								retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
 								onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
+								selectedDatasourceIds={selectedDatasourceIds}
+								onSetSelectedDatasourceIds={setSelectedDatasourceIds}
 							/>
 						</Box>
 					</Box>
