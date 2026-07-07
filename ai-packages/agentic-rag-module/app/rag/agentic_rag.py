@@ -1085,6 +1085,21 @@ class RagGraph:
 
                 search_query.append(domain_filter)
 
+            datasource_ids = self.configuration.get("datasource_ids")
+            if datasource_ids:
+                logger.debug(f"[retriever] datasource_filter={datasource_ids}")
+                datasource_filter = models.SearchToken(
+                    tokenType="DATASOURCE",
+                    keywordKey="",
+                    values=[str(datasource_id) for datasource_id in datasource_ids],
+                    filter=True,
+                    entityType="",
+                    entityName="",
+                    extra={},
+                )
+
+                search_query.append(datasource_filter)
+
             retriever = OpenSearchRetriever(
                 search_query=search_query,
                 search_text=query,

@@ -220,6 +220,7 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
+    datasource_ids = search_query_request.datasourceIds
     rag_type = RagType.SIMPLE_GENERATE.value
 
     search_text = sanitize_input(search_text)
@@ -267,6 +268,7 @@ async def rag_generate(
     chain = get_agentic_rag(
         rag_type,
         search_query,
+        datasource_ids,
         after_key,
         suggest_keyword,
         suggestion_category_id,
@@ -365,6 +367,7 @@ async def rag_chat(
     language = search_query_chat.language
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
+    datasource_ids = search_query_chat.datasourceIds
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG.value
@@ -414,6 +417,7 @@ async def rag_chat(
     chain = get_agentic_rag(
         rag_type,
         search_query,
+        datasource_ids,
         after_key,
         suggest_keyword,
         suggestion_category_id,
@@ -513,6 +517,7 @@ async def rag_chat_tool(
     language = search_query_chat.language
     search_text = search_query_chat.searchText
     chat_history = search_query_chat.chatHistory
+    datasource_ids = search_query_chat.datasourceIds
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG_TOOL.value
@@ -562,6 +567,7 @@ async def rag_chat_tool(
     chain = get_agentic_rag(
         rag_type,
         search_query,
+        datasource_ids,
         after_key,
         suggest_keyword,
         suggestion_category_id,

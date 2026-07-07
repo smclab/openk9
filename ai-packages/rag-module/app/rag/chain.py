@@ -41,6 +41,7 @@ UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 
 def get_chain(
     search_query,
+    datasource_ids,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -109,6 +110,7 @@ def get_chain(
 
         retriever = OpenSearchRetriever(
             search_query=search_query,
+            datasource_ids=datasource_ids,
             search_text=question,
             rerank=rerank,
             reranker_api_url=reranker_api_url,
@@ -168,6 +170,7 @@ def get_chat_chain(
     sort_after_key,
     language,
     search_text,
+    datasource_ids,
     chat_id,
     user_id,
     tenant_id,
@@ -234,6 +237,7 @@ def get_chat_chain(
         try:
             generator = stream_rag_conversation(
                 search_text,
+                datasource_ids,
                 reranker_api_url,
                 range_values,
                 after_key,
@@ -296,6 +300,7 @@ def get_chat_chain_tool(
     sort_after_key,
     language,
     search_text,
+    datasource_ids,
     chat_id,
     user_id,
     tenant_id,
@@ -404,6 +409,7 @@ def get_chat_chain_tool(
             try:
                 generator = stream_rag_conversation(
                     search_text,
+                    datasource_ids,
                     reranker_api_url,
                     range_values,
                     after_key,

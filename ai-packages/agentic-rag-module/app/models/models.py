@@ -81,6 +81,11 @@ class SearchQuery(BaseModel):
     reformulate: Optional[bool] = Field(
         True, description="Enable query reformulation", example=True
     )
+    datasourceIds: Optional[list[int]] = Field(
+        None,
+        description="Restrict retrieval to these datasource ids",
+        example=[1, 2],
+    )
 
 
 class SearchQueryChat(BaseModel):
@@ -155,6 +160,11 @@ class SearchQueryChat(BaseModel):
     )
     chatSequenceNumber: int = Field(
         ..., description="Incremental conversation turn number", example=3
+    )
+    datasourceIds: Optional[list[int]] = Field(
+        None,
+        description="Restrict retrieval to these datasource ids",
+        example=[1, 2],
     )
 
 

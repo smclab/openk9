@@ -29,6 +29,7 @@ UNEXPECTED_ERROR_MESSAGE = "Unexpected error"
 def get_agentic_rag(
     rag_type,
     search_query,
+    datasource_ids,
     after_key,
     suggest_keyword,
     suggestion_category_id,
@@ -114,6 +115,7 @@ def get_agentic_rag(
         graph_configuration = {
             "rag_type": rag_type,
             "search_query": search_query,
+            "datasource_ids": datasource_ids,
             "tenant_id": tenant_id,
             "user_id": user_id,
             "chat_id": chat_id,

@@ -322,6 +322,7 @@ class Citations(BaseModel):
 
 def stream_rag_conversation(
     search_text: str,
+    datasource_ids: list,
     reranker_api_url: str,
     range_values: list,
     after_key: str,
@@ -524,6 +525,7 @@ def stream_rag_conversation(
     else:
         retriever = OpenSearchRetriever(
             search_text=search_text,
+            datasource_ids=datasource_ids,
             rerank=rerank,
             reranker_api_url=reranker_api_url,
             chunk_window=chunk_window,

@@ -195,6 +195,7 @@ async def rag_generate(
     sort_after_key = search_query_request.sortAfterKey
     language = search_query_request.language
     search_text = search_query_request.searchText
+    datasource_ids = search_query_request.datasourceIds
 
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id
@@ -225,6 +226,7 @@ async def rag_generate(
 
     chain = get_chain(
         search_query,
+        datasource_ids,
         after_key,
         suggest_keyword,
         suggestion_category_id,
@@ -318,6 +320,7 @@ async def rag_chat(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
+    datasource_ids = search_query_chat.datasourceIds
 
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id
@@ -369,6 +372,7 @@ async def rag_chat(
         sort_after_key,
         language,
         search_text,
+        datasource_ids,
         chat_id,
         user_id,
         tenant_id,
@@ -464,6 +468,7 @@ async def rag_chat_tool(
     chat_history = search_query_chat.chatHistory
     timestamp = search_query_chat.timestamp
     chat_sequence_number = search_query_chat.chatSequenceNumber
+    datasource_ids = search_query_chat.datasourceIds
 
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id
@@ -515,6 +520,7 @@ async def rag_chat_tool(
         sort_after_key,
         language,
         search_text,
+        datasource_ids,
         chat_id,
         user_id,
         tenant_id,

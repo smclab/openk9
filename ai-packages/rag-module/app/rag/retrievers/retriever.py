@@ -37,6 +37,7 @@ class OpenSearchRetriever(BaseRetriever):
     """Retriever that uses OpenSearch's store for retrieving documents."""
 
     search_query: Optional[list] = None
+    datasource_ids: Optional[list] = None
     search_text: str
     rerank: Optional[bool] = False
     reranker_api_url: Optional[str] = ""
@@ -86,6 +87,21 @@ class OpenSearchRetriever(BaseRetriever):
                 }
             ]
         )
+
+        if self.datasource_ids:
+            search_query.append(
+                {
+                    "entityType": "",
+                    "entityName": "",
+                    "tokenType": "DATASOURCE",
+                    "keywordKey": "",
+                    "values": [
+                        str(datasource_id) for datasource_id in self.datasource_ids
+                    ],
+                    "extra": {},
+                    "filter": True,
+                }
+            )
 
         query_data = query_parser(
             search_query=search_query,
