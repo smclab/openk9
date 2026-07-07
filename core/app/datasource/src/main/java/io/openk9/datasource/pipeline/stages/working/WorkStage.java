@@ -22,6 +22,7 @@ import java.util.function.BiFunction;
 
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.pipeline.actor.DataProcessException;
+import io.openk9.datasource.pipeline.actor.PartialUpdateWriter;
 import io.openk9.datasource.pipeline.actor.Scheduling;
 import io.openk9.datasource.pipeline.actor.WorkStageException;
 import io.openk9.datasource.pipeline.actor.WriterException;
@@ -48,6 +49,7 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 	private final BiFunction<SchedulerDTO, ActorRef<Writer.Response>,
 		Behavior<Writer.Command>> writerFactory;
 	private ActorRef<Writer.Command> writer;
+	private ActorRef<Writer.Command> partialWriter;
 	private final ActorRef<Processor.Response> dataProcessAdapter;
 	private final LinkedList<EntityTypeKey<Processor.Command>> processorTypes;
 	private long counter = 0;
@@ -199,6 +201,36 @@ public class WorkStage extends AbstractBehavior<WorkStage.Command> {
 				));
 
 				this.replyTo.tell(new Working(heldMessage, requester));
+			}
+			case PARTIAL_DOCUMENT -> {
+				// Prepares for a partial update, bypassing the ProcessorChain
+				var contentId = dataPayload.getContentId();
+
+				if (contentId == null) {
+					this.replyTo.tell(new Invalid("content-id is null", requester));
+					return this;
+				}
+
+				if (this.partialWriter == null) {
+					this.partialWriter = getContext().spawnAnonymous(
+						PartialUpdateWriter.create(scheduler, writerAdapter));
+				}
+
+				counter++;
+				var parsingDateTimeStamp = dataPayload.getParsingDate();
+
+				var processKey = ShardingKey.concat(shardingKey, String.valueOf(counter));
+
+				var heldMessage = new HeldMessage(
+					processKey,
+					counter,
+					parsingDateTimeStamp,
+					contentId
+				);
+
+				this.replyTo.tell(new Working(heldMessage, requester));
+
+				partialWriter.tell(new Writer.Start(payloadArray, heldMessage));
 			}
 			case LAST -> this.replyTo.tell(new Last(requester, dataPayload.getParsingDate()));
 			case HALT -> {
