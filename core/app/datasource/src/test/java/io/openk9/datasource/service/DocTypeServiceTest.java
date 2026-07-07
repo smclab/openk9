@@ -179,4 +179,86 @@ public class DocTypeServiceTest {
 		analyzerService.deleteById(searchAnalyzer.getId()).await().indefinitely();
 	}
 
+	@Test
+	void should_persist_offsetSource_for_text_field() {
+
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name("OffsetSourceTextTest")
+				.build())
+			.await().indefinitely();
+
+		var field = docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldDTO.builder()
+					.name("offsetSourceField")
+					.fieldName("offsetSourceField")
+					.fieldType(FieldType.TEXT)
+					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
+					.build()
+			)
+			.await().indefinitely().right;
+
+		assertEquals(DocTypeField.OffsetSourceType.TERM_VECTOR, field.getOffsetSource());
+
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+	}
+
+	@Test
+	void should_reset_offsetSource_for_non_text_field() {
+
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name("OffsetSourceKeywordTest")
+				.build())
+			.await().indefinitely();
+
+		var field = docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldDTO.builder()
+					.name("offsetSourceField")
+					.fieldName("offsetSourceField")
+					.fieldType(FieldType.KEYWORD)
+					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
+					.build()
+			)
+			.await().indefinitely().right;
+
+		assertEquals(DocTypeField.OffsetSourceType.NONE, field.getOffsetSource());
+
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+	}
+
+	@Test
+	void should_reset_offsetSource_for_non_text_subField() {
+
+		var docType = docTypeService.create(DocTypeDTO.builder()
+				.name("OffsetSourceSubFieldTest")
+				.build())
+			.await().indefinitely();
+
+		var parent = docTypeService.addDocTypeField(
+				docType.getId(),
+				DocTypeFieldDTO.builder()
+					.name("parentField")
+					.fieldName("parentField")
+					.fieldType(FieldType.TEXT)
+					.build()
+			)
+			.await().indefinitely().right;
+
+		var subField = docTypeFieldService.createSubField(
+				parent.getId(),
+				DocTypeFieldDTO.builder()
+					.name("keywordSubField")
+					.fieldName("keyword")
+					.fieldType(FieldType.KEYWORD)
+					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
+					.build()
+			)
+			.await().indefinitely();
+
+		assertEquals(DocTypeField.OffsetSourceType.NONE, subField.getOffsetSource());
+
+		docTypeService.deleteById(docType.getId()).await().indefinitely();
+	}
+
 }
