@@ -73,6 +73,10 @@ phoenix:
   collectorEndpoint: "http://phoenix.monitoring.svc.cluster.local:6006"
   projectName: "openk9-chunk-evaluation"
   apiKey: ""
+  ## arize-phoenix persists data under its working dir; with no HOME set and a
+  ## non-root uid it defaults to /.phoenix (not writable). Point it at a
+  ## writable path (/tmp is world-writable and always present).
+  workingDir: "/tmp/.phoenix"
 
 # One of Ingress or Route is mandatory
 ingress:

@@ -15,6 +15,9 @@ data:
   {{- if .Values.phoenix.projectName }}
   PHOENIX_PROJECT_NAME: {{ .Values.phoenix.projectName | quote }}
   {{- end }}
+  {{- if .Values.phoenix.workingDir }}
+  PHOENIX_WORKING_DIR: {{ .Values.phoenix.workingDir | quote }}
+  {{- end }}
   {{- if .Values.phoenix.apiKey }}
   PHOENIX_API_KEY: {{ .Values.phoenix.apiKey | quote }}
   {{- end }}
