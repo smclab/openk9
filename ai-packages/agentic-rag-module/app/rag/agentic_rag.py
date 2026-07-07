@@ -110,6 +110,9 @@ class GraphState(BaseModel):
         default=None,
         description="Whether retrieval operates on user uploaded documents",
     )
+    no_context_answer: Optional[bool] = Field(
+        default=False, description="Answer short-circuited due to empty RAG context"
+    )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -219,6 +222,9 @@ class RagGraph:
         self.reformulate = configuration.get("reformulate")
         self.retrieve_from_uploaded_documents = configuration.get(
             "retrieve_from_uploaded_documents"
+        )
+        self.answer_only_with_context = configuration.get(
+            "answer_only_with_context", True
         )
         self.opensearch_host = configuration.get("opensearch_host")
         self.open_search_client = OpenSearch(
@@ -1333,6 +1339,18 @@ class RagGraph:
 
         conversation_history = self._format_conversation_history(messages)
 
+        if state.use_rag and not context and self.answer_only_with_context:
+            logger.debug(
+                "[llm_response] no context retrieved and "
+                "answer_only_with_context enabled -> no-context answer"
+            )
+            state.response = (
+                "No information found in the knowledge base to answer your "
+                "question. Please try rephrasing it."
+            )
+            state.no_context_answer = True
+            return state
+
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
             context_text = "\n\n".join([doc.page_content for doc in context])
@@ -1807,6 +1825,13 @@ class RagGraph:
                     raise e
 
             if last_state := self.graph.get_state(self.config):
+                if last_state.values.get("no_context_answer"):
+                    result_answer = last_state.values.get("response")
+                    yield json.dumps({"chunk": "", "type": "START"})
+                    yield json.dumps(
+                        {"chunk": result_answer, "type": "CHUNK"}
+                    )
+
                 if all(
                     [
                         self.chat_sequence_number == 1,

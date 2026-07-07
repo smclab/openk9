@@ -193,6 +193,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "enable_real_time_evaluation", False
         )
         bypass_rag = json_config.get("bypass_rag", False)
+        answer_only_with_context = json_config.get("answer_only_with_context", True)
 
         enable_input_guardrail = json_config.get("enable_input_guardrail", True)
         input_guardrail_threshold = json_config.get("input_guardrail_threshold", 0.5)
@@ -261,6 +262,7 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "reformulate": reformulate,
             "enable_conversation_title": enable_conversation_title,
             "bypass_rag": bypass_rag,
+            "answer_only_with_context": answer_only_with_context,
             "range_values": range_values,
             "rerank": rerank,
             "metadata": metadata,
