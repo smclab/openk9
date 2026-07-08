@@ -34,6 +34,7 @@ import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
+import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.LargeLanguageModel;
 import io.openk9.datasource.model.PluginDriver;
@@ -61,6 +62,7 @@ import io.openk9.datasource.model.dto.base.DocTypeTemplateDTO;
 import io.openk9.datasource.model.dto.base.EmbeddingModelDTO;
 import io.openk9.datasource.model.dto.base.EnrichItemDTO;
 import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
+import io.openk9.datasource.model.dto.base.HighlightDTO;
 import io.openk9.datasource.model.dto.base.LanguageDTO;
 import io.openk9.datasource.model.dto.base.LargeLanguageModelDTO;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
@@ -122,7 +124,8 @@ public enum ConfigEntityType {
 	SORTING(Sorting.class, SortingDTO.class),
 	TOKEN_TAB(TokenTab.class, TokenTabDTO.class),
 	AUTOCOMPLETE(Autocomplete.class, AutocompleteDTO.class),
-	AUTOCORRECTION(Autocorrection.class, AutocorrectionDTO.class);
+	AUTOCORRECTION(Autocorrection.class, AutocorrectionDTO.class),
+	HIGHLIGHT(Highlight.class, HighlightDTO.class);
 
 	private final Class<?> entityType;
 	private final Class<?> attributesType;
