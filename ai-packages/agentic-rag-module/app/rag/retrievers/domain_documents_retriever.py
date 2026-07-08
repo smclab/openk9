@@ -124,6 +124,11 @@ class OpenSearchDomainDocumentsRetriever(BaseRetriever):
             document=document,
         )
 
+        # Degenerate input (empty/whitespace/emoji-only) produces no chunks and
+        # therefore an empty embedding; with no vector there is nothing to retrieve.
+        if not embedded_query:
+            return []
+
         vector_query = embedded_query[0].get("vector")
 
         documents = []
