@@ -118,8 +118,7 @@ public class PartialUpdateWriter extends AbstractBehavior<Writer.Command> {
 
 	/**
 	 * Builds one update operation for each document id, all merging
-	 * the same partial document. No default acl is added: the acl
-	 * field is a creation-only concern.
+	 * the same partial document.
 	 *
 	 * @param indexName the index holding the documents
 	 * @param documentIds the ids of the documents to update
