@@ -24,6 +24,7 @@ import java.util.Map;
 
 import jakarta.inject.Inject;
 
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
@@ -36,6 +37,9 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.CharFilterDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
+import io.openk9.datasource.service.CharFilterService;
+import io.openk9.datasource.service.DocTypeFieldService;
+import io.openk9.datasource.service.DocTypeService;
 
 import io.quarkus.test.junit.QuarkusTest;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -58,6 +62,14 @@ public class ConfigImporterTest {
 
 	private static final String TENANT_ID = "public";
 
+	private static final String ENTITY_NAME_PREFIX = "ConfigImporterTest - ";
+	private static final String DOC_TYPE_NAME = ENTITY_NAME_PREFIX + "doc-type";
+	private static final String DOC_TYPE_FIELD_NAME = ENTITY_NAME_PREFIX + "field";
+	private static final String SECRET_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "secret-char-filter";
+	private static final String CREATED_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "created-char-filter";
+
 	@Inject
 	ConfigExporter configExporter;
 
@@ -66,6 +78,15 @@ public class ConfigImporterTest {
 
 	@Inject
 	Mutiny.SessionFactory sessionFactory;
+
+	@Inject
+	DocTypeService docTypeService;
+
+	@Inject
+	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	CharFilterService charFilterService;
 
 	private static final String COUNT_JOIN_ROWS =
 		"select count(i) from EnrichPipelineItem i";
@@ -108,8 +129,8 @@ public class ConfigImporterTest {
 		ConfigEntity newDocType = new ConfigEntity(
 			"DOC_TYPE-NEW",
 			ConfigEntityType.DOC_TYPE,
-			"zz-nonexistent-doctype",
-			DocTypeDTO.builder().name("zz-nonexistent-doctype").build(),
+			DOC_TYPE_NAME,
+			DocTypeDTO.builder().name(DOC_TYPE_NAME).build(),
 			new LinkedHashMap<>(),
 			null);
 
@@ -119,9 +140,9 @@ public class ConfigImporterTest {
 		ConfigEntity newField = new ConfigEntity(
 			"DOC_TYPE_FIELD-NEW",
 			ConfigEntityType.DOC_TYPE_FIELD,
-			"zz-field",
+			DOC_TYPE_FIELD_NAME,
 			DocTypeFieldDTO.builder()
-				.name("zz-field")
+				.name(DOC_TYPE_FIELD_NAME)
 				.fieldName("zz-field-name")
 				.fieldType(FieldType.TEXT)
 				.build(),
@@ -153,6 +174,11 @@ public class ConfigImporterTest {
 
 		assertEquals(docTypeId, wiredDocTypeId,
 			"the created field must be wired to the created doc type");
+
+		// Created in this method (not in setup): remove it here, the field
+		// first so the doc-type FK is released before the doc-type is deleted.
+		EntitiesUtils.removeEntity(fieldId, docTypeFieldService, sessionFactory);
+		EntitiesUtils.removeEntity(docTypeId, docTypeService, sessionFactory);
 	}
 
 	@Test
@@ -163,7 +189,7 @@ public class ConfigImporterTest {
 		// a plain strip-and-patch would get wrong, since jsonConfig is one column).
 		String secret = "s3cr3t-value";
 		Long id = seedCharFilter(
-			"zz-secret-charfilter",
+			SECRET_CHAR_FILTER_NAME,
 			"{\"password\":\"" + secret + "\",\"mapping\":\"a=>b\"}");
 
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
@@ -175,6 +201,9 @@ public class ConfigImporterTest {
 			"the real secret must survive the overwrite");
 		assertFalse(stored.contains(ConfigRedactor.PLACEHOLDER),
 			"the redaction placeholder must never be persisted");
+
+		// Delete the char filter created by this method.
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
 	}
 
 	@Test
@@ -186,9 +215,9 @@ public class ConfigImporterTest {
 		ConfigEntity redacted = new ConfigEntity(
 			"CHAR_FILTER-NEW",
 			ConfigEntityType.CHAR_FILTER,
-			"zz-created-charfilter",
+			CREATED_CHAR_FILTER_NAME,
 			CharFilterDTO.builder()
-				.name("zz-created-charfilter")
+				.name(CREATED_CHAR_FILTER_NAME)
 				.type("html_strip")
 				.jsonConfig("{\"password\":\"" + ConfigRedactor.PLACEHOLDER + "\"}")
 				.build(),
@@ -208,6 +237,9 @@ public class ConfigImporterTest {
 		assertNotNull(id, "the new char filter must have been created");
 		assertFalse(loadCharFilterJsonConfig(id).contains(ConfigRedactor.PLACEHOLDER),
 			"create must not persist the placeholder");
+
+		// Delete the char filter created by this method.
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
 	}
 
 	private Long seedCharFilter(String name, String jsonConfig) {

@@ -55,6 +55,11 @@ public class ConfigMatcherTest {
 
 	private static final String TENANT_ID = "public";
 
+	private static final String ENTITY_NAME_PREFIX = "ConfigMatcherTest - ";
+	private static final String LANGUAGE_NAME = ENTITY_NAME_PREFIX + "language";
+	private static final String DOC_TYPE_NAME = ENTITY_NAME_PREFIX + "doc-type";
+	private static final String DOC_TYPE_FIELD_NAME = ENTITY_NAME_PREFIX + "field";
+
 	@Inject
 	ConfigExporter configExporter;
 
@@ -134,8 +139,8 @@ public class ConfigMatcherTest {
 		ConfigEntity newLanguage = new ConfigEntity(
 			"LANGUAGE-NEW",
 			ConfigEntityType.LANGUAGE,
-			"zz-nonexistent-language",
-			LanguageDTO.builder().name("zz-nonexistent-language").build(),
+			LANGUAGE_NAME,
+			LanguageDTO.builder().name(LANGUAGE_NAME).build(),
 			new LinkedHashMap<>(),
 			null);
 
@@ -157,8 +162,8 @@ public class ConfigMatcherTest {
 		ConfigEntity newDocType = new ConfigEntity(
 			"DOC_TYPE-NEW",
 			ConfigEntityType.DOC_TYPE,
-			"zz-nonexistent-doctype",
-			DocTypeDTO.builder().name("zz-nonexistent-doctype").build(),
+			DOC_TYPE_NAME,
+			DocTypeDTO.builder().name(DOC_TYPE_NAME).build(),
 			new LinkedHashMap<>(),
 			null);
 
@@ -168,8 +173,11 @@ public class ConfigMatcherTest {
 		ConfigEntity newField = new ConfigEntity(
 			"DOC_TYPE_FIELD-NEW",
 			ConfigEntityType.DOC_TYPE_FIELD,
-			"zz-field",
-			DocTypeFieldDTO.builder().name("zz-field").fieldName("zz-field-name").build(),
+			DOC_TYPE_FIELD_NAME,
+			DocTypeFieldDTO.builder()
+				.name(DOC_TYPE_FIELD_NAME)
+				.fieldName(ENTITY_NAME_PREFIX + "field-name")
+				.build(),
 			fieldRefs,
 			null);
 

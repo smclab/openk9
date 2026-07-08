@@ -53,6 +53,10 @@ public class ConfigExporterTest {
 
 	private static final String TENANT_ID = "public";
 
+	private static final String ENTITY_NAME_PREFIX = "ConfigExporterTest - ";
+	private static final String EMBEDDING_MODEL_NAME =
+		ENTITY_NAME_PREFIX + "embedding-model";
+
 	@Inject
 	ConfigExporter configExporter;
 
@@ -122,7 +126,7 @@ public class ConfigExporterTest {
 	void should_redact_the_embedding_model_api_key() {
 		// 1. Persist an embedding model carrying a secret apiKey
 		EmbeddingModel model = new EmbeddingModel();
-		model.setName("export-redaction-model");
+		model.setName(EMBEDDING_MODEL_NAME);
 		model.setApiKey("super-secret-key");
 		// provider/model are NOT NULL columns (embedded ProviderModel)
 		model.setProviderModel(new ProviderModel("test-model", "test-provider"));
@@ -139,7 +143,7 @@ public class ConfigExporterTest {
 
 			ConfigEntity node = configPackage.getEntities().stream()
 				.filter(entity -> entity.getType() == ConfigEntityType.EMBEDDING_MODEL)
-				.filter(entity -> "export-redaction-model".equals(entity.getKey()))
+				.filter(entity -> EMBEDDING_MODEL_NAME.equals(entity.getKey()))
 				.findFirst()
 				.orElseThrow();
 
