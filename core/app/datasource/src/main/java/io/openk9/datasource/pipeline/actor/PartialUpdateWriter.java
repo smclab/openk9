@@ -55,6 +55,9 @@ import org.opensearch.client.opensearch.core.search.Hit;
 public class PartialUpdateWriter extends AbstractBehavior<Writer.Command> {
 
 	private static final Logger log = Logger.getLogger(PartialUpdateWriter.class);
+	// The default search size (10) is too small: we raise it to the
+	// max_result_window (10_000, the most a single search can return) so a
+	// single search covers every document of a contentId without paginating.
 	private static final int MAX_UPDATABLE_DOCUMENTS = 10_000;
 
 	private final String indexName;
@@ -62,6 +65,15 @@ public class PartialUpdateWriter extends AbstractBehavior<Writer.Command> {
 	private final long datasourceId;
 	private OpenSearchAsyncClient asyncClient;
 
+	/**
+	 * Creates a writer bound to the target index and datasource of the
+	 * given scheduler. Use the {@link #create} factory to obtain the
+	 * behavior; this constructor is invoked by {@link Behaviors#setup}.
+	 *
+	 * @param context the actor context
+	 * @param scheduler the scheduler holding the target index and datasource id
+	 * @param replyTo the actor notified with the write outcome
+	 */
 	public PartialUpdateWriter(
 		ActorContext<Writer.Command> context,
 		SchedulerDTO scheduler,
@@ -88,6 +100,13 @@ public class PartialUpdateWriter extends AbstractBehavior<Writer.Command> {
 			new PartialUpdateWriter(ctx, scheduler, replyTo));
 	}
 
+	/**
+	 * Handles the writer protocol: the {@link Writer.Start} command that
+	 * begins the partial update, followed by the internal responses of the
+	 * document-ids search and of the bulk update.
+	 *
+	 * @return the message handlers of this writer
+	 */
 	@Override
 	public Receive<Writer.Command> createReceive() {
 		return newReceiveBuilder()
@@ -377,7 +396,7 @@ public class PartialUpdateWriter extends AbstractBehavior<Writer.Command> {
 		Throwable throwable
 	) implements Writer.Command {}
 
-	private record SearchDocumentIds(
+	record SearchDocumentIds(
 		HeldMessage heldMessage,
 		Map<String, Object> partialDocument,
 		SearchResponse<Void> searchResponse,
