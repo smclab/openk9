@@ -18,15 +18,26 @@
 package io.openk9.datasource.pipeline.actor;
 
 import java.util.List;
+import java.util.Map;
 
+import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.TestUtils;
+import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
+import io.openk9.datasource.pipeline.stages.working.HeldMessage;
+import io.openk9.datasource.pipeline.stages.working.Writer;
 
+import org.apache.pekko.actor.testkit.typed.javadsl.BehaviorTestKit;
+import org.apache.pekko.actor.testkit.typed.javadsl.TestInbox;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch.core.SearchResponse;
 
 class PartialUpdateWriterTest {
 
 	static final String INDEX_NAME = "tenant-data-index";
+
+	static final ShardingKey SHARDING_KEY =
+		ShardingKey.fromStrings("tenant", "schedule-1");
 
 	static byte[] partialDocument = TestUtils
 		.getResourceAsJsonObject("partialupdatewriter/partial-document.json")
@@ -118,12 +129,43 @@ class PartialUpdateWriterTest {
 
 	@Test
 	void should_throw_when_partial_document_is_not_an_object() {
-
+		// a json array is not a valid partial document
 		Assertions.assertThrows(
 			IllegalArgumentException.class,
 			() -> PartialUpdateWriter.preparePartialDocument(jsonArray)
 		);
+	}
 
+	@Test
+	void should_reply_success_and_cancel_when_no_documents_match() {
+		// setup the writer with a reply inbox
+		var replyToInbox = TestInbox.<Writer.Response>create();
+		var writer = BehaviorTestKit.create(
+			PartialUpdateWriter.create(scheduler(), replyToInbox.getRef()));
+
+		// a search that returns 0 hits for the contentId
+		var heldMessage = new HeldMessage(SHARDING_KEY, 1L, 0L, "content-1");
+		var emptyHits = new SearchResponse.Builder<Void>()
+			.took(0)
+			.timedOut(false)
+			.shards(shards -> shards.total(1).successful(1).failed(0))
+			.hits(hits -> hits.hits(List.of()))
+			.build();
+
+		writer.run(new PartialUpdateWriter.SearchDocumentIds(
+			heldMessage, Map.of(), emptyHits, null));
+
+		// the update is cancelled with a Success no-op reply
+		var response = replyToInbox.receiveMessage();
+		Assertions.assertInstanceOf(Writer.Success.class, response);
+		Assertions.assertEquals(heldMessage, response.heldMessage());
+	}
+
+	static SchedulerDTO scheduler() {
+		var scheduler = new SchedulerDTO();
+		scheduler.setDatasourceId(1L);
+
+		return scheduler;
 	}
 
 }
