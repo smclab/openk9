@@ -1403,7 +1403,7 @@ class RagGraph:
         llm_response = ""
 
         if isinstance(response.content, list):
-            llm_response = response.content[0].get("text")
+            llm_response = response.content[0].get("text") if response.content else ""
         else:
             llm_response = response.content
 
