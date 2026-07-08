@@ -46,6 +46,9 @@ class PartialUpdateWriterTest {
 
 	static byte[] jsonArray = "[]".getBytes();
 
+	static byte[] partialWithAcl =
+		"{\"contentId\":\"content-1\",\"acl\":{\"public\":false}}".getBytes();
+
 	@Test
 	void should_update_single_document_with_partial_fields() {
 		// classic enrich pipeline: one indexed document for the contentId
@@ -105,11 +108,19 @@ class PartialUpdateWriterTest {
 
 	@Test
 	void should_not_add_default_acl_on_update() {
-		// the default acl is a creation-only concern:
-		// a partial update must not touch it.
+		// the default acl is injected only at creation:
+		// when the payload omits acl, the update adds none.
 		var partial = PartialUpdateWriter.preparePartialDocument(partialDocument);
 
 		Assertions.assertFalse(partial.containsKey("acl"));
+	}
+
+	@Test
+	void should_update_acl_when_present_in_partial_document() {
+		// an acl carried by the partial document is applied, not stripped
+		var partial = PartialUpdateWriter.preparePartialDocument(partialWithAcl);
+
+		Assertions.assertEquals(Map.of("public", false), partial.get("acl"));
 	}
 
 	@Test
