@@ -181,7 +181,10 @@ def initialize_embedding_model(configuration):
     match model_type:
         case ModelType.OPENAI.value:
             os.environ["OPENAI_API_KEY"] = api_key
-            embeddings = OpenAIEmbeddings(model=model)
+            if api_url:
+                embeddings = OpenAIEmbeddings(model=model, base_url=api_url)
+            else:
+                embeddings = OpenAIEmbeddings(model=model)
         case ModelType.OLLAMA.value:
             embeddings = OllamaEmbeddings(model=model, base_url=api_url)
         case ModelType.IBM_WATSONX.value:
@@ -223,7 +226,10 @@ def initialize_embedding_model(configuration):
                 region_name=region_name,
             )
         case _:
-            embeddings = OpenAIEmbeddings(model=model)
+            if api_url:
+                embeddings = OpenAIEmbeddings(model=model, base_url=api_url)
+            else:
+                embeddings = OpenAIEmbeddings(model=model)
 
     return embeddings
 
