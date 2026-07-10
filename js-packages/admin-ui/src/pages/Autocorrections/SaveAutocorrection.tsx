@@ -230,7 +230,7 @@ export function SaveAutocorrection({ setExtraFab }: { setExtraFab: (fab: React.R
                       description="If enabled, when a correction is found the search is executed using the corrected term instead of the original."
                     />
                     <AutocompleteDropdown
-                      label="Doc type fields"
+                      label="Doc type field"
                       description="Document Type Field used by the suggester to look up candidate corrections."
                       onChange={(val) => form.inputProps("docTypeFields").onChange({ id: val.id, name: val.name })}
                       value={
