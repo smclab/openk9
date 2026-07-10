@@ -20,17 +20,21 @@ package io.openk9.datasource.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Set;
 import jakarta.inject.Inject;
 
 import io.openk9.datasource.model.DocTypeField;
+import io.openk9.datasource.EntitiesUtils;
 import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.dto.base.AnalyzerDTO;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 
 import io.quarkus.test.junit.QuarkusTest;
+import org.hibernate.HibernateException;
+import org.hibernate.reactive.mutiny.Mutiny;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -44,6 +48,9 @@ public class DocTypeServiceTest {
 
 	@Inject
 	DocTypeFieldService docTypeFieldService;
+
+	@Inject
+	Mutiny.SessionFactory sessionFactory;
 
 	@Test
 	void should_delete_docType() {
@@ -187,7 +194,7 @@ public class DocTypeServiceTest {
 				.build())
 			.await().indefinitely();
 
-		var field = docTypeService.addDocTypeField(
+		docTypeService.addDocTypeField(
 				docType.getId(),
 				DocTypeFieldDTO.builder()
 					.name("offsetSourceField")
@@ -196,7 +203,13 @@ public class DocTypeServiceTest {
 					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
 					.build()
 			)
-			.await().indefinitely().right;
+			.await().indefinitely();
+
+		var field = EntitiesUtils.getEntity(
+			"offsetSourceField",
+			docTypeFieldService,
+			sessionFactory
+		);
 
 		assertEquals(DocTypeField.OffsetSourceType.TERM_VECTOR, field.getOffsetSource());
 
@@ -204,31 +217,30 @@ public class DocTypeServiceTest {
 	}
 
 	@Test
-	void should_reset_offsetSource_for_non_text_field() {
+	void should_not_persist_unexpected_offsetSource_for_non_text_field() {
 
 		var docType = docTypeService.create(DocTypeDTO.builder()
 				.name("OffsetSourceKeywordTest")
 				.build())
 			.await().indefinitely();
 
-		var field = docTypeService.addDocTypeField(
-				docType.getId(),
-				DocTypeFieldDTO.builder()
-					.name("offsetSourceField")
-					.fieldName("offsetSourceField")
-					.fieldType(FieldType.KEYWORD)
-					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
-					.build()
-			)
-			.await().indefinitely().right;
+		assertThrows(HibernateException.class, () -> docTypeService.addDocTypeField(
+					docType.getId(),
+					DocTypeFieldDTO.builder()
+						.name("offsetSourceField")
+						.fieldName("offsetSourceField")
+						.fieldType(FieldType.KEYWORD)
+						.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
+						.build()
+				)
+				.await()
+				.indefinitely()
+		);
 
-		assertEquals(DocTypeField.OffsetSourceType.NONE, field.getOffsetSource());
-
-		docTypeService.deleteById(docType.getId()).await().indefinitely();
 	}
 
 	@Test
-	void should_reset_offsetSource_for_non_text_subField() {
+	void should_not_persist_unexpected_offsetSource_for_non_text_subField() {
 
 		var docType = docTypeService.create(DocTypeDTO.builder()
 				.name("OffsetSourceSubFieldTest")
@@ -245,20 +257,19 @@ public class DocTypeServiceTest {
 			)
 			.await().indefinitely().right;
 
-		var subField = docTypeFieldService.createSubField(
-				parent.getId(),
-				DocTypeFieldDTO.builder()
-					.name("keywordSubField")
-					.fieldName("keyword")
-					.fieldType(FieldType.KEYWORD)
-					.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
-					.build()
-			)
-			.await().indefinitely();
+		assertThrows(HibernateException.class, () -> docTypeFieldService.createSubField(
+					parent.getId(),
+					DocTypeFieldDTO.builder()
+						.name("keywordSubField")
+						.fieldName("keyword")
+						.fieldType(FieldType.KEYWORD)
+						.offsetSource(DocTypeField.OffsetSourceType.TERM_VECTOR)
+						.build()
+				)
+				.await()
+				.indefinitely()
+		);
 
-		assertEquals(DocTypeField.OffsetSourceType.NONE, subField.getOffsetSource());
-
-		docTypeService.deleteById(docType.getId()).await().indefinitely();
 	}
 
 }
