@@ -89,6 +89,27 @@ public class ConfigMatcher {
 	}
 
 	/**
+	 * The natural key of the entity class as an ordered list of components,
+	 * derived from the JPA model and cached. Precedence: a {@code @Table} unique
+	 * constraint &gt; {@code @Column(unique = true)} fields.
+	 *
+	 * @throws IllegalStateException when no identity can be derived
+	 */
+	public List<KeyComponent> naturalKeyOf(Class<?> entityClass) {
+		return naturalKeys.computeIfAbsent(entityClass, ConfigMatcher::deriveNaturalKey);
+	}
+
+	/**
+	 * Session-scoped variant of {@link #plan(String, ConfigPackage, ImportMode)}
+	 * used by the importer to match and apply within a single transaction.
+	 */
+	public Uni<ImportPlan> plan(
+		Mutiny.Session s, ConfigPackage pkg, ImportMode mode) {
+
+		return doPlan(s, pkg, mode);
+	}
+
+	/**
 	 * Matches the package against the given tenant and returns the import plan.
 	 *
 	 * @param tenantId the target schema/tenant
@@ -100,16 +121,6 @@ public class ConfigMatcher {
 		String tenantId, ConfigPackage pkg, ImportMode mode) {
 
 		return sessionFactory.withTransaction(tenantId, (s, t) -> doPlan(s, pkg, mode));
-	}
-
-	/**
-	 * Session-scoped variant of {@link #plan(String, ConfigPackage, ImportMode)}
-	 * used by the importer to match and apply within a single transaction.
-	 */
-	public Uni<ImportPlan> plan(
-		Mutiny.Session s, ConfigPackage pkg, ImportMode mode) {
-
-		return doPlan(s, pkg, mode);
 	}
 
 	/**
@@ -216,30 +227,69 @@ public class ConfigMatcher {
 			.map(ids -> ids.isEmpty() ? null : ids.get(0));
 	}
 
-	/**
-	 * The single target handle of a to-one reference, or {@code null} when the
-	 * package carries no such reference for the entity.
-	 */
-	private static String referenceHandle(ConfigEntity entity, String fieldName) {
-		Map<String, List<String>> references = entity.getReferences();
-		if (references == null) {
-			return null;
-		}
-		List<String> handles = references.get(fieldName);
-		return handles == null || handles.isEmpty() ? null : handles.get(0);
-	}
-
 	// --- natural-key derivation from the JPA model -----------------------------
 
 	/**
-	 * The natural key of the entity class as an ordered list of components,
-	 * derived from the JPA model and cached. Precedence: a {@code @Table} unique
-	 * constraint &gt; {@code @Column(unique = true)} fields.
-	 *
-	 * @throws IllegalStateException when no identity can be derived
+	 * True when the entity has a composite key ({@code @EmbeddedId}): a join
+	 * entity, not matched by this component.
 	 */
-	public List<KeyComponent> naturalKeyOf(Class<?> entityClass) {
-		return naturalKeys.computeIfAbsent(entityClass, ConfigMatcher::deriveNaturalKey);
+	public static boolean isJoinEntity(Class<?> entityClass) {
+		for (Class<?> c = entityClass;
+			 c != null && c != Object.class;
+			 c = c.getSuperclass()) {
+
+			for (Field field : c.getDeclaredFields()) {
+				if (field.isAnnotationPresent(EmbeddedId.class)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * All declared fields on the entity's class hierarchy (excluding Object).
+	 */
+	private static List<Field> allFields(Class<?> entityClass) {
+		List<Field> fields = new ArrayList<>();
+		for (Class<?> c = entityClass;
+			 c != null && c != Object.class;
+			 c = c.getSuperclass()) {
+
+			for (Field field : c.getDeclaredFields()) {
+				fields.add(field);
+			}
+		}
+		return fields;
+	}
+
+	/**
+	 * Maps each mapped column name ({@code @Column(name)}/{@code @JoinColumn(name)})
+	 * to its field, across the entity's class hierarchy.
+	 */
+	private static Map<String, Field> columnToField(Class<?> entityClass) {
+		Map<String, Field> byColumn = new LinkedHashMap<>();
+		for (Field field : allFields(entityClass)) {
+			Column column = field.getAnnotation(Column.class);
+			if (column != null && !column.name().isEmpty()) {
+				byColumn.putIfAbsent(column.name(), field);
+			}
+			JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
+			if (joinColumn != null && !joinColumn.name().isEmpty()) {
+				byColumn.putIfAbsent(joinColumn.name(), field);
+			}
+		}
+		return byColumn;
+	}
+
+	/**
+	 * A key component over the field: an association when it is an owning to-one
+	 * ({@code @ManyToOne}/{@code @OneToOne}), otherwise a scalar column.
+	 */
+	private static KeyComponent component(Field field) {
+		boolean association = field.isAnnotationPresent(ManyToOne.class)
+			|| field.isAnnotationPresent(OneToOne.class);
+		return new KeyComponent(field, association);
 	}
 
 	private static List<KeyComponent> deriveNaturalKey(Class<?> entityClass) {
@@ -280,77 +330,6 @@ public class ConfigMatcher {
 	}
 
 	/**
-	 * A key component over the field: an association when it is an owning to-one
-	 * ({@code @ManyToOne}/{@code @OneToOne}), otherwise a scalar column.
-	 */
-	private static KeyComponent component(Field field) {
-		boolean association = field.isAnnotationPresent(ManyToOne.class)
-			|| field.isAnnotationPresent(OneToOne.class);
-		return new KeyComponent(field, association);
-	}
-
-	/**
-	 * Maps each mapped column name ({@code @Column(name)}/{@code @JoinColumn(name)})
-	 * to its field, across the entity's class hierarchy.
-	 */
-	private static Map<String, Field> columnToField(Class<?> entityClass) {
-		Map<String, Field> byColumn = new LinkedHashMap<>();
-		for (Field field : allFields(entityClass)) {
-			Column column = field.getAnnotation(Column.class);
-			if (column != null && !column.name().isEmpty()) {
-				byColumn.putIfAbsent(column.name(), field);
-			}
-			JoinColumn joinColumn = field.getAnnotation(JoinColumn.class);
-			if (joinColumn != null && !joinColumn.name().isEmpty()) {
-				byColumn.putIfAbsent(joinColumn.name(), field);
-			}
-		}
-		return byColumn;
-	}
-
-	/**
-	 * All declared fields on the entity's class hierarchy (excluding Object).
-	 */
-	private static List<Field> allFields(Class<?> entityClass) {
-		List<Field> fields = new ArrayList<>();
-		for (Class<?> c = entityClass;
-			 c != null && c != Object.class;
-			 c = c.getSuperclass()) {
-
-			for (Field field : c.getDeclaredFields()) {
-				fields.add(field);
-			}
-		}
-		return fields;
-	}
-
-	/**
-	 * True when the entity has a composite key ({@code @EmbeddedId}): a join
-	 * entity, not matched by this component.
-	 */
-	public static boolean isJoinEntity(Class<?> entityClass) {
-		for (Class<?> c = entityClass;
-			 c != null && c != Object.class;
-			 c = c.getSuperclass()) {
-
-			for (Field field : c.getDeclaredFields()) {
-				if (field.isAnnotationPresent(EmbeddedId.class)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * The enum constant of the given enum type with the given name.
-	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static Object toEnum(Class<?> enumType, String name) {
-		return Enum.valueOf((Class<? extends Enum>) enumType, name);
-	}
-
-	/**
 	 * Reads a bean property from the typed attributes DTO by its getter.
 	 */
 	private static Object readProperty(Object bean, String property) {
@@ -365,6 +344,27 @@ public class ConfigMatcher {
 				"Cannot read '" + property + "' from "
 					+ bean.getClass().getSimpleName(), e);
 		}
+	}
+
+	/**
+	 * The single target handle of a to-one reference, or {@code null} when the
+	 * package carries no such reference for the entity.
+	 */
+	private static String referenceHandle(ConfigEntity entity, String fieldName) {
+		Map<String, List<String>> references = entity.getReferences();
+		if (references == null) {
+			return null;
+		}
+		List<String> handles = references.get(fieldName);
+		return handles == null || handles.isEmpty() ? null : handles.get(0);
+	}
+
+	/**
+	 * The enum constant of the given enum type with the given name.
+	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static Object toEnum(Class<?> enumType, String name) {
+		return Enum.valueOf((Class<? extends Enum>) enumType, name);
 	}
 
 	/**

@@ -38,10 +38,6 @@ public class ImportPlan {
 		this.actions = List.copyOf(actions);
 	}
 
-	public List<PlannedAction> getActions() {
-		return actions;
-	}
-
 	/**
 	 * The planned actions indexed by package handle.
 	 */
@@ -58,6 +54,10 @@ public class ImportPlan {
 	 */
 	public long count(PlannedAction.Action kind) {
 		return actions.stream().filter(action -> action.action() == kind).count();
+	}
+
+	public List<PlannedAction> getActions() {
+		return actions;
 	}
 
 }

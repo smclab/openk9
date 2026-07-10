@@ -126,32 +126,6 @@ public class ConfigImporter {
 			matcher.plan(s, pkg, mode).flatMap(plan -> doApply(s, pkg, plan)));
 	}
 
-	private Uni<ImportResult> doApply(
-		Mutiny.Session s, ConfigPackage pkg, ImportPlan plan) {
-
-		Map<String, ConfigEntity> byRef = new HashMap<>();
-		for (ConfigEntity entity : pkg.getEntities()) {
-			byRef.put(entity.getRef(), entity);
-		}
-		Map<String, Long> resolvedIds = new HashMap<>();
-
-		Uni<Void> chain = Uni.createFrom().voidItem();
-		for (PlannedAction action : plan.getActions()) {
-			ConfigEntity entity = byRef.get(action.ref());
-			chain = chain.flatMap(
-				ignore -> applyAction(s, entity, action, resolvedIds));
-		}
-
-		return chain
-			.flatMap(ignore -> rebuildJoins(s, pkg, resolvedIds))
-			.flatMap(ignore -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds))
-			.map(ignore -> new ImportResult(
-				(int) plan.count(PlannedAction.Action.CREATE),
-				(int) plan.count(PlannedAction.Action.OVERWRITE),
-				(int) plan.count(PlannedAction.Action.SKIP),
-				resolvedIds));
-	}
-
 	private Uni<Void> applyAction(
 		Mutiny.Session s, ConfigEntity entity, PlannedAction action,
 		Map<String, Long> resolvedIds) {
@@ -191,7 +165,323 @@ public class ConfigImporter {
 		}
 	}
 
+	private Object bindBack(ObjectNode tree, Class<?> attributesType) {
+		try {
+			return objectMapper.treeToValue(tree, attributesType);
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalStateException(
+				"Unable to rebind attributes to " + attributesType.getSimpleName(), e);
+		}
+	}
+
 	// --- association rewiring --------------------------------------------------
+
+	private Uni<ImportResult> doApply(
+		Mutiny.Session s, ConfigPackage pkg, ImportPlan plan) {
+
+		Map<String, ConfigEntity> byRef = new HashMap<>();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			byRef.put(entity.getRef(), entity);
+		}
+		Map<String, Long> resolvedIds = new HashMap<>();
+
+		Uni<Void> chain = Uni.createFrom().voidItem();
+		for (PlannedAction action : plan.getActions()) {
+			ConfigEntity entity = byRef.get(action.ref());
+			chain = chain.flatMap(
+				ignore -> applyAction(s, entity, action, resolvedIds));
+		}
+
+		return chain
+			.flatMap(ignore -> rebuildJoins(s, pkg, resolvedIds))
+			.flatMap(ignore -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds))
+			.map(ignore -> new ImportResult(
+				(int) plan.count(PlannedAction.Action.CREATE),
+				(int) plan.count(PlannedAction.Action.OVERWRITE),
+				(int) plan.count(PlannedAction.Action.SKIP),
+				resolvedIds));
+	}
+
+	private K9EntityMapper<K9Entity, K9EntityDTO> mapperFor(Class<?> entityClass) {
+		K9EntityMapper<K9Entity, K9EntityDTO> mapper = mappers.get(entityClass);
+		if (mapper == null) {
+			throw new IllegalStateException(
+				"No K9EntityMapper for " + entityClass.getName());
+		}
+		return mapper;
+	}
+
+	private JsonNode parsedJsonConfig(ObjectNode tree) {
+		JsonNode jsonConfig = tree.get("jsonConfig");
+		if (jsonConfig == null || !jsonConfig.isTextual()) {
+			return null;
+		}
+		return tryParse(jsonConfig.asText());
+	}
+
+	/**
+	 * Rebinds the tenant's {@code TenantBinding} (row id 1) to the imported bucket
+	 * and models resolved from the package metadata, leaving {@code virtualHost}
+	 * untouched. Missing or unresolved pointers are left as they are.
+	 */
+	private Uni<Void> rebindTenantBinding(
+		Mutiny.Session s, ConfigMetadata metadata, Map<String, Long> resolvedIds) {
+
+		if (metadata == null) {
+			return Uni.createFrom().voidItem();
+		}
+
+		Long bucketId = resolvedIds.get(metadata.getDefaultBucketRef());
+		Long embeddingId = resolvedIds.get(metadata.getEnabledEmbeddingModelRef());
+		Long llmId = resolvedIds.get(metadata.getEnabledLargeLanguageModelRef());
+
+		if (bucketId == null && embeddingId == null && llmId == null) {
+			return Uni.createFrom().voidItem();
+		}
+
+		return s.find(TenantBinding.class, 1L).flatMap(tenantBinding -> {
+			if (tenantBinding == null) {
+				return Uni.createFrom().voidItem();
+			}
+			if (bucketId != null) {
+				tenantBinding.setBucket(s.getReference(Bucket.class, bucketId));
+			}
+			if (embeddingId != null) {
+				tenantBinding.setEmbeddingModel(
+					s.getReference(EmbeddingModel.class, embeddingId));
+			}
+			if (llmId != null) {
+				tenantBinding.setLargeLanguageModel(
+					s.getReference(LargeLanguageModel.class, llmId));
+			}
+			return s.persist(tenantBinding).call(s::flush);
+		});
+	}
+
+	private Uni<Void> rebuildAclMapping(
+		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
+
+		Long pluginDriverId = endpoint(entity, "pluginDriver", resolvedIds);
+		Long docTypeFieldId = endpoint(entity, "docTypeField", resolvedIds);
+		if (pluginDriverId == null || docTypeFieldId == null) {
+			return Uni.createFrom().voidItem();
+		}
+
+		var userField =
+			((AclMappingRepresentation) entity.getAttributes()).getUserField();
+		PluginDriverDocTypeFieldKey key =
+			PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId);
+
+		return s.find(AclMapping.class, key).flatMap(existing -> {
+			if (existing != null) {
+				existing.setUserField(userField);
+				return s.persist(existing).call(s::flush);
+			}
+			AclMapping mapping = new AclMapping();
+			mapping.setKey(key);
+			mapping.setPluginDriver(s.getReference(PluginDriver.class, pluginDriverId));
+			mapping.setDocTypeField(s.getReference(DocTypeField.class, docTypeFieldId));
+			mapping.setUserField(userField);
+			return s.persist(mapping).call(s::flush);
+		});
+	}
+
+	// --- join entities ---------------------------------------------------------
+
+	private Uni<Void> rebuildEnrichPipelineItem(
+		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
+
+		Long pipelineId = endpoint(entity, "enrichPipeline", resolvedIds);
+		Long itemId = endpoint(entity, "enrichItem", resolvedIds);
+		if (pipelineId == null || itemId == null) {
+			return Uni.createFrom().voidItem();
+		}
+
+		Float weight =
+			((EnrichPipelineItemRepresentation) entity.getAttributes()).getWeight();
+		EnrichPipelineItemKey key = EnrichPipelineItemKey.of(pipelineId, itemId);
+
+		return s.find(EnrichPipelineItem.class, key).flatMap(existing -> {
+			if (existing != null) {
+				existing.setWeight(weight);
+				return s.persist(existing).call(s::flush);
+			}
+			EnrichPipelineItem item = new EnrichPipelineItem();
+			item.setKey(key);
+			item.setEnrichPipeline(s.getReference(EnrichPipeline.class, pipelineId));
+			item.setEnrichItem(s.getReference(EnrichItem.class, itemId));
+			item.setWeight(weight);
+			return s.persist(item).call(s::flush);
+		});
+	}
+
+	/**
+	 * Rebuilds the composite-key join entities from their resolved endpoints. They
+	 * carry no plan action; the exporter emits them with dedicated builders, so the
+	 * importer mirrors that with a dedicated rebuild per join type.
+	 */
+	private Uni<Void> rebuildJoins(
+		Mutiny.Session s, ConfigPackage pkg, Map<String, Long> resolvedIds) {
+
+		Uni<Void> chain = Uni.createFrom().voidItem();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())) {
+				continue;
+			}
+			chain = chain.flatMap(ignore -> switch (entity.getType()) {
+				case ENRICH_PIPELINE_ITEM ->
+					rebuildEnrichPipelineItem(s, entity, resolvedIds);
+				case ACL_MAPPING ->
+					rebuildAclMapping(s, entity, resolvedIds);
+				default -> Uni.createFrom().voidItem();
+			});
+		}
+		return chain;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void registerMappers(Instance<K9EntityMapper<?, ?>> mapperBeans) {
+		for (K9EntityMapper<?, ?> mapper : mapperBeans) {
+			Class<?> entityClass = resolveEntityType(mapper.getClass());
+			if (entityClass != null) {
+				mappers.putIfAbsent(
+					entityClass, (K9EntityMapper<K9Entity, K9EntityDTO>) mapper);
+			}
+		}
+	}
+
+	private List<Object> resolveReferences(
+		Mutiny.Session s, K9Entity entity, String relationship,
+		Class<?> elementType, List<String> handles, Map<String, Long> resolvedIds) {
+
+		List<Object> targets = new ArrayList<>();
+		if (handles != null) {
+			for (String handle : handles) {
+				Long id = resolvedIds.get(handle);
+				if (id != null) {
+					targets.add(s.getReference(elementType, id));
+				}
+				else {
+					warnUnresolved(entity, relationship, handle);
+				}
+			}
+		}
+		return targets;
+	}
+
+	// --- tenant binding rebind -------------------------------------------------
+
+	/**
+	 * Restores the target's current secret values into the incoming attributes so
+	 * an overwrite keeps existing secrets: top-level fields are copied from the
+	 * target entity, and placeholders nested in {@code jsonConfig} are replaced with
+	 * the target's values at the same position.
+	 */
+	private Object restoreRedacted(
+		Object attributes, List<String> redactedFields, K9Entity target) {
+
+		if (redactedFields == null || redactedFields.isEmpty()) {
+			return attributes;
+		}
+
+		ObjectNode tree = objectMapper.valueToTree(attributes);
+		boolean jsonConfigRedacted = false;
+		for (String path : redactedFields) {
+			if (path.startsWith("jsonConfig.")) {
+				jsonConfigRedacted = true;
+			}
+			else {
+				Object value = readProperty(target, path);
+				if (value == null) {
+					tree.remove(path);
+				}
+				else {
+					tree.set(path, objectMapper.valueToTree(value));
+				}
+			}
+		}
+		if (jsonConfigRedacted) {
+			JsonNode config = parsedJsonConfig(tree);
+			if (config != null) {
+				Object targetConfig = readProperty(target, "jsonConfig");
+				JsonNode targetTree = targetConfig == null
+					? null
+					: tryParse(targetConfig.toString());
+				restorePlaceholders(config, targetTree);
+				tree.put("jsonConfig", writeString(config));
+			}
+		}
+		return bindBack(tree, attributes.getClass());
+	}
+
+	// --- secrets ---------------------------------------------------------------
+
+	/**
+	 * On create the entity is transient, so a fresh collection is set directly; on
+	 * overwrite the managed collection is fetched, then replaced in place so
+	 * Hibernate can compute the difference at flush.
+	 */
+	@SuppressWarnings("unchecked")
+	private Uni<Void> setCollection(
+		Mutiny.Session s, K9Entity entity, Field field, List<Object> targets,
+		boolean isNew) {
+
+		if (isNew) {
+			setField(entity, field, newCollection(field, targets));
+			return Uni.createFrom().voidItem();
+		}
+
+		Object current = getField(entity, field);
+		if (current == null) {
+			setField(entity, field, newCollection(field, targets));
+			return Uni.createFrom().voidItem();
+		}
+		return s.fetch(current).invoke(fetched -> {
+			Collection<Object> collection = (Collection<Object>) fetched;
+			collection.clear();
+			collection.addAll(targets);
+		}).replaceWithVoid();
+	}
+
+	/**
+	 * Removes the redacted values from the attributes so the placeholder is never
+	 * persisted on create: top-level fields are dropped and secrets nested in
+	 * {@code jsonConfig} are stripped from the parsed config.
+	 */
+	private Object stripRedacted(Object attributes, List<String> redactedFields) {
+		if (redactedFields == null || redactedFields.isEmpty()) {
+			return attributes;
+		}
+
+		ObjectNode tree = objectMapper.valueToTree(attributes);
+		boolean jsonConfigRedacted = false;
+		for (String path : redactedFields) {
+			if (path.startsWith("jsonConfig.")) {
+				jsonConfigRedacted = true;
+			}
+			else {
+				tree.remove(path);
+			}
+		}
+		if (jsonConfigRedacted) {
+			JsonNode config = parsedJsonConfig(tree);
+			if (config != null) {
+				stripPlaceholders(config);
+				tree.put("jsonConfig", writeString(config));
+			}
+		}
+		return bindBack(tree, attributes.getClass());
+	}
+
+	private JsonNode tryParse(String json) {
+		try {
+			return objectMapper.readTree(json);
+		}
+		catch (JsonProcessingException e) {
+			return null;
+		}
+	}
 
 	/**
 	 * (Re)wires every owning association of the entity from the package references
@@ -244,148 +534,44 @@ public class ConfigImporter {
 		return chain;
 	}
 
-	private List<Object> resolveReferences(
-		Mutiny.Session s, K9Entity entity, String relationship,
-		Class<?> elementType, List<String> handles, Map<String, Long> resolvedIds) {
+	private String writeString(JsonNode node) {
+		try {
+			return objectMapper.writeValueAsString(node);
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalStateException("Unable to re-serialize jsonConfig", e);
+		}
+	}
 
-		List<Object> targets = new ArrayList<>();
-		if (handles != null) {
-			for (String handle : handles) {
-				Long id = resolvedIds.get(handle);
-				if (id != null) {
-					targets.add(s.getReference(elementType, id));
-				}
-				else {
-					warnUnresolved(entity, relationship, handle);
-				}
+	private static void collectParameterizedInterfaces(
+		Class<?> type, List<ParameterizedType> out, Set<Class<?>> seen) {
+
+		if (type == null || type == Object.class || !seen.add(type)) {
+			return;
+		}
+		for (Type genericInterface : type.getGenericInterfaces()) {
+			if (genericInterface instanceof ParameterizedType parameterized) {
+				out.add(parameterized);
+				collectParameterizedInterfaces(
+					(Class<?>) parameterized.getRawType(), out, seen);
+			}
+			else if (genericInterface instanceof Class<?> rawInterface) {
+				collectParameterizedInterfaces(rawInterface, out, seen);
 			}
 		}
-		return targets;
+		collectParameterizedInterfaces(type.getSuperclass(), out, seen);
 	}
 
-	private static void warnUnresolved(
-		K9Entity entity, String relationship, String handle) {
-
-		log.warnf(
-			"Import: reference '%s' -> '%s' on %s could not be resolved "
-				+ "(target not in package); skipping",
-			relationship, handle, entity.getClass().getSimpleName());
-	}
-
-	/**
-	 * On create the entity is transient, so a fresh collection is set directly; on
-	 * overwrite the managed collection is fetched, then replaced in place so
-	 * Hibernate can compute the difference at flush.
-	 */
-	@SuppressWarnings("unchecked")
-	private Uni<Void> setCollection(
-		Mutiny.Session s, K9Entity entity, Field field, List<Object> targets,
-		boolean isNew) {
-
-		if (isNew) {
-			setField(entity, field, newCollection(field, targets));
-			return Uni.createFrom().voidItem();
-		}
-
-		Object current = getField(entity, field);
-		if (current == null) {
-			setField(entity, field, newCollection(field, targets));
-			return Uni.createFrom().voidItem();
-		}
-		return s.fetch(current).invoke(fetched -> {
-			Collection<Object> collection = (Collection<Object>) fetched;
-			collection.clear();
-			collection.addAll(targets);
-		}).replaceWithVoid();
-	}
-
-	private static Collection<Object> newCollection(Field field, List<Object> targets) {
-		Collection<Object> collection = Set.class.isAssignableFrom(field.getType())
-			? new LinkedHashSet<>()
-			: new ArrayList<>();
-		collection.addAll(targets);
-		return collection;
-	}
-
-	// --- join entities ---------------------------------------------------------
-
-	/**
-	 * Rebuilds the composite-key join entities from their resolved endpoints. They
-	 * carry no plan action; the exporter emits them with dedicated builders, so the
-	 * importer mirrors that with a dedicated rebuild per join type.
-	 */
-	private Uni<Void> rebuildJoins(
-		Mutiny.Session s, ConfigPackage pkg, Map<String, Long> resolvedIds) {
-
-		Uni<Void> chain = Uni.createFrom().voidItem();
-		for (ConfigEntity entity : pkg.getEntities()) {
-			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())) {
-				continue;
+	private static Class<?> elementType(Field field) {
+		Type generic = field.getGenericType();
+		if (generic instanceof ParameterizedType parameterized) {
+			Type[] arguments = parameterized.getActualTypeArguments();
+			if (arguments.length == 1 && arguments[0] instanceof Class<?> element) {
+				return element;
 			}
-			chain = chain.flatMap(ignore -> switch (entity.getType()) {
-				case ENRICH_PIPELINE_ITEM ->
-					rebuildEnrichPipelineItem(s, entity, resolvedIds);
-				case ACL_MAPPING ->
-					rebuildAclMapping(s, entity, resolvedIds);
-				default -> Uni.createFrom().voidItem();
-			});
 		}
-		return chain;
-	}
-
-	private Uni<Void> rebuildEnrichPipelineItem(
-		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
-
-		Long pipelineId = endpoint(entity, "enrichPipeline", resolvedIds);
-		Long itemId = endpoint(entity, "enrichItem", resolvedIds);
-		if (pipelineId == null || itemId == null) {
-			return Uni.createFrom().voidItem();
-		}
-
-		Float weight =
-			((EnrichPipelineItemRepresentation) entity.getAttributes()).getWeight();
-		EnrichPipelineItemKey key = EnrichPipelineItemKey.of(pipelineId, itemId);
-
-		return s.find(EnrichPipelineItem.class, key).flatMap(existing -> {
-			if (existing != null) {
-				existing.setWeight(weight);
-				return s.persist(existing).call(s::flush);
-			}
-			EnrichPipelineItem item = new EnrichPipelineItem();
-			item.setKey(key);
-			item.setEnrichPipeline(s.getReference(EnrichPipeline.class, pipelineId));
-			item.setEnrichItem(s.getReference(EnrichItem.class, itemId));
-			item.setWeight(weight);
-			return s.persist(item).call(s::flush);
-		});
-	}
-
-	private Uni<Void> rebuildAclMapping(
-		Mutiny.Session s, ConfigEntity entity, Map<String, Long> resolvedIds) {
-
-		Long pluginDriverId = endpoint(entity, "pluginDriver", resolvedIds);
-		Long docTypeFieldId = endpoint(entity, "docTypeField", resolvedIds);
-		if (pluginDriverId == null || docTypeFieldId == null) {
-			return Uni.createFrom().voidItem();
-		}
-
-		var userField =
-			((AclMappingRepresentation) entity.getAttributes()).getUserField();
-		PluginDriverDocTypeFieldKey key =
-			PluginDriverDocTypeFieldKey.of(pluginDriverId, docTypeFieldId);
-
-		return s.find(AclMapping.class, key).flatMap(existing -> {
-			if (existing != null) {
-				existing.setUserField(userField);
-				return s.persist(existing).call(s::flush);
-			}
-			AclMapping mapping = new AclMapping();
-			mapping.setKey(key);
-			mapping.setPluginDriver(s.getReference(PluginDriver.class, pluginDriverId));
-			mapping.setDocTypeField(s.getReference(DocTypeField.class, docTypeFieldId));
-			mapping.setUserField(userField);
-			return s.persist(mapping).call(s::flush);
-		});
+		throw new IllegalStateException(
+			"Cannot resolve element type of collection field " + field);
 	}
 
 	private static Long endpoint(
@@ -402,150 +588,75 @@ public class ConfigImporter {
 		return resolvedIds.get(handles.get(0));
 	}
 
-	// --- tenant binding rebind -------------------------------------------------
+	private static Field findField(Class<?> type, String name) {
+		for (Class<?> c = type; c != null && c != Object.class; c = c.getSuperclass()) {
+			try {
+				return c.getDeclaredField(name);
+			}
+			catch (NoSuchFieldException ignored) {
+				// try the superclass
+			}
+		}
+		return null;
+	}
+
+	// --- mapper registry -------------------------------------------------------
+
+	private static Object getField(Object target, Field field) {
+		try {
+			field.setAccessible(true);
+			return field.get(target);
+		}
+		catch (IllegalAccessException e) {
+			throw new IllegalStateException("Cannot read field " + field, e);
+		}
+	}
+
+	private static boolean isPlaceholder(JsonNode node) {
+		return node != null && node.isTextual()
+			&& ConfigRedactor.PLACEHOLDER.equals(node.asText());
+	}
+
+	private static Collection<Object> newCollection(Field field, List<Object> targets) {
+		Collection<Object> collection = Set.class.isAssignableFrom(field.getType())
+			? new LinkedHashSet<>()
+			: new ArrayList<>();
+		collection.addAll(targets);
+		return collection;
+	}
+
+	private static Object readProperty(Object bean, String property) {
+		String getter = "get"
+			+ Character.toUpperCase(property.charAt(0)) + property.substring(1);
+		try {
+			Method method = bean.getClass().getMethod(getter);
+			return method.invoke(bean);
+		}
+		catch (ReflectiveOperationException e) {
+			throw new IllegalStateException(
+				"Cannot read '" + property + "' from "
+					+ bean.getClass().getSimpleName(), e);
+		}
+	}
+
+	// --- reflection helpers ----------------------------------------------------
 
 	/**
-	 * Rebinds the tenant's {@code TenantBinding} (row id 1) to the imported bucket
-	 * and models resolved from the package metadata, leaving {@code virtualHost}
-	 * untouched. Missing or unresolved pointers are left as they are.
+	 * The {@code ENTITY} type argument of the {@link K9EntityMapper} the bean
+	 * implements, found by walking its (generic) interface hierarchy.
 	 */
-	private Uni<Void> rebindTenantBinding(
-		Mutiny.Session s, ConfigMetadata metadata, Map<String, Long> resolvedIds) {
-
-		if (metadata == null) {
-			return Uni.createFrom().voidItem();
-		}
-
-		Long bucketId = resolvedIds.get(metadata.getDefaultBucketRef());
-		Long embeddingId = resolvedIds.get(metadata.getEnabledEmbeddingModelRef());
-		Long llmId = resolvedIds.get(metadata.getEnabledLargeLanguageModelRef());
-
-		if (bucketId == null && embeddingId == null && llmId == null) {
-			return Uni.createFrom().voidItem();
-		}
-
-		return s.find(TenantBinding.class, 1L).flatMap(tenantBinding -> {
-			if (tenantBinding == null) {
-				return Uni.createFrom().voidItem();
-			}
-			if (bucketId != null) {
-				tenantBinding.setBucket(s.getReference(Bucket.class, bucketId));
-			}
-			if (embeddingId != null) {
-				tenantBinding.setEmbeddingModel(
-					s.getReference(EmbeddingModel.class, embeddingId));
-			}
-			if (llmId != null) {
-				tenantBinding.setLargeLanguageModel(
-					s.getReference(LargeLanguageModel.class, llmId));
-			}
-			return s.persist(tenantBinding).call(s::flush);
-		});
-	}
-
-	// --- secrets ---------------------------------------------------------------
-
-	/**
-	 * Removes the redacted values from the attributes so the placeholder is never
-	 * persisted on create: top-level fields are dropped and secrets nested in
-	 * {@code jsonConfig} are stripped from the parsed config.
-	 */
-	private Object stripRedacted(Object attributes, List<String> redactedFields) {
-		if (redactedFields == null || redactedFields.isEmpty()) {
-			return attributes;
-		}
-
-		ObjectNode tree = objectMapper.valueToTree(attributes);
-		boolean jsonConfigRedacted = false;
-		for (String path : redactedFields) {
-			if (path.startsWith("jsonConfig.")) {
-				jsonConfigRedacted = true;
-			}
-			else {
-				tree.remove(path);
-			}
-		}
-		if (jsonConfigRedacted) {
-			JsonNode config = parsedJsonConfig(tree);
-			if (config != null) {
-				stripPlaceholders(config);
-				tree.put("jsonConfig", writeString(config));
-			}
-		}
-		return bindBack(tree, attributes.getClass());
-	}
-
-	/**
-	 * Restores the target's current secret values into the incoming attributes so
-	 * an overwrite keeps existing secrets: top-level fields are copied from the
-	 * target entity, and placeholders nested in {@code jsonConfig} are replaced with
-	 * the target's values at the same position.
-	 */
-	private Object restoreRedacted(
-		Object attributes, List<String> redactedFields, K9Entity target) {
-
-		if (redactedFields == null || redactedFields.isEmpty()) {
-			return attributes;
-		}
-
-		ObjectNode tree = objectMapper.valueToTree(attributes);
-		boolean jsonConfigRedacted = false;
-		for (String path : redactedFields) {
-			if (path.startsWith("jsonConfig.")) {
-				jsonConfigRedacted = true;
-			}
-			else {
-				Object value = readProperty(target, path);
-				if (value == null) {
-					tree.remove(path);
-				}
-				else {
-					tree.set(path, objectMapper.valueToTree(value));
+	private static Class<?> resolveEntityType(Class<?> mapperImpl) {
+		List<ParameterizedType> parameterized = new ArrayList<>();
+		collectParameterizedInterfaces(mapperImpl, parameterized, new HashSet<>());
+		for (ParameterizedType type : parameterized) {
+			if (type.getRawType() == K9EntityMapper.class) {
+				Type argument = type.getActualTypeArguments()[0];
+				if (argument instanceof Class<?> entityClass) {
+					return entityClass;
 				}
 			}
 		}
-		if (jsonConfigRedacted) {
-			JsonNode config = parsedJsonConfig(tree);
-			if (config != null) {
-				Object targetConfig = readProperty(target, "jsonConfig");
-				JsonNode targetTree = targetConfig == null
-					? null
-					: tryParse(targetConfig.toString());
-				restorePlaceholders(config, targetTree);
-				tree.put("jsonConfig", writeString(config));
-			}
-		}
-		return bindBack(tree, attributes.getClass());
-	}
-
-	private JsonNode parsedJsonConfig(ObjectNode tree) {
-		JsonNode jsonConfig = tree.get("jsonConfig");
-		if (jsonConfig == null || !jsonConfig.isTextual()) {
-			return null;
-		}
-		return tryParse(jsonConfig.asText());
-	}
-
-	private static void stripPlaceholders(JsonNode node) {
-		if (node.isObject()) {
-			ObjectNode object = (ObjectNode) node;
-			List<String> names = new ArrayList<>();
-			object.fieldNames().forEachRemaining(names::add);
-			for (String name : names) {
-				JsonNode value = object.get(name);
-				if (isPlaceholder(value)) {
-					object.remove(name);
-				}
-				else {
-					stripPlaceholders(value);
-				}
-			}
-		}
-		else if (node.isArray()) {
-			for (JsonNode element : node) {
-				stripPlaceholders(element);
-			}
-		}
+		return null;
 	}
 
 	private static void restorePlaceholders(JsonNode source, JsonNode target) {
@@ -580,134 +691,6 @@ public class ConfigImporter {
 		}
 	}
 
-	private static boolean isPlaceholder(JsonNode node) {
-		return node != null && node.isTextual()
-			&& ConfigRedactor.PLACEHOLDER.equals(node.asText());
-	}
-
-	private JsonNode tryParse(String json) {
-		try {
-			return objectMapper.readTree(json);
-		}
-		catch (JsonProcessingException e) {
-			return null;
-		}
-	}
-
-	private String writeString(JsonNode node) {
-		try {
-			return objectMapper.writeValueAsString(node);
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalStateException("Unable to re-serialize jsonConfig", e);
-		}
-	}
-
-	private Object bindBack(ObjectNode tree, Class<?> attributesType) {
-		try {
-			return objectMapper.treeToValue(tree, attributesType);
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalStateException(
-				"Unable to rebind attributes to " + attributesType.getSimpleName(), e);
-		}
-	}
-
-	// --- mapper registry -------------------------------------------------------
-
-	@SuppressWarnings("unchecked")
-	private void registerMappers(Instance<K9EntityMapper<?, ?>> mapperBeans) {
-		for (K9EntityMapper<?, ?> mapper : mapperBeans) {
-			Class<?> entityClass = resolveEntityType(mapper.getClass());
-			if (entityClass != null) {
-				mappers.putIfAbsent(
-					entityClass, (K9EntityMapper<K9Entity, K9EntityDTO>) mapper);
-			}
-		}
-	}
-
-	private K9EntityMapper<K9Entity, K9EntityDTO> mapperFor(Class<?> entityClass) {
-		K9EntityMapper<K9Entity, K9EntityDTO> mapper = mappers.get(entityClass);
-		if (mapper == null) {
-			throw new IllegalStateException(
-				"No K9EntityMapper for " + entityClass.getName());
-		}
-		return mapper;
-	}
-
-	/**
-	 * The {@code ENTITY} type argument of the {@link K9EntityMapper} the bean
-	 * implements, found by walking its (generic) interface hierarchy.
-	 */
-	private static Class<?> resolveEntityType(Class<?> mapperImpl) {
-		List<ParameterizedType> parameterized = new ArrayList<>();
-		collectParameterizedInterfaces(mapperImpl, parameterized, new HashSet<>());
-		for (ParameterizedType type : parameterized) {
-			if (type.getRawType() == K9EntityMapper.class) {
-				Type argument = type.getActualTypeArguments()[0];
-				if (argument instanceof Class<?> entityClass) {
-					return entityClass;
-				}
-			}
-		}
-		return null;
-	}
-
-	private static void collectParameterizedInterfaces(
-		Class<?> type, List<ParameterizedType> out, Set<Class<?>> seen) {
-
-		if (type == null || type == Object.class || !seen.add(type)) {
-			return;
-		}
-		for (Type genericInterface : type.getGenericInterfaces()) {
-			if (genericInterface instanceof ParameterizedType parameterized) {
-				out.add(parameterized);
-				collectParameterizedInterfaces(
-					(Class<?>) parameterized.getRawType(), out, seen);
-			}
-			else if (genericInterface instanceof Class<?> rawInterface) {
-				collectParameterizedInterfaces(rawInterface, out, seen);
-			}
-		}
-		collectParameterizedInterfaces(type.getSuperclass(), out, seen);
-	}
-
-	// --- reflection helpers ----------------------------------------------------
-
-	private static Field findField(Class<?> type, String name) {
-		for (Class<?> c = type; c != null && c != Object.class; c = c.getSuperclass()) {
-			try {
-				return c.getDeclaredField(name);
-			}
-			catch (NoSuchFieldException ignored) {
-				// try the superclass
-			}
-		}
-		return null;
-	}
-
-	private static Class<?> elementType(Field field) {
-		Type generic = field.getGenericType();
-		if (generic instanceof ParameterizedType parameterized) {
-			Type[] arguments = parameterized.getActualTypeArguments();
-			if (arguments.length == 1 && arguments[0] instanceof Class<?> element) {
-				return element;
-			}
-		}
-		throw new IllegalStateException(
-			"Cannot resolve element type of collection field " + field);
-	}
-
-	private static Object getField(Object target, Field field) {
-		try {
-			field.setAccessible(true);
-			return field.get(target);
-		}
-		catch (IllegalAccessException e) {
-			throw new IllegalStateException("Cannot read field " + field, e);
-		}
-	}
-
 	private static void setField(Object target, Field field, Object value) {
 		try {
 			field.setAccessible(true);
@@ -718,18 +701,35 @@ public class ConfigImporter {
 		}
 	}
 
-	private static Object readProperty(Object bean, String property) {
-		String getter = "get"
-			+ Character.toUpperCase(property.charAt(0)) + property.substring(1);
-		try {
-			Method method = bean.getClass().getMethod(getter);
-			return method.invoke(bean);
+	private static void stripPlaceholders(JsonNode node) {
+		if (node.isObject()) {
+			ObjectNode object = (ObjectNode) node;
+			List<String> names = new ArrayList<>();
+			object.fieldNames().forEachRemaining(names::add);
+			for (String name : names) {
+				JsonNode value = object.get(name);
+				if (isPlaceholder(value)) {
+					object.remove(name);
+				}
+				else {
+					stripPlaceholders(value);
+				}
+			}
 		}
-		catch (ReflectiveOperationException e) {
-			throw new IllegalStateException(
-				"Cannot read '" + property + "' from "
-					+ bean.getClass().getSimpleName(), e);
+		else if (node.isArray()) {
+			for (JsonNode element : node) {
+				stripPlaceholders(element);
+			}
 		}
+	}
+
+	private static void warnUnresolved(
+		K9Entity entity, String relationship, String handle) {
+
+		log.warnf(
+			"Import: reference '%s' -> '%s' on %s could not be resolved "
+				+ "(target not in package); skipping",
+			relationship, handle, entity.getClass().getSimpleName());
 	}
 
 }

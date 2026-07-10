@@ -91,22 +91,6 @@ public class ConfigEntitySorter {
 		return ordered;
 	}
 
-	private static Map<String, ConfigEntity> indexByRef(List<ConfigEntity> entities) {
-		Map<String, ConfigEntity> byRef = new LinkedHashMap<>();
-		for (ConfigEntity entity : entities) {
-			String ref = entity.getRef();
-			if (ref == null) {
-				throw new IllegalArgumentException(
-					"ConfigEntity without a ref handle cannot be ordered");
-			}
-			if (byRef.put(ref, entity) != null) {
-				throw new IllegalArgumentException(
-					"Duplicate ConfigEntity handle: " + ref);
-			}
-		}
-		return byRef;
-	}
-
 	private static Set<String> dependencies(
 		ConfigEntity entity, Map<String, ConfigEntity> byRef) {
 
@@ -133,6 +117,22 @@ public class ConfigEntitySorter {
 		}
 
 		return dependencies;
+	}
+
+	private static Map<String, ConfigEntity> indexByRef(List<ConfigEntity> entities) {
+		Map<String, ConfigEntity> byRef = new LinkedHashMap<>();
+		for (ConfigEntity entity : entities) {
+			String ref = entity.getRef();
+			if (ref == null) {
+				throw new IllegalArgumentException(
+					"ConfigEntity without a ref handle cannot be ordered");
+			}
+			if (byRef.put(ref, entity) != null) {
+				throw new IllegalArgumentException(
+					"Duplicate ConfigEntity handle: " + ref);
+			}
+		}
+		return byRef;
 	}
 
 	private static List<String> unresolved(Map<String, Integer> indegree) {

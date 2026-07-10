@@ -103,11 +103,13 @@ public class ConfigRedactor {
 		entity.setRedactedFields(redactedFields);
 	}
 
-	private static void redactApiKey(ObjectNode tree, List<String> redacted) {
-		JsonNode apiKey = tree.get(API_KEY_FIELD);
-		if (apiKey != null && apiKey.isTextual()) {
-			tree.put(API_KEY_FIELD, PLACEHOLDER);
-			redacted.add(API_KEY_FIELD);
+	private Object bindBack(ObjectNode tree, Class<?> attributesType) {
+		try {
+			return objectMapper.treeToValue(tree, attributesType);
+		}
+		catch (JsonProcessingException e) {
+			throw new IllegalStateException(
+				"Unable to rebind redacted attributes to " + attributesType.getSimpleName(), e);
 		}
 	}
 
@@ -133,6 +135,18 @@ public class ConfigRedactor {
 		}
 	}
 
+	private void redactNode(JsonNode node, String path, List<String> redacted) {
+		if (node.isObject()) {
+			redactObject((ObjectNode) node, path, redacted);
+		}
+		else if (node.isArray()) {
+			ArrayNode array = (ArrayNode) node;
+			for (int i = 0; i < array.size(); i++) {
+				redactNode(array.get(i), path + "[" + i + "]", redacted);
+			}
+		}
+	}
+
 	private void redactObject(ObjectNode node, String prefix, List<String> redacted) {
 		List<String> fieldNames = new ArrayList<>();
 		node.fieldNames().forEachRemaining(fieldNames::add);
@@ -145,18 +159,6 @@ public class ConfigRedactor {
 			}
 			else {
 				redactNode(node.get(name), path, redacted);
-			}
-		}
-	}
-
-	private void redactNode(JsonNode node, String path, List<String> redacted) {
-		if (node.isObject()) {
-			redactObject((ObjectNode) node, path, redacted);
-		}
-		else if (node.isArray()) {
-			ArrayNode array = (ArrayNode) node;
-			for (int i = 0; i < array.size(); i++) {
-				redactNode(array.get(i), path + "[" + i + "]", redacted);
 			}
 		}
 	}
@@ -179,13 +181,11 @@ public class ConfigRedactor {
 		}
 	}
 
-	private Object bindBack(ObjectNode tree, Class<?> attributesType) {
-		try {
-			return objectMapper.treeToValue(tree, attributesType);
-		}
-		catch (JsonProcessingException e) {
-			throw new IllegalStateException(
-				"Unable to rebind redacted attributes to " + attributesType.getSimpleName(), e);
+	private static void redactApiKey(ObjectNode tree, List<String> redacted) {
+		JsonNode apiKey = tree.get(API_KEY_FIELD);
+		if (apiKey != null && apiKey.isTextual()) {
+			tree.put(API_KEY_FIELD, PLACEHOLDER);
+			redacted.add(API_KEY_FIELD);
 		}
 	}
 

@@ -125,15 +125,59 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Orchestrates one transaction: collect edges, then nodes, then the
-	 * TenantBinding, and assemble them into the package.
+	 * Node for the pluginDriver-to-docTypeField join, endpoints read from the key.
 	 */
-	private Uni<ConfigPackage> doExport(Mutiny.Session s) {
-		return collectEdges(s)
-			.flatMap(edges -> collectEntities(s, edges))
-			.flatMap(entities -> s
-				.find(TenantBinding.class, 1L)
-				.map(tenantBinding -> assemble(entities, tenantBinding)));
+	private ConfigEntity aclMappingNode(AclMapping e) {
+		PluginDriverDocTypeFieldKey key = e.getKey();
+
+		Map<String, List<String>> refs = new LinkedHashMap<>();
+		refs.put("pluginDriver", List.of(
+			handle(ConfigEntityType.PLUGIN_DRIVER, key.getPluginDriverId())));
+		refs.put("docTypeField", List.of(
+			handle(ConfigEntityType.DOC_TYPE_FIELD, key.getDocTypeFieldId())));
+
+		AclMappingRepresentation attributes = mapper.dto(e);
+		String ref = handle(
+			ConfigEntityType.ACL_MAPPING,
+			key.getPluginDriverId(), key.getDocTypeFieldId());
+
+		return new ConfigEntity(
+			ref, ConfigEntityType.ACL_MAPPING, null, attributes, refs, null);
+	}
+
+	/**
+	 * Loads every instance of the type and turns each into a node whose attributes
+	 * come from the matching {@code ConfigEntityMapper.dto(...)} overload and whose
+	 * references are read from the pre-built {@link EdgeIndex}.
+	 */
+	private Uni<List<ConfigEntity>> append(
+		Uni<List<ConfigEntity>> acc, Mutiny.Session s, ConfigEntityType type,
+		EdgeIndex edges) {
+
+		return appendJoin(acc, s, type.getEntityType(), e -> {
+			K9Entity entity = (K9Entity) e;
+			return node(
+				type, entity.getId(), toDto(type.getEntityType(), entity),
+				edges.refs(type, entity.getId()));
+		});
+	}
+
+	// --- entity collection (one sequential step per type on the session) -------
+
+	/**
+	 * Loads all instances of the type and turns each into a node via toNode,
+	 * appending them to the accumulator.
+	 */
+	private <T> Uni<List<ConfigEntity>> appendJoin(
+		Uni<List<ConfigEntity>> acc, Mutiny.Session s, Class<T> type,
+		Function<T, ConfigEntity> toNode) {
+
+		return acc.flatMap(list -> findAll(s, type).map(found -> {
+			for (T entity : found) {
+				list.add(toNode.apply(entity));
+			}
+			return list;
+		}));
 	}
 
 	/**
@@ -150,7 +194,29 @@ public class ConfigExporter {
 		return configPackage;
 	}
 
-	// --- entity collection (one sequential step per type on the session) -------
+	/**
+	 * Runs every edge query sequentially on the session, accumulating the results
+	 * into the EdgeIndex.
+	 */
+	private Uni<EdgeIndex> collectEdges(Mutiny.Session s) {
+		Uni<EdgeIndex> acc = Uni.createFrom().item(new EdgeIndex());
+
+		for (EdgeSpec spec : EDGE_SPECS) {
+			acc = acc.flatMap(index -> s
+				.createQuery(edgeCriteria(spec))
+				.getResultList()
+				.map(rows -> {
+					for (Object[] row : rows) {
+						index.add(
+							spec, (Long) row[0],
+							handle(spec.targetType(), (Long) row[1]));
+					}
+					return index;
+				}));
+		}
+
+		return acc;
+	}
 
 	/**
 	 * Loads every exportable type in turn and builds its nodes; the two
@@ -178,34 +244,15 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Loads every instance of the type and turns each into a node whose attributes
-	 * come from the matching {@code ConfigEntityMapper.dto(...)} overload and whose
-	 * references are read from the pre-built {@link EdgeIndex}.
+	 * Orchestrates one transaction: collect edges, then nodes, then the
+	 * TenantBinding, and assemble them into the package.
 	 */
-	private Uni<List<ConfigEntity>> append(
-		Uni<List<ConfigEntity>> acc, Mutiny.Session s, ConfigEntityType type,
-		EdgeIndex edges) {
-
-		return appendJoin(acc, s, type.getEntityType(), e -> {
-			K9Entity entity = (K9Entity) e;
-			return node(
-				type, entity.getId(), toDto(type.getEntityType(), entity),
-				edges.refs(type, entity.getId()));
-		});
-	}
-
-	/**
-	 * Maps an entity to its export DTO through the {@code dto(<EntityType>)}
-	 * overload of {@link ConfigEntityMapper}, resolved reflectively and cached.
-	 */
-	private K9EntityDTO toDto(Class<?> entityClass, K9Entity entity) {
-		try {
-			return (K9EntityDTO) dtoMethod(entityClass).invoke(mapper, entity);
-		}
-		catch (ReflectiveOperationException e) {
-			throw new IllegalStateException(
-				"Cannot map " + entityClass.getSimpleName() + " to its export DTO", e);
-		}
+	private Uni<ConfigPackage> doExport(Mutiny.Session s) {
+		return collectEdges(s)
+			.flatMap(edges -> collectEntities(s, edges))
+			.flatMap(entities -> s
+				.find(TenantBinding.class, 1L)
+				.map(tenantBinding -> assemble(entities, tenantBinding)));
 	}
 
 	/**
@@ -224,32 +271,36 @@ public class ConfigExporter {
 		});
 	}
 
-	/**
-	 * Loads all instances of the type and turns each into a node via toNode,
-	 * appending them to the accumulator.
-	 */
-	private <T> Uni<List<ConfigEntity>> appendJoin(
-		Uni<List<ConfigEntity>> acc, Mutiny.Session s, Class<T> type,
-		Function<T, ConfigEntity> toNode) {
-
-		return acc.flatMap(list -> findAll(s, type).map(found -> {
-			for (T entity : found) {
-				list.add(toNode.apply(entity));
-			}
-			return list;
-		}));
-	}
-
-	/**
-	 * Loads all rows of the given entity type with a Criteria "select all" query.
-	 */
-	private <T> Uni<List<T>> findAll(Mutiny.Session s, Class<T> type) {
-		CriteriaQuery<T> query = sessionFactory.getCriteriaBuilder().createQuery(type);
-		query.from(type);
-		return s.createQuery(query).getResultList();
-	}
-
 	// --- join entities: composite handle, endpoints read from the embedded key -
+
+	/**
+	 * Query that collects the edges of one relationship. It is the Criteria
+	 * equivalent of the JPQL:
+	 *
+	 * <pre>{@code
+	 * select owner.id, target.id
+	 * from <OwnerEntity> owner
+	 * join owner.<relationship> target
+	 * }</pre>
+	 *
+	 * For every owner that has the association set it returns the pair
+	 * {@code (owner id, target id)} — the two foreign-key ids that form one edge.
+	 * The join is an inner join, so owners whose association is null are skipped;
+	 * only the ids are projected, no entity is materialised. This is why edges are
+	 * read this way and not by navigating entities: the target is never re-loaded,
+	 * and a lazy to-one (which would read {@code null} in the reactive session
+	 * unless fetched) is avoided entirely.
+	 */
+	private CriteriaQuery<Object[]> edgeCriteria(EdgeSpec spec) {
+		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
+		CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
+
+		Root<?> owner = query.from(spec.ownerType().getEntityType());
+		Join<?, ?> target = owner.join(spec.relationship());
+		query.multiselect(owner.get("id"), target.get("id"));
+
+		return query;
+	}
 
 	/**
 	 * Node for the pipeline-to-item join: composite handle plus both endpoints
@@ -273,56 +324,16 @@ public class ConfigExporter {
 			ref, ConfigEntityType.ENRICH_PIPELINE_ITEM, null, attributes, refs, null);
 	}
 
-	/**
-	 * Node for the pluginDriver-to-docTypeField join, endpoints read from the key.
-	 */
-	private ConfigEntity aclMappingNode(AclMapping e) {
-		PluginDriverDocTypeFieldKey key = e.getKey();
-
-		Map<String, List<String>> refs = new LinkedHashMap<>();
-		refs.put("pluginDriver", List.of(
-			handle(ConfigEntityType.PLUGIN_DRIVER, key.getPluginDriverId())));
-		refs.put("docTypeField", List.of(
-			handle(ConfigEntityType.DOC_TYPE_FIELD, key.getDocTypeFieldId())));
-
-		AclMappingRepresentation attributes = mapper.dto(e);
-		String ref = handle(
-			ConfigEntityType.ACL_MAPPING,
-			key.getPluginDriverId(), key.getDocTypeFieldId());
-
-		return new ConfigEntity(
-			ref, ConfigEntityType.ACL_MAPPING, null, attributes, refs, null);
-	}
-
 	// --- node / reference helpers ----------------------------------------------
 
 	/**
-	 * Builds a ConfigEntity: handle from type+id, key from the DTO name. Used only
-	 * for the non-join types, whose attributes are always a {@link K9EntityDTO}.
+	 * Loads all rows of the given entity type with a Criteria "select all" query.
 	 */
-	private ConfigEntity node(
-		ConfigEntityType type, Long id, K9EntityDTO attributes,
-		Map<String, List<String>> references) {
-
-		return new ConfigEntity(
-			handle(type, id), type, attributes.getName(), attributes, references, null);
+	private <T> Uni<List<T>> findAll(Mutiny.Session s, Class<T> type) {
+		CriteriaQuery<T> query = sessionFactory.getCriteriaBuilder().createQuery(type);
+		query.from(type);
+		return s.createQuery(query).getResultList();
 	}
-
-	/**
-	 * Handle of a single-id entity, e.g. "BUCKET-42".
-	 */
-	private static String handle(ConfigEntityType type, Long id) {
-		return type.name() + "-" + id;
-	}
-
-	/**
-	 * Handle of a composite-key (join) entity, e.g. "ACL_MAPPING-7-13".
-	 */
-	private static String handle(ConfigEntityType type, Long firstId, Long secondId) {
-		return type.name() + "-" + firstId + "-" + secondId;
-	}
-
-	// --- TenantBinding metadata ------------------------------------------------
 
 	/**
 	 * Captures the tenant-wide pointers (virtual host, default bucket/embedding/LLM)
@@ -348,13 +359,63 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Handle of the target, or null when the target is absent.
+	 * Builds a ConfigEntity: handle from type+id, key from the DTO name. Used only
+	 * for the non-join types, whose attributes are always a {@link K9EntityDTO}.
 	 */
-	private static String handleOrNull(ConfigEntityType type, K9Entity target) {
-		return target == null ? null : handle(type, target.getId());
+	private ConfigEntity node(
+		ConfigEntityType type, Long id, K9EntityDTO attributes,
+		Map<String, List<String>> references) {
+
+		return new ConfigEntity(
+			handle(type, id), type, attributes.getName(), attributes, references, null);
+	}
+
+	// --- TenantBinding metadata ------------------------------------------------
+
+	/**
+	 * Maps an entity to its export DTO through the {@code dto(<EntityType>)}
+	 * overload of {@link ConfigEntityMapper}, resolved reflectively and cached.
+	 */
+	private K9EntityDTO toDto(Class<?> entityClass, K9Entity entity) {
+		try {
+			return (K9EntityDTO) dtoMethod(entityClass).invoke(mapper, entity);
+		}
+		catch (ReflectiveOperationException e) {
+			throw new IllegalStateException(
+				"Cannot map " + entityClass.getSimpleName() + " to its export DTO", e);
+		}
+	}
+
+	/**
+	 * All association fields (to-one and to-many) on the entity's class hierarchy.
+	 */
+	private static List<Field> associationFields(Class<?> entity) {
+		return associationFields(
+			entity, ManyToOne.class, OneToOne.class, OneToMany.class, ManyToMany.class);
 	}
 
 	// --- edge derivation from the JPA model ------------------------------------
+
+	/**
+	 * Fields on the entity's class hierarchy carrying any of the given annotations.
+	 */
+	@SafeVarargs
+	private static List<Field> associationFields(
+		Class<?> entity, Class<? extends java.lang.annotation.Annotation>... markers) {
+
+		List<Field> fields = new ArrayList<>();
+		for (Class<?> c = entity; c != null && c != Object.class; c = c.getSuperclass()) {
+			for (Field field : c.getDeclaredFields()) {
+				for (var marker : markers) {
+					if (field.isAnnotationPresent(marker)) {
+						fields.add(field);
+						break;
+					}
+				}
+			}
+		}
+		return fields;
+	}
 
 	/**
 	 * Builds the edge list by reflecting over the entity classes registered in
@@ -392,6 +453,53 @@ public class ConfigExporter {
 	}
 
 	/**
+	 * Element type of a generic collection field (e.g. {@code Set<Tab>} yields
+	 * {@code Tab}), or null.
+	 */
+	private static Class<?> elementType(Field field) {
+		if (field.getGenericType() instanceof ParameterizedType parameterized) {
+			Type argument = parameterized.getActualTypeArguments()[0];
+			if (argument instanceof Class<?> clazz) {
+				return clazz;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Handle of a single-id entity, e.g. "BUCKET-42".
+	 */
+	private static String handle(ConfigEntityType type, Long id) {
+		return type.name() + "-" + id;
+	}
+
+	/**
+	 * Handle of a composite-key (join) entity, e.g. "ACL_MAPPING-7-13".
+	 */
+	private static String handle(ConfigEntityType type, Long firstId, Long secondId) {
+		return type.name() + "-" + firstId + "-" + secondId;
+	}
+
+	/**
+	 * Handle of the target, or null when the target is absent.
+	 */
+	private static String handleOrNull(ConfigEntityType type, K9Entity target) {
+		return target == null ? null : handle(type, target.getId());
+	}
+
+	// --- edge collection -------------------------------------------------------
+
+	/**
+	 * True when the entity has a composite key ({@code @EmbeddedId}): a join entity.
+	 */
+	private static boolean isCompositeKeyEntity(Class<?> entity) {
+		for (Field field : associationFields(entity, EmbeddedId.class)) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
 	 * The owning association target of {@code field}, or {@code null} when the
 	 * field is not an owning association. {@code @ManyToOne} is always owning;
 	 * the other kinds own only when they declare no {@code mappedBy}.
@@ -417,114 +525,6 @@ public class ConfigExporter {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Element type of a generic collection field (e.g. {@code Set<Tab>} yields
-	 * {@code Tab}), or null.
-	 */
-	private static Class<?> elementType(Field field) {
-		if (field.getGenericType() instanceof ParameterizedType parameterized) {
-			Type argument = parameterized.getActualTypeArguments()[0];
-			if (argument instanceof Class<?> clazz) {
-				return clazz;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * True when the entity has a composite key ({@code @EmbeddedId}): a join entity.
-	 */
-	private static boolean isCompositeKeyEntity(Class<?> entity) {
-		for (Field field : associationFields(entity, EmbeddedId.class)) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * All association fields (to-one and to-many) on the entity's class hierarchy.
-	 */
-	private static List<Field> associationFields(Class<?> entity) {
-		return associationFields(
-			entity, ManyToOne.class, OneToOne.class, OneToMany.class, ManyToMany.class);
-	}
-
-	/**
-	 * Fields on the entity's class hierarchy carrying any of the given annotations.
-	 */
-	@SafeVarargs
-	private static List<Field> associationFields(
-		Class<?> entity, Class<? extends java.lang.annotation.Annotation>... markers) {
-
-		List<Field> fields = new ArrayList<>();
-		for (Class<?> c = entity; c != null && c != Object.class; c = c.getSuperclass()) {
-			for (Field field : c.getDeclaredFields()) {
-				for (var marker : markers) {
-					if (field.isAnnotationPresent(marker)) {
-						fields.add(field);
-						break;
-					}
-				}
-			}
-		}
-		return fields;
-	}
-
-	// --- edge collection -------------------------------------------------------
-
-	/**
-	 * Runs every edge query sequentially on the session, accumulating the results
-	 * into the EdgeIndex.
-	 */
-	private Uni<EdgeIndex> collectEdges(Mutiny.Session s) {
-		Uni<EdgeIndex> acc = Uni.createFrom().item(new EdgeIndex());
-
-		for (EdgeSpec spec : EDGE_SPECS) {
-			acc = acc.flatMap(index -> s
-				.createQuery(edgeCriteria(spec))
-				.getResultList()
-				.map(rows -> {
-					for (Object[] row : rows) {
-						index.add(
-							spec, (Long) row[0],
-							handle(spec.targetType(), (Long) row[1]));
-					}
-					return index;
-				}));
-		}
-
-		return acc;
-	}
-
-	/**
-	 * Query that collects the edges of one relationship. It is the Criteria
-	 * equivalent of the JPQL:
-	 *
-	 * <pre>{@code
-	 * select owner.id, target.id
-	 * from <OwnerEntity> owner
-	 * join owner.<relationship> target
-	 * }</pre>
-	 *
-	 * For every owner that has the association set it returns the pair
-	 * {@code (owner id, target id)} — the two foreign-key ids that form one edge.
-	 * The join is an inner join, so owners whose association is null are skipped;
-	 * only the ids are projected, no entity is materialised. This is why edges are
-	 * read this way and not by navigating entities: the target is never re-loaded,
-	 * and a lazy to-one (which would read {@code null} in the reactive session
-	 * unless fetched) is avoided entirely.
-	 */
-	private CriteriaQuery<Object[]> edgeCriteria(EdgeSpec spec) {
-		CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-		CriteriaQuery<Object[]> query = cb.createQuery(Object[].class);
-
-		Root<?> owner = query.from(spec.ownerType().getEntityType());
-		Join<?, ?> target = owner.join(spec.relationship());
-		query.multiselect(owner.get("id"), target.get("id"));
-
-		return query;
 	}
 
 	private record EdgeSpec(
