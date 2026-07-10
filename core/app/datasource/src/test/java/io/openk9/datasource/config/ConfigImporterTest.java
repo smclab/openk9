@@ -69,6 +69,8 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "secret-char-filter";
 	private static final String CREATED_CHAR_FILTER_NAME =
 		ENTITY_NAME_PREFIX + "created-char-filter";
+	private static final String EXISTING_REF_FIELD_NAME =
+		ENTITY_NAME_PREFIX + "existing-ref-field";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -179,6 +181,65 @@ public class ConfigImporterTest {
 		// first so the doc-type FK is released before the doc-type is deleted.
 		EntitiesUtils.removeEntity(fieldId, docTypeFieldService, sessionFactory);
 		EntitiesUtils.removeEntity(docTypeId, docTypeService, sessionFactory);
+	}
+
+	@Test
+	void a_new_field_referencing_an_unloaded_doc_type_is_wired() {
+		// A new field pointing at an existing (SKIP, hence not loaded) doc type:
+		// its docType is only known by id. The DocTypeField @PostPersist callback
+		// reads docType.getName() to build the path, so the importer must load the
+		// referenced doc type, not set a bare proxy - otherwise the reactive session
+		// throws LazyInitializationException at flush. This exercises the partial /
+		// cross-tenant case the full-package round-trips do not, because there every
+		// referenced entity is itself processed and thus already loaded.
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		String existingDocTypeRef = pkg.getEntities().stream()
+			.filter(entity -> entity.getType() == ConfigEntityType.DOC_TYPE)
+			.map(ConfigEntity::getRef)
+			.findFirst()
+			.orElseThrow(() ->
+				new IllegalStateException("the default tenant must have doc types"));
+
+		Map<String, List<String>> fieldRefs = new LinkedHashMap<>();
+		fieldRefs.put("docType", List.of(existingDocTypeRef));
+
+		ConfigEntity newField = new ConfigEntity(
+			"DOC_TYPE_FIELD-EXISTING-REF",
+			ConfigEntityType.DOC_TYPE_FIELD,
+			EXISTING_REF_FIELD_NAME,
+			DocTypeFieldDTO.builder()
+				.name(EXISTING_REF_FIELD_NAME)
+				.fieldName(EXISTING_REF_FIELD_NAME + "-fn")
+				.fieldType(FieldType.TEXT)
+				.build(),
+			fieldRefs,
+			null);
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(newField);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		ImportResult result =
+			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+				.await().indefinitely();
+
+		Long existingDocTypeId = result.resolvedIds().get(existingDocTypeRef);
+		Long fieldId = result.resolvedIds().get("DOC_TYPE_FIELD-EXISTING-REF");
+		assertNotNull(fieldId, "the new field must have been created");
+
+		Long wiredDocTypeId = sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.find(DocTypeField.class, fieldId)
+				.chain(field -> s.fetch(field.getDocType()))
+				.map(DocType::getId)
+		).await().indefinitely();
+
+		assertEquals(existingDocTypeId, wiredDocTypeId,
+			"the created field must be wired to the existing doc type");
+
+		// Created in this method: remove only the field; the doc type pre-existed.
+		EntitiesUtils.removeEntity(fieldId, docTypeFieldService, sessionFactory);
 	}
 
 	@Test
