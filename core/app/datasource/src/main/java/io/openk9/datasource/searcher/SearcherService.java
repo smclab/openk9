@@ -40,6 +40,7 @@ import io.openk9.common.util.Strings;
 import io.openk9.datasource.model.Bucket;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.FieldType;
+import io.openk9.datasource.model.Highlight;
 import io.openk9.datasource.model.Language;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.model.RAGConfiguration;
@@ -140,7 +141,13 @@ import org.opensearch.search.sort.SortOrder;
 public class SearcherService extends BaseSearchService implements Searcher {
 
 	private static final JsonWebToken NULL_JWT = new NullJsonWebToken();
+	private static final String HIGHLIGHT_TYPE_UNIFIED = "unified";
+	private static final String HIGHLIGHT_TYPE_FVH = "fvh";
+	private static final String HIGHLIGHT_TYPE_PLAIN = "plain";
+	private static final String HIGHLIGHT_FRAGMENTER_SIMPLE = "simple";
+	private static final String HIGHLIGHT_FRAGMENTER_SPAN = "span";
 	private static final Logger log = Logger.getLogger(SearcherService.class);
+
 	@Inject
 	BucketService bucketService;
 	@Inject
@@ -257,7 +264,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 	private static void applyHighlightAndIncludeExclude(
 		SearchSourceBuilder searchSourceBuilder,
 		List<DocTypeField> docTypeFieldList,
-		String language) {
+		String language,
+		Bucket bucket) {
 
 		Set<String> includes = new HashSet<>();
 		Set<String> excludes = new HashSet<>();
@@ -324,17 +332,16 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 		}
 
-		HighlightBuilder highlightBuilder = new HighlightBuilder();
+		Highlight highlight = bucket.getHighlight();
 
-		highlightBuilder.forceSource(true);
+		HighlightBuilder highlightBuilder;
 
-		highlightBuilder.fragmentSize(150);
-
-		highlightBuilder.order("score");
-
-		highlightBuilder.tagsSchema("default");
-
-		highlightBuilder.fields().addAll(highlightFields);
+		if (highlight == null) {
+			highlightBuilder = defaultHighlightBuilder(highlightFields);
+		}
+		else {
+			highlightBuilder = buildConfiguredHighlight(highlight);
+		}
 
 		searchSourceBuilder.highlighter(highlightBuilder);
 
@@ -344,6 +351,106 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			excludes.toArray(String[]::new)
 		);
 
+	}
+
+	private static HighlightBuilder defaultHighlightBuilder(
+		Set<HighlightBuilder.Field> highlightFields) {
+
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+		highlightBuilder.forceSource(true);
+
+		highlightBuilder.fragmentSize(150);
+
+		highlightBuilder.order(HighlightBuilder.Order.SCORE);
+
+		highlightBuilder.tagsSchema(HighlightBuilder.DEFAULT_ENCODER);
+
+		highlightBuilder.fields().addAll(highlightFields);
+
+		return highlightBuilder;
+	}
+
+	private static HighlightBuilder buildConfiguredHighlight(
+		 Highlight highlight) {
+
+		HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+		// type
+		switch (highlight.getType()) {
+			case UNIFIED -> highlightBuilder.highlighterType(HIGHLIGHT_TYPE_UNIFIED);
+			case FVH -> highlightBuilder.highlighterType(HIGHLIGHT_TYPE_FVH);
+			case PLAIN -> highlightBuilder.highlighterType(HIGHLIGHT_TYPE_PLAIN);
+		}
+
+		// fields
+		for (DocTypeField docTypeField : highlight.getFields()) {
+			HighlightBuilder.Field field =
+				new HighlightBuilder.Field(docTypeField.getName());
+
+			// matchedFields for type FVH
+			if (highlight.getType() == Highlight.HighlightType.FVH) {
+				List<String> matchedFields = docTypeField.getSubDocTypeFields()
+					.stream()
+					.filter(child ->
+						child.getOffsetSource() == DocTypeField.OffsetSourceType.TERM_VECTOR)
+					.map(DocTypeField::getName)
+					.collect(Collectors.toList());
+
+				if (!matchedFields.isEmpty()) {
+					// the highlighted field itself must be among the matched_fields,
+					// alongside its children
+					matchedFields.addFirst(docTypeField.getName());
+					field.matchedFields(matchedFields.toArray(String[]::new));
+				}
+			}
+
+			highlightBuilder.field(field);
+		}
+
+		// boundaryScanner
+		if (highlight.getBoundaryScanner() != null) {
+			switch (highlight.getBoundaryScanner()) {
+				case WORD -> highlightBuilder.boundaryScannerType(
+					HighlightBuilder.BoundaryScannerType.WORD
+				);
+				case SENTENCE -> highlightBuilder.boundaryScannerType(
+					HighlightBuilder.BoundaryScannerType.SENTENCE
+				);
+				case CHARS -> highlightBuilder.boundaryScannerType(
+					HighlightBuilder.BoundaryScannerType.CHARS
+				);
+			}
+		}
+
+		// boundaryChars
+		if(highlight.getBoundaryChars() != null) {
+			highlightBuilder.boundaryChars(highlight.getBoundaryChars().toCharArray());
+		}
+
+		// fragmenter
+		if (highlight.getFragmenter() != null) {
+			switch (highlight.getFragmenter()) {
+				case SIMPLE -> highlightBuilder.fragmenter(HIGHLIGHT_FRAGMENTER_SIMPLE);
+				case SPAN -> highlightBuilder.fragmenter(HIGHLIGHT_FRAGMENTER_SPAN);
+			}
+		}
+
+		// fragmentSize
+		highlightBuilder.fragmentSize(highlight.getFragmentSize());
+
+		// numberOfFragments
+		highlightBuilder.numOfFragments(highlight.getNumberOfFragments());
+
+		// order
+		if (highlight.getOrder() != null) {
+			switch (highlight.getOrder()) {
+				case NONE -> highlightBuilder.order(HighlightBuilder.Order.NONE);
+				case SCORE -> highlightBuilder.order(HighlightBuilder.Order.SCORE);
+			}
+		}
+
+		return highlightBuilder;
 	}
 
 	private static void applyMinScore(
@@ -1506,7 +1613,8 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		applyHighlightAndIncludeExclude(
 			searchSourceBuilder,
 			docTypeFieldList,
-			language
+			language,
+			bucket
 		);
 
 		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
