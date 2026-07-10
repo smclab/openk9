@@ -19,6 +19,7 @@ package io.openk9.datasource.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.openk9.datasource.model.util.DocTypeFieldUtils;
+import io.openk9.datasource.validation.ValidDocTypeFieldOffsetSource;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -58,6 +59,7 @@ import java.util.Set;
 @Setter
 @ToString
 @RequiredArgsConstructor
+@ValidDocTypeFieldOffsetSource
 public class DocTypeField extends BaseDocTypeField {
 
 	public static final EnumSet<FieldType> TEXTUAL_FIELD_TYPE = EnumSet.of(
