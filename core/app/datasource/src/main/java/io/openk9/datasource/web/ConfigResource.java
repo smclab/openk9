@@ -37,11 +37,14 @@ import io.openk9.datasource.config.model.ImportResult;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Path("/v1/config")
 @RolesAllowed("k9-admin")
 public class ConfigResource {
+
+	private static final Logger log = Logger.getLogger(ConfigResource.class);
 
 	@Inject
 	RoutingContext routingContext;
@@ -87,12 +90,13 @@ public class ConfigResource {
 	}
 
 	private void requireValidPackage(ConfigPackage pkg) {
-		if (pkg == null
-			|| !ConfigPackage.CURRENT_SCHEMA_VERSION.equals(pkg.getSchemaVersion())) {
-
+		String schemaVersion = pkg == null ? null : pkg.getSchemaVersion();
+		if (!ConfigPackage.CURRENT_SCHEMA_VERSION.equals(schemaVersion)) {
+			log.warnf(
+				"Rejected config import: unsupported schema version '%s', expected '%s'",
+				schemaVersion, ConfigPackage.CURRENT_SCHEMA_VERSION);
 			throw new BadRequestException(
-				"Unsupported schema version '"
-				+ (pkg == null ? null : pkg.getSchemaVersion())
+				"Unsupported schema version '" + schemaVersion
 				+ "', expected '" + ConfigPackage.CURRENT_SCHEMA_VERSION + "'");
 		}
 		if (pkg.getEntities() == null || pkg.getEntities().isEmpty()) {
