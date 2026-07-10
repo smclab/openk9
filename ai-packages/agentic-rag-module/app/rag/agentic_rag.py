@@ -1871,4 +1871,16 @@ class RagGraph:
 
         except Exception as e:
             logger.error(f"Streaming error: {e}")
+            content_policy_markers = (
+                "content_filter",
+                "contentpolicyviolationerror",
+                "responsibleaipolicyviolation",
+                "content management policy",
+            )
+            if any(marker in str(e).lower() for marker in content_policy_markers):
+                yield json.dumps(
+                    {"chunk": "Guardrail violation", "type": "GUARDRAIL"}
+                )
+                yield json.dumps({"chunk": "", "type": "END"})
+                return
             yield json.dumps({"chunk": str(e), "type": "ERROR"})
