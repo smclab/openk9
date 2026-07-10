@@ -57,7 +57,7 @@ public class ConfigRedactor {
 	private static final String JSON_CONFIG_FIELD = "jsonConfig";
 
 	private static final Set<String> SENSITIVE_JSON_KEYS = Set.of(
-		"password", "passphrase", "secret", "token", "apikey", "api_key",
+		"password", "pwd", "passphrase", "secret", "token", "apikey", "api_key",
 		"accesskey", "access_key", "secretkey", "secret_key", "privatekey",
 		"private_key", "credential", "credentials", "clientsecret", "client_secret"
 	);
