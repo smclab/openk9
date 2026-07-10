@@ -7074,7 +7074,7 @@ export type QDatasourceSchedulersQueryVariables = Exact<{
 }>;
 
 
-export type QDatasourceSchedulersQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', id?: string | null, status?: SchedulerStatus | null, modifiedDate?: any | null } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
+export type QDatasourceSchedulersQuery = { __typename?: 'Query', datasource?: { __typename?: 'Datasource', id?: string | null, schedulers?: { __typename?: 'DefaultConnection_Scheduler', edges?: Array<{ __typename?: 'DefaultEdge_Scheduler', node?: { __typename?: 'Scheduler', id?: string | null, status?: SchedulerStatus | null, modifiedDate?: any | null, reindex: boolean } | null } | null> | null, pageInfo?: { __typename: 'DefaultPageInfo', hasNextPage: boolean, endCursor?: string | null } | null } | null } | null };
 
 export type DataSourceInformationQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -15507,6 +15507,7 @@ export const QDatasourceSchedulersDocument = gql`
           id
           status
           modifiedDate
+          reindex
         }
       }
       pageInfo {
