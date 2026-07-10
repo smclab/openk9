@@ -44,6 +44,7 @@ import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.DocTypeField_;
 import io.openk9.datasource.model.DocType_;
+import io.openk9.datasource.model.Highlight_;
 import io.openk9.datasource.model.PluginDriver_;
 import io.openk9.datasource.model.QueryParserConfig;
 import io.openk9.datasource.model.QueryParserType;
@@ -270,6 +271,11 @@ public abstract class BaseSearchService {
 		tenantRoot.fetch(Bucket_.autocorrection, JoinType.LEFT);
 		var autocompleteFetch = tenantRoot.fetch(Bucket_.autocomplete, JoinType.LEFT);
 		autocompleteFetch.fetch(Autocomplete_.fields, JoinType.LEFT);
+
+		tenantRoot
+			.fetch(Bucket_.highlight, JoinType.LEFT)
+			.fetch(Highlight_.fields, JoinType.LEFT)
+			.fetch(DocTypeField_.subDocTypeFields, JoinType.LEFT);
 
 		Predicate conjunction = criteriaBuilder.conjunction();
 
