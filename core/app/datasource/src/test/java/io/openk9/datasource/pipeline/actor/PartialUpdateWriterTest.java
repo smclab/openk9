@@ -20,7 +20,7 @@ package io.openk9.datasource.pipeline.actor;
 import java.util.List;
 import java.util.Map;
 
-import io.openk9.common.util.ingestion.ShardingKey;
+import io.openk9.common.util.ShardingKey;
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.pipeline.service.dto.SchedulerDTO;
 import io.openk9.datasource.pipeline.stages.working.HeldMessage;
