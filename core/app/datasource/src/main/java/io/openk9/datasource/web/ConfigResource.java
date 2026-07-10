@@ -81,7 +81,24 @@ public class ConfigResource {
 		@QueryParam("mode") @DefaultValue("SKIP") ImportMode mode,
 		ConfigPackage pkg) {
 
-		return configImporter.apply(requireTenantId(), pkg, mode);
+		String tenantId = requireTenantId();
+		requireValidPackage(pkg);
+		return configImporter.apply(tenantId, pkg, mode);
+	}
+
+	private void requireValidPackage(ConfigPackage pkg) {
+		if (pkg == null
+			|| !ConfigPackage.CURRENT_SCHEMA_VERSION.equals(pkg.getSchemaVersion())) {
+
+			throw new BadRequestException(
+				"Unsupported schema version '"
+				+ (pkg == null ? null : pkg.getSchemaVersion())
+				+ "', expected '" + ConfigPackage.CURRENT_SCHEMA_VERSION + "'");
+		}
+		if (pkg.getEntities() == null || pkg.getEntities().isEmpty()) {
+			throw new BadRequestException(
+				"Invalid configuration package: it must contain at least one entity");
+		}
 	}
 
 	private String requireTenantId() {

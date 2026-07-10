@@ -87,6 +87,39 @@ public class ConfigResourceTest {
 	}
 
 	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void import_with_empty_body_is_bad_request() {
+		// an empty object deserializes to a package with no schema version and no
+		// entities: the endpoint must reject it with a speaking 400 before opening
+		// the transaction, not blow up with a 500 NPE while sorting a null list.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body("{}")
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(400);
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void import_with_unsupported_schema_version_is_bad_request() {
+		// a schema version the importer does not understand must be refused with
+		// 400, regardless of the rest of the package.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body("{\"schemaVersion\":\"0.9\"}")
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(400);
+	}
+
+	@Test
 	void export_without_admin_role_is_rejected() {
 		// no @TestSecurity: an unauthenticated caller must not reach the endpoint
 		given()
