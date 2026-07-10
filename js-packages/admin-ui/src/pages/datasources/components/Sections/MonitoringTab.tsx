@@ -21,6 +21,7 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -153,6 +154,19 @@ export function MonitoringTab({ id }: { id: string }) {
     }
   };
 
+  const renderSchedulationType = (reindex?: boolean | null) => {
+    const label = reindex ? "Full Reindex" : "Incremental";
+    return (
+      <Chip
+        label={label}
+        size="small"
+        color={reindex ? "warning" : "info"}
+        variant="filled"
+        aria-label={`Schedulation type: ${label}`}
+      />
+    );
+  };
+
   const renderActions = (item: any) => {
     const handleViewInfoClick = () => {
       navigate(`/notificationInfo/${item.node.id}`);
@@ -275,6 +289,7 @@ export function MonitoringTab({ id }: { id: string }) {
           <TableHead>
             <TableRow>
               <TableCell>Activity</TableCell>
+              <TableCell>Type</TableCell>
               <TableCell>Modified date</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
@@ -306,6 +321,7 @@ export function MonitoringTab({ id }: { id: string }) {
                 return (
                   <TableRow key={item?.node?.id || index} ref={isLast ? lastElementRef : null}>
                     <TableCell>{item?.node?.__typename}</TableCell>
+                    <TableCell>{renderSchedulationType(item?.node?.reindex)}</TableCell>
                     <TableCell>{formattedDateTime}</TableCell>
                     <TableCell>{item?.node?.status && renderStatus(item.node.status)}</TableCell>
                     <TableCell>{renderActions(item)}</TableCell>
@@ -314,7 +330,7 @@ export function MonitoringTab({ id }: { id: string }) {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={4} sx={{ py: 5, textAlign: "center" }}>
+                <TableCell colSpan={5} sx={{ py: 5, textAlign: "center" }}>
                   <Box
                     sx={{
                       display: "flex",
