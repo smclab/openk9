@@ -193,6 +193,7 @@ export const DatasourceSchedulers = gql`
             id
             status
             modifiedDate
+            reindex
           }
         }
         pageInfo {
