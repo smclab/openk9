@@ -122,7 +122,7 @@ export function SubDocTypes({ setExtraFab }: { setExtraFab: (fab: React.ReactNod
     },
     onError: (error) => {
       console.error("Error deleting document type field:", error);
-      const serverMessage = error.graphQLErrors?.[0]?.message || error.message;
+      const serverMessage = error.graphQLErrors?.[0]?.message;
       toast({
         title: "Error Delete",
         content: serverMessage || "Impossible to delete document type field. The field may be in use by other configurations.",
