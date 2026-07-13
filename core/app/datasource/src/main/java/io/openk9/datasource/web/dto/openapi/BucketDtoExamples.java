@@ -28,6 +28,18 @@ public class BucketDtoExamples {
 				"id": 751
 			}
 		 ]""";
+	public static final String DATASOURCES_RESPONSE =
+		"""
+		[
+			{
+				"id": 823,
+				"name": "Wikipedia"
+			},
+			{
+				"id": 824,
+				"name": "Confluence"
+			}
+		 ]""";
 	public static final String TABS_RESPONSE =
 		"""
 		[

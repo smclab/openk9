@@ -221,12 +221,11 @@ public class BucketResource {
 	@APIResponses(value = {
 		@APIResponse(
 			responseCode = "200",
-			description = "Default Language returned",
+			description = "List of Datasources returned",
 			content = {
 				@Content(
 					mediaType = MediaType.APPLICATION_JSON,
-					schema = @Schema(implementation = Response.class),
-					example = BucketDtoExamples.DEFAULT_LANGUAGE_RESPONSE
+					example = BucketDtoExamples.DATASOURCES_RESPONSE
 				)
 			}
 		),
@@ -243,6 +242,22 @@ public class BucketResource {
 		);
 	}
 
+	@APIResponses(value = {
+		@APIResponse(
+			responseCode = "200",
+			description = "Default Language returned",
+			content = {
+				@Content(
+					mediaType = MediaType.APPLICATION_JSON,
+					schema = @Schema(implementation = Response.class),
+					example = BucketDtoExamples.DEFAULT_LANGUAGE_RESPONSE
+				)
+			}
+		),
+		@APIResponse(ref = "#/components/responses/bad-request"),
+		@APIResponse(ref = "#/components/responses/not-found"),
+		@APIResponse(ref = "#/components/responses/internal-server-error"),
+	})
 	@Path("/current/defaultLanguage")
 	@GET
 	public Uni<Language> getDefaultLanguage(){
