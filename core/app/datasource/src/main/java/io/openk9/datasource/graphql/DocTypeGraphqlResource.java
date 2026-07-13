@@ -143,18 +143,23 @@ public class DocTypeGraphqlResource {
 
 			if (validatorList.isEmpty()) {
 
-				if (docTypeFieldId == null) {
-					return docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
-						.map(e -> Response.of(e.right, null));
-				} else {
-					return (
-						patch
-							? docTypeFieldService.patch(
-								docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
-							: docTypeFieldService.update(
-								docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
-					).map(e -> Response.of(e, null));
-				}
+				Uni<Response<DocTypeField>> result =
+					docTypeFieldId == null
+						? docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
+							.map(e -> Response.of(e.right, null))
+						: (
+							patch
+								? docTypeFieldService.patch(
+									docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
+								: docTypeFieldService.update(
+									docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
+						).map(e -> Response.of(e, null));
+
+				return result.onItemOrFailure().transform((response, t) ->
+					t != null
+						? Response.of(
+							null, List.of(FieldValidator.of("error", t.getMessage())))
+						: response);
 
 			}
 
