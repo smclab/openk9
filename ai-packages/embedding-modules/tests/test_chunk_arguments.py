@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from typing import Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from app.utils.chunk_arguments import build_chunk_arguments, coerce_argument
 
@@ -82,3 +82,41 @@ def test_coerce_argument_rejects_non_int_like():
     accepted, value = coerce_argument("abc", int)
     assert accepted is False
     assert value is None
+
+
+# Hints that raise TypeError when used as the second isinstance() argument,
+# mirroring real chonkie chunker signatures (SemanticChunker, SentenceChunker,
+# TokenChunker, LateChunker, NeuralChunker...).
+class _Proto:  # non-runtime-checkable protocol stand-in
+    pass
+
+
+UNVERIFIABLE_HINTS = [
+    Union[str, List[str]],              # delim
+    Optional[Literal["prev", "next"]],  # include_delim
+    Dict[str, Any],                     # kwargs
+    Any,                                # kwargs / model
+    Union[str, Any],                    # model
+]
+
+
+def test_unverifiable_hint_passes_value_through():
+    """A hint isinstance() cannot evaluate must not crash; value passes through."""
+    for hint in UNVERIFIABLE_HINTS:
+        accepted, value = coerce_argument("next", hint)
+        assert accepted is True
+        assert value == "next"
+
+
+def test_build_chunk_arguments_survives_unverifiable_hint():
+    """Regression: a config key with a subscripted-generic hint must not raise."""
+    signature = {
+        "chunk_size": int,
+        "include_delim": Optional[Literal["prev", "next"]],
+        "delim": Union[str, List[str]],
+    }
+    args = build_chunk_arguments(
+        {"chunk_size": 512.0, "include_delim": "next", "delim": "\n"}, signature
+    )
+    assert args == {"chunk_size": 512, "include_delim": "next", "delim": "\n"}
+    assert type(args["chunk_size"]) is int
