@@ -17,6 +17,7 @@
 
 import json
 import re
+import unicodedata
 
 # Courtesy message returned when the request carries no textual content. Kept
 # distinct from the no-context message of the answer_only_with_context flow:
@@ -27,6 +28,40 @@ BLANK_QUERY_MESSAGE = "Please enter a valid question so I can help you."
 # i.e. its negation detects a single Unicode letter or digit. Underscore is
 # excluded because a lone "_" carries no textual content.
 _TEXTUAL_CHARACTER = re.compile(r"[^\W_]", re.UNICODE)
+
+# Invisible or deceptive codepoints stripped from the input before it reaches
+# the guardrail classifier and the model. Left in place they let an attacker
+# hide or obfuscate an instruction that the classifier does not "see" while the
+# model might still decode it. Removing them makes any smuggled instruction
+# either visible (when interleaved with real letters) or gone (when the whole
+# instruction was encoded in invisible codepoints); NFKC folds full-width and
+# other compatibility look-alikes onto their canonical form beforehand.
+_INVISIBLE_CHARACTERS = re.compile(
+    "["
+    "\u200b-\u200d"  # zero-width space / non-joiner / joiner
+    "\ufeff"  # zero-width no-break space (BOM)
+    "\u202a-\u202e"  # bidirectional embedding / override (LRE RLE PDF LRO RLO)
+    "\u2066-\u2069"  # bidirectional isolates (LRI RLI FSI PDI)
+    "\ufe00-\ufe0f"  # variation selectors 1-16
+    "\U000e0100-\U000e01ef"  # variation selectors supplement
+    "\U000e0000-\U000e007f"  # tag characters
+    "]"
+)
+
+
+def sanitize_input(search_text):
+    """Normalize and strip invisible/deceptive Unicode from ``search_text``.
+
+    Applies NFKC normalization (folding full-width and other compatibility
+    forms onto their canonical characters) and then removes tag characters,
+    variation selectors, zero-width characters and bidirectional controls.
+    Non-string input is returned unchanged so the caller's blank check can
+    reject it.
+    """
+    if not isinstance(search_text, str):
+        return search_text
+    normalized = unicodedata.normalize("NFKC", search_text)
+    return _INVISIBLE_CHARACTERS.sub("", normalized)
 
 
 def is_blank_query(search_text) -> bool:
