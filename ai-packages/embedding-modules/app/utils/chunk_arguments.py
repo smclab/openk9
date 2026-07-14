@@ -25,18 +25,38 @@ def is_int_like(value):
         return False
 
 
+def _matches(value, expected):
+    """isinstance() that tolerates non-class type hints.
+
+    Chunker __init__ hints include subscripted generics, typing.Any and
+    non-runtime-checkable Protocols (e.g. Union[str, TokenizerProtocol],
+    Dict[str, Any], Optional[Literal[...]]), which raise TypeError when used
+    as the second isinstance() argument. Returns None when the check cannot
+    be evaluated, so the caller can pass the value through unverified.
+    """
+    try:
+        return isinstance(value, expected)
+    except TypeError:
+        return None
+
+
 def coerce_argument(value, expected):
     """Return (accepted, coerced_value) for a chunk argument.
 
     Keeps the value as-is when it already matches the expected type
     (so Union[int, float] params like chunk_overlap stay float),
-    otherwise casts int-like float/str to int.
+    otherwise casts int-like float/str to int. When the expected type is
+    not a plain class (subscripted generic / Any / Protocol), the value is
+    accepted unchanged and left for the chunker to validate.
     """
-    if isinstance(value, expected):
+    matched = _matches(value, expected)
+    if matched:
+        return True, value
+    if matched is None:
         return True, value
     if isinstance(value, (float, str)) and is_int_like(value):
         coerced = int(value)
-        if isinstance(coerced, expected):
+        if _matches(coerced, expected) is True:
             return True, coerced
     return False, None
 
