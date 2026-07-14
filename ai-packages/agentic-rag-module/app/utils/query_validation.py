@@ -21,7 +21,7 @@ import re
 # Courtesy message returned when the request carries no textual content. Kept
 # distinct from the no-context message of the answer_only_with_context flow:
 # there the knowledge base had nothing to say, here the user asked nothing.
-BLANK_QUERY_MESSAGE = "Please enter a question so I can help you."
+BLANK_QUERY_MESSAGE = "Please enter a valid question so I can help you."
 
 # Matches any character that is neither a "word" character nor an underscore,
 # i.e. its negation detects a single Unicode letter or digit. Underscore is
