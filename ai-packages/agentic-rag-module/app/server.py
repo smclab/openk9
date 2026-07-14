@@ -38,7 +38,11 @@ from app.utils.embedding import documents_embedding
 from app.utils.file_upload import process_file
 from app.utils.llm import get_configurations
 from app.utils.logger import logger
-from app.utils.query_validation import blank_query_stream, is_blank_query
+from app.utils.query_validation import (
+    blank_query_stream,
+    is_blank_query,
+    sanitize_input,
+)
 from app.utils.scheduler import start_document_deletion_scheduler
 from dotenv import load_dotenv
 from fastapi import (
@@ -216,6 +220,7 @@ async def rag_generate(
     search_text = search_query_request.searchText
     rag_type = RagType.SIMPLE_GENERATE.value
 
+    search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
 
@@ -359,6 +364,7 @@ async def rag_chat(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG.value
 
+    search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
 
@@ -503,6 +509,7 @@ async def rag_chat_tool(
     chat_sequence_number = search_query_chat.chatSequenceNumber
     rag_type = RagType.CHAT_RAG_TOOL.value
 
+    search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
 
