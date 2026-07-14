@@ -40,6 +40,8 @@ from app.utils.llm import get_configurations
 from app.utils.logger import logger
 from app.utils.query_validation import (
     blank_query_stream,
+    contains_encoded_blob,
+    guardrail_violation_stream,
     is_blank_query,
     sanitize_input,
 )
@@ -224,6 +226,9 @@ async def rag_generate(
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
 
+    if contains_encoded_blob(search_text):
+        return EventSourceResponse(guardrail_violation_stream())
+
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id
     else:
@@ -367,6 +372,9 @@ async def rag_chat(
     search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
+
+    if contains_encoded_blob(search_text):
+        return EventSourceResponse(guardrail_violation_stream())
 
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id
@@ -512,6 +520,9 @@ async def rag_chat_tool(
     search_text = sanitize_input(search_text)
     if is_blank_query(search_text):
         return EventSourceResponse(blank_query_stream())
+
+    if contains_encoded_blob(search_text):
+        return EventSourceResponse(guardrail_violation_stream())
 
     if headers.x_tenant_id:
         tenant_id = headers.x_tenant_id

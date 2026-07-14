@@ -88,3 +88,68 @@ def blank_query_stream():
     yield json.dumps({"chunk": "", "type": "START"})
     yield json.dumps({"chunk": BLANK_QUERY_MESSAGE, "type": "CHUNK"})
     yield json.dumps({"chunk": "", "type": "END"})
+
+
+# Message and event type used when the pipeline blocks an input. Kept identical
+# to what the guardrail node emits from inside the graph so the frontend sees a
+# single, uniform guardrail-violation contract.
+GUARDRAIL_VIOLATION_MESSAGE = "Guardrail violation"
+
+# Minimum lengths above which a run of base64 / hex characters is treated as an
+# encoded blob rather than an incidental look-alike (a slug, an id, a short
+# word). A domain chatbot has no legitimate use for encoded payloads, so a
+# significant blob is rejected outright without ever being decoded. Short
+# encodings stay out of scope by design: lowering the thresholds to catch them
+# would flag ordinary tokens.
+_BASE64_MIN_LEN = 24
+_HEX_MIN_LEN = 32
+
+_BASE64_CANDIDATE = re.compile(r"[A-Za-z0-9+/]{%d,}={0,2}" % _BASE64_MIN_LEN)
+_HEX_CANDIDATE = re.compile(r"[0-9a-fA-F]{%d,}" % _HEX_MIN_LEN)
+
+
+def _looks_base64(token) -> bool:
+    """Whether ``token`` structurally resembles a base64 blob.
+
+    A genuine base64 blob of this length either carries base64-only signals
+    (``+`` / ``/`` / ``=`` padding) or mixes upper case, lower case and digits.
+    Long single-case alphabetic runs (words, slugs) are rejected.
+    """
+    core = token.rstrip("=")
+    if len(core) < _BASE64_MIN_LEN:
+        return False
+    if "+" in token or "/" in token or token.endswith("="):
+        return True
+    has_upper = any(c.isupper() for c in core)
+    has_lower = any(c.islower() for c in core)
+    has_digit = any(c.isdigit() for c in core)
+    return has_upper and has_lower and has_digit
+
+
+def _looks_hex(token) -> bool:
+    """Whether ``token`` is a hex blob rather than a long decimal number."""
+    return any(c in "abcdefABCDEF" for c in token)
+
+
+def contains_encoded_blob(search_text) -> bool:
+    """Return True when the input carries a significant base64 or hex blob.
+
+    Detection is purely structural: no decoding is attempted, so there is no
+    "decode & execute" surface. ROT13 is out of scope as it is
+    indistinguishable from plain text without decoding.
+    """
+    if not isinstance(search_text, str):
+        return False
+    if any(_looks_base64(token) for token in _BASE64_CANDIDATE.findall(search_text)):
+        return True
+    return any(_looks_hex(token) for token in _HEX_CANDIDATE.findall(search_text))
+
+
+def guardrail_violation_stream():
+    """Yield the controlled SSE response for a blocked input.
+
+    Emits a GUARDRAIL event followed by END, matching the events the guardrail
+    node produces from inside the graph. No decoded content is ever streamed.
+    """
+    yield json.dumps({"chunk": GUARDRAIL_VIOLATION_MESSAGE, "type": "GUARDRAIL"})
+    yield json.dumps({"chunk": "", "type": "END"})
