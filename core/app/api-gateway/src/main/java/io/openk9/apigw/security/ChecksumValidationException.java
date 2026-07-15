@@ -19,7 +19,12 @@ package io.openk9.apigw.security;
 
 import org.springframework.security.core.AuthenticationException;
 
+/**
+ * Thrown when an API key fails checksum validation.
+ */
 public class ChecksumValidationException extends AuthenticationException {
+
+	/** @param message the detail message */
 	public ChecksumValidationException(String message) {
 		super(message);
 	}

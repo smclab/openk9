@@ -19,12 +19,20 @@ package io.openk9.apigw.security.apikey;
 
 import org.springframework.security.core.AuthenticationException;
 
+/**
+ * Thrown when an API key does not match the expected format.
+ */
 public class ApiKeyMalformedException extends AuthenticationException {
 
+	/** @param msg the detail message */
 	public ApiKeyMalformedException(String msg) {
 		super(msg);
 	}
 
+	/**
+	 * @param msg the detail message
+	 * @param cause the underlying cause
+	 */
 	public ApiKeyMalformedException(String msg, Throwable cause) {
 		super(msg, cause);
 	}

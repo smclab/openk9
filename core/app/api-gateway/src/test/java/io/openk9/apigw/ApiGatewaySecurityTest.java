@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Consumer;
 
 import io.openk9.apigw.security.ApiRoute;
 
@@ -147,6 +148,12 @@ class ApiGatewaySecurityTest {
 	private static final String WATERSEVEN_HOST = "waterseven.localhost";
 	private static final String SKYPEA_HOST = "skypea.localhost";
 	private static final String UNKNOWN_HOST = "unknown.localhost";
+
+	private static Consumer<String> apiKeyChallenge(String errorCode) {
+		return value -> assertThat(value).contains(
+			"ApiKey realm=\"openk9\"",
+			"error=\"" + errorCode + "\"");
+	}
 
 	@Nested
 	@DisplayName("Bean activation")
@@ -526,10 +533,8 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.AUTHORIZATION, "ApiKey ")
 				.exchange()
 				.expectStatus().isUnauthorized()
-				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
-					assertThat(value).contains(
-						"ApiKey realm=\"openk9\"",
-						"error=\"malformed_api_key\""));
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE,
+					apiKeyChallenge("malformed_api_key"));
 		}
 
 		@Test
@@ -717,10 +722,8 @@ class ApiGatewaySecurityTest {
 				"ApiKey sk_9a6efxxxxxxxxx404b60a6ffc6f9f265bc827114a6fbea9bcd8935e6d7efb2a3_a54f5667")
 				.exchange()
 				.expectStatus().isUnauthorized()
-				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
-					assertThat(value).contains(
-						"ApiKey realm=\"openk9\"",
-						"error=\"invalid_checksum\""));
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE,
+					apiKeyChallenge("invalid_checksum"));
 		}
 
 	}
@@ -740,10 +743,8 @@ class ApiGatewaySecurityTest {
 				.exchange()
 				// 401 with the ApiKey challenge and the invalid_api_key code
 				.expectStatus().isUnauthorized()
-				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
-					assertThat(value).contains(
-						"ApiKey realm=\"openk9\"",
-						"error=\"invalid_api_key\""));
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE,
+					apiKeyChallenge("invalid_api_key"));
 		}
 
 		@Test
@@ -757,10 +758,8 @@ class ApiGatewaySecurityTest {
 				.exchange()
 				// 401 with the ApiKey challenge and the expired_api_key code
 				.expectStatus().isUnauthorized()
-				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
-					assertThat(value).contains(
-						"ApiKey realm=\"openk9\"",
-						"error=\"expired_api_key\""));
+				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE,
+					apiKeyChallenge("expired_api_key"));
 		}
 
 		@Test
@@ -772,11 +771,13 @@ class ApiGatewaySecurityTest {
 				.header(HttpHeaders.HOST, ALABASTA_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_JWT_TOKEN)
 				.exchange()
-				// 401 with a Bearer challenge, never the ApiKey scheme
+				// 401 with a Bearer challenge carrying invalid_token,
+				// never the ApiKey scheme
 				.expectStatus().isUnauthorized()
 				.expectHeader().value(HttpHeaders.WWW_AUTHENTICATE, value ->
 					assertThat(value)
 						.contains("Bearer")
+						.contains("error=\"invalid_token\"")
 						.doesNotContain("ApiKey"));
 		}
 
@@ -788,6 +789,20 @@ class ApiGatewaySecurityTest {
 				.uri("/api/searcher/test")
 				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.header(HttpHeaders.AUTHORIZATION, INVALID_API_KEY)
+				.exchange()
+				.expectStatus().isUnauthorized()
+				.expectHeader().exists(HttpHeaders.WWW_AUTHENTICATE);
+		}
+
+		@Test
+		@DisplayName("Missing credentials 401 still carries a WWW-Authenticate header")
+		void testMissingCredentialsCarriesWwwAuthenticate() {
+			// RFC 7235 §4.1: even a request with no credentials must get a
+			// challenge. On this path the scheme is the chain default
+			// (Bearer); an ApiKey-specific challenge here is out of scope.
+			webTestClient.get()
+				.uri("/api/searcher/test")
+				.header(HttpHeaders.HOST, SABAODY_HOST)
 				.exchange()
 				.expectStatus().isUnauthorized()
 				.expectHeader().exists(HttpHeaders.WWW_AUTHENTICATE);

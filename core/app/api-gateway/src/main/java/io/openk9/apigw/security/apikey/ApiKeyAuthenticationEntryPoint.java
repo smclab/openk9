@@ -98,6 +98,14 @@ public class ApiKeyAuthenticationEntryPoint
 			this.description = description;
 		}
 
+		/**
+		 * Maps an API key authentication failure to its {@code error} code,
+		 * falling back to {@link #INVALID_REQUEST} for any unrecognised
+		 * {@link AuthenticationException}.
+		 *
+		 * @param ex the authentication failure raised on the API key branch
+		 * @return the matching {@code error} code
+		 */
 		static Error from(AuthenticationException ex) {
 			if (ex instanceof ApiKeyMalformedException) {
 				return MALFORMED_API_KEY;
