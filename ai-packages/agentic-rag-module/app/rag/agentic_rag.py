@@ -245,6 +245,16 @@ class RagGraph:
         self.output_guardrail_provider = self.output_guardrail.get(
             "output_guardrail_provider"
         )
+        self.scope_gate_prefix_chars = self.output_guardrail.get(
+            "scope_gate_prefix_chars", 250
+        )
+        self.scope_gate_domain_description = self.output_guardrail.get(
+            "scope_gate_domain_description", ""
+        )
+        self.scope_gate_redirect_message = self.output_guardrail.get(
+            "scope_gate_redirect_message",
+            "Posso aiutarti solo su temi di questo dominio.",
+        )
         self.guardrail_categories = escape_curly_braces(
             "\n".join(
                 f"{i}. {g.get('name', '')} - {g.get('description', '')}"
@@ -623,6 +633,73 @@ class RagGraph:
                     return output_guardrail_response
 
             return "NONE"
+
+    def _llm_scope_gate(self, query, context_text, answer_prefix):
+        """Single LLM check that the answer prefix stays within the retrieved
+        domain and is grounded in the context. Returns "VALID" or "OFF_SCOPE"."""
+        domain_description = escape_curly_braces(
+            self.scope_gate_domain_description or ""
+        )
+
+        scope_gate_prompt = """
+            You are a scope and grounding gate for a domain-specific assistant.
+            Decide whether the START of the assistant's answer stays within the
+            allowed domain and is grounded in the retrieved context.
+
+            ALLOWED DOMAIN:
+            {domain_description}
+
+            RULES:
+            - Answer OFF_SCOPE if the prefix performs an off-domain task
+              (writing code, drafting generic marketing/email/translation
+              content, general-knowledge facts) even when it is framed as being
+              "for" the allowed domain.
+            - Answer OFF_SCOPE if the prefix reports information that is not
+              supported by the retrieved context.
+            - Otherwise answer VALID.
+            - Return ONLY one word in UPPERCASE: VALID or OFF_SCOPE.
+              No explanations, comments, or punctuation.
+
+            USER QUESTION:
+            {query}
+
+            RETRIEVED CONTEXT:
+            {context_text}
+
+            ANSWER PREFIX TO CLASSIFY:
+            {answer_prefix}
+
+            VERDICT:
+            """
+
+        scope_gate_prompt_template = PromptTemplate.from_template(scope_gate_prompt)
+        scope_gate_chain = scope_gate_prompt_template | self.llm
+        scope_gate_response = scope_gate_chain.invoke(
+            {
+                "domain_description": domain_description,
+                "query": escape_curly_braces(query),
+                "context_text": escape_curly_braces(context_text),
+                "answer_prefix": escape_curly_braces(answer_prefix),
+            }
+        )
+
+        if isinstance(scope_gate_response.content, list):
+            verdict = scope_gate_response.content[0].get("text")
+        else:
+            verdict = scope_gate_response.content
+
+        return "OFF_SCOPE" if "OFF_SCOPE" in (verdict or "").upper() else "VALID"
+
+    def _get_retrieved_context_text(self):
+        """Join the page content of the documents retrieved for the current
+        turn, read back from the graph state."""
+        try:
+            context = self.graph.get_state(self.config).values.get("context") or []
+        except Exception as e:
+            logger.error(f"[scope_gate] unable to read retrieved context: {e}")
+            context = []
+
+        return "\n\n".join(doc.page_content for doc in context)
 
     def input_guardrail_node(self, state: GraphState) -> GraphState:
         if self.input_guardrail.get("enable_input_guardrail"):
@@ -1641,7 +1718,103 @@ class RagGraph:
 
     def stream(self, query: str):
         try:
-            if (
+            if self.output_guardrail.get("scope_gate_enabled"):
+                start_chunk = True
+                result_answer = ""
+                prefix_buffer = []
+                scope_checked = False
+
+                try:
+                    for chunk, metadata in self.graph.stream(
+                        {
+                            "current_query": query,
+                            "chat_sequence_number": self.chat_sequence_number,
+                        },
+                        config=self.config,
+                        stream_mode="messages",
+                    ):
+                        if (
+                            metadata["langgraph_node"] == "llm_response"
+                            and chunk.content
+                        ):
+                            chunk_response = ""
+
+                            if isinstance(chunk.content, list):
+                                chunk_response = chunk.content[0].get("text")
+                            else:
+                                chunk_response = chunk.content
+
+                            if start_chunk:
+                                yield json.dumps({"chunk": "", "type": "START"})
+                                start_chunk = False
+
+                            result_answer += chunk_response
+
+                            # Prefix already validated: stream the rest freely.
+                            if scope_checked:
+                                yield json.dumps(
+                                    {"chunk": chunk_response, "type": "CHUNK"}
+                                )
+                                continue
+
+                            prefix_buffer.append(chunk_response)
+
+                            if len(result_answer) >= self.scope_gate_prefix_chars:
+                                scope_gate = self._llm_scope_gate(
+                                    query,
+                                    self._get_retrieved_context_text(),
+                                    result_answer,
+                                )
+                                if scope_gate == "OFF_SCOPE":
+                                    yield json.dumps(
+                                        {
+                                            "chunk": self.scope_gate_redirect_message,
+                                            "type": "CANCEL",
+                                        }
+                                    )
+                                    return
+
+                                for buffered_chunk in prefix_buffer:
+                                    yield json.dumps(
+                                        {"chunk": buffered_chunk, "type": "CHUNK"}
+                                    )
+                                prefix_buffer = []
+                                scope_checked = True
+                except Exception as e:
+                    if "rate_limit" in str(e).lower() or "429" in str(e):
+                        yield json.dumps(
+                            {
+                                "chunk": "Rate limit exceeded. Try again later.",
+                                "type": "ERROR",
+                            }
+                        )
+                        return
+                    raise e
+
+                # Stream ended before reaching the prefix length: check the
+                # short prefix collected so far.
+                if not scope_checked and prefix_buffer:
+                    scope_gate = self._llm_scope_gate(
+                        query,
+                        self._get_retrieved_context_text(),
+                        result_answer,
+                    )
+                    if scope_gate == "OFF_SCOPE":
+                        yield json.dumps(
+                            {
+                                "chunk": self.scope_gate_redirect_message,
+                                "type": "CANCEL",
+                            }
+                        )
+                        return
+
+                    for buffered_chunk in prefix_buffer:
+                        yield json.dumps(
+                            {"chunk": buffered_chunk, "type": "CHUNK"}
+                        )
+                    prefix_buffer = []
+
+            elif (
                 self.output_guardrail.get("enable_output_guardrail")
                 and self.output_guardrail_type == 1
             ):
@@ -1841,7 +2014,11 @@ class RagGraph:
 
             if last_state := self.graph.get_state(self.config):
                 if last_state.values.get("no_context_answer"):
-                    result_answer = last_state.values.get("response")
+                    result_answer = (
+                        self.scope_gate_redirect_message
+                        if self.output_guardrail.get("scope_gate_enabled")
+                        else last_state.values.get("response")
+                    )
                     yield json.dumps({"chunk": "", "type": "START"})
                     yield json.dumps(
                         {"chunk": result_answer, "type": "CHUNK"}
