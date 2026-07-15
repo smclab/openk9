@@ -151,12 +151,6 @@ public class DataIndexGraphqlResource {
 			.getMappings(dataIndex.getId());
 	}
 
-	@Mutation
-	@Deprecated
-	public Uni<Tuple2<DataIndex, DocType>> removeDocTypeFromDataIndex(@Id long dataIndexId, @Id long docTypeId) {
-		return dataIndexService.removeDocType(dataIndexId, docTypeId);
-	}
-
 	public Uni<String> settings(@Source DataIndex dataIndex) {
 		return dataIndexService
 			.getSettings(dataIndex.getId());

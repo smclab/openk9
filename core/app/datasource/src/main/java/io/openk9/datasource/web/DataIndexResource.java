@@ -19,31 +19,21 @@ package io.openk9.datasource.web;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 
 import io.openk9.datasource.index.IndexMappingService;
 import io.openk9.datasource.index.model.MappingsKey;
-import io.openk9.datasource.model.DataIndex;
-import io.openk9.datasource.model.dto.base.DataIndexDTO;
 import io.openk9.datasource.service.DataIndexService;
-import io.openk9.datasource.service.DocTypeService;
-import io.openk9.datasource.service.util.K9EntityServiceException;
-import io.openk9.datasource.web.dto.DataIndexByDocTypes;
 import io.openk9.datasource.web.dto.openapi.DataIndexDtoExamples;
 
 import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.eclipse.microprofile.faulttolerance.CircuitBreaker;
-import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
@@ -182,34 +172,6 @@ public class DataIndexResource {
 		GetMappingsOrSettingsFromDocTypesRequest request) {
 
 		return indexMappingService.getSettingsFromDocTypes(request.getDocTypeIds());
-	}
-
-	@Path("/create-data-index-from-doc-types/{datasourceId}")
-	@POST
-	@Deprecated(forRemoval = true)
-	public Uni<DataIndex> createDataIndexFromDocTypes(
-		@PathParam("datasourceId") long datasourceId,
-		DataIndexByDocTypes request) {
-
-		var settings = JsonObject.mapFrom(request.getSettings()).encode();
-
-		DataIndexDTO dataIndexDto = DataIndexDTO.builder()
-			.name(request.getIndexName())
-			.docTypeIds(Set.copyOf(request.getDocTypeIds()))
-			.settings(settings)
-			.build();
-
-		return dataIndexService.create(datasourceId, dataIndexDto)
-			.map(response -> {
-				if (response.getFieldValidators() != null
-					&& !response.getFieldValidators().isEmpty()) {
-
-					throw new K9EntityServiceException("An error occurred while creating dataIndex");
-				}
-				else {
-					return response.getEntity();
-				}
-			});
 	}
 
 }

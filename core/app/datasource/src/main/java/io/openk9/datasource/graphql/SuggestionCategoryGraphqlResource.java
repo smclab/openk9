@@ -158,28 +158,6 @@ public class SuggestionCategoryGraphqlResource {
 		return suggestionCategoryService.getValidator().patch(id, suggestionCategoryDTO);
 	}
 
-	/**
-	 * This GraphQL mutation has been deprecated and replaced by the {@code unbindDocTypeFieldFromSuggestionCategory} method,
-	 * which no longer requires the {@code docTypeFieldId} parameter.
-	 *
-	 * <p>
-	 * Deprecation introduced in version 3.0.0. While there are no significant impacts from using this method,
-	 * it is recommended to transition to the new method for improved functionality and future compatibility.
-	 * </p>
-	 *
-	 * @deprecated Use {@link #unbindDocTypeFieldFromSuggestionCategory(long suggestionCategoryId)} instead.
-	 */
-	@Mutation
-	@Description("This mutation is deprecated. Use `unbindDocTypeFieldFromSuggestionCategory` instead. " +
-		"Deprecation introduced in version 3.0.0. No significant impacts from usage, " +
-		"but transitioning to the new method is recommended.")
-	@Deprecated
-	public Uni<Tuple2<SuggestionCategory, DocTypeField>> removeDocTypeFieldFromSuggestionCategory(
-			@Id long suggestionCategoryId, @Id long docTypeFieldId) {
-		return suggestionCategoryService.unsetDocTypeField(suggestionCategoryId)
-			.map(sc -> Tuple2.of(sc, null));
-	}
-
 	@Mutation
 	public Uni<SuggestionCategory> setMultiSelect(
 		@Id @Name("suggestionCategoryId") long suggestionCategoryId, boolean multiSelect) {
@@ -251,7 +229,6 @@ public class SuggestionCategoryGraphqlResource {
 	 * @param suggestionCategoryId The ID of the {@link SuggestionCategory} from which to unbind the {@link DocTypeField}.
 	 * @return A {@link Uni} containing the updated {@link SuggestionCategory} and the unbound {@link DocTypeField}.
 	 *
-	 * @see #removeDocTypeFieldFromSuggestionCategory(long, long)
 	 */
 	@Mutation
 	@Description("This mutation replaces `removeDocTypeFieldFromSuggestionCategory`. It does not require the `docTypeFieldId` parameter " +
