@@ -112,7 +112,7 @@ CORE_SERVICES=(
     search-frontend admin-ui tenant-ui web-connector
 )
 GEN_AI_SERVICES=(rag-module embedding-module talk-to agentic-rag-module evaluator evaluator-offline)
-FILE_HANDLING_SERVICES=(file-manager tika minio-connector docling-processor)
+FILE_HANDLING_SERVICES=(tika minio-connector docling-processor)
 
 VALID_SERVICES=(
     "${CORE_SERVICES[@]}" "${GEN_AI_SERVICES[@]}" "${FILE_HANDLING_SERVICES[@]}"
@@ -342,7 +342,7 @@ build_file_handling() {
     # amd64 uses the +cpu wheels, arm64 the default-PyPI aarch64 wheels, so on
     # Apple Silicon docling runs natively instead of under amd64 emulation.
     docker build --pull --platform "$JIB_PLATFORM" --build-arg "MODE=cpu" -t "$GROUP/openk9-docling-processor:$TAG" -f enrichers/docling-processor/enricher/Dockerfile enrichers/docling-processor/enricher
-    (cd core && for SVC in file-manager tika; do
+    (cd core && for SVC in tika; do
         echo "Building $SVC..."
         ./mvnw package -DskipTests \
             -Dquarkus.profile=prod \
@@ -386,7 +386,7 @@ build_single() {
     echo "--- Building: $service (tag: $TAG) ---"
     if [ "$SKIP_MVN_SHARED_DEPS" = false ]; then
         case "$service" in
-            api-gateway|tenant-manager|datasource|ingestion|searcher|file-manager|tika)
+            api-gateway|tenant-manager|datasource|ingestion|searcher|tika)
                 build_mvn_shared_deps
                 ;;
         esac
@@ -398,7 +398,7 @@ build_single() {
                 "-Djib.platform.architecture=$JIB_ARCH" \
                 -f app/api-gateway/pom.xml)
             ;;
-        tenant-manager|datasource|ingestion|searcher|file-manager|tika)
+        tenant-manager|datasource|ingestion|searcher|tika)
             (cd core && ./mvnw package -DskipTests \
                 -Dquarkus.profile=prod \
                 "-Dquarkus.jib.platforms=$JIB_PLATFORM" \
@@ -449,7 +449,7 @@ build_single() {
 }
 
 _has_java_service() {
-    local java_services="api-gateway tenant-manager datasource ingestion searcher file-manager tika"
+    local java_services="api-gateway tenant-manager datasource ingestion searcher tika"
     for svc in "$@"; do
         for jsvc in $java_services; do
             [ "$svc" = "$jsvc" ] && return 0
@@ -678,7 +678,7 @@ Services (for targeted build/restart):
   api-gateway  tenant-manager  datasource  ingestion  searcher
   search-frontend  admin-ui  tenant-ui  web-connector
   rag-module  agentic-rag-module  embedding-module  talk-to
-  file-manager  tika  minio-connector
+  tika  minio-connector
 
 Build details:
   Core images are always built. Additional profiles add extra

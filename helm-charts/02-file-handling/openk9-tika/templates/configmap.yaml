@@ -7,7 +7,6 @@ metadata:
 data:
   QUARKUS_HTTP_ACCESS_LOG_ENABLED: {{ .Values.config.httpAccessLog.enabled | quote }}
   QUARKUS_HTTP_ACCESS_LOG_PATTERN: {{ .Values.config.httpAccessLog.pattern | quote }}
-  QUARKUS_REST_CLIENT_FILE_MANAGER_URL: {{ include "helper.fileManagerURL" . | quote }}
   QUARKUS_REST_CLIENT_DATASOURCE_URL: {{ include "helper.datasourceURL" . | quote }}
   QUARKUS_HTTP_CORS: {{ .Values.quarkus.HttpCors | quote }}
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}

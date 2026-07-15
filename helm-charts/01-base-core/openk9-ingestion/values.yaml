@@ -99,11 +99,15 @@ rabbitmq:
   keyPasswordSecret: "rabbitmq-password"
   keyPasswordEnvName: "RABBITMQ_PASSWORD"
 
-# OpenK9 File Manager configuration
-openk9:
-  fileManager:
-    host: "openk9-file-manager"
-    port: 8080
+## MinIO (object storage) configuration
+minio:
+  host: "http://minio:9000"
+  secure: false
+  passwordSecretName: "minio-secret"
+  keyUserSecret: "user"
+  keyUserEnvName: "QUARKUS_MINIO_ACCESS_KEY"
+  keyPasswordSecret: "password"
+  keyPasswordEnvName: "QUARKUS_MINIO_SECRET_KEY"
 
 ## Opentelemetry configuration
 otel:

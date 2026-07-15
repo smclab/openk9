@@ -17,7 +17,6 @@ data:
   QUARKUS_HTTP_CORS_ORIGINS: {{ .Values.quarkus.HttpCorsOrigin | quote }}
   QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
 
-  QUARKUS_REST_CLIENT_FILE_MANAGER_URL: {{ include "helper.fileManagerURL" . | quote }}
   QUARKUS_REST_CLIENT_DATASOURCE_URL: {{ include "helper.datasourceURL" . | quote }}
 
   # JVM Memory variable

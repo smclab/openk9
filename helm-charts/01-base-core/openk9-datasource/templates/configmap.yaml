@@ -64,6 +64,10 @@ data:
   QUARKUS_GRPC_CLIENTS__EMBEDDING__HOST: {{ .Values.openk9.embedding.host | quote }}
   QUARKUS_GRPC_CLIENTS__EMBEDDING__PORT: {{ .Values.openk9.embedding.port | quote }}
 
+  # MinIO (object storage) env variables
+  QUARKUS_MINIO_HOST: {{ .Values.minio.host | quote }}
+  QUARKUS_MINIO_SECURE: {{ .Values.minio.secure | quote }}
+
   # Pekko env variables
   PEKKO_CLUSTER_BOOTSTRAP_SERVICE_NAME: {{ .Values.quarkus.PekkoClusterBootstrapServiceName | quote }}
   

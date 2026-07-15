@@ -5,5 +5,4 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" . | nindent 4 }}
 data:
-  FILE_MANAGER_HOST: {{ include "helper.fileManagerURL" . | quote }}
   DATASOURCE_HOST: {{ include "helper.datasourceURL" . | quote }}

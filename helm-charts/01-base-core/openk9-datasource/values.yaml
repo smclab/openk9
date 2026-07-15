@@ -207,6 +207,16 @@ openk9:
     host: "openk9-embedding-module"
     port: "5000"
 
+## MinIO (object storage) configuration
+minio:
+  host: "http://minio:9000"
+  secure: false
+  passwordSecretName: "minio-secret"
+  keyUserSecret: "user"
+  keyUserEnvName: "QUARKUS_MINIO_ACCESS_KEY"
+  keyPasswordSecret: "password"
+  keyPasswordEnvName: "QUARKUS_MINIO_SECRET_KEY"
+
 ## Search Page Configuration
 search:
   page:

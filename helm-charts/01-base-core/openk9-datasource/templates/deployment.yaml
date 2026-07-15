@@ -80,6 +80,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.rabbitmq.passwordSecretName }}
                   key: {{ .Values.rabbitmq.keyPasswordSecret }}
+            - name: {{ .Values.minio.keyUserEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.minio.passwordSecretName }}
+                  key: {{ .Values.minio.keyUserSecret }}
+            - name: {{ .Values.minio.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.minio.passwordSecretName }}
+                  key: {{ .Values.minio.keyPasswordSecret }}
             {{- if eq .Values.database.type "postgresql" }}
             - name: {{ .Values.database.postgresql.keyPasswordEnvName }}
               valueFrom:

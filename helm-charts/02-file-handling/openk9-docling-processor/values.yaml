@@ -55,10 +55,6 @@ service:
   port: 5000
 ## OpenK9 grpc services configuration
 openk9:
-  ## Openk File Manager configuration
-  fileManager:
-    host: "openk9-file-manager"
-    port: 8080
   ## Openk Datasource configuration
   datasource:
     host: "openk9-datasource"

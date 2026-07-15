@@ -83,6 +83,16 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.rabbitmq.passwordSecretName }}
                   key: {{ .Values.rabbitmq.keyPasswordSecret }}
+            - name: {{ .Values.minio.keyUserEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.minio.passwordSecretName }}
+                  key: {{ .Values.minio.keyUserSecret }}
+            - name: {{ .Values.minio.keyPasswordEnvName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.minio.passwordSecretName }}
+                  key: {{ .Values.minio.keyPasswordSecret }}
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http

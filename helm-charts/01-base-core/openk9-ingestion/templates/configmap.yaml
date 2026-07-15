@@ -21,8 +21,9 @@ data:
   QUARKUS_LOG_CONSOLE_JSON:  {{ .Values.quarkus.LogConsoleJson | quote }}
 
 
-  # Custom env variables
-  QUARKUS_REST_CLIENT_FILE_MANAGER_URL: {{ include "helper.fileManagerURL" . | quote }}
+  # MinIO (object storage) env variables
+  QUARKUS_MINIO_HOST: {{ .Values.minio.host | quote }}
+  QUARKUS_MINIO_SECURE: {{ .Values.minio.secure | quote }}
 
   # JVM Memory variable
   JAVA_TOOL_OPTIONS: {{ .Values.jvm.toolOptions | quote }}
