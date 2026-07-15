@@ -20,11 +20,14 @@ package io.openk9.datasource.pipeline.actor.enrichitem;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.openk9.common.storage.PresignedUrlService;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.pipeline.service.dto.EnrichItemDTO;
+import io.openk9.datasource.processor.payload.BinaryPayload;
 import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.util.CborSerializable;
 import io.openk9.datasource.web.dto.EnricherInputDTO;
+import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.ActorContext;
@@ -169,6 +172,8 @@ public class EnrichItemSupervisor {
 				? new HashMap<>()
 				: new ObjectMapper().readValue(jsonConfig, new TypeReference<>() {});
 
+		injectBinaryUrls(dataPayload);
+
 		Map<String, Object> payload =
 			new ObjectMapper().convertValue(dataPayload, new TypeReference<>() {});
 
@@ -183,6 +188,28 @@ public class EnrichItemSupervisor {
 		}
 
 		return Behaviors.same();
+	}
+
+	private static void injectBinaryUrls(DataPayload dataPayload) {
+
+		var resources = dataPayload.getResources();
+
+		if (resources == null || resources.getBinaries() == null
+			|| resources.getBinaries().isEmpty()) {
+			return;
+		}
+
+		PresignedUrlService presignedUrlService =
+			CDI.current().select(PresignedUrlService.class).get();
+
+		for (BinaryPayload binary : resources.getBinaries()) {
+			binary.setUrl(
+				presignedUrlService.presignGet(
+					dataPayload.getTenantId(),
+					dataPayload.getDatasourceId(),
+					dataPayload.getContentId(),
+					binary.getId()));
+		}
 	}
 
 	private static void onGroovyEnrichItem(

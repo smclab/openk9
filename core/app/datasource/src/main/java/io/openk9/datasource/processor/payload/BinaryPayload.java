@@ -32,6 +32,7 @@ public class BinaryPayload {
 	private String id;
 	private String name;
 	private String contentType;
-	private String data;
-	private String resourceId;
+	// Pre-signed GET URL injected by the datasource before invoking an
+	// enricher that reads binaries; absent on the bus, minted per invocation.
+	private String url;
 }
