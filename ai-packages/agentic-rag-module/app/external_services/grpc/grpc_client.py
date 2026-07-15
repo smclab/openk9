@@ -221,6 +221,15 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
         output_guardrail_openai_moderation = json_config.get(
             "output_guardrail_openai_moderation", {}
         )
+        scope_gate_enabled = json_config.get("scope_gate_enabled", False)
+        scope_gate_prefix_chars = json_config.get("scope_gate_prefix_chars", 250)
+        scope_gate_domain_description = json_config.get(
+            "scope_gate_domain_description", ""
+        )
+        scope_gate_redirect_message = json_config.get(
+            "scope_gate_redirect_message",
+            "Posso aiutarti solo su temi di questo dominio.",
+        )
 
         domain_threshold = json_config.get("domain_threshold", 0.7)
 
@@ -243,6 +252,10 @@ def get_rag_configuration(grpc_host, tenant_id, rag_type):
             "output_guardrail_aws_bedrock": output_guardrail_aws_bedrock,
             "output_guardrail_google_model_armor": output_guardrail_google_model_armor,
             "output_guardrail_openai_moderation": output_guardrail_openai_moderation,
+            "scope_gate_enabled": scope_gate_enabled,
+            "scope_gate_prefix_chars": scope_gate_prefix_chars,
+            "scope_gate_domain_description": scope_gate_domain_description,
+            "scope_gate_redirect_message": scope_gate_redirect_message,
         }
 
         guardrails_configuration = {
