@@ -24,6 +24,7 @@ export * from "./DocumentTypes";
 export * from "./DocumentTypesTemplates";
 export * from "./EmbeddingModels";
 export * from "./EnrichItems";
+export * from "./Highlight";
 export * from "./LargeLanguageModels";
 export * from "./Notifications";
 export * from "./pipelines";

@@ -37,6 +37,8 @@ export type NamePath =
   | "suggestion-categories"
   | "enrich-item"
   | "enrich-items"
+  | "highlight"
+  | "highlights"
   | "pipeline"
   | "pipelines"
   | "plugin-driver"
@@ -95,6 +97,8 @@ export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "suggestion-categories", value: "suggestion-categories" },
   { label: "enrich-item", value: "enrich-items" },
   { label: "enrich-items", value: "enrich-items" },
+  { label: "highlight", value: "highlights" },
+  { label: "highlights", value: "highlights" },
   { label: "pipeline", value: "pipelines" },
   { label: "pipelines", value: "pipelines" },
   { label: "plugin-driver", value: "plugin-drivers" },

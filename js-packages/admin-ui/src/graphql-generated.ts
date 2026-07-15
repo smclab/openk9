@@ -6169,6 +6169,50 @@ export type CreateOrUpdateEnrichItemMutationVariables = Exact<{
 
 export type CreateOrUpdateEnrichItemMutation = { __typename?: 'Mutation', enrichItem?: { __typename?: 'Response_EnrichItem', entity?: { __typename?: 'EnrichItem', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
 
+export type HighlightsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type HighlightsQuery = { __typename?: 'Query', highlights?: Array<{ __typename?: 'Highlight', id?: string | null, name?: string | null, description?: string | null, type: HighlightType } | null> | null };
+
+export type HighlightQueryVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type HighlightQuery = { __typename?: 'Query', highlight?: { __typename?: 'Highlight', id?: string | null, name?: string | null, description?: string | null, type: HighlightType, boundaryScanner?: BoundaryScannerType | null, boundaryChars?: string | null, fragmenter?: FragmenterType | null, fragmentSize?: number | null, numberOfFragments?: number | null, order?: OrderType | null, fields?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null } | null };
+
+export type DocTypeFieldsByOffsetSourceQueryVariables = Exact<{
+  offsetSource?: InputMaybe<OffsetSourceType>;
+}>;
+
+
+export type DocTypeFieldsByOffsetSourceQuery = { __typename?: 'Query', docTypeFieldsByOffsetSource?: Array<{ __typename?: 'DocTypeField', id?: string | null, name?: string | null } | null> | null };
+
+export type CreateOrUpdateHighlightMutationVariables = Exact<{
+  id?: InputMaybe<Scalars['ID']>;
+  name: Scalars['String'];
+  description?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<HighlightType>;
+  fieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>> | InputMaybe<Scalars['BigInteger']>>;
+  boundaryScanner?: InputMaybe<BoundaryScannerType>;
+  boundaryChars?: InputMaybe<Scalars['String']>;
+  fragmenter?: InputMaybe<FragmenterType>;
+  fragmentSize?: InputMaybe<Scalars['Int']>;
+  numberOfFragments?: InputMaybe<Scalars['Int']>;
+  order?: InputMaybe<OrderType>;
+  patch?: InputMaybe<Scalars['Boolean']>;
+}>;
+
+
+export type CreateOrUpdateHighlightMutation = { __typename?: 'Mutation', highlight?: { __typename?: 'Response_Highlight', entity?: { __typename?: 'Highlight', id?: string | null, name?: string | null } | null, fieldValidators?: Array<{ __typename?: 'FieldValidator', field?: string | null, message?: string | null } | null> | null } | null };
+
+export type DeleteHighlightMutationVariables = Exact<{
+  id: Scalars['ID'];
+}>;
+
+
+export type DeleteHighlightMutation = { __typename?: 'Mutation', deleteHighlight?: { __typename?: 'Highlight', id?: string | null, name?: string | null } | null };
+
 export type LargeLanguageModelsQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   after?: InputMaybe<Scalars['String']>;
@@ -10042,6 +10086,216 @@ export function useCreateOrUpdateEnrichItemMutation(baseOptions?: Apollo.Mutatio
 export type CreateOrUpdateEnrichItemMutationHookResult = ReturnType<typeof useCreateOrUpdateEnrichItemMutation>;
 export type CreateOrUpdateEnrichItemMutationResult = Apollo.MutationResult<CreateOrUpdateEnrichItemMutation>;
 export type CreateOrUpdateEnrichItemMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateEnrichItemMutation, CreateOrUpdateEnrichItemMutationVariables>;
+export const HighlightsDocument = gql`
+    query Highlights {
+  highlights {
+    id
+    name
+    description
+    type
+  }
+}
+    `;
+
+/**
+ * __useHighlightsQuery__
+ *
+ * To run a query within a React component, call `useHighlightsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHighlightsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHighlightsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useHighlightsQuery(baseOptions?: Apollo.QueryHookOptions<HighlightsQuery, HighlightsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HighlightsQuery, HighlightsQueryVariables>(HighlightsDocument, options);
+      }
+export function useHighlightsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HighlightsQuery, HighlightsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HighlightsQuery, HighlightsQueryVariables>(HighlightsDocument, options);
+        }
+export type HighlightsQueryHookResult = ReturnType<typeof useHighlightsQuery>;
+export type HighlightsLazyQueryHookResult = ReturnType<typeof useHighlightsLazyQuery>;
+export type HighlightsQueryResult = Apollo.QueryResult<HighlightsQuery, HighlightsQueryVariables>;
+export const HighlightDocument = gql`
+    query Highlight($id: ID!) {
+  highlight(id: $id) {
+    id
+    name
+    description
+    type
+    boundaryScanner
+    boundaryChars
+    fragmenter
+    fragmentSize
+    numberOfFragments
+    order
+    fields {
+      id
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useHighlightQuery__
+ *
+ * To run a query within a React component, call `useHighlightQuery` and pass it any options that fit your needs.
+ * When your component renders, `useHighlightQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useHighlightQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useHighlightQuery(baseOptions: Apollo.QueryHookOptions<HighlightQuery, HighlightQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<HighlightQuery, HighlightQueryVariables>(HighlightDocument, options);
+      }
+export function useHighlightLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HighlightQuery, HighlightQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<HighlightQuery, HighlightQueryVariables>(HighlightDocument, options);
+        }
+export type HighlightQueryHookResult = ReturnType<typeof useHighlightQuery>;
+export type HighlightLazyQueryHookResult = ReturnType<typeof useHighlightLazyQuery>;
+export type HighlightQueryResult = Apollo.QueryResult<HighlightQuery, HighlightQueryVariables>;
+export const DocTypeFieldsByOffsetSourceDocument = gql`
+    query DocTypeFieldsByOffsetSource($offsetSource: OffsetSourceType) {
+  docTypeFieldsByOffsetSource(offsetSource: $offsetSource) {
+    id
+    name
+  }
+}
+    `;
+
+/**
+ * __useDocTypeFieldsByOffsetSourceQuery__
+ *
+ * To run a query within a React component, call `useDocTypeFieldsByOffsetSourceQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDocTypeFieldsByOffsetSourceQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDocTypeFieldsByOffsetSourceQuery({
+ *   variables: {
+ *      offsetSource: // value for 'offsetSource'
+ *   },
+ * });
+ */
+export function useDocTypeFieldsByOffsetSourceQuery(baseOptions?: Apollo.QueryHookOptions<DocTypeFieldsByOffsetSourceQuery, DocTypeFieldsByOffsetSourceQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DocTypeFieldsByOffsetSourceQuery, DocTypeFieldsByOffsetSourceQueryVariables>(DocTypeFieldsByOffsetSourceDocument, options);
+      }
+export function useDocTypeFieldsByOffsetSourceLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DocTypeFieldsByOffsetSourceQuery, DocTypeFieldsByOffsetSourceQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DocTypeFieldsByOffsetSourceQuery, DocTypeFieldsByOffsetSourceQueryVariables>(DocTypeFieldsByOffsetSourceDocument, options);
+        }
+export type DocTypeFieldsByOffsetSourceQueryHookResult = ReturnType<typeof useDocTypeFieldsByOffsetSourceQuery>;
+export type DocTypeFieldsByOffsetSourceLazyQueryHookResult = ReturnType<typeof useDocTypeFieldsByOffsetSourceLazyQuery>;
+export type DocTypeFieldsByOffsetSourceQueryResult = Apollo.QueryResult<DocTypeFieldsByOffsetSourceQuery, DocTypeFieldsByOffsetSourceQueryVariables>;
+export const CreateOrUpdateHighlightDocument = gql`
+    mutation CreateOrUpdateHighlight($id: ID, $name: String!, $description: String, $type: HighlightType, $fieldIds: [BigInteger], $boundaryScanner: BoundaryScannerType, $boundaryChars: String, $fragmenter: FragmenterType, $fragmentSize: Int, $numberOfFragments: Int, $order: OrderType, $patch: Boolean) {
+  highlight(
+    id: $id
+    patch: $patch
+    highlightDTO: {name: $name, description: $description, type: $type, fieldIds: $fieldIds, boundaryScanner: $boundaryScanner, boundaryChars: $boundaryChars, fragmenter: $fragmenter, fragmentSize: $fragmentSize, numberOfFragments: $numberOfFragments, order: $order}
+  ) {
+    entity {
+      id
+      name
+    }
+    fieldValidators {
+      field
+      message
+    }
+  }
+}
+    `;
+export type CreateOrUpdateHighlightMutationFn = Apollo.MutationFunction<CreateOrUpdateHighlightMutation, CreateOrUpdateHighlightMutationVariables>;
+
+/**
+ * __useCreateOrUpdateHighlightMutation__
+ *
+ * To run a mutation, you first call `useCreateOrUpdateHighlightMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateOrUpdateHighlightMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createOrUpdateHighlightMutation, { data, loading, error }] = useCreateOrUpdateHighlightMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      name: // value for 'name'
+ *      description: // value for 'description'
+ *      type: // value for 'type'
+ *      fieldIds: // value for 'fieldIds'
+ *      boundaryScanner: // value for 'boundaryScanner'
+ *      boundaryChars: // value for 'boundaryChars'
+ *      fragmenter: // value for 'fragmenter'
+ *      fragmentSize: // value for 'fragmentSize'
+ *      numberOfFragments: // value for 'numberOfFragments'
+ *      order: // value for 'order'
+ *      patch: // value for 'patch'
+ *   },
+ * });
+ */
+export function useCreateOrUpdateHighlightMutation(baseOptions?: Apollo.MutationHookOptions<CreateOrUpdateHighlightMutation, CreateOrUpdateHighlightMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateOrUpdateHighlightMutation, CreateOrUpdateHighlightMutationVariables>(CreateOrUpdateHighlightDocument, options);
+      }
+export type CreateOrUpdateHighlightMutationHookResult = ReturnType<typeof useCreateOrUpdateHighlightMutation>;
+export type CreateOrUpdateHighlightMutationResult = Apollo.MutationResult<CreateOrUpdateHighlightMutation>;
+export type CreateOrUpdateHighlightMutationOptions = Apollo.BaseMutationOptions<CreateOrUpdateHighlightMutation, CreateOrUpdateHighlightMutationVariables>;
+export const DeleteHighlightDocument = gql`
+    mutation DeleteHighlight($id: ID!) {
+  deleteHighlight(id: $id) {
+    id
+    name
+  }
+}
+    `;
+export type DeleteHighlightMutationFn = Apollo.MutationFunction<DeleteHighlightMutation, DeleteHighlightMutationVariables>;
+
+/**
+ * __useDeleteHighlightMutation__
+ *
+ * To run a mutation, you first call `useDeleteHighlightMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteHighlightMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteHighlightMutation, { data, loading, error }] = useDeleteHighlightMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteHighlightMutation(baseOptions?: Apollo.MutationHookOptions<DeleteHighlightMutation, DeleteHighlightMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteHighlightMutation, DeleteHighlightMutationVariables>(DeleteHighlightDocument, options);
+      }
+export type DeleteHighlightMutationHookResult = ReturnType<typeof useDeleteHighlightMutation>;
+export type DeleteHighlightMutationResult = Apollo.MutationResult<DeleteHighlightMutation>;
+export type DeleteHighlightMutationOptions = Apollo.BaseMutationOptions<DeleteHighlightMutation, DeleteHighlightMutationVariables>;
 export const LargeLanguageModelsDocument = gql`
     query LargeLanguageModels($searchText: String, $after: String) {
   largeLanguageModels(searchText: $searchText, first: 20, after: $after) {
@@ -16703,4 +16957,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-07-27T12:04:37+02:00
+// Generated on 2026-07-29T09:54:18+02:00

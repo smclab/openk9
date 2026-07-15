@@ -67,6 +67,7 @@ export const menuItems: MenuItem[] = [
     children: [
       { label: "Search Config", path: "/search-configs", IsChildren: true, value: "search-configs" },
       { label: "Filters", path: "/suggestion-categories", IsChildren: true, value: "suggestion-categories" },
+      { label: "Highlights", path: "/highlights", IsChildren: true, value: "highlights" },
       { label: "Tabs", path: "/tabs", IsChildren: true, value: "tabs" },
       { label: "Token Tabs", path: "/token-tabs", IsChildren: true, value: "token-tabs" },
       { label: "Sortings", path: "/sortings", IsChildren: true, value: "sortings" },

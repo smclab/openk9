@@ -47,6 +47,7 @@ import {
   DocumentTypeTemplates,
   EmbeddingModels,
   EnrichItems,
+  Highlights,
   InformationNotification,
   LargeLanguageModels,
   Pipelines,
@@ -61,6 +62,7 @@ import {
   SaveDocumentTypeTemplate,
   SaveEmbeddingModel,
   SaveEnrichItem,
+  SaveHighlight,
   SaveLargeLanguageModel,
   SavePipeline,
   SaveQueryAnalysis,
@@ -389,6 +391,9 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/analyzers" element={<Analyzers />} />
     <Route path="/analyzer/:analyzerId" element={<SaveAnalyzer setExtraFab={setExtraFab} />} />
     <Route path="/analyzer/:analyzerId/:view" element={<SaveAnalyzer setExtraFab={setExtraFab} />} />
+    <Route path="/highlights" element={<Highlights />} />
+    <Route path="/highlight/:highlightId" element={<SaveHighlight setExtraFab={setExtraFab} />} />
+    <Route path="/highlight/:highlightId/:view" element={<SaveHighlight setExtraFab={setExtraFab} />} />
     <Route path="/suggestion-categories" element={<SuggestionCategories />} />
     <Route
       path="/suggestion-category/:suggestionCategoryId"
