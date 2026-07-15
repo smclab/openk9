@@ -19,17 +19,15 @@ import base64
 import os
 from io import BytesIO
 
+import requests
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 
-from app.utils.fm_helper import FileManagerHelper
 from app.utils.format_detect import extract_extension_base64
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
-FILE_MANAGER_HOST = os.getenv("FILE_MANAGER_HOST", default="http://localhost:8000")
 DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
-FMHelper = FileManagerHelper(FILE_MANAGER_HOST)
 
 
 def conversion(bin, tenant, configs):
@@ -43,7 +41,8 @@ def conversion(bin, tenant, configs):
 
     Args:
         bin (dict): A dictionary representing a binary resource. It must contain
-            the key `"resourceId"` identifying the resource to be retrieved.
+            the key `"url"`, a pre-signed GET URL from which the resource is
+            fetched.
         tenant (str): The tenant identifier used to resolve the resource context.
 
     Returns:
@@ -52,10 +51,12 @@ def conversion(bin, tenant, configs):
         (e.g. `export_to_markdown()`).
 
     """
-    resource_id = bin.get("resourceId")
-    resource = FMHelper.get_base64(tenant, resource_id)
-    bites = BytesIO(base64.b64decode(resource))
-    extension = extract_extension_base64(resource)
+    url = bin.get("url")
+    response = requests.get(url)
+    response.raise_for_status()
+    content = response.content
+    bites = BytesIO(content)
+    extension = extract_extension_base64(base64.b64encode(content).decode())
     source = DocumentStream(name=f"doc.{extension}", stream=bites)
     format_options = get_format_options(configs, extension)
     converter = DocumentConverter(format_options=format_options)

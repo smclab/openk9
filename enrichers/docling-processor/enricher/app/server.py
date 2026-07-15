@@ -99,7 +99,7 @@ def operation(payload, configs, token):
     response = {}
     try:
         binaries = [
-            b for b in payload["resources"].get("binaries", []) if "resourceId" in b
+            b for b in payload["resources"].get("binaries", []) if "url" in b
         ]
         tenant = payload["tenantId"]
     except Exception as e:
