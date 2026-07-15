@@ -4,7 +4,7 @@ Docling processor is an enricher that asynchronously processes documents (using 
 ## Description
 
 This enricher asynchronously process documents with a pipeline built on FastAPI.
-Given a payload by Openk9, it retrieves binary resources from a file-manager service, converts supported documents through Docling into Markdown format, and post the processed result back to a callback URL (`replyTo`).
+Given a payload by Openk9, it retrieves binary resources from the pre-signed URL carried in the payload, converts supported documents through Docling into Markdown format, and post the processed result back to a callback URL (`replyTo`).
 
 The transformation is executed in a background thread so the API returns immediately while the processing continues.
 
@@ -74,13 +74,11 @@ To run the enricher in local you have to:
     #Docling Processor
     uvicorn app.server:app --host 0.0.0.0 --port 8002
 
-    #File Manager mockup
-    uvicorn external.file_manager:app --host 0.0.0.0 --port 8000
-
     #OpenK9 mockup
     uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
     ```
-5. Go to http://localhost:8001/docs and send a payload with your file
+5. Go to http://localhost:8001/docs and send a payload whose binaries carry a
+   `url` (a pre-signed GET URL) pointing to the file
 
 ## API Reference
 
