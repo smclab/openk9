@@ -199,7 +199,6 @@ services:
       QUARKUS_HTTP_ACCESS_LOG_ENABLED: 'true'
       QUARKUS_HTTP_ACCESS_LOG_PATTERN: '%h %l %u %t "%r" %s %b %D'
       QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE: '20480K'
-      QUARKUS_REST_CLIENT_FILE_MANAGER_URL: http://openk9-file-manager:8080
       QUARKUS_OTEL_SDK_DISABLED: 'true'
       QUARKUS_LOG_CONSOLE_JSON: 'false'
     depends_on:
