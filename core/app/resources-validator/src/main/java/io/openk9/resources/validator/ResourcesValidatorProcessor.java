@@ -17,7 +17,6 @@
 
 package io.openk9.resources.validator;
 
-import io.openk9.resources.validator.client.filemanager.FileManagerClient;
 import io.openk9.resources.validator.dto.BinaryPayload;
 import io.openk9.resources.validator.dto.DataPayload;
 import io.openk9.resources.validator.dto.ResourcesValidatorDataPayload;
@@ -26,7 +25,6 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
@@ -40,6 +38,10 @@ import org.opensearch.search.builder.SearchSourceBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
@@ -59,8 +61,6 @@ public class ResourcesValidatorProcessor {
 		String replyTo = resourcesValidatorPayload.getReplyTo();
 
 		DataPayload payload = resourcesValidatorPayload.getPayload();
-
-		String schemaName = payload.getTenantId();
 
 		String indexName = payload.getIndexName();
 
@@ -92,7 +92,7 @@ public class ResourcesValidatorProcessor {
 
 		String rawContent = payload.getRawContent();
 
-		List<Integer> hashCodes = _getHashCodes(rawContent, binaries, schemaName);
+		List<Integer> hashCodes = _getHashCodes(rawContent, binaries);
 
 		try {
 
@@ -121,15 +121,6 @@ public class ResourcesValidatorProcessor {
 						if (hashCodes.size() == documentHashCodesList.size() &&
 							hashCodes.containsAll(documentHashCodesList)) {
 
-							binaries.forEach(binaryPayload -> {
-
-								String resourceId =
-									binaryPayload.getResourceId();
-
-								fileManagerClient.delete(
-									resourceId, schemaName);
-							});
-
 							logger.info(
 								"document found. dropped message with contentId: "
 								+ contentId);
@@ -153,7 +144,7 @@ public class ResourcesValidatorProcessor {
 
 	}
 
-	private List<Integer> _getHashCodes(String rawContent,  List<BinaryPayload> binaries, String schemaName) {
+	private List<Integer> _getHashCodes(String rawContent,  List<BinaryPayload> binaries) {
 
 		if (rawContent == null && binaries == null) {
 			return List.of();
@@ -169,10 +160,9 @@ public class ResourcesValidatorProcessor {
 
 			for (BinaryPayload binaryPayload : binaries) {
 
-				String resourceId = binaryPayload.getResourceId();
+				String url = binaryPayload.getUrl();
 
-				try (InputStream inputStream =
-						 fileManagerClient.download(resourceId, schemaName);) {
+				try (InputStream inputStream = openStream(url)) {
 
 					byte[] sourceBytes = IOUtils.toByteArray(inputStream);
 
@@ -195,10 +185,23 @@ public class ResourcesValidatorProcessor {
 	RestHighLevelClient restHighLevelClient;
 
 	@Inject
-	@RestClient
-	FileManagerClient fileManagerClient;
-
-	@Inject
 	Logger logger;
+
+	// The binary is fetched from the pre-signed URL injected by the datasource;
+	// the URL is a bearer credential and must never be logged.
+	private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
+	private static InputStream openStream(String url) throws Exception {
+		HttpResponse<InputStream> response = HTTP_CLIENT.send(
+			HttpRequest.newBuilder(URI.create(url)).GET().build(),
+			HttpResponse.BodyHandlers.ofInputStream());
+
+		if (response.statusCode() >= 300) {
+			throw new IllegalStateException(
+				"Binary fetch failed with HTTP " + response.statusCode());
+		}
+
+		return response.body();
+	}
 
 }

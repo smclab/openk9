@@ -19,13 +19,16 @@ package io.openk9.tika;
 
 import java.io.BufferedInputStream;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import io.openk9.tika.client.DatasourceClient;
-import io.openk9.tika.client.FileManagerClient;
 import io.openk9.tika.util.Detectors;
 import io.openk9.tika.util.TextCleaner;
 
@@ -58,10 +61,24 @@ public class TikaProcessor {
     @RestClient
     DatasourceClient datasourceClient;
     @Inject
-    @RestClient
-    FileManagerClient fileManagerClient;
-    @Inject
     Logger logger;
+
+    // The binary is fetched from the pre-signed URL injected by the datasource;
+    // the URL is a bearer credential and must never be logged.
+    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+
+    private static InputStream openStream(String url) throws Exception {
+        HttpResponse<InputStream> response = HTTP_CLIENT.send(
+            HttpRequest.newBuilder(URI.create(url)).GET().build(),
+            HttpResponse.BodyHandlers.ofInputStream());
+
+        if (response.statusCode() >= 300) {
+            throw new IllegalStateException(
+                "Binary fetch failed with HTTP " + response.statusCode());
+        }
+
+        return response.body();
+    }
 
     /**
      * Extracts the last-modified date from Tika metadata using a fallback
@@ -92,8 +109,6 @@ public class TikaProcessor {
 
         String replyTo = jsonObject.getString("replyTo");
 
-        String schemaName = payload.getString("tenantId");
-
         JsonArray binaries =
             payload
                 .getJsonObject("resources")
@@ -120,15 +135,13 @@ public class TikaProcessor {
             JsonObject binaryJson =
                 binaries.getJsonObject(internalIndex);
 
-            String resourceId = binaryJson.getString("resourceId");
+            String url = binaryJson.getString("url");
 
             String name = binaryJson.getString("name");
 
-            logger.info("Processing resource with id: " + resourceId + " and name: " + name);
+            logger.info("Processing resource with name: " + name);
 
-            boolean retainBinaries = enrichItemConfig.getBoolean("retain_binaries");
-
-            try (InputStream inputStream = new BufferedInputStream(fileManagerClient.download(resourceId, schemaName))) {
+            try (InputStream inputStream = new BufferedInputStream(openStream(url))) {
 
                 MediaType mediaType = _detectors.detect(inputStream);
 
@@ -256,11 +269,6 @@ public class TikaProcessor {
                             .getJsonObject(internalIndex)
                             .put("contentType", contentType);
 
-                    if (!retainBinaries) {
-                        logger.info("Deleting resource with id: " + resourceId + " and name: " + name);
-                        fileManagerClient.delete(resourceId, schemaName);
-                    }
-
                     logger.debug(response.toString());
 
                     datasourceClient.sentToPipeline(replyTo, response.toString());
@@ -274,11 +282,8 @@ public class TikaProcessor {
 
                 }
                 else {
-                    if (!retainBinaries) {
-                        fileManagerClient.delete(resourceId, schemaName);
-                        logger.info("Skipping resource with id: " + resourceId + " and name: " + name
+                    logger.info("Skipping resource with name: " + name
                         + " because not supported by configuration");
-                    }
                 }
 
             } catch (Exception e) {
