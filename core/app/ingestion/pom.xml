@@ -64,6 +64,17 @@
       <artifactId>model</artifactId>
     </dependency>
 
+    <!-- binary object storage -->
+    <dependency>
+      <groupId>io.openk9.common</groupId>
+      <artifactId>binary-storage</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.minio</groupId>
+      <artifactId>quarkus-minio</artifactId>
+      <version>${quarkus-minio.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

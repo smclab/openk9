@@ -17,21 +17,23 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.ingestion.client.filemanager.FileManagerClient;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.ResourcesDTO;
+import io.openk9.ingestion.storage.BinaryStorageService;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.restassured.http.ContentType;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
-
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import org.mockito.Mockito;
 
 import static io.restassured.RestAssured.given;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,8 +45,7 @@ import static org.mockito.Mockito.times;
 class IngestionEndpointTest {
 
 	@InjectMock
-	@RestClient
-	FileManagerClient fileManagerClient;
+	BinaryStorageService binaryStorageService;
 
 	@InjectSpy
 	IngestionEmitter ingestionEmitter;
@@ -63,7 +64,7 @@ class IngestionEndpointTest {
 			//a 406 is expected because no queue exists with name "null#null"
 			.statusCode(406);
 
-		then(fileManagerClient).shouldHaveNoInteractions();
+		then(binaryStorageService).shouldHaveNoInteractions();
 
 		then(ingestionEmitter)
 			.should(times(1))
@@ -72,6 +73,10 @@ class IngestionEndpointTest {
 
 	@Test
 	void should_ingest_a_binary_payload() {
+
+		Mockito
+			.when(binaryStorageService.store(any(), any(), any(), any()))
+			.thenReturn(Uni.createFrom().voidItem());
 
 		given()
 			.accept(ContentType.JSON)
@@ -110,8 +115,8 @@ class IngestionEndpointTest {
 			//a 406 is expected because no queue exists with name "mew#null"
 			.statusCode(406);
 
-		then(fileManagerClient).should(times(1))
-			.upload(any(), any(), any(), any());
+		then(binaryStorageService).should(times(1))
+			.store(any(), any(), any(), any());
 
 		then(ingestionEmitter).should(times(1))
 			.emit(any(IngestionDTO.class));

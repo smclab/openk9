@@ -230,6 +230,11 @@
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
+				<groupId>io.openk9.common</groupId>
+				<artifactId>binary-storage</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
 				<groupId>io.openk9.api</groupId>
 				<artifactId>tenant-manager-api</artifactId>
 				<version>${project.version}</version>

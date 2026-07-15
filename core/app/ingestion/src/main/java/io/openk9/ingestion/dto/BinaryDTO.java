@@ -40,7 +40,4 @@ public class BinaryDTO {
 	@Schema(format = "byte",
 			description = "Base64 encoded string of binary resource.")
 	private byte[] data;
-	@Schema(format = "uuid",
-			description = "Unique id that identifies the binary inside Openk9.")
-	private String resourceId;
 }

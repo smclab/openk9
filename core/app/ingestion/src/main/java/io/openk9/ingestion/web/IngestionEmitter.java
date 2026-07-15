@@ -117,7 +117,7 @@ public class IngestionEmitter {
 					.stream()
 					.map(binaryDTO -> BinaryPayload.of(
 						binaryDTO.getId(), binaryDTO.getName(),
-						binaryDTO.getContentType(), binaryDTO.getData(), binaryDTO.getResourceId()
+						binaryDTO.getContentType()
 					))
 					.collect(Collectors.toList());
 		}

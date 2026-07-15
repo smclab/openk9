@@ -17,34 +17,37 @@
 
 package io.openk9.ingestion.web;
 
-import io.openk9.ingestion.client.filemanager.FileManagerClient;
-import io.openk9.ingestion.dto.BinaryDTO;
-import io.openk9.ingestion.dto.IngestionDTO;
-import io.openk9.ingestion.dto.ResourcesDTO;
-import io.openk9.ingestion.exception.NoSuchQueueException;
-import io.smallrye.mutiny.Uni;
-import io.vertx.core.json.JsonObject;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.jboss.logging.Logger;
-
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+import io.openk9.common.storage.BinaryKeys;
+import io.openk9.ingestion.dto.BinaryDTO;
+import io.openk9.ingestion.dto.IngestionDTO;
+import io.openk9.ingestion.dto.ResourcesDTO;
+import io.openk9.ingestion.exception.NoSuchQueueException;
+import io.openk9.ingestion.storage.BinaryStorageService;
+
+import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
+import org.jboss.logging.Logger;
+
+/**
+ * Writes the binaries of an ingestion request to the object storage under
+ * their deterministic key, strips the raw bytes from the payload and emits the
+ * reference-only payload (fileId + contentType) on the ingestion queue.
+ */
 @ApplicationScoped
-public class FileManagerEmitter {
+public class BinaryStorageEmitter {
 
 	@Inject
 	IngestionEmitter emitter;
 	@Inject
-	@RestClient
-	FileManagerClient fileManagerClient;
+	BinaryStorageService binaryStorageService;
 	@Inject
 	Logger logger;
 
@@ -59,10 +62,12 @@ public class FileManagerEmitter {
 
 					logger.info("Handling binaries");
 
-					String datasourceId =
-						Long.toString(ingestionDTO.getDatasourceId());
+					long datasourceId = ingestionDTO.getDatasourceId();
 
-					String schemaName = ingestionDTO.getTenantId();
+					String tenantId = ingestionDTO.getTenantId();
+
+					boolean splitBinaries =
+						ingestionDTO.getResources().isSplitBinaries();
 
 					List<BinaryDTO> binaries =
 						ingestionDTO.getResources().getBinaries();
@@ -79,28 +84,30 @@ public class FileManagerEmitter {
 
 							if (data.length > 0) {
 
-								InputStream inputStream =
-									new BufferedInputStream(
-										new ByteArrayInputStream(data));
+								String contentId = splitBinaries
+									? fileId
+									: ingestionDTO.getContentId();
 
-								var uploadUni = fileManagerClient.upload(
-									datasourceId,
-									fileId,
-									schemaName,
-									inputStream
-								).map(resourceId -> {
+								String key = BinaryKeys.key(
+									datasourceId, contentId, fileId);
 
-									BinaryDTO newBinaryDTO = new BinaryDTO();
-									newBinaryDTO.setId(fileId);
-									newBinaryDTO.setName(binaryDTO.getName());
-									newBinaryDTO.setContentType(
-										binaryDTO.getContentType());
-									newBinaryDTO.setResourceId(resourceId);
+								BinaryDTO reference = BinaryDTO
+									.builder()
+									.id(fileId)
+									.name(binaryDTO.getName())
+									.contentType(binaryDTO.getContentType())
+									.build();
 
-									return newBinaryDTO;
-								}).invoke(newBinaryDTO -> {
+								var uploadUni = binaryStorageService.store(
+									tenantId,
+									key,
+									data,
+									binaryDTO.getContentType()
+								).replaceWith(
+									reference
+								).invoke(uploadedBinaryDTO -> {
 
-									if (ingestionDTO.getResources().isSplitBinaries()) {
+									if (splitBinaries) {
 
 										IngestionDTO newIngestionDto =
 											new IngestionDTO();
@@ -109,7 +116,7 @@ public class FileManagerEmitter {
 											new ResourcesDTO();
 										List<BinaryDTO> singeBinariesList =
 											new ArrayList<>();
-										singeBinariesList.add(newBinaryDTO);
+										singeBinariesList.add(uploadedBinaryDTO);
 
 										newResourcesDTO.setBinaries(
 											singeBinariesList);
@@ -143,9 +150,11 @@ public class FileManagerEmitter {
 								uploadUnis.add(uploadUni);
 							}
 
-						} catch (NoSuchQueueException e) {
+						}
+						catch (NoSuchQueueException e) {
 							throw e;
-						} catch (Exception e) {
+						}
+						catch (Exception e) {
 							logger.error(e.getMessage(), e);
 						}
 

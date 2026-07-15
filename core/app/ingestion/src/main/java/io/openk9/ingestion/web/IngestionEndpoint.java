@@ -49,7 +49,7 @@ public class IngestionEndpoint {
 	private static final String DETAILS_FIELD = "details";
 	private static final String EMPTY_JSON = "{}";
 	@Inject
-	FileManagerEmitter _fileManagerEmitter;
+	BinaryStorageEmitter _binaryStorageEmitter;
 
 	@Operation(operationId = "ingestion")
 	@Tag(name = "Ingestion API", description = "Permits to ingest data and associated resources inside Openk9 and perform elaboration and indexing.")
@@ -99,7 +99,7 @@ public class IngestionEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Uni<String> ingestion(IngestionDTO dto) {
 
-		return _fileManagerEmitter.emit(dto)
+		return _binaryStorageEmitter.emit(dto)
 			.replaceWith(() -> EMPTY_JSON);
 
 	}
