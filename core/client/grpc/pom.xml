@@ -62,7 +62,6 @@
 	<modules>
 		<module>searcher-client-grpc</module>
 		<module>tenant-manager-client-grpc</module>
-		<module>file-manager-client-grpc</module>
 		<module>datasource-client-grpc</module>
 		<module>app-manager</module>
 		<module>common</module>

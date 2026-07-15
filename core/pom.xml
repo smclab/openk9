@@ -196,11 +196,6 @@
 			</dependency>
 			<dependency>
 				<groupId>io.openk9.client.grpc</groupId>
-				<artifactId>file-manager-client-grpc</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.openk9.client.grpc</groupId>
 				<artifactId>datasource-client-grpc</artifactId>
 				<version>${project.version}</version>
 			</dependency>
