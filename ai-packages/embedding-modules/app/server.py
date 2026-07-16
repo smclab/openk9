@@ -28,6 +28,7 @@ import grpc
 import pika
 from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
 from app.text_splitters.derived_text_splitter import DerivedTextSplitter
+from app.utils.chunk_arguments import build_chunk_arguments
 from app.utils.text_cleaner import clean_text
 from chonkie import (
     LateChunker,
@@ -280,14 +281,6 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
 
             # logger.info(info_chunk)
 
-            def _is_int_like(value):
-                """Checks if an input can be casted to int."""
-                try:
-                    int(value)
-                    return True
-                except (ValueError, TypeError):
-                    return False
-
             signature = {
                 name: hint
                 for name, hint in get_type_hints(
@@ -296,19 +289,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 if name != "return"
             }
 
-            arguments = {
-                hit: chunk_json_config[hit]
-                for hit in chunk_json_config
-                if (hit in signature.keys())
-                and (
-                    isinstance(chunk_json_config[hit], signature[hit])
-                    or (
-                        isinstance(chunk_json_config[hit], (float, str))
-                        and _is_int_like(chunk_json_config[hit])
-                        and isinstance(int(chunk_json_config[hit]), signature[hit])
-                    )
-                )
-            }
+            arguments = build_chunk_arguments(chunk_json_config, signature)
 
             info_arguments = {
                 "using_arguments": arguments,
