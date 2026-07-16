@@ -19,8 +19,6 @@ package io.openk9.datasource.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -33,6 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Removes secrets from a configuration package before it leaves the system.
@@ -57,18 +56,13 @@ public class ConfigRedactor {
 	private static final String API_KEY_FIELD = "apiKey";
 	private static final String JSON_CONFIG_FIELD = "jsonConfig";
 
-	private static final Set<String> SENSITIVE_JSON_KEYS = Set.of(
-		"password", "pwd", "passphrase", "secret", "token", "apikey", "api_key",
-		"accesskey", "access_key", "secretkey", "secret_key", "privatekey",
-		"private_key", "credential", "credentials", "clientsecret", "client_secret"
-	);
-
-	private final ObjectMapper objectMapper;
-
 	@Inject
-	public ConfigRedactor(ObjectMapper objectMapper) {
-		this.objectMapper = objectMapper;
-	}
+	ObjectMapper objectMapper;
+
+	// Case-insensitive denylist of jsonConfig keys to redact, sourced from
+	// configuration (openk9.datasource.config.redaction.keys).
+	@ConfigProperty(name = "openk9.datasource.config.redaction.keys")
+	List<String> redactionKeys;
 
 	/**
 	 * Redacts secrets from every entity in the package, in place. A {@code null}
@@ -124,6 +118,15 @@ public class ConfigRedactor {
 		}
 	}
 
+	private boolean isSensitiveKey(String name) {
+		for (String key : redactionKeys) {
+			if (key.equalsIgnoreCase(name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void redactJsonConfig(ObjectNode tree, List<String> redacted) {
 		JsonNode jsonConfig = tree.get(JSON_CONFIG_FIELD);
 		if (jsonConfig == null || !jsonConfig.isTextual()) {
@@ -164,7 +167,7 @@ public class ConfigRedactor {
 
 		for (String name : fieldNames) {
 			String path = prefix.isEmpty() ? name : prefix + "." + name;
-			if (SENSITIVE_JSON_KEYS.contains(name.toLowerCase(Locale.ROOT))) {
+			if (isSensitiveKey(name)) {
 				node.put(name, PLACEHOLDER);
 				redacted.add(path);
 			}

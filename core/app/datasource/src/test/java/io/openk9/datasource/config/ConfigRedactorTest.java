@@ -17,7 +17,10 @@
 
 package io.openk9.datasource.config;
 
+import java.util.List;
 import java.util.Map;
+
+import jakarta.inject.Inject;
 
 import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
@@ -27,6 +30,8 @@ import io.openk9.datasource.model.dto.base.RuleDTO;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.test.junit.QuarkusTest;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,15 +40,43 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Pure unit tests (no Quarkus, no Docker) for secret redaction: the known
- * {@code apiKey} field and denylisted keys nested in {@code jsonConfig} are
- * replaced by the placeholder and recorded, while non-secret values and
- * secret-free entities are left untouched.
+ * Integration test for secret redaction. Boots Quarkus so the CDI-managed
+ * {@link ConfigRedactor} is wired with the jsonConfig denylist sourced from
+ * {@code application.properties}
+ * ({@code openk9.datasource.config.redaction.keys}): the known {@code apiKey}
+ * field and denylisted keys nested in {@code jsonConfig} are replaced by the
+ * placeholder and recorded, while non-secret values and secret-free entities
+ * are left untouched.
  */
+@QuarkusTest
 class ConfigRedactorTest {
 
-	private final ObjectMapper objectMapper = new ObjectMapper();
-	private final ConfigRedactor redactor = new ConfigRedactor(objectMapper);
+	@Inject
+	ObjectMapper objectMapper;
+
+	@Inject
+	ConfigRedactor redactor;
+
+	@ConfigProperty(name = "openk9.datasource.config.redaction.keys")
+	List<String> redactionKeys;
+
+	@Test
+	void shouldSourceDenylistFromApplicationProperties() {
+		// 1. the denylist is loaded from application.properties, not hardcoded
+		assertTrue(redactionKeys.contains("password"));
+		assertTrue(redactionKeys.contains("client_secret"));
+
+		// 2. the CDI-wired redactor redacts a base key drawn from that list
+		DatasourceDTO datasource = DatasourceDTO.builder()
+			.name("props-connector")
+			.jsonConfig("{\"url\":\"https://x\",\"password\":\"p\"}")
+			.build();
+		ConfigEntity entity = entity(ConfigEntityType.DATASOURCE, datasource);
+
+		redactor.redact(entity);
+
+		assertTrue(entity.getRedactedFields().contains("jsonConfig.password"));
+	}
 
 	@Test
 	void shouldRedactApiKey() {
@@ -103,6 +136,38 @@ class ConfigRedactorTest {
 		redactor.redact(entity);
 
 		assertNull(entity.getRedactedFields());
+	}
+
+	@Test
+	void shouldRedactKeySuppliedOnlyViaConfig() throws Exception {
+		// a redactor whose denylist adds a custom key absent from the base list
+		ConfigRedactor custom = new ConfigRedactor();
+		custom.objectMapper = objectMapper;
+		custom.redactionKeys = List.of("password", "x_api_token");
+
+		DatasourceDTO datasource = DatasourceDTO.builder()
+			.name("custom-connector")
+			.jsonConfig("{\"url\":\"https://x\",\"password\":\"p\","
+				+ "\"x_api_token\":\"t\"}")
+			.build();
+
+		ConfigEntity entity = entity(ConfigEntityType.DATASOURCE, datasource);
+
+		// redact with the config-driven denylist
+		custom.redact(entity);
+
+		DatasourceDTO redacted =
+			assertInstanceOf(DatasourceDTO.class, entity.getAttributes());
+		JsonNode jsonConfig = objectMapper.readTree(redacted.getJsonConfig());
+
+		// both the base key and the config-only key are redacted, others untouched
+		assertEquals("https://x", jsonConfig.get("url").asText());
+		assertEquals(ConfigRedactor.PLACEHOLDER, jsonConfig.get("password").asText());
+		assertEquals(
+			ConfigRedactor.PLACEHOLDER, jsonConfig.get("x_api_token").asText());
+
+		assertTrue(entity.getRedactedFields().contains("jsonConfig.password"));
+		assertTrue(entity.getRedactedFields().contains("jsonConfig.x_api_token"));
 	}
 
 	private static ConfigEntity entity(ConfigEntityType type, Object attributes) {
