@@ -42,10 +42,9 @@ class UserDataExtractor(BaseExtractor):
                     if datetime.strptime(last_activity, '%Y-%m-%d') >= time_stamp_date:
                         yield user
         else:
-            # TODO: Check why this doesn't work, Index gets CANCELLED, no data only LAST
             datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
-            return gl.users.list(
-                iterator=True, 
+            yield from gl.users.list(
+                iterator=True,
                 created_after=datetime_filter,
                 **self.user_filters,
             )

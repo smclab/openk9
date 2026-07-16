@@ -118,11 +118,6 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
         doExtractLabels: (bool): Should also extract Labels. Default is True.
         doExtractMilestones: (bool): Should also extract Milestone. Default is True.
         doExtractMergeRequests: (bool): Should also extract Merge Requests. Default is True.
-
-        TODO: 
-            - Add extract + Filters
-            - Add filters to porject extract 
-            - Test
     """
     
     projectList: list | None = Field(default=None, frozen=True)

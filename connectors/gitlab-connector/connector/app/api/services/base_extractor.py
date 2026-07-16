@@ -42,6 +42,7 @@ class BaseExtractor(ABC):
 
         try:
             gl = gitlab.Gitlab(url=self.domain, private_token=self.access_token, pagination="keyset", order_by="id",  per_page=self.items_per_page)
+            gl.auth()
         except Exception as e:
             self.ingestion_handler.post_halt(exception=e, end_timestamp=end_timestamp)
             return

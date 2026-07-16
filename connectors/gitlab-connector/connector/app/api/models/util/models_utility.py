@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 
 BoolFilter = Literal['True', 'False', 'NoFilter']
@@ -27,7 +27,7 @@ PROJECT_MIN_ACCESS_LEVEL_MAP: dict[ProjectMinAccessLevelStrings, int] = {
 class FilterComposite(ABC):
     @classmethod
     def parse_value(cls, value: Any) -> Any:
-        if value in BoolFilter:
+        if value in get_args(BoolFilter):
             return value == 'True'
         return value
         
