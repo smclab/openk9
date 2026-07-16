@@ -34,6 +34,7 @@ import java.util.List;
 public class ResourcesDTO {
 	@Schema(description = "List of objects containing binaries.")
 	private List<BinaryDTO> binaries;
-	@Schema(description = "Specify if multiple binaries must be splitted up in differente messages.")
+	@Builder.Default
+	@Schema(description = "Specify if multiple binaries must be splitted up in different messages.")
 	private boolean splitBinaries = false;
 }
