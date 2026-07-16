@@ -69,9 +69,11 @@ export function PdfResult({ result }: PdfResultProps) {
         icon={<FontAwesomeIcon icon={faFilePdf} />}
         date={lastEdit}
       />
-      <ResultLinkTwo href={result.source.document.url} title="Link Documento">
-        <HighlightableText result={result} path="document.url" />
-      </ResultLinkTwo>
+      {result.source.document.url ? (
+        <ResultLinkTwo href={result.source.document.url} title="Link Documento">
+          <HighlightableText result={result} path="document.url" />
+        </ResultLinkTwo>
+      ) : null}
     </ResultContainerTwo>
   );
 }

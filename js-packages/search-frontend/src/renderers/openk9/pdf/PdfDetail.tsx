@@ -1,4 +1,3 @@
-import React from "react";
 import { PdfResultItem } from "./PdfItem";
 import { faFilePdf } from "@fortawesome/free-solid-svg-icons/faFilePdf";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -69,58 +68,21 @@ export function PdfDetail({ result }: PdfDetailProps) {
         icon={<FontAwesomeIcon icon={faFilePdf} />}
         date={lastEdit}
       />
-      <div
-        css={css`
-          margin-top: 10px;
-          margin-left: 5px;
-        `}
-      >
-        <ResultLinkTwo href={result.source.document.url} title="Link Documento">
-          <HighlightableText result={result} path="document.url" />
-        </ResultLinkTwo>
-      </div>
-      <div
-        css={css`
-          margin-top: 15px;
-        `}
-      >
-        {result.source.resources?.binaries.map((binary) => {
-          const url = `/api/file-manager/v1/download/byte/${binary.resourceId}/${result.source.tenantId}`;
-          return (
-            <ViewIfUrlOk key={binary.id} url={url}>
-              <iframe
-                title={binary.id}
-                src={url}
-                css={css`
-                  width: 100%;
-                  height: 50vh;
-                  background-color: white;
-                  border-radius: 4px;
-                  border: 1px solid
-                    var(--openk9-embeddable-search--border-color);
-                `}
-              />
-            </ViewIfUrlOk>
-          );
-        })}
-      </div>
+      {result.source.document.url ? (
+        <div
+          css={css`
+            margin-top: 10px;
+            margin-left: 5px;
+          `}
+        >
+          <ResultLinkTwo
+            href={result.source.document.url}
+            title="Link Documento"
+          >
+            <HighlightableText result={result} path="document.url" />
+          </ResultLinkTwo>
+        </div>
+      ) : null}
     </DetailContainer>
   );
-}
-
-function ViewIfUrlOk({
-  url,
-  children,
-}: {
-  url: string;
-  children: React.ReactNode;
-}) {
-  const [isOk, setIsOk] = React.useState(false);
-  React.useEffect(() => {
-    fetch(url).then((response) => {
-      if (response.ok) setIsOk(true);
-    });
-    return () => setIsOk(false);
-  }, [url]);
-  return <React.Fragment>{isOk ? children : null}</React.Fragment>;
 }
