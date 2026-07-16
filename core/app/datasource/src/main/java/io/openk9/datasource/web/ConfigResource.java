@@ -32,7 +32,7 @@ import io.openk9.datasource.config.ConfigExporter;
 import io.openk9.datasource.config.ConfigImporter;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
-import io.openk9.datasource.config.model.ImportResult;
+import io.openk9.datasource.config.model.ImportReport;
 
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
@@ -75,18 +75,28 @@ public class ConfigResource {
 	 * @param mode {@code SKIP} (default) leaves matched entities untouched,
 	 *             {@code OVERWRITE} replaces them
 	 * @param pkg  the configuration package to apply
-	 * @return the outcome of the import (created, overwritten and skipped counts)
+	 * @return the import report
 	 */
 	@POST
 	@Path("/import")
 	@Operation(summary = "Import a configuration package into the current tenant")
-	public Uni<ImportResult> importConfig(
+	public Uni<ImportReport> importConfig(
 		@QueryParam("mode") @DefaultValue("SKIP") ImportMode mode,
 		ConfigPackage pkg) {
 
 		String tenantId = requireTenantId();
 		requireValidPackage(pkg);
-		return configImporter.apply(tenantId, pkg, mode);
+		return configImporter.importConfig(tenantId, pkg, mode, false);
+	}
+
+	private String requireTenantId() {
+		String tenantId = routingContext.get("_tenantId");
+		if (tenantId == null || tenantId.isBlank()) {
+			throw new BadRequestException(
+				"Missing tenant: the '" + InternalHeaders.TENANT_ID
+				+ "' header is required");
+		}
+		return tenantId;
 	}
 
 	private void requireValidPackage(ConfigPackage pkg) {
@@ -103,16 +113,6 @@ public class ConfigResource {
 			throw new BadRequestException(
 				"Invalid configuration package: it must contain at least one entity");
 		}
-	}
-
-	private String requireTenantId() {
-		String tenantId = routingContext.get("_tenantId");
-		if (tenantId == null || tenantId.isBlank()) {
-			throw new BadRequestException(
-				"Missing tenant: the '" + InternalHeaders.TENANT_ID
-				+ "' header is required");
-		}
-		return tenantId;
 	}
 
 }

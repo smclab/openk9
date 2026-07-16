@@ -29,7 +29,7 @@ import io.openk9.datasource.config.model.ConfigEntity;
 import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
-import io.openk9.datasource.config.model.ImportResult;
+import io.openk9.datasource.config.model.ImportReport;
 import io.openk9.datasource.model.CharFilter;
 import io.openk9.datasource.model.DocType;
 import io.openk9.datasource.model.DocTypeField;
@@ -82,6 +82,10 @@ public class ConfigImporterTest {
 		ENTITY_NAME_PREFIX + "rollback-char-filter";
 	private static final String CONFLICT_CHAR_FILTER_NAME =
 		ENTITY_NAME_PREFIX + "conflict-char-filter";
+	private static final String DRYRUN_CHAR_FILTER_NAME =
+		ENTITY_NAME_PREFIX + "dryrun-char-filter";
+	private static final String DANGLING_FIELD_NAME =
+		ENTITY_NAME_PREFIX + "dangling-field";
 
 	@Inject
 	ConfigExporter configExporter;
@@ -112,8 +116,8 @@ public class ConfigImporterTest {
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 		long itemsBefore = count(COUNT_JOIN_ROWS);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, pkg, ImportMode.SKIP)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, false)
 				.await().indefinitely();
 
 		assertEquals(0, result.created(),
@@ -132,8 +136,8 @@ public class ConfigImporterTest {
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 		long itemsBefore = count(COUNT_JOIN_ROWS);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, pkg, ImportMode.OVERWRITE)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
 				.await().indefinitely();
 
 		assertEquals(0, result.created());
@@ -175,8 +179,8 @@ public class ConfigImporterTest {
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 				.await().indefinitely();
 
 		Long docTypeId = result.resolvedIds().get("DOC_TYPE-NEW");
@@ -241,8 +245,8 @@ public class ConfigImporterTest {
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 				.await().indefinitely();
 
 		Long existingDocTypeId = result.resolvedIds().get(existingDocTypeRef);
@@ -288,8 +292,8 @@ public class ConfigImporterTest {
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 				.await().indefinitely();
 
 		Long ragId = result.resolvedIds().get("RAG_CONFIGURATION-NEW");
@@ -318,7 +322,7 @@ public class ConfigImporterTest {
 			"{\"password\":\"" + secret + "\",\"mapping\":\"a=>b\"}");
 
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
-		configImporter.apply(TENANT_ID, pkg, ImportMode.OVERWRITE)
+		configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
 			.await().indefinitely();
 
 		String stored = loadCharFilterJsonConfig(id);
@@ -354,8 +358,8 @@ public class ConfigImporterTest {
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 				.await().indefinitely();
 
 		Long id = result.resolvedIds().get("CHAR_FILTER-NEW");
@@ -382,7 +386,7 @@ public class ConfigImporterTest {
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
 		assertThrows(Exception.class, () ->
-			configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 				.await().indefinitely());
 
 		assertEquals(
@@ -398,8 +402,8 @@ public class ConfigImporterTest {
 		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
 		String virtualHostBefore = tenantBindingVirtualHost();
 
-		ImportResult result =
-			configImporter.apply(TENANT_ID, pkg, ImportMode.OVERWRITE)
+		ImportReport result =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.OVERWRITE, false)
 				.await().indefinitely();
 
 		Object[] binding = sessionFactory.withTransaction(TENANT_ID, (s, t) ->
@@ -456,12 +460,12 @@ public class ConfigImporterTest {
 		ConfigPackage augmented = new ConfigPackage(
 			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
 
-		configImporter.apply(TENANT_ID, augmented, ImportMode.SKIP)
+		configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
 			.await().indefinitely();
 		assertTrue(loadCharFilterJsonConfig(id).contains("a=>b"),
 			"SKIP must keep the existing value on a name match");
 
-		configImporter.apply(TENANT_ID, augmented, ImportMode.OVERWRITE)
+		configImporter.importConfig(TENANT_ID, augmented, ImportMode.OVERWRITE, false)
 			.await().indefinitely();
 		assertTrue(loadCharFilterJsonConfig(id).contains("x=>y"),
 			"OVERWRITE must apply the incoming value on a name match");
@@ -493,6 +497,104 @@ public class ConfigImporterTest {
 		).await().indefinitely();
 	}
 
+	@Test
+	void dry_run_previews_a_creation_then_apply_writes_it() {
+		// A brand new char filter carrying a redacted secret, appended to a full
+		// round-trip package. The dry-run must plan its creation and flag the
+		// secret to re-enter, yet write nothing; the apply must then persist it.
+		ConfigPackage pkg = configExporter.export(TENANT_ID).await().indefinitely();
+
+		ConfigEntity newCharFilter = new ConfigEntity(
+			"CHAR_FILTER-DRYRUN",
+			ConfigEntityType.CHAR_FILTER,
+			DRYRUN_CHAR_FILTER_NAME,
+			CharFilterDTO.builder()
+				.name(DRYRUN_CHAR_FILTER_NAME)
+				.type("html_strip")
+				.jsonConfig("{\"password\":\"" + ConfigRedactor.PLACEHOLDER + "\"}")
+				.build(),
+			new LinkedHashMap<>(),
+			List.of("jsonConfig.password"));
+
+		List<ConfigEntity> entities = new ArrayList<>(pkg.getEntities());
+		entities.add(newCharFilter);
+		ConfigPackage augmented = new ConfigPackage(
+			pkg.getSchemaVersion(), pkg.getMetadata(), entities);
+
+		// 1. Dry-run: previews the creation, flags the secret, writes nothing
+		ImportReport preview =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, true)
+				.await().indefinitely();
+
+		assertTrue(preview.dryRun());
+		assertFalse(preview.applied());
+		assertEquals(1, preview.created(),
+			"only the appended char filter is new; the round-trip is skipped");
+		assertTrue(preview.resolvedIds().isEmpty(), "dry-run resolves no ids");
+		assertTrue(
+			preview.secretsToReenter().stream().anyMatch(secret ->
+				"CHAR_FILTER-DRYRUN".equals(secret.ref())
+					&& secret.fields().contains("jsonConfig.password")),
+			"the created entity's redacted secret must be flagged to re-enter");
+		assertEquals(0, countByName("CharFilter", DRYRUN_CHAR_FILTER_NAME),
+			"dry-run must not create the char filter");
+
+		// 2. Apply: persists the creation and resolves its id
+		ImportReport applied =
+			configImporter.importConfig(TENANT_ID, augmented, ImportMode.SKIP, false)
+				.await().indefinitely();
+
+		assertFalse(applied.dryRun());
+		assertTrue(applied.applied());
+		assertEquals(1, applied.created());
+		Long id = applied.resolvedIds().get("CHAR_FILTER-DRYRUN");
+		assertNotNull(id, "apply must create the char filter and resolve its id");
+		assertEquals(1, countByName("CharFilter", DRYRUN_CHAR_FILTER_NAME));
+
+		// 3. Clean up the char filter created by this method
+		EntitiesUtils.removeEntity(id, charFilterService, sessionFactory);
+	}
+
+	@Test
+	void dry_run_reports_a_missing_reference() {
+		// A field pointing at a doc type absent from the package: the dangling edge
+		// a shallow export leaves behind. The report must surface it, and the
+		// dry-run must write nothing.
+		Map<String, List<String>> fieldRefs = new LinkedHashMap<>();
+		fieldRefs.put("docType", List.of("DOC_TYPE-MISSING"));
+
+		ConfigEntity danglingField = new ConfigEntity(
+			"DOC_TYPE_FIELD-DANGLING",
+			ConfigEntityType.DOC_TYPE_FIELD,
+			DANGLING_FIELD_NAME,
+			DocTypeFieldDTO.builder()
+				.name(DANGLING_FIELD_NAME)
+				.fieldName(DANGLING_FIELD_NAME + "-fn")
+				.fieldType(FieldType.TEXT)
+				.build(),
+			fieldRefs,
+			null);
+
+		ConfigPackage pkg = new ConfigPackage(
+			ConfigPackage.CURRENT_SCHEMA_VERSION, null, List.of(danglingField));
+
+		ImportReport report =
+			configImporter.importConfig(TENANT_ID, pkg, ImportMode.SKIP, true)
+				.await().indefinitely();
+
+		// 1. The dangling edge is reported
+		assertTrue(
+			report.missingReferences().stream().anyMatch(missing ->
+				"DOC_TYPE_FIELD-DANGLING".equals(missing.fromRef())
+					&& "docType".equals(missing.relationship())
+					&& "DOC_TYPE-MISSING".equals(missing.targetHandle())),
+			"the reference to the absent doc type must be reported as missing");
+
+		// 2. The dry-run wrote nothing
+		assertFalse(report.applied());
+		assertEquals(0, countByName("DocTypeField", DANGLING_FIELD_NAME));
+	}
+
 	private Long seedCharFilter(String name, String jsonConfig) {
 		return sessionFactory.withTransaction(TENANT_ID, (s, t) -> {
 			CharFilter charFilter = new CharFilter();
@@ -511,6 +613,16 @@ public class ConfigImporterTest {
 	private long count(String query) {
 		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
 			s.createQuery(query, Long.class).getSingleResult()
+		).await().indefinitely();
+	}
+
+	private long countByName(String jpqlEntity, String name) {
+		return sessionFactory.withTransaction(TENANT_ID, (s, t) ->
+			s.createQuery(
+					"select count(e) from " + jpqlEntity + " e where e.name = :name",
+					Long.class)
+				.setParameter("name", name)
+				.getSingleResult()
 		).await().indefinitely();
 	}
 

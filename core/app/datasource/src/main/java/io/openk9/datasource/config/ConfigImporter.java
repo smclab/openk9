@@ -24,6 +24,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,9 @@ import io.openk9.datasource.config.model.ConfigMetadata;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportPlan;
-import io.openk9.datasource.config.model.ImportResult;
+import io.openk9.datasource.config.model.ImportReport;
+import io.openk9.datasource.config.model.ImportReport.MissingReference;
+import io.openk9.datasource.config.model.ImportReport.SecretToReenter;
 import io.openk9.datasource.config.model.PlannedAction;
 import io.openk9.datasource.config.model.representation.AclMappingRepresentation;
 import io.openk9.datasource.config.model.representation.EnrichPipelineItemRepresentation;
@@ -67,7 +70,8 @@ import org.hibernate.reactive.mutiny.Mutiny;
 import org.jboss.logging.Logger;
 
 /**
- * Applies an {@link ImportPlan} to a target tenant, in a single transaction.
+ * Imports a {@link ConfigPackage} into a target tenant, either previewing the
+ * plan (dry-run) or applying it in a single transaction.
  * <p>
  * The plan (from {@link ConfigMatcher}) is matched and applied on the same
  * session, so nothing changes between planning and writing. Regular entities are
@@ -114,18 +118,40 @@ public class ConfigImporter {
 	}
 
 	/**
-	 * Matches the package against the tenant and applies the resulting plan.
+	 * Matches the package against the tenant and, unless {@code dryRun}, applies
+	 * the resulting plan in a single transaction. The report is always fully
+	 * populated (actions, counts, missing references, secrets to re-enter); on a
+	 * dry-run nothing is written and {@code applied} is {@code false}, on apply the
+	 * writes are committed and {@code resolvedIds} is returned. A cyclic package is
+	 * rejected cleanly into {@code blockingErrors} without writing anything.
 	 *
 	 * @param tenantId the target schema/tenant
 	 * @param pkg      the configuration package to import
 	 * @param mode     what to do with entities that already exist
-	 * @return the summary of the applied plan
+	 * @param dryRun   {@code true} previews the plan, {@code false} applies it
+	 * @return the import report
 	 */
-	public Uni<ImportResult> apply(
-		String tenantId, ConfigPackage pkg, ImportMode mode) {
+	public Uni<ImportReport> importConfig(
+		String tenantId, ConfigPackage pkg, ImportMode mode, boolean dryRun) {
+
+		List<MissingReference> missingReferences = missingReferences(pkg);
 
 		return sessionFactory.withTransaction(tenantId, (s, t) ->
-			matcher.plan(s, pkg, mode).flatMap(plan -> doApply(s, pkg, plan)));
+				matcher.plan(s, pkg, mode).flatMap(plan -> {
+					List<SecretToReenter> secrets = secretsToReenter(pkg, plan);
+					if (dryRun) {
+						return Uni.createFrom().item(report(
+							true, false, mode, plan, missingReferences, secrets,
+							List.of(), Map.of(), null));
+					}
+					return doApply(s, pkg, plan).map(applied -> report(
+						false, true, mode, plan, missingReferences, secrets,
+						List.of(), applied.resolvedIds(), applied.joins()));
+				}))
+			.onFailure(ConfigEntitySorter.CyclicDependencyException.class)
+			.recoverWithItem(failure -> report(
+				dryRun, false, mode, null, missingReferences, List.of(),
+				List.of(failure.getMessage()), Map.of(), null));
 	}
 
 	private Uni<Void> applyAction(
@@ -172,7 +198,7 @@ public class ConfigImporter {
 		}
 	}
 
-	private Uni<ImportResult> doApply(
+	private Uni<Applied> doApply(
 		Mutiny.Session s, ConfigPackage pkg, ImportPlan plan) {
 
 		Map<String, ConfigEntity> byRef = new HashMap<>();
@@ -192,12 +218,15 @@ public class ConfigImporter {
 			.flatMap(ignore -> rebuildJoins(s, pkg, resolvedIds))
 			.flatMap(joins -> rebindTenantBinding(s, pkg.getMetadata(), resolvedIds)
 				.replaceWith(joins))
-			.map(joins -> new ImportResult(
-				(int) plan.count(PlannedAction.Action.CREATE) + joins.created(),
-				(int) plan.count(PlannedAction.Action.OVERWRITE) + joins.overwritten(),
-				(int) plan.count(PlannedAction.Action.SKIP) + joins.skipped(),
-				resolvedIds));
+			.map(joins -> new Applied(resolvedIds, joins));
 	}
+
+	/**
+	 * What an apply produced: the {@code handle -> target id} map and the tally of
+	 * the join entities rebuilt outside the plan, which the report folds into its
+	 * counts.
+	 */
+	private record Applied(Map<String, Long> resolvedIds, JoinCounts joins) {}
 
 	/**
 	 * The cached {@code ConfigEntityMapper.entity(...)} overload for the entity type,
@@ -609,6 +638,96 @@ public class ConfigImporter {
 		catch (JsonProcessingException e) {
 			throw new IllegalStateException("Unable to re-serialize jsonConfig", e);
 		}
+	}
+
+	/**
+	 * Assembles the report, deriving the actions and counts from the plan (empty
+	 * when the plan could not be produced, e.g. a cyclic package). The plan holds
+	 * no join entities, so {@code joins} — the tally an apply produced, null on a
+	 * dry-run or a rejected import — is added on top of the plan counts.
+	 */
+	private static ImportReport report(
+		boolean dryRun, boolean applied, ImportMode mode, ImportPlan plan,
+		List<MissingReference> missingReferences,
+		List<SecretToReenter> secretsToReenter, List<String> blockingErrors,
+		Map<String, Long> resolvedIds, JoinCounts joins) {
+
+		List<PlannedAction> actions = plan == null ? List.of() : plan.getActions();
+		int created =
+			plan == null ? 0 : (int) plan.count(PlannedAction.Action.CREATE);
+		int overwritten =
+			plan == null ? 0 : (int) plan.count(PlannedAction.Action.OVERWRITE);
+		int skipped =
+			plan == null ? 0 : (int) plan.count(PlannedAction.Action.SKIP);
+
+		if (joins != null) {
+			created += joins.created();
+			overwritten += joins.overwritten();
+			skipped += joins.skipped();
+		}
+
+		return new ImportReport(
+			dryRun, applied, mode, actions, created, overwritten, skipped,
+			missingReferences, secretsToReenter, blockingErrors, resolvedIds);
+	}
+
+	/**
+	 * Every reference in the package whose target handle is not itself a package
+	 * entity: the dangling edges a shallow (or hand-crafted) package carries.
+	 */
+	private static List<MissingReference> missingReferences(ConfigPackage pkg) {
+		Set<String> present = new HashSet<>();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			present.add(entity.getRef());
+		}
+
+		List<MissingReference> missing = new ArrayList<>();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			Map<String, List<String>> references = entity.getReferences();
+			if (references == null) {
+				continue;
+			}
+			for (Map.Entry<String, List<String>> reference : references.entrySet()) {
+				List<String> handles = reference.getValue();
+				if (handles == null) {
+					continue;
+				}
+				for (String handle : handles) {
+					if (handle != null && !present.contains(handle)) {
+						missing.add(new MissingReference(
+							entity.getRef(), entity.getKey(), reference.getKey(),
+							handle));
+					}
+				}
+			}
+		}
+		return missing;
+	}
+
+	/**
+	 * The redacted secrets the operator must re-enter: only entities being created
+	 * (on overwrite the target keeps its current secret) that carry redacted
+	 * fields. Join entities carry no action and no secrets, so they never match.
+	 */
+	private static List<SecretToReenter> secretsToReenter(
+		ConfigPackage pkg, ImportPlan plan) {
+
+		Map<String, PlannedAction> byRef = plan.byRef();
+
+		List<SecretToReenter> secrets = new ArrayList<>();
+		for (ConfigEntity entity : pkg.getEntities()) {
+			List<String> redactedFields = entity.getRedactedFields();
+			if (redactedFields == null || redactedFields.isEmpty()) {
+				continue;
+			}
+			PlannedAction action = byRef.get(entity.getRef());
+			if (action != null && action.action() == PlannedAction.Action.CREATE) {
+				secrets.add(new SecretToReenter(
+					entity.getRef(), entity.getKey(), entity.getType(),
+					redactedFields));
+			}
+		}
+		return secrets;
 	}
 
 	private static Class<?> elementType(Field field) {
