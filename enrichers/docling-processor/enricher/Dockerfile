@@ -3,15 +3,24 @@ ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
 FROM python:${PYTHON_BASE_DOCKER_IMAGE}
 
 ARG MODE=cpu
+# Populated automatically by BuildKit from --platform (e.g. arm64, amd64).
+ARG TARGETARCH
 
 WORKDIR /docling-processor/
 
 COPY ./requirements.txt ./
 COPY ./requirements_cpu.txt ./
+COPY ./requirements_arm64.txt ./
 
-RUN echo $MODE
+RUN echo "MODE=$MODE TARGETARCH=$TARGETARCH"
+# MODE=gpu uses the CUDA requirements; otherwise pick CPU wheels by arch: the
+# +cpu torch/torchvision wheels are x86_64-only, so arm64 builds use the
+# default-PyPI aarch64 wheels (requirements_arm64) to run natively instead of
+# under amd64 emulation.
 RUN if [ "$MODE" = "gpu" ]; then \
         pip install --no-cache-dir -r requirements.txt; \
+    elif [ "$TARGETARCH" = "arm64" ]; then \
+        pip install --no-cache-dir -r requirements_arm64.txt; \
     else \
         pip install --no-cache-dir -r requirements_cpu.txt; \
     fi

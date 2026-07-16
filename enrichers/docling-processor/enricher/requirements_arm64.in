@@ -1,0 +1,10 @@
+# arm64 (aarch64) CPU build. Same top-level versions as requirements_cpu.in,
+# but torch/torchvision are the default-PyPI aarch64 wheels (no +cpu suffix,
+# which is x86_64-only) so docling runs natively on arm64 instead of under
+# amd64 emulation. docling is pinned to the cpu-variant version; bumping it is
+# out of scope here (see the docling 3.x migration, #2282).
+docling==2.55.0
+fastapi==0.128.0
+uvicorn==0.37.0
+torch==2.8.0
+torchvision==0.23.0
