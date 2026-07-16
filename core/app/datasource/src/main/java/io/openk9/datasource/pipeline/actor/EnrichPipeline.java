@@ -122,6 +122,8 @@ public class EnrichPipeline {
 				);
 			}
 
+			stripBinaryUrls(dataPayload);
+
 			var buffer = Json.encodeToBuffer(dataPayload);
 
 			replyTo.tell(new Processor.Success(buffer.getBytes(), scheduler, heldMessage));
@@ -230,6 +232,8 @@ public class EnrichPipeline {
 							heldMessage.messageNumber(),
 							enrichItem.getId()
 						);
+
+						stripBinaryUrls(dataPayload);
 
 						var buffer = Json.encodeToBuffer(dataPayload);
 
@@ -416,6 +420,27 @@ public class EnrichPipeline {
 			dataPayload.setOldIndexName(oldDataIndexName);
 		}
 		return dataPayload;
+	}
+
+	/**
+	 * Drops the pre-signed URL injected into the binary references before the
+	 * payload leaves the pipeline: it is a short-lived bearer credential that
+	 * enrichers consume during processing and must never be persisted to the
+	 * index.
+	 *
+	 * @param dataPayload the payload about to be handed to the writer
+	 */
+	static void stripBinaryUrls(DataPayload dataPayload) {
+
+		var resources = dataPayload.getResources();
+
+		if (resources == null || resources.getBinaries() == null) {
+			return;
+		}
+
+		for (var binary : resources.getBinaries()) {
+			binary.setUrl(null);
+		}
 	}
 
 	private record EnrichItemSupervisorResponseWrapper(
