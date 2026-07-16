@@ -36,10 +36,10 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 /**
- * Writes binaries straight to the tenant bucket on the object storage, under
- * their deterministic key. Replaces the upload round-trip through the removed
- * file-manager service: the bytes go to storage and only a reference travels
- * on the bus.
+ * Persists ingested binaries on the tenant bucket of the object storage, under
+ * their deterministic key. The bytes are stored once and only a lightweight
+ * reference to them travels on the ingestion bus, keeping large payloads off
+ * the message broker while enrichers read the binaries back from storage.
  */
 @ApplicationScoped
 public class BinaryStorageService {
