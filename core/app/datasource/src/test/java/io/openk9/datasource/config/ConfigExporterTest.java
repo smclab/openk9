@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -120,6 +121,76 @@ public class ConfigExporterTest {
 	}
 
 	@Test
+	void should_export_only_the_seed_type_when_shallow() {
+		// 1. Shallow export seeded with a single type
+		ConfigPackage shallow = configExporter
+			.export(TENANT_ID, List.of(ConfigEntityType.BUCKET), false)
+			.await().indefinitely();
+
+		List<ConfigEntity> entities = shallow.getEntities();
+		assertFalse(
+			entities.isEmpty(), "the default tenant must export at least one bucket");
+
+		// 2. Shallow keeps only the seed: every node is of the requested type
+		for (ConfigEntity entity : entities) {
+			assertEquals(ConfigEntityType.BUCKET, entity.getType());
+		}
+
+		// 3. Metadata pointers outside the bucket-only scope are nulled, while the
+		// default bucket (itself a bucket) stays wired.
+		Set<String> handles = handlesOf(entities);
+		String defaultBucketRef = shallow.getMetadata().getDefaultBucketRef();
+		assertNotNull(defaultBucketRef);
+		assertTrue(handles.contains(defaultBucketRef));
+		assertNull(shallow.getMetadata().getEnabledEmbeddingModelRef());
+		assertNull(shallow.getMetadata().getEnabledLargeLanguageModelRef());
+	}
+
+	@Test
+	void should_close_over_dependencies_when_deep() {
+		// 1. Deep and shallow exports seeded with the same single type
+		ConfigPackage deep = configExporter
+			.export(TENANT_ID, List.of(ConfigEntityType.BUCKET), true)
+			.await().indefinitely();
+		ConfigPackage shallow = configExporter
+			.export(TENANT_ID, List.of(ConfigEntityType.BUCKET), false)
+			.await().indefinitely();
+
+		Set<String> deepHandles = handlesOf(deep.getEntities());
+		Set<String> shallowHandles = handlesOf(shallow.getEntities());
+
+		// 2. Deep is a strict superset: it keeps the seed and pulls in more
+		assertTrue(deepHandles.containsAll(shallowHandles));
+		assertTrue(
+			deepHandles.size() > shallowHandles.size(),
+			"deep export must pull in the bucket dependencies");
+
+		// 3. Deep is self-contained: every reference resolves within the package
+		for (ConfigEntity entity : deep.getEntities()) {
+			for (List<String> targets : entity.getReferences().values()) {
+				for (String target : targets) {
+					assertTrue(
+						deepHandles.contains(target),
+						entity.getRef() + " dangles a reference to " + target);
+				}
+			}
+		}
+
+		// 4. The default bucket's queryAnalysis and searchConfig travelled along
+		String defaultBucketRef = deep.getMetadata().getDefaultBucketRef();
+		ConfigEntity defaultBucket = deep.getEntities().stream()
+			.filter(entity -> entity.getRef().equals(defaultBucketRef))
+			.findFirst()
+			.orElseThrow();
+		for (String target : defaultBucket.getReferences().get("queryAnalysis")) {
+			assertTrue(deepHandles.contains(target));
+		}
+		for (String target : defaultBucket.getReferences().get("searchConfig")) {
+			assertTrue(deepHandles.contains(target));
+		}
+	}
+
+	@Test
 	void should_redact_the_embedding_model_api_key() {
 		// 1. Persist an embedding model carrying a secret apiKey
 		EmbeddingModel model = new EmbeddingModel();
@@ -158,6 +229,14 @@ public class ConfigExporterTest {
 				.await()
 				.indefinitely();
 		}
+	}
+
+	private static Set<String> handlesOf(List<ConfigEntity> entities) {
+		Set<String> handles = new HashSet<>();
+		for (ConfigEntity entity : entities) {
+			handles.add(entity.getRef());
+		}
+		return handles;
 	}
 
 }

@@ -22,11 +22,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -60,8 +65,9 @@ import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
 /**
- * Export graph collector: walks the whole tenant configuration and turns it
- * into a portable {@link ConfigPackage}.
+ * Export graph collector: walks a tenant configuration — the whole tenant, or
+ * a selected subset of types — and turns it into a portable
+ * {@link ConfigPackage}.
  * <p>
  * For every exportable type all instances are loaded and turned into a
  * {@link ConfigEntity}: {@code attributes} come from {@link ConfigEntityMapper},
@@ -121,7 +127,31 @@ public class ConfigExporter {
 	 * @return the assembled package, with secrets already redacted
 	 */
 	public Uni<ConfigPackage> export(String tenantId) {
-		return sessionFactory.withTransaction(tenantId, (s, t) -> doExport(s));
+		return export(tenantId, List.of(), true);
+	}
+
+	/**
+	 * Exports a selected subset of the tenant configuration as a portable,
+	 * secret-free {@link ConfigPackage}.
+	 * <p>
+	 * The seed is every entity whose type is in {@code types}; an empty list means
+	 * "no filter" and exports the whole tenant, exactly like {@link #export(String)}.
+	 * When {@code includeDependencies} is {@code true} (deep export) the seed is
+	 * expanded with the transitive closure over its outgoing references, so the
+	 * package is self-contained; when {@code false} (shallow export) only the seed
+	 * is kept and dangling references are reported by the importer.
+	 *
+	 * @param tenantId the schema/tenant to export
+	 * @param types the entity types to seed the export with; empty exports all
+	 * @param includeDependencies whether to pull in referenced entities (deep)
+	 * @return the assembled package, with secrets already redacted
+	 */
+	public Uni<ConfigPackage> export(
+		String tenantId, List<ConfigEntityType> types,
+		boolean includeDependencies) {
+
+		return sessionFactory.withTransaction(
+			tenantId, (s, t) -> doExport(s, types, includeDependencies));
 	}
 
 	/**
@@ -180,12 +210,20 @@ public class ConfigExporter {
 
 	/**
 	 * Wraps entities and metadata into a ConfigPackage, then redacts secrets last.
+	 * The metadata pointers are kept only when their target is part of the exported
+	 * set, so a partial export never dangles the {@code TenantBinding} rebind.
 	 */
 	private ConfigPackage assemble(
 		List<ConfigEntity> entities, TenantBinding tenantBinding) {
 
+		Set<String> exportedHandles = new HashSet<>();
+		for (ConfigEntity entity : entities) {
+			exportedHandles.add(entity.getRef());
+		}
+
 		ConfigPackage configPackage = new ConfigPackage(
-			ConfigPackage.CURRENT_SCHEMA_VERSION, metadata(tenantBinding), entities);
+			ConfigPackage.CURRENT_SCHEMA_VERSION,
+			metadata(tenantBinding, exportedHandles), entities);
 
 		redactor.redact(configPackage);
 
@@ -242,16 +280,21 @@ public class ConfigExporter {
 	}
 
 	/**
-	 * Orchestrates one transaction: collect edges, then nodes, then the
-	 * TenantBinding, and assemble them into the package.
+	 * Orchestrates one transaction: collect edges, then nodes, narrow them to the
+	 * requested selection, then read the TenantBinding and assemble the package.
 	 */
-	private Uni<ConfigPackage> doExport(Mutiny.Session s) {
+	private Uni<ConfigPackage> doExport(
+		Mutiny.Session s, List<ConfigEntityType> types,
+		boolean includeDependencies) {
+
 		return collectEdges(s)
 			.flatMap(edges -> collectEntities(s, edges))
+			.map(entities -> select(entities, types, includeDependencies))
 			.flatMap(entities -> s
 				.find(TenantBinding.class, 1L)
 				.map(tenantBinding -> assemble(entities, tenantBinding)));
 	}
+
 
 	/**
 	 * The cached {@code ConfigEntityMapper.dto(entityClass)} method; fails loudly
@@ -331,9 +374,13 @@ public class ConfigExporter {
 
 	/**
 	 * Captures the tenant-wide pointers (virtual host, default bucket/embedding/LLM)
-	 * from the TenantBinding into ConfigMetadata.
+	 * from the TenantBinding into ConfigMetadata. A pointer is kept only when its
+	 * target is among {@code exportedHandles}, so a partial export leaves the
+	 * missing pointers null and the import rebind stays consistent.
 	 */
-	private ConfigMetadata metadata(TenantBinding tenantBinding) {
+	private ConfigMetadata metadata(
+		TenantBinding tenantBinding, Set<String> exportedHandles) {
+
 		String exportedAt = OffsetDateTime.now().toString();
 
 		if (tenantBinding == null) {
@@ -343,14 +390,17 @@ public class ConfigExporter {
 		return new ConfigMetadata(
 			exportedAt,
 			tenantBinding.getVirtualHost(),
-			handleOrNull(ConfigEntityType.BUCKET, tenantBinding.getBucket()),
-			handleOrNull(
-				ConfigEntityType.EMBEDDING_MODEL, tenantBinding.getEmbeddingModel()),
-			handleOrNull(
+			pointerOrNull(
+				ConfigEntityType.BUCKET, tenantBinding.getBucket(), exportedHandles),
+			pointerOrNull(
+				ConfigEntityType.EMBEDDING_MODEL, tenantBinding.getEmbeddingModel(),
+				exportedHandles),
+			pointerOrNull(
 				ConfigEntityType.LARGE_LANGUAGE_MODEL,
-				tenantBinding.getLargeLanguageModel())
+				tenantBinding.getLargeLanguageModel(), exportedHandles)
 		);
 	}
+
 
 	/**
 	 * Builds a ConfigEntity: handle from type+id, key from the DTO name. Used only
@@ -376,6 +426,116 @@ public class ConfigExporter {
 			throw new IllegalStateException(
 				"Cannot map " + entityClass.getSimpleName() + " to its export DTO", e);
 		}
+	}
+
+
+	/**
+	 * Narrows the collected entities to the requested selection, keeping their
+	 * original order: with no {@code types} the whole tenant is returned,
+	 * otherwise the seed is every entity whose type is selected, expanded
+	 * with the transitive closure of its outgoing references when
+	 * {@code includeDependencies} is set (deep export) or kept as-is (shallow).
+	 * Composite-key join entities are added last, only when every endpoint they
+	 * connect is already selected, since the forward closure never reaches them.
+	 */
+	private static List<ConfigEntity> select(
+		List<ConfigEntity> entities, List<ConfigEntityType> types,
+		boolean includeDependencies) {
+
+		if (types == null || types.isEmpty()) {
+			return entities;
+		}
+
+		Map<String, ConfigEntity> byRef = new LinkedHashMap<>();
+		for (ConfigEntity entity : entities) {
+			byRef.put(entity.getRef(), entity);
+		}
+
+		Set<ConfigEntityType> seedTypes = new LinkedHashSet<>(types);
+		Set<String> selected = new LinkedHashSet<>();
+		for (ConfigEntity entity : entities) {
+			if (seedTypes.contains(entity.getType())) {
+				selected.add(entity.getRef());
+			}
+		}
+
+		if (includeDependencies) {
+			expandForwardClosure(selected, byRef);
+		}
+
+		addJoinEntities(entities, selected);
+
+		List<ConfigEntity> result = new ArrayList<>();
+		for (ConfigEntity entity : entities) {
+			if (selected.contains(entity.getRef())) {
+				result.add(entity);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Expands the selection with the transitive closure over outgoing references,
+	 * following only handles that resolve to an entity in the package.
+	 */
+	private static void expandForwardClosure(
+		Set<String> selected, Map<String, ConfigEntity> byRef) {
+
+		Deque<String> pending = new ArrayDeque<>(selected);
+		while (!pending.isEmpty()) {
+			ConfigEntity entity = byRef.get(pending.poll());
+			if (entity == null) {
+				continue;
+			}
+			for (String handle : targetHandles(entity)) {
+				if (byRef.containsKey(handle) && selected.add(handle)) {
+					pending.add(handle);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Adds every composite-key join entity whose endpoints are all already
+	 * selected, so a join is exported exactly when both sides travel with it.
+	 */
+	private static void addJoinEntities(
+		List<ConfigEntity> entities, Set<String> selected) {
+
+		for (ConfigEntity entity : entities) {
+			if (!ConfigMatcher.isJoinEntity(entity.getType().getEntityType())
+				|| selected.contains(entity.getRef())) {
+
+				continue;
+			}
+			List<String> endpoints = targetHandles(entity);
+			if (!endpoints.isEmpty() && selected.containsAll(endpoints)) {
+				selected.add(entity.getRef());
+			}
+		}
+	}
+
+
+	/**
+	 * Flattens all outgoing reference handles of an entity into a single list.
+	 */
+	private static List<String> targetHandles(ConfigEntity entity) {
+		List<String> handles = new ArrayList<>();
+		Map<String, List<String>> references = entity.getReferences();
+		if (references == null) {
+			return handles;
+		}
+		for (List<String> targets : references.values()) {
+			if (targets == null) {
+				continue;
+			}
+			for (String handle : targets) {
+				if (handle != null) {
+					handles.add(handle);
+				}
+			}
+		}
+		return handles;
 	}
 
 	/**
@@ -471,6 +631,17 @@ public class ConfigExporter {
 	 */
 	private static String handleOrNull(ConfigEntityType type, K9Entity target) {
 		return target == null ? null : handle(type, target.getId());
+	}
+
+	/**
+	 * Metadata pointer to the target, or null when the target is absent or falls
+	 * outside the exported set (partial export).
+	 */
+	private static String pointerOrNull(
+		ConfigEntityType type, K9Entity target, Set<String> exportedHandles) {
+
+		String handle = handleOrNull(type, target);
+		return handle != null && exportedHandles.contains(handle) ? handle : null;
 	}
 
 	/**
