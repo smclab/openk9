@@ -35,6 +35,7 @@ import java.util.Set;
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.actor.PekkoUtils;
 import io.openk9.datasource.model.Scheduler;
+import io.openk9.datasource.pipeline.actor.closing.DeleteBinaries;
 import io.openk9.datasource.pipeline.actor.closing.DeletionCompareNotifier;
 import io.openk9.datasource.pipeline.actor.closing.EvaluateStatus;
 import io.openk9.datasource.pipeline.actor.closing.UpdateDatasource;
@@ -182,6 +183,7 @@ public class Scheduling extends AbstractBehavior<Scheduling.Command> {
 				List.of(
 					UpdateDatasource::create,
 					DeletionCompareNotifier::create,
+					DeleteBinaries::create,
 					EvaluateStatus::create
 				)
 			)

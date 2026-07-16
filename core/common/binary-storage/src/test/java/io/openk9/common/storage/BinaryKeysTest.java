@@ -18,6 +18,7 @@
 package io.openk9.common.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +43,18 @@ class BinaryKeysTest {
 		assertEquals(
 			"bin-acme-store",
 			BinaryKeys.bucket("acme", "bin-{tenant}-store"));
+	}
+
+	@Test
+	void datasourcePrefixMatchesEveryKeyOfTheDatasource() {
+		// the prefix ends with the separator so it cannot match a sibling
+		// datasource whose id shares the same digits (e.g. 42 vs 420)
+		assertEquals("42/", BinaryKeys.datasourcePrefix(42L));
+
+		// every key of the datasource starts with its prefix
+		assertTrue(
+			BinaryKeys.key(42L, "content-1", "file-1")
+				.startsWith(BinaryKeys.datasourcePrefix(42L)));
 	}
 
 }

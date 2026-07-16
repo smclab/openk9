@@ -17,14 +17,23 @@
 
 package io.openk9.common.storage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+import io.minio.BucketExistsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
+import io.minio.RemoveObjectsArgs;
+import io.minio.Result;
 import io.minio.http.Method;
+import io.minio.messages.DeleteError;
+import io.minio.messages.DeleteObject;
+import io.minio.messages.Item;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
@@ -97,6 +106,78 @@ public class PresignedUrlService {
 		catch (Exception e) {
 			throw new IllegalStateException(
 				"Cannot pre-sign GET for object " + key, e);
+		}
+	}
+
+	/**
+	 * Deletes the whole working copy of a datasource from the tenant bucket.
+	 *
+	 * <p>The binaries staged during processing live under the datasource
+	 * prefix and are only needed while the enrichers read them; a re-index
+	 * re-fetches them from the connector. It is a no-op when the bucket does
+	 * not exist or holds no object under the prefix.
+	 *
+	 * @param tenantId the tenant owning the bucket
+	 * @param datasourceId the datasource whose staged binaries are removed
+	 * @throws IllegalStateException if the storage cannot be listed or an
+	 * object cannot be deleted
+	 */
+	public void deleteByDatasource(String tenantId, long datasourceId) {
+
+		String bucket = BinaryKeys.bucket(tenantId, bucketTemplate);
+		String prefix = BinaryKeys.datasourcePrefix(datasourceId);
+
+		try {
+			boolean exists = minioClient.bucketExists(
+				BucketExistsArgs.builder().bucket(bucket).build());
+
+			if (!exists) {
+				return;
+			}
+
+			List<DeleteObject> objects = new ArrayList<>();
+
+			Iterable<Result<Item>> items = minioClient.listObjects(
+				ListObjectsArgs.builder()
+					.bucket(bucket)
+					.prefix(prefix)
+					.recursive(true)
+					.build());
+
+			for (Result<Item> item : items) {
+				objects.add(new DeleteObject(item.get().objectName()));
+			}
+
+			if (objects.isEmpty()) {
+				return;
+			}
+
+			// removeObjects is lazy: iterating the results forces the deletion
+			// and surfaces any object the storage refused to delete.
+			Iterable<Result<DeleteError>> results = minioClient.removeObjects(
+				RemoveObjectsArgs.builder()
+					.bucket(bucket)
+					.objects(objects)
+					.build());
+
+			List<String> failed = new ArrayList<>();
+
+			for (Result<DeleteError> result : results) {
+				failed.add(result.get().objectName());
+			}
+
+			if (!failed.isEmpty()) {
+				throw new IllegalStateException(
+					"Cannot delete objects " + failed + " in bucket " + bucket);
+			}
+		}
+		catch (IllegalStateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new IllegalStateException(
+				"Cannot delete binaries under " + prefix
+				+ " in bucket " + bucket, e);
 		}
 	}
 

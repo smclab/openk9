@@ -64,4 +64,16 @@ public final class BinaryKeys {
 		return datasourceId + "/" + contentId + "/" + fileId;
 	}
 
+	/**
+	 * Builds the key prefix that lists every binary of a datasource, used to
+	 * drop a datasource working copy in one sweep.
+	 *
+	 * @param datasourceId the datasource owning the content
+	 * @return the prefix {@code {datasourceId}/}, matching every key of the
+	 * datasource
+	 */
+	public static String datasourcePrefix(long datasourceId) {
+		return datasourceId + "/";
+	}
+
 }
