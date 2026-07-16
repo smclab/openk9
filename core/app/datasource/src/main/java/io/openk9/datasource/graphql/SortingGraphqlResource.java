@@ -27,6 +27,7 @@ import io.openk9.common.util.web.Response;
 import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.Sorting;
 import io.openk9.datasource.model.dto.base.SortingDTO;
+import io.openk9.datasource.model.dto.request.SortingWithDocTypeFieldDTO;
 import io.openk9.datasource.service.SortingService;
 import io.openk9.datasource.service.TranslationService;
 import io.openk9.datasource.service.util.Tuple2;
@@ -104,6 +105,27 @@ public class SortingGraphqlResource {
 
 	public Uni<Response<Sorting>> updateSorting(@Id long id, SortingDTO sortingDTO) {
 		return sortingService.getValidator().update(id, sortingDTO);
+	}
+
+	@Mutation
+	@Description("API to create, patch or update sorting with the possibility to link a docTypeField ")
+	public Uni<Response<Sorting>> sortingWithDocTypeField(
+		@Id Long id, SortingWithDocTypeFieldDTO sortingWithDocTypeFieldDTO,
+		@DefaultValue("false") boolean patch) {
+
+		if (id == null) {
+			return createSorting(sortingWithDocTypeFieldDTO);
+		} else {
+			return patch
+				? sorting(id, sortingWithDocTypeFieldDTO)
+				: updateSorting(id, sortingWithDocTypeFieldDTO);
+		}
+
+	}
+
+	@Mutation
+	public Uni<Sorting> deleteSorting(@Id long sortingId) {
+		return sortingService.deleteById(sortingId);
 	}
 
 	public Uni<Connection<DocTypeField>> docTypeFieldsNotInSorting(

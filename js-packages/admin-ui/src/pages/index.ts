@@ -30,6 +30,7 @@ export * from "./pipelines";
 export * from "./QueryAnalyses";
 export * from "./Rules";
 export * from "./SearchConfigs";
+export * from "./Sorting";
 export * from "./SuggestionCategories";
 export * from "./Tabs";
 export * from "./TokenFilters";

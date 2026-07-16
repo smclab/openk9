@@ -78,6 +78,14 @@ gql`
           }
         }
       }
+      sortings(notEqual: $unasociated) {
+        edges {
+          node {
+            name
+            id
+          }
+        }
+      }
       translations {
         key
         language
@@ -97,10 +105,17 @@ gql`
     $description: String
     $priority: Int!
     $tokenTabIds: [BigInteger]
+    $sortingIds: [BigInteger]
   ) {
     tabWithTokenTabs(
       id: $id
-      tabWithTokenTabsDTO: { name: $name, description: $description, priority: $priority, tokenTabIds: $tokenTabIds }
+      tabWithTokenTabsDTO: {
+        name: $name
+        description: $description
+        priority: $priority
+        tokenTabIds: $tokenTabIds
+        sortingIds: $sortingIds
+      }
     ) {
       entity {
         id
@@ -184,5 +199,6 @@ gql`
 
 export type ReturnUserTabData = {
   tokenTab: AssociatedUnassociated;
+  sorting: AssociatedUnassociated;
 };
 

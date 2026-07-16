@@ -70,7 +70,9 @@ import {
   SaveTokenFilter,
   SaveTokenizer,
   SaveTokenTab,
+  SaveSorting,
   SearchConfigs,
+  Sortings,
   SuggestionCategories,
   Tabs,
   TokenFilters,
@@ -429,6 +431,10 @@ const AppRoutes = ({ setExtraFab }: AppRoutesProps) => (
     <Route path="/token-tabs" element={<TokenTabs />} />
     <Route path="/token-tab/:tokenTabId" element={<SaveTokenTab setExtraFab={setExtraFab} />} />
     <Route path="/token-tab/:tokenTabId/:view" element={<SaveTokenTab setExtraFab={setExtraFab} />} />
+
+    <Route path="/sortings" element={<Sortings />} />
+    <Route path="/sorting/:sortingId" element={<SaveSorting setExtraFab={setExtraFab} />} />
+    <Route path="/sorting/:sortingId/:view" element={<SaveSorting setExtraFab={setExtraFab} />} />
 
     <Route path="/annotators" element={<Annotators />} />
     <Route path="/annotator/:annotatorId" element={<SaveAnnotator setExtraFab={setExtraFab} />} />

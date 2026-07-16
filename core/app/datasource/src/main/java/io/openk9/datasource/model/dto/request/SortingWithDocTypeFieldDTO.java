@@ -17,9 +17,7 @@
 
 package io.openk9.datasource.model.dto.request;
 
-import java.util.Set;
-
-import io.openk9.datasource.model.dto.base.TabDTO;
+import io.openk9.datasource.model.dto.base.SortingDTO;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,7 +30,6 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class TabWithTokenTabsDTO extends TabDTO {
-	private Set<Long> tokenTabIds;
-	private Set<Long> sortingIds;
+public class SortingWithDocTypeFieldDTO extends SortingDTO {
+	private Long docTypeFieldId;
 }

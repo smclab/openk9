@@ -45,6 +45,8 @@ export type NamePath =
   | "tabs"
   | "token-tab"
   | "token-tabs"
+  | "sorting"
+  | "sortings"
   | "dataindex"
   | "dataindices"
   | "rule"
@@ -101,6 +103,8 @@ export const namePath: { label: NamePath; value: NamePath }[] = [
   { label: "tabs", value: "tabs" },
   { label: "token-tab", value: "token-tabs" },
   { label: "token-tabs", value: "token-tabs" },
+  { label: "sorting", value: "sortings" },
+  { label: "sortings", value: "sortings" },
   { label: "dataindex", value: "dataindices" },
   { label: "dataindices", value: "dataindices" },
   { label: "rule", value: "rules" },
