@@ -19,6 +19,9 @@
 		"unsupported-file-type": "Formato non supportato",
 		"file-too-large": "File troppo grande (max 10MB)",
 		"copy-code": "Copia codice",
-		"copied": "Copiato"
+		"copied": "Copiato",
+		"all-sources": "Tutte le fonti",
+		"one-source": "1 fonte",
+		"selected-sources": "{{count}} fonti"
 	}
 }

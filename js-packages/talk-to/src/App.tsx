@@ -185,12 +185,12 @@ function App() {
 						</Box>
 						{/* Search Area */}
 						<Box
-							height="12vh"
+							minHeight="12vh"
 							width="100%"
 							display="flex"
 							alignItems="center"
 							justifyContent="center"
-							overflow={"hidden"}
+							overflow={"visible"}
 							sx={{
 								background: "white",
 								borderRadius: "10px",

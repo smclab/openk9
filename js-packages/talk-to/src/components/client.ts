@@ -59,7 +59,7 @@ export function OpenK9Client() {
 			return res?.statusText !== "No Content" ? res.json() : { value: "en_US" };
 		},
 
-		async getDatasources() {
+		async getDatasources(): Promise<{ id: number; name: string }[]> {
 			const res = await authFetch("/api/datasource/buckets/current/datasources");
 			if (!res.ok) throw new Error("Failed to fetch datasources");
 			return res.json();

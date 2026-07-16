@@ -46,13 +46,13 @@ const DatasourceSelect = ({
 		return null;
 	}
 
+	const selectedCount = selectedDatasourceIds.length;
 	const label =
-		selectedDatasourceIds.length === 0
+		selectedCount === 0
 			? t("all-sources", { defaultValue: "All sources" })
-			: t("selected-sources", {
-					count: selectedDatasourceIds.length,
-					defaultValue: "{{count}} sources",
-			  });
+			: selectedCount === 1
+			? t("one-source", { defaultValue: "1 source" })
+			: t("selected-sources", { count: selectedCount, defaultValue: "{{count}} sources" });
 
 	return (
 		<>
@@ -62,7 +62,7 @@ const DatasourceSelect = ({
 				size="small"
 				variant="outlined"
 				sx={{
-					color: "#333",
+					color: "text.primary",
 					minWidth: "auto",
 					px: 1,
 					py: 0.5,
@@ -102,12 +102,31 @@ const DatasourceSelect = ({
 					horizontal: "left",
 				}}
 			>
-				{datasources.map((datasource) => (
-					<MenuItem key={datasource.id} onClick={() => toggleDatasource(datasource.id)} dense>
-						<Checkbox checked={selectedDatasourceIds.includes(datasource.id)} size="small" sx={{ p: 0.5, mr: 1 }} />
-						<ListItemText primary={datasource.name} />
-					</MenuItem>
-				))}
+				{datasources.map((datasource) => {
+					const isSelected = selectedDatasourceIds.includes(datasource.id);
+					return (
+						<MenuItem
+							key={datasource.id}
+							onClick={() => toggleDatasource(datasource.id)}
+							dense
+							selected={isSelected}
+							role="menuitemcheckbox"
+							aria-checked={isSelected}
+						>
+							<Checkbox
+								checked={isSelected}
+								size="small"
+								sx={{ p: 0.5, mr: 1, "&.Mui-checked": { color: "secondary.contrastText" } }}
+								tabIndex={-1}
+								aria-hidden
+							/>
+							<ListItemText
+								primary={datasource.name}
+								primaryTypographyProps={{ fontWeight: isSelected ? 600 : 400 }}
+							/>
+						</MenuItem>
+					);
+				})}
 			</Menu>
 		</>
 	);

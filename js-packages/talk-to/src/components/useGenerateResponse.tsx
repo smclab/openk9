@@ -87,7 +87,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						timestamp,
 						language,
 						retrieveFromUploadedDocuments: retrieveFromUploadedDocuments,
-						datasourceIds,
+						...(datasourceIds?.length ? { datasourceIds } : {}),
 				  }
 				: {
 						searchText: query,
@@ -95,7 +95,7 @@ const useGenerateResponse = ({ initialMessages }: { initialMessages: Message[] }
 						timestamp,
 						chatHistory,
 						language,
-						datasourceIds,
+						...(datasourceIds?.length ? { datasourceIds } : {}),
 				  };
 
 			try {
