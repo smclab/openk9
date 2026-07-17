@@ -55,7 +55,7 @@ GENERIC_USERS       = ["luca.siligato", "other.user"]
 # ── Trigger job names by domain ────────────────────────────────────────────────
 BACKEND_TRIGGERS = [
     "Trigger Datasource", "Trigger Searcher", "Trigger Ingestion",
-    "Trigger K8S-Client", "Trigger File-Manager", "Trigger Tenant-Manager",
+    "Trigger K8S-Client", "Trigger Tenant-Manager",
     "Trigger API-Gateway", "Trigger Tika",
     "Trigger Resources-Validator",
 ]

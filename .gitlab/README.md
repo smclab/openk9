@@ -79,7 +79,6 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 ├── .gitlab-ci-tenant-manager.yaml
 ├── .gitlab-ci-resources-validator.yaml
 ├── .gitlab-ci-k8s-client.yaml
-├── .gitlab-ci-file-manager.yaml
 ├── .gitlab-ci-api-gateway.yaml
 ├── .gitlab-ci-tika.yaml
 │
