@@ -642,6 +642,7 @@ export type GenericResultItem<E = {}> = {
     resources: {
       binaries: {
         id: string;
+        name: string;
         contentType: string;
         url?: string;
       }[];
