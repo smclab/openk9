@@ -20,12 +20,17 @@ from utils.helpers import (
     score,
 )
 
+# The file handler writes to a path that must be writable by the (non-root)
+# runtime user. The WORKDIR (/app) is owned by root, so default to a writable
+# location and let it be overridden via LOG_FILE.
+LOG_FILE = os.getenv("LOG_FILE", "/tmp/app.log")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     handlers=[
         logging.StreamHandler(),  # console
-        logging.FileHandler("app.log"),  # file
+        logging.FileHandler(LOG_FILE),  # file
     ],
 )
 
