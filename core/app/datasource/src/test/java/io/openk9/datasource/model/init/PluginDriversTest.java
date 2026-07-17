@@ -67,11 +67,11 @@ class PluginDriversTest {
 			"Resource URI must start with http://, got: " + baseUri
 		);
 		Assertions.assertTrue(
-			baseUri.endsWith(":5000"),
-			"Resource URI must end with port :5000, got: " + baseUri
+			baseUri.contains(":5000"),
+			"Resource URI must contain port :5000, got: " + baseUri
 		);
 		Assertions.assertEquals(
-			"http://openk9-web-connector-luxio:5000",
+			"http://openk9-web-connector-luxio:5000/urls",
 			baseUri
 		);
 	}
@@ -82,7 +82,28 @@ class PluginDriversTest {
 
 		String baseUri = dto.getResourceUri().getBaseUri();
 
-		Assertions.assertEquals("http://openk9-web-connector:5000", baseUri);
+		Assertions.assertEquals("http://openk9-web-connector:5000/urls", baseUri);
+	}
+
+	// The crawler and sitemap presets share the same connector host but must be
+	// served under distinct base paths, so that the core (which fetches the form
+	// as baseUri + "/form") gets a different form for each crawling mode.
+	@Test
+	void crawlerAndSitemapPresets_exposeDistinctBasePaths() {
+		String crawlerBaseUri =
+			PluginDrivers.getPluginDriverDTO(Preset.CRAWLER).getResourceUri().getBaseUri();
+		String sitemapBaseUri =
+			PluginDrivers.getPluginDriverDTO(Preset.SITEMAP).getResourceUri().getBaseUri();
+
+		Assertions.assertTrue(
+			crawlerBaseUri.endsWith("/urls"),
+			"Crawler base uri must end with /urls, got: " + crawlerBaseUri
+		);
+		Assertions.assertTrue(
+			sitemapBaseUri.endsWith("/sitemap"),
+			"Sitemap base uri must end with /sitemap, got: " + sitemapBaseUri
+		);
+		Assertions.assertNotEquals(crawlerBaseUri, sitemapBaseUri);
 	}
 
 }
