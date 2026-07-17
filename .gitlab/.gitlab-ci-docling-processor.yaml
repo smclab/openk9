@@ -119,8 +119,8 @@ Container Scanning Docling:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-docling-processor"
-    # Per-module suppressions: docling's own .trivyignore under enrichers/ (not core/, Java-only).
-    IGNOREFILE: "enrichers/docling-processor/enricher/.trivyignore"
+    # Area-level suppressions: this scan reads the area .trivyignore (see IGNOREFILE).
+    IGNOREFILE: "enrichers/.trivyignore.yaml"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

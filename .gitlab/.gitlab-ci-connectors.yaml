@@ -375,8 +375,8 @@ Container Scanning Web Connector:
   - "Build Web Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-web-connector"
-    # Per-module suppressions: web connector lives under openk9-crawler/.
-    IGNOREFILE: "connectors/openk9-crawler/connector/.trivyignore"
+    # Area-level suppressions: this scan reads the area .trivyignore (see IGNOREFILE).
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -398,7 +398,7 @@ Container Scanning Email Connector:
   - "Build Email Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-email-connector"
-    IGNOREFILE: "connectors/email-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -420,7 +420,7 @@ Container Scanning Database Connector:
   - "Build Database Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-database-connector"
-    IGNOREFILE: "connectors/database-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -442,7 +442,7 @@ Container Scanning YouTube Connector:
   - "Build YouTube Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-youtube-connector"
-    IGNOREFILE: "connectors/youtube-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -464,7 +464,7 @@ Container Scanning GitLab Connector:
   - "Build GitLab Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-gitlab-connector"
-    IGNOREFILE: "connectors/gitlab-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'
@@ -486,7 +486,7 @@ Container Scanning Minio Connector:
   - "Build Minio Connector image"
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-minio-connector"
-    IGNOREFILE: "connectors/minio-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   # Allineato al build: scatta solo sulle modifiche al codice del connector
   rules:
   - if: '$CI_COMMIT_BRANCH == "main"'

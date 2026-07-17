@@ -44,7 +44,7 @@
 Trivy FS Java:
   extends: .trivy-fs-scan
   variables:
-    IGNOREFILE: "core/.trivyignore"
+    IGNOREFILE: "core/.trivyignore.yaml"
   script:
     - for d in core vendor; do
         echo "=== trivy fs (table) $d ===";
@@ -110,17 +110,18 @@ SonarQube Check:
 
 # ============================================================================
 # Trivy FS — Python dependency scan (Issue #2004, replaces pip-audit)
-# SPLIT PER-MODULE: one job per Python module, each scanning its OWN dir with
-# its OWN .trivyignore. This is what makes a per-module suppression actually
-# work (a dev suppresses a CVE in ai-packages/rag-module/.trivyignore and it
-# takes effect only there, no global leak). Python is the one tree where this
-# is clean — every module ships its own requirements.txt. Java stays a single
-# reactor job (deps shared by the parent pom) and JS stays a single job (the
-# frontends share the root yarn.lock), see below.
+# PER-MODULE JOBS, AREA-LEVEL SUPPRESSIONS: one job per Python module (each scans
+# its OWN dir, so a CVE surfaces attributed to the right module and only when that
+# module's files change), but all AI modules share a single area IGNOREFILE
+# (ai-packages/.trivyignore). Suppressions are therefore area-wide — a CVE
+# suppressed for one AI module is suppressed for all — a deliberate trade-off for
+# fewer files to maintain; keep the affected module in the rationale for traceability.
+# Java stays a single reactor job (deps shared by the parent pom) with core/.trivyignore;
+# JS stays a single job (frontends share the root yarn.lock) with js-packages/.trivyignore.
 #
 # Each job:
 #   - extends .trivy-fs-scan (table → json → gate, --offline-scan, --ignore-unfixed);
-#   - sets SCAN_DIR to its module dir and IGNOREFILE to its module .trivyignore;
+#   - sets SCAN_DIR to its module dir; IGNOREFILE points at the area file;
 #   - only runs when files under its own dir change (targeted MR feedback).
 # The .trivy-fs-scan template writes trivy-deps-$CI_JOB_NAME_SLUG.json, so the
 # per-job artifact names never collide.
@@ -129,7 +130,7 @@ SonarQube Check:
 # porting-MR). NB: GitLab does NOT expand variables inside rules:changes: paths,
 # so each job hardcodes its own dir there (the antispam-new-branch reference and
 # the three if: conditions are identical across jobs; only the changes: path and
-# the SCAN_DIR/IGNOREFILE variables differ per module).
+# the SCAN_DIR variable differ per module — IGNOREFILE is the shared area file).
 # ============================================================================
 
 # --- AI modules (ai-packages/) ---
@@ -137,7 +138,7 @@ Trivy FS rag-module:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "ai-packages/rag-module"
-    IGNOREFILE: "ai-packages/rag-module/.trivyignore"
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -151,7 +152,7 @@ Trivy FS agentic-rag-module:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "ai-packages/agentic-rag-module"
-    IGNOREFILE: "ai-packages/agentic-rag-module/.trivyignore"
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -165,7 +166,7 @@ Trivy FS chunk-evaluation-module:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "ai-packages/chunk-evaluation-module"
-    IGNOREFILE: "ai-packages/chunk-evaluation-module/.trivyignore"
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -179,7 +180,7 @@ Trivy FS embedding-modules:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "ai-packages/embedding-modules"
-    IGNOREFILE: "ai-packages/embedding-modules/.trivyignore"
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -194,7 +195,7 @@ Trivy FS docling-processor:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "enrichers/docling-processor/enricher"
-    IGNOREFILE: "enrichers/docling-processor/enricher/.trivyignore"
+    IGNOREFILE: "enrichers/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -209,7 +210,7 @@ Trivy FS database-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/database-connector/connector"
-    IGNOREFILE: "connectors/database-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -223,7 +224,7 @@ Trivy FS email-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/email-connector/connector"
-    IGNOREFILE: "connectors/email-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -237,7 +238,7 @@ Trivy FS gitlab-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/gitlab-connector/connector"
-    IGNOREFILE: "connectors/gitlab-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -251,7 +252,7 @@ Trivy FS minio-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/minio-connector/connector"
-    IGNOREFILE: "connectors/minio-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -265,7 +266,7 @@ Trivy FS openk9-crawler:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/openk9-crawler/connector"
-    IGNOREFILE: "connectors/openk9-crawler/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -279,7 +280,7 @@ Trivy FS rest-api-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/rest-api-connector/connector"
-    IGNOREFILE: "connectors/rest-api-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -293,7 +294,7 @@ Trivy FS youtube-connector:
   extends: .trivy-fs-scan
   variables:
     SCAN_DIR: "connectors/youtube-connector/connector"
-    IGNOREFILE: "connectors/youtube-connector/connector/.trivyignore"
+    IGNOREFILE: "connectors/.trivyignore.yaml"
   rules:
     - !reference [.rules:antispam-new-branch, rules]
     - if: '$CI_COMMIT_BRANCH == "main"'
@@ -316,7 +317,7 @@ Trivy FS JS:
     # Single JS ignore file: the frontends share the root yarn.lock, so this one
     # job scans the whole tree and this one file backs it (per-component split is
     # not possible here — see js-packages/.trivyignore header).
-    IGNOREFILE: "js-packages/.trivyignore"
+    IGNOREFILE: "js-packages/.trivyignore.yaml"
   rules:
     # Block on new branch creation
     - !reference [.rules:antispam-new-branch, rules]

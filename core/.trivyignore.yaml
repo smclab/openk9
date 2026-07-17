@@ -1,0 +1,89 @@
+# .trivyignore.yaml — Java/core area Trivy suppressions (Issue #2004)
+#
+# One file per pipeline area (Java reactor). A suppression here applies to every
+# Java module scanned against core/. Structured YAML format: each entry carries
+# id + statement (rationale) and, for temporary suppressions, expired-at.
+#
+# NB on expired-at: Trivy parses it but does NOT auto-reactivate a CVE past the
+# date — enforcement is done by a separate CI check that fails the job when a
+# past expired-at is found. Keep the date accurate so that check is meaningful.
+# Permanent false positives omit expired-at; mitigations to re-check carry one.
+vulnerabilities:
+  # --- Temporary suppressions (carry expired-at, re-evaluated before next release) ---
+
+  - id: CVE-2026-45292
+    # io.opentelemetry:opentelemetry-api / -extension-trace-propagators
+    statement: >-
+      CVE still RESERVED (no NVD detail). MEDIUM (CVSS 5.3), availability-only.
+      opentelemetry-api is transitive via the Quarkus BOM; bumping it out-of-band
+      risks OTel version misalignment. Fix expected in Quarkus OTel BOM >= 1.62.0.
+    expired-at: 2026-07-06
+
+  - id: CVE-2025-46548
+    # pekko-management 1.1.1 (_2.13)
+    statement: >-
+      Severity Medium->Low: applies to the Pekko Management port, exposed only
+      inside the k8s cluster network, not from the public internet. Low-priority tech debt.
+    expired-at: 2026-09-23
+
+  - id: CVE-2025-67735
+    # netty-transport / -codec / -native-epoll 4.1.128.Final (and variants)
+    statement: >-
+      Not applicable: no public Netty-based HTTP endpoints, only headless/internal ones.
+      No attacker-controlled URIs reach HttpRequestEncoder, so CRLF/request smuggling is infeasible.
+    expired-at: 2026-09-23
+
+  # --- Permanent suppressions (false positives / not applicable, no expiry) ---
+
+  - id: CVE-2025-14969
+    # org.hibernate.reactive:hibernate-reactive-core
+    statement: >-
+      False positive: bug fixed upstream in Quarkus 3.27.2; OpenK9 runs 3.27.4.
+      NVD "affected" record is open-ended (*) so Trivy matches the transitive 3.1.x regardless.
+
+  # quarkus-minio 3.7.7 — scanner flags it as vulnerable minio:minio 3.7.7, but the
+  # tree uses non-vulnerable transitive minio:minio 8.5.x. (9 CVEs, same root cause.)
+  - id: CVE-2021-43858
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2023-28433
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2023-28434
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2021-21287
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2018-1000538
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2020-11012
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2021-21362
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2021-21390
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+  - id: CVE-2022-35919
+    statement: "False positive: quarkus-minio 3.7.7 misattributed; tree uses minio:minio 8.5.x."
+
+  - id: CVE-2022-2403
+    # openshift-model 7.1.0
+    statement: >-
+      False positive: server-side OCP vulnerability, not a flaw in the Fabric8 client /
+      openshift-model JAR. Fix is upgrading the OCP cluster, not the client library.
+
+  - id: CVE-2025-15104
+    # quarkus-hibernate-validator / -spi / smallrye-config-validator
+    statement: "Not applicable: SSRF affects Nu Html Checker (validator.nu); nu.validator not in the tree."
+  - id: CVE-2023-1932
+    statement: "Not applicable: SSRF affects Nu Html Checker (validator.nu); nu.validator not in the tree."
+
+  - id: CVE-2022-41904
+    # lit-element-state 1.7.0
+    statement: "Not applicable: affects Element iOS (Matrix client). Java/Quarkus backend, no Matrix."
+
+  - id: CVE-2025-68161
+    # log4j-api 2.24.3, log4j-jul 2.21.0
+    statement: >-
+      Not applicable: affects the Log4j Socket Appender (network log transmission).
+      We log only to local files and stdout; the Socket Appender is not configured.
+
+  - id: CVE-2024-34517
+    # quarkus-neo4j 5.0.0
+    statement: "Not applicable: the neo4j module was removed and is not in any deployment artifact."

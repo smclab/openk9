@@ -128,8 +128,8 @@ Container Scanning Agentic Rag:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-agentic-rag-module"
-    # Per-module suppressions: agentic-rag-module's own .trivyignore (not core/, Java-only).
-    IGNOREFILE: "ai-packages/agentic-rag-module/.trivyignore"
+    # Area-level suppressions: this scan reads the area .trivyignore (see IGNOREFILE).
+    IGNOREFILE: "ai-packages/.trivyignore.yaml"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]
