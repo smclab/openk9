@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.web;
 
+import java.util.List;
+
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -30,6 +32,7 @@ import jakarta.ws.rs.QueryParam;
 import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.config.ConfigExporter;
 import io.openk9.datasource.config.ConfigImporter;
+import io.openk9.datasource.config.model.ConfigEntityType;
 import io.openk9.datasource.config.model.ConfigPackage;
 import io.openk9.datasource.config.model.ImportMode;
 import io.openk9.datasource.config.model.ImportReport;
@@ -56,25 +59,36 @@ public class ConfigResource {
 	ConfigImporter configImporter;
 
 	/**
-	 * Exports the calling tenant's whole configuration as a portable package,
-	 * with database ids replaced by local handles and secrets redacted.
+	 * Exports the calling tenant's configuration as a portable package, with
+	 * database ids replaced by local handles and secrets redacted.
 	 *
+	 * @param types the entity types to export; empty exports the whole tenant
+	 * @param includeDependencies whether to also pull in referenced entities;
+	 *                            {@code false} exports only the selected types
 	 * @return the configuration of the tenant resolved from the request
 	 */
 	@GET
 	@Path("/export")
 	@Operation(summary = "Export the current tenant's configuration")
-	public Uni<ConfigPackage> export() {
-		return configExporter.export(requireTenantId());
+	public Uni<ConfigPackage> export(
+		@QueryParam("types") List<ConfigEntityType> types,
+		@QueryParam("includeDependencies") @DefaultValue("true")
+		boolean includeDependencies) {
+
+		return configExporter.export(
+			requireTenantId(), types, includeDependencies);
 	}
 
 	/**
-	 * Imports a configuration package into the calling tenant in a single
-	 * transaction, creating or overwriting entities according to {@code mode}.
+	 * Imports a configuration package into the calling tenant, either previewing
+	 * the plan (dry-run) or applying it in a single transaction, creating or
+	 * overwriting entities according to {@code mode}.
 	 *
-	 * @param mode {@code SKIP} (default) leaves matched entities untouched,
-	 *             {@code OVERWRITE} replaces them
-	 * @param pkg  the configuration package to apply
+	 * @param mode   {@code SKIP} (default) leaves matched entities untouched,
+	 *               {@code OVERWRITE} replaces them
+	 * @param dryRun {@code true} (default) previews the plan without writing;
+	 *               {@code false} applies it
+	 * @param pkg    the configuration package to apply
 	 * @return the import report
 	 */
 	@POST
@@ -82,11 +96,12 @@ public class ConfigResource {
 	@Operation(summary = "Import a configuration package into the current tenant")
 	public Uni<ImportReport> importConfig(
 		@QueryParam("mode") @DefaultValue("SKIP") ImportMode mode,
+		@QueryParam("dryRun") @DefaultValue("true") boolean dryRun,
 		ConfigPackage pkg) {
 
 		String tenantId = requireTenantId();
 		requireValidPackage(pkg);
-		return configImporter.importConfig(tenantId, pkg, mode, false);
+		return configImporter.importConfig(tenantId, pkg, mode, dryRun);
 	}
 
 	private String requireTenantId() {

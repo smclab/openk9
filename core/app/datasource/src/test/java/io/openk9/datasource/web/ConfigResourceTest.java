@@ -57,20 +57,52 @@ public class ConfigResourceTest {
 			.statusCode(200)
 			.extract().asString();
 
-		// 2. Post the exact exported body back in SKIP mode: re-importing a
-		// tenant into itself must create nothing and skip every matched entity.
+		// 2. Post the exact exported body back in SKIP mode with dryRun=false, so
+		// the apply path actually runs: re-importing a tenant into itself must
+		// commit the plan (applied=true) yet create nothing and skip every match.
 		given()
 			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.queryParam("mode", "SKIP")
+			.queryParam("dryRun", "false")
 			.body(exported)
 			.when()
 			.post("/import")
 			.then()
 			.statusCode(200)
+			.body("applied", equalTo(true))
 			.body("created", equalTo(0))
 			.body("skipped", greaterThan(0));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void default_import_is_a_dry_run_preview() {
+		// 1. Export the current tenant's configuration over HTTP
+		String exported = given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.when()
+			.get("/export")
+			.then()
+			.statusCode(200)
+			.extract().asString();
+
+		// 2. Post it back WITHOUT a dryRun param: the new default is preview, so
+		// the report must plan the work yet write nothing (applied=false).
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body(exported)
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(200)
+			.body("dryRun", equalTo(true))
+			.body("applied", equalTo(false))
+			.body("created", equalTo(0));
 	}
 
 	@Test
