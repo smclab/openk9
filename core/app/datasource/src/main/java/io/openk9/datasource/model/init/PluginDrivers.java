@@ -59,6 +59,7 @@ public class PluginDrivers {
 				.description("Plugin Driver for Generic Crawling")
 				.type(PluginDriver.PluginDriverType.HTTP)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
+				.basePath("/urls")
 				.resourceUri(ResourceUri.builder()
 					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.CRAWLER))
 					.path("/startUrlsCrawling")
@@ -101,6 +102,7 @@ public class PluginDrivers {
 				.description("Plugin Driver for Sitemap Server")
 				.type(PluginDriver.PluginDriverType.HTTP)
 				.provisioning(PluginDriver.Provisioning.SYSTEM)
+				.basePath("/sitemap")
 				.resourceUri(ResourceUri.builder()
 					.baseUri(PresetPluginDrivers.getPluginDriver(Preset.SITEMAP))
 					.path("/startSitemapCrawling")
@@ -158,6 +160,10 @@ public class PluginDrivers {
 		baseUri.append(":");
 		baseUri.append(PORT);
 
+		if (presetConfiguration.getBasePath() != null) {
+			baseUri.append(presetConfiguration.getBasePath());
+		}
+
 		return ResourceUri.builder()
 			.baseUri(baseUri.toString())
 			.path(presetConfiguration.resourceUri.getPath())
@@ -188,6 +194,7 @@ public class PluginDrivers {
 		private ResourceUri resourceUri;
 		private PluginDriver.Provisioning provisioning;
 		private PluginDriver.PluginDriverType type;
+		private String basePath;
 	}
 
 }
