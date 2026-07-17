@@ -31,12 +31,12 @@ DATASOURCE_HOST = os.getenv("DATASOURCE_HOST", default="http://localhost:8001")
 
 def conversion(bin, tenant, configs):
     """
-    Converts a binary resource into a document object using a base64-encoded source.
+    Converts a binary resource into a document object.
 
-    This function retrieves a base64-encoded resource associated with the given
-    tenant and resource identifier, decodes it into a binary stream, determines
-    the document extension, and converts it into an internal document representation
-    using the configured document converter.
+    This function fetches the binary from the pre-signed GET URL carried in the
+    payload, determines the document extension from its bytes, and converts it
+    into an internal document representation using the configured document
+    converter.
 
     Args:
         bin (dict): A dictionary representing a binary resource. It must contain
