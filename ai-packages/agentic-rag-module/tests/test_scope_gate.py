@@ -38,7 +38,8 @@ def _graph(chunk_texts, prefix_chars, verdict=None, state_values=None):
     and _get_retrieved_context_text are spies so no real model or graph state
     is touched (keeping the test isolated from the shared langchain stubs)."""
     graph = RagGraph.__new__(RagGraph)
-    graph.output_guardrail = {"scope_gate_enabled": True}
+    graph.output_guardrail = {"enable_output_guardrail": True}
+    graph.output_guardrail_type = 3
     graph.scope_gate_prefix_chars = prefix_chars
     graph.scope_gate_redirect_message = REDIRECT
     graph.config = {}
