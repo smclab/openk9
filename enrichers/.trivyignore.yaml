@@ -1,0 +1,15 @@
+# .trivyignore.yaml — Enrichers area Trivy suppressions (Issue #2004)
+#
+# One file per pipeline area. A suppression here applies to EVERY module in this
+# area (scoping is intentionally broad — fewer files to maintain). Keep the
+# affected package/module in each statement so it stays traceable.
+#
+# NB on expired-at: Trivy parses it but does NOT auto-reactivate a CVE past the
+# date — enforcement is a separate CI check. Permanent false positives omit it.
+#
+# Format:
+#   vulnerabilities:
+#     - id: CVE-YYYY-NNNNN
+#       statement: "<why not exploitable / why no fix yet> (<module>)"
+#       expired-at: YYYY-MM-DD   # omit for permanent false positives
+vulnerabilities: []

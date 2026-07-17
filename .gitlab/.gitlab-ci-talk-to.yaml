@@ -129,8 +129,8 @@ Container Scanning:
     optional: true
   variables:
     REGISTRY_COMPONENT_NAME: "openk9-talk-to"
-    # Per-module suppressions: talk-to's own .trivyignore (not core/, Java-only).
-    IGNOREFILE: "js-packages/talk-to/.trivyignore"
+    # Area-level suppressions: this scan reads the area .trivyignore (see IGNOREFILE).
+    IGNOREFILE: "js-packages/.trivyignore.yaml"
   rules:
     # Main line + release line (push N.N.x and tag vN.N.N)
     - !reference [.rules:child-deploy-main-tag, rules]

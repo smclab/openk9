@@ -378,13 +378,13 @@ variables:
     name: $TRIVY_IMAGE
     entrypoint: [ "" ]            # the trivy image entrypoint is the binary itself
   variables:
-    GIT_STRATEGY: fetch           # checkout needed to read the module .trivyignore
+    GIT_STRATEGY: fetch           # checkout needed to read the area .trivyignore
     TRIVY_NO_PROGRESS: "true"
     TRIVY_USERNAME: "$CI_REGISTRY_USERNAME"
     TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
     # Calling job MUST set: SCAN_IMAGE (full ref with tag), COMPONENT_NAME.
     # Calling job MAY set:  IGNOREFILE (defaults to core/.trivyignore below).
-    IGNOREFILE: "core/.trivyignore"
+    IGNOREFILE: "core/.trivyignore.yaml"
   cache:
     key: "trivy-db"               # SINGLE shared key — one DB copy on the runner host disk
     paths: [ ".trivycache/" ]
@@ -399,6 +399,10 @@ variables:
     - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
         --ignore-unfixed --format json --output "trivy-$COMPONENT_NAME.json"
         --exit-code 0 "$SCAN_IMAGE"
+    # 2b) Markdown report from the JSON (human-readable artifact; Trivy has no
+    #     native md format, so we render our own template — jq is NOT in the image).
+    - trivy convert --format template --template "@.gitlab/trivy-templates/md.tpl"
+        --output "trivy-$COMPONENT_NAME.md" "trivy-$COMPONENT_NAME.json"
     # 3) CycloneDX SBOM (audit/compliance)
     - trivy image --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
         --format cyclonedx --output "sbom-$COMPONENT_NAME.cdx.json"
@@ -411,6 +415,7 @@ variables:
     expire_in: 1 week
     paths:
       - "trivy-*.json"
+      - "trivy-*.md"
       - "sbom-*.cdx.json"
 
 # ========================================
@@ -434,7 +439,7 @@ variables:
     GIT_STRATEGY: fetch
     TRIVY_NO_PROGRESS: "true"
     SCAN_DIR: "."
-    IGNOREFILE: "core/.trivyignore"
+    IGNOREFILE: "core/.trivyignore.yaml"
   cache:
     key: "trivy-db"               # same shared key as the image scans
     paths: [ ".trivycache/" ]
@@ -454,6 +459,9 @@ variables:
     - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
         --scanners vuln --offline-scan --format json --output "trivy-deps-$CI_JOB_NAME_SLUG.json"
         --exit-code 0 "$SCAN_DIR"
+    # Markdown report from the JSON (human-readable artifact; jq is NOT in the image).
+    - trivy convert --format template --template "@.gitlab/trivy-templates/md.tpl"
+        --output "trivy-deps-$CI_JOB_NAME_SLUG.md" "trivy-deps-$CI_JOB_NAME_SLUG.json"
     # GATE (Phase 2)
     - trivy fs --cache-dir "$TRIVY_CACHE_DIR" --ignorefile "$IGNOREFILE"
         --scanners vuln --offline-scan --ignore-unfixed --severity CRITICAL,HIGH
@@ -461,7 +469,7 @@ variables:
   artifacts:
     when: always
     expire_in: 1 week
-    paths: [ "trivy-deps-*.json" ]
+    paths: [ "trivy-deps-*.json", "trivy-deps-*.md" ]
 
 # ========================================
 # TRIVY IMAGE SCAN — BACKEND JAVA bridge (Issue #2004)
@@ -470,7 +478,7 @@ variables:
 # and only need to switch the extends target to this. It resolves the version
 # from the `.version` artifact (built by the module's Build job) and feeds
 # SCAN_IMAGE/COMPONENT_NAME into .trivy-image-scan. IGNOREFILE stays the shared
-# core/.trivyignore (suppressions are per-reactor, not per-module).
+# core/.trivyignore (suppressions are per-reactor / area-level, see core/.trivyignore).
 # ========================================
 .trivy-image-scan-backend:
   extends: .trivy-image-scan
@@ -494,7 +502,7 @@ variables:
     TRIVY_NO_PROGRESS: "true"
     TRIVY_USERNAME: "$CI_REGISTRY_USERNAME"
     TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
-    IGNOREFILE: "core/.trivyignore"
+    IGNOREFILE: "core/.trivyignore.yaml"
     TRIVY_IMAGE_SRC: "remote"      # read from registry, don't pull the full image to disk
   before_script:
     - source version.env
