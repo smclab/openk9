@@ -29,6 +29,24 @@
 .js_files_list: &js_files_list
   - js-packages/**/*
 
+# Trivy Ignore Expiry Check (Issue #2004)
+# Trivy parses `expired-at` in .trivyignore.yaml but does NOT enforce it — a
+# suppression with a past date keeps hiding the CVE forever. This job reads the 5
+# area files and fails when any expired-at is in the past (or malformed), forcing
+# a re-evaluation. Blocking on main + MR so an expiry is caught before merge.
+Trivy Ignore Expiry Check:
+  stage: quality
+  image: python:3.13-slim
+  before_script:
+    - pip install --no-cache-dir pyyaml
+  script:
+    - python .gitlab/trivy-templates/check-expiry.py
+  rules:
+    - !reference [.rules:antispam-new-branch, rules]
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH =~ /^\d+\.\d+\.x$/'
+
 # Trivy FS — Java dependency scan (Issue #2004, replaces OWASP dependency-check)
 # trivy fs reads the pom.xml tree statically (no `mvnw install`). Covers both
 # core/ (the app reactor) and vendor/ (hibernate-rx multitenancy lib). The actual

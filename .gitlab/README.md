@@ -60,7 +60,7 @@ OpenK9 uses a **Parent-Child CI/CD pipeline** on GitLab. The parent pipeline act
 │   ├── enrichers.yaml                 ← enricher change detection triggers
 │   ├── common.yaml                    ← connectors + Helm chart triggers
 │   ├── child-rules.yaml               ← shared job rules (MR, main, tag, feature, release)
-│   └── quality.yaml                   ← SonarQube, OWASP, pip-audit dep checks
+│   └── quality.yaml                   ← SonarQube, Trivy FS dependency scans (Java/Python/JS)
 ├── pipeline-tests/                    ← local test suites for parent + child rules
 │   ├── test-pipeline-rules.py         ← parent triggers (which domain fires)
 │   ├── test-child-rules.py            ← child job rules (Build vs Build Release vs Copy)
@@ -127,8 +127,8 @@ Each component has its own YAML file included via `trigger:`. A child pipeline d
 |---|---|---|---|---|
 | `build` | Maven build + push | Kaniko build + push | Kaniko build + push | Kaniko build + push |
 | `build-verifier` | Maven compile only (MR) | Node build (MR) | — | — |
-| `container-scanning` | Trivy scan | Trivy scan | Trivy scan | Trivy scan |
-| `dependency-check` | OWASP (via quality.yaml) | npm-audit | pip-audit (via quality.yaml) | — |
+| `container-scanning` | `trivy image` | `trivy image` | `trivy image` | `trivy image` |
+| `dependency-check` | `trivy fs` (Java, via quality.yaml) | `trivy fs` (JS, via quality.yaml) | `trivy fs` (Python, via quality.yaml) | `trivy fs` (Python, via quality.yaml) |
 | `restart` | ArgoCD restart | ArgoCD restart | ArgoCD restart | — |
 | `publish` | — | NPM publish (chatbot only) | — | — |
 | `push` | — | — | — | — |
@@ -150,8 +150,8 @@ All reusable logic lives in `.gitlab-templates.yaml`. Child pipelines use `!refe
 | `.springboot-build-logic` | API Gateway (Spring Boot + JIB) | JIB-based build + push with branch-conditional logic |
 | `.springboot-verifier-logic` | API Gateway MR jobs | Compile-only, no push |
 | `.springboot-verifier-template` | API Gateway Build Verifier | Pull-only cache on MR |
-| `.container-scanning-template` | Backend container scanning | Trivy scan via `$CS_ANALYZER_IMAGE` (v8), `allow_failure: true` |
-| `.dependency_check_frontend_template` | Frontend dep check jobs | npm-audit analyzer, scoped via `DS_PROJECT_DIR` |
+| `.trivy-image-scan` (+ `-backend`/`-frontend`/`-ai` variants) | All image scans | `trivy image` with pure `aquasec/trivy`: table (log) + JSON + Markdown + CycloneDX SBOM; area `IGNOREFILE`; gate on fixable CRITICAL/HIGH |
+| `.trivy-fs-scan` | All dependency scans | `trivy fs` (static lockfile read, `--offline-scan`): table + JSON + Markdown; area `IGNOREFILE`; gate on fixable CRITICAL/HIGH |
 | `.restart_job_template` | All restart jobs | Curl trigger to external ArgoCD pipeline with context-aware tag/namespace |
 
 ---
@@ -356,7 +356,7 @@ All Kaniko jobs use a pinned image (`gcr.io/kaniko-project/executor:v1.23.2-debu
 |---|---|---|---|
 | `main` / feature build | `$COMPONENT-mvn` | `pull-push` | Populates cache after build |
 | MR Build Verifier | `$COMPONENT-mvn` | `pull` | Read-only — protects shared cache from unreviewed code |
-| OWASP dep check | `owasp-nvd-db` | `pull-push` | Shared NVD database, not branch-specific |
+| Trivy scans (fs + image) | `trivy-db` | `pull-push` | Shared Trivy vuln DB, one copy on the runner host, not branch-specific |
 
 Each component has its own key (`datasource-mvn`, `searcher-mvn`, etc.) to avoid cross-component conflicts.
 
@@ -396,44 +396,35 @@ cache:
   policy: pull-push
 ```
 
-Dependency check jobs set `DS_PROJECT_DIR` to point the npm-audit analyzer at the specific component subdirectory. Without this, the analyzer finds the monorepo root yarn.lock, installs the entire workspace, and crashes (segfault in yarn 1.22.5 inside the analyzer container).
-
 ---
 
-## Security Scans
+## Security Scans (Issue #2004 — unified on Trivy)
 
-All scans run in the **parent pipeline** (via `quality.yaml`) or in **child pipelines** (container scanning). All are `allow_failure: true` — non-blocking, results upload to the GitLab Security Dashboard.
+All security scanning uses the **pure `aquasec/trivy` binary** (pinned via `$TRIVY_IMAGE`), replacing the previous four-tool setup (gtcs for images, OWASP for Java, npm-audit for JS, pip-audit for Python).
 
-### Container Scanning
+Two kinds of scan, split by *where the risk changes*:
 
-Every build job on `main`/tag is followed by a container scanning job using `$CS_ANALYZER_IMAGE` (`registry.gitlab.com/security-products/container-scanning:8`). It runs Trivy against the pushed image and produces a CycloneDX SBOM.
+- **Dependency scan** (`trivy fs`) — reads lockfiles/manifests **statically** (no `yarn install` / `pip install` / `mvn install`), so it does not touch the runner disk and killed the old npm-audit segfault. Runs in the **parent** (`quality.yaml`) where dependencies change.
+- **Image scan** (`trivy image`) — scans a pushed image. Runs in the **child pipelines** where an image is published.
 
-- Runs on: `main`, tag
-- Does **not** run on MR or feature branches (no image is pushed in those cases)
-- `allow_failure: true`
+This instance is **GitLab CE** (no Security Dashboard / MR security widget), so reports are optimised for what CE actually shows: a **table in the job log** + downloadable **JSON**, **Markdown** (`trivy convert` with `.gitlab/trivy-templates/md.tpl`) and **CycloneDX SBOM** artifacts.
 
-### Dependency Check — Backend (OWASP)
+Suppressions live in **5 area-level `.trivyignore.yaml` files** (`core/`, `js-packages/`, `ai-packages/`, `connectors/`, `enrichers/`), each job passing its area file via `IGNOREFILE`.
 
-`Maven Dependency Check` in `quality.yaml` runs `dependency-check:aggregate` against the Maven project to detect known vulnerable JARs (NVD database).
+### Where each scan runs
 
-- Runs on: `main` + Java file changes, MR + Java file changes, tag
-- NVD database cached under key `owasp-nvd-db`
-- `allow_failure: true`
+| Scan | Tool | Runs on | Not on |
+|---|---|---|---|
+| Dependency (`trivy fs`) | `trivy fs --offline-scan` | `main`, MR→`main`, push `N.N.x` (on relevant file changes) | tags (deps identical to `main`/`N.N.x`), feature branches |
+| Image (`trivy image`) | `trivy image` | `main`, push `N.N.x`, tag `vN.N.N` | MR, feature branches (no image pushed) |
 
-### Dependency Check — Frontend (npm-audit)
+- **Java** dep scan: one job (`Trivy FS Java`) over the `core/`+`vendor/` reactor. `--offline-scan` is mandatory — the reactor leaves versions to the remote quarkus-bom, so without it Trivy fires hundreds of pom fetches at Maven Central from an empty `.m2` → HTTP 429 + a ~30 min runner IP ban.
+- **Python** dep scan: one job per module (`ai-packages/*`, `enrichers/docling-processor`, `connectors/*`), each scanning its own dir so a CVE is attributed to the right module. Connectors now have a dep scan (they had none before).
+- **JS** dep scan: one job over `js-packages/` (the frontends share the root yarn.lock).
 
-`Dependency Check` jobs in each frontend child pipeline run the GitLab npm-audit analyzer, scoped per component via `DS_PROJECT_DIR`.
+### Gate (Phase 1 → Phase 2)
 
-- Runs on: `main` + JS file changes, MR + JS file changes
-- `allow_failure: true`
-
-### Dependency Check — Python (pip-audit)
-
-`Python Dependency Check` in `quality.yaml` installs `pip-audit` and scans all `requirements*.txt` files found under `ai-packages/` and `enrichers/`.
-
-- Runs on: `main` + Python file changes, MR + Python file changes, tag
-- `allow_failure: true`
-- Report saved as artifact `pip-audit-report.txt`
+Each scan ends with a gate step (`--exit-code 1` on **fixable** CRITICAL/HIGH, `--ignore-unfixed`). Rollout is two-phase: Phase 1 keeps `allow_failure: true` (baseline, non-blocking); Phase 2 flips it to blocking once the backlog is triaged into the `.trivyignore.yaml` files.
 
 ### SonarQube
 
@@ -549,7 +540,7 @@ sequenceDiagram
     Dev->>Git: Open / push MR
     Git->>Git: Build Verifier (compile only, no push)
     Git->>Git: SonarQube Check
-    Git->>Git: OWASP / npm-audit / pip-audit
+    Git->>Git: Trivy fs (Java / JS / Python deps)
     Git-->>Dev: Results posted to MR
 ```
 
