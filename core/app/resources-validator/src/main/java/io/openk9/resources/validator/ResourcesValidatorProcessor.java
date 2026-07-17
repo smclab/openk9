@@ -121,9 +121,9 @@ public class ResourcesValidatorProcessor {
 						if (hashCodes.size() == documentHashCodesList.size() &&
 							hashCodes.containsAll(documentHashCodesList)) {
 
-							logger.info(
-								"document found. dropped message with contentId: "
-								+ contentId);
+							logger.infof(
+								"Duplicate content '%s' already indexed, dropping message",
+								contentId);
 
 							return JsonObject.of("_openk9SkipDocument", true);
 						}
@@ -131,14 +131,16 @@ public class ResourcesValidatorProcessor {
 				}
 			}
 			else {
-				logger.info("Index wit name: " + indexName + " not exist. Item go to next enrich step.");
+				logger.debugf(
+					"Index '%s' does not exist yet, passing item to next enrich step",
+					indexName);
 			}
 
 			return JsonObject.of("hashCodes", hashCodes, "_openk9SkipDocument", false);
 
 		}
 		catch (IOException e) {
-			logger.error(e.getMessage(), e);
+			logger.errorf(e, "Failed to process resource '%s'", contentId);
 			throw new RuntimeException();
 		}
 
@@ -172,7 +174,8 @@ public class ResourcesValidatorProcessor {
 					hashCodes.add(encodedString.hashCode());
 				}
 				catch (Exception e) {
-					logger.error(e.getMessage(), e);
+					logger.errorf(
+						e, "Failed to read binary while computing hash codes");
 				}
 			}
 

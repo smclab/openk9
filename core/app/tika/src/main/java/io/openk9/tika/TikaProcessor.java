@@ -139,7 +139,7 @@ public class TikaProcessor {
 
             String name = binaryJson.getString("name");
 
-            logger.info("Processing resource with name: " + name);
+            logger.infof("Processing resource '%s'", name);
 
             try (InputStream inputStream = new BufferedInputStream(openStream(url))) {
 
@@ -147,7 +147,9 @@ public class TikaProcessor {
 
                 String metaTypeString = mediaType.toString();
 
-                logger.info("Detected type : " + metaTypeString + " for file: " + name);
+                logger.debugf(
+                    "Detected type '%s' for resource '%s'",
+                    metaTypeString, name);
 
                 if (typeMapping != null &&
                         typeMapping.containsKey(metaTypeString)) {
@@ -162,7 +164,8 @@ public class TikaProcessor {
                     Duration end =
                             Duration.between(start, Instant.now());
 
-                    logger.info("duration: " + end + " name: " + name);
+                    logger.debugf(
+                            "Parse duration for resource '%s': %s", name, end);
 
                     TikaMetadata metadata = tikaContent.getMetadata();
 
@@ -176,9 +179,8 @@ public class TikaProcessor {
                         metadata.getSingleValue("title");
 
                     if (xParsedBy != null) {
-                        logger.info(
-                                "document parsed by: " + xParsedBy +
-                                        " name: " + name);
+                        logger.debugf(
+                                "Resource '%s' parsed by '%s'", name, xParsedBy);
                     }
 
                     JsonObject responsePayload =
@@ -247,7 +249,7 @@ public class TikaProcessor {
                     document.put("content", text);
                     responsePayload.put("rawContent", text);
 
-                    logger.info("Cleaned text parsed from " + name);
+                    logger.debugf("Cleaned text parsed from resource '%s'", name);
 
                     if (text.length() > summaryLength && summaryLength > 0) {
 
@@ -269,26 +271,26 @@ public class TikaProcessor {
                             .getJsonObject(internalIndex)
                             .put("contentType", contentType);
 
-                    logger.debug(response.toString());
-
                     datasourceClient.sentToPipeline(replyTo, response.toString());
 
-                    logger.info("Send message to datasource with token: " + replyTo);
+                    logger.debugf(
+                            "Sent message to datasource with token '%s'", replyTo);
 
                     long estimatedTime = System.currentTimeMillis() - startTime;
-                    logger.info(estimatedTime);
+                    logger.debugf("Processing took %d ms", estimatedTime);
 
                     return;
 
                 }
                 else {
-                    logger.info("Skipping resource with name: " + name
-                        + " because not supported by configuration");
+                    logger.warnf(
+                        "Skipping resource '%s': type '%s' not supported by configuration",
+                        name, metaTypeString);
                 }
 
             } catch (Exception e) {
 
-                logger.error(e.getMessage(), e);
+                logger.errorf(e, "Failed to process resource '%s'", name);
 
                 throw new RuntimeException();
             }
@@ -297,10 +299,10 @@ public class TikaProcessor {
 
         datasourceClient.sentToPipeline(replyTo, jsonObject.toString());
 
-        logger.info("Send message to datasource with token: " + replyTo);
+        logger.debugf("Sent message to datasource with token '%s'", replyTo);
 
         long estimatedTime = System.currentTimeMillis() - startTime;
-        logger.info(estimatedTime);
+        logger.debugf("Processing took %d ms", estimatedTime);
 
     }
 
