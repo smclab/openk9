@@ -17,14 +17,11 @@
 
 package io.openk9.datasource.pipeline.actor.closing;
 
-import java.util.concurrent.CompletableFuture;
-
-import io.openk9.common.storage.PresignedUrlService;
 import io.openk9.common.util.ingestion.ShardingKey;
 import io.openk9.datasource.pipeline.actor.common.AggregateItem;
+import io.openk9.datasource.pipeline.service.StagedBinaryService;
 import io.openk9.datasource.pipeline.stages.closing.CloseStage;
 
-import jakarta.enterprise.inject.spi.CDI;
 import org.apache.pekko.actor.typed.ActorRef;
 import org.apache.pekko.actor.typed.Behavior;
 import org.apache.pekko.actor.typed.javadsl.AbstractBehavior;
@@ -77,12 +74,8 @@ public class DeleteBinaries extends AbstractBehavior<AggregateItem.Command> {
 		var tenantId = shardingKey.tenantId();
 		var datasourceId = start.scheduler().getDatasourceId();
 
-		PresignedUrlService storage =
-			CDI.current().select(PresignedUrlService.class).get();
-
 		getContext().pipeToSelf(
-			CompletableFuture.runAsync(
-				() -> storage.deleteByDatasource(tenantId, datasourceId)),
+			StagedBinaryService.deleteByDatasource(tenantId, datasourceId),
 			(vo1d, throwable) -> {
 				if (throwable != null) {
 					log.warnf(
