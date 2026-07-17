@@ -15,7 +15,7 @@ stages:
 #################
 Fetch version:
   stage: build
-  image: node:22.14.0-alpine
+  image: node:22.15.0-alpine
   script:
   - cd js-packages/openk9-chatbot
   - export VERSION=$(node -p "require('./package.json').version")
@@ -31,7 +31,7 @@ Fetch version:
 ######################## BUILD VERIFIER ########################
 Build Verifier:
   stage: build-verifier
-  image: node:22.14.0
+  image: node:22.15.0
   cache:
     key:
       prefix: "openk9-chatbot"
@@ -65,7 +65,7 @@ Build Verifier:
 ####################### PUBLISH OPENK9-CHATBOT #######################
 Publish OpenK9-Chatbot:
   stage: publish
-  image: node:22.14.0
+  image: node:22.15.0
   cache:
     key:
       prefix: "openk9-chatbot"
@@ -98,7 +98,7 @@ Publish OpenK9-Chatbot:
 
 Build Verifier OpenK9-Chatbot Release MR:
   stage: build-verifier
-  image: node:22.14.0
+  image: node:22.15.0
   cache:
     key:
       prefix: "openk9-chatbot"
@@ -126,7 +126,7 @@ Build Verifier OpenK9-Chatbot Release MR:
 # Library packages should not have -SNAPSHOT versions on the npm registry.
 Publish OpenK9-Chatbot Release:
   stage: publish
-  image: node:22.14.0
+  image: node:22.15.0
   cache:
     key:
       prefix: "openk9-chatbot"

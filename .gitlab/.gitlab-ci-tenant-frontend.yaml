@@ -18,7 +18,7 @@ stages:
 #################
 Fetch version:
   stage: build
-  image: node:22.14.0-alpine
+  image: node:22.15.0-alpine
   script:
   - cd js-packages/tenant-ui
   - export VERSION=$(node -p "require('./package.json').version")
@@ -202,7 +202,7 @@ Build Tenant Frontend Release:
 
 Build Verifier Tenant Frontend Release MR:
   stage: build-verifier
-  image: node:22.14.0
+  image: node:22.15.0
   cache:
     - key:
         prefix: "shared-yarn"
