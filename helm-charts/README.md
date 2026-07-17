@@ -40,7 +40,6 @@ Read more about compatibility matrix on Github.
     - [Chunk Evaluation Module](#chunk-evaluation-module)
 6. [Openk9 File Handling components installation](#file-handling-components)
     - [Minio](#minio)
-    - [File Manager](#file-manager)
     - [Tika](#tika)
     - [Docling Processor](#docling-processor)
 
@@ -1402,60 +1401,6 @@ oc port-forward -n openk9 svc/minio 9001
 
 Open browser on [http://localhost:9001](http://localhost:9001) and log in with the credentials entered in the previously created secret.
 
-
-### File Manager
-
-File Manager is the component delegated to upload and dowload binaries to Minio. It is used to save data when ingested and to download when they need to be processed.
-
-To learn more on File Manager component, read [official documentation](https://www.openk9.io/docs/file-manager).
-
-#### Main Configurations
-
-Edit your local yaml file to overwrite main configurations and configure File Manager to run correctly in your cluster.
-
-Following are main configurations to edit:
-
-```bash
-## Quarkus configuration
-quarkus:
-  HttpCors: true
-  HttpCorsOrigin: "/https://.*.openk9.local/," ## Change to configure Cors for your domain
-```
-
-For advanced configurations read [README.md](./02-file-handling/openk9-file-manager/README.md) inside File Manager chart folder.
-
-Now you can install the File Manager.
-
-For Kubernetes execute:
-
-```bash
-helm upgrade -i file-manager 02-file-handling/openk9-file-manager -n openk9 -f 02-file-handling/openk9-file-manager/scenarios/local-runtime.yaml
-```
-
-For Openshift execute:
-
-```bash
-helm upgrade -i file-manager 02-file-handling/openk9-file-manager -n openk9 -f 02-file-handling/openk9-file-manager/scenarios/local-crc.yaml
-```
-
-#### Verify Installation
-
-Expose the http interface on the host PC and use health endpoint to verify status of component.
-
-For Kubernetes execute:
-
-```bash
-kubectl -n openk9 port-forward svc/openk9-file-manager 8080:8080
-```
-
-For Openshift execute:
-
-```bash
-oc -n openk9 port-forward svc/openk9-file-manager 8080:8080
-```
-
-Access to console using url "http://localhost:8080/q/health". If status is UP service is OK.
-
 ### Tika
 
 Tika is the component delegated to parse binaries coming from external data sources. It is developed wrapping [https://tika.apache.org/](https://tika.apache.org/).
@@ -1512,7 +1457,7 @@ Access to console using url "http://localhost:8080/q/health". If status is UP se
 
 ### Docling Processor
 
-Docling Processor is the component delegated to convert binaries coming from external data sources into Markdown. It is developed wrapping [Docling](https://github.com/docling-project/docling) and depends on the File Manager (to download binaries) and the Datasource.
+Docling Processor is the component delegated to convert binaries coming from external data sources into Markdown. It is developed wrapping [Docling](https://github.com/docling-project/docling) and depends on the Datasource. It fetches binaries via the pre-signed URL from object storage (MinIO).
 
 #### Main Configurations
 
@@ -1529,9 +1474,6 @@ service:
   port: 5000
 ## OpenK9 services configuration
 openk9:
-  fileManager:
-    host: "openk9-file-manager"
-    port: 8080
   datasource:
     host: "openk9-datasource"
     port: 8080
