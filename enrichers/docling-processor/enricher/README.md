@@ -10,7 +10,7 @@ The transformation is executed in a background thread so the API returns immedia
 
 Main features:
 
-- Fetches binary files from an external File Manager
+- Fetches binary files from the pre-signed URL carried in the payload
 
 - Converts documents using Docling (`.docx`, `.pdf`, and other supported formats)
 
@@ -23,21 +23,16 @@ Main features:
 ## Quickstart
 
 ### OpenK9 Setup
-<!-- Include this in the Docker Compose:
+
+The enricher runs as part of the OpenK9 stack. Bring it up with the
+`file-handling` profile, which provides the full pre-signed-URL chain
+(MinIO, ingestion, datasource, Docling, and Tika):
 
 ```bash
-docling-processor:
-        build:
-            context: .
-            args:
-                MODE: cpu
-        env_file: .env
-        ports:
-            - "5000:5000"
-``` -->
+./k9.sh up --with=file-handling
+```
 
-The prerequisites for this enricher are:
-- A running File Manager service
+The prerequisite for this enricher is:
 - An Openk9 pipeline callback endpoint
 
 > **Build platform note:** the `cpu` mode pins `torch`/`torchvision` `+cpu`
@@ -78,7 +73,9 @@ To run the enricher in local you have to:
     uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
     ```
 5. Go to http://localhost:8001/docs and send a payload whose binaries carry a
-   `url` (a pre-signed GET URL) pointing to the file
+   `url` pointing to the file. Docling fetches each binary with a plain GET on
+   that `url`, so it only has to be reachable from the processor (any HTTP
+   source works).
 
 ## API Reference
 
@@ -109,7 +106,7 @@ Starts the background document-processing task.
 **Behavior**
 
 * Extracts binary resources from the Openk9 payload
-* Downloads them from `FM_HOST`
+* Downloads each binary from the pre-signed `url` in the payload
 * Converts them into Markdown with Docling
 * Sends results to:
 
@@ -151,7 +148,6 @@ Current implementation:
 Environment variables expected:
 
 ```
-FM_HOST=http://localhost:8000     # File Manager host
 S_HOST=http://localhost:8001      # Openk9 callback host
 ```
 ## License
