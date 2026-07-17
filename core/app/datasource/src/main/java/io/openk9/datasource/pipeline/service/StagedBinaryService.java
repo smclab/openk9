@@ -30,6 +30,7 @@ import io.quarkus.runtime.Startup;
 import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import org.jboss.logging.Logger;
 
 /**
  * Single entry point the indexing pipeline uses to reach the binaries staged on
@@ -46,6 +47,9 @@ import io.smallrye.mutiny.infrastructure.Infrastructure;
 @Startup
 @ApplicationScoped
 public class StagedBinaryService {
+
+	private static final Logger log =
+		Logger.getLogger(StagedBinaryService.class);
 
 	private static final String DELETE_BY_DATASOURCE =
 		"StagedBinaryService#deleteByDatasource";
@@ -98,6 +102,10 @@ public class StagedBinaryService {
 
 	@ConsumeEvent(DELETE_BY_DATASOURCE)
 	Uni<Void> deleteByDatasource(DeleteByDatasourceRequest request) {
+
+		log.debugf(
+			"Deleting staged binaries for datasource %s",
+			request.datasourceId());
 
 		return Uni.createFrom()
 			.<Void>item(() -> {

@@ -89,7 +89,7 @@ public class BinaryStorageService {
 								: DEFAULT_CONTENT_TYPE)
 							.build());
 
-					logger.infof("Stored binary %s in bucket %s", key, bucket);
+					logger.debugf("Stored binary %s in bucket %s", key, bucket);
 
 					return null;
 				}

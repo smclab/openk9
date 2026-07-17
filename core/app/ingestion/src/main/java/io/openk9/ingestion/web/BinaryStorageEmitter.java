@@ -60,7 +60,10 @@ public class BinaryStorageEmitter {
 					&& ingestionDTO.getResources().getBinaries() != null
 					&& !ingestionDTO.getResources().getBinaries().isEmpty()) {
 
-					logger.info("Handling binaries");
+					logger.debugf(
+						"Handling %d binaries for content %s",
+						ingestionDTO.getResources().getBinaries().size(),
+						ingestionDTO.getContentId());
 
 					long datasourceId = ingestionDTO.getDatasourceId();
 
