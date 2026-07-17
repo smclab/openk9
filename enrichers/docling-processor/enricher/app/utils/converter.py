@@ -15,7 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import base64
 import os
 from io import BytesIO
 
@@ -23,7 +22,7 @@ import requests
 from docling.document_converter import DocumentConverter
 from docling_core.types.io import DocumentStream
 
-from app.utils.format_detect import extract_extension_base64
+from app.utils.format_detect import extract_extension
 from app.utils.logger import logger
 from app.utils.pipeline_options import get_format_options
 
@@ -56,7 +55,7 @@ def conversion(bin, tenant, configs):
     response.raise_for_status()
     content = response.content
     bites = BytesIO(content)
-    extension = extract_extension_base64(base64.b64encode(content).decode())
+    extension = extract_extension(content)
     source = DocumentStream(name=f"doc.{extension}", stream=bites)
     format_options = get_format_options(configs, extension)
     converter = DocumentConverter(format_options=format_options)
