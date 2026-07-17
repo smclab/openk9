@@ -78,7 +78,7 @@ services:
     depends_on:
       - api-gateway
   tenant-manager:
-    image: ${IMAGE_GROUP:-openk9}/openk9-tenant-manager:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-tenant-manager:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-tenant-manager
     hostname: openk9-tenant-manager
     environment:
@@ -114,7 +114,7 @@ services:
       timeout: 10s
       retries: 10
   api-gateway:
-    image: ${IMAGE_GROUP:-openk9}/openk9-api-gateway:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-api-gateway:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-api-gateway
     hostname: openk-api-gateway
     environment:
@@ -135,7 +135,7 @@ services:
       timeout: 10s
       retries: 10
   datasource:
-    image: ${IMAGE_GROUP:-openk9}/openk9-datasource:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-datasource:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-datasource
     hostname: openk9-datasource
     environment:
@@ -188,7 +188,7 @@ services:
     ports:
       - 8187:8080
   ingestion:
-    image: ${IMAGE_GROUP:-openk9}/openk9-ingestion:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-ingestion:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-ingestion
     hostname: openk9-ingestion
     environment:
@@ -211,7 +211,7 @@ services:
       timeout: 10s
       retries: 10
   searcher:
-    image: ${IMAGE_GROUP:-openk9}/openk9-searcher:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-searcher:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-searcher
     hostname: openk9-searcher
     environment:
@@ -229,20 +229,20 @@ services:
       timeout: 10s
       retries: 10
   web-connector:
-    image: ${IMAGE_GROUP:-openk9}/openk9-web-connector:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-web-connector:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-web-connector
     hostname: openk9-web-connector
     ports:
       - "5001:5000"
       - "6800:6800"
   search-frontend:
-    image: ${IMAGE_GROUP:-openk9}/openk9-search-frontend:${IMAGE_TAG:-2026.1.1-SNAPSHOT-chatbot}
+    image: ${IMAGE_GROUP:-openk9}/openk9-search-frontend:${IMAGE_TAG:-2026.1.1-chatbot}
     container_name: openk9-search-frontend
   admin-ui:
-    image: ${IMAGE_GROUP:-openk9}/openk9-admin-ui:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-admin-ui:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-admin-ui
   tenant-ui:
-    image: ${IMAGE_GROUP:-openk9}/openk9-tenant-ui:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-tenant-ui:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-tenant-ui
   initializer:
     build: ./compose-utilities/initializer

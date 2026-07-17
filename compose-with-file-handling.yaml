@@ -12,7 +12,7 @@ services:
     volumes:
       - minio-data:/data
   file-manager:
-    image: ${IMAGE_GROUP:-openk9}/openk9-file-manager:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-file-manager:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-file-manager
     hostname: openk9-file-manager
     environment:
@@ -32,7 +32,7 @@ services:
       timeout: 10s
       retries: 10
   tika:
-    image: ${IMAGE_GROUP:-openk9}/openk9-tika:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-tika:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-tika
     hostname: openk9-tika
     environment:
@@ -52,13 +52,13 @@ services:
       timeout: 10s
       retries: 10
   minio-connector:
-    image: ${IMAGE_GROUP:-openk9}/openk9-minio-connector:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-minio-connector:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-minio-connector
     hostname: openk9-minio-connector
     ports:
       - "5002:5000"
   docling-processor:
-    image: ${IMAGE_GROUP:-openk9}/openk9-docling-processor:${IMAGE_TAG:-2026.1.1-SNAPSHOT}
+    image: ${IMAGE_GROUP:-openk9}/openk9-docling-processor:${IMAGE_TAG:-2026.1.1}
     container_name: openk9-docling-processor
     hostname: openk9-docling-processor
     environment:

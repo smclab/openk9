@@ -23,7 +23,7 @@ from fastapi import FastAPI, Path, Request
 
 app = FastAPI(
     title="file-manager API",
-    version="2026.1.1-SNAPSHOT",
+    version="2026.1.1",
 )
 
 USER_DOCS = {
