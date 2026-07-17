@@ -19,7 +19,7 @@ image:
   registry: ""
   name: smclab/openk9-rest-api-connector
   ## Overrides the image tag whose default is the chart appVersion.
-  tag: "2026.1.1"
+  tag: "2026.1.2-SNAPSHOT"
   ## Specify a imagePullPolicy
   ## ref: https://kubernetes.io/docs/concepts/containers/images/#pre-pulled-images
   ##

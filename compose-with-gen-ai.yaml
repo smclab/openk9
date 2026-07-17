@@ -1,6 +1,6 @@
 services:
   agentic-rag-module:
-    image: ${IMAGE_GROUP:-openk9}/openk9-agentic-rag-module:${IMAGE_TAG:-2026.1.1}
+    image: ${IMAGE_GROUP:-openk9}/openk9-agentic-rag-module:${IMAGE_TAG:-2026.1.2-SNAPSHOT}
     container_name: openk9-agentic-rag-module
     hostname: openk9-agentic-rag-module
     environment:
@@ -16,14 +16,14 @@ services:
       MAX_UPLOAD_FILES_NUMBER: "5"
       OPENK9_SECURITY_ADMIN_PASSWORD: "admin"
   evaluator:
-    image: ${IMAGE_GROUP:-openk9}/openk9-evaluator:${IMAGE_TAG:-2026.1.1}
+    image: ${IMAGE_GROUP:-openk9}/openk9-evaluator:${IMAGE_TAG:-2026.1.2-SNAPSHOT}
     container_name: openk9-evaluator
     depends_on:
       rabbitmq:
         condition: service_healthy
   evaluator-offline:
     command: uvicorn api:app --host 0.0.0.0 --port 8000
-    image: ${IMAGE_GROUP:-openk9}/openk9-evaluator:${IMAGE_TAG:-2026.1.1}
+    image: ${IMAGE_GROUP:-openk9}/openk9-evaluator:${IMAGE_TAG:-2026.1.2-SNAPSHOT}
     container_name: evaluator-offline
     ports:
     - "8000:8000"
@@ -31,11 +31,11 @@ services:
       DATASET_PREFIX: "offline-dataset"
       EXPERIMENT_PREFIX: "offline-experiment"
   embedding-module:
-    image: ${IMAGE_GROUP:-openk9}/openk9-embedding-module-base:${IMAGE_TAG:-2026.1.1}
+    image: ${IMAGE_GROUP:-openk9}/openk9-embedding-module-base:${IMAGE_TAG:-2026.1.2-SNAPSHOT}
     container_name: openk9-embedding-module
     hostname: openk9-embedding-module
     environment:
       ORIGINS: '*'
   talk-to:
-    image: ${IMAGE_GROUP:-openk9}/openk9-talk-to:${IMAGE_TAG:-2026.1.1}
+    image: ${IMAGE_GROUP:-openk9}/openk9-talk-to:${IMAGE_TAG:-2026.1.2-SNAPSHOT}
     container_name: openk9-talk-to
