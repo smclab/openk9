@@ -64,18 +64,44 @@ To run the enricher in local you have to:
     #GPU mode
     pip install -r requirements.txt
     ```
-4. Run the following commands:
+4. Start the two services, each in its own terminal:
     ```bash
     #Docling Processor
     uvicorn app.server:app --host 0.0.0.0 --port 8002
 
-    #OpenK9 mockup
+    #OpenK9 datasource/callback mock (receives the result on DATASOURCE_HOST)
     uvicorn external.doc_server:app --host 0.0.0.0 --port 8001
     ```
-5. Go to http://localhost:8001/docs and send a payload whose binaries carry a
-   `url` pointing to the file. Docling fetches each binary with a plain GET on
-   that `url`, so it only has to be reachable from the processor (any HTTP
-   source works).
+5. Serve a sample binary over HTTP so Docling can fetch it. Drop a document
+   (for example `sample.pdf`) into a directory and start Python's built-in
+   static server from that directory:
+    ```bash
+    cd /path/to/sample-dir
+    python -m http.server 8003
+    ```
+   The file is now reachable at `http://localhost:8003/sample.pdf`.
+6. Trigger a task on the processor. Open the Docling Swagger UI at
+   http://localhost:8002/docs, call `POST /start-task/`, and set each binary's
+   `url` to the static-server URL from the previous step:
+    ```json
+    {
+      "payload": {
+        "tenantId": "mrossi",
+        "resources": {
+          "binaries": [
+            {"resourceId": "doc_1", "url": "http://localhost:8003/sample.pdf"}
+          ]
+        }
+      },
+      "enrichItemConfig": {},
+      "replyTo": "fake-token"
+    }
+    ```
+   Docling fetches each binary with a plain GET on its `url`, converts it, and
+   posts the Markdown result to
+   `{DATASOURCE_HOST}/api/datasource/pipeline/callback/{replyTo}` on :8001,
+   where the mock prints it. Any HTTP source works, so the static server can be
+   swapped for any host reachable from the processor.
 
 ## API Reference
 
@@ -110,7 +136,7 @@ Starts the background document-processing task.
 * Converts them into Markdown with Docling
 * Sends results to:
 
-    `POST {S_HOST}/api/datasource/pipeline/callback/{replyTo}`
+    `POST {DATASOURCE_HOST}/api/datasource/pipeline/callback/{replyTo}`
 
 - Returns immediately :
 
@@ -148,7 +174,7 @@ Current implementation:
 Environment variables expected:
 
 ```
-S_HOST=http://localhost:8001      # Openk9 callback host
+DATASOURCE_HOST=http://localhost:8001   # Openk9 datasource/callback host
 ```
 ## License
 
