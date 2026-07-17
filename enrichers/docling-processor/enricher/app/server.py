@@ -111,6 +111,7 @@ def operation(payload, configs, token):
     logger.info("Starting process")
     if len(binaries) > 1:
         logger.info("Multiple binary")
+        failed = False
         for bin in binaries:
             try:
                 result = conversion(bin, tenant, configs)
@@ -127,13 +128,16 @@ def operation(payload, configs, token):
                 elif error_strategy == "fail-fast":
                     # invalida tutto e interrompe
                     response = {"error": "conversion failed"}
+                    failed = True
                     break
 
                 else:
                     # invalida tutto e interrompe
                     response = {"error": "conversion failed"}
+                    failed = True
                     break
-        response = {"binaries": binaries}
+        if not failed:
+            response = {"binaries": binaries}
         logger.info("Process ended")
 
     elif len(binaries) == 1:
