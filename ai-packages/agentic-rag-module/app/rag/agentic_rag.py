@@ -1703,7 +1703,10 @@ class RagGraph:
 
     def stream(self, query: str):
         try:
-            if self.output_guardrail.get("scope_gate_enabled"):
+            if (
+                self.output_guardrail.get("enable_output_guardrail")
+                and self.output_guardrail_type == 3
+            ):
                 start_chunk = True
                 result_answer = ""
                 prefix_buffer = []
@@ -2001,7 +2004,7 @@ class RagGraph:
                 if last_state.values.get("no_context_answer"):
                     result_answer = (
                         self.scope_gate_redirect_message
-                        if self.output_guardrail.get("scope_gate_enabled")
+                        if self.output_guardrail_type == 3
                         else last_state.values.get("response")
                     )
                     yield json.dumps({"chunk": "", "type": "START"})
