@@ -566,6 +566,7 @@ const useBucketData = ({
   const skipRecoveryAllInformation = bucketId !== "new";
 
   const datasourcesQuery = useDataSourcesQuery({
+    variables: { first: 1000 },
     skip: skipRecoveryAllInformation,
   });
 

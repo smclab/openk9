@@ -9265,7 +9265,7 @@ export const QueryAnalysesRulesDocument = gql`
     rules(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -10409,7 +10409,7 @@ export const SuggestionCategoryDocumentTypeFieldsDocument = gql`
       subFields(
         searchText: $searchText
         notEqual: $unassociated
-        first: 20
+        first: 1000
         after: $cursor
       ) {
         edges {
@@ -10989,7 +10989,7 @@ export const TabTokenTabsDocument = gql`
     tokenTabs(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -12733,7 +12733,7 @@ export const BucketDataSourcesDocument = gql`
     id
     tabs(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -12746,7 +12746,7 @@ export const BucketDataSourcesDocument = gql`
     }
     suggestionCategories(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -12759,7 +12759,7 @@ export const BucketDataSourcesDocument = gql`
     }
     datasources(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -12776,7 +12776,7 @@ export const BucketDataSourcesDocument = gql`
     }
     languages(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -12967,7 +12967,7 @@ export const BucketLanguagesDocument = gql`
     id
     languages(
       searchText: $searchText
-      first: 20
+      first: 1000
       after: $cursor
       notEqual: $unassociated
     ) {
@@ -13102,7 +13102,7 @@ export const BucketTabsDocument = gql`
     tabs(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -13236,7 +13236,7 @@ export const BucketSuggestionCategoriesDocument = gql`
     suggestionCategories(
       searchText: $searchText
       notEqual: $unassociated
-      first: 20
+      first: 1000
       after: $cursor
     ) {
       edges {
@@ -14380,7 +14380,7 @@ export const UnassociatedEnrichPipelineEnrichItemsDocument = gql`
     query UnassociatedEnrichPipelineEnrichItems($enrichPipelineId: ID!, $searchText: String) {
   enrichPipeline(id: $enrichPipelineId) {
     id
-    enrichItems(searchText: $searchText, not: true, first: 20) {
+    enrichItems(searchText: $searchText, not: true, first: 1000) {
       edges {
         node {
           id
