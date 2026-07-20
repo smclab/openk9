@@ -105,6 +105,7 @@ Openk9 Datasource service has specific configurations that can be customized to 
 | Name                | Description                                                                                              | Value                      |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
 | `datasource.aclQueryExtraParamsEnabled`    | Enable extra parameters for ACL queries                             | `true`            |
+| `datasource.config.redactionKeys`    | Comma-separated, case-insensitive JSON keys whose values are redacted from exported tenant configuration (env `OPENK9_DATASOURCE_CONFIG_REDACTION_KEYS`)                             | `password,pwd,passphrase,secret,token,apikey,api_key,accesskey,access_key,secretkey,secret_key,privatekey,private_key,credential,credentials,clientsecret,client_secret`            |
 
 
 ### JVM configuration

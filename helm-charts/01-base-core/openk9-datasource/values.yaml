@@ -105,6 +105,10 @@ datasource:
   client:
     pluginDriverValidationRegexes: ".*"
     enricherValidationRegexes: ".*"
+  # Comma-separated, case-insensitive JSON keys whose values are redacted
+  # from exported tenant configuration. Extend per environment as needed.
+  config:
+    redactionKeys: "password,pwd,passphrase,secret,token,apikey,api_key,accesskey,access_key,secretkey,secret_key,privatekey,private_key,credential,credentials,clientsecret,client_secret"
 
 ## QueryParser configuration
 queryAnalysis:

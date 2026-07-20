@@ -56,6 +56,7 @@ data:
   OPENK9_DATASOURCE_ACL_QUERY_EXTRA_PARAMS_ENABLED: {{ .Values.datasource.aclQueryExtraParamsEnabled | quote }}
   OPENK9_DATASOURCE_CLIENT_PLUGIN_DRIVER_VALIDATION_REGEXES: {{ .Values.datasource.client.pluginDriverValidationRegexes | quote }}
   OPENK9_DATASOURCE_CLIENT_ENRICHER_VALIDATION_REGEXES: {{ .Values.datasource.client.enricherValidationRegexes | quote }}
+  OPENK9_DATASOURCE_CONFIG_REDACTION_KEYS: {{ .Values.datasource.config.redactionKeys | quote }}
   OPENK9_DATASOURCE_QUERY_ANALYSIS_SEARCH_TEXT_LENGTH: {{ .Values.queryAnalysis.searchTextLength | quote }}
   QUARKUS_GRPC_CLIENTS__TENANTMANAGER__HOST: {{ include "helper.tenantManagerHost" . | quote }}
   QUARKUS_GRPC_CLIENTS__EMBEDDING__HOST: {{ .Values.openk9.embedding.host | quote }}
