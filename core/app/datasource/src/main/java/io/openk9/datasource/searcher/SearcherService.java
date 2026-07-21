@@ -265,7 +265,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		SearchSourceBuilder searchSourceBuilder,
 		List<DocTypeField> docTypeFieldList,
 		String language,
-		Bucket bucket) {
+		Highlight highlight) {
 
 		Set<String> includes = new HashSet<>();
 		Set<String> excludes = new HashSet<>();
@@ -331,8 +331,6 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			}
 
 		}
-
-		Highlight highlight = bucket.getHighlight();
 
 		HighlightBuilder highlightBuilder;
 
@@ -1614,7 +1612,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 			searchSourceBuilder,
 			docTypeFieldList,
 			language,
-			bucket
+			bucket.getHighlight()
 		);
 
 		List<SearchTokenRequest> searchQuery = request.getSearchQueryList();
