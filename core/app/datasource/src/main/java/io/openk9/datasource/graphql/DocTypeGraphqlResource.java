@@ -143,24 +143,29 @@ public class DocTypeGraphqlResource {
 
 			if (validatorList.isEmpty()) {
 
-				Uni<Response<DocTypeField>> result =
-					docTypeFieldId == null
-						? docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
-							.map(e -> Response.of(e.right, null))
-						: (
-							patch
-								? docTypeFieldService.patch(
-									docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
-								: docTypeFieldService.update(
-									docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
-						).map(e -> Response.of(e, null));
+				Uni<Response<DocTypeField>> result;
 
-				return result.onItemOrFailure().transform((response, t) ->
-					t != null
-						? Response.of(
-							null, List.of(FieldValidator.of("error", t.getMessage())))
-						: response);
+				if (docTypeFieldId == null) {
+					result = docTypeService.addDocTypeField(docTypeId, docTypeFieldDTO)
+						.map(e -> Response.of(e.right, null));
+				} else if (patch) {
+					result = docTypeFieldService.patch(
+							docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
+						.map(e -> Response.of(e, null));
+				} else {
+					result = docTypeFieldService.update(
+							docTypeFieldId, docTypeFieldDTO, docTypeFieldName)
+						.map(e -> Response.of(e, null));
+				}
 
+				return result.onItemOrFailure().transform(
+					(response, t) -> {
+					if (t != null) {
+						return Response.of(
+							null, List.of(FieldValidator.of("error", t.getMessage())));
+					}
+					return response;
+				});
 			}
 
 			return Uni.createFrom().item(Response.of(null, validatorList));
