@@ -22,49 +22,53 @@ import java.util.Map;
 
 import jakarta.inject.Inject;
 
+import io.openk9.common.storage.BinaryKeys;
 import io.openk9.ingestion.dto.BinaryDTO;
 import io.openk9.ingestion.dto.IngestionDTO;
 import io.openk9.ingestion.dto.ResourcesDTO;
 import io.openk9.ingestion.storage.BinaryStorageService;
 
+import io.minio.GetObjectArgs;
+import io.minio.GetObjectResponse;
+import io.minio.MinioClient;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.smallrye.mutiny.Uni;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
 
 @QuarkusTest
 class BinaryStorageEmitterTest {
 
+	private static final String TENANT_ID = "mew";
+	private static final byte[] STORED_BYTES = "some-bytes".getBytes();
+
 	@Inject
 	BinaryStorageEmitter binaryStorageEmitter;
 
-	@InjectMock
+	// the real storage bean writes to the MinIO DevServices instance
+	@Inject
 	BinaryStorageService binaryStorageService;
+
+	@Inject
+	MinioClient minioClient;
 
 	@InjectMock
 	IngestionEmitter ingestionEmitter;
 
 	@Test
-	void should_split_each_binary_into_its_own_message() {
-
-		// storage accepts every binary
-		Mockito
-			.when(binaryStorageService.store(any(), any(), any(), any()))
-			.thenReturn(Uni.createFrom().voidItem());
+	void should_split_each_binary_into_its_own_message() throws Exception {
 
 		// an ingestion request carrying two binaries to split
 		IngestionDTO ingestionDTO = IngestionDTO.builder()
 			.datasourceId(100L)
-			.tenantId("mew")
+			.tenantId(TENANT_ID)
 			.contentId("doc-1")
 			.datasourcePayload(Map.of("title", "Lorem ipsum"))
 			.resources(ResourcesDTO.builder()
@@ -77,11 +81,6 @@ class BinaryStorageEmitterTest {
 
 		// run the upload pipeline to completion
 		binaryStorageEmitter.emit(ingestionDTO).await().indefinitely();
-
-		// each binary is stored once
-		then(binaryStorageService)
-			.should(times(2))
-			.store(any(), any(), any(), any());
 
 		// one message per binary plus the original request are emitted
 		ArgumentCaptor<IngestionDTO> emitted =
@@ -107,20 +106,20 @@ class BinaryStorageEmitterTest {
 			assertEquals("", dto.getRawContent());
 			assertTrue(dto.getDatasourcePayload().containsKey("file"));
 		}
+
+		// each split binary is persisted under its key (contentId == fileId)
+		assertStored(BinaryKeys.key(100L, "f1", "f1"));
+		assertStored(BinaryKeys.key(100L, "f2", "f2"));
 	}
 
 	@Test
-	void should_emit_a_single_message_when_binaries_are_not_split() {
-
-		// storage accepts every binary
-		Mockito
-			.when(binaryStorageService.store(any(), any(), any(), any()))
-			.thenReturn(Uni.createFrom().voidItem());
+	void should_emit_a_single_message_when_binaries_are_not_split()
+		throws Exception {
 
 		// an ingestion request carrying two binaries kept together
 		IngestionDTO ingestionDTO = IngestionDTO.builder()
 			.datasourceId(100L)
-			.tenantId("mew")
+			.tenantId(TENANT_ID)
 			.contentId("doc-1")
 			.resources(ResourcesDTO.builder()
 				.splitBinaries(false)
@@ -133,11 +132,6 @@ class BinaryStorageEmitterTest {
 		// run the upload pipeline to completion
 		binaryStorageEmitter.emit(ingestionDTO).await().indefinitely();
 
-		// both binaries are stored
-		then(binaryStorageService)
-			.should(times(2))
-			.store(any(), any(), any(), any());
-
 		// only the original request is emitted, now carrying the references
 		ArgumentCaptor<IngestionDTO> emitted =
 			ArgumentCaptor.forClass(IngestionDTO.class);
@@ -148,6 +142,21 @@ class BinaryStorageEmitterTest {
 			emitted.getValue().getResources().getBinaries();
 		assertEquals(2, references.size());
 		references.forEach(reference -> assertNull(reference.getData()));
+
+		// both binaries are persisted under the shared content key
+		assertStored(BinaryKeys.key(100L, "doc-1", "f1"));
+		assertStored(BinaryKeys.key(100L, "doc-1", "f2"));
+	}
+
+	private void assertStored(String key) throws Exception {
+		String bucket =
+			BinaryKeys.bucket(TENANT_ID, BinaryKeys.DEFAULT_BUCKET_TEMPLATE);
+
+		try (GetObjectResponse response = minioClient.getObject(
+			GetObjectArgs.builder().bucket(bucket).object(key).build())) {
+
+			assertArrayEquals(STORED_BYTES, response.readAllBytes());
+		}
 	}
 
 	private static BinaryDTO binary(String id, String contentType) {

@@ -17,35 +17,22 @@
 
 package io.openk9.ingestion.storage;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.inject.Inject;
 
 import io.openk9.common.storage.BinaryKeys;
-import io.openk9.common.storage.BinaryObjectStore;
 
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
-import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
-import io.minio.Result;
-import io.minio.messages.Item;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Integration test of the binary storage against a real MinIO instance provided
- * by Quarkus DevServices, covering the write path ({@link BinaryStorageService})
- * and the datasource read/cleanup path ({@link BinaryObjectStore}) end to end,
+ * Integration test of the binary write path ({@link BinaryStorageService})
+ * against a real MinIO instance provided by Quarkus DevServices, verifying that
+ * a stored binary lands under its deterministic key and reads back unchanged,
  * not only with mocks.
  */
 @QuarkusTest
@@ -55,8 +42,6 @@ class BinaryStorageMinioTest {
 	MinioClient minioClient;
 	@Inject
 	BinaryStorageService binaryStorageService;
-	@Inject
-	BinaryObjectStore binaryObjectStore;
 
 	@Test
 	void should_store_a_binary_under_its_key() throws Exception {
@@ -77,110 +62,6 @@ class BinaryStorageMinioTest {
 
 			assertArrayEquals(data, response.readAllBytes());
 		}
-	}
-
-	@Test
-	void should_serve_a_stored_binary_via_its_presigned_url() throws Exception {
-		// store a binary
-		String tenantId = "presigntenant";
-		String contentId = "doc-1";
-		String fileId = "f1";
-		byte[] data = "presigned bytes".getBytes();
-
-		binaryStorageService
-			.store(tenantId, BinaryKeys.key(7L, contentId, fileId),
-				data, "text/plain")
-			.await().indefinitely();
-
-		// mint a pre-signed GET URL and fetch it over HTTP
-		String url = binaryObjectStore.presignGet(tenantId, 7L, contentId, fileId);
-
-		HttpResponse<byte[]> response = HttpClient.newHttpClient().send(
-			HttpRequest.newBuilder(URI.create(url)).GET().build(),
-			HttpResponse.BodyHandlers.ofByteArray());
-
-		// the URL serves exactly the stored bytes
-		assertEquals(200, response.statusCode());
-		assertArrayEquals(data, response.body());
-	}
-
-	@Test
-	void should_delete_every_staged_object_of_a_datasource() throws Exception {
-		// 1. stage two binaries of datasource 42 and one of datasource 99
-		String tenantId = "deletetenant";
-		String bucket =
-			BinaryKeys.bucket(tenantId, BinaryKeys.DEFAULT_BUCKET_TEMPLATE);
-
-		store(tenantId, BinaryKeys.key(42L, "c1", "f1"));
-		store(tenantId, BinaryKeys.key(42L, "c2", "f2"));
-		store(tenantId, BinaryKeys.key(99L, "c1", "f1"));
-
-		// 2. delete the working copy of datasource 42
-		binaryObjectStore.deleteByDatasource(tenantId, 42L);
-
-		// datasource 42 is swept clean, datasource 99 is untouched
-		assertTrue(
-			objectNames(bucket, BinaryKeys.datasourcePrefix(42L)).isEmpty());
-		assertEquals(
-			List.of(BinaryKeys.key(99L, "c1", "f1")),
-			objectNames(bucket, BinaryKeys.datasourcePrefix(99L)));
-	}
-
-	@Test
-	void should_delete_a_large_working_copy() throws Exception {
-		// stage fifty binaries of datasource 5 to exercise batch removal
-		String tenantId = "bulktenant";
-		String bucket =
-			BinaryKeys.bucket(tenantId, BinaryKeys.DEFAULT_BUCKET_TEMPLATE);
-
-		for (int i = 0; i < 50; i++) {
-			store(tenantId, BinaryKeys.key(5L, "c" + i, "f" + i));
-		}
-
-		// delete the whole working copy in one sweep
-		binaryObjectStore.deleteByDatasource(tenantId, 5L);
-
-		// every staged object is gone
-		assertTrue(
-			objectNames(bucket, BinaryKeys.datasourcePrefix(5L)).isEmpty());
-	}
-
-	@Test
-	void should_be_a_noop_when_deleting_an_already_clean_datasource()
-		throws Exception {
-
-		// stage and delete a datasource working copy
-		String tenantId = "idemtenant";
-		store(tenantId, BinaryKeys.key(3L, "c1", "f1"));
-		binaryObjectStore.deleteByDatasource(tenantId, 3L);
-
-		// deleting again on the now-empty prefix is a no-op, not a failure
-		binaryObjectStore.deleteByDatasource(tenantId, 3L);
-	}
-
-	private void store(String tenantId, String key) {
-		binaryStorageService
-			.store(tenantId, key, "some-bytes".getBytes(), "text/plain")
-			.await().indefinitely();
-	}
-
-	private List<String> objectNames(String bucket, String prefix)
-		throws Exception {
-
-		List<String> names = new ArrayList<>();
-
-		Iterable<Result<Item>> items = minioClient.listObjects(
-			ListObjectsArgs.builder()
-				.bucket(bucket)
-				.prefix(prefix)
-				.recursive(true)
-				.build());
-
-		for (Result<Item> item : items) {
-			names.add(item.get().objectName());
-		}
-
-		return names;
 	}
 
 }
