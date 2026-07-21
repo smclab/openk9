@@ -17,56 +17,12 @@
 
 
 import json
-import os
-import sys
-import tempfile
 from unittest.mock import MagicMock
 
-# ---------------------------------------------------------------------------
-# app.server runs a lot at import time: it reads env vars, creates the upload
-# directory and imports the full RAG/langchain/phoenix/grpc stack. Set the
-# mandatory env vars and stub the heavy, non-installed modules BEFORE importing
-# it, keeping fastapi / opensearchpy real (they back TestClient and the patched
-# OpenSearch client).
-# ---------------------------------------------------------------------------
-os.environ.setdefault("ORIGINS", "http://localhost")
-os.environ.setdefault("OPENSEARCH_HOST", "http://localhost:9200")
-os.environ.setdefault("UPLOAD_DIR", tempfile.mkdtemp())
-os.environ.setdefault("UPLOAD_FILE_EXTENSIONS", "")
-os.environ.setdefault("MAX_UPLOAD_FILE_SIZE", "10")
-os.environ.setdefault("MAX_UPLOAD_FILES_NUMBER", "5")
+import pytest
+from fastapi.testclient import TestClient
 
-# Stub only leaf modules: app.rag / app.external_services are PEP 420 namespace
-# packages that sibling tests import for real, so they must not be shadowed.
-_STUBS = [
-    "uvicorn",
-    "dotenv",
-    "jwt",
-    "phoenix",
-    "phoenix.otel",
-    "sse_starlette",
-    "sse_starlette.sse",
-    "app.external_services.grpc.grpc_client",
-    "app.rag.chain",
-    "app.rag.evaluations",
-    "app.utils.embedding",
-    "app.utils.file_upload",
-    "app.utils.scheduler",
-]
-_added = [name for name in _STUBS if name not in sys.modules]
-for name in _added:
-    sys.modules[name] = MagicMock()
-
-import pytest  # noqa: E402
-from fastapi.testclient import TestClient  # noqa: E402
-
-import app.server as server  # noqa: E402
-
-# app.server has bound the names it needs; drop the app.* stubs so sibling test
-# modules collected later in the session import the real submodules.
-for name in _added:
-    if name.startswith("app."):
-        del sys.modules[name]
+import app.server as server
 
 CHAT_ID = "chat-123"
 HEADERS = {"authorization": "Bearer fake-token", "x-tenant-id": "tenant-1"}

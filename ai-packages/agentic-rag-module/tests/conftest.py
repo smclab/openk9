@@ -16,7 +16,9 @@
 #
 
 
+import os
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -25,8 +27,20 @@ MODULE_ROOT = Path(__file__).resolve().parent.parent
 if str(MODULE_ROOT) not in sys.path:
     sys.path.insert(0, str(MODULE_ROOT))
 
-# Stub heavy third-party dependencies so that app modules can be imported
-# without installing the full requirements (and without cloud credentials).
+# app.server reads these at import time (reading the upload config and creating
+# the upload directory). Set them once for the whole session so any test module
+# can `import app.server` without repeating the setup.
+os.environ.setdefault("ORIGINS", "http://localhost")
+os.environ.setdefault("OPENSEARCH_HOST", "http://localhost:9200")
+os.environ.setdefault("UPLOAD_DIR", tempfile.mkdtemp())
+os.environ.setdefault("UPLOAD_FILE_EXTENSIONS", "")
+os.environ.setdefault("MAX_UPLOAD_FILE_SIZE", "10")
+os.environ.setdefault("MAX_UPLOAD_FILES_NUMBER", "5")
+
+# Stub the LLM layer (and the cloud SDKs it pulls in) so app modules import
+# without cloud credentials. Applied once, session-wide, and never removed:
+# per-module stubbing that mutated sys.modules mid-session leaked mocks into
+# sibling test modules and made the suite order-dependent.
 _STUBBED_MODULES = [
     "langchain_aws",
     "langchain_classic",

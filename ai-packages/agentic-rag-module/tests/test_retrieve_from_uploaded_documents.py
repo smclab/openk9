@@ -18,6 +18,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from app.rag import agentic_rag
 from app.rag.agentic_rag import GraphState, RagGraph
 from app.rag.retrievers import uploaded_documents_retriever
 from app.rag.retrievers.uploaded_documents_retriever import (
@@ -102,12 +103,18 @@ def test_history_handler_preserves_flag_on_followup_turn():
     rag_graph.chat_sequence_number = 2
     rag_graph.user_id = "user-1"
     rag_graph.chat_id = "chat-1"
-    rag_graph._load_messages_from_checkpoints = MagicMock(return_value=[])
+    rag_graph.graph = MagicMock()
+    rag_graph.config = {}
     rag_graph._load_domain_from_checkpoints = MagicMock(return_value=None)
 
-    # On follow-up turns the value resumed from the checkpoint must not be lost.
-    state = rag_graph.history_handler_node(
-        GraphState(retrieve_from_uploaded_documents=True)
-    )
+    # On follow-up turns the value resumed from the checkpoint must not be lost:
+    # the node reloads the history but must leave retrieve_from_uploaded_documents
+    # untouched.
+    with patch.object(
+        agentic_rag, "load_messages_from_snapshot", return_value=[]
+    ):
+        state = rag_graph.history_handler_node(
+            GraphState(retrieve_from_uploaded_documents=True)
+        )
 
     assert state.retrieve_from_uploaded_documents is True

@@ -22,61 +22,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# agentic_rag pulls in a large third-party import graph (langgraph, opensearch,
-# phoenix, ...). We only need the pure logic of history_saver_node, so stub the
-# heavy modules before importing, mirroring the approach in conftest.py.
-_HEAVY = [
-    "app.external_services",
-    "app.external_services.grpc",
-    "app.external_services.grpc.grpc_client",
-    "app.models",
-    "app.models.models",
-    "app.rag.retrievers",
-    "app.rag.retrievers.domain_documents_retriever",
-    "app.rag.retrievers.guardrail_documents_retriever",
-    "app.rag.retrievers.retriever",
-    "app.rag.retrievers.uploaded_documents_retriever",
-    "app.utils.authentication",
-    "app.utils.conversation_history",
-    "app.utils.guardrails",
-    "app.utils.logger",
-    "IPython",
-    "IPython.display",
-    "langchain_core",
-    "langchain_core.documents",
-    "langchain_core.messages",
-    "langchain_core.output_parsers",
-    "langchain_core.output_parsers.string",
-    "langchain_core.prompts",
-    "langgraph",
-    "langgraph.checkpoint",
-    "langgraph.checkpoint.memory",
-    "langgraph.checkpoint.opensearch",
-    "langgraph.graph",
-    "langgraph.graph.message",
-    "opensearchpy",
-    "phoenix",
-    "phoenix.evals",
-]
-for _name in _HEAVY:
-    sys.modules.setdefault(_name, MagicMock())
-
-
-class _Msg:
-    """Minimal stand-in for langchain HumanMessage / AIMessage."""
-
-    def __init__(self, content):
-        self.content = content
-
-
-sys.modules["langchain_core.messages"].HumanMessage = _Msg
-sys.modules["langchain_core.messages"].AIMessage = _Msg
-sys.modules["langchain_core.messages"].SystemMessage = _Msg
-# Used only as Annotated metadata / as a field type on GraphState.
-sys.modules["langgraph.graph.message"].add_messages = object()
-sys.modules["langchain_core.documents"].Document = dict
-
-from app.rag.agentic_rag import GraphState, RagGraph  # noqa: E402
+from app.rag.agentic_rag import GraphState, RagGraph
 
 
 def _fake_self(*, sequence_number, generated_title="GENERATED TITLE"):
