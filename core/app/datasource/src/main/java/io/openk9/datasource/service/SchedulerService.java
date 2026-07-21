@@ -318,42 +318,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		);
 	}
 
-	/**
-	 * Retrieves the job status for a list of datasources.
-	 *
-	 * <p>This method queries the database for active {@code Scheduler} instances associated with
-	 * the provided datasource IDs. If a datasource is found in a running state,
-	 * a {@link io.openk9.datasource.service.SchedulerService.DatasourceJobStatus} instance is created
-	 * with the status {@link  JobStatus#TRIGGER_RUNNING}.
-	 * Otherwise, it defaults to {@link JobStatus#NOT_RUNNING}.
-	 *
-	 * @param datasourceIds the list of datasource IDs to check
-	 * @return a {@code Uni<List<DatasourceJobStatus>>} where each datasource ID is mapped
-	 *         to its corresponding job status
-	 * @deprecated Replaced by {@link #getJobStatus(Long)} which uses unique datasource id.
-	 *         Since only one scheduler per datasource can now be in running state,
-	 *         this method is no longer necessary.
-	 */
-	@Deprecated
-	public Uni<List<DatasourceJobStatus>> getJobStatusList(List<Long> datasourceIds) {
-
-		return sessionFactory.withTransaction((session, transaction) -> session
-			.createQuery(
-				"""
-					SELECT d.id, d.name, s.status
-					FROM Datasource d
-					LEFT JOIN d.schedulers s ON s.status IN :runningStates
-					WHERE d.id IN :datasourceIds
-					""",
-				Tuple.class
-			)
-			.setParameter("datasourceIds", datasourceIds)
-			.setParameter("runningStates", Scheduler.RUNNING_STATES_SET)
-			.getResultList()
-			.map(this::mapToJobStatusList)
-		);
-	}
-
 	public Uni<DataIndex> getNewDataIndex(Scheduler scheduler) {
 		return sessionFactory.withTransaction(s -> findById(s, scheduler.getId())
 			.flatMap(found -> s.fetch(found.getNewDataIndex()))
@@ -484,38 +448,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 		return reindex ? JobStatus.REINDEX_RUNNING : JobStatus.TRIGGER_RUNNING;
 	}
 
-	/**
-	 * Transforms a list of raw JPA query results into a list of {@link DatasourceJobStatus} DTOs.
-	 * <p>
-	 * This method iterates through each {@link jakarta.persistence.Tuple} and extracts the raw
-	 * datasource and scheduler data. It delegates the mapping of the internal
-	 * {@link Scheduler.SchedulerStatus} to a simplified, client-facing {@link JobStatus}
-	 * by calling the {@code getJobStatus} helper method.
-	 *
-	 * @param tuples The list of raw tuples from the database query, conforming to the expected structure.
-	 * @return A final, mapped list of {@link DatasourceJobStatus} objects.
-	 */
-	@Deprecated
-	private List<DatasourceJobStatus> mapToJobStatusList(List<Tuple> tuples) {
-
-		List<DatasourceJobStatus> jobStatusList = new ArrayList<>();
-
-		for (Tuple tuple : tuples) {
-			var schedulerId = tuple.get(2, Scheduler.SchedulerStatus.class);
-			var jobStatus = getJobStatus(schedulerId);
-
-			var datasourceJobStatus = new DatasourceJobStatus(
-				tuple.get(0, Long.class),
-				tuple.get(1, String.class),
-				jobStatus
-			);
-
-			jobStatusList.add(datasourceJobStatus);
-		}
-
-		return jobStatusList;
-	}
-
 	private List<String> mapToList(SearchResponse searchResponse) {
 		return searchResponse
 			.getAggregations()
@@ -544,8 +476,6 @@ public class SchedulerService extends BaseK9EntityService<Scheduler, SchedulerDT
 	}
 
 	public record DatasourceHealthStatus(long id, String name, HealthStatus status) {}
-
-	public record DatasourceJobStatus(long id, String name, JobStatus status) {}
 
 	public record TriggerResponse(
 		JobStatus oldJobStatus,
