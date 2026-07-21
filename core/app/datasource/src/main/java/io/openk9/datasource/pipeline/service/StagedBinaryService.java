@@ -23,7 +23,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
-import io.openk9.common.storage.PresignedUrlService;
+import io.openk9.common.storage.BinaryObjectStore;
 import io.openk9.quarkus.common.EventBusInstanceHolder;
 
 import io.quarkus.runtime.Startup;
@@ -57,7 +57,7 @@ public class StagedBinaryService {
 	private static volatile StagedBinaryService instance;
 
 	@Inject
-	PresignedUrlService presignedUrlService;
+	BinaryObjectStore binaryObjectStore;
 
 	@PostConstruct
 	void init() {
@@ -76,7 +76,7 @@ public class StagedBinaryService {
 	public static String presignGet(
 		String tenantId, long datasourceId, String contentId, String fileId) {
 
-		return instance.presignedUrlService.presignGet(
+		return instance.binaryObjectStore.presignGet(
 			tenantId, datasourceId, contentId, fileId);
 	}
 
@@ -109,7 +109,7 @@ public class StagedBinaryService {
 
 		return Uni.createFrom()
 			.<Void>item(() -> {
-				presignedUrlService.deleteByDatasource(
+				binaryObjectStore.deleteByDatasource(
 					request.tenantId(), request.datasourceId());
 
 				return null;

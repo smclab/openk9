@@ -27,7 +27,7 @@ import java.util.List;
 import jakarta.inject.Inject;
 
 import io.openk9.common.storage.BinaryKeys;
-import io.openk9.common.storage.PresignedUrlService;
+import io.openk9.common.storage.BinaryObjectStore;
 
 import io.minio.GetObjectArgs;
 import io.minio.GetObjectResponse;
@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Integration test of the binary storage against a real MinIO instance provided
  * by Quarkus DevServices, covering the write path ({@link BinaryStorageService})
- * and the datasource read/cleanup path ({@link PresignedUrlService}) end to end,
+ * and the datasource read/cleanup path ({@link BinaryObjectStore}) end to end,
  * not only with mocks.
  */
 @QuarkusTest
@@ -56,7 +56,7 @@ class BinaryStorageMinioTest {
 	@Inject
 	BinaryStorageService binaryStorageService;
 	@Inject
-	PresignedUrlService presignedUrlService;
+	BinaryObjectStore binaryObjectStore;
 
 	@Test
 	void should_store_a_binary_under_its_key() throws Exception {
@@ -93,7 +93,7 @@ class BinaryStorageMinioTest {
 			.await().indefinitely();
 
 		// mint a pre-signed GET URL and fetch it over HTTP
-		String url = presignedUrlService.presignGet(tenantId, 7L, contentId, fileId);
+		String url = binaryObjectStore.presignGet(tenantId, 7L, contentId, fileId);
 
 		HttpResponse<byte[]> response = HttpClient.newHttpClient().send(
 			HttpRequest.newBuilder(URI.create(url)).GET().build(),
@@ -116,7 +116,7 @@ class BinaryStorageMinioTest {
 		store(tenantId, BinaryKeys.key(99L, "c1", "f1"));
 
 		// 2. delete the working copy of datasource 42
-		presignedUrlService.deleteByDatasource(tenantId, 42L);
+		binaryObjectStore.deleteByDatasource(tenantId, 42L);
 
 		// datasource 42 is swept clean, datasource 99 is untouched
 		assertTrue(
@@ -138,7 +138,7 @@ class BinaryStorageMinioTest {
 		}
 
 		// delete the whole working copy in one sweep
-		presignedUrlService.deleteByDatasource(tenantId, 5L);
+		binaryObjectStore.deleteByDatasource(tenantId, 5L);
 
 		// every staged object is gone
 		assertTrue(
@@ -152,10 +152,10 @@ class BinaryStorageMinioTest {
 		// stage and delete a datasource working copy
 		String tenantId = "idemtenant";
 		store(tenantId, BinaryKeys.key(3L, "c1", "f1"));
-		presignedUrlService.deleteByDatasource(tenantId, 3L);
+		binaryObjectStore.deleteByDatasource(tenantId, 3L);
 
 		// deleting again on the now-empty prefix is a no-op, not a failure
-		presignedUrlService.deleteByDatasource(tenantId, 3L);
+		binaryObjectStore.deleteByDatasource(tenantId, 3L);
 	}
 
 	private void store(String tenantId, String key) {

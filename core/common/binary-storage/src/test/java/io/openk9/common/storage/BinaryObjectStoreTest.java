@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.minio.MinioClient;
 import org.junit.jupiter.api.Test;
 
-class PresignedUrlServiceTest {
+class BinaryObjectStoreTest {
 
-	private static PresignedUrlService service(String bucketTemplate) {
+	private static BinaryObjectStore service(String bucketTemplate) {
 		// region pinned so the SigV4 signature is computed locally, with no
 		// network round-trip to discover the bucket region.
 		MinioClient client = MinioClient
@@ -35,7 +35,7 @@ class PresignedUrlServiceTest {
 			.credentials("test-access", "test-secret")
 			.build();
 
-		return new PresignedUrlService(client, bucketTemplate, 120);
+		return new BinaryObjectStore(client, bucketTemplate, 120);
 	}
 
 	@Test

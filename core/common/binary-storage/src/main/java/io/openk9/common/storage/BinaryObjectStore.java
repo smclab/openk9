@@ -37,9 +37,13 @@ import io.minio.messages.Item;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * Issues short-lived pre-signed GET URLs for binaries on the object storage.
- * The signature is a local SigV4 computation (no call to the storage), so a
- * fresh URL can be minted on every enricher invocation and retry without I/O.
+ * Object-storage gateway for the binaries staged during indexing: it mints the
+ * short-lived pre-signed GET URLs the enrichers read them with, and drops the
+ * whole working copy of a datasource once its scheduling has closed.
+ *
+ * <p>URL signing is a local SigV4 computation (no call to the storage), so a
+ * fresh URL can be minted on every enricher invocation and retry without I/O;
+ * deletion, by contrast, lists and removes the objects and is blocking.
  *
  * <p>The URL is a bearer credential: it must have a short expiry and must
  * never be logged. Being standard SigV4, it works against any S3-compatible
@@ -47,14 +51,14 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
  * reachable by whoever downloads.
  */
 @ApplicationScoped
-public class PresignedUrlService {
+public class BinaryObjectStore {
 
 	private final MinioClient minioClient;
 	private final String bucketTemplate;
 	private final int expirySeconds;
 
 	@Inject
-	public PresignedUrlService(
+	public BinaryObjectStore(
 		MinioClient minioClient,
 		@ConfigProperty(
 			name = "openk9.binaries.bucket-template",

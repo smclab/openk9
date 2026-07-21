@@ -38,10 +38,10 @@ import io.minio.messages.Item;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-class PresignedUrlServiceDeleteTest {
+class BinaryObjectStoreDeleteTest {
 
-	private static PresignedUrlService service(MinioClient client) {
-		return new PresignedUrlService(
+	private static BinaryObjectStore service(MinioClient client) {
+		return new BinaryObjectStore(
 			client, BinaryKeys.DEFAULT_BUCKET_TEMPLATE, 120);
 	}
 
