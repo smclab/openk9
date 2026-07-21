@@ -17,28 +17,25 @@
 
 """Vector quantization primitives for the embedding module.
 
-Each quantizer L2-normalizes its input first, so the fixed symmetric
-range [-1, +1] is safe for int8 quantization and the sign threshold is
-meaningful for the binary arm. Quantizing here (rather than relying on
-the provider) keeps a single code path across providers. The int8 range
-is fixed and there is no centroid: per-tenant re-centering is out of
-Phase 1.
-
-FLOAT32 is not a quantized arm: the caller passes the raw float vector
-through unchanged. Selecting the arm from the contract's vectorDataType
-is done by the RPC wiring (C2/C3), which switches on the generated
-embedding.VectorDataType enum directly.
+The int8 arm L2-normalizes first, so the fixed symmetric range [-1, +1]
+is safe; the binary arm keeps only the component sign and needs no
+normalization. The int8 range is fixed and there is no centroid
+subtraction.
 """
 
 import numpy as np
 
 
 def l2_normalize(vector) -> np.ndarray:
-    """Returns the L2-normalized copy of the vector as float32.
+    """Scales the vector to unit L2 norm, returned as float32.
 
-    Normalization is idempotent, which makes quantization independent
-    from whether the provider already normalizes its output. A zero
-    vector is returned unchanged (no division by zero).
+    Divides every component by the Euclidean norm
+    ``||v|| = sqrt(sum(v_i ** 2))``, so the result has length 1 (its
+    squares sum to 1).
+
+    Normalization is idempotent, so quantization does not depend on
+    whether the provider already normalizes its output.
+    A zero vector is returned unchanged.
     """
     array = np.asarray(vector, dtype=np.float32)
     norm = np.linalg.norm(array)
@@ -52,23 +49,20 @@ def l2_normalize(vector) -> np.ndarray:
 def quantize_int8(vector) -> bytes:
     """L2-normalizes, then scalar int8 quantization over [-1, +1].
 
-    Maps [-1, +1] linearly onto [-127, 127]; with L2-normalized input no
-    component can clip. Returns one signed byte per component.
+    Maps [-1, +1] linearly onto [-127, 127], one signed byte per
+    component.
     """
     normalized = l2_normalize(vector)
-    scaled = np.clip(np.rint(normalized * 127.0), -127, 127)
+    scaled = np.rint(normalized * 127.0)
 
     return scaled.astype(np.int8).tobytes()
 
 
 def quantize_binary(vector) -> bytes:
-    """L2-normalizes, then binary quantization: one sign bit per
+    """Binary quantization: one sign bit per
     component, packed MSB-first.
 
-    Normalization is applied for uniformity with the int8 arm; the packed
-    output depends only on the component signs, which normalization
-    preserves. The dimension must be a multiple of 8, as required by
-    OpenSearch binary knn_vector fields.
+    The dimension must be a multiple of 8.
     """
     array = np.asarray(vector, dtype=np.float32)
 
@@ -77,6 +71,6 @@ def quantize_binary(vector) -> bytes:
             f"binary quantization needs a dimension multiple of 8, got {array.size}"
         )
 
-    bits = (l2_normalize(array) > 0.0).astype(np.uint8)
+    bits = (array > 0.0).astype(np.uint8)
 
     return np.packbits(bits).tobytes()

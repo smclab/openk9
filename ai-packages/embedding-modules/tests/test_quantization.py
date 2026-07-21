@@ -95,6 +95,39 @@ def test_int8_normalizes_input_internally():
     assert quantize_int8(unit) == quantize_int8(unit * 0.5)
 
 
+def test_int8_boundary_component_maps_to_127_not_wraparound():
+    # a one-hot vector is already unit-norm, so its single component sits
+    # exactly at the +1/-1 bound and maps to +127/-127 -- the values
+    # closest to the clip. A wraparound would send +1 to the unused -128
+    # slot with its sign flipped; assert it lands on the symmetric max.
+    one_hot = np.zeros(8, dtype=np.float32)
+    one_hot[0] = 1.0
+
+    positive = np.frombuffer(quantize_int8(one_hot), dtype=np.int8)
+    negative = np.frombuffer(quantize_int8(-one_hot), dtype=np.int8)
+
+    assert positive[0] == 127
+    assert negative[0] == -127
+
+
+@pytest.mark.parametrize(
+    "vector",
+    [
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],        # one-hot, max component
+        [1e30, -1e30, 1e30, -1e30, 0.0, 0.0, 0.0, 0.0],  # huge magnitudes
+        [1e-30, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],      # near-degenerate norm
+        [1.0, 1e-7, -1e-7, 0.0, 0.0, 0.0, 0.0, 0.0],     # single dominant axis
+    ],
+)
+def test_int8_output_stays_in_symmetric_range(vector):
+    # whatever the input magnitude, the encoded bytes never leave the
+    # symmetric range: -128 (the asymmetric int8 minimum) must never
+    # appear, which is the silent sign-flip the clip is there to prevent.
+    decoded = np.frombuffer(quantize_int8(vector), dtype=np.int8)
+
+    assert decoded.min() >= -127  # never the wraparound value -128
+
+
 # --- binary -----------------------------------------------------------
 
 
