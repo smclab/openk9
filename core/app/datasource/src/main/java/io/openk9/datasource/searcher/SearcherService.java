@@ -384,7 +384,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		// fields
 		for (DocTypeField docTypeField : highlight.getFields()) {
 			HighlightBuilder.Field field =
-				new HighlightBuilder.Field(docTypeField.getName());
+				new HighlightBuilder.Field(docTypeField.getPath());
 
 			// matchedFields for type FVH
 			if (highlight.getType() == Highlight.HighlightType.FVH) {
@@ -392,13 +392,13 @@ public class SearcherService extends BaseSearchService implements Searcher {
 					.stream()
 					.filter(child ->
 						child.getOffsetSource() == DocTypeField.OffsetSourceType.TERM_VECTOR)
-					.map(DocTypeField::getName)
+					.map(DocTypeField::getPath)
 					.collect(Collectors.toList());
 
 				if (!matchedFields.isEmpty()) {
 					// the highlighted field itself must be among the matched_fields,
 					// alongside its children
-					matchedFields.addFirst(docTypeField.getName());
+					matchedFields.addFirst(docTypeField.getPath());
 					field.matchedFields(matchedFields.toArray(String[]::new));
 				}
 			}
