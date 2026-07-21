@@ -19,15 +19,17 @@ import numpy as np
 import pytest
 
 from app.embedding.quantization import (
-    VECTOR_DATA_TYPE_BINARY,
-    VECTOR_DATA_TYPE_BYTE,
-    VECTOR_DATA_TYPE_FLOAT32,
-    dequantize_int8,
     l2_normalize,
-    quantize,
     quantize_binary,
     quantize_int8,
 )
+
+
+def dequantize_int8(data: bytes) -> np.ndarray:
+    """Inverse of quantize_int8; test-only, to measure roundtrip error."""
+    array = np.frombuffer(data, dtype=np.int8).astype(np.float32)
+
+    return array / 127.0
 
 
 # --- L2 normalization -------------------------------------------------
@@ -85,6 +87,14 @@ def test_int8_preserves_nearest_neighbour_ranking():
     assert hits / len(queries) >= 0.9
 
 
+def test_int8_normalizes_input_internally():
+    unit = np.array([0.6, 0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+
+    # halving the magnitude must not change the output: quantize_int8
+    # L2-normalizes internally, collapsing both to the same unit vector
+    assert quantize_int8(unit) == quantize_int8(unit * 0.5)
+
+
 # --- binary -----------------------------------------------------------
 
 
@@ -100,40 +110,3 @@ def test_binary_packs_signs_msb_first():
 def test_binary_requires_dimension_multiple_of_8():
     with pytest.raises(ValueError):
         quantize_binary(np.ones(10))
-
-
-# --- dispatcher (selection from vectorDataType) -----------------------
-
-
-def test_quantize_float32_returns_plain_floats():
-    vector = [1.0, 2.0, 3.0, 4.0]
-
-    result = quantize(vector, VECTOR_DATA_TYPE_FLOAT32)
-
-    assert isinstance(result, list)
-    assert all(isinstance(component, float) for component in result)
-    assert result == pytest.approx(vector)
-
-
-def test_quantize_byte_normalizes_then_int8():
-    vector = [3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-
-    result = quantize(vector, VECTOR_DATA_TYPE_BYTE)
-
-    # one signed byte per component, normalized before quantization
-    assert result == quantize_int8(l2_normalize(vector))
-    assert len(result) == len(vector)
-
-
-def test_quantize_binary_normalizes_then_packs():
-    vector = [3.0, -4.0, 1.0, -1.0, 2.0, -2.0, 5.0, -5.0]
-
-    result = quantize(vector, VECTOR_DATA_TYPE_BINARY)
-
-    assert result == quantize_binary(l2_normalize(vector))
-    assert len(result) == len(vector) // 8
-
-
-def test_quantize_rejects_unknown_type():
-    with pytest.raises(ValueError):
-        quantize([0.0] * 8, 99)
