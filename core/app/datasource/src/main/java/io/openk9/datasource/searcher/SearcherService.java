@@ -335,7 +335,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 		HighlightBuilder highlightBuilder;
 
 		if (highlight == null) {
-			highlightBuilder = defaultHighlightBuilder(highlightFields);
+			highlightBuilder = defaultHighlightConfiguration(highlightFields);
 		}
 		else {
 			highlightBuilder = buildConfiguredHighlight(highlight);
@@ -351,7 +351,7 @@ public class SearcherService extends BaseSearchService implements Searcher {
 
 	}
 
-	private static HighlightBuilder defaultHighlightBuilder(
+	private static HighlightBuilder defaultHighlightConfiguration(
 		Set<HighlightBuilder.Field> highlightFields) {
 
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
