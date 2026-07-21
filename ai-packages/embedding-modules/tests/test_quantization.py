@@ -26,7 +26,12 @@ from app.embedding.quantization import (
 
 
 def dequantize_int8(data: bytes) -> np.ndarray:
-    """Inverse of quantize_int8; test-only, to measure roundtrip error."""
+    """Decode int8 bytes back to floats in [-1, 1]; test-only.
+
+    Reverses quantize_int8 (divide by 127) so a test can compare the
+    decoded vector against the original and measure how much precision
+    the int8 encoding lost (the "roundtrip error").
+    """
     array = np.frombuffer(data, dtype=np.int8).astype(np.float32)
 
     return array / 127.0
@@ -55,12 +60,19 @@ def test_l2_normalization_of_zero_vector_is_safe():
 
 
 def test_int8_roundtrip_error_is_bounded():
+    # int8 quantization is lossy: each component of a unit vector (a float
+    # in [-1, 1]) is rounded to one of 255 integer levels (-127..127), so
+    # precision is thrown away. "Roundtrip" = encode then decode back to
+    # float; the roundtrip error is how far the decoded value drifted from
+    # the original. This asserts the loss is no larger than it must be, so
+    # a broken scale factor, missing rounding, or wrong dtype would fail.
     rng = np.random.default_rng(42)
     vector = l2_normalize(rng.normal(size=1024))
 
     restored = dequantize_int8(quantize_int8(vector))
 
-    # half a quantization step over [-1, 1] mapped on 127 levels
+    # quantize rounds c*127 to the nearest integer (error <= 0.5); dividing
+    # back by 127 bounds the per-component error at 0.5/127. +1e-6 is slack.
     assert np.max(np.abs(restored - vector)) <= 0.5 / 127.0 + 1e-6
 
 
@@ -95,11 +107,12 @@ def test_int8_normalizes_input_internally():
     assert quantize_int8(unit) == quantize_int8(unit * 0.5)
 
 
-def test_int8_boundary_component_maps_to_127_not_wraparound():
-    # a one-hot vector is already unit-norm, so its single component sits
-    # exactly at the +1/-1 bound and maps to +127/-127 -- the values
-    # closest to the clip. A wraparound would send +1 to the unused -128
-    # slot with its sign flipped; assert it lands on the symmetric max.
+def test_int8_maps_unit_component_to_symmetric_max():
+    # a one-hot vector is already unit-norm, so its single non-zero
+    # component is exactly +1 (or -1) -- the largest magnitude any
+    # component of a unit vector can reach. It must map to the extreme
+    # byte +127 (or -127): this pins the scale factor (1.0 -> 127) and
+    # confirms both ends of the symmetric range are representable.
     one_hot = np.zeros(8, dtype=np.float32)
     one_hot[0] = 1.0
 
@@ -120,12 +133,15 @@ def test_int8_boundary_component_maps_to_127_not_wraparound():
     ],
 )
 def test_int8_output_stays_in_symmetric_range(vector):
-    # whatever the input magnitude, the encoded bytes never leave the
-    # symmetric range: -128 (the asymmetric int8 minimum) must never
-    # appear, which is the silent sign-flip the clip is there to prevent.
+    # quantize_int8 relies on L2-normalization to keep every component in
+    # [-1, 1], so rint(c * 127) always lands in [-127, 127]. This is the
+    # tripwire for that invariant: whatever the input magnitude, the
+    # encoded bytes must never hit -128 (int8's extra negative value, which
+    # the symmetric mapping deliberately never uses). If a change ever
+    # weakened normalization, an out-of-range component would surface here.
     decoded = np.frombuffer(quantize_int8(vector), dtype=np.int8)
 
-    assert decoded.min() >= -127  # never the wraparound value -128
+    assert decoded.min() >= -127  # -128 would mean the invariant broke
 
 
 # --- binary -----------------------------------------------------------
