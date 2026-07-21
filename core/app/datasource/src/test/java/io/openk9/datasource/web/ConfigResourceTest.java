@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 
@@ -149,6 +150,43 @@ public class ConfigResourceTest {
 			.post("/import")
 			.then()
 			.statusCode(400);
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void export_with_unknown_type_is_bad_request() {
+		// an unknown ConfigEntityType name must be a speaking 400, not the opaque
+		// 404 the raw enum @QueryParam binding would otherwise produce.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.queryParam("types", "PIPPO")
+			.when()
+			.get("/export")
+			.then()
+			.statusCode(400)
+			.body(containsString("PIPPO"))
+			.body(containsString("valid values"));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void import_with_unknown_mode_is_bad_request() {
+		// an unknown import mode must be a speaking 400, not the opaque 404 the raw
+		// enum @QueryParam binding would otherwise produce; the mode is validated
+		// before the body, so a minimal body is enough to reach it.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.queryParam("mode", "PIPPO")
+			.body("{}")
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(400)
+			.body(containsString("PIPPO"))
+			.body(containsString("valid values"));
 	}
 
 	@Test
