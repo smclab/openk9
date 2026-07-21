@@ -7,7 +7,9 @@ import { Box, Chip, IconButton, Skeleton, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Logo } from "../Svg/Logo";
+import { richMarkdownComponents } from "./MarkdownRenderer";
 import { Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "./utils/safeExternalUrl";
 
@@ -289,7 +291,9 @@ export function MessageCard({
 							</>
 						) : (
 							<Markdown
+								remarkPlugins={[remarkGfm]}
 								components={{
+									...richMarkdownComponents,
 									pre: (props: any) => <PreBlock {...props} />,
 									code: (props: any) => {
 										const { inline, style, children, ...rest } = props || {};
@@ -463,11 +467,11 @@ export function MessageCard({
 										</Box>
 									}
 									onClick={() =>
-											!source?.filename &&
-											!source?.file_extension &&
-											isSafeExternalUrl(source.url) &&
-											window.open(source.url, "_blank", "noopener,noreferrer")
-										}
+										!source?.filename &&
+										!source?.file_extension &&
+										isSafeExternalUrl(source.url) &&
+										window.open(source.url, "_blank", "noopener,noreferrer")
+									}
 									sx={{
 										backgroundColor: typeColors.backgroundColor,
 										color: typeColors.color,

@@ -9,6 +9,7 @@ import { getUserProfile } from "./components/authentication";
 import { OpenK9Client } from "./components/client";
 import { InitialConversation } from "./components/InitialConversation";
 import { kc } from "./auth/kc";
+import { DocumentPreviewProvider } from "./components/DocumentPreview";
 import { MessageCard } from "./components/MessageCard";
 import Search from "./components/Search";
 import Sidebar from "./components/Sidebar";
@@ -85,138 +86,142 @@ function App() {
 
 	return (
 		<MuiThemeProvider theme={defaultThemeK9}>
-			<Box display="flex" height="100vh">
-				<Box
-					className="k9-generation-sideNavigation"
-					display="flex"
-					flexDirection="column"
-					minWidth={225}
-					maxWidth={245}
-					p={2}
-					alignItems="flex-start"
-					position="relative"
-					sx={{
-						fontSize: 20,
-						color: "#1e1c21",
-						background: defaultThemeK9.palette.background.default,
-						overflow: "hidden",
-						paddingRight: 0,
-					}}
-				>
-					<Sidebar setChatId={setChatId} />
-				</Box>
+			<DocumentPreviewProvider>
+				<Box display="flex" height="100vh">
+					<Box
+						className="k9-generation-sideNavigation"
+						display="flex"
+						flexDirection="column"
+						minWidth={225}
+						maxWidth={245}
+						p={2}
+						alignItems="flex-start"
+						position="relative"
+						sx={{
+							fontSize: 20,
+							color: "#1e1c21",
+							background: defaultThemeK9.palette.background.default,
+							overflow: "hidden",
+							paddingRight: 0,
+						}}
+					>
+						<Sidebar setChatId={setChatId} />
+					</Box>
 
-				<Box
-					display="flex"
-					flexDirection="column"
-					flexGrow={1}
-					p={2}
-					sx={{
-						background: "#EEEEEE",
-					}}
-				>
-					<CssBaseline />
-					<Box display={"flex"} flexDirection={"column"} flex={1} gap={"14px"}>
-						{/* main content */}
-						<Box
-							component="main"
-							flex={1}
-							bgcolor="white"
-							display="flex"
-							flexDirection="column"
-							alignItems="center"
-							justifyContent={messages.length !== 0 ? "flex-start" : "center"}
-							p={2}
-							boxSizing="border-box"
-							zIndex={2}
-							width="100%"
-							border={"1px solid rgba(0, 0, 0, 0.12)"}
-							borderRadius={"10px"}
-						>
+					<Box
+						display="flex"
+						flexDirection="column"
+						flexGrow={1}
+						p={2}
+						sx={{
+							background: "#EEEEEE",
+						}}
+					>
+						<CssBaseline />
+						<Box display={"flex"} flexDirection={"column"} flex={1} gap={"14px"}>
+							{/* main content */}
 							<Box
-								component="header"
-								width={"100%"}
-								p={2}
-								bgcolor="background.paper"
+								component="main"
+								flex={1}
+								bgcolor="white"
 								display="flex"
-								justifyContent="flex-end"
+								flexDirection="column"
 								alignItems="center"
-								padding={0}
-								sx={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+								justifyContent={messages.length !== 0 ? "flex-start" : "center"}
+								p={2}
+								boxSizing="border-box"
 								zIndex={2}
+								width="100%"
+								border={"1px solid rgba(0, 0, 0, 0.12)"}
+								borderRadius={"10px"}
 							>
-								{!isNewChat && (
-									<Button
-										variant="contained"
-										sx={{ margin: "10px", borderRadius: "10px" }}
-										onClick={() => {
-											const timestamp = String(Date.now());
-											const newId = kc.authenticated ? `${userId}_${timestamp}` : `anonymous_${uuidv4()}_${timestamp}`;
-											setChatId({ id: newId, isNew: true });
-										}}
-									>
-										{t("new-chat", { defaultValue: "New Chat" })}
-									</Button>
-								)}
+								<Box
+									component="header"
+									width={"100%"}
+									p={2}
+									bgcolor="background.paper"
+									display="flex"
+									justifyContent="flex-end"
+									alignItems="center"
+									padding={0}
+									sx={{ borderTopLeftRadius: "10px", borderTopRightRadius: "10px" }}
+									zIndex={2}
+								>
+									{!isNewChat && (
+										<Button
+											variant="contained"
+											sx={{ margin: "10px", borderRadius: "10px" }}
+											onClick={() => {
+												const timestamp = String(Date.now());
+												const newId = kc.authenticated
+													? `${userId}_${timestamp}`
+													: `anonymous_${uuidv4()}_${timestamp}`;
+												setChatId({ id: newId, isNew: true });
+											}}
+										>
+											{t("new-chat", { defaultValue: "New Chat" })}
+										</Button>
+									)}
+								</Box>
+								<div
+									className="openk9-box-main"
+									style={{
+										display: "flex",
+										flexDirection: "column",
+										gap: "50px",
+										padding: messages.length !== 0 ? "30px 50px" : "unset",
+										width: "100%",
+										overflowY: "auto",
+										maxHeight: "69vh",
+										justifyContent: "flex-start",
+									}}
+								>
+									{!isNewChat
+										? messages.map((message, index) => (
+												<React.Fragment key={index}>
+													<MessageCard message={message} isGenerateMessage={isGenerateMessage} />
+													{index === messages.length - 1 && <div ref={messagesEndRef} />}
+												</React.Fragment>
+										  ))
+										: !isLoadingChat && <InitialConversation handleSearch={handleSearch} />}
+									{isLoadingChat && <Loading />}
+								</div>
 							</Box>
-							<div
-								className="openk9-box-main"
-								style={{
-									display: "flex",
-									flexDirection: "column",
-									gap: "50px",
-									padding: messages.length !== 0 ? "30px 50px" : "unset",
-									width: "100%",
-									overflowY: "auto",
-									maxHeight: "69vh",
-									justifyContent: "flex-start",
+							{/* Search Area */}
+							<Box
+								minHeight="12vh"
+								width="100%"
+								display="flex"
+								alignItems="center"
+								justifyContent="center"
+								overflow={"visible"}
+								sx={{
+									background: "white",
+									borderRadius: "10px",
+									border: "1px solid rgba(0, 0, 0, 0.12)",
+									padding: "0 16px",
+									boxSizing: "border-box",
 								}}
 							>
-								{!isNewChat
-									? messages.map((message, index) => (
-											<React.Fragment key={index}>
-												<MessageCard message={message} isGenerateMessage={isGenerateMessage} />
-												{index === messages.length - 1 && <div ref={messagesEndRef} />}
-											</React.Fragment>
-									  ))
-									: !isLoadingChat && <InitialConversation handleSearch={handleSearch} />}
-								{isLoadingChat && <Loading />}
-							</div>
-						</Box>
-						{/* Search Area */}
-						<Box
-							minHeight="12vh"
-							width="100%"
-							display="flex"
-							alignItems="center"
-							justifyContent="center"
-							overflow={"visible"}
-							sx={{
-								background: "white",
-								borderRadius: "10px",
-								border: "1px solid rgba(0, 0, 0, 0.12)",
-								padding: "0 16px",
-								boxSizing: "border-box",
-							}}
-						>
-							<Search
-								handleSearch={handleSearch}
-								cancelAllResponses={cancelAllResponses}
-								isChatting={isChatting}
-								onUploadFiles={async (files) => {
-									if (!kc.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
-									return client.uploadFiles(chatId.id, files);
-								}}
-								isAuthenticated={!!kc.authenticated}
-								retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
-								onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
-								selectedDatasourceIds={selectedDatasourceIds}
-								onSetSelectedDatasourceIds={setSelectedDatasourceIds}
-							/>
+								<Search
+									handleSearch={handleSearch}
+									cancelAllResponses={cancelAllResponses}
+									isChatting={isChatting}
+									onUploadFiles={async (files) => {
+										if (!kc.authenticated || !chatId?.id) throw new Error("Not authenticated or no chat");
+										return client.uploadFiles(chatId.id, files);
+									}}
+									isAuthenticated={!!kc.authenticated}
+									retrieveFromUploadedDocuments={retrieveFromUploadedDocuments}
+									onSetRetrieveFromUploadedDocuments={(v) => setRetrieveFromUploadedDocuments(v)}
+									selectedDatasourceIds={selectedDatasourceIds}
+									onSetSelectedDatasourceIds={setSelectedDatasourceIds}
+								/>
+							</Box>
 						</Box>
 					</Box>
 				</Box>
-			</Box>
+			</DocumentPreviewProvider>
 		</MuiThemeProvider>
 	);
 }
