@@ -36,7 +36,7 @@ public class ConfigMetadata {
 
 	private String exportedAt;
 	private String sourceVirtualHost;
-	private String defaultBucketRef;
+	private String activeBucketRef;
 	private String enabledEmbeddingModelRef;
 	private String enabledLargeLanguageModelRef;
 

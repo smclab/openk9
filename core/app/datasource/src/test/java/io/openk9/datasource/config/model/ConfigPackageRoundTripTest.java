@@ -69,7 +69,7 @@ class ConfigPackageRoundTripTest {
 
 		ConfigMetadata metadata = new ConfigMetadata();
 		metadata.setSourceVirtualHost("tenant.example.com");
-		metadata.setDefaultBucketRef("bucket-1");
+		metadata.setActiveBucketRef("bucket-1");
 
 		ConfigPackage original = new ConfigPackage(
 			ConfigPackage.CURRENT_SCHEMA_VERSION,
@@ -81,7 +81,7 @@ class ConfigPackageRoundTripTest {
 		ConfigPackage restored = mapper.readValue(json, ConfigPackage.class);
 
 		assertEquals(ConfigPackage.CURRENT_SCHEMA_VERSION, restored.getSchemaVersion());
-		assertEquals("bucket-1", restored.getMetadata().getDefaultBucketRef());
+		assertEquals("bucket-1", restored.getMetadata().getActiveBucketRef());
 
 		ConfigEntity restoredDatasource = restored.getEntities().get(0);
 		assertEquals(ConfigEntityType.DATASOURCE, restoredDatasource.getType());

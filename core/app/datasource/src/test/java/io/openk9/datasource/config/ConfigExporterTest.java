@@ -102,22 +102,22 @@ public class ConfigExporterTest {
 		assertNotNull(configPackage.getMetadata());
 		assertNotNull(configPackage.getMetadata().getSourceVirtualHost());
 
-		String defaultBucketRef = configPackage.getMetadata().getDefaultBucketRef();
-		assertNotNull(defaultBucketRef);
+		String activeBucketRef = configPackage.getMetadata().getActiveBucketRef();
+		assertNotNull(activeBucketRef);
 		assertTrue(
-			handles.contains(defaultBucketRef),
-			"defaultBucketRef must point to an exported bucket");
+			handles.contains(activeBucketRef),
+			"activeBucketRef must point to an exported bucket");
 
-		// 5. The default bucket (the one the tenant is bound to; a tenant may hold
+		// 5. The active bucket (the one the tenant is bound to; a tenant may hold
 		// several buckets) is wired to its query analysis and search config, which
 		// createDefault establishes.
-		ConfigEntity defaultBucket = entities.stream()
-			.filter(entity -> entity.getRef().equals(defaultBucketRef))
+		ConfigEntity activeBucket = entities.stream()
+			.filter(entity -> entity.getRef().equals(activeBucketRef))
 			.findFirst()
 			.orElseThrow();
 
-		assertTrue(defaultBucket.getReferences().containsKey("queryAnalysis"));
-		assertTrue(defaultBucket.getReferences().containsKey("searchConfig"));
+		assertTrue(activeBucket.getReferences().containsKey("queryAnalysis"));
+		assertTrue(activeBucket.getReferences().containsKey("searchConfig"));
 	}
 
 	@Test
@@ -137,11 +137,11 @@ public class ConfigExporterTest {
 		}
 
 		// 3. Metadata pointers outside the bucket-only scope are nulled, while the
-		// default bucket (itself a bucket) stays wired.
+		// active bucket (itself a bucket) stays wired.
 		Set<String> handles = handlesOf(entities);
-		String defaultBucketRef = shallow.getMetadata().getDefaultBucketRef();
-		assertNotNull(defaultBucketRef);
-		assertTrue(handles.contains(defaultBucketRef));
+		String activeBucketRef = shallow.getMetadata().getActiveBucketRef();
+		assertNotNull(activeBucketRef);
+		assertTrue(handles.contains(activeBucketRef));
 		assertNull(shallow.getMetadata().getEnabledEmbeddingModelRef());
 		assertNull(shallow.getMetadata().getEnabledLargeLanguageModelRef());
 	}
@@ -176,16 +176,16 @@ public class ConfigExporterTest {
 			}
 		}
 
-		// 4. The default bucket's queryAnalysis and searchConfig travelled along
-		String defaultBucketRef = deep.getMetadata().getDefaultBucketRef();
-		ConfigEntity defaultBucket = deep.getEntities().stream()
-			.filter(entity -> entity.getRef().equals(defaultBucketRef))
+		// 4. The active bucket's queryAnalysis and searchConfig travelled along
+		String activeBucketRef = deep.getMetadata().getActiveBucketRef();
+		ConfigEntity activeBucket = deep.getEntities().stream()
+			.filter(entity -> entity.getRef().equals(activeBucketRef))
 			.findFirst()
 			.orElseThrow();
-		for (String target : defaultBucket.getReferences().get("queryAnalysis")) {
+		for (String target : activeBucket.getReferences().get("queryAnalysis")) {
 			assertTrue(deepHandles.contains(target));
 		}
-		for (String target : defaultBucket.getReferences().get("searchConfig")) {
+		for (String target : activeBucket.getReferences().get("searchConfig")) {
 			assertTrue(deepHandles.contains(target));
 		}
 	}

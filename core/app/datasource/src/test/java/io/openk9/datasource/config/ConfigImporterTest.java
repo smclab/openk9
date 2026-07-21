@@ -416,8 +416,8 @@ public class ConfigImporterTest {
 
 		var metadata = pkg.getMetadata();
 		assertEquals(
-			result.resolvedIds().get(metadata.getDefaultBucketRef()), binding[0],
-			"the tenant binding must reference the imported default bucket");
+			result.resolvedIds().get(metadata.getActiveBucketRef()), binding[0],
+			"the tenant binding must reference the imported active bucket");
 		if (metadata.getEnabledEmbeddingModelRef() != null) {
 			assertEquals(
 				result.resolvedIds().get(metadata.getEnabledEmbeddingModelRef()),

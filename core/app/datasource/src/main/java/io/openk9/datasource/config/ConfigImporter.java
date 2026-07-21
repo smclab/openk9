@@ -323,7 +323,7 @@ public class ConfigImporter {
 			return Uni.createFrom().voidItem();
 		}
 
-		Long bucketId = resolvedIds.get(metadata.getDefaultBucketRef());
+		Long bucketId = resolvedIds.get(metadata.getActiveBucketRef());
 		Long embeddingId = resolvedIds.get(metadata.getEnabledEmbeddingModelRef());
 		Long llmId = resolvedIds.get(metadata.getEnabledLargeLanguageModelRef());
 
