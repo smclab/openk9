@@ -77,7 +77,9 @@ test: load_config
 	@source "$(CONFIG_PATH)" && \
 	docker buildx build \
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--pull \
 		--target test \
+		--output type=cacheonly \
 		.
 
 # Start Docker Compose service
