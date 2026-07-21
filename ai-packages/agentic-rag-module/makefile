@@ -18,6 +18,7 @@
 SHELL := /bin/bash
 .PHONY: check_commands load_config \
         build \
+        test \
         start \
         stop
 .DEFAULT_GOAL := help
@@ -38,6 +39,7 @@ help:
 	@echo "  check_commands              Verify required tools (git, docker) and environment"
 	@echo "  load_config                 Load and validate configuration from $(CONFIG_FILE)"
 	@echo "  build                       Build Docker image with configured base image and version"
+	@echo "  test                        Run the unit tests in the Docker test stage"
 	@echo "  start                       Start Docker Compose services in detached mode"
 	@echo "  stop                        Stop running Docker Compose services"
 	@echo "  help                        Show this help message"
@@ -68,7 +70,15 @@ build: load_config
 		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
 		--pull \
 		-t "$(RAG_MODULE_DOCKER_IMAGE_NAME):$$OPENK9_VERSION" \
-		.		
+		.
+
+# Run the unit tests in the Docker test stage (no runtime image is produced)
+test: load_config
+	@source "$(CONFIG_PATH)" && \
+	docker buildx build \
+		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--target test \
+		.
 
 # Start Docker Compose service
 start: load_config
