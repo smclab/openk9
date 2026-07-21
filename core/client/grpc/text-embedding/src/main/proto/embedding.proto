@@ -24,7 +24,7 @@ import "google/protobuf/struct.proto";
 package embedding;
 
 service Embedding {
-  // v1, text-only. DEPRECATED: removed in Phase 2 once all consumers migrate.
+  // v1, text-only. DEPRECATED.
   rpc GetMessages(EmbeddingRequest) returns (EmbeddingResponse);
 
   // Indexing: text and/or binaries (URL), combinable. Stream of chunks.
@@ -80,11 +80,11 @@ message EmbeddingRequest {
 message EmbeddingResponse {repeated ResponseChunk chunks = 1;}
 
 // Type of vector written to the index; the same value governs the
-// quantization in the module (after L2-norm) and the knn_vector mapping (B2).
+// quantization in the module (after L2-norm) and the knn_vector mapping.
 enum VectorDataType {
   VECTOR_DATA_TYPE_FLOAT32 = 0;
-  VECTOR_DATA_TYPE_BYTE = 1;    // int8, fixed range [-1,1] after L2 (B1)
-  VECTOR_DATA_TYPE_BINARY = 2;  // sign + packbits MSB-first (B1)
+  VECTOR_DATA_TYPE_BYTE = 1;
+  VECTOR_DATA_TYPE_BINARY = 2;
 }
 
 // Reference to a binary to index. Storage is out of the contract: the
@@ -96,7 +96,7 @@ message MediaRef {
   string url = 1;
   // Binary discriminator, copied onto every chunk derived from it.
   string fileId = 2;
-  // From connector metadata; drives per-modality routing (C2).
+  // From connector metadata; drives per-modality routing.
   string contentType = 3;
 }
 
