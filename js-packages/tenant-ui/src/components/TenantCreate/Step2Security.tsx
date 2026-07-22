@@ -15,7 +15,16 @@ import {
   Typography,
 } from "@mui/material";
 import { PreconfigurationsQuery, usePreconfigurationsQuery } from "../../graphql-generated";
-import { apiGroupLabel, authSchemeColor, authSchemeLabel, securityConfigDescription, securityConfigLabel, SecurityConfigurationKey, WizardState } from "./types";
+import {
+  apiGroupLabel,
+  authSchemeColor,
+  authSchemeLabel,
+  securityConfigDescription,
+  securityConfigLabel,
+  securityConfigurationOrder,
+  SecurityConfigurationKey,
+  WizardState,
+} from "./types";
 
 type Preconfig = NonNullable<NonNullable<PreconfigurationsQuery["preconfigurations"]>[number]>;
 
@@ -30,6 +39,20 @@ export function selectablePresets<T extends { name?: unknown }>(presets: T[], de
   return presets.filter((p) => !HIDDEN_SECURITY_CONFIGURATIONS.includes(p.name as string));
 }
 
+// The preconfigurations query does not guarantee a stable order, which made the
+// cards jump around between renders/refreshes. Sort by the canonical order so
+// the cards keep a fixed position; unknown keys are appended alphabetically.
+export function sortPresets<T extends { name?: unknown }>(presets: T[]): T[] {
+  const orderOf = (name: unknown) => {
+    const idx = securityConfigurationOrder.indexOf(name as SecurityConfigurationKey);
+    return idx === -1 ? securityConfigurationOrder.length : idx;
+  };
+  return [...presets].sort((a, b) => {
+    const diff = orderOf(a.name) - orderOf(b.name);
+    return diff !== 0 ? diff : String(a.name ?? "").localeCompare(String(b.name ?? ""));
+  });
+}
+
 type Props = {
   values: WizardState["step2"];
   onChange: (next: WizardState["step2"]) => void;
@@ -41,7 +64,7 @@ export function Step2Security({ values, onChange }: Props) {
     nextFetchPolicy: "cache-only",
   });
   const devMode = process.env.REACT_APP_DEV_MODE === "true";
-  const presets = selectablePresets((data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p), devMode);
+  const presets = sortPresets(selectablePresets((data?.preconfigurations ?? []).filter((p): p is Preconfig => !!p), devMode));
   const selected = presets.find((p) => p.name === values.securityConfiguration);
 
   if (loading) {
