@@ -19,7 +19,6 @@ package io.openk9.datasource.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.List;
 import java.util.UUID;
 import jakarta.inject.Inject;
 
@@ -74,22 +73,15 @@ public class StatusByDatasourcesTest {
 	@Test
 	@Order(2)
 	void should_retrieve_status_by_datasource() {
-
 		var datasource = getDatasourceOne();
-		List<Long> datasourceIds = List.of(datasource.getId());
+		Long datasourceId = datasource.getId();
 
-
-
-		var statusList =
-			schedulerService.getJobStatusList(datasourceIds)
+		var status =
+			schedulerService.getJobStatus(datasourceId)
 				.await()
 				.indefinitely();
 
-		assertEquals(1, statusList.size());
-		statusList.forEach(
-			status ->
-				assertEquals(SchedulerService.JobStatus.TRIGGER_RUNNING, status.status())
-		);
+		assertEquals(SchedulerService.JobStatus.TRIGGER_RUNNING, status);
 	}
 
 	@Test
