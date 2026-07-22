@@ -5,6 +5,17 @@ export type SecurityConfigurationKey =
   | "OAUTH2_ADMIN_WITH_API_KEY"
   | "NO_GATEWAY_AUTH";
 
+// Canonical, stable display order for the security preset cards. The backend
+// returns preconfigurations in a non-deterministic order, so the wizard must
+// sort by this list before rendering to keep the cards in a fixed position.
+export const securityConfigurationOrder: SecurityConfigurationKey[] = [
+  "OAUTH2_ADMIN_ONLY",
+  "OAUTH2_SEARCH",
+  "OAUTH2_SEARCH_WITH_API_KEY",
+  "OAUTH2_ADMIN_WITH_API_KEY",
+  "NO_GATEWAY_AUTH",
+];
+
 export type WizardState = {
   step1: {
     tenantName: string;
