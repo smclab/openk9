@@ -17,11 +17,8 @@
 
 package io.openk9.datasource.grpc.mapper;
 
-import io.openk9.datasource.grpc.CreatePluginDriverRequest;
 import io.openk9.datasource.grpc.PluginDriverType;
 import io.openk9.datasource.model.PluginDriver;
-import io.openk9.datasource.model.ResourceUri;
-import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.ValueMapping;
@@ -29,20 +26,6 @@ import org.mapstruct.ValueMappings;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.CDI)
 public interface PluginDriverMapper {
-
-	default PluginDriverDTO map(CreatePluginDriverRequest source) {
-		var infoBuilder = ResourceUri.builder()
-			.baseUri(source.getBaseUri())
-			.path(source.getPath())
-			.build();
-
-		return PluginDriverDTO.builder()
-			.name(source.getName())
-			.description(source.getDescription())
-			.type(map(source.getType()))
-			.resourceUri(infoBuilder)
-			.build();
-	}
 
 	@ValueMappings(
 		@ValueMapping(source = "HTTP", target = "HTTP")

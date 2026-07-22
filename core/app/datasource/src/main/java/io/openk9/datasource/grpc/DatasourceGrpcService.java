@@ -17,8 +17,6 @@
 
 package io.openk9.datasource.grpc;
 
-import io.grpc.Status;
-import io.grpc.StatusRuntimeException;
 import io.openk9.datasource.grpc.mapper.EnrichItemMapper;
 import io.openk9.datasource.model.dto.base.PluginDriverDTO;
 import io.openk9.datasource.model.init.PluginDrivers;
@@ -60,14 +58,6 @@ public class DatasourceGrpcService implements Datasource {
 				.setEnrichItemId(enrichItem.getId())
 				.build()
 			);
-	}
-
-	@Override
-	@Deprecated
-	public Uni<CreatePluginDriverResponse> createPluginDriver(CreatePluginDriverRequest request) {
-		return Uni.createFrom().failure(new StatusRuntimeException(Status.UNIMPLEMENTED
-			.withDescription("This GRPC method is deprecated and no longer available. Use GraphQL API instead."))
-		);
 	}
 
 	@Override

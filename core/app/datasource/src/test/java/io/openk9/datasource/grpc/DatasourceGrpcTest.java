@@ -17,7 +17,6 @@
 
 package io.openk9.datasource.grpc;
 
-import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.openk9.datasource.model.EnrichItem;
 import io.openk9.datasource.model.PluginDriver;
@@ -148,32 +147,7 @@ public class DatasourceGrpcTest {
 
 	}
 
-	@Test
-	@RunOnVertxContext
-	void should_fail_on_create_plugin_driver(UniAsserter asserter) {
 
-		BDDMockito.given(pluginDriverService.upsert(
-				eq(SCHEMA_NAME_VALUE),
-				any(PluginDriverDTO.class)
-			))
-			.willReturn(Uni.createFrom().failure(InternalServiceMockException::new));
-
-
-		asserter.assertFailedWith(
-			() -> datasource.createPluginDriver(CreatePluginDriverRequest.newBuilder()
-				.setSchemaName(SCHEMA_NAME_VALUE)
-				.build()),
-			throwable -> {
-				Assertions.assertInstanceOf(StatusRuntimeException.class, throwable);
-
-				var exception = (StatusRuntimeException) throwable;
-
-				Assertions.assertEquals(
-					Status.Code.UNIMPLEMENTED, exception.getStatus().getCode());
-			}
-		);
-
-	}
 
 	@Test
 	@RunOnVertxContext
