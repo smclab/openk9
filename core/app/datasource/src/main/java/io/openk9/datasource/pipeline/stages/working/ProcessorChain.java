@@ -40,6 +40,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 	private final ClusterSharding sharding;
 	private SchedulerDTO scheduler;
 	private ActorRef<Processor.Response> replyTo;
+	private ActorRef<Writer.Command> writerRef;
 
 	public ProcessorChain(
 		ActorContext<Processor.Command> context,
@@ -77,6 +78,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 		switch (response) {
 			case Processor.Failure failure -> replyTo.tell(failure);
 			case Processor.Skip skip -> replyTo.tell(skip);
+			case Processor.Complete complete -> replyTo.tell(complete);
 			case Processor.Success success -> {
 				if (this.processorTypeKeys.hasNext()) {
 
@@ -101,6 +103,7 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 
 		this.scheduler = start.scheduler();
 		this.replyTo = start.replyTo();
+		this.writerRef = start.writerRef();
 		var heldMessage = start.heldMessage();
 
 		try {
@@ -128,7 +131,8 @@ public class ProcessorChain extends AbstractBehavior<Processor.Command> {
 			start,
 			scheduler,
 			heldMessage,
-			processorResponseAdapter
+			processorResponseAdapter,
+			writerRef
 		));
 	}
 

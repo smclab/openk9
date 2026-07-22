@@ -18,11 +18,17 @@
 package io.openk9.datasource.pipeline.service;
 
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -32,6 +38,8 @@ import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.Scheduler;
 import io.openk9.datasource.model.Scheduler_;
+import io.openk9.datasource.processor.payload.BinaryPayload;
+import io.openk9.datasource.processor.payload.DataPayload;
 import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
@@ -40,12 +48,16 @@ import com.google.protobuf.ByteString;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import io.quarkus.cache.Cache;
 import io.quarkus.cache.CacheName;
 import io.quarkus.cache.CompositeCacheKey;
 import io.quarkus.grpc.GrpcClient;
 import io.quarkus.vertx.ConsumeEvent;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -59,6 +71,25 @@ public class EmbeddingService {
 
 	private static final String GET_EMBEDDED_PAYLOAD =
 		"EmbeddingService#getEmbeddedPayload";
+
+	// Finalized chunk-docs flushed to the writer per batch. Small on purpose so
+	// the per-batch bulk stays bounded and the write is incremental; the exact
+	// value is not load-bearing (the batching policy is deliberately free).
+	private static final int DEFAULT_EMBED_BATCH_SIZE = 32;
+
+	// A partial batch is also flushed after this delay measured from its first
+	// buffered doc, so a slow stream (e.g. one embedding per image) stays
+	// visible within a bounded delay instead of waiting for the batch to fill.
+	// The flush is demand-driven, so memory stays O(windowSize + batchSize).
+	// Not load-bearing (the batching policy is deliberately free).
+	private static final Duration DEFAULT_EMBED_BATCH_MAX_DELAY =
+		Duration.ofSeconds(1);
+
+	// media_type fallback for a binary chunk whose ref carried no contentType
+	// (refs are sent unfiltered, so the connector may omit it): keep the field a
+	// non-null string, parallel to "text" for text chunks.
+	private static final String DEFAULT_BINARY_MEDIA_TYPE =
+		"application/octet-stream";
 
 	private static final Logger log = Logger.getLogger(EmbeddingService.class);
 
@@ -140,6 +171,315 @@ public class EmbeddingService {
 						.mapToPayload(embeddingResponse, root, chunkWindowSize)
 					));
 			});
+	}
+
+	/**
+	 * v2 streaming counterpart of {@link #getEmbeddedPayload}: composes an
+	 * {@code EmbedContentRequest} (text and/or binary refs), drives the
+	 * server-streaming {@code EmbedContent} through the incremental windowing of
+	 * {@link ChunkWindowBuffer}, and emits the finalized chunk-docs in small
+	 * batches (one {@code byte[]} JSON array per batch, same encoding as
+	 * {@link #mapToPayload}). The returned {@link Multi} is fully backpressured:
+	 * the gRPC demand bounds the buffer to {@code O(windowSize)} memory.
+	 *
+	 * <p>Unlike v1 this path bypasses the request/reply event bus for the stream
+	 * itself (single-response, cannot stream); it is called directly on the
+	 * CDI bean by {@code EmbeddingProcessor}.
+	 *
+	 * @param tenantId   the tenant owning the content
+	 * @param scheduleId the running schedule
+	 * @param payload    the {@code DataPayload} JSON of a single document
+	 * @return a stream of batches, each a JSON array of finalized chunk-docs
+	 */
+	public Multi<byte[]> embedContentStream(
+		String tenantId, String scheduleId, byte[] payload) {
+
+		return EventBusInstanceHolder
+			.request(
+				GET_EMBEDDING_CHUNKS_CONFIGURATION,
+				new GetConfigurationRequest(tenantId, scheduleId)
+			)
+			.onItem().ifNull().failWith(PayloadEmbeddingFailed::new)
+			.onItem().transformToMulti(message -> composeAndStream(
+				tenantId, (EmbeddingChunksRequest) message.body(), payload));
+	}
+
+	private Multi<byte[]> composeAndStream(
+		String tenantId, EmbeddingChunksRequest config, byte[] payload) {
+
+		var dataPayload = Json.decodeValue(Buffer.buffer(payload), DataPayload.class);
+		var datasourceId = dataPayload.getDatasourceId();
+		var contentId = dataPayload.getContentId();
+
+		var documentContext = JsonPath
+			.using(Configuration.defaultConfiguration())
+			.parseUtf8(payload);
+
+		var docTypeField = Objects.requireNonNull(
+			config.docTypeField(),
+			"The source field for text embedding is not specified."
+		);
+
+		var docTypeFieldJsonPath = "$." + docTypeField.getPath();
+
+		String text;
+		try {
+			text = documentContext.read(docTypeFieldJsonPath);
+			// remove the original docTypeField element, it is split in chunks
+			documentContext.delete(docTypeFieldJsonPath);
+		}
+		catch (PathNotFoundException e) {
+			// the source may carry only binaries, with no text field at all
+			text = null;
+		}
+
+		var root = getRoot(documentContext);
+
+		// one MediaRef per staged binary, mirroring EnrichItemSupervisor
+		// .injectBinaryUrls(): a just-in-time pre-signed GET URL, no contentType
+		// filtering (embeddability is the module's concern).
+		List<EmbeddingOuterClass.MediaRef> refs = new ArrayList<>();
+		Map<String, String> contentTypeByFileId = new HashMap<>();
+		Set<String> sentFileIds = new HashSet<>();
+
+		var resources = dataPayload.getResources();
+		if (resources != null && resources.getBinaries() != null) {
+			for (BinaryPayload binary : resources.getBinaries()) {
+
+				var refBuilder = EmbeddingOuterClass.MediaRef.newBuilder()
+					.setUrl(StagedBinaryService.presignGet(
+						tenantId, datasourceId, contentId, binary.getId()))
+					.setFileId(binary.getId());
+
+				if (binary.getContentType() != null) {
+					refBuilder.setContentType(binary.getContentType());
+				}
+
+				refs.add(refBuilder.build());
+				contentTypeByFileId.put(binary.getId(), binary.getContentType());
+				sentFileIds.add(binary.getId());
+			}
+		}
+
+		var hasText = text != null && !text.isEmpty();
+
+		// v2 relaxes the v1 "fail if no text" guard to "fail only when there is
+		// neither text nor any binary ref to embed".
+		if (!hasText && refs.isEmpty()) {
+			return Multi.createFrom().failure(new PayloadEmbeddingFailed(
+				String.format(
+					"The field %s has no text and there are no binary references",
+					docTypeFieldJsonPath)));
+		}
+
+		// TODO: DataIndex has no vectorDataType column yet; default to FLOAT32.
+		// Wire this to the DataIndex / embedding-model configuration when it
+		// lands. Do NOT invent a migration here.
+		var vectorDataType =
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
+
+		var requestBuilder = EmbeddingOuterClass.EmbedContentRequest.newBuilder()
+			.setTenantId(tenantId)
+			.setChunk(config.requestChunk())
+			.setEmbeddingModel(config.embeddingModel())
+			.setVectorDataType(vectorDataType)
+			.addAllRefs(refs);
+
+		if (hasText) {
+			requestBuilder.setText(text);
+		}
+
+		var request = requestBuilder.build();
+
+		Set<String> receivedFileIds = ConcurrentHashMap.newKeySet();
+
+		var chunks = embedding.embedContent(request)
+			.onItem().invoke(chunk -> {
+				if (chunk.hasFileId()) {
+					receivedFileIds.add(chunk.getFileId());
+				}
+			});
+
+		return windowAndBatch(
+				chunks, root, contentTypeByFileId,
+				config.chunkWindowSize(), DEFAULT_EMBED_BATCH_SIZE)
+			.onCompletion().invoke(() ->
+				warnMissingRefs(sentFileIds, receivedFileIds, contentId));
+	}
+
+	/**
+	 * The pure stream transform: window each {@code EmbeddedChunk} exactly as v1
+	 * does (via {@link ChunkWindowBuffer}), map every finalized chunk to a
+	 * chunk-doc, and group the docs into batches of at most {@code batchSize}
+	 * (also flushing a partial batch every {@link #DEFAULT_EMBED_BATCH_MAX_DELAY}
+	 * so a slow stream stays progressively visible), one {@code byte[]} JSON
+	 * array per batch. Free of gRPC / OpenSearch / CDI, so it is unit-testable
+	 * in isolation.
+	 *
+	 * <p>On stream failure the grouping drops its in-flight partial batch, but
+	 * the docs it holds are already matured (their lookahead completed) and must
+	 * still be written (an interrupted stream leaves the matured chunks
+	 * indexed). So the failure is turned into a completion — which flushes that
+	 * partial as the last batch — and then re-raised, keeping the write
+	 * fail-fast. The lookahead tail still held by {@link ChunkWindowBuffer} is
+	 * intentionally NOT flushed on failure: those windows never completed.
+	 */
+	static Multi<byte[]> windowAndBatch(
+		Multi<EmbeddingOuterClass.EmbeddedChunk> chunks,
+		Map<String, Object> root,
+		Map<String, String> contentTypeByFileId,
+		int windowSize,
+		int batchSize) {
+
+		var buffer = ChunkWindowBuffer.<EmbeddingOuterClass.EmbeddedChunk>of(
+			windowSize,
+			chunk -> new ChunkWindowBuffer.WindowEntry(
+				chunk.getNumber(), chunk.getText()));
+
+		var streamFailure = new AtomicReference<Throwable>();
+
+		return chunks
+			.onItem().transformToMultiAndConcatenate(chunk ->
+				Multi.createFrom().iterable(buffer.offer(chunk)))
+			.onCompletion().switchTo(() ->
+				Multi.createFrom().iterable(buffer.flush()))
+			.onItem().transform(windowed ->
+				mapWindowedToDocument(windowed, root, contentTypeByFileId))
+			.onFailure().invoke(streamFailure::set)
+			.onFailure().recoverWithCompletion()
+			.group().intoLists().of(batchSize, DEFAULT_EMBED_BATCH_MAX_DELAY)
+			.onItem().transform(EmbeddingService::mapDocumentsToPayload)
+			.onCompletion().switchTo(() -> {
+				var throwable = streamFailure.get();
+
+				return throwable == null
+					? Multi.createFrom().empty()
+					: Multi.createFrom().failure(throwable);
+			});
+	}
+
+	/**
+	 * Builds a chunk-doc identical to v1 ({@link #mapToDocumentObject} +
+	 * {@link #mapToChunkWindowObject}) and adds the two v2 fields: a flat
+	 * {@code fileId} (omitted for text chunks) and a Core-derived
+	 * {@code media_type} ({@code "text"} when there is no fileId, else the
+	 * contentType of the matching ref).
+	 */
+	static JsonObject mapWindowedToDocument(
+		ChunkWindowBuffer.Windowed<EmbeddingOuterClass.EmbeddedChunk> windowed,
+		Map<String, Object> root,
+		Map<String, String> contentTypeByFileId) {
+
+		var chunk = windowed.chunk();
+
+		var jsonObject = new JsonObject();
+
+		jsonObject.put("number", chunk.getNumber());
+
+		// total is optional in v2 (known for text, maybe not for binaries):
+		// write it only when the module provided it.
+		if (chunk.hasTotal()) {
+			jsonObject.put("total", chunk.getTotal());
+		}
+
+		jsonObject.put("chunkText", chunk.getText());
+		jsonObject.put("vector", mapVector(chunk));
+
+		// merge the rest of the source document (same as v1).
+		for (Map.Entry<String, Object> entry : root.entrySet()) {
+			jsonObject.put(entry.getKey(), entry.getValue());
+		}
+
+		// v2 additions, written after the merge so they are authoritative.
+		if (chunk.hasFileId()) {
+			jsonObject.put("fileId", chunk.getFileId());
+			jsonObject.put("media_type", Objects.requireNonNullElse(
+				contentTypeByFileId.get(chunk.getFileId()),
+				DEFAULT_BINARY_MEDIA_TYPE));
+		}
+		else {
+			jsonObject.put("media_type", "text");
+		}
+
+		var previous = new JsonArray();
+		for (ChunkWindowBuffer.WindowEntry entry : windowed.previous()) {
+			previous.add(mapToChunkWindowObject(entry.number(), entry.text()));
+		}
+
+		var next = new JsonArray();
+		for (ChunkWindowBuffer.WindowEntry entry : windowed.next()) {
+			next.add(mapToChunkWindowObject(entry.number(), entry.text()));
+		}
+
+		jsonObject.put("previous", previous);
+		jsonObject.put("next", next);
+
+		return jsonObject;
+	}
+
+	/**
+	 * Maps the vector {@code oneof} to a JSON-friendly value. FLOAT32 stays a
+	 * list of floats (as v1). The quantized shapes are a provisional
+	 * representation pending the knn_vector mapping decision (out of this
+	 * module): i8 as a JSON array of signed integers (one per
+	 * component), bits as a JSON array of unsigned bytes (packed, MSB first).
+	 */
+	static Object mapVector(EmbeddingOuterClass.EmbeddedChunk chunk) {
+
+		switch (chunk.getVectorCase()) {
+			case F32:
+				return chunk.getF32().getValuesList();
+			case I8: {
+				var bytes = chunk.getI8().toByteArray();
+				var values = new ArrayList<Integer>(bytes.length);
+				for (byte b : bytes) {
+					values.add((int) b);
+				}
+				return values;
+			}
+			case BITS: {
+				var bytes = chunk.getBits().toByteArray();
+				var values = new ArrayList<Integer>(bytes.length);
+				for (byte b : bytes) {
+					values.add(b & 0xFF);
+				}
+				return values;
+			}
+			case VECTOR_NOT_SET:
+			default:
+				return List.of();
+		}
+	}
+
+	static byte[] mapDocumentsToPayload(List<JsonObject> documents) {
+
+		var jsonArray = new JsonArray();
+
+		for (JsonObject document : documents) {
+			jsonArray.add(document);
+		}
+
+		return jsonArray.toBuffer().getBytes();
+	}
+
+	/**
+	 * The fileIds sent as refs that produced no chunk in the stream.
+	 */
+	static List<String> missingRefs(Set<String> sent, Set<String> received) {
+
+		return sent.stream()
+			.filter(fileId -> !received.contains(fileId))
+			.toList();
+	}
+
+	private static void warnMissingRefs(
+		Set<String> sent, Set<String> received, String contentId) {
+
+		for (String fileId : missingRefs(sent, received)) {
+			log.warnf(
+				"contentId %s: reference %s produced no chunk",
+				contentId, fileId);
+		}
 	}
 
 	protected static <T> List<T> getNextWindow(
