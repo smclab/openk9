@@ -22,6 +22,24 @@
 		"copied": "Copiato",
 		"all-sources": "Tutte le fonti",
 		"one-source": "1 fonte",
-		"selected-sources": "{{count}} fonti"
+		"selected-sources": "{{count}} fonti",
+		"image-not-available": "Immagine non disponibile",
+		"artifact-generating": "Generazione in corso…",
+		"artifact-file-ready": "File disponibile · {{lines}} righe",
+		"artifact-preview": "Anteprima",
+		"artifact-download": "Scarica",
+		"preview-copied": "Copiato",
+		"preview-copy-content": "Copia contenuto",
+		"preview-copy-link": "Copia link",
+		"preview-copy": "Copia",
+		"preview-generating": "Generazione in corso…",
+		"preview-download": "Scarica",
+		"preview-open-new-tab": "Apri in una nuova scheda",
+		"preview-close": "Chiudi",
+		"preview-close-aria": "Chiudi anteprima",
+		"preview-fallback-caption": "Se l'anteprima non viene visualizzata, usa \"Apri in una nuova scheda\" o \"Scarica\".",
+		"preview-fallback-message": "Anteprima non disponibile. Usa \"Apri in una nuova scheda\" o \"Scarica\" nella barra in alto.",
+		"show-all-sources": "Mostra tutte",
+		"hide-all-sources": "Nascondi tutte"
 	}
 }

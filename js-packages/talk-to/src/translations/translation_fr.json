@@ -22,6 +22,24 @@
 		"copied": "Copié",
 		"all-sources": "Toutes les sources",
 		"one-source": "1 source",
-		"selected-sources": "{{count}} sources"
+		"selected-sources": "{{count}} sources",
+		"image-not-available": "Image non disponible",
+		"artifact-generating": "Génération en cours…",
+		"artifact-file-ready": "Fichier prêt · {{lines}} lignes",
+		"artifact-preview": "Aperçu",
+		"artifact-download": "Télécharger",
+		"preview-copied": "Copié",
+		"preview-copy-content": "Copier le contenu",
+		"preview-copy-link": "Copier le lien",
+		"preview-copy": "Copier",
+		"preview-generating": "Génération en cours…",
+		"preview-download": "Télécharger",
+		"preview-open-new-tab": "Ouvrir dans un nouvel onglet",
+		"preview-close": "Fermer",
+		"preview-close-aria": "Fermer l'aperçu",
+		"preview-fallback-caption": "Si l'aperçu ne s'affiche pas, utilisez « Ouvrir dans un nouvel onglet » ou « Télécharger ».",
+		"preview-fallback-message": "Aperçu non disponible. Utilisez « Ouvrir dans un nouvel onglet » ou « Télécharger » dans la barre du haut.",
+		"show-all-sources": "Tout afficher",
+		"hide-all-sources": "Tout masquer"
 	}
 }

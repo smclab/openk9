@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Logo } from "../Svg/Logo";
-import { richMarkdownComponents } from "./MarkdownRenderer";
+import { ArtifactCard, extractDocumentFromAnswer, richMarkdownComponents } from "./MarkdownRenderer";
 import { Message } from "./useGenerateResponse";
 import { isSafeExternalUrl } from "./utils/safeExternalUrl";
 
@@ -253,6 +253,8 @@ export function MessageCard({
 		);
 	};
 
+	const documentArtifact = message.status === "ERROR" ? null : extractDocumentFromAnswer(message.answer);
+
 	return (
 		<>
 			<Box display="flex" alignItems="center" gap={4}>
@@ -289,6 +291,13 @@ export function MessageCard({
 									<Skeleton variant="rectangular" width="100%" height={35} sx={{ background: "#ffe6e6" }} />
 								</div>
 							</>
+						) : documentArtifact ? (
+							<ArtifactCard
+								filename={documentArtifact.filename}
+								content={documentArtifact.content}
+								messageId={message.id || ""}
+								streaming={message.status !== "END"}
+							/>
 						) : (
 							<Markdown
 								remarkPlugins={[remarkGfm]}
@@ -366,7 +375,7 @@ export function MessageCard({
 				<Box ml={9}>
 					<Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
 						<Typography variant="body2" color="text.secondary">
-							{sources.length} sources
+							{t(sources.length === 1 ? "one-source" : "selected-sources", { count: sources.length })}
 						</Typography>
 						<Box
 							component="button"
@@ -394,7 +403,7 @@ export function MessageCard({
 							}}
 						>
 							<VisibilityIcon sx={{ fontSize: "0.75rem" }} />
-							<Typography variant="caption">{showAllSources ? "Hide all" : "Show all"}</Typography>
+							<Typography variant="caption">{t(showAllSources ? "hide-all-sources" : "show-all-sources")}</Typography>
 						</Box>
 					</Box>
 
