@@ -50,6 +50,7 @@ class GitlabBaseExtractionRequest(BaseModel):
     datasourceId: int = Field(..., frozen=True)
     scheduleId: str = Field(..., frozen=True)
     tenantId: str = Field(..., frozen=True)
+    aclEnabled: bool = Field(default=True, frozen=True)
 
 
 class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
@@ -86,6 +87,7 @@ class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
             schedule_id=self.scheduleId,
             tenant_id=self.tenantId,
             items_per_page=self.itemsPerPage,
+            acl_enabled=self.aclEnabled,
             fetch_user_details=self.fetchUserDetails,
             filter_active=self.filterActive,
             filter_external=self.filterExternal,
@@ -180,6 +182,7 @@ class ProjectsGitlabExtractionRequest(GitlabBaseExtractionRequest):
             schedule_id=self.scheduleId,
             tenant_id=self.tenantId,
             items_per_page=self.itemsPerPage,
+            acl_enabled=self.aclEnabled,
             project_list=self.projectList,
             archived=self.archived,
             membership=self.membership,

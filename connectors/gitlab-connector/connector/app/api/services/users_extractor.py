@@ -15,9 +15,9 @@ from ..models.util.models_utility import  (
 
 
 class UserDataExtractor(BaseExtractor):
-    def __init__(self, *, domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int, fetch_user_details: bool,
+    def __init__(self, *, domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int, acl_enabled: bool, fetch_user_details: bool,
                 filter_active: BoolFilter, filter_external: BoolFilter, filter_blocked: BoolFilter, filter_human: BoolFilter, exclude_active: BoolFilter, exclude_external: BoolFilter, exclude_humans: BoolFilter, exclude_internal: BoolFilter) -> None:
-        super().__init__(domain, access_token, timestamp, datasource_id, schedule_id, tenant_id, items_per_page)
+        super().__init__(domain, access_token, timestamp, datasource_id, schedule_id, tenant_id, items_per_page, acl_enabled)
 
         self.fetch_user_details = fetch_user_details
 
@@ -52,11 +52,18 @@ class UserDataExtractor(BaseExtractor):
             ):
                 # The list endpoint exposes a reduced field set to non-admin
                 # tokens; optionally fetch each user by id for the fuller profile.
-                
-                user = gl.users.get(user.id) if self.fetch_user_details else user
-                self.status_logger.info(user.to_json())
-                yield user
-    
+                yield gl.users.get(user.id) if self.fetch_user_details else user
+
+    @override
+    def extract_sub_data(self, data: User, time_stamp_date: datetime) -> Iterator:
+        yield from ()
+
+    @override
+    def get_acl(self, data: User) -> dict | None:
+        # Global users are world-visible: omit acl and let the datasource
+        # IndexWriter default it to {"public": true}.
+        return None
+
     @override
     def manage_data(self, data: User, end_timestamp: float) -> dict[str, Any]:
         info = data.attributes

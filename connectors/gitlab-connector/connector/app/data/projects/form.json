@@ -921,6 +921,25 @@
         "min": 0,
         "max": 100
       }
+    },
+    {
+      "label": "Enable ACL?",
+      "name": "aclEnabled",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": true,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "Propagate GitLab visibility and membership as document ACL",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
     }
   ]
 }
