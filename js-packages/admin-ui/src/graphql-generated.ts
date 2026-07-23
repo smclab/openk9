@@ -5673,8 +5673,11 @@ export enum UserField {
 }
 
 export enum VectorDataType {
+  /** Packed binary vectors; maps to a binary knn_vector (faiss engine, hamming space). Requires a vectorSize multiple of 8. */
   Binary = 'BINARY',
+  /** Signed 8-bit integer vectors; maps to a byte knn_vector (lucene engine, cosinesimil space). */
   Byte = 'BYTE',
+  /** Full precision 32-bit float vectors (default, no quantization). */
   Float32 = 'FLOAT32'
 }
 
@@ -9924,6 +9927,7 @@ export type CreateOrUpdateEmbeddingModelMutationFn = Apollo.MutationFunction<Cre
  *      description: // value for 'description'
  *      name: // value for 'name'
  *      vectorSize: // value for 'vectorSize'
+ *      vectorDataType: // value for 'vectorDataType'
  *      providerModel: // value for 'providerModel'
  *      jsonConfig: // value for 'jsonConfig'
  *   },
@@ -16978,4 +16982,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-07-29T09:54:34+02:00
+// Generated on 2026-07-29T14:39:58+02:00
