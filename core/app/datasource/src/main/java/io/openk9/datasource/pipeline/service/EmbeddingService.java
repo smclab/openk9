@@ -35,6 +35,7 @@ import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
+import com.google.protobuf.ByteString;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -51,11 +52,6 @@ import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class EmbeddingService {
-
-	private static final EmbeddingOuterClass.RequestChunk REQUEST_CHUNK_DEFAULT =
-		EmbeddingOuterClass.RequestChunk.newBuilder()
-			.setType(EmbeddingOuterClass.ChunkType.CHUNK_TYPE_DEFAULT)
-			.build();
 
 	private static final String GET_EMBEDDING_CHUNKS_CONFIGURATION =
 		"EmbeddingService#getEmbeddingChunksConfiguration";
@@ -253,7 +249,25 @@ public class EmbeddingService {
 		return jsonObject;
 	}
 
-	public Uni<EmbeddedText> getEmbeddedText(String tenantId, String text) {
+	/**
+	 * Produces a single query embedding vector through the unary
+	 * {@code EmbedQuery} RPC, from query text, an inline query image, or both
+	 * combined. This replaces the v1 implicit query path (a {@code GetMessages}
+	 * call with a default chunk followed by the first response chunk).
+	 *
+	 * <p>Modality follows the arguments: only {@code text} produces
+	 * {@code EmbedQuery(text)}, only {@code media} produces
+	 * {@code EmbedQuery(inline)}, and text plus media produces a single combined
+	 * {@code EmbedQuery(text + inline)} vector.
+	 *
+	 * @param tenantId the tenant owning the query
+	 * @param text     the query text, or {@code null} for an image-only query
+	 * @param media    the inline query image, or {@code null} for a text-only
+	 *                 query
+	 * @return the query vector, quantized like the index, ready for KNN
+	 */
+	public Uni<QueryVector> embedQuery(
+		String tenantId, String text, QueryMedia media) {
 
 		return getEmbeddingModel(tenantId)
 			.onItem().ifNull().failWith(ConfigurationNotFound::new)
@@ -262,16 +276,73 @@ public class EmbeddingService {
 				EmbeddingOuterClass.EmbeddingModel embeddingModelRequest =
 					mapToEmbeddingModelRequest(embeddingModel);
 
-				return embedding.getMessages(EmbeddingOuterClass.EmbeddingRequest.newBuilder()
-					.setText(text)
-					.setEmbeddingModel(embeddingModelRequest)
-					.setChunk(REQUEST_CHUNK_DEFAULT)
-					.build());
+				return embedding.embedQuery(buildEmbedQueryRequest(
+					tenantId, embeddingModelRequest, text, media));
 			})
-			.map(embeddingResponse -> new EmbeddedText(
-				// with default chunk strategy, we always have one embedding.
-				embeddingResponse.getChunks(0).getVectorsList()));
+			.map(EmbeddingService::toQueryVector);
 
+	}
+
+	/**
+	 * Builds the {@code EmbedQueryRequest} for the given query, setting
+	 * {@code text} and/or {@code inline} according to the provided modality.
+	 *
+	 * <p>The query vector must be quantized like the index. The index vector
+	 * data type is not yet a configurable field on the embedding model, so the
+	 * request defaults to {@code FLOAT32}, matching the current behavior; wire
+	 * this through once the vector data type configuration is available.
+	 *
+	 * @param tenantId       the tenant owning the query
+	 * @param embeddingModel the resolved embedding model request
+	 * @param text           the query text, or {@code null}
+	 * @param media          the inline query image, or {@code null}
+	 * @return the assembled request
+	 */
+	static EmbeddingOuterClass.EmbedQueryRequest buildEmbedQueryRequest(
+		String tenantId,
+		EmbeddingOuterClass.EmbeddingModel embeddingModel,
+		String text,
+		QueryMedia media) {
+
+		var builder = EmbeddingOuterClass.EmbedQueryRequest.newBuilder()
+			.setTenantId(tenantId)
+			.setEmbeddingModel(embeddingModel)
+			.setVectorDataType(
+				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32);
+
+		if (text != null && !text.isBlank()) {
+			builder.setText(text);
+		}
+
+		if (media != null) {
+			builder.setInline(EmbeddingOuterClass.InlineMedia.newBuilder()
+				.setData(ByteString.copyFrom(media.data()))
+				.setContentType(media.contentType())
+				.build());
+		}
+
+		return builder.build();
+	}
+
+	/**
+	 * Extracts the float vector from an {@code EmbeddedVector}. Only the
+	 * {@code FLOAT32} representation is decoded, which is the sole vector data
+	 * type requested by {@link #buildEmbedQueryRequest}; a response carrying a
+	 * different representation is a contract violation.
+	 *
+	 * @param vector the vector returned by {@code EmbedQuery}
+	 * @return the float components of the query vector
+	 */
+	static QueryVector toQueryVector(EmbeddingOuterClass.EmbeddedVector vector) {
+
+		if (vector.getVectorCase()
+			!= EmbeddingOuterClass.EmbeddedVector.VectorCase.F32) {
+
+			throw new PayloadEmbeddingFailed(String.format(
+				"Unexpected query vector type: %s", vector.getVectorCase()));
+		}
+
+		return new QueryVector(vector.getF32().getValuesList());
 	}
 
 	@ConsumeEvent(GET_EMBEDDING_CHUNKS_CONFIGURATION)
@@ -418,8 +489,13 @@ public class EmbeddingService {
 			);
 	}
 
-	public record EmbeddedText(
+	public record QueryVector(
 		List<Float> vector
+	) {}
+
+	public record QueryMedia(
+		byte[] data,
+		String contentType
 	) {}
 
 	private record EmbeddingChunksRequest(

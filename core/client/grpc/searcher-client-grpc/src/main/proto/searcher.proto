@@ -149,6 +149,14 @@ message Value {
   repeated string value = 1;
 }
 
+// Optional inline media carried by a KNN search token (image-as-query).
+// data is the base64 of the raw bytes; it is decoded and mapped 1:1 to the
+// embedding contract InlineMedia when the query vector is produced.
+message Media {
+  string data = 1;
+  string contentType = 2;
+}
+
 message SearchTokenRequest {
   string entityType = 1;
   string entityName = 2;
@@ -157,6 +165,7 @@ message SearchTokenRequest {
   repeated string values = 5;
   map<string, string> extra = 6;
   bool filter = 7;
+  optional Media media = 8;
 }
 
 

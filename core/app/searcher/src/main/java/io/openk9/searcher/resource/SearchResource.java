@@ -141,6 +141,8 @@ public class SearchResource {
 
 	protected static final String SUGGESTIONS = "suggestions";
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
+	private static final String KNN_TOKEN_TYPE = "KNN";
+	private static final String IMAGE_CONTENT_TYPE_PREFIX = "image/";
 	private static final String DETAILS_FIELD = "details";
 	private static final String BEARER_PREFIX = "Bearer ";
 	private static final int NONE_STATUS_CODE = 0;
@@ -170,6 +172,11 @@ public class SearchResource {
 	SearcherMapper searcherMapper;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
+	@ConfigProperty(
+		name = "openk9.searcher.query.media.max-size-bytes",
+		defaultValue = "2097152"
+	)
+	long maxMediaSizeBytes;
 	@Inject
 	Tracer tracer;
 
@@ -1688,6 +1695,8 @@ public class SearchResource {
 
 	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
 
+		validateMediaTokens(searchRequest.getSearchQuery(), maxMediaSizeBytes);
+
 		var requestBuilder = searcherMapper
 			.toQueryParserRequest(searchRequest)
 			.toBuilder();
@@ -1731,6 +1740,78 @@ public class SearchResource {
 			.setLanguage(language == null ? "" : language)
 			.build();
 
+	}
+
+	/**
+	 * Validates the optional inline {@code media} carried by search tokens,
+	 * failing fast with an HTTP 400 on any violation instead of silently
+	 * dropping the media downstream.
+	 *
+	 * <p>In Phase 1 {@code media} is only accepted on KNN tokens, must declare
+	 * an {@code image/*} content type, and must not exceed the configured
+	 * maximum decoded size.
+	 *
+	 * @param tokens       the search tokens to validate; {@code null} is a no-op
+	 * @param maxSizeBytes the maximum allowed decoded media size in bytes; a
+	 *                     value of {@code 0} or less disables the size check
+	 * @throws WebApplicationException with status 400 on any violation
+	 */
+	static void validateMediaTokens(
+		List<ParserSearchToken> tokens, long maxSizeBytes) {
+
+		if (tokens == null) {
+			return;
+		}
+
+		for (ParserSearchToken token : tokens) {
+
+			var media = token.getMedia();
+
+			if (media == null) {
+				continue;
+			}
+
+			if (!KNN_TOKEN_TYPE.equals(token.getTokenType())) {
+				throw badRequestMedia(
+					"media is only supported on KNN tokens, got tokenType="
+						+ token.getTokenType());
+			}
+
+			var contentType = media.getContentType();
+
+			if (contentType == null || !contentType
+				.toLowerCase(Locale.ROOT)
+				.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
+
+				throw badRequestMedia(
+					"media.contentType must be image/*, got " + contentType);
+			}
+
+			var data = media.getData();
+
+			if (data == null || data.isBlank()) {
+				throw badRequestMedia("media.data must not be empty");
+			}
+
+			byte[] decoded;
+			try {
+				decoded = Base64.getDecoder().decode(data);
+			}
+			catch (IllegalArgumentException e) {
+				throw badRequestMedia("media.data is not valid base64");
+			}
+
+			if (maxSizeBytes > 0 && decoded.length > maxSizeBytes) {
+				throw badRequestMedia(
+					"media exceeds the maximum allowed size of "
+						+ maxSizeBytes + " bytes");
+			}
+		}
+	}
+
+	private static WebApplicationException badRequestMedia(String message) {
+		return new WebApplicationException(
+			message, jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
 	}
 
 	private Iterable<Sort> mapToGrpc(

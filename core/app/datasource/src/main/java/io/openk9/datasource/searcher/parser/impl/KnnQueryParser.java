@@ -18,6 +18,7 @@
 package io.openk9.datasource.searcher.parser.impl;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -64,11 +65,33 @@ public class KnnQueryParser implements QueryParser {
 
 			var kNeighbors = getKNeighbors(parserSearchToken, queryParserConfig);
 
-			for (String value : parserSearchToken.getValues()) {
+			var media = toQueryMedia(parserSearchToken.getMedia());
 
+			var values = parserSearchToken.getValues();
+
+			if (values != null && !values.isEmpty()) {
+
+				// text-only, or combined text + image when media is present:
+				// one query vector per text value.
+				for (String value : values) {
+
+					var knnQuery = embeddingService
+						.embedQuery(tenantId, value, media)
+						.map(queryVector ->
+							KnnQueryParser.toKnnQuery(queryVector, kNeighbors));
+
+					knnQueryUnis.add(knnQuery);
+
+				}
+
+			}
+			else if (media != null) {
+
+				// image-only query.
 				var knnQuery = embeddingService
-					.getEmbeddedText(tenantId, value)
-					.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors));
+					.embedQuery(tenantId, null, media)
+					.map(queryVector ->
+						KnnQueryParser.toKnnQuery(queryVector, kNeighbors));
 
 				knnQueryUnis.add(knnQuery);
 
@@ -105,12 +128,12 @@ public class KnnQueryParser implements QueryParser {
 	}
 
 	protected static Query toKnnQuery(
-		EmbeddingService.EmbeddedText embeddedText, Integer kNeighbors) {
+		EmbeddingService.QueryVector queryVector, Integer kNeighbors) {
 
 		return new KnnQuery.Builder()
 			.k(kNeighbors)
 			.field("vector")
-			.vector(toVector(embeddedText))
+			.vector(toVector(queryVector))
 			.build()
 			.toQuery();
 	}
@@ -122,9 +145,22 @@ public class KnnQueryParser implements QueryParser {
 		parserContext.getMutableQuery().must(wrapperQueryBuilder);
 	}
 
-	private static float[] toVector(EmbeddingService.EmbeddedText embeddedText) {
+	private static EmbeddingService.QueryMedia toQueryMedia(
+		ParserSearchToken.Media media) {
 
-		var list = embeddedText.vector();
+		if (media == null) {
+			return null;
+		}
+
+		return new EmbeddingService.QueryMedia(
+			Base64.getDecoder().decode(media.getData()),
+			media.getContentType()
+		);
+	}
+
+	private static float[] toVector(EmbeddingService.QueryVector queryVector) {
+
+		var list = queryVector.vector();
 		var n = list.size();
 		var arr = new float[n];
 

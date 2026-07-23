@@ -48,6 +48,8 @@ public class ParserSearchToken {
 	@Schema(description = "Used to specify extra configurations to overwrite default configurations")
 	private Map<String, String> extra;
 	private boolean filter;
+	@Schema(description = "Optional inline media for image-as-query. Only supported on KNN tokens.")
+	private Media media;
 
 	public static ParserSearchToken ofText(String value) {
 		return ofText(List.of(value), null, false, false);
@@ -65,9 +67,21 @@ public class ParserSearchToken {
 		List<String> values, String keywordKey, boolean filter, boolean search) {
 
 		return new ParserSearchToken(
-			null, null, null, search, TEXT, keywordKey, values, Map.of(), filter);
+			null, null, null, search, TEXT, keywordKey, values, Map.of(),
+			filter, null);
 	}
 
 	public static final String TEXT = "TEXT";
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	@Builder
+	public static class Media {
+		@Schema(description = "Base64-encoded raw bytes of the query media")
+		private String data;
+		@Schema(description = "Media content type; must be image/* in Phase 1")
+		private String contentType;
+	}
 
 }

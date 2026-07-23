@@ -106,8 +106,8 @@ public class HybridQueryParser implements QueryParser {
 				boost
 			);
 
-			return embeddingService.getEmbeddedText(tenantId, value)
-				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
+			return embeddingService.embedQuery(tenantId, value, null)
+				.map(queryVector -> KnnQueryParser.toKnnQuery(queryVector, kNeighbors))
 				.map(knnQuery -> new HybridQuery.Builder()
 					.queries(textQuery, knnQuery)
 					.build()
