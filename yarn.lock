@@ -3994,10 +3994,10 @@
   dependencies:
     "@octokit/openapi-types" "^24.2.0"
 
-"@openk9ui/openk9-chatbot@npm:@openk9ui/openk9-chatbot@3.1.1-SNAPSHOT":
-  version "3.1.1-SNAPSHOT"
-  resolved "https://registry.yarnpkg.com/@openk9ui/openk9-chatbot/-/openk9-chatbot-3.1.1-SNAPSHOT.tgz#bd70929b84dd2014bc35d824043f1444a0a7bdd9"
-  integrity sha512-7qfwxFSGHeLBZ/JVSPOGrmVTU+2f66vDzA8xJiXNuc71CpAopRRfctBzfMF/Fr9lpS7G2+lmZiKYRQJFQPsRbw==
+"@openk9ui/openk9-chatbot@npm:@openk9ui/openk9-chatbot@2026.1.1-SNAPSHOT":
+  version "2026.1.1-SNAPSHOT"
+  resolved "https://registry.npmjs.org/@openk9ui/openk9-chatbot/-/openk9-chatbot-2026.1.1-SNAPSHOT.tgz#8c0683f05aa984b662a5d027a86aeec96488844b"
+  integrity sha512-bkv0sMXX6SnkpxuPJijx4PBbnIAFYE3c2odBCq98cGqAnMru5cq5JgHxWHXq7fA0qkoHWpblGi47oip2ewmf7A==
 
 "@peculiar/asn1-schema@^2.1.6", "@peculiar/asn1-schema@^2.3.0":
   version "2.3.3"
@@ -12681,7 +12681,7 @@ keycloak-js@*:
     base64-js "^1.5.1"
     js-sha256 "^0.9.0"
 
-keycloak-js@25.0.6, keycloak-js@^25.0.1:
+keycloak-js@^25.0.1:
   version "25.0.6"
   resolved "https://registry.yarnpkg.com/keycloak-js/-/keycloak-js-25.0.6.tgz#ea2e74d907f251c93080c6e2245d9d858bd4b329"
   integrity sha512-Km+dc+XfNvY6a4az5jcxTK0zPk52ns9mAxLrHj7lF3V+riVYvQujfHmhayltJDjEpSOJ4C8a57LFNNKnNnRP2g==
