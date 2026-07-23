@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.openk9.ml.grpc.EmbeddingOuterClass.EmbeddedChunk;
 import io.openk9.ml.grpc.EmbeddingOuterClass.FloatVector;
@@ -273,6 +274,38 @@ class EmbedContentStreamTest {
 	}
 
 	@Test
+	void should_keep_outstanding_bounded_when_the_writer_is_slow() {
+
+		// The pipeline claims O(windowSize + batchSize) memory because it is
+		// demand-driven: with a fast source and a consumer that pulls one batch
+		// at a time (as EmbeddingProcessor does via transformToUniAndConcatenate),
+		// the chunks pulled-from-source-but-not-yet-written must stay bounded and
+		// must NOT grow with the stream length.
+		int windowSize = 2;
+		int batchSize = 32;
+
+		// the observed peak is windowSize + batchSize; the extra batchSize is
+		// headroom for the grouping's n * batchSize upstream request rounding.
+		int bound = windowSize + 2 * batchSize;
+
+		// measure the peak outstanding at two very different stream lengths.
+		int peakShort = maxOutstanding(1_000, windowSize, batchSize);
+		int peakLong = maxOutstanding(4_000, windowSize, batchSize);
+
+		// bounded by a small constant, far below the 1_000 / 4_000 chunks streamed.
+		Assertions.assertTrue(
+			peakShort <= bound,
+			"peak outstanding " + peakShort + " exceeded bound " + bound);
+
+		// and it does not grow with the stream length: an unbounded buffer in the
+		// pipeline (e.g. a collect().asList()) would drive the peak up to N.
+		Assertions.assertEquals(
+			peakShort, peakLong,
+			"peak outstanding grew with stream length: "
+			+ peakShort + " -> " + peakLong);
+	}
+
+	@Test
 	void should_map_vector_by_case() {
 
 		var f32 = binaryChunk(1, "f", 1.5f, -2.5f);
@@ -306,6 +339,52 @@ class EmbedContentStreamTest {
 	}
 
 	// ---- helpers ---------------------------------------------------------
+
+	/**
+	 * Streams {@code n} chunks through {@link EmbeddingService#windowAndBatch}
+	 * with a fast source and a consumer that pulls exactly one batch at a time,
+	 * writing it before pulling the next. Returns the peak number of chunks
+	 * emitted by the source but not yet written by the consumer.
+	 */
+	private static int maxOutstanding(int n, int windowSize, int batchSize) {
+
+		var emitted = new AtomicInteger();
+		var written = new AtomicInteger();
+		var peak = new AtomicInteger();
+
+		// a source that emits eagerly, recording the running gap between what it
+		// has emitted and what the consumer has written so far.
+		var source = Multi.createFrom().iterable(textChunks(n))
+			.onItem().invoke(() -> peak.accumulateAndGet(
+				emitted.incrementAndGet() - written.get(), Math::max));
+
+		// a slow consumer with zero initial demand.
+		var subscriber = EmbeddingService.windowAndBatch(
+				source, Map.of(), Map.of(), windowSize, batchSize)
+			.subscribe().withSubscriber(AssertSubscriber.create());
+
+		// pull one batch, "write" it, then pull the next, until the stream ends.
+		// the request count is guarded (a batch is at least one doc) so a broken
+		// pipeline that never completes cannot hang the suite.
+		int requests = 0;
+		while (!subscriber.hasCompleted() && requests++ < n) {
+			subscriber.request(1);
+
+			int docs = 0;
+			for (byte[] batch : subscriber.getItems()) {
+				docs += new JsonArray(Buffer.buffer(batch)).size();
+			}
+			written.set(docs);
+		}
+
+		// the bounded-demand consumer must have drained the whole stream.
+		Assertions.assertTrue(
+			subscriber.hasCompleted(),
+			"stream did not complete after " + requests + " requests");
+		Assertions.assertEquals(n, emitted.get());
+
+		return peak.get();
+	}
 
 	private static List<JsonObject> runToDocs(
 		List<EmbeddedChunk> chunks, int windowSize, int batchSize) {
