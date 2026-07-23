@@ -24,6 +24,8 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PostLoad;
@@ -32,6 +34,7 @@ import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.graphql.Description;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -73,6 +76,10 @@ public class EmbeddingModel extends K9Entity {
 	@Column(name = "vector_size")
 	private Integer vectorSize = 0;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "vector_data_type", nullable = false)
+	private VectorDataType vectorDataType = VectorDataType.FLOAT32;
+
 	@Embedded
 	@AttributeOverrides({
 		@AttributeOverride(name = "provider", column = @Column(name = "provider")),
@@ -90,5 +97,31 @@ public class EmbeddingModel extends K9Entity {
 
 	public void setProviderModel(ProviderModel providerModel) {
 		this.providerModel = Objects.requireNonNullElse(providerModel, new ProviderModel());
+	}
+
+	public void setVectorDataType(VectorDataType vectorDataType) {
+		this.vectorDataType = Objects.requireNonNullElse(
+			vectorDataType, VectorDataType.FLOAT32);
+	}
+
+	/**
+	 * Tenant-global type of the vector written to the index. The same value
+	 * drives the quantization performed by the embedding module and the
+	 * {@code knn_vector} mapping created on OpenSearch.
+	 */
+	public enum VectorDataType {
+
+		@Description("Full precision 32-bit float vectors (default, no quantization).")
+		FLOAT32,
+
+		@Description(
+			"Signed 8-bit integer vectors; maps to a byte knn_vector "
+			+ "(lucene engine, cosinesimil space).")
+		BYTE,
+
+		@Description(
+			"Packed binary vectors; maps to a binary knn_vector "
+			+ "(faiss engine, hamming space). Requires a vectorSize multiple of 8.")
+		BINARY
 	}
 }
