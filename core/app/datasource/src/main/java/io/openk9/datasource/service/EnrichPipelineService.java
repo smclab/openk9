@@ -60,8 +60,6 @@ import io.openk9.datasource.service.util.Tuple2;
 import io.smallrye.mutiny.Uni;
 import org.hibernate.reactive.mutiny.Mutiny;
 
-;
-
 @ApplicationScoped
 public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, EnrichPipelineDTO> {
 	@Inject
@@ -269,18 +267,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 	public Uni<Page<EnrichItem>> getEnrichItems(
 		long enrichPipelineId, Pageable pageable) {
 		return getEnrichItems(enrichPipelineId, pageable, Filter.DEFAULT);
-	}
-
-	public Uni<Page<EnrichItem>> getEnrichItems(
-		long enrichPipelineId, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			new Long[]{enrichPipelineId},
-			EnrichPipeline_.ENRICH_PIPELINE_ITEMS, EnrichItem.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(),
-			searchText
-		);
 	}
 
 	public Uni<Set<EnrichItem>> getEnrichItemsInEnrichPipeline(

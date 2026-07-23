@@ -507,29 +507,6 @@ public class DataIndexService
 		return patch((Mutiny.Session) null, id, dto);
 	}
 
-	public Uni<Tuple2<DataIndex, DocType>> removeDocType(
-		long dataIndexId, long docTypeId) {
-		return sessionFactory.withTransaction(s -> findById(s, dataIndexId)
-			.onItem()
-			.ifNotNull()
-			.transformToUni(dataIndex ->
-				docTypeService.findById(s, docTypeId)
-					.onItem()
-					.ifNotNull()
-					.transformToUni(
-						docType -> s.fetch(dataIndex.getDocTypes())
-							.flatMap(dts -> {
-								if (dts.remove(docType)) {
-									dataIndex.setDocTypes(dts);
-									return merge(s, dataIndex)
-										.map(di -> Tuple2.of(di, docType));
-								}
-								return Uni.createFrom().nullItem();
-							})
-					)
-			));
-	}
-
 	@Override
 	public Uni<DataIndex> update(long id, DataIndexDTO dto) {
 		return update((Mutiny.Session) null, id, dto);

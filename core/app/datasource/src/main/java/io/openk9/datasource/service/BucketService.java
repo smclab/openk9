@@ -895,15 +895,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 	}
 
 	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		long bucketId, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
 		long bucketId, Pageable pageable, Filter filter) {
 
 		return findAllPaginatedJoin(

@@ -311,16 +311,6 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		);
 	}
 
-	public Uni<List<DataIndex>> getDataIndexOrphans(long datasourceId) {
-		return sessionFactory.withTransaction((s) -> s.createQuery(
-			"select di "
-			+ "from DataIndex di "
-			+ "inner join di.datasource d on di.datasource = d and d.dataIndex <> di "
-			+ "where d.id = :id",
-			DataIndex.class
-		).setParameter("id", datasourceId).getResultList());
-	}
-
 	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
 		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))

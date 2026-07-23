@@ -36,7 +36,6 @@ import jakarta.validation.ValidationException;
 
 import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
-import io.openk9.datasource.mapper.DocTypeFieldMapper;
 import io.openk9.datasource.mapper.DocTypeMapper;
 import io.openk9.datasource.model.AclMapping;
 import io.openk9.datasource.model.AclMapping_;
@@ -64,8 +63,6 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 @ApplicationScoped
 public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
-	@Inject
-	DocTypeFieldMapper docTypeFieldMapper;
 	@Inject
 	DocTypeFieldService docTypeFieldService;
 	@Inject
@@ -305,17 +302,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<Page<DocTypeField>> getDocTypeFields(
 		long docTypeId, Pageable pageable) {
 		return getDocTypeFields(docTypeId, pageable, Filter.DEFAULT);
-	}
-
-	public Uni<Page<DocTypeField>> getDocTypeFields(
-		long docTypeId, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			new Long[] { docTypeId },
-			DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(),
-			searchText);
 	}
 
 	public Uni<Page<DocTypeField>> getDocTypeFields(
