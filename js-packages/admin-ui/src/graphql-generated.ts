@@ -1689,6 +1689,7 @@ export type EmbeddingModel = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   providerModel?: Maybe<ProviderModel>;
+  vectorDataType?: Maybe<VectorDataType>;
   vectorSize?: Maybe<Scalars['Int']>;
 };
 
@@ -1710,6 +1711,13 @@ export type EmbeddingModelDtoInput = {
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   providerModel: ProviderModelDtoInput;
+  /**
+   * Tenant-global type of the vector written to the index. Drives both the
+   * quantization performed by the embedding module and the knn_vector
+   * mapping on OpenSearch. When omitted it defaults to FLOAT32
+   * (no quantization). BINARY requires a vectorSize multiple of 8.
+   */
+  vectorDataType?: InputMaybe<VectorDataType>;
   /**
    * Dimensionality of the embedding vectors produced by the model.
    * This critical technical parameter determines the storage and processing requirements
@@ -5664,6 +5672,12 @@ export enum UserField {
   Username = 'USERNAME'
 }
 
+export enum VectorDataType {
+  Binary = 'BINARY',
+  Byte = 'BYTE',
+  Float32 = 'FLOAT32'
+}
+
 export type LanguagesQueryVariables = Exact<{
   searchText?: InputMaybe<Scalars['String']>;
   cursor?: InputMaybe<Scalars['String']>;
@@ -6117,7 +6131,7 @@ export type EmbeddingModelQueryVariables = Exact<{
 }>;
 
 
-export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, vectorSize?: number | null, jsonConfig?: string | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
+export type EmbeddingModelQuery = { __typename?: 'Query', embeddingModel?: { __typename?: 'EmbeddingModel', name?: string | null, description?: string | null, apiUrl?: string | null, apiKey?: string | null, vectorSize?: number | null, vectorDataType?: VectorDataType | null, jsonConfig?: string | null, providerModel?: { __typename?: 'ProviderModel', provider?: string | null, model?: string | null } | null } | null };
 
 export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
   id?: InputMaybe<Scalars['ID']>;
@@ -6126,6 +6140,7 @@ export type CreateOrUpdateEmbeddingModelMutationVariables = Exact<{
   description: Scalars['String'];
   name: Scalars['String'];
   vectorSize: Scalars['Int'];
+  vectorDataType?: InputMaybe<VectorDataType>;
   providerModel: ProviderModelDtoInput;
   jsonConfig?: InputMaybe<Scalars['String']>;
 }>;
@@ -9834,6 +9849,7 @@ export const EmbeddingModelDocument = gql`
     apiUrl
     apiKey
     vectorSize
+    vectorDataType
     jsonConfig
     providerModel {
       provider
@@ -9871,10 +9887,10 @@ export type EmbeddingModelQueryHookResult = ReturnType<typeof useEmbeddingModelQ
 export type EmbeddingModelLazyQueryHookResult = ReturnType<typeof useEmbeddingModelLazyQuery>;
 export type EmbeddingModelQueryResult = Apollo.QueryResult<EmbeddingModelQuery, EmbeddingModelQueryVariables>;
 export const CreateOrUpdateEmbeddingModelDocument = gql`
-    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $vectorSize: Int!, $providerModel: ProviderModelDTOInput!, $jsonConfig: String) {
+    mutation CreateOrUpdateEmbeddingModel($id: ID, $apiKey: String, $apiUrl: String!, $description: String!, $name: String!, $vectorSize: Int!, $vectorDataType: VectorDataType, $providerModel: ProviderModelDTOInput!, $jsonConfig: String) {
   embeddingModel(
     id: $id
-    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, vectorSize: $vectorSize, providerModel: $providerModel, jsonConfig: $jsonConfig}
+    embeddingModelDTO: {name: $name, apiKey: $apiKey, apiUrl: $apiUrl, description: $description, vectorSize: $vectorSize, vectorDataType: $vectorDataType, providerModel: $providerModel, jsonConfig: $jsonConfig}
   ) {
     entity {
       id

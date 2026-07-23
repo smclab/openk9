@@ -57,6 +57,7 @@ gql`
       apiUrl
       apiKey
       vectorSize
+      vectorDataType
       jsonConfig
       providerModel {
         provider
@@ -74,6 +75,7 @@ gql`
     $description: String!
     $name: String!
     $vectorSize: Int!
+    $vectorDataType: VectorDataType
     $providerModel: ProviderModelDTOInput!
     $jsonConfig: String
   ) {
@@ -85,6 +87,7 @@ gql`
         apiUrl: $apiUrl
         description: $description
         vectorSize: $vectorSize
+        vectorDataType: $vectorDataType
         providerModel: $providerModel
         jsonConfig: $jsonConfig
       }

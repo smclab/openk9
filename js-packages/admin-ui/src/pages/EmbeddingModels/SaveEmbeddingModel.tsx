@@ -29,7 +29,7 @@ import {
 } from "@components/Form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery } from "../../graphql-generated";
+import { useCreateOrUpdateEmbeddingModelMutation, useEmbeddingModelQuery, VectorDataType } from "../../graphql-generated";
 import { Box, Button } from "@mui/material";
 import { AutocompleteDropdownWithOptions } from "@components/Form/Select/AutocompleteDropdown";
 import { useConfirmModal } from "../../utils/useConfirmModal";
@@ -41,6 +41,12 @@ const PROVIDER_OPTIONS = [
   { value: "watsonx", label: "IBM WatsonX" },
   { value: "chat_vertex_ai", label: "Chat Vertex AI" },
   { value: "aws_bedrock", label: "AWS Bedrock" },
+];
+
+const VECTOR_DATA_TYPE_OPTIONS = [
+  { value: "FLOAT32", label: "Float32 (full precision, default)" },
+  { value: "BYTE", label: "Byte (int8 quantized)" },
+  { value: "BINARY", label: "Binary (packed, vector size multiple of 8)" },
 ];
 
 export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.ReactNode | null) => void }) {
@@ -113,6 +119,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         description: "",
         provider: "openai",
         vectorSize: 1,
+        vectorDataType: "FLOAT32",
         model: "",
         jsonConfig: "{}",
       }),
@@ -132,6 +139,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           id: embeddingModelsId !== "new" ? embeddingModelsId : undefined,
           providerModel: { provider: providerModel.provider || "", model: providerModel.model || "" },
           ...data,
+          vectorDataType: data.vectorDataType as VectorDataType,
         },
       });
     },
@@ -156,6 +164,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           { key: "name" },
           { key: "description" },
           { key: "vectorSize", label: "Vector Size" },
+          { key: "vectorDataType", label: "Vector Data Type" },
           { key: "provider" },
           { key: "model" },
           { key: "apiKey", label: "API Key" },
@@ -210,6 +219,21 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       {...form.inputProps("vectorSize")}
                       isNumber={false}
                       description="Dimensionality of the embedding vectors produced by the model. Must match the model output."
+                    />
+                    <AutocompleteDropdownWithOptions
+                      label="Vector Data Type"
+                      description="Type of the vector written to the index. Drives the quantization applied by the embedding module and the knn_vector mapping on OpenSearch. Defaults to FLOAT32 (no quantization). BINARY requires a vector size multiple of 8."
+                      allowClear={false}
+                      disabled={view ? true : false}
+                      optionsDefault={VECTOR_DATA_TYPE_OPTIONS}
+                      value={(() => {
+                        const current = form.inputProps("vectorDataType").value || "FLOAT32";
+                        const match = VECTOR_DATA_TYPE_OPTIONS.find((o) => o.value === current);
+                        return { id: current, name: match?.label || current };
+                      })()}
+                      onChange={(val) => {
+                        form.inputProps("vectorDataType").onChange(val.id);
+                      }}
                     />
                     <AutocompleteDropdownWithOptions
                       label="Provider"
