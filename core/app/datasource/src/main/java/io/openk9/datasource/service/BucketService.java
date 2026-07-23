@@ -801,41 +801,9 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 			.flatMap(bucket -> session.fetch(bucket.getHighlight())));
 	}
 
-	public Uni<Language> getLanguage(Bucket bucket) {
-		return sessionFactory.withTransaction(
-			s -> s.fetch(bucket.getDefaultLanguage()));
-	}
-
 	public Uni<Language> getLanguage(long bucketId) {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(b -> s.fetch(b.getDefaultLanguage())));
-	}
-
-	public Uni<Page<Language>> getLanguages(long bucketId, Pageable pageable, Filter filter) {
-		return getLanguages(new Long[] {bucketId}, pageable, filter);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		long bucketId, Pageable pageable, String searchText) {
-		return getLanguages(new Long[] {bucketId}, pageable, searchText);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		Long[] bucketIds, Pageable pageable, String searchText) {
-
-		return findAllPaginatedJoin(
-			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), searchText);
-	}
-
-	public Uni<Page<Language>> getLanguages(
-		Long[] bucketIds, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			bucketIds, Bucket_.AVAILABLE_LANGUAGES, Language.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
 	}
 
 	public Uni<Connection<Language>> getLanguagesConnection(
@@ -892,15 +860,6 @@ public class BucketService extends BaseK9EntityService<Bucket, BucketDTO> {
 		return sessionFactory.withTransaction(s -> findById(s, bucketId)
 			.flatMap(bucket -> s.fetch(bucket.getSuggestionCategories())));
 
-	}
-
-	public Uni<Page<SuggestionCategory>> getSuggestionCategories(
-		long bucketId, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			new Long[]{bucketId}, Bucket_.SUGGESTION_CATEGORIES, SuggestionCategory.class,
-			pageable.getLimit(), pageable.getSortBy().name(), pageable.getAfterId(),
-			pageable.getBeforeId(), filter);
 	}
 
 	public Uni<Connection<SuggestionCategory>> getSuggestionCategoriesConnection(

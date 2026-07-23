@@ -18,11 +18,12 @@
 package io.openk9.datasource.service;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import io.quarkus.vertx.ConsumeEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.spi.CDI;
 import jakarta.inject.Inject;
@@ -49,7 +50,6 @@ import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.K9EntityEvent;
 import io.openk9.datasource.service.util.Tuple2;
 
-import io.quarkus.vertx.ConsumeEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.hibernate.reactive.mutiny.Mutiny;
@@ -311,23 +311,9 @@ public class DatasourceService extends BaseK9EntityService<Datasource, Datasourc
 		);
 	}
 
-	public Uni<List<DataIndex>> getDataIndexes(long datasourceId) {
-		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
-			.flatMap(datasource -> s.fetch(datasource.getDataIndexes()))
-			.map(ArrayList::new));
-	}
-
-	public Uni<Set<DataIndex>> getDataIndexes(Datasource datasource) {
-		return sessionFactory.withTransaction(s -> s.fetch(datasource.getDataIndexes()));
-	}
-
 	public Uni<EnrichPipeline> getEnrichPipeline(long datasourceId) {
 		return sessionFactory.withTransaction(s -> findById(s, datasourceId)
 			.flatMap(datasource -> s.fetch(datasource.getEnrichPipeline())));
-	}
-
-	public Uni<EnrichPipeline> getEnrichPipeline(Datasource datasource) {
-		return sessionFactory.withTransaction(s -> s.fetch(datasource.getEnrichPipeline()));
 	}
 
 	@Override

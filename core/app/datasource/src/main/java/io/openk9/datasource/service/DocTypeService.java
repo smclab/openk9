@@ -50,9 +50,6 @@ import io.openk9.datasource.model.DocType_;
 import io.openk9.datasource.model.dto.base.DocTypeDTO;
 import io.openk9.datasource.model.dto.base.DocTypeFieldDTO;
 import io.openk9.datasource.model.dto.request.DocTypeWithTemplateDTO;
-import io.openk9.datasource.resource.util.Filter;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.exception.K9Error;
 import io.openk9.datasource.service.util.Tuple2;
 
@@ -254,29 +251,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 		);
 	}
 
-	public Uni<Boolean> existsByName(String name) {
-		return sessionFactory.withTransaction(s -> {
-
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-			Class<DocType> entityClass = getEntityClass();
-
-			CriteriaQuery<Long> query = cb.createQuery(Long.class);
-
-			Root<DocType> from = query.from(entityClass);
-
-			query.select(cb.count(from));
-
-			query.where(cb.equal(from.get(DocType_.name), name));
-
-			return s
-				.createQuery(query)
-				.getSingleResult()
-				.map(count -> count > 0);
-
-		});
-	}
-
 	public Uni<DocType> findByName(String name) {
 		return sessionFactory.withTransaction((s) -> {
 			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
@@ -297,37 +271,6 @@ public class DocTypeService extends BaseK9EntityService<DocType, DocTypeDTO> {
 	public Uni<List<DocType>> findDocTypes(List<Long> docTypeIds) {
 
 		return sessionFactory.withSession(s -> findDocTypes(docTypeIds, s));
-	}
-
-	public Uni<Page<DocTypeField>> getDocTypeFields(
-		long docTypeId, Pageable pageable) {
-		return getDocTypeFields(docTypeId, pageable, Filter.DEFAULT);
-	}
-
-	public Uni<Page<DocTypeField>> getDocTypeFields(
-		long docTypeId, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			new Long[] { docTypeId },
-			DocType_.DOC_TYPE_FIELDS, DocTypeField.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(),
-			filter);
-	}
-
-	public Uni<Set<DocTypeField>> getDocTypeFields(DocType docType) {
-		return sessionFactory.withTransaction(s -> s.fetch(docType.getDocTypeFields()));
-	}
-
-	public Uni<List<DocTypeField>> getDocTypeFieldsByName(String docTypeName) {
-		return sessionFactory.withTransaction((s) -> {
-			CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-			CriteriaQuery<DocTypeField> cq = cb.createQuery(DocTypeField.class);
-			Root<DocType> root = cq.from(DocType.class);
-			cq.select(root.join(DocType_.docTypeFields));
-			cq.where(cb.equal(root.get(DocType_.name), docTypeName));
-			return s.createQuery(cq).getResultList();
-		});
 	}
 
 	public Uni<Connection<DocTypeField>> getDocTypeFieldsConnection(

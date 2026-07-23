@@ -31,12 +31,7 @@ import io.openk9.datasource.model.FieldType;
 import io.openk9.datasource.model.SuggestionCategory;
 import io.openk9.datasource.model.SuggestionCategory_;
 import io.openk9.datasource.model.dto.base.SuggestionCategoryDTO;
-import io.openk9.datasource.model.dto.base.TranslationDTO;
-import io.openk9.datasource.model.dto.base.TranslationKeyDTO;
 import io.openk9.datasource.model.dto.request.SuggestionCategoryWithDocTypeFieldDTO;
-import io.openk9.datasource.resource.util.Filter;
-import io.openk9.datasource.resource.util.Page;
-import io.openk9.datasource.resource.util.Pageable;
 import io.openk9.datasource.service.util.Tuple2;
 
 import io.smallrye.mutiny.Uni;
@@ -47,8 +42,6 @@ public class SuggestionCategoryService extends
 	BaseK9EntityService<SuggestionCategory, SuggestionCategoryDTO> {
 	@Inject
 	DocTypeFieldService docTypeFieldService;
-	@Inject
-	TranslationService translationService;
 
 	 SuggestionCategoryService(SuggestionCategoryMapper mapper) {
 		 this.mapper = mapper;
@@ -74,11 +67,6 @@ public class SuggestionCategoryService extends
 				})));
 	}
 
-	public Uni<Void> addTranslation(Long id, TranslationDTO dto) {
-		return translationService.addTranslation(
-			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey(), dto.getValue());
-	}
-
 	public Uni<SuggestionCategory> create(SuggestionCategoryDTO suggestionDTO){
 
 		if (suggestionDTO instanceof
@@ -100,11 +88,6 @@ public class SuggestionCategoryService extends
 		}
 
 		return super.create(suggestionDTO);
-	}
-
-	public Uni<Void> deleteTranslation(Long id, TranslationKeyDTO dto) {
-		return translationService.deleteTranslation(
-			SuggestionCategory.class, id, dto.getLanguage(), dto.getKey());
 	}
 
 	/**
@@ -133,14 +116,6 @@ public class SuggestionCategoryService extends
 		});
 	}
 
-	public Uni<Set<Bucket>> getBuckets(long suggestionCategoryId) {
-		return sessionFactory.withTransaction(s ->
-			findById(s, suggestionCategoryId)
-				.flatMap(suggestionCategory ->
-					s.fetch(suggestionCategory.getBuckets()))
-		);
-	}
-
 	public Uni<Connection<Bucket>> getBucketsConnection(
 		Long id, String after, String before, Integer first, Integer last,
 		String searchText, Set<SortBy> sortByList, boolean notEqual) {
@@ -148,23 +123,6 @@ public class SuggestionCategoryService extends
 			id, SuggestionCategory_.BUCKETS, Bucket.class,
 			new String[]{}, after, before, first,
 			last, searchText, sortByList, notEqual
-		);
-	}
-
-	public Uni<Page<DocTypeField>> getDocTypeFields(
-		long suggestionCategoryId, Pageable pageable) {
-		 return getDocTypeFields(
-			suggestionCategoryId, pageable, Filter.DEFAULT);
-	}
-
-	public Uni<Page<DocTypeField>> getDocTypeFields(
-		long suggestionCategoryId, Pageable pageable, Filter filter) {
-
-		return findAllPaginatedJoin(
-			new Long[] { suggestionCategoryId },
-			SuggestionCategory_.DOC_TYPE_FIELD, DocTypeField.class,
-			pageable.getLimit(), pageable.getSortBy().name(),
-			pageable.getAfterId(), pageable.getBeforeId(), filter
 		);
 	}
 

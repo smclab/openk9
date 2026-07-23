@@ -29,12 +29,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.SetJoin;
-import jakarta.persistence.criteria.Subquery;
 
 import io.openk9.common.graphql.SortBy;
 import io.openk9.common.graphql.util.relay.Connection;
@@ -46,12 +42,10 @@ import io.openk9.datasource.model.EnrichItem_;
 import io.openk9.datasource.model.EnrichPipeline;
 import io.openk9.datasource.model.EnrichPipelineItem;
 import io.openk9.datasource.model.EnrichPipelineItemKey;
-import io.openk9.datasource.model.EnrichPipelineItemKey_;
 import io.openk9.datasource.model.EnrichPipelineItem_;
 import io.openk9.datasource.model.EnrichPipeline_;
 import io.openk9.datasource.model.dto.base.EnrichPipelineDTO;
 import io.openk9.datasource.model.dto.request.PipelineWithItemsDTO;
-import io.openk9.datasource.model.util.K9Entity_;
 import io.openk9.datasource.resource.util.Filter;
 import io.openk9.datasource.resource.util.Page;
 import io.openk9.datasource.resource.util.Pageable;
@@ -264,11 +258,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 
 	}
 
-	public Uni<Page<EnrichItem>> getEnrichItems(
-		long enrichPipelineId, Pageable pageable) {
-		return getEnrichItems(enrichPipelineId, pageable, Filter.DEFAULT);
-	}
-
 	public Uni<Set<EnrichItem>> getEnrichItemsInEnrichPipeline(
 		long enrichPipelineId) {
 
@@ -280,47 +269,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 						.stream()
 						.map(EnrichPipelineItem::getEnrichItem)
 						.collect(Collectors.toSet()))
-		);
-
-	}
-
-	public Uni<List<EnrichItem>> getEnrichItemsNotInEnrichPipeline(
-		long enrichPipelineId) {
-
-		return sessionFactory.withTransaction(
-			s -> {
-
-				CriteriaBuilder cb = sessionFactory.getCriteriaBuilder();
-
-				CriteriaQuery<EnrichItem> query =
-					cb.createQuery(EnrichItem.class);
-
-				Root<EnrichItem> root = query.from(EnrichItem.class);
-
-				Subquery<Long> subquery = query.subquery(Long.class);
-
-				Root<EnrichPipeline> from = subquery.from(EnrichPipeline.class);
-
-				SetJoin<EnrichPipeline, EnrichPipelineItem> rootJoin =
-					from.joinSet(EnrichPipeline_.ENRICH_PIPELINE_ITEMS);
-
-				Path<EnrichPipelineItemKey> enrichPipelineItemKeyPath =
-					rootJoin.get(EnrichPipelineItem_.key);
-
-				Path<Long> enrichItemId = enrichPipelineItemKeyPath.get(
-					EnrichPipelineItemKey_.enrichItemId);
-
-				subquery.select(enrichItemId);
-
-				subquery.where(
-					cb.equal(from.get(K9Entity_.id), enrichPipelineId));
-
-				query.where(
-					cb.in(root.get(K9Entity_.id)).value(subquery).not());
-
-				return s.createQuery(query).getResultList();
-
-			}
 		);
 
 	}
@@ -462,55 +410,6 @@ public class EnrichPipelineService extends BaseK9EntityService<EnrichPipeline, E
 				})
 			)
 		);
-	}
-
-	public Uni<EnrichItem> findFirstEnrichItem(
-		Mutiny.Session s, long enrichPipelineId) {
-
-		String queryString =
-			"select epi.enrichItem " +
-			"from EnrichPipelineItem epi " +
-			"where epi.enrichPipeline.id = :enrichPipelineId " +
-			"order by epi.weight asc";
-
-		var query = s.createQuery(queryString, EnrichItem.class);
-
-		query.setParameter("enrichPipelineId", enrichPipelineId);
-
-		query.setMaxResults(1);
-
-		return query.getSingleResultOrNull();
-	}
-
-	public Uni<EnrichItem> findFirstEnrichItem(long enrichPipelineId) {
-		return sessionFactory.withTransaction(s -> findFirstEnrichItem(s, enrichPipelineId));
-	}
-
-	public Uni<EnrichItem> findNextEnrichItem(
-		long enrichPipelineId, long enrichItemId) {
-
-		return sessionFactory.withTransaction(s -> {
-
-			String queryString =
-				"select epi_next.enrichItem " +
-				"from EnrichPipelineItem epi " +
-				"left join EnrichPipelineItem epi_next on epi_next.enrichPipeline.id = epi.enrichPipeline.id " +
-				"where epi.enrichPipeline.id = :enrichPipelineId " +
-				"and epi.enrichItem.id = :enrichItemId " +
-				"and epi_next.weight > epi.weight " +
-				"order by epi_next.weight asc";
-
-			var query = s.createQuery(queryString, EnrichItem.class);
-
-			query.setParameter("enrichPipelineId", enrichPipelineId);
-			query.setParameter("enrichItemId", enrichItemId);
-
-			query.setMaxResults(1);
-
-			return query.getSingleResultOrNull();
-
-		});
-
 	}
 
 	public Uni<List<EnrichPipeline>> findUnboundEnrichPipelines(long itemId) {
