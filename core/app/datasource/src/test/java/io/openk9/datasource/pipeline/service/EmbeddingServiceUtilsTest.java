@@ -27,6 +27,7 @@ import java.util.Map;
 import io.openk9.datasource.TestUtils;
 import io.openk9.datasource.model.EmbeddingModel;
 import io.openk9.datasource.model.ProviderModel;
+import io.openk9.ml.grpc.EmbeddingOuterClass;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -155,6 +156,42 @@ public class EmbeddingServiceUtilsTest {
 		);
 		assertEquals("test-key", request.getApiKey());
 		assertEquals("HUGGING_FACE", request.getProviderModel().getProvider());
+	}
+
+	@Test
+	void toGrpcVectorDataType_should_map_every_type_and_fallback_to_float32() {
+
+		// a fresh model and a null-coerced one both default to FLOAT32
+		var embeddingModel = new EmbeddingModel();
+		assertEquals(
+			EmbeddingModel.VectorDataType.FLOAT32,
+			embeddingModel.getVectorDataType());
+
+		embeddingModel.setVectorDataType(null);
+		assertEquals(
+			EmbeddingModel.VectorDataType.FLOAT32,
+			embeddingModel.getVectorDataType());
+
+		// FLOAT32 and null (pre-existing models) map to the grpc default
+		assertEquals(
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32,
+			EmbeddingService.toGrpcVectorDataType(
+				EmbeddingModel.VectorDataType.FLOAT32));
+
+		assertEquals(
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32,
+			EmbeddingService.toGrpcVectorDataType(null));
+
+		// BYTE and BINARY map to their quantized grpc counterparts
+		assertEquals(
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE,
+			EmbeddingService.toGrpcVectorDataType(
+				EmbeddingModel.VectorDataType.BYTE));
+
+		assertEquals(
+			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BINARY,
+			EmbeddingService.toGrpcVectorDataType(
+				EmbeddingModel.VectorDataType.BINARY));
 	}
 
 }

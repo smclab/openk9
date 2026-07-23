@@ -368,6 +368,32 @@ public class EmbeddingService {
 		return embeddingModelBuilder.build();
 	}
 
+	/**
+	 * Maps the tenant-global {@link EmbeddingModel.VectorDataType} to the gRPC
+	 * {@link EmbeddingOuterClass.VectorDataType} propagated to the embedding
+	 * module in {@code EmbedContent}/{@code EmbedQuery} requests, so the module
+	 * quantizes each vector to match the {@code knn_vector} mapping of the index.
+	 *
+	 * @param vectorDataType the model's vector type; {@code null} is treated as
+	 * {@code FLOAT32} for backward compatibility with pre-existing models
+	 * @return the corresponding gRPC vector data type
+	 */
+	static EmbeddingOuterClass.VectorDataType toGrpcVectorDataType(
+		EmbeddingModel.VectorDataType vectorDataType) {
+
+		if (vectorDataType == null) {
+			return EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
+		}
+
+		return switch (vectorDataType) {
+			case FLOAT32 ->
+				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
+			case BYTE -> EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BYTE;
+			case BINARY ->
+				EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_BINARY;
+		};
+	}
+
 	private Uni<EmbeddingModel> getEmbeddingModel(String tenantId) {
 		return cache.getAsync(
 			new CompositeCacheKey(tenantId),

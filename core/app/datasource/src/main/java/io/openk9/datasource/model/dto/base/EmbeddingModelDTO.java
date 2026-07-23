@@ -17,6 +17,8 @@
 
 package io.openk9.datasource.model.dto.base;
 
+import io.openk9.datasource.model.EmbeddingModel;
+import io.openk9.datasource.validation.ValidVectorDataType;
 import io.openk9.datasource.validation.json.Json;
 import io.smallrye.graphql.api.Nullable;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +34,7 @@ import org.eclipse.microprofile.graphql.Description;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
+@ValidVectorDataType
 public class EmbeddingModelDTO extends K9EntityDTO {
 
 	@Nullable
@@ -72,5 +75,15 @@ public class EmbeddingModelDTO extends K9EntityDTO {
 			"""
 	)
 	private int vectorSize;
+	@Nullable
+	@Description(
+		"""
+			Tenant-global type of the vector written to the index. Drives both the
+			quantization performed by the embedding module and the knn_vector
+			mapping on OpenSearch. When omitted it defaults to FLOAT32
+			(no quantization). BINARY requires a vectorSize multiple of 8.
+			"""
+	)
+	private EmbeddingModel.VectorDataType vectorDataType;
 
 }
