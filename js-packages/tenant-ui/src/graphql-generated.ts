@@ -568,4 +568,4 @@ export function usePreconfigurationsLazyQuery(baseOptions?: Apollo.LazyQueryHook
 export type PreconfigurationsQueryHookResult = ReturnType<typeof usePreconfigurationsQuery>;
 export type PreconfigurationsLazyQueryHookResult = ReturnType<typeof usePreconfigurationsLazyQuery>;
 export type PreconfigurationsQueryResult = Apollo.QueryResult<PreconfigurationsQuery, PreconfigurationsQueryVariables>;
-// Generated on 2026-06-08T14:44:10+02:00
+// Generated on 2026-07-23T19:32:47+02:00
