@@ -310,12 +310,18 @@ public class IndexMappingService {
 	}
 
 	protected static PutComponentTemplateRequest createComponentTemplateRequest(
-		String componentTemplateName, String mappings) {
+		String componentTemplateName, String mappings, Integer efSearch) {
 
 		return PutComponentTemplateRequest.of(component -> component
 			.name(componentTemplateName)
 			.template(template -> template
-				.settings(settings -> settings.knn(true))
+				.settings(settings -> {
+					settings.knn(true);
+					if (efSearch != null) {
+						settings.knnAlgoParamEfSearch(efSearch);
+					}
+					return settings;
+				})
 				.mappings(mapping -> mapping
 					.withJson(new StringReader(mappings))
 				)
@@ -353,7 +359,8 @@ public class IndexMappingService {
 				var componentTemplate = new EmbeddingComponentTemplate(
 					tenantId,
 					embeddingModel.getName(),
-					embeddingModel.getVectorSize()
+					embeddingModel.getVectorSize(),
+					embeddingModel.getVectorDataType()
 				);
 
 				componentTemplates.add(componentTemplate.getName());
@@ -534,14 +541,21 @@ public class IndexMappingService {
 			);
 		}
 
-		var mappings = embeddingComponentMappings.data(
-			"knnVectorDimension",
-			embeddingComponentTemplate.vectorSize()
-		).render();
+		var mappings = embeddingComponentMappings
+			.data("knnVectorDimension", embeddingComponentTemplate.vectorSize())
+			.data("dataType", embeddingComponentTemplate.dataType())
+			.data("engine", embeddingComponentTemplate.engine())
+			.data("spaceType", embeddingComponentTemplate.spaceType())
+			.render();
+
+		Integer efSearch = embeddingComponentTemplate.quantized()
+			? EmbeddingComponentTemplate.EF_SEARCH_QUANTIZED
+			: null;
 
 		var componentTemplateRequest = createComponentTemplateRequest(
 			embeddingComponentTemplate.getName(),
-			mappings
+			mappings,
+			efSearch
 		);
 
 		var jsonObject = (JsonObject) Json.decodeValue(mappings);

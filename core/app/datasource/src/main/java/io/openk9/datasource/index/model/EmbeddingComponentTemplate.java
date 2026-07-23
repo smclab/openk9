@@ -18,16 +18,32 @@
 package io.openk9.datasource.index.model;
 
 import io.openk9.datasource.index.util.OpenSearchUtils;
+import io.openk9.datasource.model.EmbeddingModel;
 
 public record EmbeddingComponentTemplate(
-	String tenantId, String embeddingModelName, int vectorSize
+	String tenantId,
+	String embeddingModelName,
+	int vectorSize,
+	EmbeddingModel.VectorDataType vectorDataType
 ) {
+
+	/**
+	 * {@code index.knn.algo_param.ef_search} applied to quantized indexes.
+	 * Quantization (byte/binary) loses recall, so the search-time exploration
+	 * factor is raised well above the OpenSearch default of {@code 100} to
+	 * recover it.
+	 */
+	public static final int EF_SEARCH_QUANTIZED = 512;
 
 	public EmbeddingComponentTemplate {
 
 		assert embeddingModelName != null && !embeddingModelName.isEmpty();
 		assert tenantId != null && !tenantId.isEmpty();
 		assert vectorSize > 0;
+
+		vectorDataType = vectorDataType != null
+			? vectorDataType
+			: EmbeddingModel.VectorDataType.FLOAT32;
 	}
 
 	@Override
@@ -43,6 +59,59 @@ public record EmbeddingComponentTemplate(
 	@Override
 	public String tenantId() {
 		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Whether the vector is quantized (anything other than {@code FLOAT32}).
+	 * Quantized indexes get an explicit {@code knn_vector} method and a raised
+	 * {@code ef_search}.
+	 *
+	 * @return {@code true} for {@code BYTE} and {@code BINARY}
+	 */
+	public boolean quantized() {
+		return vectorDataType != EmbeddingModel.VectorDataType.FLOAT32;
+	}
+
+	/**
+	 * The OpenSearch {@code knn_vector} {@code data_type} for this vector type.
+	 *
+	 * @return {@code "byte"}, {@code "binary"} or {@code null} for
+	 * {@code FLOAT32} (which uses the OpenSearch default)
+	 */
+	public String dataType() {
+		return switch (vectorDataType) {
+			case BYTE -> "byte";
+			case BINARY -> "binary";
+			case FLOAT32 -> null;
+		};
+	}
+
+	/**
+	 * The OpenSearch k-NN engine backing this vector type.
+	 *
+	 * @return {@code "lucene"} for {@code BYTE}, {@code "faiss"} for
+	 * {@code BINARY}, {@code null} for {@code FLOAT32}
+	 */
+	public String engine() {
+		return switch (vectorDataType) {
+			case BYTE -> "lucene";
+			case BINARY -> "faiss";
+			case FLOAT32 -> null;
+		};
+	}
+
+	/**
+	 * The OpenSearch k-NN {@code space_type} for this vector type.
+	 *
+	 * @return {@code "cosinesimil"} for {@code BYTE}, {@code "hamming"} for
+	 * {@code BINARY}, {@code null} for {@code FLOAT32}
+	 */
+	public String spaceType() {
+		return switch (vectorDataType) {
+			case BYTE -> "cosinesimil";
+			case BINARY -> "hamming";
+			case FLOAT32 -> null;
+		};
 	}
 
 }

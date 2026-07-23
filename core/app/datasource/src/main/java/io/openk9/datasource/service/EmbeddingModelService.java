@@ -145,7 +145,8 @@ public class EmbeddingModelService extends BaseK9EntityService<EmbeddingModel, E
 				var embeddingComponentTemplate = new EmbeddingComponentTemplate(
 					tenantId,
 					entity.getName(),
-					entity.getVectorSize()
+					entity.getVectorSize(),
+					entity.getVectorDataType()
 				);
 
 				return indexMappingService.createEmbeddingComponentTemplate(

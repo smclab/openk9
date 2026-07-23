@@ -65,7 +65,8 @@ public class EmbeddingModelServiceTest {
 		var req = new EmbeddingComponentTemplate(
 			"public",
 			EMBEDDING_MODEL_NAME,
-			VECTOR_SIZE
+			VECTOR_SIZE,
+			EmbeddingModel.VectorDataType.FLOAT32
 		);
 
 		asserter.assertThat(

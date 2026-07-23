@@ -26,7 +26,13 @@
 	  },
 	  "vector": {
 		"type": "knn_vector",
-		"dimension": {knnVectorDimension}
+		"dimension": {knnVectorDimension}{#if dataType},
+		"data_type": "{dataType}",
+		"method": {
+		  "name": "hnsw",
+		  "engine": "{engine}",
+		  "space_type": "{spaceType}"
+		}{/if}
 	  },
 	  "next": {
 		"properties": {
