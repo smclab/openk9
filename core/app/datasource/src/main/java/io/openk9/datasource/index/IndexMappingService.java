@@ -329,6 +329,27 @@ public class IndexMappingService {
 		);
 	}
 
+	/**
+	 * Renders the {@code embeddingComponentMappings} Qute template into the
+	 * {@code knn_vector} mapping for the given component template.
+	 *
+	 * @param template                   the {@code embeddingComponentMappings}
+	 *                                   Qute template
+	 * @param embeddingComponentTemplate the knn parameters to render
+	 * @return the rendered mapping as a JSON string
+	 */
+	protected static String renderEmbeddingComponentMappings(
+		io.quarkus.qute.Template template,
+		EmbeddingComponentTemplate embeddingComponentTemplate) {
+
+		return template
+			.data("knnVectorDimension", embeddingComponentTemplate.vectorSize())
+			.data("dataType", embeddingComponentTemplate.dataType())
+			.data("engine", embeddingComponentTemplate.engine())
+			.data("spaceType", embeddingComponentTemplate.spaceType())
+			.render();
+	}
+
 	protected static PutComposableIndexTemplateRequest createIndexTemplateRequest(
 		DataIndexTemplate indexTemplateRequest) {
 
@@ -541,12 +562,8 @@ public class IndexMappingService {
 			);
 		}
 
-		var mappings = embeddingComponentMappings
-			.data("knnVectorDimension", embeddingComponentTemplate.vectorSize())
-			.data("dataType", embeddingComponentTemplate.dataType())
-			.data("engine", embeddingComponentTemplate.engine())
-			.data("spaceType", embeddingComponentTemplate.spaceType())
-			.render();
+		var mappings = renderEmbeddingComponentMappings(
+			embeddingComponentMappings, embeddingComponentTemplate);
 
 		Integer efSearch = embeddingComponentTemplate.quantized()
 			? EmbeddingComponentTemplate.EF_SEARCH_QUANTIZED

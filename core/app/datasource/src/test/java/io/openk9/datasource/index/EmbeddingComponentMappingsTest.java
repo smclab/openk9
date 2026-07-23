@@ -90,12 +90,8 @@ public class EmbeddingComponentMappingsTest {
 		var componentTemplate = new EmbeddingComponentTemplate(
 			"tenant", "e5-small", 768, vectorDataType);
 
-		var rendered = template()
-			.data("knnVectorDimension", componentTemplate.vectorSize())
-			.data("dataType", componentTemplate.dataType())
-			.data("engine", componentTemplate.engine())
-			.data("spaceType", componentTemplate.spaceType())
-			.render();
+		var rendered = IndexMappingService.renderEmbeddingComponentMappings(
+			template(), componentTemplate);
 
 		return new JsonObject(rendered)
 			.getJsonObject("properties")
