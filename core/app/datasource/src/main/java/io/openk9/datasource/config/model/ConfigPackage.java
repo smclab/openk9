@@ -19,6 +19,7 @@ package io.openk9.datasource.config.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonDeserialize(using = ConfigPackageDeserializer.class)
 public class ConfigPackage {
 
 	public static final String CURRENT_SCHEMA_VERSION = "1.0";

@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.not;
 
 /**
  * Exercises the import/export HTTP contract end-to-end against the booted
@@ -139,8 +140,8 @@ public class ConfigResourceTest {
 	@Test
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void import_with_unsupported_schema_version_is_bad_request() {
-		// a schema version the importer does not understand must be refused with
-		// 400, regardless of the rest of the package.
+		// a schema version whose major does not match is refused with a speaking
+		// 400 that names the offending version, before any entity is bound.
 		given()
 			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.accept(ContentType.JSON)
@@ -149,7 +150,49 @@ public class ConfigResourceTest {
 			.when()
 			.post("/import")
 			.then()
-			.statusCode(400);
+			.statusCode(400)
+			.body(containsString("0.9"))
+			.body(containsString("schema version"));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void import_with_newer_minor_is_rejected() {
+		// forward compatibility is not assumed: a same-major but newer-minor
+		// package (produced by a more recent runtime) is refused with a speaking 400.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body("{\"schemaVersion\":\"1.9\"}")
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(400)
+			.body(containsString("1.9"))
+			.body(containsString("schema version"));
+	}
+
+	@Test
+	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
+	void import_with_unknown_type_is_speaking_bad_request() {
+		// a compatible version but an unknown entity type must still be a speaking
+		// 400 that names the offending value, not the opaque empty 400 the raw enum
+		// binding in ConfigEntityDeserializer would otherwise produce; the message
+		// must NOT leak the internal enum's fully-qualified class name.
+		given()
+			.header(InternalHeaders.TENANT_ID, TENANT_ID)
+			.accept(ContentType.JSON)
+			.contentType(ContentType.JSON)
+			.body("{\"schemaVersion\":\"1.0\",\"entities\":[{\"ref\":\"x\","
+				+ "\"type\":\"PIPPO_TYPE\",\"key\":\"x\",\"attributes\":{\"name\":\"x\"}}]}")
+			.when()
+			.post("/import")
+			.then()
+			.statusCode(400)
+			.body(containsString("PIPPO_TYPE"))
+			.body(containsString("Malformed configuration package"))
+			.body(not(containsString("io.openk9")));
 	}
 
 	@Test
@@ -173,14 +216,14 @@ public class ConfigResourceTest {
 	@TestSecurity(user = "k9-admin", roles = {"k9-admin"})
 	void import_with_unknown_mode_is_bad_request() {
 		// an unknown import mode must be a speaking 400, not the opaque 404 the raw
-		// enum @QueryParam binding would otherwise produce; the mode is validated
-		// before the body, so a minimal body is enough to reach it.
+		// enum @QueryParam binding would otherwise produce; the body is a valid,
+		// compatible package so the only error surfaced is the bad mode.
 		given()
 			.header(InternalHeaders.TENANT_ID, TENANT_ID)
 			.accept(ContentType.JSON)
 			.contentType(ContentType.JSON)
 			.queryParam("mode", "PIPPO")
-			.body("{}")
+			.body("{\"schemaVersion\":\"1.0\",\"entities\":[]}")
 			.when()
 			.post("/import")
 			.then()

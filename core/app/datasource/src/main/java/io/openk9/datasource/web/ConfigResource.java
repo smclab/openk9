@@ -28,7 +28,11 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
+import io.openk9.common.model.dto.Problem;
 import io.openk9.common.util.web.InternalHeaders;
 import io.openk9.datasource.config.ConfigExporter;
 import io.openk9.datasource.config.ConfigImporter;
@@ -40,14 +44,11 @@ import io.openk9.datasource.config.model.ImportReport;
 import io.smallrye.mutiny.Uni;
 import io.vertx.ext.web.RoutingContext;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 @Path("/v1/config")
 @RolesAllowed("k9-admin")
 public class ConfigResource {
-
-	private static final Logger log = Logger.getLogger(ConfigResource.class);
 
 	@Inject
 	RoutingContext routingContext;
@@ -115,19 +116,24 @@ public class ConfigResource {
 	}
 
 	private void requireValidPackage(ConfigPackage pkg) {
-		String schemaVersion = pkg == null ? null : pkg.getSchemaVersion();
-		if (!ConfigPackage.CURRENT_SCHEMA_VERSION.equals(schemaVersion)) {
-			log.warnf(
-				"Rejected config import: unsupported schema version '%s', expected '%s'",
-				schemaVersion, ConfigPackage.CURRENT_SCHEMA_VERSION);
-			throw new BadRequestException(
-				"Unsupported schema version '" + schemaVersion
-				+ "', expected '" + ConfigPackage.CURRENT_SCHEMA_VERSION + "'");
+		// The schema version is validated earlier, in ConfigPackageDeserializer,
+		// before any entity is typed-bound; here only the business shape is checked.
+		if (pkg == null) {
+			throw badRequest(
+				Problems.malformedPackage("A configuration package body is required"));
 		}
 		if (pkg.getEntities() == null || pkg.getEntities().isEmpty()) {
-			throw new BadRequestException(
-				"Invalid configuration package: it must contain at least one entity");
+			throw badRequest(Problems.malformedPackage(
+				"The configuration package must contain at least one entity"));
 		}
+	}
+
+	private static WebApplicationException badRequest(Problem problem) {
+		return new WebApplicationException(
+			Response.status(Response.Status.BAD_REQUEST)
+				.entity(problem)
+				.type(MediaType.APPLICATION_JSON)
+				.build());
 	}
 
 }

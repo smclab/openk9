@@ -23,6 +23,7 @@ import io.openk9.common.model.dto.Problem;
 import io.openk9.datasource.client.exception.InvalidUriException;
 import io.openk9.datasource.client.exception.HealthEndpointException;
 import io.openk9.datasource.client.exception.FormEndpointException;
+import io.openk9.datasource.config.model.SchemaVersion;
 import jakarta.ws.rs.core.Response;
 
 import java.net.ConnectException;
@@ -70,6 +71,36 @@ public final class Problems {
 		problem.setStatus(status.getStatusCode());
 		problem.setTitle("Invalid baseUri");
 		problem.setDetail(exception.getMessage());
+		return problem;
+	}
+
+	/**
+	 * Builds a 400 Problem for a configuration package whose schema version this
+	 * runtime cannot accept (see {@link SchemaVersion} for the compatibility
+	 * policy).
+	 */
+	public static Problem unsupportedSchemaVersion(String rawVersion) {
+		var problem = new Problem();
+		problem.setStatus(400);
+		problem.setTitle("Unsupported schema version");
+		problem.setDetail(
+			"Unsupported schema version '" + rawVersion
+			+ "'; this runtime supports major " + SchemaVersion.CURRENT.major()
+			+ ", minor <= " + SchemaVersion.CURRENT.minor()
+			+ " (the major must match and the minor must be no newer than the "
+			+ "current one).");
+		return problem;
+	}
+
+	/**
+	 * Builds a 400 Problem for a configuration package that is malformed or
+	 * cannot be bound (e.g. an unknown entity type or an invalid attribute shape).
+	 */
+	public static Problem malformedPackage(String detail) {
+		var problem = new Problem();
+		problem.setStatus(400);
+		problem.setTitle("Malformed configuration package");
+		problem.setDetail(detail);
 		return problem;
 	}
 

@@ -59,7 +59,13 @@ public class ConfigEntityDeserializer extends JsonDeserializer<ConfigEntity> {
 
 		ConfigEntityType type = null;
 		if (node.hasNonNull("type")) {
-			type = ConfigEntityType.valueOf(node.get("type").asText());
+			String typeName = node.get("type").asText();
+			try {
+				type = ConfigEntityType.valueOf(typeName);
+			}
+			catch (IllegalArgumentException e) {
+				throw new UnknownTypeException(typeName);
+			}
 			entity.setType(type);
 		}
 
@@ -81,6 +87,18 @@ public class ConfigEntityDeserializer extends JsonDeserializer<ConfigEntity> {
 		}
 
 		return entity;
+	}
+
+	/**
+	 * Raised when the {@code type} of a package entity is not a known
+	 * {@link ConfigEntityType}. Its message names only the offending value, never
+	 * an internal class or package name, so it is safe to surface to the client
+	 * (see {@code ConfigPackageDeserializer}).
+	 */
+	static final class UnknownTypeException extends IllegalArgumentException {
+		UnknownTypeException(String value) {
+			super("Unknown configuration entity type '" + value + "'");
+		}
 	}
 
 }
