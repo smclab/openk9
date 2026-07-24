@@ -16,7 +16,6 @@
 #
 
 from textwrap import wrap
-from typing import List
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import Chunk
@@ -27,7 +26,7 @@ class DerivedTextSplitter(BaseChunker):
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Split incoming text and return chunks without cutting words."""
 
         chunks = wrap(text, self._chunk_size)

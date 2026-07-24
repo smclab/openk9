@@ -29,8 +29,9 @@ HTTP fetch) are injected via Pipelines, so the routing is testable
 without network or models.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, List, Optional
+from typing import Optional
 
 
 class SkipRef(Exception):
@@ -77,7 +78,7 @@ def classify(content_type) -> str:
     return "unknown"
 
 
-def text_pieces(text, pipelines, file_id=None) -> List[Piece]:
+def text_pieces(text, pipelines, file_id=None) -> list[Piece]:
     """Chunks text and embeds every chunk on the text path."""
     chunks = pipelines.chunk(text)
     vectors = pipelines.embed_texts(chunks) if chunks else []
@@ -115,7 +116,7 @@ _HANDLERS = {
 }
 
 
-def ref_pieces(ref, pipelines) -> List[Piece]:
+def ref_pieces(ref, pipelines) -> list[Piece]:
     """Embeds one binary ref pulled from its pre-signed URL.
 
     The authoritative content type comes from the ref (connector
