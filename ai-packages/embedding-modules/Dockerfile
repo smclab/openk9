@@ -1,10 +1,9 @@
 ARG PYTHON_BASE_DOCKER_IMAGE=3.12-slim
 
-FROM python:${PYTHON_BASE_DOCKER_IMAGE}
+# ---- base: dependencies, app code, generated gRPC stubs ----
+FROM python:${PYTHON_BASE_DOCKER_IMAGE} AS base
 
 ARG MODE=cpu
-
-RUN mkdir -p /var/log/openk9 && chown -R 1001:0 /var/log/openk9 && chmod -R g=u /var/log/openk9
 
 WORKDIR /embedding_module/
 
@@ -33,6 +32,21 @@ RUN python -m grpc_tools.protoc \
         --grpc_python_out=. \
         ./app/external_services/grpc/embedding/embedding.proto
 
+# ---- test: quality gate; the runtime stage depends on this passing ----
+FROM base AS test
+
+COPY ./pyproject.toml ./
+COPY ./tests ./tests
+
+RUN pip install --no-cache-dir pytest && \
+    python -m pytest && \
+    touch /tests-passed
+
+# ---- runtime ----
+FROM base AS runtime
+
+RUN mkdir -p /var/log/openk9 && chown -R 1001:0 /var/log/openk9 && chmod -R g=u /var/log/openk9
+
 EXPOSE 5000
 
 # Register the non-root user so libs resolving the user/home (getpwuid) don't
@@ -46,6 +60,9 @@ ENV USER=embedding-module \
     XDG_CACHE_HOME=/embedding_module/.cache
 RUN mkdir -p /embedding_module/.cache && \
     chown -R 1001:0 /embedding_module && chmod -R g=u /embedding_module
+
+# Quality gate: the runtime image cannot be built unless the test stage passed.
+COPY --from=test /tests-passed /tests-passed
 
 USER 1001
 

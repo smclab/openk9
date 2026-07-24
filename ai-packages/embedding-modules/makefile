@@ -18,6 +18,7 @@
 SHELL := /bin/bash
 .PHONY: check_commands load_config \
         build_pytorch_cpu build_pytorch_gpu \
+        test \
         start \
         stop
 .DEFAULT_GOAL := help
@@ -39,6 +40,7 @@ help:
 	@echo "  load_config                  Load and validate configuration from $(CONFIG_FILE)"
 	@echo "  build_pytorch_cpu            Build Docker image for embedding module with configured settings, small image size installing only pytorch-cpu"
 	@echo "  build_pytorch_gpu            Build Docker image for embedding module with configured settings"
+	@echo "  test                         Run the unit tests as a Docker quality gate (no image produced)"
 	@echo "  start                        Start embedding module service in detached mode"
 	@echo "  stop                         Stop running embedding module service"
 	@echo "  help                         Show this help message"
@@ -81,6 +83,18 @@ build_pytorch_gpu: load_config
 		--build-arg MODE=gpu \
 		--pull \
 		-t openk9-embedding-module:"$$OPENK9_VERSION" \
+		-f Dockerfile \
+		.
+
+# Run the unit tests as a quality gate (builds only the test stage, no image)
+test: load_config
+	@source "$(CONFIG_PATH)" && \
+	docker buildx build \
+		--build-arg PYTHON_BASE_DOCKER_IMAGE="$$PYTHON_BASE_DOCKER_IMAGE" \
+		--build-arg MODE=$(MODE) \
+		--target test \
+		--output type=cacheonly \
+		--pull \
 		-f Dockerfile \
 		.
 

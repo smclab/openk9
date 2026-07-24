@@ -26,10 +26,6 @@ from typing import get_type_hints
 
 import grpc
 import pika
-from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
-from app.text_splitters.derived_text_splitter import DerivedTextSplitter
-from app.utils.chunk_arguments import build_chunk_arguments
-from app.utils.text_cleaner import clean_text
 from chonkie import (
     LateChunker,
     NeuralChunker,
@@ -52,6 +48,16 @@ from langchain_ibm import WatsonxEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
 
+from app.embedding import chunking, router
+from app.embedding.fetch import fetch_url
+from app.embedding.multimodal import build_multimodal_embedder
+from app.embedding.quantization import l2_normalize, quantize_binary, quantize_int8
+from app.embedding.router import Pipelines
+from app.external_services.grpc.embedding import embedding_pb2, embedding_pb2_grpc
+from app.text_splitters.derived_text_splitter import DerivedTextSplitter
+from app.utils.chunk_arguments import build_chunk_arguments
+from app.utils.text_cleaner import clean_text
+
 load_dotenv()
 
 LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
@@ -59,13 +65,17 @@ LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
 logger = logging.getLogger(__name__)
 logger.setLevel(LOGGING_LEVEL)
 formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler = TimedRotatingFileHandler(
-    "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
-)
-file_handler.setFormatter(formatter)
+try:
+    file_handler = TimedRotatingFileHandler(
+        "/var/log/openk9/embedding-module.log", when="D", interval=1, backupCount=10
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+except OSError:
+    # outside the container (tests, local runs) the log dir may not exist
+    pass
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
 # default text embedding parameters
@@ -235,6 +245,79 @@ def initialize_embedding_model(configuration):
     return embeddings
 
 
+def _apply_multimodal_credentials(configuration):
+    """Sets provider credentials for the direct multimodal clients, the
+    same way initialize_embedding_model does for the text-only path."""
+    provider = configuration.get("model_type")
+
+    if provider == ModelType.AWS_BEDROCK.value and configuration.get("api_key"):
+        os.environ["AWS_BEARER_TOKEN_BEDROCK"] = configuration["api_key"]
+    elif provider == ModelType.CHAT_VERTEX_AI.value:
+        model_garden = configuration.get("chat_vertex_ai_model_garden") or {}
+        credentials = model_garden.get("credentials")
+        if credentials:
+            save_google_application_credentials(credentials)
+
+
+def build_pipelines(configuration, chunker, is_query=False):
+    """Builds the injected capabilities (router.Pipelines) for a request.
+
+    A model flagged multimodal in its jsonConfig embeds text and images
+    through the same model (one vector space); every other model keeps the
+    langchain text-only path and cannot embed images (they are skipped).
+    """
+    if configuration.get("multimodal"):
+        _apply_multimodal_credentials(configuration)
+        embedder = build_multimodal_embedder(configuration)
+        input_type = "search_query" if is_query else "search_document"
+
+        return Pipelines(
+            embed_texts=lambda texts: embedder.embed_texts(texts, input_type),
+            chunk=lambda text: chunking.chunk_text(chunker, text),
+            fetch=fetch_url,
+            embed_image=embedder.embed_image,
+        )
+
+    embeddings = initialize_embedding_model(configuration)
+
+    return Pipelines(
+        embed_texts=lambda texts: [embeddings.embed_query(text) for text in texts],
+        chunk=lambda text: chunking.chunk_text(chunker, text),
+        fetch=fetch_url,
+        embed_image=None,
+    )
+
+
+def to_chunk_message(piece, number, total, vector_data_type):
+    """Maps a router Piece onto the EmbeddedChunk wire message.
+
+    The vector is L2-normalized, then quantized according to the requested
+    vectorDataType.
+    """
+    normalized = l2_normalize(piece.vector)
+    dimension = int(normalized.size)
+
+    message = embedding_pb2.EmbeddedChunk(
+        number=number,
+        text=piece.text or "",
+        vectorDataType=vector_data_type,
+        dimension=dimension,
+    )
+    if total is not None:
+        message.total = total
+    if piece.file_id is not None:
+        message.fileId = piece.file_id
+
+    if vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BYTE:
+        message.i8 = quantize_int8(normalized)
+    elif vector_data_type == embedding_pb2.VECTOR_DATA_TYPE_BINARY:
+        message.bits = quantize_binary(normalized)
+    else:
+        message.f32.values.extend(normalized.tolist())
+
+    return message
+
+
 class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
     def GetMessages(self, request, context):
         try:
@@ -378,6 +461,84 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
             logger.exception("GetMessages Error")
 
             context.abort(grpc.StatusCode.INTERNAL, str(e))
+
+    def EmbedContent(self, request, context):
+        embedding_model = request.embeddingModel
+        embedding_model_json_config = json_format.MessageToDict(
+            embedding_model.jsonConfig
+        )
+
+        configuration = {
+            "api_key": embedding_model.apiKey,
+            "api_url": embedding_model.apiUrl,
+            "model_type": embedding_model.providerModel.provider,
+            "model": embedding_model.providerModel.model,
+            "watsonx_project_id": embedding_model_json_config.get("watsonx_project_id"),
+            "chat_vertex_ai_model_garden": embedding_model_json_config.get(
+                "chat_vertex_ai_model_garden"
+            ),
+            "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
+            "multimodal": embedding_model_json_config.get("multimodal"),
+        }
+
+        has_text = request.HasField("text")
+        refs = list(request.refs)
+
+        if not has_text and not refs:
+            context.abort(
+                grpc.StatusCode.INVALID_ARGUMENT, "neither text nor refs provided"
+            )
+
+        tenant_id = request.tenantId
+        vector_data_type = request.vectorDataType
+        number = 0
+
+        # Text first, fail-fast: an error building the model/chunker or
+        # embedding the text ends the whole RPC with INTERNAL, the same as
+        # the v1 GetMessages path.
+        try:
+            chunk = request.chunk
+            chunker = chunking.build_chunker(
+                chunk.type, json_format.MessageToDict(chunk.jsonConfig)
+            )
+            pipelines = build_pipelines(configuration, chunker)
+
+            if has_text:
+                text_pieces = router.text_pieces(clean_text(request.text), pipelines)
+                # total is known only for a text-only request
+                total = len(text_pieces) if not refs else None
+                for piece in text_pieces:
+                    number += 1
+                    yield to_chunk_message(piece, number, total, vector_data_type)
+        except Exception as error:
+            logger.exception("EmbedContent text error")
+            context.abort(grpc.StatusCode.INTERNAL, str(error))
+
+        # Then the refs in list order: an error on one ref is a skip (no chunk
+        # for that fileId, structured log), the stream continues with the rest.
+        for ref in refs:
+            try:
+                ref_pieces = router.ref_pieces(
+                    {
+                        "url": ref.url,
+                        "fileId": ref.fileId,
+                        "contentType": ref.contentType,
+                    },
+                    pipelines,
+                )
+            except Exception as error:
+                logger.warning(
+                    "EmbedContent skip: tenantId=%s fileId=%s contentType=%s reason=%s",
+                    tenant_id,
+                    ref.fileId,
+                    ref.contentType,
+                    error,
+                )
+                continue
+
+            for piece in ref_pieces:
+                number += 1
+                yield to_chunk_message(piece, number, None, vector_data_type)
 
 
 def serve():

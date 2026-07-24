@@ -13,3 +13,6 @@ Documentation = "https://www.openk9.io/docs/"
 Repository = "https://github.com/smclab/openk9.git"
 Issues = "https://github.com/smclab/openk9/issues"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
