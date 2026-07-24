@@ -30,10 +30,12 @@
   - js-packages/**/*
 
 # Trivy Ignore Expiry Check (Issue #2004)
-# Trivy parses `expired-at` in .trivyignore.yaml but does NOT enforce it — a
-# suppression with a past date keeps hiding the CVE forever. This job reads the 5
-# area files and fails when any expired-at is in the past (or malformed), forcing
-# a re-evaluation. Blocking on main + MR so an expiry is caught before merge.
+# Trivy enforces `expired_at` natively (expired entries are pruned, the CVE
+# reappears in the report), but Phase 1 scans are informational and the Phase 2
+# gate only fails on CRITICAL/HIGH — an expired MEDIUM would resurface unseen.
+# This job reads the 5 area files and fails when any expired_at is in the past
+# (or malformed, incl. the misspelled `expired-at` that Trivy silently ignores),
+# forcing a re-evaluation. Blocking on main + MR so an expiry is caught before merge.
 Trivy Ignore Expiry Check:
   stage: quality
   image: python:3.13-slim
