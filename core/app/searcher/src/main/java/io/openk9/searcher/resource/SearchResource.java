@@ -143,9 +143,6 @@ public class SearchResource {
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
 	private static final String KNN_TOKEN_TYPE = "KNN";
 	private static final String IMAGE_CONTENT_TYPE_PREFIX = "image/";
-	// maximum decoded size of the inline media carried by a KNN search token
-	// (image-as-query); larger requests are rejected with HTTP 400. Fixed
-	// limit: the frontend resizes the image client-side before sending it.
 	private static final long MEDIA_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 	private static final String DETAILS_FIELD = "details";
 	private static final String BEARER_PREFIX = "Bearer ";
@@ -1746,17 +1743,14 @@ public class SearchResource {
 	 * failing fast with an HTTP 400 on any violation instead of silently
 	 * dropping the media downstream.
 	 *
-	 * <p>In Phase 1 {@code media} is only accepted on KNN tokens, must declare
+	 * <p>{@code media} is only accepted on KNN tokens, must declare
 	 * an {@code image/*} content type, and must not exceed the maximum
 	 * decoded size.
 	 *
 	 * @param tokens       the search tokens to validate; {@code null} is a no-op
-	 * @param maxSizeBytes the maximum allowed decoded media size in bytes; a
-	 *                     value of {@code 0} or less disables the size check
 	 * @throws WebApplicationException with status 400 on any violation
 	 */
-	static void validateMediaTokens(
-		List<ParserSearchToken> tokens, long maxSizeBytes) {
+	static void validateMediaTokens(List<ParserSearchToken> tokens) {
 
 		if (tokens == null) {
 			return;
@@ -1783,7 +1777,8 @@ public class SearchResource {
 				.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
 
 				throw badRequestMedia(
-					"media.contentType must be image/*, got " + contentType);
+					"media.contentType must be image/*, got " 
+					+ contentType);
 			}
 
 			var data = media.getData();
@@ -1800,10 +1795,14 @@ public class SearchResource {
 				throw badRequestMedia("media.data is not valid base64");
 			}
 
-			if (maxSizeBytes > 0 && decoded.length > maxSizeBytes) {
+			if (MEDIA_MAX_SIZE_BYTES > 0 
+			 	&& decoded.length > MEDIA_MAX_SIZE_BYTES) {
+
 				throw badRequestMedia(
 					"media exceeds the maximum allowed size of "
-						+ maxSizeBytes + " bytes");
+						+ MEDIA_MAX_SIZE_BYTES 
+						+ " bytes");
+
 			}
 		}
 	}
