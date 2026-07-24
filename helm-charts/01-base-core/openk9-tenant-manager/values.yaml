@@ -207,6 +207,11 @@ hostAliases: []
 ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ##
 ingress:
+  ## @param ingress.ingressClassName IngressClass that should be used to implement this Ingress
+  ## Leave empty to let the cluster pick its default IngressClass.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
+  ##
+  ingressClassName: ""
   ## @param ingress.enabled Enable ingress resource for Tenant Manager console
   ##
   enabled: false
