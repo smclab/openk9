@@ -1514,9 +1514,10 @@ class RagGraph:
             state.no_context_answer = True
             return state
 
-        state.target_lang = self._resolve_target_language(
-            state.original_query or state.current_query
-        )
+        # target_lang is resolved once in stream()/invoke() (outside the graph)
+        # so the resolver's utility LLM output is never captured by the
+        # llm_response token stream and leaked to the client.
+        target_lang = state.target_lang or "Italian"
 
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
@@ -1545,7 +1546,7 @@ class RagGraph:
                     "query": query,
                     "context": context_text,
                     "history": conversation_history,
-                    "target_lang": state.target_lang,
+                    "target_lang": target_lang,
                 }
             )
         else:
@@ -1572,7 +1573,7 @@ class RagGraph:
                 {
                     "query": query,
                     "history": conversation_history,
-                    "target_lang": state.target_lang,
+                    "target_lang": target_lang,
                 }
             )
 
@@ -1762,6 +1763,7 @@ class RagGraph:
             {
                 "current_query": query,
                 "chat_sequence_number": self.chat_sequence_number,
+                "target_lang": self._resolve_target_language(query),
             },
             config=self.config,
         )
@@ -1801,6 +1803,10 @@ class RagGraph:
                 )
 
     def stream(self, query: str):
+        # Resolve the answer language once, BEFORE running the graph, so the
+        # resolver's utility LLM call is not part of the llm_response token
+        # stream (otherwise its JSON output leaks to the client as chunks).
+        target_lang = self._resolve_target_language(query)
         try:
             if (
                 self.output_guardrail.get("enable_output_guardrail")
@@ -1816,6 +1822,7 @@ class RagGraph:
                         {
                             "current_query": query,
                             "chat_sequence_number": self.chat_sequence_number,
+                            "target_lang": target_lang,
                         },
                         config=self.config,
                         stream_mode="messages",
@@ -1914,6 +1921,7 @@ class RagGraph:
                         {
                             "current_query": query,
                             "chat_sequence_number": self.chat_sequence_number,
+                            "target_lang": target_lang,
                         },
                         config=self.config,
                         stream_mode="messages",
@@ -1996,6 +2004,7 @@ class RagGraph:
                         {
                             "current_query": query,
                             "chat_sequence_number": self.chat_sequence_number,
+                            "target_lang": target_lang,
                         },
                         config=self.config,
                         stream_mode="messages",
@@ -2065,6 +2074,7 @@ class RagGraph:
                         {
                             "current_query": query,
                             "chat_sequence_number": self.chat_sequence_number,
+                            "target_lang": target_lang,
                         },
                         config=self.config,
                         stream_mode="messages",
