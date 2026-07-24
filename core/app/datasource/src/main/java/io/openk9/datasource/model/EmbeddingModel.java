@@ -80,6 +80,13 @@ public class EmbeddingModel extends K9Entity {
 	@Column(name = "vector_data_type", nullable = false)
 	private VectorDataType vectorDataType = VectorDataType.FLOAT32;
 
+	@Description(
+		"Marks the model as multimodal: routes image refs to the multimodal "
+		+ "embedder and requires the same model to serve text too. "
+		+ "Absent/false = text-only path. Independent from the provider.")
+	@Column(name = "multimodal", nullable = false)
+	private boolean multimodal = false;
+
 	@Embedded
 	@AttributeOverrides({
 		@AttributeOverride(name = "provider", column = @Column(name = "provider")),
