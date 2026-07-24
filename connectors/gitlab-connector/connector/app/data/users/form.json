@@ -260,6 +260,25 @@
         "min": 0,
         "max": 100
       }
+    },
+    {
+      "label": "Fetch User Details?",
+      "name": "fetchUserDetails",
+      "type": "checkbox",
+      "size": 4,
+      "required": false,
+      "values": [
+        {
+          "value": false,
+          "isDefault": true
+        }
+      ],
+      "placeholder": "",
+      "info": "For non-admin tokens, fetch each user by id to retrieve the richer profile fields the list endpoint omits. Ignored for admin tokens.",
+      "validator": {
+        "min": 0,
+        "max": 100
+      }
     }
   ]
 }

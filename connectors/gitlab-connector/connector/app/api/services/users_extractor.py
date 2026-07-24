@@ -15,9 +15,11 @@ from ..models.util.models_utility import  (
 
 
 class UserDataExtractor(BaseExtractor):
-    def __init__(self, *, domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int,
+    def __init__(self, *, domain: str, access_token: str, timestamp: int, datasource_id: int, schedule_id: str, tenant_id: str, items_per_page: int, fetch_user_details: bool,
                 filter_active: BoolFilter, filter_external: BoolFilter, filter_blocked: BoolFilter, filter_human: BoolFilter, exclude_active: BoolFilter, exclude_external: BoolFilter, exclude_humans: BoolFilter, exclude_internal: BoolFilter) -> None:
         super().__init__(domain, access_token, timestamp, datasource_id, schedule_id, tenant_id, items_per_page)
+
+        self.fetch_user_details = fetch_user_details
 
         self.user_filters: dict[str, Any] = FilterComposite.compose_params(
             filters={
@@ -43,11 +45,17 @@ class UserDataExtractor(BaseExtractor):
                         yield user
         else:
             datetime_filter: str = strftime_datetime_filter(dt=time_stamp_date)
-            yield from gl.users.list(
+            for user in gl.users.list(
                 iterator=True,
                 created_after=datetime_filter,
                 **self.user_filters,
-            )
+            ):
+                # The list endpoint exposes a reduced field set to non-admin
+                # tokens; optionally fetch each user by id for the fuller profile.
+                
+                user = gl.users.get(user.id) if self.fetch_user_details else user
+                self.status_logger.info(user.to_json())
+                yield user
     
     @override
     def manage_data(self, data: User, end_timestamp: float) -> dict[str, Any]:

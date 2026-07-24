@@ -64,6 +64,7 @@ class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
         excludeExternal (bool): Filters only non external users. Default is false.
         excludeHumans (bool): Filters only bot or internal users. Default is false.
         excludeInternal (bool): Filters only non internal users. Default is false.
+        fetchUserDetails (bool): For non-admin tokens, fetch each user by id to retrieve the richer profile fields the list endpoint omits. Ignored for admin tokens. Default is false.
     """
     
     filterActive: BoolFilter = Field(default='NoFilter', frozen=True)
@@ -74,7 +75,8 @@ class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
     excludeExternal: BoolFilter = Field(default='NoFilter', frozen=True)
     excludeHumans: BoolFilter = Field(default='NoFilter', frozen=True)
     excludeInternal: BoolFilter = Field(default='NoFilter', frozen=True)
-    
+    fetchUserDetails: bool = Field(default=False, frozen=True)
+
     def create_extractor(self) -> users_extractor.UserDataExtractor:
         return users_extractor.UserDataExtractor(
             domain=self.domain,
@@ -84,6 +86,7 @@ class UsersGitlabExtractionRequest(GitlabBaseExtractionRequest):
             schedule_id=self.scheduleId,
             tenant_id=self.tenantId,
             items_per_page=self.itemsPerPage,
+            fetch_user_details=self.fetchUserDetails,
             filter_active=self.filterActive,
             filter_external=self.filterExternal,
             filter_blocked=self.filterBlocked,
