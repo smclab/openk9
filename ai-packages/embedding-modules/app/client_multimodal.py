@@ -15,23 +15,35 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""Manual smoke client for the multimodal EmbedContent path (Vertex).
+"""Manual smoke client for the multimodal EmbedContent path.
 
 Serves a local image and text over HTTP (standing in for pre-signed
 storage URLs), then drives the running Embedding server on
-localhost:5000 with a multimodalembedding@001 request combining inline
-text and refs (image, text, and an audio ref that gets skipped).
-Credentials travel in the request, as the datasource would send them.
+localhost:5000 with a multimodal request combining inline text and refs
+(image, text, and an audio ref that gets skipped). The provider is
+selected with MM_PROVIDER; credentials travel in the request, as the
+datasource would send them.
 
 Start the server first:  python -m app.server
 
-Configuration via environment:
+Common configuration:
+  MM_PROVIDER   'vertex' or 'bedrock' (default: vertex)
+  MM_IMAGE      path to a local image file to index (required)
+
+Vertex (MM_PROVIDER=vertex):
   VERTEX_CREDENTIALS   path to the ADC / service-account JSON
                        (falls back to GOOGLE_APPLICATION_CREDENTIALS)
   VERTEX_PROJECT       GCP project id (required)
   VERTEX_LOCATION      region serving the model (default: europe-west1)
+  VERTEX_MODEL         model id (default: multimodalembedding@001)
   VERTEX_DIMENSION     embedding dimension (default: 1408)
-  VERTEX_IMAGE         path to a local image file to index (required)
+
+Bedrock (MM_PROVIDER=bedrock):
+  BEDROCK_API_KEY    Bedrock bearer token (optional if the standard AWS
+                     credential chain is configured in the environment)
+  BEDROCK_REGION     AWS region (default: us-east-1)
+  BEDROCK_MODEL      model id (default: cohere.embed-v4:0)
+  BEDROCK_DIMENSION  output dimension (default: 1024)
 """
 
 import json
@@ -69,6 +81,62 @@ def serve_files(routes):
     return httpd
 
 
+def vertex_model():
+    """Builds the EmbeddingModel for the Vertex multimodal provider."""
+    credentials_path = os.getenv("VERTEX_CREDENTIALS") or os.environ[
+        "GOOGLE_APPLICATION_CREDENTIALS"
+    ]
+    with open(credentials_path) as f:
+        credentials = json.load(f)
+
+    json_config = Struct()
+    json_config.update(
+        {
+            "multimodal": True,
+            "chat_vertex_ai_model_garden": {
+                "credentials": credentials,
+                "project": os.environ["VERTEX_PROJECT"],
+                "location": os.getenv("VERTEX_LOCATION", "europe-west1"),
+                "dimension": int(os.getenv("VERTEX_DIMENSION", "1408")),
+            },
+        }
+    )
+
+    return embedding_pb2.EmbeddingModel(
+        providerModel=embedding_pb2.ProviderModel(
+            provider="chat_vertex_ai",
+            model=os.getenv("VERTEX_MODEL", "multimodalembedding@001"),
+        ),
+        jsonConfig=json_config,
+    )
+
+
+def bedrock_model():
+    """Builds the EmbeddingModel for the Bedrock multimodal provider."""
+    json_config = Struct()
+    json_config.update(
+        {
+            "multimodal": True,
+            "aws_bedrock": {
+                "region_name": os.getenv("BEDROCK_REGION", "us-east-1"),
+                "output_dimension": int(os.getenv("BEDROCK_DIMENSION", "1024")),
+            },
+        }
+    )
+
+    return embedding_pb2.EmbeddingModel(
+        apiKey=os.getenv("BEDROCK_API_KEY", ""),
+        providerModel=embedding_pb2.ProviderModel(
+            provider="aws_bedrock",
+            model=os.getenv("BEDROCK_MODEL", "cohere.embed-v4:0"),
+        ),
+        jsonConfig=json_config,
+    )
+
+
+MODELS = {"vertex": vertex_model, "bedrock": bedrock_model}
+
+
 def run(request):
     with grpc.insecure_channel("localhost:5000") as channel:
         stub = embedding_pb2_grpc.EmbeddingStub(channel)
@@ -87,18 +155,13 @@ def run(request):
 
 
 if __name__ == "__main__":
-    credentials_path = os.getenv("VERTEX_CREDENTIALS") or os.environ[
-        "GOOGLE_APPLICATION_CREDENTIALS"
-    ]
-    project = os.environ["VERTEX_PROJECT"]
-    location = os.getenv("VERTEX_LOCATION", "europe-west1")
-    dimension = int(os.getenv("VERTEX_DIMENSION", "1408"))
-    image_path = os.environ["VERTEX_IMAGE"]
+    provider = os.getenv("MM_PROVIDER", "vertex").lower()
+    image_path = os.environ["MM_IMAGE"]
 
-    with open(credentials_path) as f:
-        credentials = json.load(f)
     with open(image_path, "rb") as f:
         image_bytes = f.read()
+
+    embedding_model = MODELS[provider]()
 
     httpd = serve_files(
         {
@@ -109,30 +172,13 @@ if __name__ == "__main__":
     )
     base = f"http://localhost:{httpd.server_address[1]}"
 
-    model_json_config = Struct()
-    model_json_config.update(
-        {
-            "multimodal": True,
-            "chat_vertex_ai_model_garden": {
-                "credentials": credentials,
-                "project": project,
-                "location": location,
-                "dimension": dimension,
-            },
-        }
-    )
     chunk_json_config = Struct()
     chunk_json_config.update({"chunk_size": 60, "chunk_overlap": 10})
 
     request = embedding_pb2.EmbedContentRequest(
         tenantId="mew",
         chunk=embedding_pb2.RequestChunk(type=1, jsonConfig=chunk_json_config),
-        embeddingModel=embedding_pb2.EmbeddingModel(
-            providerModel=embedding_pb2.ProviderModel(
-                provider="chat_vertex_ai", model="multimodalembedding@001"
-            ),
-            jsonConfig=model_json_config,
-        ),
+        embeddingModel=embedding_model,
         vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_FLOAT32,
         text="Ricerca semantica.",
         refs=[
