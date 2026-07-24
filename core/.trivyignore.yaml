@@ -2,36 +2,43 @@
 #
 # One file per pipeline area (Java reactor). A suppression here applies to every
 # Java module scanned against core/. Structured YAML format: each entry carries
-# id + statement (rationale) and, for temporary suppressions, expired-at.
+# id + statement (rationale) and, for temporary suppressions, expired_at.
 #
-# NB on expired-at: Trivy parses it but does NOT auto-reactivate a CVE past the
-# date — enforcement is done by a separate CI check that fails the job when a
-# past expired-at is found. Keep the date accurate so that check is meaningful.
-# Permanent false positives omit expired-at; mitigations to re-check carry one.
+# NB on expired_at: Trivy enforces it natively — past the date the entry is
+# pruned at parse time and the CVE reappears in the report. A separate CI check
+# ALSO fails the pipeline on expired entries, so the re-evaluation is explicit
+# even while scans are informational (Phase 1) and for sub-HIGH severities.
+# Permanent false positives omit expired_at; mitigations to re-check carry one.
 vulnerabilities:
-  # --- Temporary suppressions (carry expired-at, re-evaluated before next release) ---
+  # --- Temporary suppressions (carry expired_at, re-evaluated before next release) ---
 
   - id: CVE-2026-45292
     # io.opentelemetry:opentelemetry-api / -extension-trace-propagators
     statement: >-
-      CVE still RESERVED (no NVD detail). MEDIUM (CVSS 5.3), availability-only.
-      opentelemetry-api is transitive via the Quarkus BOM; bumping it out-of-band
-      risks OTel version misalignment. Fix expected in Quarkus OTel BOM >= 1.62.0.
-    expired-at: 2026-07-06
+      Unbounded memory/CPU on oversized W3C baggage headers (DoS). Fixed upstream
+      in OTel 1.62.0, but quarkus-bom 3.27.4 still pins 1.44.1 — verified in the
+      published BOM — so no fix is reachable without bumping OTel out-of-band,
+      which risks OTel/Quarkus version misalignment. Not applicable in practice:
+      baggage propagation headers reach only headless/internal services, with no
+      attacker-controlled baggage from the public internet. NB severity is
+      contested — GitHub 5.3 MEDIUM vs Red Hat 7.5 HIGH (availability:H); under
+      the Red Hat score this becomes a Phase 2 blocking finding, so re-evaluate
+      as soon as a Quarkus release ships OTel >= 1.62.0.
+    expired_at: 2026-10-22
 
   - id: CVE-2025-46548
     # pekko-management 1.1.1 (_2.13)
     statement: >-
       Severity Medium->Low: applies to the Pekko Management port, exposed only
       inside the k8s cluster network, not from the public internet. Low-priority tech debt.
-    expired-at: 2026-09-23
+    expired_at: 2026-09-23
 
   - id: CVE-2025-67735
     # netty-transport / -codec / -native-epoll 4.1.128.Final (and variants)
     statement: >-
       Not applicable: no public Netty-based HTTP endpoints, only headless/internal ones.
       No attacker-controlled URIs reach HttpRequestEncoder, so CRLF/request smuggling is infeasible.
-    expired-at: 2026-09-23
+    expired_at: 2026-09-23
 
   # --- Permanent suppressions (false positives / not applicable, no expiry) ---
 

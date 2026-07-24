@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Fail the pipeline when a Trivy suppression has an expired `expired-at` date.
+"""Fail the pipeline when a Trivy suppression has an expired `expired_at` date.
 
-Why this exists (Issue #2004): Trivy PARSES `expired-at` in .trivyignore.yaml but
-does NOT enforce it — a suppression with a past date keeps hiding the CVE forever.
-So a "temporary" suppression silently becomes permanent. This script closes that
-gap: it reads every area .trivyignore.yaml, finds entries whose expired-at is in
-the past, and exits non-zero so CI turns red. The fix is then to re-evaluate the
-suppression (drop it if the CVE is fixed, or renew the date with a fresh reason).
+Why this exists (Issue #2004): Trivy DOES enforce `expired_at` natively — expired
+entries are pruned at parse time, so the CVE reappears in the scan report. But in
+Phase 1 all scans are informational (exit-code 0) and the Phase 2 gate only fails
+on CRITICAL/HIGH with a fix, so a reappeared MEDIUM would land unnoticed in an
+artifact nobody opens. This script makes expiry LOUD: it reads every area
+.trivyignore.yaml, finds entries whose expired_at is in the past, and exits
+non-zero so CI turns red and forces the re-evaluation (drop the suppression if
+the CVE is fixed, or renew the date with a fresh reason) regardless of severity.
 
-Scope: the 5 area files. Entries without `expired-at` (permanent false positives)
+It also rejects the misspelled `expired-at` (hyphen): Trivy silently ignores
+unknown fields, so a hyphenated entry would be a permanent suppression by accident.
+
+Scope: the 5 area files. Entries without `expired_at` (permanent false positives)
 are ignored by design. Covers the `vulnerabilities` section (the only one used);
 `misconfigurations`/`secrets`/`licenses` are checked too if present, for free.
 """
@@ -31,7 +36,7 @@ IGNORE_FILES = [
     "enrichers/.trivyignore.yaml",
 ]
 
-# Trivy ignore-file sections that carry per-entry expired-at.
+# Trivy ignore-file sections that carry per-entry expired_at.
 SECTIONS = ["vulnerabilities", "misconfigurations", "secrets", "licenses"]
 
 
@@ -63,10 +68,16 @@ def main():
 
         for section in SECTIONS:
             for entry in (data.get(section) or []):
-                if not isinstance(entry, dict) or "expired-at" not in entry:
+                if not isinstance(entry, dict):
                     continue
                 cve = entry.get("id", "<no-id>")
-                raw = entry["expired-at"]
+                if "expired-at" in entry:
+                    malformed.append((path, section, cve, entry["expired-at"],
+                                      "wrong field name: use expired_at (Trivy ignores 'expired-at')"))
+                    continue
+                if "expired_at" not in entry:
+                    continue
+                raw = entry["expired_at"]
                 try:
                     when = parse_date(raw)
                 except (ValueError, TypeError) as exc:
@@ -76,13 +87,13 @@ def main():
                     expired.append((path, section, cve, when))
 
     if malformed:
-        print("Malformed expired-at values (must be YYYY-MM-DD):")
+        print("Malformed expired_at values (must be YYYY-MM-DD):")
         for path, section, cve, raw, err in malformed:
             print(f"  {path}  [{section}]  {cve}  ->  {raw!r}  ({err})")
 
     if expired:
         print(f"\nExpired Trivy suppressions ({today.isoformat()}) — "
-              "re-evaluate the CVE or renew expired-at with a fresh rationale:")
+              "re-evaluate the CVE or renew expired_at with a fresh rationale:")
         for path, section, cve, when in sorted(expired):
             print(f"  {path}  [{section}]  {cve}  expired on {when.isoformat()}")
 
