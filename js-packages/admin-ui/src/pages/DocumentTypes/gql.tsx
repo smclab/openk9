@@ -112,6 +112,7 @@ gql`
       name
       description
       fieldType
+      offsetSource
       boost
       searchable
       exclude
@@ -146,6 +147,7 @@ gql`
     $boost: Float
     $fieldType: FieldType!
     $sortable: Boolean!
+    $offsetSource: OffsetSourceType
   ) {
     createSubField(
       parentDocTypeFieldId: $parentDocTypeFieldId
@@ -157,6 +159,7 @@ gql`
         boost: $boost
         fieldType: $fieldType
         sortable: $sortable
+        offsetSource: $offsetSource
       }
     ) {
       entity {
@@ -243,6 +246,7 @@ gql`
     $sortable: Boolean!
     $analyzerId: BigInteger
     $searchAnalyzerId: BigInteger
+    $offsetSource: OffsetSourceType
   ) {
     docTypeFieldWithAnalyzer(
       docTypeId: $documentTypeId
@@ -260,6 +264,7 @@ gql`
         sortable: $sortable
         analyzerId: $analyzerId
         searchAnalyzerId: $searchAnalyzerId
+        offsetSource: $offsetSource
       }
     ) {
       entity {

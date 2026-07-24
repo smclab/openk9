@@ -101,37 +101,3 @@ gql`
   }
 `;
 
-gql`
-  mutation createOrUpdateDocumentTypeSubFields(
-    $parentDocTypeFieldId: ID!
-    $name: String!
-    $fieldName: String!
-    $jsonConfig: String
-    $searchable: Boolean!
-    $boost: Float
-    $fieldType: FieldType!
-    $sortable: Boolean!
-  ) {
-    createSubField(
-      parentDocTypeFieldId: $parentDocTypeFieldId
-      docTypeFieldDTO: {
-        name: $name
-        fieldName: $fieldName
-        jsonConfig: $jsonConfig
-        searchable: $searchable
-        boost: $boost
-        fieldType: $fieldType
-        sortable: $sortable
-      }
-    ) {
-      entity {
-        id
-      }
-      fieldValidators {
-        field
-        message
-      }
-    }
-  }
-`;
-

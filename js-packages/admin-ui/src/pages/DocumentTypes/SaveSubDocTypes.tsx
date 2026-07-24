@@ -28,6 +28,7 @@ import {
 import React from "react";
 import {
   FieldType,
+  OffsetSourceType,
   useCreateOrUpdateDocumentTypeFieldMutation,
   useCreateOrUpdateDocumentTypeSubFieldsMutation,
   useDocumentTypeFieldQuery,
@@ -110,6 +111,7 @@ export function SaveSubDocType({
         fieldName: "",
         description: "",
         fieldType: FieldType.Text,
+        offsetSource: OffsetSourceType.None,
         boost: 1,
         searchable: false,
         exclude: false,
@@ -130,6 +132,7 @@ export function SaveSubDocType({
             documentTypeFieldId: subDocTypesId !== "new" ? subDocTypesId : undefined,
             docTypeFieldName: subDocTypesId !== "new" ? documentTypeFieldQuery.data?.docTypeField?.name : undefined,
             ...data,
+            offsetSource: data.fieldType === FieldType.Text ? data.offsetSource : OffsetSourceType.None,
             ...(data.analyzer.id !== "-1" ? { analyzerId: data.analyzer.id } : {}),
             ...(data.searchAnalyzer.id && data.searchAnalyzer.id !== "-1"
               ? { searchAnalyzerId: data.searchAnalyzer.id }
@@ -141,6 +144,7 @@ export function SaveSubDocType({
           variables: {
             parentDocTypeFieldId: "" + parentId,
             ...data,
+            offsetSource: data.fieldType === FieldType.Text ? data.offsetSource : OffsetSourceType.None,
           },
         });
       }
@@ -169,6 +173,14 @@ export function SaveSubDocType({
           {...form.inputProps("fieldType")}
           description="Type associated to field. See OpenSearch documentation for field data types"
         />
+        {form.inputProps("fieldType").value === FieldType.Text && (
+          <CustomSelect
+            label="Offset Source"
+            dict={OffsetSourceType}
+            {...form.inputProps("offsetSource")}
+            description="Source used to load offsets for highlighting (TERM_VECTOR / INDEX_OPTIONS / NONE). Configurable only for TEXT fields; TERM_VECTOR fields are selectable when creating an FVH Highlight."
+          />
+        )}
         <CustomSelectRelationsOneToOne
           options={analyzerOption}
           label="Analyzer association"
