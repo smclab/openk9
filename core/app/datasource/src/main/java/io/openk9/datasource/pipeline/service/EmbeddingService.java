@@ -35,6 +35,8 @@ import io.openk9.datasource.service.EmbeddingModelService;
 import io.openk9.ml.grpc.Embedding;
 import io.openk9.ml.grpc.EmbeddingOuterClass;
 
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -360,7 +362,20 @@ public class EmbeddingService {
 			embeddingModelBuilder.setProviderModel(providerModelBuilder.build());
 		}
 
-		if (embeddingModel.getJsonConfig() != null) {
+		if (embeddingModel.isMultimodal()) {
+			var jsonConfig = embeddingModel.getJsonConfig();
+			var base = jsonConfig != null && !jsonConfig.isBlank()
+				? StructUtils.fromJson(jsonConfig)
+				: Struct.getDefaultInstance();
+
+			embeddingModelBuilder.setJsonConfig(
+				Struct.newBuilder(base)
+					.putFields(
+						"multimodal",
+						Value.newBuilder().setBoolValue(true).build())
+					.build());
+		}
+		else if (embeddingModel.getJsonConfig() != null) {
 			embeddingModelBuilder.setJsonConfig(
 				StructUtils.fromJson(embeddingModel.getJsonConfig()));
 		}
