@@ -113,6 +113,9 @@ class GraphState(BaseModel):
     no_context_answer: Optional[bool] = Field(
         default=False, description="Answer short-circuited due to empty RAG context"
     )
+    target_lang: Optional[str] = Field(
+        default=None, description="Resolved language the answer must be written in"
+    )
     # conversation_summary: Annotated[str, "conversation_summary"] = Field(
     #     "", description="Summary of the conversation"
     # )
@@ -206,6 +209,16 @@ class Domain(BaseModel):
         if isinstance(v, str):
             return None if v.strip() == "" else [v]
         return v
+
+
+class TargetLanguage(BaseModel):
+    language: str = Field(
+        "Italian",
+        description=(
+            "Language the assistant must answer in, as its English name "
+            "(e.g. 'English', 'Italian', 'French')"
+        ),
+    )
 
 
 class RagGraph:
@@ -816,6 +829,64 @@ class RagGraph:
         domain_response = parser.parse(domain_content)
 
         return domain_response
+
+    def _resolve_target_language(self, query):
+        """Resolve the language the answer must be written in.
+
+        An explicit request in the query (e.g. "answer in English",
+        "rispondi in francese") wins; otherwise the language the query is
+        written in is used. Returns the English language name (e.g.
+        "English"). Falls back to Italian if resolution fails.
+        """
+        try:
+            parser = PydanticOutputParser(pydantic_object=TargetLanguage)
+            format_instructions = parser.get_format_instructions()
+            language_prompt = """
+            You determine the language the assistant must answer in.
+
+            Rules (in priority order):
+            1. If the user EXPLICITLY asks for a language (e.g. "answer in
+               English", "rispondi in francese", "réponds en anglais"), return
+               THAT language.
+            2. Otherwise, return the language the query itself is written in.
+            3. If the language cannot be determined, return "Italian".
+
+            Return the language as its English name (e.g. "English",
+            "Italian", "French", "Spanish", "German", "Russian").
+
+            ---
+
+            USER QUERY:
+            {query}
+
+            ---
+
+            {format_instructions}
+            """
+
+            language_prompt_template = PromptTemplate.from_template(language_prompt)
+            chain = language_prompt_template | self.utility_llm
+            raw_output = chain.invoke(
+                {
+                    "query": query,
+                    "format_instructions": format_instructions,
+                }
+            )
+
+            if isinstance(raw_output.content, list):
+                language_content = raw_output.content[0].get("text")
+            else:
+                language_content = raw_output.content
+
+            resolved = parser.parse(language_content).language
+            return resolved.strip() if resolved and resolved.strip() else "Italian"
+        except Exception:
+            logger.warning(
+                "[resolve_target_language] resolution failed, "
+                "falling back to Italian",
+                exc_info=True,
+            )
+            return "Italian"
 
     def input_domain_node(self, state: GraphState) -> GraphState:
         query = state.current_query
@@ -1443,6 +1514,10 @@ class RagGraph:
             state.no_context_answer = True
             return state
 
+        state.target_lang = self._resolve_target_language(
+            state.original_query or state.current_query
+        )
+
         if state.use_rag and context:
             prompt = escape_curly_braces(self.configuration.get("prompt_template"))
             context_text = "\n\n".join([doc.page_content for doc in context])
@@ -1455,9 +1530,11 @@ class RagGraph:
                 Previous conversation: {history}
                 
                 Context: {context}
-                
+
                 Question: {query}
-                
+
+                IMPORTANT: Write your entire answer in {target_lang}, regardless of the language used in the context or in these instructions.
+
                 Answer:
                 """
             )
@@ -1468,6 +1545,7 @@ class RagGraph:
                     "query": query,
                     "context": context_text,
                     "history": conversation_history,
+                    "target_lang": state.target_lang,
                 }
             )
         else:
@@ -1483,13 +1561,19 @@ class RagGraph:
                 Previous conversation (may be empty or omitted):: {history}
                 
                 Current question: {query}
-                
+
+                IMPORTANT: Write your entire answer in {target_lang}, regardless of the language used in these instructions.
+
                 Answer:
                 """
             )
             direct_chain = direct_prompt | self.llm
             response = direct_chain.invoke(
-                {"query": query, "history": conversation_history}
+                {
+                    "query": query,
+                    "history": conversation_history,
+                    "target_lang": state.target_lang,
+                }
             )
 
         llm_response = ""
