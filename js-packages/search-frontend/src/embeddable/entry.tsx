@@ -6,7 +6,10 @@ import {
   OpenK9Client,
   SearchToken,
   OpenK9ClientContext,
+  ChatSource,
 } from "../components/client";
+import { Message } from "../components/useGenerateResponse";
+import { useCopilotChat as useCopilotChatHook } from "../components/useCopilotChat";
 import * as RendererComponents from "../renderer-components";
 import { Main, QueryState } from "./Main";
 import { ResultsDisplayMode } from "../components/ResultList";
@@ -16,6 +19,12 @@ import { RangeProvider } from "../components/useRange";
 import { TypeAllFilters } from "../components/AllFiltersConfigurable";
 
 export const rendererComponents = RendererComponents;
+
+// superficie Copilot / K9 IA riesposta dall'entry embeddable, così gli embedder
+// (e il demo) non importano da percorsi interni `../components/*`
+export { useCopilotChat } from "../components/useCopilotChat";
+export type { ChatRequest, ChatHistoryEntry } from "../components/client";
+export type { ChatSource, Message };
 
 export class OpenK9 {
   static dependencies = {
@@ -134,6 +143,23 @@ export class OpenK9 {
     return this.client.deauthenticate();
   };
 
+  /**
+   * Copilot / K9 IA chat hook bound to this instance's client.
+   *
+   * Exposed on the `openk9` object so embedders that only have the instance
+   * (script-tag embedding, no ESM deep imports) can drive the conversation
+   * without the internal context provider. Call it inside a React component:
+   *
+   * ```js
+   * const { messages, isChatting, send, cancel, reset } = openk9.useCopilotChat();
+   * ```
+   *
+   * `endpoint` / `baseUrl` can be overridden; the client is injected from this
+   * instance by default.
+   */
+  useCopilotChat = (options: Parameters<typeof useCopilotChatHook>[0] = {}) =>
+    useCopilotChatHook({ client: this.client, ...options });
+
   private listeners: {
     [K in keyof Events]: Set<(payload: Events[K]) => void>;
   } = {
@@ -234,6 +260,33 @@ type ResultListProps = {
   noResultsCustom?: React.ReactNode;
 };
 
+export type CopilotConfiguration = {
+  /** container element that hosts the conversation panel */
+  element: Element | string | null;
+  /** element that hosts the open/close toggle button */
+  toggle?: Element | string | null;
+  /** override the chat-tool path (default: /api/rag/chat-tool) */
+  endpoint?: string | null;
+  /** separate base URL/tenant for the generative calls (reuses the auth token) */
+  tenant?: string | null;
+  /** show the "related searches" suggestions (default: true) */
+  suggestions?: boolean;
+  /** how many related searches to request (default: 3) */
+  maxSuggestions?: number;
+  /** custom content for the toggle button (default: the localized label) */
+  toggleLabel?: React.ReactNode;
+  /** override the input placeholder */
+  placeholder?: string;
+  /** override the empty-thread hint */
+  emptyState?: React.ReactNode;
+  onOpen?: () => void;
+  onClose?: () => void;
+  onMessageSent?: (question: string) => void;
+  onResponse?: (message: Message) => void;
+  onError?: (message: Message) => void;
+  onSourceClick?: (source: ChatSource) => void;
+};
+
 type SortResultConfigurableProps = {
   sort: Element | string | null;
   relevance: string;
@@ -281,6 +334,7 @@ type FilterProps = {
   noResultMessage?: string | null | undefined;
   placeholder?: string | null | undefined;
   haveSearch?: boolean | null | undefined;
+  showCount?: boolean | null | undefined;
 };
 
 type ResulListPaginationProps = {
@@ -523,6 +577,7 @@ export type Configuration = {
   calendar: Element | string | null;
   calendarVertical: Element | string | null;
   changeLanguage: Element | string | null;
+  copilot: CopilotConfiguration | null;
   detailMobile: Element | string | null;
   details: Element | string | null;
   filters: Element | string | null;
@@ -593,6 +648,7 @@ const defaultConfiguration: Configuration = {
   debounceTimeSearch: null,
   defaultTokens: [],
   externalSearchTokens: null,
+  copilot: null,
   detailMobile: null,
   details: null,
   enabled: false,

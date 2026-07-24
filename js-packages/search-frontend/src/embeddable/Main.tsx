@@ -13,6 +13,8 @@ import {
 } from "../components/DateRangePicker";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
 import { DetailMemo } from "../components/Detail";
+import { CopilotMemo } from "../components/Copilot";
+import { css } from "styled-components";
 import { DetailMobileMemo } from "../components/DetailMobile";
 import { WhoIsDynamic } from "../components/FilterCategoryDynamic";
 import { FiltersMemo, SkeletonFilters } from "../components/Filters";
@@ -136,6 +138,11 @@ export function Main({
   const [prevSearchQuery, setPrevSearchQuery] = React.useState([]);
   const [prevSearchQueryMobile, setPrevSearchQueryMobile] = React.useState([]);
   const [viewButtonDetail, setViewButtonDetail] = React.useState(false);
+  const [showCopilot, setShowCopilot] = React.useState(false);
+  // embedded mode: a container is provided without a toggle, so the panel is
+  // always visible (no open/close button) instead of being toggle-driven
+  const copilotEmbedded =
+    !!configuration.copilot?.element && !configuration.copilot?.toggle;
 
   const { dateRange, setDateRange, dateTokens } = useDateTokens();
   const {
@@ -151,7 +158,7 @@ export function Main({
     selectionsDispatch,
     useQueryStringFilters,
   });
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     tabs,
     selectedTabIndex,
@@ -555,6 +562,7 @@ export function Main({
               memoryResults={memoryResults}
               placeholder={configuration.filtersConfigurable?.placeholder}
               haveSearch={configuration.filtersConfigurable?.haveSearch}
+              showCount={configuration.filtersConfigurable?.showCount}
               iconCustom={iconCustom}
               setOverrideSearchWithCorrection={setOverrideSearchWithCorrection}
               overrideSearchWithCorrection={overrideSearchWithCorrection}
@@ -804,24 +812,120 @@ export function Main({
         configuration.sortable,
       )}
       {renderPortal(
-        <I18nextProvider i18n={i18next}>
-          <DetailMemo
-            result={detail}
-            actionOnCLose={() => {}}
-            template={configuration.template}
-            cardDetailsOnOver={isHoverChangeDetail}
-            callbackFocusedButton={() => {
-              const recoveryButton = document.getElementById(
-                "openk9-button-card-" + idPreview,
-              ) as any;
-              if (recoveryButton) recoveryButton.focus();
-              setDetail(null);
-            }}
-            setViewButtonDetail={setViewButtonDetail}
-            viewButtonDetail={viewButtonDetail}
-          />
-        </I18nextProvider>,
+        showCopilot ? null : (
+          <I18nextProvider i18n={i18next}>
+            <DetailMemo
+              result={detail}
+              actionOnCLose={() => {}}
+              template={configuration.template}
+              cardDetailsOnOver={isHoverChangeDetail}
+              callbackFocusedButton={() => {
+                const recoveryButton = document.getElementById(
+                  "openk9-button-card-" + idPreview,
+                ) as any;
+                if (recoveryButton) recoveryButton.focus();
+                setDetail(null);
+              }}
+              setViewButtonDetail={setViewButtonDetail}
+              viewButtonDetail={viewButtonDetail}
+            />
+          </I18nextProvider>
+        ),
         configuration.details,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <button
+            type="button"
+            className="openk9-embeddable-search--copilot-toggle"
+            aria-pressed={showCopilot}
+            onClick={() => {
+              const next = !showCopilot;
+              setShowCopilot(next);
+              if (next) configuration.copilot?.onOpen?.();
+              else configuration.copilot?.onClose?.();
+            }}
+            css={css`
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              padding: 8px 18px;
+              border-radius: 999px;
+              border: 1px solid
+                var(--openk9-embeddable-search--primary-color, #c0272b);
+              background: ${showCopilot
+                ? "var(--openk9-embeddable-search--primary-color, #c0272b)"
+                : "transparent"};
+              color: ${showCopilot
+                ? "#ffffff"
+                : "var(--openk9-embeddable-search--primary-color, #c0272b)"};
+              font-weight: 600;
+              font-size: 14px;
+              line-height: 1;
+              cursor: pointer;
+              transition: background 140ms ease, color 140ms ease,
+                box-shadow 140ms ease;
+              box-shadow: ${showCopilot
+                ? "0 2px 8px color-mix(in srgb, var(--openk9-embeddable-search--primary-color, #c22525) 35%, transparent)"
+                : "none"};
+              &:hover {
+                background: var(
+                  --openk9-embeddable-search--primary-color,
+                  #c0272b
+                );
+                color: #ffffff;
+                box-shadow: 0 2px 8px
+                  color-mix(
+                    in srgb,
+                    var(--openk9-embeddable-search--primary-color, #c22525) 35%,
+                    transparent
+                  );
+              }
+              &:focus-visible {
+                outline: 2px solid
+                  var(--openk9-embeddable-search--primary-color, #c0272b);
+                outline-offset: 2px;
+              }
+            `}
+          >
+            {configuration.copilot?.toggleLabel ?? t("copilot-toggle")}
+          </button>
+        </I18nextProvider>,
+        configuration.copilot?.toggle ?? null,
+      )}
+      {renderPortal(
+        showCopilot || copilotEmbedded ? (
+          <I18nextProvider i18n={i18next}>
+            <CopilotMemo
+              endpoint={configuration.copilot?.endpoint}
+              baseUrl={configuration.copilot?.tenant}
+              language={languageSelect}
+              searchText={selectionsState.text}
+              suggestions={configuration.copilot?.suggestions}
+              maxSuggestions={configuration.copilot?.maxSuggestions}
+              placeholder={configuration.copilot?.placeholder}
+              emptyState={configuration.copilot?.emptyState}
+              onMessageSent={configuration.copilot?.onMessageSent}
+              onResponse={configuration.copilot?.onResponse}
+              onError={configuration.copilot?.onError}
+              onSourceClick={configuration.copilot?.onSourceClick}
+              onClose={
+                copilotEmbedded
+                  ? undefined
+                  : () => {
+                      setShowCopilot(false);
+                      configuration.copilot?.onClose?.();
+                      // return focus to the toggle so keyboard users aren't dropped
+                      const toggle = document.querySelector(
+                        ".openk9-embeddable-search--copilot-toggle",
+                      ) as HTMLElement | null;
+                      toggle?.focus();
+                    }
+              }
+            />
+          </I18nextProvider>
+        ) : null,
+        configuration.copilot?.element ?? null,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>
@@ -1319,12 +1423,10 @@ function useSearch({
   selectionsState: SelectionsState;
   selectionsDispatch: React.Dispatch<SelectionsAction>;
   retrieveType?: string;
-  externalSearchTokens?:
-    | Array<{
-        kind: "tabs" | "search" | "filters";
-        tokens: SearchToken[];
-      }>
-    | null;
+  externalSearchTokens?: Array<{
+    kind: "tabs" | "search" | "filters";
+    tokens: SearchToken[];
+  }> | null;
   setSortAfterKey: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const { searchAutoselect, searchReplaceText, defaultTokens, sort } =
@@ -1470,7 +1572,8 @@ function useSearch({
     return map;
   }, [stableExternalSearchTokens]);
 
-  const effectiveTabTokens = externalOverrides.tabs ?? tabTokens?.tabToken ?? [];
+  const effectiveTabTokens =
+    externalOverrides.tabs ?? tabTokens?.tabToken ?? [];
   const effectiveFilterTokens = externalOverrides.filters ?? newTokenFilter;
   const effectiveSearchTokens = externalOverrides.search ?? newSearch;
 

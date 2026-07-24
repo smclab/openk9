@@ -17,6 +17,16 @@
 import React from "react";
 import { UserManager, WebStorageStateStore, type User } from "oidc-client-ts";
 import { Options } from "./SortResults";
+import {
+  createChatClient,
+  CHAT_TOOL_ENDPOINT,
+  type ChatSource,
+  type ChatHistoryEntry,
+  type ChatRequest,
+} from "./chatClient";
+
+export { CHAT_TOOL_ENDPOINT };
+export type { ChatSource, ChatHistoryEntry, ChatRequest };
 export const OpenK9ClientContext = React.createContext<
   ReturnType<typeof OpenK9Client>
 >(null as any /* must break app if not provided */);
@@ -210,7 +220,11 @@ export function OpenK9Client({
     return user.access_token ?? null;
   }
 
-  async function authFetch(route: string, init: RequestInit = {}) {
+  async function authFetch(
+    route: string,
+    init: RequestInit = {},
+    base?: string,
+  ) {
     if (callback) callback();
 
     let headers = init.headers;
@@ -234,7 +248,7 @@ export function OpenK9Client({
       }
     }
 
-    return fetch(tenant + route, {
+    return fetch((base ?? tenant) + route, {
       ...init,
       headers,
     });
@@ -282,6 +296,7 @@ export function OpenK9Client({
       });
       return data;
     },
+    ...createChatClient(authFetch),
     async getServiceStatus(): Promise<"up" | "down"> {
       const response = await fetch(tenant + `/api/status`);
       if (response.ok) return "up";

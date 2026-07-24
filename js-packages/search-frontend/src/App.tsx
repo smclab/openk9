@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,42 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import {
-  faChevronDown,
-  faChevronUp,
-  faSearch,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Chatbot } from "@openk9ui/openk9-chatbot";
 import { debounce } from "lodash";
-import moment from "moment";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { css } from "styled-components";
+import Markdown from "react-markdown";
+import { css, keyframes } from "styled-components";
 import "./app.css";
-import "./components/dataRangePicker.css";
-import { getCachedAccessToken } from "./components/client";
-import { DeleteLogo } from "./components/DeleteLogo";
-import { Logo } from "./components/Logo";
-import { MaintenancePage } from "./components/MaintenancePage";
-import { OpenK9 } from "./embeddable/entry";
 import "./index.css";
 import "./ScrollBar.css";
-import { CalendarMobileSvg } from "./svgElement/CalendarMobileSvg";
-import { FilterHorizontalSvg } from "./svgElement/FilterHorizontalSvg";
-import { FilterSvg } from "./svgElement/FiltersSvg";
-import { TrashSvg as TrashIcon } from "./svgElement/TrashSvg";
-import { User } from "./svgElement/UserSvg";
-import { CloseIcon } from "./svgElement/CloseSvg";
-import "./components/SortResultList.css";
-import "./components/dateRangePickerVertical.css";
-import "./components/dataRangePicker.css";
-import "react-dates/lib/css/_datepicker.css";
+import { Logo } from "./components/Logo";
+// il demo consuma la stessa superficie pubblica di un embedder reale: hook e tipi
+// arrivano dall'entry del package, non da percorsi interni `./components/*`
+import { type ChatSource } from "./components/client";
+import { OpenK9 } from "./embeddable/entry";
 
 const isOAuth2Enabled = import.meta.env.VITE_OAUTH2_ENABLED !== "false";
-const isChatbotEnabled = import.meta.env.VITE_CHATBOT_ENABLED === "true";
 const isGenerativeEnabled = import.meta.env.VITE_GENERATIVE_ENABLED === "true";
-const isCalendarEnabled = import.meta.env.VITE_CALENDAR_ENABLED !== "false";
 
 export const openk9 = new OpenK9({
   enabled: true,
@@ -65,951 +45,1153 @@ export const openk9 = new OpenK9({
   autocompleteEnabled: true,
 });
 
-export function App() {
-  const serviceStatus = useServiceStatus();
+const RED = "var(--openk9-embeddable-search--primary-color, #c0272b)";
+const PAGE_BG = "#f5f6f8";
+const BORDER = "#e5e7eb";
+const MUTED = "#6b7280";
 
-  const [isVisibleFilters, setIsVisibleFilters] = React.useState(false);
-  const [numberOfResults, setNumberOfResults] = React.useState(false);
-  const [isVisibleSearchMobile, setIsVisibleSearchMobile] =
-    React.useState(false);
-  const [isVisibleCalendar, setIsVisibleCalendar] = React.useState(false);
-  const [startDate, setStartDate] = React.useState<any | null>(null);
-  const [endDate, setEndDate] = React.useState<any | null>(null);
-  const [focusedInput, setFocusedInput] = React.useState(null);
-  const [isClickReset, setIsClickReset] = React.useState(false);
-  const [isOpenCalendar, setIsOpenCalendar] = React.useState(false);
-  const [isPanelVisible, setIsPanelVisible] = React.useState(true);
-  const [searchText, setSearchText] = React.useState<string | null | undefined>(
-    undefined,
-  );
-  React.useEffect(() => {
-    document.body.classList.toggle(
-      "no-scroll",
-      isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar,
-    );
-    return () => document.body.classList.remove("no-scroll");
-  }, [isVisibleFilters, isVisibleSearchMobile, isVisibleCalendar]);
+// ---- stile condiviso delle sezioni ---------------------------------------
+// un unico sistema visivo per tutte le aree (navbar, filtri, risultati, K9 IA,
+// anteprima, fonti): stesso contenitore (bordo/raggio/ombra) e stessi header e
+// titoli, così le colonne risultano uniformi tra loro.
+const panelStyle = css`
+  background: #fff;
+  border: 1px solid ${BORDER};
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+`;
 
-  const { t, i18n } = useTranslation();
+const sectionHeaderStyle = css`
+  padding: 16px 20px;
+  border-bottom: 1px solid ${BORDER};
+`;
 
-  const debouncedUpdateSearch = debounce((search) => {
-    const text = search?.[0]?.values?.[0] || undefined;
-    setSearchText(text);
-  }, 200);
+const sectionHeaderRowStyle = css`
+  ${sectionHeaderStyle}
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
 
-  const debouncedNumberOfResults = debounce((search) => {
-    setNumberOfResults(search);
-  }, 200);
+const sectionTitleStyle = css`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e1c21;
+`;
 
-  React.useEffect(() => {
-    openk9.addEventListener("queryStateChange", (newConfig) => {
-      debouncedUpdateSearch(newConfig.searchTokens);
-      debouncedNumberOfResults(newConfig.numberOfResults);
-    });
-  }, [openk9]);
+const sectionSubtitleStyle = css`
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: ${MUTED};
+`;
 
-  React.useEffect(() => {
-    if (isVisibleFilters || isVisibleSearchMobile || isVisibleCalendar) {
-      document.body.classList.add("no-scroll");
-    } else {
-      document.body.classList.remove("no-scroll");
-    }
-    return () => {
-      document.body.classList.remove("no-scroll");
-    };
-  }, [isVisibleFilters, isVisibleCalendar, isVisibleSearchMobile]);
+// il backend risponde con questo testo quando non trova nulla in knowledge base:
+// in quel caso non c'è una risposta utile, quindi non mostriamo la CTA verso K9 IA
+const NO_ANSWER_PATTERN = /no information found in the knowledge base/i;
 
-  if (serviceStatus === "down") {
-    return <MaintenancePage />;
-  }
+// ---- pannello Filtri (reali, stile del mock) -----------------------------
+// I filtri veri di OpenK9 vengono montati via `filtersConfigurable` /
+// `removeFiltersConfigurable`; il markup iniettato dal widget viene ristilizzato
+// per combaciare con il pannello mockato tramite selettori annidati (scoped
+// dalla classe wrapper, quindi vincono per specificità senza `!important`).
 
+function RealFiltersPanel() {
   return (
     <div
-      id="openk9-body"
-      className="openk9-body"
+      className="openk9-mock-filters"
       css={css`
-        background-color: var(
-          --openk9-embeddable-search--secondary-background-color
-        );
-        width:100vw;
-        height: 100vh;
-        display: grid;
-        grid-column-gap: 30px;
-        padding:  50px ;
-        padding-block:0px;
-        box-sizing: border-box;
-        grid-template-columns: 1fr 2.5fr 1.8fr;
-        grid-template-rows: auto auto auto auto 1fr;
-        grid-template-areas:
-          "dockbar dockbar dockbar"
-          "search search search"
-          "tabs tabs tabs"
-          "filters panel panel"
-          "filters result detail";
-        padding: 20px;
-        padding-top:0px;
-        @-moz-document url-prefix() {
-          .openk9-container-tabs {
-          margin-bottom: 30px;
-           }
-        }
-        @media (max-width: 480.98px) {
-          padding: 0;
-          grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto auto 1fr;
-          grid-template-areas:
-            "dockbar"
-            "search"
-            "tabs"
-            "panel"
-            "result";
+        ${panelStyle}
+        grid-area: filters;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        @media (max-width: 1024px) {
+          display: none;
         }
 
-        @media (min-width: 481px) and (max-width: 768.98px) {
-         padding-block:0;
-        padding-inline:20px;
-          grid-template-columns: 1fr;
-          grid-template-rows: auto auto auto auto 1fr;
-          grid-template-areas:
-            "dockbar"
-            "search"
-            "tabs"
-            "panel"
-            "result";
+        /* --- ristilizzazione dei filtri reali per matchare il mock --- */
+        /* la search per-categoria si apre con animazione dalla lente */
+        .openk9-filter-category-container-search {
+          margin: 2px 0 12px;
         }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-          grid-template-columns: 1fr 2fr;
-          grid-template-rows: auto auto auto auto 1fr;
-          grid-template-areas:
-            "dockbar dockbar"
-            "search search"
-            "tabs tabs"
-            "filters panel"
-            "filters result";
-            "result";
-
+        .openk9-filter-category-container {
+          /* separatore delicato, sempre presente, sotto le suggestion */
+          border-bottom: 1px solid #eef0f2;
+          padding: 14px 0;
+          margin-bottom: 0;
         }
-
-         @media (min-width: 1024px) and (max-width: 1280px) {
-        grid-template-columns: 1.2fr 2.3fr 1.8fr;
-        grid-template-rows: auto auto auto auto 1fr;
+        .openk9-filter-category-title {
+          margin-left: 0;
+          padding: 0 0 8px;
+          /* separatore persistente tra nome categoria e ricerca */
+          border-bottom: 1px solid #eef0f2;
+        }
+        .openk9-filter-category-title strong,
+        .name-category-filter {
+          text-transform: uppercase;
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+          color: ${MUTED};
+        }
+        /* pulsanti lente/chevron senza box, così non competono coi bordi */
+        .openk9-toggle-search-button,
+        .openk9-collapsable-filters,
+        .openk9-mobile-collapsable-filters {
+          border: none;
+          background: transparent;
+          padding: 4px;
+          color: ${MUTED};
+        }
+        /* la search filtri (riga a tutta larghezza) usa lo stile del componente */
+        .openk9-filter-form-check-container {
+          padding-left: 0;
+          gap: 10px;
+          margin-top: 12px;
+        }
+        .form-check {
+          align-items: center;
+        }
+        /* checkbox nativo con accent rosso, come nel mock (non il quadro custom) */
+        .form-check-input {
+          appearance: auto;
+          -webkit-appearance: auto;
+          accent-color: ${RED};
+          width: 16px;
+          height: 16px;
+          min-width: 16px;
+          min-height: 16px;
+          border: none;
+          border-radius: 0;
+          background-color: initial;
+          margin-right: 10px;
+          cursor: pointer;
+        }
+        .form-check-label {
+          font-weight: 400;
+          color: #1e1c21;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        .openk9-container-load-more {
+          justify-content: flex-start;
+          margin-left: 0;
+        }
+        .openk9-load-more-button {
+          color: ${RED};
+          font-weight: 600;
         }
       `}
     >
       <div
-        className="openk9-navbar"
         css={css`
-          grid-area: dockbar;
-          padding: 8px 50px;
-          margin: 0 -50px;
-          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          display: flex;
-          align-items: center;
-          background-color: var(
-            --openk9-embeddable-search--primary-background-color
-          );
-
-          @media (max-width: 768.98px) {
-            margin: 0 0px;
-            padding: 8px 20px;
-          }
+          ${sectionHeaderRowStyle}
         `}
       >
-        <div
-          className="openk9-navbar-container-logo"
+        <span
           css={css`
-            font-size: 20px;
-            color: #1e1c21;
-            display: flex;
-            align-items: center;
+            ${sectionTitleStyle}
           `}
         >
-          <span
-            className="openk9-navbar-logo"
-            css={css`
-              color: var(--openk9-embeddable-search--primary-color);
-              margin-right: 8px;
-            `}
-          >
-            <Logo size={32} />
-          </span>
-          <span>Open</span>
-          <span
-            className="openk9-navbar-name-logo"
-            css={css`
-              font-weight: 700;
-            `}
-          >
-            K9
-          </span>
-        </div>
+          Filtri
+        </span>
         <div
+          className="openk9-mock-filters-clear"
           css={css`
-            flex-grow: 1;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            align-items: center;
-          `}
-        >
-          <div
-            className="openk9-navbar-login"
-            ref={(element) => openk9.updateConfiguration({ login: element })}
-          />
-          <div
-            className="openk9-navbar-change-language"
-            ref={(element) =>
-              openk9.updateConfiguration({ changeLanguage: element })
+            /* il mock aveva solo il testo rosso, senza icona */
+            svg,
+            .fa,
+            [class*="icon"] {
+              display: none !important;
             }
-          />
-        </div>
+            button {
+              border: none;
+              background: none;
+              color: ${RED};
+              font-size: 13px;
+              font-weight: 600;
+              cursor: pointer;
+              padding: 0;
+              display: inline-flex;
+              align-items: center;
+              gap: 0;
+            }
+          `}
+          ref={(element) =>
+            openk9.updateConfiguration({
+              removeFiltersConfigurable: {
+                element,
+                itemsRemove: ["filters"],
+                label: "Cancella tutto",
+              },
+            })
+          }
+        />
       </div>
 
       <div
         css={css`
-          grid-area: search;
-          padding-top: 16px;
-          padding-bottom: 8px;
-          @media (max-width: 768.98px) {
-            padding-inline: 16px;
+          flex: 1;
+          box-sizing: border-box;
+          overflow-x: hidden;
+          overflow-y: auto;
+          padding-block: 0 16px;
+          padding-inline: 8px;
+        `}
+        ref={(element) =>
+          openk9.updateConfiguration({
+            filtersConfigurable: { element, haveSearch: true, showCount: true },
+          })
+        }
+      />
+    </div>
+  );
+}
+
+// ---- colonna Fonti utilizzate (dati reali: eventi DOCUMENT della risposta) --
+
+function SourcesColumn({ sources }: { sources: Array<ChatSource> }) {
+  return (
+    <div
+      css={css`
+        ${panelStyle}
+        grid-area: detail;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        @media (max-width: 1024px) {
+          display: none;
+        }
+      `}
+    >
+      <div
+        css={css`
+          ${sectionHeaderStyle}
+        `}
+      >
+        <span
+          css={css`
+            ${sectionTitleStyle}
+          `}
+        >
+          <span aria-hidden="true">📖</span> Fonti utilizzate
+        </span>
+        <p
+          css={css`
+            ${sectionSubtitleStyle}
+          `}
+        >
+          Le fonti che hanno contribuito alla risposta generata da K9 IA.
+        </p>
+      </div>
+      <div
+        css={css`
+          flex: 1;
+          overflow: auto;
+          padding: 12px 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        `}
+      >
+        {sources.length === 0 && (
+          <div
+            css={css`
+              color: ${MUTED};
+              font-size: 13px;
+              padding: 24px 16px;
+              text-align: center;
+            `}
+          >
+            Le fonti compaiono quando K9 IA genera una risposta.
+          </div>
+        )}
+        {sources.map((source, index) => {
+          const title = source.title || source.source || source.url || "Fonte";
+          return (
+            <div
+              key={(source.url ?? "") + index}
+              css={css`
+                border: 1px solid ${BORDER};
+                border-radius: 10px;
+                padding: 14px;
+              `}
+            >
+              <div
+                css={css`
+                  display: flex;
+                  justify-content: space-between;
+                  gap: 10px;
+                  align-items: flex-start;
+                `}
+              >
+                <div
+                  css={css`
+                    display: flex;
+                    gap: 10px;
+                    align-items: flex-start;
+                  `}
+                >
+                  <span
+                    aria-hidden="true"
+                    css={css`
+                      flex-shrink: 0;
+                      width: 34px;
+                      height: 34px;
+                      background: ${RED};
+                      color: #fff;
+                      border-radius: 8px;
+                      display: inline-flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 15px;
+                      font-weight: 800;
+                    `}
+                  >
+                    {title.charAt(0).toUpperCase()}
+                  </span>
+                  <span
+                    css={css`
+                      font-size: 14px;
+                      font-weight: 700;
+                      color: #1e1c21;
+                      line-height: 1.3;
+                    `}
+                  >
+                    {title}
+                  </span>
+                </div>
+                <span
+                  css={css`
+                    flex-shrink: 0;
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #16a34a;
+                    background: #dcfce7;
+                    border-radius: 999px;
+                    padding: 3px 8px;
+                    white-space: nowrap;
+                  `}
+                >
+                  Usata nella risposta
+                </span>
+              </div>
+              {source.url && (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  css={css`
+                    display: block;
+                    margin: 8px 0 0;
+                    font-size: 12px;
+                    color: #2563eb;
+                    word-break: break-all;
+                  `}
+                >
+                  {source.url}
+                </a>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---- indicatore "sta scrivendo" ------------------------------------------
+
+const blink = keyframes`
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+`;
+
+function TypingDots() {
+  return (
+    <span
+      css={css`
+        display: inline-flex;
+        gap: 4px;
+        span {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: ${MUTED};
+          animation: ${blink} 1.2s infinite ease-in-out both;
+        }
+        span:nth-of-type(2) {
+          animation-delay: 0.2s;
+        }
+        span:nth-of-type(3) {
+          animation-delay: 0.4s;
+        }
+      `}
+    >
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
+
+// ---- App -----------------------------------------------------------------
+
+export function App() {
+  return <AppInner />;
+}
+
+function AppInner() {
+  const [view, setView] = React.useState<"results" | "ai">("results");
+
+  return (
+    <>
+      <div
+        id="openk9-body"
+        className="openk9-body"
+        css={css`
+          background: ${PAGE_BG};
+          width: 100vw;
+          height: 100vh;
+          box-sizing: border-box;
+          display: grid;
+          gap: 20px;
+          padding: 20px;
+          grid-template-columns: ${view === "ai"
+            ? "1fr 380px"
+            : "300px 1fr 380px"};
+          grid-template-rows: auto 1fr;
+          grid-template-areas: ${view === "ai"
+            ? '"dockbar dockbar" "dialog detail"'
+            : '"dockbar dockbar dockbar" "filters dialog detail"'};
+
+          @media (max-width: 1024px) {
+            grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+              "dockbar"
+              "dialog";
           }
         `}
       >
+        {/* ---- Navbar: logo + search reale + login/lingua reali ---- */}
         <div
           css={css`
+            ${panelStyle}
+            grid-area: dockbar;
+            padding: 10px 20px;
             display: flex;
-            gap: 10px;
-            width: 100%;
-            justify-content: center;
-            align-items: baseline;
-
+            align-items: center;
+            gap: 20px;
             @media (max-width: 768.98px) {
-              flex-direction: column;
+              flex-wrap: wrap;
             }
           `}
         >
           <div
             css={css`
               display: flex;
-              gap: 18px;
-              align-items: flex-end;
-              width: 100%;
+              align-items: center;
+              font-size: 20px;
+              color: #1e1c21;
+              flex-shrink: 0;
             `}
-            className="openk9-update-configuration-search"
+          >
+            <span
+              css={css`
+                color: ${RED};
+                margin-right: 8px;
+              `}
+            >
+              <Logo size={32} />
+            </span>
+            <span>Open</span>
+            <span
+              css={css`
+                font-weight: 700;
+              `}
+            >
+              K9
+            </span>
+          </div>
+          <div
+            css={css`
+              flex: 1;
+              min-width: 240px;
+              /* in vista K9 IA l'input di ricerca sparisce (c'è già la chat) */
+              display: ${view === "ai" ? "none" : "block"};
+            `}
             ref={(element) =>
               openk9.updateConfiguration({ searchWithButton: element })
             }
           />
           <div
             css={css`
-              width: 100%;
               display: flex;
-              gap: 1%;
-              flex-wrap: wrap;
-
-              @media (min-width: 769px) {
-                display: none;
-              }
-            `}
-            className="openk9-update-configuration"
-          >
-            {isCalendarEnabled && (
-              <div
-                css={css`
-                  display: flex;
-                  background-color: white;
-                  border-radius: 50px;
-                  border: 1px solid #ced4da;
-                  justify-content: space-between;
-                  align-items: center;
-                  padding: 8px 12px;
-                  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                `}
-              >
-                <div
-                  css={css`
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    flex: 1;
-                  `}
-                  onClick={() => setIsVisibleCalendar(true)}
-                >
-                  <CalendarMobileSvg />
-                  <div
-                    css={css`
-                      display: flex;
-                      align-items: center;
-                      gap: 10px;
-                      flex: 1;
-                    `}
-                    onClick={() => setIsVisibleCalendar(true)}
-                  >
-                    <div
-                      css={css`
-                        white-space: nowrap;
-                        color: #495057;
-                        font-size: 14px;
-                      `}
-                    >
-                      {startDate === null
-                        ? t("choose-a-date")
-                        : moment(startDate).format("DD MMM YYYY")}
-                    </div>
-                    {endDate !== null && (
-                      <div
-                        css={css`
-                          height: 20px;
-                          width: 1px;
-                          background-color: #ced4da;
-                        `}
-                      />
-                    )}
-                    <div
-                      css={css`
-                        white-space: nowrap;
-                        color: #495057;
-                        font-size: 14px;
-                      `}
-                    >
-                      {endDate === null
-                        ? ""
-                        : moment(endDate).format("DD MMM YYYY")}
-                    </div>
-                  </div>
-                </div>
-                {startDate !== null && (
-                  <div
-                    onClick={() => {
-                      setStartDate(null);
-                      setEndDate(null);
-                      setIsClickReset(true);
-                    }}
-                    css={css`
-                      margin-left: 10px;
-                      cursor: pointer;
-                      display: flex;
-                      align-items: center;
-                    `}
-                  >
-                    <DeleteLogo />
-                  </div>
-                )}
-              </div>
-            )}
-            <button
-              css={css`
-                padding: 6px 10px;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                background: white;
-                border-radius: 50px;
-
-                @media (min-width: 769px) {
-                  display: none;
-                }
-              `}
-              onClick={() => setIsVisibleFilters(true)}
-            >
-              <FilterHorizontalSvg />
-            </button>
-            {isGenerativeEnabled && searchText !== undefined && (
-              <div
-                css={css`
-                  padding-block: 8px;
-                  @media (min-width: 769px) {
-                    display: none;
-                  }
-                `}
-              >
-                <button
-                  onClick={() => setIsPanelVisible(!isPanelVisible)}
-                  css={css`
-                    justify-self: center;
-                    border: 1px solid
-                      var(--openk9-embeddable-search--primary-color);
-                    border-radius: 20px;
-                    background: var(--openk9-embeddable-search--primary-color);
-                    border: 1px solid
-                      var(--openk9-embeddable-search--primary-color);
-                    border-radius: 20px;
-                    color: white;
-                    gap: 10px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    padding: 6px 10px;
-                    @media (min-width: 769px) {
-                      display: none;
-                    }
-                  `}
-                >
-                  {isGenerativeEnabled && isPanelVisible ? (
-                    <>
-                      Chiudi <Logo />
-                    </>
-                  ) : (
-                    <>
-                      <Logo />
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <div
-        className="openk9-container-tabs"
-        css={css`
-          grid-area: tabs;
-          overflow: auto;
-          padding-top: 8px;
-          padding-bottom: 16px;
-          height: max-content;
-          @media (max-width: 768.98px) {
-            display: none;
-          }
-        `}
-      >
-        <div ref={(element) => openk9.updateConfiguration({ tabs: element })} />
-        <div
-          ref={(element) =>
-            openk9.updateConfiguration({
-              correction: {
-                element,
-                information: (
-                  cor,
-                  err,
-                  call,
-                  hasCorrectedSearch,
-                  callbackCorrected,
-                ) => {
-                  return (
-                    <>
-                      <div
-                        css={css`
-                          display: flex;
-                          align-items: center;
-                          gap: 12px;
-                          border-radius: 8px;
-                          font-size: 15px;
-                          color: var(--openk9-embeddable-search--primary-color);
-                        `}
-                        aria-live="polite"
-                      >
-                        {hasCorrectedSearch ? (
-                          <span>
-                            {t("search-done-with")}
-                            <strong
-                              css={css`
-                                color: var(
-                                  --openk9-embeddable-search--primary-color
-                                );
-                              `}
-                            >
-                              {`“${cor}”`}
-                            </strong>
-                            {t("use-instead")}
-                            <button
-                              onClick={call}
-                              css={css`
-                                border: unset;
-                                background: var(
-                                  --openk9-embeddable-search--primary-light-color
-                                );
-                                color: white;
-                                border-radius: 8px;
-                                padding: 4px 12px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                font-size: 15px;
-                              `}
-                            >
-                              {`“${err}”`}
-                            </button>
-                            {"."}
-                          </span>
-                        ) : (
-                          <span>
-                            {t("your-search-did-you-mean")}{" "}
-                            <button
-                              onClick={callbackCorrected}
-                              css={css`
-                                border: unset;
-                                background: var(
-                                  --openk9-embeddable-search--primary-light-color
-                                );
-                                color: white;
-                                border-radius: 8px;
-                                padding: 4px 12px;
-                                font-weight: 600;
-                                cursor: pointer;
-                                font-size: 15px;
-                              `}
-                            >
-                              {`“${cor}”`}
-                            </button>
-                            {"."}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  );
-                },
-              },
-            })
-          }
-        />
-      </div>
-
-      <div
-        className="openk9-filters-mobile-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            filtersMobileLiveChange: {
-              element,
-              isVisible: isVisibleFilters,
-              setIsVisible: setIsVisibleFilters,
-              viewTabs: true,
-            },
-          })
-        }
-      />
-      <div
-        className="openk9-detail-container-title box-title"
-        css={css`
-          grid-area: filters;
-          width: 100%;
-          background: white;
-          display: flex;
-          flex-direction: column;
-          gap: 3px;
-          box-sizing: border-box;
-          border-radius: 8px;
-          @media (max-width: 768.98px) {
-            display: none;
-          }
-        `}
-      >
-        <div
-          className="openk9-icon-and-title-filters"
-          css={css`
-            display: flex;
-            gap: 5px;
-            padding: 16px;
-          `}
-        >
-          <div>
-            <FilterSvg size={14} />
-          </div>
-          <h2
-            id="title-preview-openk9"
-            tabIndex={0}
-            className="openk9-detail-class-title"
-            css={css`
-              font-style: normal;
-              font-weight: 700;
-              font-size: 16px;
-              height: 18px;
-              line-height: 22px;
               align-items: center;
-              margin: 0;
-            `}
-          >
-            {t("filters")}
-          </h2>
-        </div>
-        <div
-          ref={(element) =>
-            openk9.updateConfiguration({
-              removeFiltersConfigurable: {
-                element,
-                itemsRemove: ["filters", "calendar"],
-              },
-            })
-          }
-          css={css`
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding-inline: 16px;
-          }`}
-        ></div>
-        {isCalendarEnabled && (
-          <div
-            css={css`
-              padding-inline: 16px;
-              padding-top: 16px;
+              gap: 10px;
+              flex-shrink: 0;
+              /* i pulsanti restano a destra anche quando la search è nascosta */
+              margin-left: auto;
             `}
           >
             <div
-              className="openk9-filter-category-title"
-              css={css`
-                user-select: none;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 8px;
-                padding: 6px 0;
-              `}
-            >
-              <legend
-                className="data-range-filter"
-                css={css`
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  :first-letter {
-                    text-transform: uppercase;
-                  }
-                `}
-              >
-                <strong
-                  className="name-category-filter"
-                  css={css`
-                    font-size: 14px;
-                    letter-spacing: 0.2px;
-                    color: var(
-                      --openk9-embeddable-search--secondary-text-color
-                    );
-                  `}
-                >
-                  Calendar
-                </strong>
-              </legend>
-              <div
-                css={css`
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                `}
-              >
-                <button
-                  className={`openk9-mobile-collapsable-filters openk9-collapsable-filters ${
-                    isOpenCalendar
-                      ? "openk9-dropdown-filters-open"
-                      : "openk9-dropdown-filters-close"
-                  }`}
-                  aria-label={
-                    t("openk9-collapsable-filter") ||
-                    "openk9 collapsable filter"
-                  }
-                  aria-expanded={isOpenCalendar ? "true" : "false"}
-                  css={css`
-                    background: transparent;
-                    border: 1px solid
-                      var(--openk9-embeddable-search--border-color);
-                    border-radius: 8px;
-                    padding: 6px 8px;
-                    cursor: pointer;
-                    transition: transform 120ms ease,
-                      background-color 120ms ease, border-color 120ms ease;
-                    &:hover {
-                      background: rgba(0, 0, 0, 0.03);
-                    }
-                    &:active {
-                      transform: translateY(1px);
-                    }
-                  `}
-                  onClick={() => setIsOpenCalendar(!isOpenCalendar)}
-                >
-                  <FontAwesomeIcon
-                    className="icon-search icon-search-filters"
-                    icon={isOpenCalendar ? faChevronUp : faChevronDown}
-                    style={{
-                      color:
-                        "var(--openk9-embeddable-search--secondary-icon-color)",
-                      cursor: "pointer",
-                    }}
-                  />
-                </button>
-              </div>
-            </div>
-            <span
-              role="separator"
-              aria-hidden="true"
-              css={css`
-                display: flex;
-                height: 1px;
-                background: var(--openk9-embeddable-search--border-color);
-                margin: 4px 0;
-                list-style: none;
-                width: 100%;
-              `}
+              ref={(element) =>
+                openk9.updateConfiguration({ changeLanguage: element })
+              }
+            />
+            <div
+              ref={(element) => openk9.updateConfiguration({ login: element })}
             />
           </div>
-        )}
-        {isCalendarEnabled && isOpenCalendar && (
-          <div
-            css={css`
-              padding-inline: 16px;
-            `}
-            ref={(element) =>
-              openk9.updateConfiguration({
-                dataRangePickerVertical: { element },
-              })
-            }
-          ></div>
-        )}
-        <div
-          className="openk9-filters-container openk9-box"
-          ref={(element) =>
-            openk9.updateConfiguration({
-              filtersConfigurable: { element },
-            })
-          }
-          css={css`
-            display: flex;
-            height: max-content;
-            background-color: inherit;
-            border-radius: 8px;
-            overflow: auto;
-            flex-direction: column;
-            @media (max-width: 768.98px) {
-              display: none;
-            }
-          `}
-        ></div>
-      </div>
-
-      {isGenerativeEnabled && searchText !== undefined && (
-        <div
-          css={css`
-            grid-area: panel;
-            display: flex;
-            flex-direction: column;
-            @media (max-width: 768.98px) {
-              margin-inline: 5%;
-            }
-          `}
-        >
-          <div
-            css={css`
-              background: white;
-              display: flex;
-              justify-content: flex-end;
-              border-top-left-radius: 10px;
-              border-top-right-radius: 10px;
-              border-bottom-left-radius: ${!isPanelVisible ? "10px" : "unset"};
-              border-bottom-right-radius: ${!isPanelVisible ? "10px" : "unset"};
-            `}
-          >
-            <button
-              onClick={() => setIsPanelVisible(!isPanelVisible)}
-              css={css`
-                justify-self: center;
-                border: 1px solid var(--openk9-embeddable-search--primary-color);
-                background: var(--openk9-embeddable-search--primary-color);
-                border: 1px solid var(--openk9-embeddable-search--primary-color);
-                border-radius: 8px;
-                padding: 8px;
-                color: white;
-                gap: 10px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                margin: 10px;
-                @media (max-width: 768.98px) {
-                  display: none;
-                }
-              `}
-            >
-              {isPanelVisible ? (
-                <>
-                  Chiudi Risposta Generata <Logo />
-                </>
-              ) : (
-                <>
-                  Apri Risposta Generata <Logo />
-                </>
-              )}
-            </button>
-          </div>
-          {isGenerativeEnabled && (
-            <div
-              ref={(element) =>
-                openk9.updateConfiguration({
-                  generateResponse: element,
-                })
-              }
-              css={css`
-                color: black;
-                display: ${isPanelVisible ? "block" : "none"};
-              `}
-            ></div>
-          )}
         </div>
-      )}
 
-      <div
-        className="openk9-results-container openk9-box"
-        ref={(element) =>
-          openk9.updateConfiguration({
-            resultList: {
-              element,
-              changeOnOver: true,
-            },
-          })
-        }
-        css={css`
-          grid-area: result;
-          margin-top: ${searchText !== undefined && isGenerativeEnabled
-            ? "20px"
-            : "unset"};
-          overflow: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
+        {/* ---- Colonna sinistra: Filtri reali — nascosti in vista K9 IA ---- */}
+        {view === "results" && <RealFiltersPanel />}
 
-          @media (max-width: 768.98px) {
-            padding-inline: 16px;
-            gap: 10px;
-          }
-        `}
-      >
-        {
-          <div
-            css={css`
-              display: flex;
-              justify-content: space-between;
-              background-color: white;
-              align-items: center;
-              border-radius: 8px;
-              @media (max-width: 768.98px) {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 16px;
-              }
-            `}
-          >
-            <div
-              css={css`
-                padding: 16px;
-                font-weight: 700;
-                width: 100%;
-                @media (max-width: 768.98px) {
-                  padding: 0;
-                  padding-bottom: 8px;
-                }
-              `}
-            >
-              {t("number-of-results")}
-              <span
-                css={css`
-                  color: var(--openk9-embeddable-search--primary-color);
-                  margin-left: 5px;
-                `}
-              >
-                {numberOfResults}
-              </span>
-            </div>
-            <div
-              ref={(element) =>
-                openk9.updateConfiguration({
-                  sortResults: { element },
-                })
-              }
-            ></div>
-          </div>
-        }
+        {/* ---- Colonne centrale + destra: gestite dal componente ad hoc ---- */}
+        <K9Copilot view={view} setView={setView} />
       </div>
-
-      {isCalendarEnabled && (
-        <div
-          className="openk9-results-container openk9-box"
-          ref={(element) =>
-            openk9.updateConfiguration({
-              calendarMobile: {
-                element,
-                isVisible: isVisibleCalendar,
-                setIsVisible: setIsVisibleCalendar,
-                startDate,
-                setStartDate,
-                endDate,
-                setEndDate,
-                focusedInput,
-                setFocusedInput,
-                isCLickReset: isClickReset,
-                setIsCLickReset: setIsClickReset,
-              },
-            })
-          }
-        />
-      )}
-
-      <div
-        className="openk9-preview-container openk9-box"
-        ref={(element) => openk9.updateConfiguration({ details: element })}
-        css={css`
-          grid-area: detail;
-          overflow-y: auto;
-          overflow-x: hidden;
-          background-color: var(
-            --openk9-embeddable-search--primary-background-color
-          );
-          border-radius: 8px;
-          margin-top: ${searchText !== undefined && isGenerativeEnabled
-            ? "20px"
-            : "unset"};
-
-          @media (max-width: 1024px) {
-            display: none;
-          }
-        `}
-      />
-
+      {/* target del preview mobile: il widget vi monta l'overlay ModalDetail
+          aperto dal pill "Anteprima" sui risultati sotto i 1024px */}
       <div
         ref={(element) => openk9.updateConfiguration({ detailMobile: element })}
       />
-      {isChatbotEnabled && (
-        <div
-          css={css`
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-          `}
-        >
-          <Chatbot
-            language={i18n.language}
-            callbackAuthorization={() => {
-              const token = getCachedAccessToken();
-              return token ? `Bearer ${token}` : null;
-            }}
-            icon={{
-              buttonIcon: <Logo size={35} color="white" />,
-              userIcon: <User />,
-              chatbotIcon: <Logo size={25} color="#c22525" />,
-              refreshChatIcon: <TrashIcon />,
-              searchIcon: (
-                <FontAwesomeIcon
-                  className="openk9--search-icon"
-                  icon={faSearch}
-                  css={css`
-                    opacity: 0.5;
-                    color: var(
-                      --openk9-embeddable-search--secondary-text-color
-                    );
-                  `}
-                />
-              ),
-              logoIcon: <Logo size={35} color="#c22525" />,
-              closeIcon: <CloseIcon size={25} color="white" />,
-              closeModal: <CloseIcon size={18} color="#c22525" />,
-            }}
-          />
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
-function useServiceStatus() {
-  const [serviceStatus, setServiceStatus] = React.useState<"up" | "down">("up");
+type K9CopilotProps = {
+  view: "results" | "ai";
+  setView: (view: "results" | "ai") => void;
+};
 
+// componente ad hoc (non esportato): possiede tutta la gestione del Copilot —
+// stato, effetti, motore chat — e rende conversazione, CTA e colonna fonti.
+// Il client arriva dall'oggetto `openk9` (nessun provider di context necessario).
+function K9Copilot({ view, setView }: K9CopilotProps) {
+  const { t, i18n } = useTranslation();
+  const [searchText, setSearchText] = React.useState("");
+  const [numberOfResults, setNumberOfResults] = React.useState(0);
+  const [language, setLanguage] = React.useState(i18n.language);
+  const [input, setInput] = React.useState("");
+  const [pending, setPending] = React.useState<string | null>(null);
+  // azioni K9 IA generate dinamicamente dal contesto cercato
+  const [actions, setActions] = React.useState<Array<string>>([]);
+  const [actionsLoading, setActionsLoading] = React.useState(false);
+  const lastQueryRef = React.useRef<string | null>(null);
+  const threadRef = React.useRef<HTMLDivElement | null>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  // motore reale del Copilot: l'hook è esposto sull'oggetto openk9 e usa il suo
+  // client (niente provider, niente import interni — è la superficie di embedding)
+  const { messages, isChatting, send, reset } = openk9.useCopilotChat();
+  const preview = messages[0];
+  const currentSources = messages[messages.length - 1]?.sources ?? [];
+  // la risposta è "vuota" quando il backend non ha trovato nulla in KB
+  const previewHasNoAnswer =
+    preview?.status === "END" && NO_ANSWER_PATTERN.test(preview.answer ?? "");
+
+  // lingua reale del bucket per allineare l'AI ai risultati
   React.useEffect(() => {
-    openk9.client.getServiceStatus().then(setServiceStatus);
+    openk9.client
+      .getLanguageDefault()
+      .then((data) => setLanguage(data.value))
+      .catch(() => {});
   }, []);
 
-  return serviceStatus;
+  // testo di ricerca + numero risultati dagli eventi openk9
+  React.useEffect(() => {
+    const debounced = debounce(
+      (queryState: {
+        numberOfResults: number;
+        searchTokens: Array<{ values?: Array<string> }>;
+      }) => {
+        setSearchText(queryState.searchTokens?.[0]?.values?.[0] ?? "");
+        setNumberOfResults(queryState.numberOfResults);
+      },
+      250,
+    );
+    openk9.addEventListener("queryStateChange", debounced);
+    return () => openk9.removeEventListener("queryStateChange", debounced);
+  }, []);
+
+  // a ogni nuova ricerca: azzera la conversazione e prepara la prima domanda
+  React.useEffect(() => {
+    const query = searchText.trim();
+    if (!query) {
+      lastQueryRef.current = null;
+      setPending(null);
+      reset();
+      return;
+    }
+    if (lastQueryRef.current === query) return;
+    lastQueryRef.current = query;
+    reset();
+    setPending(query);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText]);
+
+  // quando la conversazione è stata azzerata, invia la prima domanda (history vuota)
+  React.useEffect(() => {
+    if (pending && messages.length === 0 && !isChatting) {
+      send({ question: pending, searchText: pending, language });
+      setPending(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending, messages.length, isChatting]);
+
+  // le azioni contestuali si azzerano appena parte una nuova interazione
+  React.useEffect(() => {
+    if (isChatting) setActions([]);
+  }, [isChatting]);
+
+  // ...e vengono rigenerate ad ogni interazione, appena la risposta è completa,
+  // sul contesto dell'ultima domanda posta
+  React.useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.status !== "END" || !last.answer) return;
+    let cancelled = false;
+    setActionsLoading(true);
+    openk9.client
+      .getRefinedSearches({ searchText: last.question, language })
+      .then((result) => {
+        if (!cancelled) setActions(result);
+      })
+      .catch(() => {
+        if (!cancelled) setActions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setActionsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [messages, language]);
+
+  // autoscroll del thread
+  React.useEffect(() => {
+    if (threadRef.current) {
+      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const submitFollowUp = () => {
+    const value = input.trim();
+    if (!value || isChatting) return;
+    setInput("");
+    if (inputRef.current) inputRef.current.style.height = "auto";
+    send({ question: value, searchText: value, language });
+  };
+
+  return (
+    <>
+      {/* ---- Colonna centrale: risultati oppure conversazione K9 IA ---- */}
+      <div
+        css={css`
+          ${panelStyle}
+          grid-area: dialog;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          min-height: 0;
+        `}
+      >
+        {view === "results" ? (
+          <>
+            {/* header risultati */}
+            <div
+              css={css`
+                ${sectionHeaderRowStyle}
+              `}
+            >
+              <span
+                css={css`
+                  ${sectionTitleStyle}
+                `}
+              >
+                {t("number-of-results")}
+                <span
+                  css={css`
+                    color: ${RED};
+                    margin-left: 6px;
+                  `}
+                >
+                  {numberOfResults}
+                </span>
+              </span>
+            </div>
+
+            {/* micro-anteprima della risposta AI + CTA "Vai a K9 IA":
+                nascosta quando il backend non ha una risposta utile */}
+            {!previewHasNoAnswer && (
+              <div
+                css={css`
+                  display: flex;
+                  align-items: center;
+                  gap: 14px;
+                  margin: 14px 20px 0;
+                  padding: 12px 14px;
+                  border: 1px solid ${BORDER};
+                  border-left: 3px solid ${RED};
+                  border-radius: 10px;
+                  background: #fafafa;
+                `}
+              >
+                <span aria-hidden="true" style={{ fontSize: 20 }}>
+                  ✨
+                </span>
+                <div
+                  css={css`
+                    flex: 1;
+                    min-width: 0;
+                    font-size: 13px;
+                    line-height: 1.4;
+                    color: ${MUTED};
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                  `}
+                >
+                  {preview ? (
+                    preview.answer ? (
+                      preview.answer
+                    ) : (
+                      <TypingDots />
+                    )
+                  ) : (
+                    "Chiedi a K9 IA di aiutarti con questi risultati."
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setView("ai")}
+                  css={css`
+                    flex-shrink: 0;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    border: 1px solid ${RED};
+                    background: ${RED};
+                    color: #fff;
+                    border-radius: 8px;
+                    padding: 8px 14px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    white-space: nowrap;
+                  `}
+                >
+                  Vai a K9 IA →
+                </button>
+              </div>
+            )}
+
+            {/* risultati reali */}
+            <div
+              className="openk9-results-container openk9-box"
+              ref={(element) =>
+                openk9.updateConfiguration({
+                  resultList: {
+                    element,
+                    changeOnOver: true,
+                  },
+                })
+              }
+              css={css`
+                flex: 1;
+                overflow: auto;
+                /* sfondo lista uguale a quello di pagina: le card bianche
+                   risaltano invece di confondersi col pannello */
+                background: ${PAGE_BG};
+                /* padding-block generoso + scroll-padding così il bordo/raggio
+                   della card non viene tagliato di netto contro il bordo dello
+                   scroll: entra/esce sfumando (mask) invece di troncarsi */
+                padding: 16px 20px;
+                scroll-padding-block: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                mask-image: linear-gradient(
+                  to bottom,
+                  transparent 0,
+                  #000 16px,
+                  #000 calc(100% - 16px),
+                  transparent 100%
+                );
+                -webkit-mask-image: linear-gradient(
+                  to bottom,
+                  transparent 0,
+                  #000 16px,
+                  #000 calc(100% - 16px),
+                  transparent 100%
+                );
+                /* il pill "Anteprima" iniettato dal widget su tablet/mobile:
+                   lo avviciniamo alla card e lo allineiamo a destra */
+                .openk9-wrapper-button-mobile {
+                  display: flex;
+                  justify-content: flex-end;
+                  margin-top: -6px;
+                }
+              `}
+            />
+          </>
+        ) : (
+          <>
+            {/* header conversazione */}
+            <div
+              css={css`
+                ${sectionHeaderRowStyle}
+              `}
+            >
+              <span
+                css={css`
+                  ${sectionTitleStyle}
+                `}
+              >
+                <span aria-hidden="true">✨</span> {t("copilot-toggle")}
+              </span>
+              <span
+                css={css`
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-size: 13px;
+                  font-weight: 600;
+                  color: #16a34a;
+                  background: #dcfce7;
+                  border-radius: 999px;
+                  padding: 5px 12px;
+                `}
+              >
+                AI attiva ▾
+              </span>
+            </div>
+
+            <div
+              css={css`
+                padding: 12px 20px;
+                border-bottom: 1px solid ${BORDER};
+              `}
+            >
+              <button
+                type="button"
+                onClick={() => setView("results")}
+                css={css`
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  border: 1px solid ${BORDER};
+                  background: #fff;
+                  border-radius: 8px;
+                  padding: 8px 14px;
+                  font-size: 14px;
+                  font-weight: 600;
+                  color: #1e1c21;
+                  cursor: pointer;
+                  &:hover {
+                    border-color: ${RED};
+                    color: ${RED};
+                  }
+                `}
+              >
+                ← Torna ai risultati
+              </button>
+            </div>
+
+            {/* thread */}
+            <div
+              ref={threadRef}
+              css={css`
+                flex: 1;
+                overflow-y: auto;
+                padding: 16px 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                min-height: 0;
+              `}
+            >
+              {messages.length === 0 && (
+                <div
+                  css={css`
+                    margin: auto;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    text-align: center;
+                    gap: 16px;
+                    padding: 24px;
+                    max-width: 640px;
+                  `}
+                >
+                  <div
+                    aria-hidden="true"
+                    css={css`
+                      width: 72px;
+                      height: 72px;
+                      border-radius: 50%;
+                      background: #fdeaea;
+                      color: ${RED};
+                      display: flex;
+                      align-items: center;
+                      justify-content: center;
+                      font-size: 30px;
+                    `}
+                  >
+                    💬
+                  </div>
+                  <div>
+                    <h3
+                      css={css`
+                        margin: 0;
+                        font-size: 18px;
+                        color: #1e1c21;
+                      `}
+                    >
+                      Fai una domanda sui risultati
+                    </h3>
+                    <p
+                      css={css`
+                        margin: 6px 0 0;
+                        font-size: 14px;
+                        color: ${MUTED};
+                      `}
+                    >
+                      K9 IA analizza i risultati trovati e ti fornisce risposte
+                      chiare e basate sulle fonti.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {messages.map((message, index) => (
+                <div
+                  key={index}
+                  css={css`
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                  `}
+                >
+                  <div
+                    css={css`
+                      align-self: flex-end;
+                      background: ${RED};
+                      color: #fff;
+                      border-radius: 14px 14px 2px 14px;
+                      padding: 8px 12px;
+                      max-width: 85%;
+                      line-height: 1.4;
+                    `}
+                  >
+                    {message.question}
+                  </div>
+                  <div
+                    css={css`
+                      align-self: flex-start;
+                      background: #fbfbfc;
+                      border: 1px solid ${BORDER};
+                      border-radius: 14px 14px 14px 2px;
+                      padding: 10px 14px;
+                      max-width: 90%;
+                      line-height: 1.5;
+                      p {
+                        margin: 0 0 8px;
+                      }
+                      p:last-child {
+                        margin-bottom: 0;
+                      }
+                      a {
+                        color: ${RED};
+                      }
+                    `}
+                  >
+                    {message.status === "CHUNK" && message.answer === "" ? (
+                      <TypingDots />
+                    ) : (
+                      <Markdown>{message.answer}</Markdown>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* pulsanti azione K9 IA generati dinamicamente dal contesto cercato */}
+            {(actionsLoading || actions.length > 0) && (
+              <div
+                css={css`
+                  display: flex;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  gap: 10px;
+                  padding: 12px 20px;
+                  border-top: 1px solid ${BORDER};
+                `}
+              >
+                {actionsLoading && actions.length === 0 && (
+                  <span
+                    css={css`
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 8px;
+                      font-size: 13px;
+                      color: ${MUTED};
+                    `}
+                  >
+                    <TypingDots /> Azioni contestuali…
+                  </span>
+                )}
+                {actions.map((action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    disabled={isChatting}
+                    onClick={() =>
+                      send({ question: action, searchText: action, language })
+                    }
+                    css={css`
+                      border: 1px solid ${BORDER};
+                      background: #fff;
+                      border-radius: 8px;
+                      padding: 8px 14px;
+                      font-size: 14px;
+                      font-weight: 600;
+                      color: #1e1c21;
+                      cursor: pointer;
+                      text-align: left;
+                      &:hover {
+                        border-color: ${RED};
+                        color: ${RED};
+                      }
+                      &:disabled {
+                        opacity: 0.5;
+                        cursor: default;
+                      }
+                    `}
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* input follow-up (textarea) */}
+            <div
+              css={css`
+                padding: 12px 20px 8px;
+              `}
+            >
+              <div
+                css={css`
+                  display: flex;
+                  align-items: flex-end;
+                  gap: 8px;
+                  padding: 8px 8px 8px 14px;
+                  border: 1px solid ${BORDER};
+                  border-radius: 14px;
+                  background: #fff;
+                  transition: border-color 120ms ease, box-shadow 120ms ease;
+                  &:focus-within {
+                    border-color: ${RED};
+                    box-shadow: 0 0 0 3px rgba(192, 39, 43, 0.12);
+                  }
+                `}
+              >
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                  placeholder={
+                    t("copilot-input-placeholder") ?? "Fai una domanda…"
+                  }
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    const el = event.target;
+                    el.style.height = "auto";
+                    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      submitFollowUp();
+                    }
+                  }}
+                  css={css`
+                    flex: 1;
+                    border: none;
+                    outline: none;
+                    resize: none;
+                    background: transparent;
+                    font-family: inherit;
+                    font-size: 14px;
+                    line-height: 1.5;
+                    max-height: 120px;
+                    padding: 6px 0;
+                    color: #1e1c21;
+                  `}
+                />
+                <button
+                  type="button"
+                  onClick={submitFollowUp}
+                  disabled={isChatting || input.trim() === ""}
+                  css={css`
+                    flex-shrink: 0;
+                    width: 36px;
+                    height: 36px;
+                    border: none;
+                    border-radius: 50%;
+                    background: ${RED};
+                    color: #fff;
+                    cursor: pointer;
+                    font-size: 15px;
+                    &:disabled {
+                      opacity: 0.4;
+                      cursor: default;
+                    }
+                  `}
+                >
+                  ➤
+                </button>
+              </div>
+            </div>
+
+            <div
+              css={css`
+                padding: 0 20px 14px;
+                text-align: center;
+                font-size: 12px;
+                color: ${MUTED};
+              `}
+            >
+              🔒 Le risposte di K9 IA possono contenere imprecisioni. Verifica
+              sempre le informazioni importanti.
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ---- Colonna destra: anteprima (risultati) o fonti (K9 IA) ---- */}
+      {view === "ai" ? (
+        <SourcesColumn sources={currentSources} />
+      ) : (
+        <div
+          className="openk9-preview-container openk9-box"
+          ref={(element) => openk9.updateConfiguration({ details: element })}
+          css={css`
+            ${panelStyle}
+            grid-area: detail;
+            overflow-y: auto;
+            overflow-x: hidden;
+            @media (max-width: 1024px) {
+              display: none;
+            }
+          `}
+        />
+      )}
+    </>
+  );
 }

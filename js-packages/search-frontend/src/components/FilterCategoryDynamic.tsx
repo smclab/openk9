@@ -1,21 +1,21 @@
 ﻿/*
-* Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 import React from "react";
-import { css } from "styled-components";
+import { css, keyframes } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
@@ -45,6 +45,7 @@ type FilterCategoryDynamicallyProps = {
   loadAll?: boolean;
   language: string;
   haveSearch?: boolean | null | undefined;
+  showCount?: boolean | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   placeholder?: string | undefined | null;
   noResultMessage?: string | null | undefined;
@@ -55,6 +56,10 @@ type FilterCategoryDynamicallyProps = {
     React.SetStateAction<boolean>
   >;
 };
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
 
 function FilterCategoryDynamic({
   suggestionCategoryId,
@@ -74,11 +79,11 @@ function FilterCategoryDynamic({
   placeholder,
   iconCustom,
   haveSearch = true,
+  showCount = false,
   isOpenFilter = false,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState<string>("");
   const debounced = useDebounce(text, 600);
-  const [showSearch, setShowSearch] = React.useState<boolean>(false);
   const tokensWithoutSearch = React.useMemo(
     () => (tokens ?? []).filter((t) => !t?.search),
     [tokens],
@@ -96,6 +101,13 @@ function FilterCategoryDynamic({
 
   const { t } = useTranslation();
   const resultPages = suggestions?.data?.pages ?? [];
+
+  // feedback ricerca: distingue "sto per cercare" (debounce) e "sto caricando"
+  const isSearchPending = text !== debounced;
+  const isSearching =
+    text.length > 0 && (isSearchPending || suggestions.isFetching);
+
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   const keyOfSuggestion = React.useCallback((s: SuggestionResult) => {
     return s?.tokenType === "ENTITY"
@@ -193,6 +205,7 @@ function FilterCategoryDynamic({
         background-image: none;
         font: inherit;
         color: inherit;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -232,6 +245,36 @@ function FilterCategoryDynamic({
           >
             {suggestionCategoryName}
           </strong>
+          {baseSelectedKeys.size > 0 && (
+            <span
+              className="openk9-filter-active-count"
+              aria-label={
+                t("filter-active-count", { n: baseSelectedKeys.size }) || ""
+              }
+              title={
+                t("filter-active-count", { n: baseSelectedKeys.size }) || ""
+              }
+              css={css`
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 5px;
+                border-radius: 999px;
+                background: var(
+                  --openk9-embeddable-search--primary-color,
+                  #c22525
+                );
+                color: #fff;
+                font-size: 11px;
+                font-weight: 700;
+                line-height: 1;
+              `}
+            >
+              {baseSelectedKeys.size}
+            </span>
+          )}
         </legend>
         <div
           className="openk9-filter-category-actions-buttons"
@@ -241,40 +284,6 @@ function FilterCategoryDynamic({
             gap: 8px;
           `}
         >
-          {isOpen && (
-            <button
-              className="openk9-toggle-search-button"
-              aria-label={
-                showSearch
-                  ? t("hide-search") || "Nascondi ricerca"
-                  : t("show-search") || "Mostra ricerca"
-              }
-              css={css`
-                background: transparent;
-                border: 1px solid var(--openk9-embeddable-search--border-color);
-                border-radius: 8px;
-                padding: 6px 8px;
-                cursor: pointer;
-                transition: transform 120ms ease, background-color 120ms ease,
-                  border-color 120ms ease;
-                &:hover {
-                  background: rgba(0, 0, 0, 0.03);
-                }
-                &:active {
-                  transform: translateY(1px);
-                }
-                color: var(--openk9-embeddable-search--secondary-icon-color);
-              `}
-              onClick={() => setShowSearch((prev) => !prev)}
-              title={
-                showSearch
-                  ? t("hide-search") || "Nascondi ricerca"
-                  : t("show-search") || "Mostra ricerca"
-              }
-            >
-              <FontAwesomeIcon icon={faSearch} />
-            </button>
-          )}
           <button
             className={`openk9-mobile-collapsable-filters openk9-collapsable-filters ${
               isOpen
@@ -315,122 +324,222 @@ function FilterCategoryDynamic({
       </div>
       {isOpen && (
         <>
-          {!isUniqueLoadMore && haveSearch && (
-            <>
-              {showSearch && (
-                <>
-                  <label
-                    htmlFor={"search-category-" + suggestionCategoryId}
-                    className="visually-hidden"
-                    css={css`
-                      border: 0;
-                      padding: 0;
-                      margin: 0;
-                      position: absolute !important;
-                      height: 1px;
-                      width: 1px;
-                      overflow: hidden;
-                      clip: rect(1px 1px 1px 1px);
-                      clip: rect(1px, 1px, 1px, 1px);
-                      clip-path: inset(50%);
-                      white-space: nowrap;
-                    `}
-                  >
-                    {t("search-filters")}
-                  </label>
-                  <div
-                    css={css`
-                      position: relative;
-                    `}
-                  >
-                    {iconCustom?.Search ? (
-                      iconCustom?.Search
-                    ) : (
-                      <FontAwesomeIcon
-                        icon={faSearch}
-                        width={10}
-                        css={css`
-                          position: absolute;
-                          top: 45%;
-                          left: 10px;
-                          transform: translateY(-50%);
-                          color: silver;
-                          display: inline-block;
-                          width: 0.75em;
-                          height: 0.75em;
-                          stroke-width: 0;
-                          stroke: currentColor;
-                          fill: currentColor;
-                        `}
-                      />
-                    )}
-                    <input
-                      type="text"
-                      placeholder={placeholder || t("search-filters") || ""}
-                      onChange={(event) =>
-                        setText(event?.currentTarget?.value ?? "")
-                      }
-                      className="openk9-filter-category-search"
-                      id={"search-category-" + suggestionCategoryId}
-                      value={text}
-                      css={css`
-                        padding-left: calc(1em + 10px + 8px);
-                        height: 2em;
-                        width: -moz-available;
-                        width: -webkit-fill-available;
-                        width: fill-available;
-                        padding: 3px;
-                        flex-grow: 1;
-                        text-indent: 25px;
-                        border-radius: 8px;
-                        border: 1px solid
-                          var(--openk9-embeddable-search--border-color);
-                        background: white;
-                        :focus {
-                          border: 1px solid
-                            var(--openk9-embeddable-search--active-color);
-                          outline: none;
-                        }
-                        ::placeholder {
-                          font-style: normal;
-                          font-weight: 400;
-                          font-size: 15px;
-                        }
-                      `}
-                    />
-                  </div>
-                </>
-              )}
-              {baseSelectedKeys.size > 0 && (
-                <button
-                  aria-label={t("clear-category") || "clear category"}
-                  className="openk9-clear-category-button"
-                  onClick={handleClearCategory}
+          {haveSearch && (
+            <div
+              className="openk9-filter-search-row"
+              css={css`
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 4px 0 10px;
+              `}
+            >
+              <div
+                css={css`
+                  position: relative;
+                  flex: 1;
+                  min-width: 0;
+                `}
+              >
+                <FontAwesomeIcon
+                  icon={faSearch}
                   css={css`
-                    background: transparent;
+                    position: absolute;
+                    top: 50%;
+                    left: 14px;
+                    transform: translateY(-50%);
+                    color: var(
+                      --openk9-embeddable-search--secondary-icon-color
+                    );
+                    width: 0.85em;
+                    height: 0.85em;
+                  `}
+                />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="openk9-filter-category-search"
+                  aria-label={t("search-filters") || "Search filters"}
+                  placeholder={t("search-filters") || "Cerca tra i filtri…"}
+                  value={text}
+                  onChange={(event) =>
+                    setText(event?.currentTarget?.value ?? "")
+                  }
+                  css={css`
+                    width: 100%;
+                    height: 42px;
+                    box-sizing: border-box;
+                    padding: 0 40px;
+                    border-radius: 12px;
                     border: 1px solid
                       var(--openk9-embeddable-search--border-color);
-                    border-radius: 8px;
-                    padding: 6px 8px;
-                    cursor: pointer;
-                    transition: transform 120ms ease,
-                      background-color 120ms ease, border-color 120ms ease;
-                    &:hover {
-                      background: rgba(0, 0, 0, 0.03);
+                    background: white;
+                    font-size: 14px;
+                    :focus {
+                      border-color: var(
+                        --openk9-embeddable-search--active-color
+                      );
+                      box-shadow: 0 0 0 3px
+                        color-mix(
+                          in srgb,
+                          var(
+                              --openk9-embeddable-search--primary-color,
+                              #c22525
+                            )
+                            15%,
+                          transparent
+                        );
+                      outline: none;
                     }
-                    &:active {
-                      transform: translateY(1px);
-                    }
-                    color: var(
-                      --openk9-embeddable-search--secondary-text-color
-                    );
                   `}
-                  title={t("clear-category") || "clear"}
+                />
+                {isSearching && (
+                  <span
+                    role="status"
+                    aria-label={t("filter-searching") || "Ricerca in corso"}
+                    css={css`
+                      position: absolute;
+                      top: calc(50% - 8px);
+                      right: 12px;
+                      width: 16px;
+                      height: 16px;
+                      border: 2px solid
+                        var(--openk9-embeddable-search--border-color);
+                      border-top-color: var(
+                        --openk9-embeddable-search--primary-color
+                      );
+                      border-radius: 50%;
+                      animation: ${spin} 0.7s linear infinite;
+                    `}
+                  />
+                )}
+              </div>
+              <button
+                type="button"
+                aria-label={t("filter-reset-category") || "Reimposta filtri"}
+                title={t("filter-reset-category") || "Reimposta filtri"}
+                onClick={() => {
+                  handleClearCategory();
+                  setText("");
+                }}
+                css={css`
+                  flex-shrink: 0;
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 42px;
+                  height: 42px;
+                  background: transparent;
+                  border: 1px solid
+                    var(--openk9-embeddable-search--border-color);
+                  border-radius: 12px;
+                  cursor: pointer;
+                  color: var(--openk9-embeddable-search--secondary-text-color);
+                  &:hover {
+                    background: rgba(0, 0, 0, 0.03);
+                  }
+                `}
+              >
+                <span
+                  aria-hidden="true"
+                  css={css`
+                    font-size: 18px;
+                    line-height: 1;
+                  `}
                 >
-                  clear filter
-                </button>
-              )}
-            </>
+                  ×
+                </span>
+              </button>
+            </div>
+          )}
+          {baseSelectedKeys.size > 0 && (
+            <div
+              className="openk9-filter-selected-chips"
+              css={css`
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 4px 0 2px;
+              `}
+            >
+              {filters
+                .filter((s) => baseSelectedKeys.has(keyOfSuggestion(s)))
+                .map((s) => {
+                  const label =
+                    s?.tokenType === "ENTITY"
+                      ? `${s?.entityType ?? ""}: ${s?.entityValue ?? ""}`
+                      : s?.value ?? "";
+                  return (
+                    <span
+                      key={keyOfSuggestion(s)}
+                      className="openk9-filter-chip"
+                      title={label}
+                      css={css`
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        max-width: 100%;
+                        min-width: 0;
+                        padding: 2px 6px 2px 10px;
+                        border-radius: 999px;
+                        background: color-mix(
+                          in srgb,
+                          var(
+                              --openk9-embeddable-search--primary-color,
+                              #c22525
+                            )
+                            10%,
+                          transparent
+                        );
+                        color: var(--openk9-embeddable-search--primary-color);
+                        border: 1px solid
+                          color-mix(
+                            in srgb,
+                            var(
+                                --openk9-embeddable-search--primary-color,
+                                #c22525
+                              )
+                              30%,
+                            transparent
+                          );
+                        font-size: 12px;
+                        font-weight: 600;
+                      `}
+                    >
+                      <span
+                        css={css`
+                          min-width: 0;
+                          flex: 1;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          white-space: nowrap;
+                        `}
+                      >
+                        {label}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={t("filter-remove") || "Rimuovi"}
+                        onClick={() =>
+                          onRemove(mapSuggestionToSearchToken(s, true))
+                        }
+                        css={css`
+                          flex-shrink: 0;
+                          border: none;
+                          background: none;
+                          cursor: pointer;
+                          padding: 0;
+                          font-size: 14px;
+                          line-height: 1;
+                          color: inherit;
+                        `}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+            </div>
           )}
           <ul
             className="openk9-filter-form-check-container"
@@ -441,153 +550,199 @@ function FilterCategoryDynamic({
               flex-wrap: ${isUniqueLoadMore ? "wrap" : "initial"};
               padding-left: unset;
               margin: 0;
+              opacity: ${isSearching ? 0.55 : 1};
+              transition: opacity 120ms ease;
             `}
           >
-            {(filters?.length ?? 0) === 0 && <NoFiltersSearch />}
-            {filters?.map((suggestion, index) => {
-              const asSearchToken = mapSuggestionToSearchToken(
-                suggestion,
-                true,
-              );
-              const key = keyOfSuggestion(suggestion);
-              const baseChecked = baseSelectedKeys.has(key);
-              const optimisticOverride = optimistic.has(key)
-                ? optimistic.get(key)!
-                : undefined;
-              const isChecked = optimisticOverride ?? baseChecked;
-              const idValue =
-                suggestion?.tokenType === "ENTITY"
-                  ? `${suggestion?.entityType ?? ""}-${
-                      suggestion?.entityValue ?? ""
-                    }`
-                  : suggestion?.value ?? String(index);
-              const handleAdd = (tok: SearchToken) => {
-                setOptimistic((prev) => {
-                  const m = new Map(prev);
-                  if (!multiSelect) {
-                    for (const s of filters ?? []) {
-                      const k = keyOfSuggestion(s);
-                      m.set(k, false);
-                    }
-                  }
-                  m.set(key, true);
-                  return m;
-                });
-                onAdd(tok);
-              };
-              const handleRemove = (tok: SearchToken) => {
-                setOptimistic((prev) => {
-                  const m = new Map(prev);
-                  m.set(key, false);
-                  return m;
-                });
-                onRemove(tok);
-              };
-              const showSeparator =
-                !isUniqueLoadMore &&
-                selectedCount > 0 &&
-                index === selectedCount &&
-                (filters?.length ?? 0) > selectedCount;
-
-              return (
-                <React.Fragment
-                  key={`fragment-filter-dynamic-${index}-${idValue}`}
+            {(filters?.length ?? 0) === 0 &&
+              (isSearching ? (
+                <li
+                  css={css`
+                    list-style: none;
+                    padding: 12px 4px;
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color
+                    );
+                    font-size: 13px;
+                  `}
                 >
-                  {showSeparator && (
-                    <li
-                      role="separator"
-                      aria-hidden="true"
-                      css={css`
-                        height: 1px;
-                        background: var(
-                          --openk9-embeddable-search--border-color
-                        );
-                        margin: 4px 0;
-                        list-style: none;
-                        width: 100%;
-                      `}
-                    />
-                  )}
-                  <li
-                    className="form-check"
-                    css={css`
-                      display: flex;
-                      align-items: ${multiSelect ? "baseline" : "stretch"};
-                      width: ${isUniqueLoadMore ? "50%" : "auto"};
-                      margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
-                      @media (max-width: 768px) {
-                        width: 100%;
-                        height: ${isUniqueLoadMore ? "50%" : "auto"};
+                  {t("filter-searching") || "Ricerca in corso…"}
+                </li>
+              ) : debounced ? (
+                <li
+                  css={css`
+                    list-style: none;
+                    padding: 12px 4px;
+                    color: var(
+                      --openk9-embeddable-search--secondary-text-color
+                    );
+                    font-size: 13px;
+                  `}
+                >
+                  {(t("filter-no-results") || "Nessun risultato per") +
+                    ` «${debounced}»`}
+                </li>
+              ) : (
+                <NoFiltersSearch />
+              ))}
+            {filters
+              ?.filter((s) => !baseSelectedKeys.has(keyOfSuggestion(s)))
+              .map((suggestion, index) => {
+                const asSearchToken = mapSuggestionToSearchToken(
+                  suggestion,
+                  true,
+                );
+                const key = keyOfSuggestion(suggestion);
+                const baseChecked = baseSelectedKeys.has(key);
+                const optimisticOverride = optimistic.has(key)
+                  ? optimistic.get(key)!
+                  : undefined;
+                const isChecked = optimisticOverride ?? baseChecked;
+                const idValue =
+                  suggestion?.tokenType === "ENTITY"
+                    ? `${suggestion?.entityType ?? ""}-${
+                        suggestion?.entityValue ?? ""
+                      }`
+                    : suggestion?.value ?? String(index);
+                const handleAdd = (tok: SearchToken) => {
+                  setOptimistic((prev) => {
+                    const m = new Map(prev);
+                    if (!multiSelect) {
+                      for (const s of filters ?? []) {
+                        const k = keyOfSuggestion(s);
+                        m.set(k, false);
                       }
-                    `}
+                    }
+                    m.set(key, true);
+                    return m;
+                  });
+                  onAdd(tok);
+                };
+                const handleRemove = (tok: SearchToken) => {
+                  setOptimistic((prev) => {
+                    const m = new Map(prev);
+                    m.set(key, false);
+                    return m;
+                  });
+                  onRemove(tok);
+                };
+                return (
+                  <React.Fragment
+                    key={`fragment-filter-dynamic-${index}-${idValue}`}
                   >
-                    {multiSelect ? (
-                      <CheckBoxSelect
-                        isChecked={isChecked}
-                        suggestion={suggestion}
-                        asSearchToken={asSearchToken}
-                        suggestionCategoryId={suggestionCategoryId}
-                        onAdd={handleAdd}
-                        onRemove={handleRemove}
-                      />
-                    ) : (
-                      <SingleSelect
-                        isChecked={isChecked}
-                        asSearchToken={asSearchToken}
-                        onAdd={handleAdd}
-                        onRemove={handleRemove}
-                        singleSelect={singleSelect}
-                        setSingleSelect={setSingleselect}
-                        suggestionValue={idValue}
-                        suggestionCategoryId={String(suggestionCategoryId)}
-                      />
-                    )}
-                    <label
-                      className="form-check-label"
-                      htmlFor={
-                        multiSelect
-                          ? "checkbox-dynamic-" +
-                            idValue +
-                            "-" +
-                            suggestionCategoryId
-                          : "radio-button-dynamic-" +
-                            idValue +
-                            "-" +
-                            suggestionCategoryId
-                      }
+                    <li
+                      className="form-check"
                       css={css`
-                        text-overflow: ellipsis;
-                        font-style: normal;
-                        font-weight: 400;
-                        line-height: 22px;
-                        color: ${isChecked
-                          ? "var(--openk9-embeddable-search--primary-color)"
-                          : "#000000"};
+                        display: flex;
+                        align-items: ${multiSelect ? "baseline" : "stretch"};
+                        width: ${isUniqueLoadMore ? "50%" : "auto"};
+                        margin-bottom: ${isUniqueLoadMore ? "8px" : "0"};
+                        @media (max-width: 768px) {
+                          width: 100%;
+                          height: ${isUniqueLoadMore ? "50%" : "auto"};
+                        }
                       `}
                     >
-                      {suggestion?.tokenType === "ENTITY" ? (
-                        <>
-                          <strong
-                            className="openk9-filter-category-suggestion-value"
-                            css={css`
-                              :first-letter {
-                                text-transform: uppercase;
-                              }
-                              display: inline-block;
-                            `}
-                          >
-                            {suggestion?.entityType}
-                          </strong>
-                          : {suggestion?.entityValue}
-                        </>
+                      {multiSelect ? (
+                        <CheckBoxSelect
+                          isChecked={isChecked}
+                          suggestion={suggestion}
+                          asSearchToken={asSearchToken}
+                          suggestionCategoryId={suggestionCategoryId}
+                          onAdd={handleAdd}
+                          onRemove={handleRemove}
+                        />
                       ) : (
-                        <CapitalizeValue value={suggestion.value} />
+                        <SingleSelect
+                          isChecked={isChecked}
+                          asSearchToken={asSearchToken}
+                          onAdd={handleAdd}
+                          onRemove={handleRemove}
+                          singleSelect={singleSelect}
+                          setSingleSelect={setSingleselect}
+                          suggestionValue={idValue}
+                          suggestionCategoryId={String(suggestionCategoryId)}
+                        />
                       )}
-                    </label>
-                  </li>
-                </React.Fragment>
-              );
-            })}
+                      <label
+                        className="form-check-label"
+                        htmlFor={
+                          multiSelect
+                            ? "checkbox-dynamic-" +
+                              idValue +
+                              "-" +
+                              suggestionCategoryId
+                            : "radio-button-dynamic-" +
+                              idValue +
+                              "-" +
+                              suggestionCategoryId
+                        }
+                        css={css`
+                          text-overflow: ellipsis;
+                          font-style: normal;
+                          font-weight: 400;
+                          line-height: 22px;
+                          color: ${isChecked
+                            ? "var(--openk9-embeddable-search--primary-color)"
+                            : "#000000"};
+                        `}
+                      >
+                        {suggestion?.tokenType === "ENTITY" ? (
+                          <>
+                            <strong
+                              className="openk9-filter-category-suggestion-value"
+                              css={css`
+                                :first-letter {
+                                  text-transform: uppercase;
+                                }
+                                display: inline-block;
+                              `}
+                            >
+                              {suggestion?.entityType}
+                            </strong>
+                            : {suggestion?.entityValue}
+                          </>
+                        ) : (
+                          <CapitalizeValue value={suggestion.value} />
+                        )}
+                      </label>
+                      {showCount && suggestion?.count != null && (
+                        <span
+                          className="openk9-filter-count"
+                          title={
+                            t("filter-result-count", { n: suggestion.count }) ||
+                            `${suggestion.count} risultati`
+                          }
+                          aria-label={
+                            t("filter-result-count", { n: suggestion.count }) ||
+                            `${suggestion.count} risultati`
+                          }
+                          css={css`
+                            margin-left: auto;
+                            flex-shrink: 0;
+                            min-width: 22px;
+                            padding: 1px 8px;
+                            border-radius: 999px;
+                            background: var(
+                              --openk9-embeddable-search--secondary-background-color,
+                              #eeeeee
+                            );
+                            color: var(
+                              --openk9-embeddable-search--secondary-text-color
+                            );
+                            font-size: 12px;
+                            font-weight: 600;
+                            text-align: center;
+                            white-space: nowrap;
+                          `}
+                        >
+                          {suggestion.count}
+                        </span>
+                      )}
+                    </li>
+                  </React.Fragment>
+                );
+              })}
           </ul>
           {!isUniqueLoadMore && suggestions?.hasNextPage && (
             <div
@@ -1020,4 +1175,3 @@ function CapitalizeValue({ value }: { value: string | undefined }) {
     </span>
   );
 }
-
