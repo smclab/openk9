@@ -15,6 +15,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import {
+  BooleanInput,
   combineErrorMessages,
   ContainerFluid,
   CreateDataEntity,
@@ -124,6 +125,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
         provider: "openai",
         vectorSize: 1,
         vectorDataType: "FLOAT32",
+        multimodal: false,
         model: "",
         jsonConfig: "{}",
       }),
@@ -172,6 +174,7 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           { key: "description" },
           { key: "vectorSize", label: "Vector Size" },
           { key: "vectorDataType", label: "Vector Data Type" },
+          { key: "multimodal", label: "Multimodal" },
           { key: "provider" },
           { key: "model" },
           { key: "apiKey", label: "API Key" },
@@ -226,6 +229,12 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
                       {...form.inputProps("vectorSize")}
                       isNumber={false}
                       description="Dimensionality of the embedding vectors produced by the model. Must match the model output."
+                    />
+                    <BooleanInput
+                      label="Multimodal"
+                      {...form.inputProps("multimodal")}
+                      disabled={view ? true : false}
+                      description="Marks the model as multimodal: image refs are routed to the multimodal embedder and the same model must also serve text. Leave off for text-only models (default)."
                     />
                     <AutocompleteDropdownWithOptions
                       label="Vector Data Type"

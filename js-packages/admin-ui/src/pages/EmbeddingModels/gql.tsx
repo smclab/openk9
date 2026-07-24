@@ -58,6 +58,7 @@ gql`
       apiKey
       vectorSize
       vectorDataType
+      multimodal
       jsonConfig
       providerModel {
         provider
@@ -76,6 +77,7 @@ gql`
     $name: String!
     $vectorSize: Int!
     $vectorDataType: VectorDataType
+    $multimodal: Boolean!
     $providerModel: ProviderModelDTOInput!
     $jsonConfig: String
   ) {
@@ -88,6 +90,7 @@ gql`
         description: $description
         vectorSize: $vectorSize
         vectorDataType: $vectorDataType
+        multimodal: $multimodal
         providerModel: $providerModel
         jsonConfig: $jsonConfig
       }
