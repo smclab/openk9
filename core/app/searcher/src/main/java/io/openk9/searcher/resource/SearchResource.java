@@ -1691,7 +1691,7 @@ public class SearchResource {
 
 	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
 
-		validateMediaTokens(searchRequest.getSearchQuery(), MEDIA_MAX_SIZE_BYTES);
+		validateMediaTokens(searchRequest.getSearchQuery());
 
 		var requestBuilder = searcherMapper
 			.toQueryParserRequest(searchRequest)
@@ -1745,12 +1745,17 @@ public class SearchResource {
 	 *
 	 * <p>{@code media} is only accepted on KNN tokens, must declare
 	 * an {@code image/*} content type, and must not exceed the maximum
-	 * decoded size.
+	 * size.
 	 *
-	 * @param tokens       the search tokens to validate; {@code null} is a no-op
+	 * @param tokens the search tokens to validate; {@code null} is a no-op
 	 * @throws WebApplicationException with status 400 on any violation
 	 */
 	static void validateMediaTokens(List<ParserSearchToken> tokens) {
+		validateMediaTokens(tokens, MEDIA_MAX_SIZE_BYTES);
+	}
+
+	static void validateMediaTokens(
+		List<ParserSearchToken> tokens, long maxSizeBytes) {
 
 		if (tokens == null) {
 			return;
@@ -1777,32 +1782,21 @@ public class SearchResource {
 				.startsWith(IMAGE_CONTENT_TYPE_PREFIX)) {
 
 				throw badRequestMedia(
-					"media.contentType must be image/*, got " 
+					"media.contentType must be image/*, got "
 					+ contentType);
 			}
 
 			var data = media.getData();
 
-			if (data == null || data.isBlank()) {
+			if (data == null || data.length == 0) {
 				throw badRequestMedia("media.data must not be empty");
 			}
 
-			byte[] decoded;
-			try {
-				decoded = Base64.getDecoder().decode(data);
-			}
-			catch (IllegalArgumentException e) {
-				throw badRequestMedia("media.data is not valid base64");
-			}
-
-			if (MEDIA_MAX_SIZE_BYTES > 0 
-			 	&& decoded.length > MEDIA_MAX_SIZE_BYTES) {
-
+			if (maxSizeBytes > 0 && data.length > maxSizeBytes) {
 				throw badRequestMedia(
 					"media exceeds the maximum allowed size of "
-						+ MEDIA_MAX_SIZE_BYTES 
+						+ maxSizeBytes
 						+ " bytes");
-
 			}
 		}
 	}

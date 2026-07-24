@@ -79,7 +79,7 @@ public class ParserSearchToken {
 	@Builder
 	public static class Media {
 		@Schema(description = "Base64-encoded raw bytes of the query media")
-		private String data;
+		private byte[] data;
 		@Schema(description = "Media content type; must be image/* in Phase 1")
 		private String contentType;
 	}

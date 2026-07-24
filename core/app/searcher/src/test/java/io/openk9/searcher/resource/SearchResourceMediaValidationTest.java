@@ -17,7 +17,6 @@
 
 package io.openk9.searcher.resource;
 
-import java.util.Base64;
 import java.util.List;
 
 import io.openk9.searcher.client.dto.ParserSearchToken;
@@ -29,8 +28,7 @@ import org.junit.jupiter.api.Test;
 class SearchResourceMediaValidationTest {
 
 	private static final long MAX_SIZE = 1024;
-	private static final String IMAGE_BASE64 =
-		Base64.getEncoder().encodeToString(new byte[] {1, 2, 3});
+	private static final byte[] IMAGE_BYTES = {1, 2, 3};
 
 	@Test
 	void should_reject_media_on_a_non_knn_token() {
@@ -38,7 +36,7 @@ class SearchResourceMediaValidationTest {
 		// 1. a TEXT token carrying media
 		var token = ParserSearchToken.builder()
 			.tokenType("TEXT")
-			.media(new ParserSearchToken.Media(IMAGE_BASE64, "image/png"))
+			.media(new ParserSearchToken.Media(IMAGE_BYTES, "image/png"))
 			.build();
 
 		// 2. validation fails with HTTP 400
@@ -51,7 +49,7 @@ class SearchResourceMediaValidationTest {
 		// 1. a KNN token whose media is not an image
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
-			.media(new ParserSearchToken.Media(IMAGE_BASE64, "application/pdf"))
+			.media(new ParserSearchToken.Media(IMAGE_BYTES, "application/pdf"))
 			.build();
 
 		// 2. validation fails with HTTP 400
@@ -61,9 +59,8 @@ class SearchResourceMediaValidationTest {
 	@Test
 	void should_reject_media_above_the_size_limit() {
 
-		// 1. a KNN token whose decoded media exceeds the limit
-		var oversized = Base64.getEncoder()
-			.encodeToString(new byte[] {1, 2, 3, 4, 5});
+		// 1. a KNN token whose media exceeds the limit
+		var oversized = new byte[] {1, 2, 3, 4, 5};
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
 			.media(new ParserSearchToken.Media(oversized, "image/png"))
@@ -78,26 +75,13 @@ class SearchResourceMediaValidationTest {
 	}
 
 	@Test
-	void should_reject_media_with_invalid_base64() {
-
-		// 1. a KNN token whose media data is not valid base64
-		var token = ParserSearchToken.builder()
-			.tokenType("KNN")
-			.media(new ParserSearchToken.Media("not+valid+base64!!", "image/png"))
-			.build();
-
-		// 2. validation fails with HTTP 400
-		assertBadRequest(List.of(token));
-	}
-
-	@Test
 	void should_accept_a_valid_knn_image_token() {
 
 		// 1. a well-formed KNN image token
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
 			.values(List.of("a cat"))
-			.media(new ParserSearchToken.Media(IMAGE_BASE64, "image/png"))
+			.media(new ParserSearchToken.Media(IMAGE_BYTES, "image/png"))
 			.build();
 
 		// 2. validation passes

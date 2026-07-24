@@ -26,6 +26,8 @@ import io.openk9.searcher.grpc.QueryParserRequest;
 import io.openk9.searcher.grpc.SearchTokenRequest;
 import io.openk9.searcher.grpc.Sort;
 
+import com.google.protobuf.ByteString;
+
 import org.mapstruct.CollectionMappingStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.NullValueCheckStrategy;
@@ -44,6 +46,14 @@ public interface SearcherMapper {
 	SearchTokenRequest toQueryParserRequest(ParserSearchToken searchToken);
 
 	List<SearchTokenRequest> toQueryParserRequest(List<ParserSearchToken> searchToken);
+
+	static ByteString map(byte[] value) {
+		return value == null ? ByteString.EMPTY : ByteString.copyFrom(value);
+	}
+
+	static byte[] map(ByteString value) {
+		return value == null ? null : value.toByteArray();
+	}
 
 	static Sort toSort(Map<String, Map<String,String>> value) {
 

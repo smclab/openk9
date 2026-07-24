@@ -18,7 +18,6 @@
 package io.openk9.datasource.searcher.parser.impl;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -153,7 +152,7 @@ public class KnnQueryParser implements QueryParser {
 		}
 
 		return new EmbeddingService.QueryMedia(
-			Base64.getDecoder().decode(media.getData()),
+			media.getData(),
 			media.getContentType()
 		);
 	}
