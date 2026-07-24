@@ -143,6 +143,10 @@ public class SearchResource {
 	private static final String AUTOCORRECTION_SUGGESTION = "autocorrection_suggestion";
 	private static final String KNN_TOKEN_TYPE = "KNN";
 	private static final String IMAGE_CONTENT_TYPE_PREFIX = "image/";
+	// maximum decoded size of the inline media carried by a KNN search token
+	// (image-as-query); larger requests are rejected with HTTP 400. Fixed
+	// limit: the frontend resizes the image client-side before sending it.
+	private static final long MEDIA_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 	private static final String DETAILS_FIELD = "details";
 	private static final String BEARER_PREFIX = "Bearer ";
 	private static final int NONE_STATUS_CODE = 0;
@@ -172,11 +176,6 @@ public class SearchResource {
 	SearcherMapper searcherMapper;
 	@ConfigProperty(name = "openk9.searcher.total-result-limit", defaultValue = "10000")
 	Integer totalResultLimit;
-	@ConfigProperty(
-		name = "openk9.searcher.query.media.max-size-bytes",
-		defaultValue = "2097152"
-	)
-	long maxMediaSizeBytes;
 	@Inject
 	Tracer tracer;
 
@@ -1695,7 +1694,7 @@ public class SearchResource {
 
 	private QueryParserRequest getQueryParserRequest(SearchRequest searchRequest) {
 
-		validateMediaTokens(searchRequest.getSearchQuery(), maxMediaSizeBytes);
+		validateMediaTokens(searchRequest.getSearchQuery(), MEDIA_MAX_SIZE_BYTES);
 
 		var requestBuilder = searcherMapper
 			.toQueryParserRequest(searchRequest)
@@ -1748,8 +1747,8 @@ public class SearchResource {
 	 * dropping the media downstream.
 	 *
 	 * <p>In Phase 1 {@code media} is only accepted on KNN tokens, must declare
-	 * an {@code image/*} content type, and must not exceed the configured
-	 * maximum decoded size.
+	 * an {@code image/*} content type, and must not exceed the maximum
+	 * decoded size.
 	 *
 	 * @param tokens       the search tokens to validate; {@code null} is a no-op
 	 * @param maxSizeBytes the maximum allowed decoded media size in bytes; a
