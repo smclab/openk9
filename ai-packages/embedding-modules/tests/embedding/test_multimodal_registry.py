@@ -70,7 +70,12 @@ def test_vertex_provider_maps_to_vertex_embedder(monkeypatch):
             client=None,
             image_factory=None,
         ):
-            captured.update(model_id=model_id, project=project, dimension=dimension)
+            captured.update(
+                model_id=model_id,
+                project=project,
+                location=location,
+                dimension=dimension,
+            )
 
     monkeypatch.setattr(vertex, "VertexMultimodalEmbedder", _Fake)
 
@@ -78,7 +83,9 @@ def test_vertex_provider_maps_to_vertex_embedder(monkeypatch):
         "model_type": "chat_vertex_ai",
         "model": "multimodalembedding@001",
         "chat_vertex_ai_model_garden": {
-            "credentials": {"quota_project_id": "proj-1"},
+            "credentials": {"quota_project_id": "adc-proj"},
+            "project": "explicit-proj",
+            "location": "europe-west1",
             "dimension": 1408,
         },
     }
@@ -86,8 +93,10 @@ def test_vertex_provider_maps_to_vertex_embedder(monkeypatch):
     embedder = multimodal.build_multimodal_embedder(configuration)
 
     assert isinstance(embedder, _Fake)
+    # explicit project wins over the ADC quota_project_id; location flows through
     assert captured == {
         "model_id": "multimodalembedding@001",
-        "project": "proj-1",
+        "project": "explicit-proj",
+        "location": "europe-west1",
         "dimension": 1408,
     }

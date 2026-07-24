@@ -24,6 +24,8 @@ interface parity and ignored. The embedding model and the Image wrapper
 are injectable, so the wiring is testable without the Vertex SDK.
 """
 
+import os
+
 
 class VertexMultimodalEmbedder:
     def __init__(
@@ -45,6 +47,10 @@ class VertexMultimodalEmbedder:
             from vertexai.vision_models import MultiModalEmbeddingModel
 
             if project:
+                # authorized_user ADC (gcloud auth application-default login) has
+                # no quota project; point it at the model's project so aiplatform
+                # calls are billed/enabled there instead of failing.
+                os.environ.setdefault("GOOGLE_CLOUD_QUOTA_PROJECT", project)
                 vertexai.init(project=project, location=location or "us-central1")
             self.client = MultiModalEmbeddingModel.from_pretrained(model_id)
 

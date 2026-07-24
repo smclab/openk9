@@ -60,7 +60,8 @@ def _build_vertex(configuration):
 
     return VertexMultimodalEmbedder(
         model_id=configuration.get("model"),
-        project=credentials.get("quota_project_id"),
+        project=model_garden.get("project") or credentials.get("quota_project_id"),
+        location=model_garden.get("location"),
         dimension=model_garden.get("dimension"),
     )
 
