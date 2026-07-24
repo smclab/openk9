@@ -79,7 +79,38 @@ env:
 
 # One of Ingress or Route is mandatory
 ingress:
+  ## @param ingress.ingressClassName IngressClass that should be used to implement this Ingress
+  ## Leave empty to let the cluster pick its default IngressClass.
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
+  ##
+  ingressClassName: ""
+  ## @param ingress.enabled Enable ingress resource for Embedding Module console
+  ##
   enabled: false
+  ## @param ingress.host Default host for the ingress resource
+  ##
+  host: openk9.local #-TBMD
+  ## @param ingress.annotations Additional annotations for the Ingress resource.
+  ## For a full list of possible ingress annotations, please see
+  ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+  ##
+  ## e.g:
+  ## annotations:
+  ##   kubernetes.io/ingress.class: nginx
+  ##
+  annotations: {}
+  ## @param ingress.servicePort Path for the default port.
+  ##
+  servicePort: 5000
+  ## @param ingress.paths Paths for the default host.
+  ##
+  paths:
+    - /api/embedding
+  ## @param ingress.tls Enable TLS configuration for the host defined at `ingress.host` parameter
+  ##
+  tls:
+    enabled: false
+    secretName: openk9-tls-star-secret #-TBMD
 
 # In OpenShift use Route instead of Ingress
 route:
