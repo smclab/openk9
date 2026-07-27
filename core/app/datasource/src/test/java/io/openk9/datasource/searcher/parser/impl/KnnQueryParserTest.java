@@ -120,8 +120,7 @@ class KnnQueryParserTest {
 		var imageBytes = new byte[] {1, 2, 3, 4};
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
-			.media(new ParserSearchToken.Media(
-				Base64.getEncoder().encodeToString(imageBytes), "image/png"))
+			.media(new ParserSearchToken.Media(imageBytes, "image/png"))
 			.build();
 
 		var parserContext = knnContext(token);
@@ -129,7 +128,7 @@ class KnnQueryParserTest {
 		// 2. apply the parser
 		parser.apply(parserContext).await().indefinitely();
 
-		// 3. EmbedQuery is called with no text and the decoded inline media
+		// 3. EmbedQuery is called with no text and the inline media
 		var mediaCaptor =
 			ArgumentCaptor.forClass(EmbeddingService.QueryMedia.class);
 
@@ -156,8 +155,7 @@ class KnnQueryParserTest {
 		var token = ParserSearchToken.builder()
 			.tokenType("KNN")
 			.values(List.of("a cat"))
-			.media(new ParserSearchToken.Media(
-				Base64.getEncoder().encodeToString(imageBytes), "image/jpeg"))
+			.media(new ParserSearchToken.Media(imageBytes, "image/jpeg"))
 			.build();
 
 		var parserContext = knnContext(token);
