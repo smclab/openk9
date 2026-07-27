@@ -272,9 +272,9 @@ public class EmbeddingService {
 					docTypeFieldJsonPath)));
 		}
 
-		// TODO: DataIndex has no vectorDataType column yet; default to FLOAT32.
-		// Wire this to the DataIndex / embedding-model configuration when it
-		// lands. Do NOT invent a migration here.
+		// TODO: the vector type is tenant-global and belongs to the embedding
+		// model configuration (EmbeddingModel.vectorDataType); wire it here once
+		// that field is available. FLOAT32 keeps the current behavior meanwhile.
 		var vectorDataType =
 			EmbeddingOuterClass.VectorDataType.VECTOR_DATA_TYPE_FLOAT32;
 
