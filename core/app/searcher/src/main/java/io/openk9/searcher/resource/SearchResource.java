@@ -1801,9 +1801,26 @@ public class SearchResource {
 		}
 	}
 
+	/**
+	 * Builds the {@code 400} raised on a media violation, carrying the reason in
+	 * the same {@code details} envelope the other error responses use.
+	 *
+	 * <p>The message has to travel as an entity: a {@code
+	 * WebApplicationException} built from a message alone keeps it inside the
+	 * exception and answers with an empty body, leaving the caller with a bare
+	 * status and no way to tell the violations apart.
+	 *
+	 * @param message the violation to report to the caller
+	 * @return the exception to throw
+	 */
 	private static WebApplicationException badRequestMedia(String message) {
 		return new WebApplicationException(
-			message, jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
+			jakarta.ws.rs.core.Response
+				.status(jakarta.ws.rs.core.Response.Status.BAD_REQUEST)
+				.type(MediaType.APPLICATION_JSON)
+				.entity(JsonObject.of(DETAILS_FIELD, message))
+				.build()
+		);
 	}
 
 	private Iterable<Sort> mapToGrpc(

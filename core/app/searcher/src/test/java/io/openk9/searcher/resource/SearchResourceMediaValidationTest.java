@@ -21,6 +21,7 @@ import java.util.List;
 
 import io.openk9.searcher.client.dto.ParserSearchToken;
 
+import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.WebApplicationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -39,8 +40,11 @@ class SearchResourceMediaValidationTest {
 			.media(new ParserSearchToken.Media(IMAGE_BYTES, "image/png"))
 			.build();
 
-		// 2. validation fails with HTTP 400
-		assertBadRequest(List.of(token));
+		// 2. validation fails with HTTP 400 naming the violation
+		assertBadRequest(
+			List.of(token),
+			"media is only supported on KNN tokens, got tokenType=TEXT",
+			MAX_SIZE);
 	}
 
 	@Test
@@ -52,8 +56,25 @@ class SearchResourceMediaValidationTest {
 			.media(new ParserSearchToken.Media(IMAGE_BYTES, "application/pdf"))
 			.build();
 
-		// 2. validation fails with HTTP 400
-		assertBadRequest(List.of(token));
+		// 2. validation fails with HTTP 400 naming the violation
+		assertBadRequest(
+			List.of(token),
+			"media.contentType must be image/*, got application/pdf",
+			MAX_SIZE);
+	}
+
+	@Test
+	void should_reject_empty_media_data() {
+
+		// 1. a KNN token whose media carries no bytes
+		var token = ParserSearchToken.builder()
+			.tokenType("KNN")
+			.media(new ParserSearchToken.Media(new byte[0], "image/png"))
+			.build();
+
+		// 2. validation fails with HTTP 400 naming the violation
+		assertBadRequest(
+			List.of(token), "media.data must not be empty", MAX_SIZE);
 	}
 
 	@Test
@@ -67,11 +88,10 @@ class SearchResourceMediaValidationTest {
 			.build();
 
 		// 2. validation fails with HTTP 400 against a tiny limit
-		var exception = Assertions.assertThrows(
-			WebApplicationException.class,
-			() -> SearchResource.validateMediaTokens(List.of(token), 2));
-
-		Assertions.assertEquals(400, exception.getResponse().getStatus());
+		assertBadRequest(
+			List.of(token),
+			"media exceeds the maximum allowed size of 2 bytes",
+			2);
 	}
 
 	@Test
@@ -105,12 +125,26 @@ class SearchResourceMediaValidationTest {
 			() -> SearchResource.validateMediaTokens(null, MAX_SIZE));
 	}
 
-	private void assertBadRequest(List<ParserSearchToken> tokens) {
+	/**
+	 * Asserts the violation answers {@code 400} and that the reason reaches the
+	 * caller in the response body, not just the exception.
+	 */
+	private void assertBadRequest(
+		List<ParserSearchToken> tokens, String expectedDetails, long maxSize) {
+
 		var exception = Assertions.assertThrows(
 			WebApplicationException.class,
-			() -> SearchResource.validateMediaTokens(tokens, MAX_SIZE));
+			() -> SearchResource.validateMediaTokens(tokens, maxSize));
 
-		Assertions.assertEquals(400, exception.getResponse().getStatus());
+		var response = exception.getResponse();
+
+		Assertions.assertEquals(400, response.getStatus());
+
+		Assertions.assertInstanceOf(JsonObject.class, response.getEntity());
+
+		Assertions.assertEquals(
+			expectedDetails,
+			((JsonObject) response.getEntity()).getString("details"));
 	}
 
 }
