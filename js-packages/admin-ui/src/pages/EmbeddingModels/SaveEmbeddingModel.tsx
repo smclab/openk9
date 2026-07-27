@@ -26,6 +26,7 @@ import {
   TooltipDescription,
   NumberInput,
   CodeInput,
+  fromFieldValidators,
 } from "@components/Form";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -93,6 +94,9 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
           });
           navigate(`/embedding-models/`, { replace: true });
         } else {
+          // The save runs from the recap, which covers the form: leaving it
+          // open would hide the per-field messages the backend just returned.
+          setPage(0);
           toast({
             title: `Error`,
             content: combineErrorMessages(data.embeddingModel?.fieldValidators),
@@ -133,6 +137,9 @@ export function SaveEmbeddingModel({ setExtraFab }: { setExtraFab: (fab: React.R
       }
       : undefined,
     isLoading: embeddingModelQuery.loading || createOrUpdateEmbeddingModelsMutation.loading,
+    getValidationMessages: fromFieldValidators(
+      createOrUpdateEmbeddingModelsMutation.data?.embeddingModel?.fieldValidators,
+    ),
     onSubmit(data) {
       createOrUpdateEmbeddingModelsMutate({
         variables: {
