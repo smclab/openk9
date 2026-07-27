@@ -1,20 +1,20 @@
-// Dev server puntato allo stack ./k9.sh locale invece che al demo remoto.
+// Dev server pointed at the local ./k9.sh stack instead of the remote demo.
 //
 //   yarn vite --config vite.config.k9-local.mts   ->  http://localhost:3000/admin/
 //
-// Va scelta esplicitamente: vite auto-carica solo i sei nomi
-// `vite.config.{js,mjs,ts,cjs,mts,cts}`, quindi `yarn start` continua a usare
-// `vite.config.ts` e il suo proxy verso il demo remoto.
+// It has to be selected explicitly: vite only auto-loads the six
+// `vite.config.{js,mjs,ts,cjs,mts,cts}` names, so plain `yarn start` keeps
+// using `vite.config.ts` and its proxy to the remote demo.
 //
-// Tre dettagli non ovvi:
-//   - il proxy punta a 127.0.0.1 tenendo l'Host `demo.openk9.localhost`,
-//     perche' e' da quell'header che il datasource risolve il tenant e su
-//     macOS *.localhost non si risolve via DNS;
-//   - `secure: false` perche' caddy usa un certificato interno;
-//   - estensione .mts, cioe' caricata come ESM: importare ./vite.config da un
-//     file .ts fa fallire esbuild (vite e vite-tsconfig-paths sono ESM-only),
-//     percio' qui il minimo indispensabile e' ridichiarato invece di riusare
-//     la config di build.
+// Three things that are not obvious:
+//   - the proxy targets 127.0.0.1 while keeping the `demo.openk9.localhost`
+//     Host header, because the datasource resolves the tenant from that
+//     header and macOS does not resolve *.localhost over DNS;
+//   - `secure: false` because caddy serves an internal certificate;
+//   - the .mts extension, so the file is loaded as ESM: importing
+//     ./vite.config from a .ts file makes esbuild fail (vite and
+//     vite-tsconfig-paths are ESM-only), hence the bare minimum is declared
+//     here instead of reusing the build config.
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
