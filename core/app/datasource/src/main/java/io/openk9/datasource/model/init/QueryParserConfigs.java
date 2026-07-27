@@ -350,7 +350,9 @@ public class QueryParserConfigs {
 			{
 				"kNeighbors": 2,
 				"boost": 1.0,
-				"fuzziness": "ZERO"
+				"fuzziness": "ZERO",
+				"multiMatchType": "MOST_FIELDS",
+				"tieBreaker": 0.0
 			}
 			""";
 
@@ -402,6 +404,41 @@ public class QueryParserConfigs {
 					.build()
 				)
 				.type(FormFieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("multiMatchType")
+				.label("Multi Match Type")
+				.value(FieldValue.builder()
+					.value("MOST_FIELDS")
+					.isDefault(true)
+					.build())
+				.value(FieldValue.builder()
+					.value("BEST_FIELDS")
+					.build())
+				.value(FieldValue.builder()
+					.value("CROSS_FIELDS")
+					.build())
+				.value(FieldValue.builder()
+					.value("PHRASE")
+					.build())
+				.value(FieldValue.builder()
+					.value("PHRASE_PREFIX")
+					.build())
+				.value(FieldValue.builder()
+					.value("BOOL_PREFIX")
+					.build())
+				.type(FormFieldType.SELECT)
+				.build()
+			)
+			.field(FormField.builder()
+				.name("tieBreaker")
+				.label("Tie Breaker")
+				.value(FieldValue.builder()
+					.value(0.0f)
+					.build()
+				)
+				.type(FormFieldType.NUMBER)
 				.build()
 			)
 			.build();
