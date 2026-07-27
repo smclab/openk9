@@ -97,3 +97,6 @@ venv/
 # grpc
 app/external_services/grpc/embedding/embedding_pb2_grpc.py
 app/external_services/grpc/embedding/embedding_pb2.py
+
+# Google ADC written at runtime by save_google_application_credentials (secret)
+application_default_credentials.json
