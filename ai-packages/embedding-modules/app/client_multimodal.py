@@ -27,23 +27,23 @@ datasource would send them.
 Start the server first:  python -m app.server
 
 Common configuration:
-  MM_PROVIDER   'vertex' or 'bedrock' (default: vertex)
-  MM_IMAGE      path to a local image file to index (required)
+    MM_PROVIDER   'vertex' or 'bedrock' (default: vertex)
+    MM_IMAGE      path to a local image file to index (required)
 
 Vertex (MM_PROVIDER=vertex):
-  VERTEX_CREDENTIALS   path to the ADC / service-account JSON
-                       (falls back to GOOGLE_APPLICATION_CREDENTIALS)
-  VERTEX_PROJECT       GCP project id (required)
-  VERTEX_LOCATION      region serving the model (default: europe-west1)
-  VERTEX_MODEL         model id (default: multimodalembedding@001)
-  VERTEX_DIMENSION     embedding dimension (default: 1408)
+    VERTEX_CREDENTIALS   path to the ADC / service-account JSON
+                    (falls back to GOOGLE_APPLICATION_CREDENTIALS)
+    VERTEX_PROJECT       GCP project id (required)
+    VERTEX_LOCATION      region serving the model (default: europe-west1)
+    VERTEX_MODEL         model id (default: multimodalembedding@001)
+    VERTEX_DIMENSION     embedding dimension (default: 1408)
 
 Bedrock (MM_PROVIDER=bedrock):
-  BEDROCK_API_KEY    Bedrock bearer token (optional if the standard AWS
-                     credential chain is configured in the environment)
-  BEDROCK_REGION     AWS region (default: us-east-1)
-  BEDROCK_MODEL      model id (default: cohere.embed-v4:0)
-  BEDROCK_DIMENSION  output dimension (default: 1024)
+    BEDROCK_API_KEY    Bedrock bearer token (optional if the standard AWS
+                    credential chain is configured in the environment)
+    BEDROCK_REGION     AWS region (default: us-east-1)
+    BEDROCK_MODEL      model id (default: cohere.embed-v4:0)
+    BEDROCK_DIMENSION  output dimension (default: 1024)
 """
 
 import json
@@ -73,6 +73,7 @@ def serve_files(routes):
             self.wfile.write(body)
 
         def log_message(self, *args):
+            # silence the default per-request logging to stderr
             pass
 
     httpd = HTTPServer(("localhost", 0), Handler)
@@ -83,9 +84,9 @@ def serve_files(routes):
 
 def vertex_model():
     """Builds the EmbeddingModel for the Vertex multimodal provider."""
-    credentials_path = os.getenv("VERTEX_CREDENTIALS") or os.environ[
-        "GOOGLE_APPLICATION_CREDENTIALS"
-    ]
+    credentials_path = (
+        os.getenv("VERTEX_CREDENTIALS") or os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+    )
     with open(credentials_path) as f:
         credentials = json.load(f)
 

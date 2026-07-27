@@ -31,7 +31,6 @@ without network or models.
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Optional
 
 
 class SkipRef(Exception):
@@ -45,7 +44,7 @@ class Piece:
 
     vector: list
     text: str = ""
-    file_id: Optional[str] = None
+    file_id: str | None = None
 
 
 @dataclass
