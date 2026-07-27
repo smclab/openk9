@@ -200,7 +200,7 @@ public class TextQueryParser implements QueryParser {
 
 	}
 
-	private static boolean i18nFilter(DocTypeField f, String language) {
+	static boolean i18nFilter(DocTypeField f, String language) {
 		String fieldPath = f.getPath();
 
 		if (!language.equals(Language.NONE)) {
@@ -260,7 +260,7 @@ public class TextQueryParser implements QueryParser {
 			.orElse(true);
 	}
 
-	private MultiMatchQueryBuilder.Type getMultiMatchType(
+	static MultiMatchQueryBuilder.Type getMultiMatchType(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
 		return ParserContext.getString(token, jsonConfig, MULTI_MATCH_TYPE)
@@ -269,7 +269,7 @@ public class TextQueryParser implements QueryParser {
 
 	}
 
-	private static float getTieBreaker(
+	static float getTieBreaker(
 		ParserSearchToken token, JsonObject jsonConfig) {
 
 		return ParserContext.getFloat(token, jsonConfig, TIE_BREAKER)
