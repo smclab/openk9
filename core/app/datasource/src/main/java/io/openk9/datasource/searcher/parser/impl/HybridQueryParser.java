@@ -22,20 +22,34 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
 import io.openk9.datasource.index.util.OpenSearchUtils;
+import io.openk9.datasource.model.DocTypeField;
 import io.openk9.datasource.model.QueryParserType;
 import io.openk9.datasource.pipeline.service.EmbeddingService;
 import io.openk9.datasource.searcher.parser.ParserContext;
 import io.openk9.datasource.searcher.parser.QueryParser;
+import io.openk9.datasource.searcher.util.Utils;
+import io.openk9.searcher.client.dto.ParserSearchToken;
 
 import io.smallrye.mutiny.Uni;
+import io.vertx.core.json.JsonObject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.opensearch.client.opensearch._types.query_dsl.HybridQuery;
 import org.opensearch.client.opensearch._types.query_dsl.MatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.MultiMatchQuery;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.TextQueryType;
+import org.opensearch.common.unit.Fuzziness;
+import org.opensearch.index.query.MultiMatchQueryBuilder;
 import org.opensearch.search.builder.SearchSourceBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 @Named("HybridQueryParser")
 public class HybridQueryParser implements QueryParser {
+
+	static final String CHUNK_TEXT = "chunkText";
 
 	@ConfigProperty(
 		name = "openk9.datasource.acl.query.extra.params.key", defaultValue = "OPENK9_ACL"
@@ -79,18 +93,19 @@ public class HybridQueryParser implements QueryParser {
 		if (values.hasNext()) {
 			var value = values.next();
 
-			var matchQuery = new MatchQuery.Builder()
-				.field("chunkText")
-				.query(q -> q.stringValue(value))
-				.fuzziness(fuzziness.asString())
-				.boost(boost)
-				.build()
-				.toQuery();
+			var textQuery = toTextQuery(
+				parserContext,
+				parserSearchToken,
+				jsonConfig,
+				value,
+				fuzziness,
+				boost
+			);
 
 			return embeddingService.getEmbeddedText(tenantId, value)
 				.map(embeddedText -> KnnQueryParser.toKnnQuery(embeddedText, kNeighbors))
 				.map(knnQuery -> new HybridQuery.Builder()
-					.queries(matchQuery, knnQuery)
+					.queries(textQuery, knnQuery)
 					.build()
 					.toQuery()
 				)
@@ -109,6 +124,87 @@ public class HybridQueryParser implements QueryParser {
 		}
 
 		return Uni.createFrom().item(searchSourceBuilder);
+	}
+
+	/**
+	 * Builds the textual branch of the hybrid query as a multi match over the
+	 * searchable text fields of the bucket, each with its configured boost,
+	 * plus the {@code chunkText} field holding the embedded chunk.
+	 * <p>
+	 * When the bucket exposes no searchable text field, it falls back to a
+	 * plain match on {@code chunkText}.
+	 *
+	 * @param textQueryValue the search text, already truncated if needed
+	 * @return the textual query to combine with the knn one
+	 */
+	static Query toTextQuery(
+		ParserContext parserContext,
+		ParserSearchToken parserSearchToken,
+		JsonObject jsonConfig,
+		String textQueryValue,
+		Fuzziness fuzziness,
+		float boost) {
+
+		var bucket = parserContext.getTenantWithBucket().getBucket();
+		var language = parserContext.getLanguage();
+
+		var searchableFields = Utils.getDocTypeFieldsFrom(bucket.getDatasources())
+			.filter(DocTypeField::isSearchableAndText)
+			.filter(docTypeField -> TextQueryParser.i18nFilter(docTypeField, language))
+			.map(HybridQueryParser::toFieldWithBoost)
+			.distinct()
+			.toList();
+
+		if (searchableFields.isEmpty()) {
+			return new MatchQuery.Builder()
+				.field(CHUNK_TEXT)
+				.query(q -> q.stringValue(textQueryValue))
+				.fuzziness(fuzziness.asString())
+				.boost(boost)
+				.build()
+				.toQuery();
+		}
+
+		var fields = new ArrayList<String>();
+		fields.add(CHUNK_TEXT);
+		fields.addAll(searchableFields);
+
+		var multiMatchType = TextQueryParser.getMultiMatchType(
+			parserSearchToken, jsonConfig);
+
+		var tieBreaker = TextQueryParser.getTieBreaker(
+			parserSearchToken, jsonConfig);
+
+		return new MultiMatchQuery.Builder()
+			.fields(fields)
+			.query(textQueryValue)
+			.type(toTextQueryType(multiMatchType))
+			.tieBreaker((double) tieBreaker)
+			.fuzziness(fuzziness.asString())
+			.boost(boost)
+			.build()
+			.toQuery();
+	}
+
+	private static String toFieldWithBoost(DocTypeField docTypeField) {
+		var path = docTypeField.getPath();
+
+		return docTypeField.isDefaultBoost()
+			? path + "^" + docTypeField.getFloatBoost()
+			: path;
+	}
+
+	private static TextQueryType toTextQueryType(
+		MultiMatchQueryBuilder.Type type) {
+
+		return switch (type) {
+			case BEST_FIELDS -> TextQueryType.BestFields;
+			case MOST_FIELDS -> TextQueryType.MostFields;
+			case CROSS_FIELDS -> TextQueryType.CrossFields;
+			case PHRASE -> TextQueryType.Phrase;
+			case PHRASE_PREFIX -> TextQueryType.PhrasePrefix;
+			case BOOL_PREFIX -> TextQueryType.BoolPrefix;
+		};
 	}
 
 }
