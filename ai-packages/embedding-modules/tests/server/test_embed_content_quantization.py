@@ -54,3 +54,26 @@ def test_binary_quantization_packs_sign_bits(stub):
     assert len(chunk.bits) == 8 // 8
     # positive components at index 0 and 4 -> 1000 1000
     assert chunk.bits == bytes([0b10001000])
+
+
+def test_byte_quantization_applies_to_ref_chunks(stub):
+    # quantization must also run on chunks coming from a ref, not just text
+    refs = [
+        embedding_pb2.MediaRef(
+            url="https://signed/img-1", fileId="img-1", contentType="image/png"
+        )
+    ]
+    request = embedding_pb2.EmbedContentRequest(
+        tenantId="mew",
+        refs=refs,
+        vectorDataType=embedding_pb2.VECTOR_DATA_TYPE_BYTE,
+    )
+
+    chunk = list(stub.EmbedContent(request))[0]
+
+    assert chunk.fileId == "img-1"
+    assert chunk.vectorDataType == embedding_pb2.VECTOR_DATA_TYPE_BYTE
+    assert len(chunk.i8) == 8
+    # the fake image vector [0, 1, 0, ...] is already unit-norm -> 1.0 -> 127
+    int8 = np.frombuffer(chunk.i8, dtype=np.int8)
+    assert int8[1] == 127
