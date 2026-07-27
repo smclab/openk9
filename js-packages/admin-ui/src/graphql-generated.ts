@@ -288,6 +288,12 @@ export enum BooleanOperator {
   Or = 'OR'
 }
 
+export enum BoundaryScannerType {
+  Chars = 'CHARS',
+  Sentence = 'SENTENCE',
+  Word = 'WORD'
+}
+
 export type Bucket = {
   __typename?: 'Bucket';
   autocomplete?: Maybe<Autocomplete>;
@@ -299,6 +305,7 @@ export type Bucket = {
   description?: Maybe<Scalars['String']>;
   docCount?: Maybe<Scalars['BigInteger']>;
   enabled: Scalars['Boolean'];
+  highlight?: Maybe<Highlight>;
   id?: Maybe<Scalars['ID']>;
   indexCount?: Maybe<Scalars['BigInteger']>;
   language?: Maybe<Language>;
@@ -392,6 +399,7 @@ export type BucketWithListsDtoInput = {
   datasourceIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   defaultLanguageId?: InputMaybe<Scalars['BigInteger']>;
   description?: InputMaybe<Scalars['String']>;
+  highlightId?: InputMaybe<Scalars['BigInteger']>;
   languageIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
   name: Scalars['String'];
   queryAnalysisId?: InputMaybe<Scalars['BigInteger']>;
@@ -1325,6 +1333,7 @@ export type DocTypeField = {
   modifiedDate?: Maybe<Scalars['DateTime']>;
   name?: Maybe<Scalars['String']>;
   numeric: Scalars['Boolean'];
+  offsetSource?: Maybe<OffsetSourceType>;
   parent?: Maybe<DocTypeField>;
   path?: Maybe<Scalars['String']>;
   searchAnalyzer?: Maybe<Analyzer>;
@@ -1361,6 +1370,8 @@ export type DocTypeFieldDtoInput = {
   fieldType: FieldType;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  /** Specifies how to retrieve the offsets needed by the unified and fvh highlighters; for fvh the TERM_VECTOR value is also used to populate matched_fields */
+  offsetSource?: InputMaybe<OffsetSourceType>;
   /** If true field is used for matches during search */
   searchable: Scalars['Boolean'];
   /** If true field is used for sorting during search */
@@ -1380,6 +1391,8 @@ export type DocTypeFieldWithAnalyzerDtoInput = {
   fieldType: FieldType;
   jsonConfig?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  /** Specifies how to retrieve the offsets needed by the unified and fvh highlighters; for fvh the TERM_VECTOR value is also used to populate matched_fields */
+  offsetSource?: InputMaybe<OffsetSourceType>;
   /** The searchAnalyzerId used as search_analyzer for the field in OpenSearch. (optional) */
   searchAnalyzerId?: InputMaybe<Scalars['BigInteger']>;
   /** If true field is used for matches during search */
@@ -1879,11 +1892,62 @@ export type FilterInput = {
   filterFields?: InputMaybe<Array<InputMaybe<FilterFieldInput>>>;
 };
 
+export enum FragmenterType {
+  Simple = 'SIMPLE',
+  Span = 'SPAN'
+}
+
 export enum Fuzziness {
   Auto = 'AUTO',
   One = 'ONE',
   Two = 'TWO',
   Zero = 'ZERO'
+}
+
+export type Highlight = {
+  __typename?: 'Highlight';
+  boundaryChars?: Maybe<Scalars['String']>;
+  boundaryScanner?: Maybe<BoundaryScannerType>;
+  /** ISO-8601 */
+  createDate?: Maybe<Scalars['DateTime']>;
+  description?: Maybe<Scalars['String']>;
+  fields?: Maybe<Array<Maybe<DocTypeField>>>;
+  fragmentSize?: Maybe<Scalars['Int']>;
+  fragmenter?: Maybe<FragmenterType>;
+  id?: Maybe<Scalars['ID']>;
+  /** ISO-8601 */
+  modifiedDate?: Maybe<Scalars['DateTime']>;
+  name?: Maybe<Scalars['String']>;
+  numberOfFragments?: Maybe<Scalars['Int']>;
+  order?: Maybe<OrderType>;
+  type: HighlightType;
+};
+
+export type HighlightDtoInput = {
+  /** Chars allowed to split fragments of text, only for fvh highlighter */
+  boundaryChars?: InputMaybe<Scalars['String']>;
+  /** Specifies how to split fragments of text, for unified and fvh highlighters */
+  boundaryScanner?: InputMaybe<BoundaryScannerType>;
+  description?: InputMaybe<Scalars['String']>;
+  /** Set of unique DocTypeField IDs, it's used to add the fields to highlight */
+  fieldIds?: InputMaybe<Array<InputMaybe<Scalars['BigInteger']>>>;
+  /** Maximum length of each fragment */
+  fragmentSize?: InputMaybe<Scalars['Int']>;
+  /** Specifies how to split fragments of text, only for plain highlighter */
+  fragmenter?: InputMaybe<FragmenterType>;
+  name: Scalars['String'];
+  /** Maximum number of fragments to return */
+  numberOfFragments?: InputMaybe<Scalars['Int']>;
+  /** Field that decides how to order fragments of text */
+  order?: InputMaybe<OrderType>;
+  /** The field used to choose the highlighter */
+  type?: InputMaybe<HighlightType>;
+};
+
+export enum HighlightType {
+  Fvh = 'FVH',
+  Plain = 'PLAIN',
+  Unified = 'UNIFIED'
 }
 
 export type ItemDtoInput = {
@@ -2041,6 +2105,19 @@ export type Mutation = {
   bindDocTypeFieldToTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   bindDocTypeToDocTypeTemplate?: Maybe<Tuple2_DocType_DocTypeTemplate>;
   bindEnrichPipelineToDatasource?: Maybe<Tuple2_Datasource_EnrichPipeline>;
+  /**
+   * Binds an existing Highlight to a specified Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket to bind the Highlight to.
+   * - `highlightId` (ID!): The ID of the Highlight to be bound.
+   *
+   * Returns:
+   * - A tuple containing:
+   *   - `bucket`: The updated Bucket with the linked Highlight.
+   *   - `highlight`: The linked Highlight.
+   */
+  bindHighlightToBucket?: Maybe<Tuple2_Bucket_Highlight>;
   bindLanguageToBucket?: Maybe<Tuple2_Bucket_Language>;
   bindPluginDriverToDatasource?: Maybe<Tuple2_Datasource_PluginDriver>;
   bindQueryAnalysisToBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
@@ -2129,6 +2206,8 @@ export type Mutation = {
   deleteEmbeddingModel?: Maybe<EmbeddingModel>;
   deleteEnrichItem?: Maybe<EnrichItem>;
   deleteEnrichPipeline?: Maybe<EnrichPipeline>;
+  /** Delete an Highlight by its ID */
+  deleteHighlight?: Maybe<Highlight>;
   deleteLanguage?: Maybe<Language>;
   deleteLargeLanguageModel?: Maybe<LargeLanguageModel>;
   deletePluginDriver?: Maybe<PluginDriver>;
@@ -2172,6 +2251,22 @@ export type Mutation = {
   enrichItem?: Maybe<Response_EnrichItem>;
   enrichPipeline?: Maybe<Response_EnrichPipeline>;
   enrichPipelineWithEnrichItems?: Maybe<Response_EnrichPipeline>;
+  /**
+   * Creates or updates an Highlight configuration.
+   *
+   * This mutation handles both creation and updates/patch of Highlight configurations based on the provided ID.
+   * If no ID is provided, a new Highlight is created. If an ID is provided, the existing Highlight
+   * is either fully updated or partially patched based on the patch parameter.
+   *
+   * Arguments:
+   * - `id` (ID): The ID of the Highlight to update. If null, creates a new Highlight.
+   * - `HighlightDTO` (highlightDTO!): The Highlight data to create or update.
+   * - `patch` (Boolean): If true, performs a partial update (patch). If false, performs a full update. Defaults to false.
+   *
+   * Returns:
+   * - A Response containing the created or updated Highlight configuration.
+   */
+  highlight?: Maybe<Response_Highlight>;
   language?: Maybe<Response_Language>;
   largeLanguageModel?: Maybe<Response_LargeLanguageModel>;
   multiSelect?: Maybe<SuggestionCategory>;
@@ -2205,6 +2300,7 @@ export type Mutation = {
   searchConfigWithQueryParsers?: Maybe<Response_SearchConfig>;
   sortEnrichItems?: Maybe<EnrichPipeline>;
   sorting?: Maybe<Response_Sorting>;
+  /** API to create, patch or update sorting with the possibility to link a docTypeField  */
   sortingWithDocTypeField?: Maybe<Response_Sorting>;
   suggestionCategory?: Maybe<Response_SuggestionCategory>;
   suggestionCategoryWithDocTypeField?: Maybe<Response_SuggestionCategory>;
@@ -2252,6 +2348,20 @@ export type Mutation = {
   unbindDocTypeFieldFromTokenTab?: Maybe<Tuple2_TokenTab_DocTypeField>;
   unbindDocTypeTemplateFromDocType?: Maybe<DocType>;
   unbindEnrichPipelineToDatasource?: Maybe<Datasource>;
+  /**
+   * Unbinds the Highlight from a specified Bucket.
+   *
+   * This mutation removes the link between a Highlight and a Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket from which the Highlight will be unbound.
+   *
+   * Returns:
+   * - A tuple containing:
+   *   - `bucket`: The updated Bucket after unbinding the Highlight.
+   *   - `highlight`: Always null.
+   */
+  unbindHighlightFromBucket?: Maybe<Tuple2_Bucket_Highlight>;
   unbindLanguageFromBucket?: Maybe<Tuple2_Bucket_Language>;
   unbindPluginDriverToDatasource?: Maybe<Datasource>;
   unbindQueryAnalysisFromBucket?: Maybe<Tuple2_Bucket_QueryAnalysis>;
@@ -2546,6 +2656,13 @@ export type MutationBindEnrichPipelineToDatasourceArgs = {
 
 
 /** Mutation root */
+export type MutationBindHighlightToBucketArgs = {
+  bucketId: Scalars['ID'];
+  highlightId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationBindLanguageToBucketArgs = {
   bucketId: Scalars['ID'];
   languageId: Scalars['ID'];
@@ -2756,6 +2873,12 @@ export type MutationDeleteEnrichPipelineArgs = {
 
 
 /** Mutation root */
+export type MutationDeleteHighlightArgs = {
+  id: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationDeleteLanguageArgs = {
   languageId: Scalars['ID'];
 };
@@ -2948,6 +3071,14 @@ export type MutationEnrichPipelineWithEnrichItemsArgs = {
   id?: InputMaybe<Scalars['ID']>;
   patch?: InputMaybe<Scalars['Boolean']>;
   pipelineWithItemsDTO?: InputMaybe<PipelineWithItemsDtoInput>;
+};
+
+
+/** Mutation root */
+export type MutationHighlightArgs = {
+  highlightDTO?: InputMaybe<HighlightDtoInput>;
+  id?: InputMaybe<Scalars['ID']>;
+  patch?: InputMaybe<Scalars['Boolean']>;
 };
 
 
@@ -3321,6 +3452,12 @@ export type MutationUnbindEnrichPipelineToDatasourceArgs = {
 
 
 /** Mutation root */
+export type MutationUnbindHighlightFromBucketArgs = {
+  bucketId: Scalars['ID'];
+};
+
+
+/** Mutation root */
 export type MutationUnbindLanguageFromBucketArgs = {
   bucketId: Scalars['ID'];
 };
@@ -3384,6 +3521,12 @@ export type MutationUserFieldArgs = {
   userField?: InputMaybe<UserField>;
 };
 
+export enum OffsetSourceType {
+  IndexOptions = 'INDEX_OPTIONS',
+  None = 'NONE',
+  TermVector = 'TERM_VECTOR'
+}
+
 export enum Operator {
   Contains = 'contains',
   EndsWith = 'endsWith',
@@ -3393,6 +3536,11 @@ export enum Operator {
   LessThan = 'lessThan',
   LessThenOrEqualTo = 'lessThenOrEqualTo',
   StartsWith = 'startsWith'
+}
+
+export enum OrderType {
+  None = 'NONE',
+  Score = 'SCORE'
 }
 
 /** Information about pagination in a connection. */
@@ -3584,6 +3732,8 @@ export type Query = {
   docTypeField?: Maybe<DocTypeField>;
   docTypeFieldNotInAnnotator?: Maybe<Connection_DocTypeField>;
   docTypeFields?: Maybe<Connection_DocTypeField>;
+  /** Retrieves all DocTypeField entities whose offsetSource matches the given value. */
+  docTypeFieldsByOffsetSource?: Maybe<Array<Maybe<DocTypeField>>>;
   docTypeFieldsByParent?: Maybe<Connection_DocTypeField>;
   /** Retrieves all DocTypeField entities whose fieldType matches the given value. */
   docTypeFieldsByType?: Maybe<Array<Maybe<DocTypeField>>>;
@@ -3607,6 +3757,10 @@ export type Query = {
   eventData?: Maybe<Scalars['String']>;
   /** Returns the list of available options for the event */
   eventOptions?: Maybe<Array<Maybe<EventOption>>>;
+  /** Retrieves an Highlight by its ID */
+  highlight?: Maybe<Highlight>;
+  /** Retrieves all Highlights */
+  highlights?: Maybe<Array<Maybe<Highlight>>>;
   language?: Maybe<Language>;
   languages?: Maybe<Connection_Language>;
   largeLanguageModel?: Maybe<LargeLanguageModel>;
@@ -3701,6 +3855,18 @@ export type Query = {
   /** Fetches DocTypeFields unbound to the provided SuggestionCategory ID with FieldType KEYWORD or I18N. */
   unboundDocTypeFieldsBySuggestionCategory?: Maybe<Array<Maybe<DocTypeField>>>;
   unboundEnrichPipelines?: Maybe<Array<Maybe<EnrichPipeline>>>;
+  /**
+   * Retrieves all Highlight configurations that are not bound to a specific Bucket.
+   *
+   * This query returns Highlight configurations that are available to be bound to the specified Bucket.
+   *
+   * Arguments:
+   * - `bucketId` (ID!): The ID of the Bucket to check for unbound Highlight.
+   *
+   * Returns:
+   * - A list of unbound Highlight configurations available for the specified Bucket.
+   */
+  unboundHighlightByBucket?: Maybe<Array<Maybe<Highlight>>>;
   /**
    * Retrieves a list of RAGConfiguration entities of the specified RAGType
    * that are not yet associated with the given Bucket.
@@ -3894,6 +4060,12 @@ export type QueryDocTypeFieldsArgs = {
 
 
 /** Query root */
+export type QueryDocTypeFieldsByOffsetSourceArgs = {
+  offsetSource?: InputMaybe<OffsetSourceType>;
+};
+
+
+/** Query root */
 export type QueryDocTypeFieldsByParentArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -4071,6 +4243,12 @@ export type QueryEventOptionsArgs = {
   size?: InputMaybe<Scalars['Int']>;
   sortType?: InputMaybe<Scalars['String']>;
   sortable?: InputMaybe<Scalars['Boolean']>;
+};
+
+
+/** Query root */
+export type QueryHighlightArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -4431,6 +4609,12 @@ export type QueryUnboundEnrichPipelinesArgs = {
 
 
 /** Query root */
+export type QueryUnboundHighlightByBucketArgs = {
+  bucketId: Scalars['BigInteger'];
+};
+
+
+/** Query root */
 export type QueryUnboundRagConfigurationByBucketArgs = {
   bucketId: Scalars['ID'];
   ragType: RagType;
@@ -4695,6 +4879,12 @@ export type Response_EnrichItem = {
 export type Response_EnrichPipeline = {
   __typename?: 'Response_EnrichPipeline';
   entity?: Maybe<EnrichPipeline>;
+  fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
+};
+
+export type Response_Highlight = {
+  __typename?: 'Response_Highlight';
+  entity?: Maybe<Highlight>;
   fieldValidators?: Maybe<Array<Maybe<FieldValidator>>>;
 };
 
@@ -5281,6 +5471,12 @@ export type Tuple2_Bucket_Datasource = {
   __typename?: 'Tuple2_Bucket_Datasource';
   left?: Maybe<Bucket>;
   right?: Maybe<Datasource>;
+};
+
+export type Tuple2_Bucket_Highlight = {
+  __typename?: 'Tuple2_Bucket_Highlight';
+  left?: Maybe<Bucket>;
+  right?: Maybe<Highlight>;
 };
 
 export type Tuple2_Bucket_Language = {
@@ -16507,4 +16703,4 @@ export function useEnrichPipelineWithItemsMutation(baseOptions?: Apollo.Mutation
 export type EnrichPipelineWithItemsMutationHookResult = ReturnType<typeof useEnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationResult = Apollo.MutationResult<EnrichPipelineWithItemsMutation>;
 export type EnrichPipelineWithItemsMutationOptions = Apollo.BaseMutationOptions<EnrichPipelineWithItemsMutation, EnrichPipelineWithItemsMutationVariables>;
-// Generated on 2026-07-01T15:57:21+02:00
+// Generated on 2026-07-27T12:04:37+02:00

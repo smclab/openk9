@@ -110,6 +110,7 @@ export type DocTypeField = {
     boost?: number;
     fieldType?: FieldType;
     exclude?: boolean;
+    offsetSource?: OffsetSourceType;
     jsonConfig?: string;
     path?: string;
     children?: Array<DocTypeField>;
@@ -269,6 +270,8 @@ export type K9EntityEventSuggestionCategory = {
 };
 
 export type NormalizationTechnique = 'MIN_MAX' | 'L2';
+
+export type OffsetSourceType = 'TERM_VECTOR' | 'INDEX_OPTIONS' | 'NONE';
 
 export type PageBucket = Array<Bucket>;
 
@@ -570,6 +573,37 @@ export type GetBucketsCurrentAvailableLanguageError = GetBucketsCurrentAvailable
 export type GetBucketsCurrentAvailableLanguageResponses = {
     /**
      * List of available Languages returned
+     */
+    200: unknown;
+};
+
+export type GetBucketsCurrentDatasourcesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/buckets/current/datasources';
+};
+
+export type GetBucketsCurrentDatasourcesErrors = {
+    /**
+     * Bad Request
+     */
+    400: Problem;
+    /**
+     * Not found
+     */
+    404: Problem;
+    /**
+     * Internal Server Error
+     */
+    500: Problem;
+};
+
+export type GetBucketsCurrentDatasourcesError = GetBucketsCurrentDatasourcesErrors[keyof GetBucketsCurrentDatasourcesErrors];
+
+export type GetBucketsCurrentDatasourcesResponses = {
+    /**
+     * List of Datasources returned
      */
     200: unknown;
 };
@@ -2502,37 +2536,6 @@ export type GetPluginDriversHealthByIdResponses = {
 };
 
 export type GetPluginDriversHealthByIdResponse = GetPluginDriversHealthByIdResponses[keyof GetPluginDriversHealthByIdResponses];
-
-export type GetSchedulersStatusData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/schedulers/status';
-};
-
-export type GetSchedulersStatusErrors = {
-    /**
-     * Bad Request
-     */
-    400: Problem;
-    /**
-     * Not found
-     */
-    404: Problem;
-    /**
-     * Internal Server Error
-     */
-    500: Problem;
-};
-
-export type GetSchedulersStatusError = GetSchedulersStatusErrors[keyof GetSchedulersStatusErrors];
-
-export type GetSchedulersStatusResponses = {
-    /**
-     * Health statud for each scheduled Datasource Indexing Job.
-     */
-    200: unknown;
-};
 
 export type PostSchedulersBySchedulerIdCancelSchedulingData = {
     body?: never;
