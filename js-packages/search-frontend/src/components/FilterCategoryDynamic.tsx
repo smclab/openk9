@@ -823,7 +823,20 @@ function CheckBoxSelect({
           }
         }}
         css={css`
+          width: 14px;
+          appearance: none;
+          min-width: 15px;
+          min-height: 15px;
+          border-radius: 4px;
+          border: 2px solid #ccc;
+          background-color: ${isChecked
+            ? "var(--openk9-embeddable-search--secondary-active-color)"
+            : "#fff"};
+          background-size: 100%;
+          background-position: center;
+          background-repeat: no-repeat;
           cursor: pointer;
+          margin-right: 10px;
         `}
       />
     </>
