@@ -1,7 +1,7 @@
 {
   "name": "@openk9ui/openk9-chatbot",
   "private": false,
-  "version": "2026.1.2",
+  "version": "2026.1.3-SNAPSHOT",
   "license": "MIT",
   "type": "module",
   "main": "dist/main.js",
