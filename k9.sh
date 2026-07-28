@@ -271,7 +271,7 @@ build_core() {
 build_gen_ai() {
     echo "--- Building AI Services ---"
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
-    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+    docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile.base ai-packages/embedding-modules
     docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
 }
 
@@ -358,7 +358,7 @@ build_single() {
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-rag-module:$TAG" -f ai-packages/rag-module/Dockerfile ai-packages/rag-module
             ;;
         embedding-module)
-            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile ai-packages/embedding-modules
+            docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-embedding-module-base:$TAG" -f ai-packages/embedding-modules/Dockerfile.base ai-packages/embedding-modules
             ;;
         talk-to)
             docker build --pull --platform "$JIB_PLATFORM" -t "$GROUP/openk9-talk-to:$TAG" -f js-packages/talk-to/Dockerfile .
