@@ -195,7 +195,7 @@ public class EmbeddingServiceUtilsTest {
 	}
 
 	@Test
-	void mapToEmbeddingModelRequest_should_inject_multimodal_when_true() {
+	void mapToEmbeddingModelRequest_should_set_multimodal_when_true() {
 
 		// a multimodal model carrying a pre-existing jsonConfig
 		var embeddingModel = new EmbeddingModel();
@@ -204,29 +204,15 @@ public class EmbeddingServiceUtilsTest {
 
 		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
 
-		// the flag is injected while pre-existing keys are preserved
+		// the flag travels in its own field, the jsonConfig is left untouched
+		assertTrue(request.getMultimodal());
 		var fields = request.getJsonConfig().getFieldsMap();
-		assertTrue(fields.get("multimodal").getBoolValue());
+		assertFalse(fields.containsKey("multimodal"));
 		assertEquals("bar", fields.get("foo").getStringValue());
 	}
 
 	@Test
-	void mapToEmbeddingModelRequest_should_inject_multimodal_when_jsonConfig_null() {
-
-		// a multimodal model without any jsonConfig
-		var embeddingModel = new EmbeddingModel();
-		embeddingModel.setMultimodal(true);
-
-		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
-
-		// the flag is injected on top of an empty struct
-		assertTrue(request.hasJsonConfig());
-		assertTrue(
-			request.getJsonConfig().getFieldsMap().get("multimodal").getBoolValue());
-	}
-
-	@Test
-	void mapToEmbeddingModelRequest_should_not_inject_multimodal_when_false() {
+	void mapToEmbeddingModelRequest_should_not_set_multimodal_when_false() {
 
 		// a text-only model carrying a pre-existing jsonConfig
 		var embeddingModel = new EmbeddingModel();
@@ -234,22 +220,24 @@ public class EmbeddingServiceUtilsTest {
 
 		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
 
-		// no multimodal key is added and the jsonConfig is left untouched
+		// the flag stays at its proto3 default and the jsonConfig is unchanged
+		assertFalse(request.getMultimodal());
 		var fields = request.getJsonConfig().getFieldsMap();
 		assertFalse(fields.containsKey("multimodal"));
 		assertEquals("bar", fields.get("foo").getStringValue());
 	}
 
 	@Test
-	void mapToEmbeddingModelRequest_should_leave_jsonConfig_unset_when_false_and_null() {
+	void mapToEmbeddingModelRequest_should_leave_jsonConfig_unset_when_null() {
 
 		// a text-only model without any jsonConfig (pre-existing behaviour)
 		var embeddingModel = new EmbeddingModel();
 
 		var request = EmbeddingService.mapToEmbeddingModelRequest(embeddingModel);
 
-		// the jsonConfig stays unset, byte-identical to the text-only wire
+		// the jsonConfig stays unset, as on the text-only wire
 		assertFalse(request.hasJsonConfig());
+		assertFalse(request.getMultimodal());
 	}
 
 }

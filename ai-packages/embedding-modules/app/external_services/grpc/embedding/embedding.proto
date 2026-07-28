@@ -60,6 +60,9 @@ message EmbeddingModel {
     ProviderModel providerModel = 2;
     .google.protobuf.Struct jsonConfig = 3;
     optional string apiUrl = 4;
+    // The model embeds text and images in a shared space; false (default)
+    // means the text-only path.
+    bool multimodal = 5;
 }
 
 message ResponseChunk {
