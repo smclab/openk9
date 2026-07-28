@@ -12,6 +12,7 @@ import {
   resetFilterCalendar,
 } from "../components/DateRangePicker";
 import { DataRangePickerVertical } from "../components/DateRangePickerVertical";
+import { DateRangeFilter } from "../components/DateRangeFilter";
 import { DetailMemo } from "../components/Detail";
 import { CopilotMemo } from "../components/Copilot";
 import { css } from "styled-components";
@@ -1293,6 +1294,16 @@ export function Main({
           />
         </I18nextProvider>,
         configuration.calendarVertical,
+      )}
+      {renderPortal(
+        <I18nextProvider i18n={i18next}>
+          <DateRangeFilter
+            onChange={setDateRange}
+            calendarDate={dateRange}
+            language={languageSelect}
+          />
+        </I18nextProvider>,
+        configuration.dateRangeFilter,
       )}
       {renderPortal(
         <I18nextProvider i18n={i18next}>

@@ -1186,11 +1186,18 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
             <div
               css={css`
                 ${sectionHeaderRowStyle}
+                @media (max-width: 1024px) {
+                  flex-wrap: wrap;
+                  gap: 8px 12px;
+                }
               `}
             >
               <span
                 css={css`
                   ${sectionTitleStyle}
+                  @media (max-width: 1024px) {
+                    font-size: 15px;
+                  }
                 `}
               >
                 {t("number-of-results")}
@@ -1203,6 +1210,13 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   {numberOfResults}
                 </span>
               </span>
+              {/* pulsante "Filtra per data": montato dal widget, accanto al
+                  conteggio; mostra "dal X al Y" quando un intervallo è attivo */}
+              <div
+                ref={(element) =>
+                  openk9.updateConfiguration({ dateRangeFilter: element })
+                }
+              />
             </div>
 
             {/* micro-anteprima della risposta AI + CTA "Vai a K9 IA":

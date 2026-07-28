@@ -90,6 +90,10 @@
     "uncheck": "Desmarcar",
     "from-date": "Desde",
     "to-date": "Hasta",
+    "filter-by-date": "Filtrar por fecha",
+    "date-range-hint": "Selecciona un intervalo",
+    "select-month": "Mes",
+    "select-year": "Año",
     "invalid-date-format": "Formato de fecha no válido",
     "end-date-before-start": "La fecha de fin no puede ser anterior a la fecha de inicio",
     "start-date-after-end": "La fecha de inicio no puede ser posterior a la fecha de fin"

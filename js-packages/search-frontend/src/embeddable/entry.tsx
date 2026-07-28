@@ -577,6 +577,7 @@ export type Configuration = {
   activeFilters: Element | string | null;
   calendar: Element | string | null;
   calendarVertical: Element | string | null;
+  dateRangeFilter: Element | string | null;
   changeLanguage: Element | string | null;
   copilot: CopilotConfiguration | null;
   detailMobile: Element | string | null;
@@ -639,6 +640,7 @@ const defaultConfiguration: Configuration = {
   calendar: null,
   calendarMobile: null,
   calendarVertical: null,
+  dateRangeFilter: null,
   changeLanguage: null,
   correction: null,
   dataRangePicker: null,

@@ -91,6 +91,10 @@
     "uncheck": "Auswahl aufheben",
     "from-date": "Von",
     "to-date": "Bis",
+    "filter-by-date": "Nach Datum filtern",
+    "date-range-hint": "Zeitraum auswählen",
+    "select-month": "Monat",
+    "select-year": "Jahr",
     "invalid-date-format": "Ungültiges Datumsformat",
     "end-date-before-start": "Das Enddatum darf nicht vor dem Startdatum liegen",
     "start-date-after-end": "Das Startdatum darf nicht nach dem Enddatum liegen"
