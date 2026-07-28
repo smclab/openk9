@@ -89,12 +89,14 @@ export function createChatClient(authFetch: AuthFetch) {
       url = CHAT_TOOL_ENDPOINT,
       baseUrl,
       max = 3,
+      controller,
     }: {
       searchText: string;
       language: string;
       url?: string;
       baseUrl?: string;
       max?: number;
+      controller?: AbortController;
     }): Promise<string[]> {
       const prompt = i18n.t("copilot-refine-prompt", { searchText });
       const body: ChatRequest = {
@@ -113,9 +115,13 @@ export function createChatClient(authFetch: AuthFetch) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
+          signal: controller?.signal,
         },
         baseUrl,
       );
+      if (!response.ok) {
+        throw new Error(`getRefinedSearches failed: HTTP ${response.status}`);
+      }
       const raw = await response.text();
       let answer = "";
       for (const line of raw.split("\n")) {

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2020-present SMC Treviso s.r.l. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -243,7 +243,12 @@ function RealFiltersPanel() {
         `}
         ref={(element) =>
           openk9.updateConfiguration({
-            filtersConfigurable: { element, haveSearch: true, showCount: true },
+            filtersConfigurable: {
+              element,
+              haveSearch: true,
+              showCount: true,
+              selectedAsChips: false,
+            },
           })
         }
       />
@@ -411,8 +416,11 @@ const blink = keyframes`
 `;
 
 function TypingDots() {
+  const { t } = useTranslation();
   return (
     <span
+      role="status"
+      aria-label={t("copilot-loading") ?? ""}
       css={css`
         display: inline-flex;
         gap: 4px;
@@ -679,6 +687,11 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
     }
   }, [messages]);
 
+  // sposta il focus sul campo domanda quando si passa alla vista K9 IA
+  React.useEffect(() => {
+    if (view === "ai") inputRef.current?.focus();
+  }, [view]);
+
   const submitFollowUp = () => {
     const value = input.trim();
     if (!value || isChatting) return;
@@ -868,7 +881,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   padding: 5px 12px;
                 `}
               >
-                AI attiva ▾
+                AI attiva
               </span>
             </div>
 
@@ -906,6 +919,10 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
             {/* thread */}
             <div
               ref={threadRef}
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions text"
+              aria-busy={isChatting}
               css={css`
                 flex: 1;
                 overflow-y: auto;
@@ -1105,6 +1122,7 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   ref={inputRef}
                   rows={1}
                   value={input}
+                  aria-label={t("copilot-input-placeholder") ?? ""}
                   placeholder={
                     t("copilot-input-placeholder") ?? "Fai una domanda…"
                   }
@@ -1138,6 +1156,8 @@ function K9Copilot({ view, setView }: K9CopilotProps) {
                   type="button"
                   onClick={submitFollowUp}
                   disabled={isChatting || input.trim() === ""}
+                  aria-label={t("copilot-send") ?? ""}
+                  title={t("copilot-send") ?? ""}
                   css={css`
                     flex-shrink: 0;
                     width: 36px;

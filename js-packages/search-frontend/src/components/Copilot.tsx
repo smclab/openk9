@@ -35,7 +35,9 @@ const SURFACE =
   "var(--openk9-embeddable-search--primary-background-color, #ffffff)";
 const SURFACE_2 =
   "var(--openk9-embeddable-search--secondary-background-color, #eeeeee)";
-const DANGER = "#b3261e";
+const DANGER = "var(--openk9-embeddable-search--error-color, #b3261e)";
+const DANGER_BG =
+  "var(--openk9-embeddable-search--error-background-color, #fdecea)";
 
 // icon-only controls use inline SVGs (not emoji glyphs) so they render
 // consistently across host operating systems and fonts
@@ -214,7 +216,6 @@ export function Copilot({
     if (!query || suggestLoading) return;
     const cached = suggestionsCache.current.get(query);
     if (cached) {
-      console.log("using cached suggestions for", query, cached);
       setSuggestions(cached);
       return;
     }
@@ -227,7 +228,6 @@ export function Copilot({
         baseUrl: baseUrl ?? undefined,
         max: maxSuggestions,
       });
-      console.log(result);
       suggestionsCache.current.set(query, result);
       setSuggestions(result);
     } catch {
@@ -252,6 +252,12 @@ export function Copilot({
         overflow: hidden;
         font-size: 14px;
         color: ${TEXT};
+        button:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible {
+          outline: 2px solid ${PRIMARY};
+          outline-offset: 2px;
+        }
       `}
     >
       <div
@@ -483,7 +489,7 @@ export function Copilot({
                 className="openk9-embeddable-search--copilot-answer"
                 css={css`
                   align-self: flex-start;
-                  background: ${isError ? "#fdecea" : SURFACE_2};
+                  background: ${isError ? DANGER_BG : SURFACE_2};
                   color: ${isError ? DANGER : "inherit"};
                   border: ${isError ? `1px solid ${DANGER}` : "none"};
                   border-radius: 14px 14px 14px 2px;

@@ -49,6 +49,7 @@ export type FiltersProps = {
   iconCustom: IconsCustom;
   haveSearch?: boolean | null | undefined;
   showCount?: boolean | null | undefined;
+  selectedAsChips?: boolean | null | undefined;
   state: SelectionsState;
   dynamicFilters?: boolean;
   overrideSearchWithCorrection?: RangeContextProviderProps;
@@ -73,6 +74,7 @@ function Filters({
   iconCustom,
   haveSearch = true,
   showCount = false,
+  selectedAsChips = false,
   state,
   dynamicFilters = true,
   overrideSearchWithCorrection,
@@ -154,6 +156,7 @@ function Filters({
             iconCustom={iconCustom}
             haveSearch={haveSearch}
             showCount={showCount}
+            selectedAsChips={selectedAsChips}
             isOpenFilter={isOpenFilter}
           />
         </React.Suspense>

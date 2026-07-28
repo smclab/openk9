@@ -335,6 +335,7 @@ type FilterProps = {
   placeholder?: string | null | undefined;
   haveSearch?: boolean | null | undefined;
   showCount?: boolean | null | undefined;
+  selectedAsChips?: boolean | null | undefined;
 };
 
 type ResulListPaginationProps = {

@@ -46,6 +46,12 @@ type FilterCategoryDynamicallyProps = {
   language: string;
   haveSearch?: boolean | null | undefined;
   showCount?: boolean | null | undefined;
+  /**
+   * quando true, i filtri selezionati vengono estratti dalla lista e mostrati
+   * come chip rimovibili al click. Di default (false) restano nella lista come
+   * checkbox selezionate.
+   */
+  selectedAsChips?: boolean | null | undefined;
   isDynamicElement: WhoIsDynamic[];
   placeholder?: string | undefined | null;
   noResultMessage?: string | null | undefined;
@@ -80,6 +86,7 @@ function FilterCategoryDynamic({
   iconCustom,
   haveSearch = true,
   showCount = false,
+  selectedAsChips = false,
   isOpenFilter = false,
 }: FilterCategoryDynamicallyProps) {
   const [text, setText] = React.useState<string>("");
@@ -452,7 +459,7 @@ function FilterCategoryDynamic({
               </button>
             </div>
           )}
-          {baseSelectedKeys.size > 0 && (
+          {selectedAsChips && baseSelectedKeys.size > 0 && (
             <div
               className="openk9-filter-selected-chips"
               css={css`
@@ -470,10 +477,15 @@ function FilterCategoryDynamic({
                       ? `${s?.entityType ?? ""}: ${s?.entityValue ?? ""}`
                       : s?.value ?? "";
                   return (
-                    <span
+                    <button
                       key={keyOfSuggestion(s)}
+                      type="button"
                       className="openk9-filter-chip"
                       title={label}
+                      aria-label={`${t("filter-remove") || "Rimuovi"}: ${label}`}
+                      onClick={() =>
+                        onRemove(mapSuggestionToSearchToken(s, true))
+                      }
                       css={css`
                         display: inline-flex;
                         align-items: center;
@@ -482,6 +494,7 @@ function FilterCategoryDynamic({
                         min-width: 0;
                         padding: 2px 6px 2px 10px;
                         border-radius: 999px;
+                        cursor: pointer;
                         background: color-mix(
                           in srgb,
                           var(
@@ -504,6 +517,17 @@ function FilterCategoryDynamic({
                           );
                         font-size: 12px;
                         font-weight: 600;
+                        &:hover {
+                          background: color-mix(
+                            in srgb,
+                            var(
+                                --openk9-embeddable-search--primary-color,
+                                #c22525
+                              )
+                              20%,
+                            transparent
+                          );
+                        }
                       `}
                     >
                       <span
@@ -517,26 +541,17 @@ function FilterCategoryDynamic({
                       >
                         {label}
                       </span>
-                      <button
-                        type="button"
-                        aria-label={t("filter-remove") || "Rimuovi"}
-                        onClick={() =>
-                          onRemove(mapSuggestionToSearchToken(s, true))
-                        }
+                      <span
+                        aria-hidden="true"
                         css={css`
                           flex-shrink: 0;
-                          border: none;
-                          background: none;
-                          cursor: pointer;
-                          padding: 0;
                           font-size: 14px;
                           line-height: 1;
-                          color: inherit;
                         `}
                       >
                         ×
-                      </button>
-                    </span>
+                      </span>
+                    </button>
                   );
                 })}
             </div>
@@ -586,7 +601,10 @@ function FilterCategoryDynamic({
                 <NoFiltersSearch />
               ))}
             {filters
-              ?.filter((s) => !baseSelectedKeys.has(keyOfSuggestion(s)))
+              ?.filter(
+                (s) =>
+                  !selectedAsChips || !baseSelectedKeys.has(keyOfSuggestion(s)),
+              )
               .map((suggestion, index) => {
                 const asSearchToken = mapSuggestionToSearchToken(
                   suggestion,
@@ -884,6 +902,7 @@ function SingleSelect({
             "-" +
             suggestionCategoryId
           }
+          name={"radio-group-dynamic-" + suggestionCategoryId}
           className={`radio-button ${
             isChecked
               ? "is-checked-dynamic-radio"

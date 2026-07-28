@@ -563,6 +563,9 @@ export function Main({
               placeholder={configuration.filtersConfigurable?.placeholder}
               haveSearch={configuration.filtersConfigurable?.haveSearch}
               showCount={configuration.filtersConfigurable?.showCount}
+              selectedAsChips={
+                configuration.filtersConfigurable?.selectedAsChips
+              }
               iconCustom={iconCustom}
               setOverrideSearchWithCorrection={setOverrideSearchWithCorrection}
               overrideSearchWithCorrection={overrideSearchWithCorrection}
@@ -822,7 +825,7 @@ export function Main({
               callbackFocusedButton={() => {
                 const recoveryButton = document.getElementById(
                   "openk9-button-card-" + idPreview,
-                ) as any;
+                );
                 if (recoveryButton) recoveryButton.focus();
                 setDetail(null);
               }}

@@ -107,13 +107,15 @@ export function useCopilotChat({
 
         const stream = response.body;
         if (!stream) {
-          updateLast((prev) => ({
-            ...prev,
-            status: "ERROR",
-            answer: t("copilot-error"),
-          }));
-          setIsChatting(false);
-          abortRef.current = null;
+          if (abortRef.current === controller) {
+            updateLast((prev) => ({
+              ...prev,
+              status: "ERROR",
+              answer: t("copilot-error"),
+            }));
+            setIsChatting(false);
+            abortRef.current = null;
+          }
           return;
         }
 
@@ -216,22 +218,30 @@ export function useCopilotChat({
         const tail = buffer.trim();
         if (tail.length) flushEvent(tail);
 
-        updateLast((prev) =>
-          prev.status === "CHUNK" ? { ...prev, status: "END" } : prev,
-        );
-        setIsChatting(false);
+        // only finalize if this stream is still the current one: a reset()
+        // or a newer send() supersedes us and owns the state from here on
+        if (abortRef.current === controller) {
+          updateLast((prev) =>
+            prev.status === "CHUNK" ? { ...prev, status: "END" } : prev,
+          );
+          setIsChatting(false);
+          abortRef.current = null;
+        }
       } catch (error) {
-        // a deliberate abort (unmount / reset / stop) is not a user-facing error
-        const aborted =
-          error instanceof DOMException && error.name === "AbortError";
-        updateLast((prev) => ({
-          ...prev,
-          status: aborted ? "END" : "ERROR",
-          answer: aborted || prev.answer ? prev.answer : t("copilot-error"),
-        }));
-        setIsChatting(false);
+        // a superseded stream must not clobber the current one's state
+        if (abortRef.current === controller) {
+          // a deliberate abort (unmount / stop) is not a user-facing error
+          const aborted =
+            error instanceof DOMException && error.name === "AbortError";
+          updateLast((prev) => ({
+            ...prev,
+            status: aborted ? "END" : "ERROR",
+            answer: aborted || prev.answer ? prev.answer : t("copilot-error"),
+          }));
+          setIsChatting(false);
+          abortRef.current = null;
+        }
       }
-      abortRef.current = null;
     },
     [client, endpoint, baseUrl, messages, t, updateLast],
   );
