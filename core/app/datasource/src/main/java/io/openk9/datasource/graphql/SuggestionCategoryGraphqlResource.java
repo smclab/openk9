@@ -221,11 +221,6 @@ public class SuggestionCategoryGraphqlResource {
 	/**
 	 * Unbinds a {@link DocTypeField} from a {@link SuggestionCategory}.
 	 *
-	 * <p>
-	 * This method replaces the deprecated {@code removeDocTypeFieldFromSuggestionCategory(long suggestionCategoryId, long docTypeFieldId)}.
-	 * The new implementation improves usability by eliminating the need to provide the {@code docTypeFieldId}.
-	 * </p>
-	 *
 	 * @param suggestionCategoryId The ID of the {@link SuggestionCategory} from which to unbind the {@link DocTypeField}.
 	 * @return A {@link Uni} containing the updated {@link SuggestionCategory} and the unbound {@link DocTypeField}.
 	 *
