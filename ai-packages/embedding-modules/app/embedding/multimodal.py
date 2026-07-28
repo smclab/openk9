@@ -19,7 +19,7 @@
 
 A multimodal embedder embeds text and images through the SAME model, so
 both land in one coherent vector space. The model is selected explicitly
-by an opt-in flag in the model jsonConfig; the provider then picks the
+by the EmbeddingModel.multimodal proto field; the provider then picks the
 concrete embedder from the registry below. Adding a new multimodal model
 means registering a factory here — no change to the routing.
 

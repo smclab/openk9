@@ -66,7 +66,7 @@ if __name__ == "__main__":
     #           contentType="image/png",
     #       )
     #   )
-    # Image refs need a multimodal model: set jsonConfig["multimodal"] = True on
-    # the EmbeddingModel and use a provider that has a multimodal embedder.
+    # Image refs need a multimodal model: set multimodal=True on the
+    # EmbeddingModel and use a provider that has a multimodal embedder.
 
     run(request)

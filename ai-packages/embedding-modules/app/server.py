@@ -262,9 +262,9 @@ def _apply_multimodal_credentials(configuration):
 def build_pipelines(configuration, chunker, is_query=False):
     """Builds the injected capabilities (router.Pipelines) for a request.
 
-    A model flagged multimodal in its jsonConfig embeds text and images
-    through the same model (one vector space); every other model keeps the
-    langchain text-only path and cannot embed images (they are skipped).
+    A model with multimodal=True embeds text and images through the same
+    model (one vector space); every other model keeps the langchain
+    text-only path and cannot embed images (they are skipped).
     """
     if configuration.get("multimodal"):
         _apply_multimodal_credentials(configuration)
