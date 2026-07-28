@@ -47,7 +47,13 @@ const RED_SOFT = `color-mix(in srgb, ${RED} 12%, #fff)`;
 const RED_TINT = `color-mix(in srgb, ${RED} 22%, #fff)`;
 
 const CalendarIcon = () => (
-  <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none">
+  <svg
+    aria-hidden="true"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
     <rect
       x="3"
       y="5"
@@ -92,7 +98,9 @@ export function DateRangeFilter({
 
   // sincronizza con lo stato esterno (reset globale, ripristino da URL, ecc.)
   React.useEffect(() => {
-    setStartDate(calendarDate?.startDate ? moment(calendarDate.startDate) : null);
+    setStartDate(
+      calendarDate?.startDate ? moment(calendarDate.startDate) : null,
+    );
     setEndDate(calendarDate?.endDate ? moment(calendarDate.endDate) : null);
   }, [calendarDate?.startDate, calendarDate?.endDate]);
 
