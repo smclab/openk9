@@ -71,6 +71,14 @@ To configure connection to RabbitMQ following parameters are available:
 | `rabbitmq.password.secretKey`    | Key in secret containing RabbitMQ password                         | `rabbitmq-password`            |
 
 
+### Embedding module settings
+
+| Name                      | Description                                                                          | Value   |
+| ------------------------- | ------------------------------------------------------------------------------------ | ------- |
+| `env.doEval`              | Publish chunks to the evaluation queue (`DO_EVAL`)                                    | `false` |
+| `env.fetchTimeoutSeconds` | Timeout in seconds for fetching binaries from pre-signed URLs (`FETCH_TIMEOUT_SECONDS`) | `30`    |
+
+
 ### Service account and rbac
 
 Openk9 Embedding Module doesn't need particular Service Account or rbac. 

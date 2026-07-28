@@ -76,6 +76,8 @@ rabbitmq:
 
 env:
   doEval: false
+  ## @param env.fetchTimeoutSeconds Timeout in seconds for fetching binaries from pre-signed URLs (FETCH_TIMEOUT_SECONDS)
+  fetchTimeoutSeconds: 30
 
 # One of Ingress or Route is mandatory
 ingress:

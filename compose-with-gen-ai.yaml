@@ -36,6 +36,7 @@ services:
     hostname: openk9-embedding-module
     environment:
       ORIGINS: '*'
+      FETCH_TIMEOUT_SECONDS: '30'
   talk-to:
     image: ${IMAGE_GROUP:-openk9}/openk9-talk-to:${IMAGE_TAG:-2026.2.0-SNAPSHOT}
     container_name: openk9-talk-to
