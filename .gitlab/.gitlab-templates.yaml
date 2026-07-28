@@ -212,6 +212,18 @@ variables:
     paths:
     - $CI_PROJECT_DIR/.m2/repository
     policy: pull  # MR: read-only - avoids overwriting shared cache with unreviewed code
+  # Drop the artifacts inherited from .build_template. The verifier is a compile-only
+  # check that never pushes an image, so it has no artifact to hand downstream — but
+  # it was still uploading core/app/$COMPONENT/target/ (~2920 files on datasource) and
+  # failing with "413 Request Entity Too Large" AFTER a successful build, turning
+  # perfectly valid MRs red. Nothing consumes target/: the Skopeo copy jobs take
+  # .version from the Build jobs.
+  #
+  # Must be `null`, NOT `{}` and NOT `paths: []`. `extends` deep-merges hashes, so
+  # `artifacts: {}` leaves the inherited `paths` in place (verified: the merged job
+  # still uploads target/), and `paths: []` is rejected by the CI schema
+  # ("must not have fewer than 1 items"). Only an explicit null drops the key.
+  artifacts: null
   script:
   - !reference [.maven-build-verifier-logic, script]
 
