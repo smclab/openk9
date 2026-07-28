@@ -478,7 +478,7 @@ class EmbeddingServicer(embedding_pb2_grpc.EmbeddingServicer):
                 "chat_vertex_ai_model_garden"
             ),
             "aws_bedrock": embedding_model_json_config.get("aws_bedrock"),
-            "multimodal": embedding_model_json_config.get("multimodal"),
+            "multimodal": embedding_model.multimodal,
         }
 
         has_text = request.HasField("text")

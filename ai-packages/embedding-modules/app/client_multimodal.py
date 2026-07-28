@@ -93,7 +93,6 @@ def vertex_model():
     json_config = Struct()
     json_config.update(
         {
-            "multimodal": True,
             "chat_vertex_ai_model_garden": {
                 "credentials": credentials,
                 "project": os.environ["VERTEX_PROJECT"],
@@ -104,6 +103,7 @@ def vertex_model():
     )
 
     return embedding_pb2.EmbeddingModel(
+        multimodal=True,
         providerModel=embedding_pb2.ProviderModel(
             provider="chat_vertex_ai",
             model=os.getenv("VERTEX_MODEL", "multimodalembedding@001"),
@@ -117,7 +117,6 @@ def bedrock_model():
     json_config = Struct()
     json_config.update(
         {
-            "multimodal": True,
             "aws_bedrock": {
                 "region_name": os.getenv("BEDROCK_REGION", "us-east-1"),
                 "output_dimension": int(os.getenv("BEDROCK_DIMENSION", "1024")),
@@ -126,6 +125,7 @@ def bedrock_model():
     )
 
     return embedding_pb2.EmbeddingModel(
+        multimodal=True,
         apiKey=os.getenv("BEDROCK_API_KEY", ""),
         providerModel=embedding_pb2.ProviderModel(
             provider="aws_bedrock",
